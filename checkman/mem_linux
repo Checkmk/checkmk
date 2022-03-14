@@ -1,7 +1,7 @@
 title: Linux: Detailed Usage of RAM, Swap, VMalloc and other Memory Areas
 agents: linux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures all of the available memory readings of the complex
@@ -39,4 +39,3 @@ description:
 
 discovery:
  One service is created for each Linux host.
-

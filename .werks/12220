@@ -6,7 +6,7 @@ Date: 1614703726
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you entered a value in suggestion fields, like e.g. the parent option in the
 settings of a host, the value was only saved if you clicked enter.

@@ -5,9 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Mapping, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 from cmk.utils import password_store
+
+# TODO: Cleanup this separation violation. This should be accessed through some API
+from cmk.base.config import SpecialAgentConfiguration
 
 
 def _get_tag_options(tag_values, prefix):
@@ -89,7 +92,9 @@ def _agent_aws_stdin(
     )
 
 
-def agent_aws_arguments(params, hostname, ipaddress):
+def agent_aws_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> SpecialAgentConfiguration:
 
     args, proxy_secrets = (
         _get_proxy_args_and_secrets(params["proxy_details"])
@@ -99,7 +104,7 @@ def agent_aws_arguments(params, hostname, ipaddress):
 
     if params.get("assume_role"):
         args += ["--assume-role"]
-        role_arn_id = params.get("assume_role").get("role_arn_id")
+        role_arn_id = params["assume_role"].get("role_arn_id")
         if role_arn_id:
             if role_arn_id[0]:
                 args += ["--role-arn", role_arn_id[0]]
@@ -151,9 +156,6 @@ def agent_aws_arguments(params, hostname, ipaddress):
         "--hostname",
         hostname,
     ]
-    # TODO: Cleanup this separation violation. This should be accessed through some API
-    from cmk.base.config import SpecialAgentConfiguration
-
     return SpecialAgentConfiguration(
         args,
         _agent_aws_stdin(

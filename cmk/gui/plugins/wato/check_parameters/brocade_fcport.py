@@ -262,7 +262,7 @@ def _parameter_valuespec_brocade_fcport():
             (
                 "phystate",
                 Optional(
-                    ListChoice(
+                    valuespec=ListChoice(
                         title=_("Allowed states (otherwise check will be critical)"),
                         choices=[
                             (1, _("noCard")),
@@ -284,7 +284,7 @@ def _parameter_valuespec_brocade_fcport():
             (
                 "opstate",
                 Optional(
-                    ListChoice(
+                    valuespec=ListChoice(
                         title=_("Allowed states (otherwise check will be critical)"),
                         choices=[
                             (0, _("unknown")),
@@ -302,7 +302,7 @@ def _parameter_valuespec_brocade_fcport():
             (
                 "admstate",
                 Optional(
-                    ListChoice(
+                    valuespec=ListChoice(
                         title=_("Allowed states (otherwise check will be critical)"),
                         choices=[
                             (1, _("online")),

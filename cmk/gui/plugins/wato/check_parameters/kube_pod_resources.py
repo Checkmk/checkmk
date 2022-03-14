@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, CascadingDropdown, Dictionary, MonitoringState, Tuple
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Percentage, Tuple
 
 
 def _parameter_valuespec_kube_pod_resources(help_text: str):
@@ -18,33 +19,36 @@ def _parameter_valuespec_kube_pod_resources(help_text: str):
         elements=[
             (
                 "pending",
+                age_levels_dropdown(title=_("Define levels for pending pods")),
+            ),
+            (
+                "free",
                 CascadingDropdown(
-                    title=_("Define levels for pending pods"),
+                    title=_("Define lower levels for free pods (clusters and nodes only)"),
                     choices=[
+                        ("no_levels", _("Do not impose levels")),
                         (
-                            "no_levels",
-                            _("No levels"),
-                            None,
-                        ),
-                        (
-                            "levels",
-                            _("Impose levels"),
+                            "levels_perc",
+                            _("Percentual levels"),
                             Tuple(
                                 elements=[
-                                    Age(title=_("Warning after"), default_value=300),
-                                    Age(title=_("Critical after"), default_value=600),
-                                ],
+                                    Percentage(title=_("Warning below"), default_value=10.0),
+                                    Percentage(title=_("Critical below"), default_value=5.0),
+                                ]
+                            ),
+                        ),
+                        (
+                            "levels_abs",
+                            _("Absolute levels"),
+                            Tuple(
+                                elements=[
+                                    Integer(title=_("Warning below"), default_value=10),
+                                    Integer(title=_("Critical below"), default_value=5),
+                                ]
                             ),
                         ),
                     ],
-                    default_value="no_levels",
-                ),
-            ),
-            (
-                "unknown",
-                MonitoringState(
-                    title=_("Set state for unknown pods"),
-                    default_value=3,
+                    default_value="levels_perc",
                 ),
             ),
         ],
@@ -64,36 +68,10 @@ rulespec_registry.register(
                 " to be a comprehensive state machine. For the pending pods, the check keeps track "
                 "for how long they have been pending. If a tolerating time period is set, the "
                 "service goes WARN/CRIT after any of the pods has been pending for longer than the "
-                "set duration. If there is at least one unknown pod, the service goes UNKNOWN by "
-                "default. The state the service goes can be configured. This rule affects any Pod "
-                "Resources service, except for those on the Nodes and the Clusters. The "
-                "configuration for Clusters and Nodes can be done via the rule Kubernetes Pod "
-                "Resources: Clusters, Nodes."
+                "set duration. "
+                "For clusters and nodes one can define levels on the number of free pods."
             )
         ),
-        title=lambda: _("Kubernetes Pod Resources: Deployments"),
-    )
-)
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="kube_pod_resources_with_capacity",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=lambda: _parameter_valuespec_kube_pod_resources(
-            _(
-                "According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
-                "summary of where the Pod is in its lifecycle. The phase is not intended to be a "
-                "comprehensive rollup of observations of container or Pod state, nor is it intended"
-                " to be a comprehensive state machine. For the pending pods, the check keeps track "
-                "for how long they have been pending. If a tolerating time period is set, the "
-                "service goes WARN/CRIT after any of the pods has been pending for longer than the "
-                "set duration. If there is at least one unknown pod, the service goes UNKNOWN by "
-                "default. The state the service goes can be configured. This rule affects the Pod"
-                "Resources services of Kubernetes Nodes and Kubernetes Clusters. The configuration"
-                " of other Pod Resources services can be done via the rule Kubernetes Pod "
-                "Resources: Deployments."
-            )
-        ),
-        title=lambda: _("Kubernetes Pod Resources: Clusters, Nodes"),
+        title=lambda: _("Kubernetes pod resources"),
     )
 )

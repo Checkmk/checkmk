@@ -6,7 +6,7 @@ Date: 1620368953
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Filtering for host or service labels could lead to a memory leak in large
 setups with a large count of labels. With every character entered in the search

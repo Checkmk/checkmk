@@ -8,7 +8,7 @@ from typing import Iterable, Optional, Tuple
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _u
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 
 
@@ -19,7 +19,7 @@ def text_with_links_to_user_translated_html(
     return HTML(separator).join(
         html.render_a(user_translation, href=url, title=user_translation)
         if url
-        else escape_html_permissive(user_translation)
+        else escape_to_html_permissive(user_translation, escape_links=False)
         for txt, url in elements
         for user_translation in [_u(txt)]
         if txt

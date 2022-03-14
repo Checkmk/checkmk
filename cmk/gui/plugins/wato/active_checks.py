@@ -164,7 +164,7 @@ def _imap_parameters():
                             False,
                             _("Use no encryption"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=143,
                                 ),
                                 title=_("TCP Port"),
@@ -175,7 +175,7 @@ def _imap_parameters():
                             True,
                             _("Encrypt IMAP communication using SSL"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=993,
                                 ),
                                 title=_("TCP Port"),
@@ -224,7 +224,7 @@ def _pop3_parameters():
                             False,
                             _("Use no encryption"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=110,
                                 ),
                                 title=_("TCP Port"),
@@ -235,7 +235,7 @@ def _pop3_parameters():
                             True,
                             _("Encrypt POP3 communication using SSL"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=995,
                                 ),
                                 title=_("TCP Port"),
@@ -429,7 +429,7 @@ def transform_cert_days(cert_days):
 
 def _valuespec_active_checks_ftp():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "port",
@@ -485,7 +485,7 @@ def _valuespec_active_checks_ftp():
                 (
                     "cert_days",
                     Transform(
-                        Tuple(
+                        valuespec=Tuple(
                             title=_("SSL certificate validation"),
                             help=_("Minimum number of days a certificate has to be valid"),
                             elements=[
@@ -655,7 +655,7 @@ def _valuespec_active_checks_dns():
                 help=_("The name or IPv4 address you want to query"),
             ),
             Transform(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("Optional parameters"),
                     elements=[
                         (
@@ -831,7 +831,7 @@ def _valuespec_active_checks_sql():
             (
                 "sql",
                 Transform(
-                    TextAreaUnicode(
+                    valuespec=TextAreaUnicode(
                         title=_("Query or SQL statement"),
                         help=_(
                             "The SQL-statement or procedure name which is executed on the DBMS. It must return "
@@ -1080,7 +1080,7 @@ def _valuespec_active_checks_tcp():
                     (
                         "cert_days",
                         Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 title=_("SSL certificate validation"),
                                 help=_("Minimum number of days a certificate has to be valid"),
                                 elements=[
@@ -1324,7 +1324,7 @@ def _validate_active_check_http_name(value, varprefix):
 
 def _valuespec_active_checks_http():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Check HTTP service"),
             help=_(
                 "Check HTTP/HTTPS service using the plugin <tt>check_http</tt> "
@@ -1378,7 +1378,7 @@ def _valuespec_active_checks_http():
                                         (
                                             "ssl",
                                             Transform(
-                                                DropdownChoice(
+                                                valuespec=DropdownChoice(
                                                     title=_("Use SSL/HTTPS for the connection"),
                                                     choices=[
                                                         (
@@ -1509,7 +1509,7 @@ def _valuespec_active_checks_http():
                                         (
                                             "expect_regex",
                                             Transform(
-                                                Tuple(
+                                                valuespec=Tuple(
                                                     orientation="vertical",
                                                     show_titles=False,
                                                     elements=[
@@ -1645,7 +1645,7 @@ def _valuespec_active_checks_http():
                                         (
                                             "cert_days",
                                             Transform(
-                                                Tuple(
+                                                valuespec=Tuple(
                                                     title=_("Age"),
                                                     help=_(
                                                         "Minimum number of days a certificate"
@@ -1874,7 +1874,7 @@ def _valuespec_active_checks_smtp():
                 allow_empty=False,
             ),
             Transform(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("Optional parameters"),
                     elements=[
                         (
@@ -1891,7 +1891,7 @@ def _valuespec_active_checks_smtp():
                         (
                             "port",
                             Transform(
-                                Integer(
+                                valuespec=Integer(
                                     title=_("TCP Port to connect to"),
                                     help=_(
                                         "The TCP Port the SMTP server is listening on. "
@@ -1958,7 +1958,7 @@ def _valuespec_active_checks_smtp():
                         (
                             "cert_days",
                             Transform(
-                                Tuple(
+                                valuespec=Tuple(
                                     title=_("Minimum Certificate Age"),
                                     help=_("Minimum number of days a certificate has to be valid"),
                                     elements=[
@@ -1980,7 +1980,7 @@ def _valuespec_active_checks_smtp():
                         (
                             "starttls",
                             FixedValue(
-                                True,
+                                value=True,
                                 totext=_("STARTTLS enabled."),
                                 title=_("Use STARTTLS for the connection."),
                             ),
@@ -2175,8 +2175,8 @@ def _valuespec_custom_checks():
             (
                 "has_perfdata",
                 FixedValue(
-                    title=_("Performance data"),
                     value=True,
+                    title=_("Performance data"),
                     totext=_("process performance data"),
                 ),
             ),
@@ -2258,7 +2258,7 @@ def _active_checks_bi_aggr_transform_from_disk(value):
 
 def _valuespec_active_checks_bi_aggr():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Check State of BI Aggregation"),
             help=_(
                 "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
@@ -2603,7 +2603,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_traceroute():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Check current routing"),
             help=_(
                 "This active check uses <tt>traceroute</tt> in order to determine the current "
@@ -2629,7 +2629,7 @@ def _valuespec_active_checks_traceroute():
                 (
                     "routers",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 TextInput(
                                     title=_("Router (FQDN, IP-Address)"),
@@ -2732,7 +2732,7 @@ def _valuespec_active_checks_mail_loop():
             (
                 "smtp_tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Use TLS over SMTP"),
                     totext=_("Encrypt SMTP communication using TLS"),
                 ),
@@ -2740,7 +2740,7 @@ def _valuespec_active_checks_mail_loop():
             (
                 "imap_tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Use TLS for IMAP authentification"),
                     totext=_("IMAP authentification uses TLS"),
                 ),
@@ -2802,7 +2802,7 @@ def _valuespec_active_checks_mail_loop():
             (
                 "delete_messages",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Delete processed messages"),
                     totext=_("Delete all processed message belonging to this check"),
                     help=_(
@@ -2875,7 +2875,7 @@ def _valuespec_active_checks_mail():
                                         title=_("Send events to local event console"),
                                         elements=[
                                             FixedValue(
-                                                "",
+                                                value="",
                                                 totext=_("Directly forward to event console"),
                                                 title=_(
                                                     "Send events to local event console in same OMD site"
@@ -2888,14 +2888,14 @@ def _valuespec_active_checks_mail():
                                                 allow_empty=False,
                                             ),
                                             FixedValue(
-                                                "spool:",
+                                                value="spool:",
                                                 totext=_("Spool to event console"),
                                                 title=_(
                                                     "Spooling: Send events to local event console in same OMD site"
                                                 ),
                                             ),
                                             Transform(
-                                                TextInput(
+                                                valuespec=TextInput(
                                                     allow_empty=False,
                                                 ),
                                                 title=_(
@@ -2965,7 +2965,7 @@ def _valuespec_active_checks_mail():
                                 help=_("Use this syslog application for all created events"),
                                 elements=[
                                     FixedValue(
-                                        None,
+                                        value=None,
                                         title=_("Use the mail subject"),
                                         totext=_("The mail subject is used as syslog appliaction"),
                                     ),
@@ -3011,7 +3011,7 @@ def _valuespec_active_checks_mail():
                                 ),
                                 elements=[
                                     FixedValue(
-                                        True,
+                                        value=True,
                                         title=_("Delete messages"),
                                         totext=_(
                                             "Delete all processed message belonging to this check"
@@ -3175,8 +3175,8 @@ def _valuespec_active_checks_by_ssh():
                         Alternative(
                             title=_("IP-Version"),
                             elements=[
-                                FixedValue("ipv4", totext="", title=_("IPv4")),
-                                FixedValue("ipv6", totext="", title=_("IPv6")),
+                                FixedValue(value="ipv4", totext="", title=_("IPv4")),
+                                FixedValue(value="ipv6", totext="", title=_("IPv6")),
                             ],
                         ),
                     ),
@@ -3203,7 +3203,7 @@ def _valuespec_active_checks_by_ssh():
                     (
                         "accept_new_host_keys",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Enable automatic host key acceptance"),
                             help=_(
                                 "This will automatically accept hitherto-unseen keys"

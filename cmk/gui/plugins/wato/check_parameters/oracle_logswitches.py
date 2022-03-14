@@ -24,7 +24,7 @@ def transform_oracle_logswitches(params):
 
 def _parameter_valuespec_oracle_logswitches():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This check monitors the number of log switches of an ORACLE "
                 "database instance in the last 60 minutes. You can set levels "

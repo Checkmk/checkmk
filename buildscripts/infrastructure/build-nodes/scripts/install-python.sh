@@ -6,10 +6,11 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 failure() {
-    echo "$(basename $0):" "$@" >&2
+    echo "$(basename "$0"):" "$@" >&2
     exit 1
 }
 
@@ -37,7 +38,7 @@ ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=2
+BUILD_ID=3
 
 build_package() {
     mkdir -p /opt/src
@@ -55,6 +56,8 @@ build_package() {
         --prefix="${TARGET_DIR}/${DIR_NAME}" \
         --with-ensurepip=install \
         --with-openssl="${OPENSSL_PATH}" \
+        --enable-optimizations \
+        --with-lto \
         --enable-shared
     make -j2
     make install
@@ -63,11 +66,5 @@ build_package() {
     rm -rf /opt/src
 }
 
-set_symlinks() {
-    log "Set symlink"
-    mkdir -p "${TARGET_DIR}/bin"
-    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
-}
-
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
-set_symlinks
+set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"

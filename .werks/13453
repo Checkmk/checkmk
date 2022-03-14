@@ -6,7 +6,7 @@ Date: 1638266833
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 apc_symmetra_elphase check would assume CRIT state for current values bigger then 1 A.
 Since this value depends on the configuration of the UPS and the battery type, it

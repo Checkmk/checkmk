@@ -6,7 +6,7 @@ Date: 1626961443
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The absolute levels for filesystem growth trends used to be Integer fields. This was changed to the Filesize field, to be more convenient when inserting larger warning levels.
 

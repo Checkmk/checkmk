@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
+import copy
+from typing import Any, Dict, List, Mapping, Sequence, Tuple, Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -17,6 +18,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.valuespec import (
+    Checkbox,
     Dictionary,
     DropdownChoice,
     ListChoice,
@@ -57,27 +59,23 @@ def _validate_discovery_filesystem_params(value, varprefix):
         )
 
 
-def _transform_discovery_filesystem_params(params):
-    include_volume_name = params.pop("include_volume_name", None)
+def _transform_discovery_filesystem_params(params: Mapping[str, Any]) -> Dict[str, Any]:
+    p: Dict[str, Any] = dict(copy.deepcopy(params))
+    include_volume_name = p.pop("include_volume_name", None)
 
     if isinstance(include_volume_name, tuple):
-        params["item_appearance"] = "volume_name_and_mountpoint"
-        params["grouping_behaviour"] = include_volume_name[1]
+        p["item_appearance"] = "volume_name_and_mountpoint"
+        p["grouping_behaviour"] = include_volume_name[1]
+    elif isinstance(include_volume_name, bool):
+        p["item_appearance"] = "volume_name_and_mountpoint" if include_volume_name else "mountpoint"
+        p["grouping_behaviour"] = "mountpoint"
 
-    if include_volume_name is True:
-        params["item_appearance"] = "volume_name_and_mountpoint"
-        params["grouping_behaviour"] = "mountpoint"
-
-    if include_volume_name is False:
-        params["item_appearance"] = "mountpoint"
-        params["grouping_behaviour"] = "mountpoint"
-
-    return params
+    return p
 
 
 def _valuespec_inventory_df_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Filesystem discovery"),
             elements=[
                 (
@@ -136,7 +134,7 @@ def _valuespec_inventory_df_rules():
                 (
                     "never_ignore_mountpoints",
                     ListOf(
-                        TextOrRegExp(),
+                        valuespec=TextOrRegExp(),
                         title=_("Mountpoints to never ignore"),
                         help=_(
                             "Regardless of filesystem type, these mountpoints will always be discovered."
@@ -163,7 +161,9 @@ rulespec_registry.register(
 FILESYSTEM_GROUPS_WRAPPER_KEY = "groups"
 
 
-def _transform_filesystem_groups(grouping):
+def _transform_filesystem_groups(
+    params: Union[Sequence[Tuple], Sequence[Mapping[str, Any]], Dict[str, Any]]
+) -> Dict[str, Any]:
     """
     Old format:
         [(group_name, include_pattern), (group_name, include_pattern), ...]
@@ -186,15 +186,17 @@ def _transform_filesystem_groups(grouping):
           patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
          ...]}
     """
+    grouping = copy.deepcopy(params)
     if isinstance(grouping, dict) and FILESYSTEM_GROUPS_WRAPPER_KEY in grouping:
         return grouping
 
-    if not grouping or isinstance(grouping[0], dict):
+    if not grouping or (isinstance(grouping, list) and isinstance(grouping[0], dict)):
         return {FILESYSTEM_GROUPS_WRAPPER_KEY: grouping}
 
     grouping_dict: Dict[str, List[str]] = {}
-    for group_name, pattern_inclde in grouping:
-        grouping_dict.setdefault(group_name, []).append(pattern_inclde)
+    if isinstance(grouping, list) and isinstance(grouping[0], tuple):
+        for group_name, pattern_include in grouping:
+            grouping_dict.setdefault(group_name, []).append(pattern_include)
 
     return {
         FILESYSTEM_GROUPS_WRAPPER_KEY: [
@@ -210,14 +212,14 @@ def _transform_filesystem_groups(grouping):
 
 def _valuespec_filesystem_groups():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Filesystem grouping patterns"),
             optional_keys=False,
             elements=[
                 (
                     FILESYSTEM_GROUPS_WRAPPER_KEY,
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             optional_keys=False,
                             elements=[
                                 (
@@ -314,5 +316,37 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=vs_filesystem,
         title=lambda: _("Filesystems (used space and growth)"),
+    )
+)
+
+
+def _discovery_valuespec_qtree_quota() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "exclude_volume",
+                Checkbox(
+                    title=_("Exclude volume from service name"),
+                    help=_(
+                        "The service description of qtree services is composed of the "
+                        "quota, quota-users and the volume name by default. Check this box"
+                        "if you would like to use the quota and quota-users combination as the "
+                        "service description on its own. "
+                        "Please be advised that this may lead to a service description that is "
+                        "not unique, resulting in some services, which are not shown!"
+                    ),
+                ),
+            ),
+        ],
+        title=_("NetApp Qtree discovery"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="list",
+        name="discovery_qtree",
+        valuespec=_discovery_valuespec_qtree_quota,
     )
 )

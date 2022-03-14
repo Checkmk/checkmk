@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+import re
 from typing import Final, Protocol
 
 from ..agent_based_api.v1 import HostLabel
@@ -58,8 +59,11 @@ class SNMPDeviceType(enum.Enum):
     WLC = enum.auto()
 
 
-_FIBRECHANEL_MARKER: Final = {"fc", "fibrechannel", "fibre channel"}
+_FIBRECHANNEL_MARKER: Final = {"fc", "fibrechannel", "fibre channel"}
 
 
 def _is_fibrechannel_switch(description: str) -> bool:
-    return any(m in description.lower() for m in _FIBRECHANEL_MARKER)
+    return any(
+        m in description.lower() and not re.search(r"fc\d", description.lower())
+        for m in _FIBRECHANNEL_MARKER
+    )

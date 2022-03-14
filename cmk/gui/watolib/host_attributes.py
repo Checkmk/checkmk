@@ -19,12 +19,15 @@ import cmk.utils.plugin_registry
 from cmk.utils.tags import TagGroup
 from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
 
+from cmk.gui import watolib
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
+from cmk.gui.sites import allsites
 from cmk.gui.type_defs import Choices
+from cmk.gui.utils import escaping
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
@@ -804,7 +807,7 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
     def from_html_vars(self, varprefix: str) -> Optional[str]:
-        value = request.get_unicode_input(varprefix + "attr_" + self.name())
+        value = request.get_str_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()
@@ -854,7 +857,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def render_input(self, varprefix: str, value: Any) -> None:
         self.valuespec().render_input(varprefix + self.name(), value)
 
-    def from_html_vars(self, varprefix) -> Any:
+    def from_html_vars(self, varprefix: str) -> Any:
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     def validate_input(self, value: Any, varprefix: str) -> None:
@@ -947,7 +950,7 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
         # that work.
         choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
         return Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 title=self._tag_group.title,
                 choices=choices,
                 default_value=choices[0][0],
@@ -1152,3 +1155,52 @@ def EnumAttribute(
             "_enumlist": enumlist,
         },
     )
+
+
+def _validate_host_tags(host_tags):
+    """Check if the tag group exists and the tag value is valid"""
+    for tag_group_id, tag_id in host_tags.items():
+        for tag_group in config.tags.tag_groups:
+            if tag_group.id == tag_group_id:
+                for grouped_tag in tag_group.tags:
+                    if grouped_tag.id == tag_id:
+                        break
+                else:
+                    raise MKUserError(None, _("Unknown tag %s") % escaping.escape_attribute(tag_id))
+                break
+        else:
+            raise MKUserError(
+                None, _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id)
+            )
+
+
+def validate_host_attributes(attributes, new=False):
+    _validate_general_host_attributes(
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new
+    )
+    _validate_host_tags(
+        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_"))
+    )
+
+
+def _validate_general_host_attributes(host_attributes, new):
+    """Check if the given attribute name exists, no type check"""
+    # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
+    all_host_attribute_names = list(host_attribute_registry.keys()) + ["inventory_failed", "site"]
+    for name, value in host_attributes.items():
+        if name not in all_host_attribute_names:
+            raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
+
+        # For real host attributes validate the values
+        try:
+            attr = watolib.host_attribute(name)
+        except KeyError:
+            attr = None
+
+        if attr is not None:
+            if attr.needs_validation("host", new):
+                attr.validate_input(value, "")
+
+        # The site attribute gets an extra check
+        if name == "site" and value not in allsites().keys():
+            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))

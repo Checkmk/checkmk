@@ -17,8 +17,8 @@ namespace {
 // Internal description of assorted counter params.
 // Should be valid for all windows versions
 struct CounterParam {
-    const wchar_t* const description_;  // human form
-    const wchar_t* const name_;         // usually number
+    const wchar_t *const description_;  // human form
+    const wchar_t *const name_;         // usually number
     const uint32_t index_;              // the same as name
     const uint32_t counters_count;
     const uint32_t instances_min_;
@@ -54,7 +54,7 @@ protected:
 
     static void KillTmpProcesses() {
         // kill process
-        wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
+        wtools::ScanProcessList([](const PROCESSENTRY32 &entry) -> auto {
             if (std::wstring{entry.szExeFile} == nameToUse()) {
                 wtools::KillProcess(entry.th32ProcessID, 99);
             }
@@ -78,7 +78,7 @@ protected:
     static std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
         uint32_t pid = 0;
         std::wstring path;
-        ScanProcessList([&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+        ScanProcessList([&path, &pid ](const PROCESSENTRY32 &entry) -> auto {
             if (std::wstring{entry.szExeFile} != nameToUse()) {
                 return true;  // continue scan
             }
@@ -136,6 +136,8 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     EXPECT_EQ(pid, 0);
 
     EXPECT_EQ(KillProcessesByDir(test_dir_), 0);
+    EXPECT_EQ(KillProcessesByDir(""), -1);
+    EXPECT_EQ(KillProcessesByDir("k:"), -1);
 }
 
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
@@ -144,7 +146,7 @@ protected:
         std::vector<std::string> names;
         temp_fs = tst::TempCfgFs::Create();
 
-        wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
+        wtools::ScanProcessList([&names](const PROCESSENTRY32 &entry) -> auto {
             names.emplace_back(wtools::ToUtf8(entry.szExeFile));
             if (names.back() == "watest32.exe" ||
                 names.back() == "watest64.exe") {
@@ -156,14 +158,17 @@ protected:
             return true;
         });
         EXPECT_TRUE(!names.empty());
-        for (auto& name : names) {
+        for (auto &name : names) {
             cma::tools::StringLower(name);
         }
 
         // check that we do not have own process
-        EXPECT_FALSE(cma::tools::find(
-            names, tgt::Is64bit() ? "watest64.exe"s : "watest32.exe"s));
-        EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
+        EXPECT_TRUE(std::ranges::find(names, tgt::Is64bit()
+                                                 ? "watest64.exe"s
+                                                 : "watest32.exe"s) ==
+                    names.end());
+        EXPECT_TRUE(std::ranges::find(names, std::string("svchost.exe")) !=
+                    names.end());
     }
 
     void TearDown() override {}
@@ -183,7 +188,7 @@ protected:
     bool findProcessByPid(uint32_t pid) {
         bool found = false;
         wtools::ScanProcessList(
-            [&found, pid ](const PROCESSENTRY32& entry) -> auto {
+            [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
                 if (entry.th32ProcessID == pid) {
                     found = true;
                     EXPECT_FALSE(true) << "bullshit found " << pid << "name is "
@@ -197,7 +202,7 @@ protected:
     bool findProcessByParentPid(uint32_t pid) {
         bool found = false;
         wtools::ScanProcessList(
-            [&found, pid ](const PROCESSENTRY32& entry) -> auto {
+            [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
                 if (entry.th32ParentProcessID == pid) {
                     found = true;
                 }
@@ -211,7 +216,7 @@ protected:
         std::wstring proc_name;
         DWORD parent_process_id = 0;
         wtools::ScanProcessList([ proc_id, &proc_name, &parent_process_id ](
-                                    const PROCESSENTRY32& entry) -> auto {
+                                    const PROCESSENTRY32 &entry) -> auto {
             if (entry.th32ProcessID == proc_id) {
                 proc_name = entry.szExeFile;
                 parent_process_id = entry.th32ParentProcessID;
@@ -294,8 +299,8 @@ TEST(Wtools, ConditionallyConvert) {
         ret = wtools::ConditionallyConvertFromUTF16(a);
         EXPECT_EQ(0, ret.size());
 
-        const wchar_t* text = L"abcde";
-        auto data = reinterpret_cast<const uint8_t*>(text);
+        const wchar_t *text = L"abcde";
+        auto data = reinterpret_cast<const uint8_t *>(text);
         for (int i = 0; i < 10; ++i) {
             a.push_back(data[i]);
         }
@@ -323,7 +328,7 @@ TEST(Wtools, PerformanceFrequency) {
 TEST(Wtools, Utf16Utf8) {
     using namespace std;
     unsigned short utf16string[] = {0x41, 0x0448, 0x65e5, 0xd834, 0xdd1e, 0};
-    auto x = ToUtf8((wchar_t*)utf16string);
+    auto x = ToUtf8((wchar_t *)utf16string);
     EXPECT_EQ(x.size(), 10);
 }
 
@@ -383,7 +388,7 @@ TEST(Wtools, Perf) {
         auto names = GenerateInstanceNames(object);
         EXPECT_TRUE(instances.size() == names.size());
 
-        const PERF_COUNTER_BLOCK* counterblock = nullptr;
+        const PERF_COUNTER_BLOCK *counterblock = nullptr;
         auto counters = GenerateCounters(object, counterblock);
         EXPECT_EQ(counterblock, nullptr);
         EXPECT_EQ(counters.size(), cur_info.counters_count);
@@ -424,7 +429,7 @@ TEST(Wtools, Perf) {
 
         // low level;
 
-        const PERF_COUNTER_BLOCK* counterblock = nullptr;
+        const PERF_COUNTER_BLOCK *counterblock = nullptr;
         auto counters = GenerateCounters(object, counterblock);
         EXPECT_NE(counterblock, nullptr);
         EXPECT_EQ(counters.size(), object->NumCounters);
@@ -686,8 +691,8 @@ TEST(Wtools, HandleDeleterInvalidAndNull) {
 
 TEST(Wtools, GetMultiSz) {
     std::array<wchar_t, 12> data{L"abcde\0fgh\0\0"};
-    wchar_t* pos = data.data();
-    wchar_t* end = pos + 11;
+    wchar_t *pos = data.data();
+    wchar_t *end = pos + 11;
     pos = nullptr;
     EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
     pos = data.data();
@@ -726,6 +731,11 @@ TEST(Wtools, ExecuteCommandsAsync) {
     });
     auto output = tst::ReadFileAsTable(output_file);
     EXPECT_EQ(output[0], "x");
+}
+
+TEST(Wtools, RunCommandCheck) {
+    auto s = RunCommand(L"icacls.exe /?");
+    EXPECT_FALSE(s.empty());
 }
 
 }  // namespace wtools

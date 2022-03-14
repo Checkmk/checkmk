@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
 
 def _parameter_valuespec_netapp_instance():
     return ListOf(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("This rule allows you to override netapp warnings"),
             elements=[
                 ("name", TextInput(title=_("Warning starts with"))),

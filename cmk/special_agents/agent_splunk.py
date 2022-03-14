@@ -63,8 +63,6 @@ def main(argv=None):
 
     args = parse_arguments(argv)
 
-    sys.stdout.write("<<<check_mk>>>\n")
-
     try:
         handle_request(args, sections)
     except Exception as e:
@@ -208,6 +206,11 @@ def handle_health(value):
     for func, state in value[0]["content"]["features"].items():
         func_name = "%s%s" % (func[0].upper(), func[1:].lower())
         sys.stdout.write("%s %s\n" % (func_name.replace(" ", "_"), state.get("health", {})))
+
+        if state.get("disabled", False):
+            # Some functions may have set '"disabled": True' and it seems
+            # that "features" are missing in this case
+            continue
 
         for feature, status in state["features"].items():
             feature_name = "%s%s" % (feature[0].upper(), feature[1:].lower())

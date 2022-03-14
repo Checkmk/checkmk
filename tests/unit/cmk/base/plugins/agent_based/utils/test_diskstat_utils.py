@@ -3,8 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, Tuple
 
 import pytest
 
@@ -158,65 +159,159 @@ def test_compute_rates_multiple_disks():
         assert disk_out == {k: 0 for k in disk_in}
 
 
-DISKS = [
+@pytest.mark.parametrize(
     [
-        {
-            "a": 3,
-            "b": 3,
-        },
-        {
-            "a": 5.5345,
-            "c": 0.0,
-        },
+        "disks_to_combine",
+        "expected_result",
     ],
     [
-        {
-            "a": 3,
-            "utilization": 3,
-        },
-        {
-            "a": 5.5345,
-            "c": 0.0,
-            "average_x": 0,
-        },
-        {
-            "a": 5.5345,
-            "utilization": 0.897878,
-        },
-        {
-            "average_x": 123.123123,
-            "average_y": 89,
-        },
+        pytest.param(
+            [
+                {
+                    "a": 3,
+                    "b": 3,
+                },
+                {
+                    "a": 5.5345,
+                    "c": 0.0,
+                },
+            ],
+            {
+                "a": 8.534500000000001,
+                "b": 3.0,
+                "c": 0.0,
+            },
+        ),
+        pytest.param(
+            [
+                {
+                    "a": 3,
+                    "utilization": 3,
+                    "latency": 5,
+                    "read_latency": 5,
+                    "write_latency": 6,
+                },
+                {
+                    "a": 5.5345,
+                    "c": 0.0,
+                    "average_x": 0,
+                    "latency": 1,
+                    "read_latency": 2,
+                    "write_latency": 3,
+                },
+                {
+                    "a": 5.5345,
+                    "utilization": 0.897878,
+                },
+                {
+                    "average_x": 123.123123,
+                    "average_y": 89,
+                },
+            ],
+            {
+                "a": 14.069000000000003,
+                "average_x": 61.5615615,
+                "average_y": 89.0,
+                "c": 0.0,
+                "latency": 3.0,
+                "read_latency": 3.5,
+                "utilization": 1.948939,
+                "write_latency": 4.5,
+            },
+        ),
     ],
-]
+)
+def test_combine_disks(
+    disks_to_combine: Iterable[diskstat.Disk],
+    expected_result: diskstat.Disk,
+) -> None:
+    assert diskstat.combine_disks(disks_to_combine) == expected_result
 
 
 @pytest.mark.parametrize(
-    "disks",
-    DISKS,
+    [
+        "disks_to_summarize",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            [
+                (
+                    "disk1",
+                    {
+                        "a": 3,
+                        "b": 3,
+                    },
+                ),
+                (
+                    "disk1",
+                    {
+                        "a": 5.5345,
+                        "c": 0.0,
+                    },
+                ),
+            ],
+            {
+                "a": 8.534500000000001,
+                "b": 3.0,
+                "c": 0.0,
+            },
+        ),
+        pytest.param(
+            [
+                (
+                    "disk1",
+                    {
+                        "a": 3,
+                        "utilization": 3,
+                        "latency": 5,
+                        "read_latency": 5,
+                        "write_latency": 6,
+                    },
+                ),
+                (
+                    "LVM 1",
+                    {
+                        "a": 5.5345,
+                        "c": 0.0,
+                        "average_x": 0,
+                        "latency": 1,
+                        "read_latency": 2,
+                        "write_latency": 3,
+                    },
+                ),
+                (
+                    "disk2",
+                    {
+                        "a": 5.5345,
+                        "utilization": 0.897878,
+                    },
+                ),
+                (
+                    "disk3",
+                    {
+                        "average_x": 123.123123,
+                        "average_y": 89,
+                    },
+                ),
+            ],
+            {
+                "a": 8.534500000000001,
+                "average_x": 123.123123,
+                "average_y": 89.0,
+                "latency": 5.0,
+                "read_latency": 5.0,
+                "utilization": 1.948939,
+                "write_latency": 6.0,
+            },
+        ),
+    ],
 )
-def test_combine_disks(disks):
-    combined_disk = diskstat.combine_disks(disks)
-    # any key found in at least one of the input dicts must be present in the combination
-    assert sorted(combined_disk) == sorted(set(sum((list(disk) for disk in disks), [])))
-
-    for key, val in combined_disk.items():
-        exp_res = sum(disk.get(key, 0.0) for disk in disks)
-        if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
-            assert val == exp_res / sum(key in disk for disk in disks)
-        else:
-            assert val == exp_res
-
-
-@pytest.mark.parametrize(
-    "disks",
-    DISKS,
-)
-def test_summarize_disks(disks):
-    assert diskstat.summarize_disks(("a", disk) for disk in disks) == diskstat.combine_disks(disks)
-    assert diskstat.summarize_disks(
-        ("LVM " if i == 0 else "b", disk) for i, disk in enumerate(disks)
-    ) == diskstat.combine_disks(disks[1:])
+def test_summarize_disks(
+    disks_to_summarize: Iterable[Tuple[str, diskstat.Disk]],
+    expected_result: diskstat.Disk,
+) -> None:
+    assert diskstat.summarize_disks(disks_to_summarize) == expected_result
 
 
 @pytest.mark.parametrize(

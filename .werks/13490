@@ -6,7 +6,7 @@ Date: 1636365884
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The standard UPS checks will now be discovered on Eaton Power
 Xpert devices.

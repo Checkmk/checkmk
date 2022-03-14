@@ -12,12 +12,11 @@ import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    config_variable_group_registry,
     config_variable_registry,
     ConfigDomainCore,
     ConfigDomainGUI,
     ConfigVariable,
-    ConfigVariableGroup,
+    ConfigVariableGroupNotifications,
     notification_parameter_registry,
     site_neutral_path,
 )
@@ -33,15 +32,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-
-
-@config_variable_group_registry.register
-class ConfigVariableGroupNotifications(ConfigVariableGroup):
-    def title(self):
-        return _("Notifications")
-
-    def sort_index(self):
-        return 15
 
 
 @config_variable_registry.register
@@ -213,7 +203,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 choices=[
                     (20, _("Minimal logging")),
                     (15, _("Normal logging")),
@@ -255,7 +245,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Integer(
                         title=_("internal ID"),

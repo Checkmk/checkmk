@@ -1,7 +1,7 @@
 title: ZFS Storage Pool: Status
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current state of a ZFS storage pool. The information

@@ -79,8 +79,8 @@ LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
-        documentation-quick format format-c format-python format-shell format-js \
-        GTAGS headers help install iwyu mrproper mrclean optimize-images \
+        documentation-quick format format-c test-format-c format-python format-shell \
+        format-js GTAGS headers help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
         protobuf-files
 
@@ -175,6 +175,8 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	    --exclude "cee.py*" \
 	    --exclude "cme" \
 	    --exclude "cme.py*" \
+	    --exclude "cpe" \
+	    --exclude "cpe.py*" \
 	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
@@ -215,6 +217,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		cfg_examples \
 		plugins \
 		sap \
+		scripts \
 		special \
 		z_os \
 		check-mk-agent_*.deb \
@@ -348,7 +351,9 @@ node_modules/.bin/redoc-cli: .ran-npm
 node_modules/.bin/prettier: .ran-npm
 .ran-npm: package.json package-lock.json
 	@echo "npm version: $$(npm --version)"
+	npm --version | grep "^$(NPM_VERSION)\." >/dev/null 2>&1
 	@echo "node version: $$(node --version)"
+	node --version | grep "^v$(NODEJS_VERSION)\." >/dev/null 2>&1
 	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
 	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
 	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
@@ -359,7 +364,7 @@ node_modules/.bin/prettier: .ran-npm
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --audit=false --unsafe-perm $$REGISTRY
+	npm install --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
 
@@ -379,7 +384,7 @@ web/htdocs/themes/facelift/theme.css: .ran-webpack
 web/htdocs/themes/modern-dark/theme.css: .ran-webpack
 web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) PLUS=$(PLUS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -435,9 +440,6 @@ buildclean:
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
-	    aptitude \
-	    autoconf \
-	    bear \
 	    build-essential \
 	    clang-$(CLANG_VERSION) \
 	    clang-format-$(CLANG_VERSION) \
@@ -445,36 +447,51 @@ setup:
 	    clang-tools-$(CLANG_VERSION) \
 	    clangd-$(CLANG_VERSION) \
 	    cmake \
-	    lld-$(CLANG_VERSION) \
-	    lldb-$(CLANG_VERSION) \
-	    libclang-$(CLANG_VERSION)-dev \
 	    curl \
-	    libjpeg-dev \
+	    direnv \
 	    doxygen \
 	    figlet \
-	    g++ \
-		gdebi \
+	    gawk \
+	    gdebi \
+	    git \
+	    git-svn \
+	    gitk \
+	    ksh \
+	    libclang-$(CLANG_VERSION)-dev \
+	    libjpeg-dev \
+	    libkrb5-dev \
+	    libldap2-dev \
+	    libmariadb-dev-compat \
+	    libpango1.0-dev \
 	    libpcap-dev \
 	    librrd-dev \
-	    libxml2-dev \
-	    libpango1.0-dev \
 	    libsasl2-dev \
-	    libldap2-dev \
-	    libkrb5-dev \
-	    libmariadb-dev-compat \
-	    pngcrush \
-	    valgrind \
-	    shellcheck \
-	    direnv \
-	    python3-pip \
-	    python3.9-dev \
-	    python-setuptools \
-	    chrpath \
-	    enchant-2 \
-	    ksh \
+	    libtool-bin \
+	    libxml2-dev \
+	    lld-$(CLANG_VERSION) \
+	    lldb-$(CLANG_VERSION) \
+	    musl-tools \
 	    p7zip-full \
+	    patchelf \
+	    pngcrush \
+	    python3-pip \
+	    python3-venv \
+	    shellcheck \
+	    valgrind \
 	    zlib1g-dev
-	sudo -H pip3 install -U pipenv wheel
+	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
+	    CMD="pyenv exec" ; \
+	else \
+	    CMD="" ; \
+	fi ; \
+	$$CMD pip3 install --user --upgrade \
+	    pip \
+	    pipenv=="$(PIPENV_VERSION)" \
+	    virtualenv=="$(VIRTUALENV_VERSION)" \
+	    wheel
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	source $$HOME/.cargo/env
+	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
@@ -543,7 +560,7 @@ GTAGS: config.h
 # to configure.ac).
 	$(MAKE) -C livestatus GTAGS
 
-compile-neb-cmc: config.status
+compile-neb-cmc: config.status test-format-c
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -574,9 +591,13 @@ format: format-python format-c format-shell format-js format-css
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
+clang-format-with = $(CLANG_FORMAT) -style=file $(1) $(FILES_TO_FORMAT_LINUX)
 
+format-c:
+	$(call clang-format-with,-i)
+
+test-format-c:
+	@$(call clang-format-with,-Werror --dry-run)
 
 format-python: format-python-isort format-python-black
 
@@ -634,13 +655,13 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
-	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --pre; RC=$$? ; \
+	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; RC=$$? ; \
 	    rm -rf .venv ; \
 	    exit $$RC \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
-# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
+# mode installs the dependencies exactly as specified in the Pipfile.lock.
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
@@ -649,7 +670,7 @@ Pipfile.lock: Pipfile
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(RM) -r .venv; \
-	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --pre --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the

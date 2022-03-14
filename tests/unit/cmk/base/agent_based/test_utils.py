@@ -20,6 +20,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
@@ -33,7 +34,6 @@ from cmk.base.agent_based.utils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.base.sources.agent import AgentHostSections
 
 
 def _test_section(
@@ -111,7 +111,7 @@ def test_get_section_kwargs(
     required_sections: Sequence[str], expected_result: Dict[str, Dict[str, str]]
 ) -> None:
 
-    node_sections = AgentHostSections(
+    node_sections = HostSections[AgentRawDataSection](
         sections={
             SectionName("one"): NODE_1,
             SectionName("two"): NODE_1,
@@ -183,7 +183,7 @@ def test_get_section_cluster_kwargs(
     required_sections: Sequence[str], expected_result: Dict[str, Any]
 ) -> None:
 
-    node1_sections = AgentHostSections(
+    node1_sections = HostSections[AgentRawDataSection](
         sections={
             SectionName("one"): NODE_1,
             SectionName("two"): NODE_1,
@@ -191,7 +191,7 @@ def test_get_section_cluster_kwargs(
         }
     )
 
-    node2_sections = AgentHostSections(
+    node2_sections = HostSections[AgentRawDataSection](
         sections={
             SectionName("two"): NODE_2,
             SectionName("three"): NODE_2,
@@ -232,23 +232,17 @@ def test_check_parsing_errors_no_errors() -> None:
 
 
 def test_check_parsing_errors_are_ok() -> None:
-    assert (
-        check_parsing_errors(
-            ("error - message",),
-            error_state=0,
-        )
-        == [ActiveCheckResult(0, "error", ("error - message",))]
-    )
+    assert check_parsing_errors(
+        ("error - message",),
+        error_state=0,
+    ) == [ActiveCheckResult(0, "error", ("error - message",))]
 
 
 def test_check_parsing_errors_with_errors_() -> None:
     assert check_parsing_errors(("error - message",)) == [
         ActiveCheckResult(1, "error", ("error - message",))
     ]
-    assert (
-        check_parsing_errors(
-            ("error - message",),
-            error_state=2,
-        )
-        == [ActiveCheckResult(2, "error", ("error - message",))]
-    )
+    assert check_parsing_errors(
+        ("error - message",),
+        error_state=2,
+    ) == [ActiveCheckResult(2, "error", ("error - message",))]

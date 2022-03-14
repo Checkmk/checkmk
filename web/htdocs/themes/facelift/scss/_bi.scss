@@ -14,6 +14,8 @@
 | Styles used by the Business-Intelligence module.                         |
 '-------------------------------------------------------------------------*/
 
+/* TODO: Check whether these styles are still used somewhere. They are (only sometimes?)
+ *       overwritten by styles for table.data.table .bi_tree_container .title ul.subtree */
 .aggrtree ul.subtree {
   padding-top: 0;
   padding-bottom: 3px;
@@ -21,18 +23,18 @@
   margin-top: 4px;
   margin-left: 34px;
   list-style-type: none;
-  border-top: 1px solid rgb(170, 170, 170);
-  border-bottom: 1px solid rgb(170, 170, 170);
-  border-left: 1px solid rgb(170, 170, 170);
+  border-top: 1px solid $grey-2;
+  border-bottom: 1px solid $grey-2;
+  border-left: 1px solid $grey-2;
   border-radius: 3px;
 }
 
 tr.odd0 .aggrtree ul.subtree {
-  border-color: rgb(204, 204, 204);
+  border-color: $middarkgrey;
 }
 
 tr.even0 .aggrtree ul.subtree {
-  border-color: rgb(170, 170, 170);
+  border-color: $grey-2;
 }
 
 .aggrtree ul.subtree li {

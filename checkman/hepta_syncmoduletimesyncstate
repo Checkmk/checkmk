@@ -1,7 +1,7 @@
 title: Hepta: Time Synchronization
 agents: snmp
 catalog: hw/time/hopf
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the synchronization.

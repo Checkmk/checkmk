@@ -86,10 +86,14 @@ def test_discovery_returns_an_iterable(string_table):
 @pytest.fixture
 def params():
     return {
-        "running": {"levels_upper": (10, 15), "levels_lower": (5, 2)},
-        "waiting": {"levels_upper": (2, 5), "levels_lower": (0, 0)},
-        "terminated": {"levels_upper": (1, 1), "levels_lower": (0, 0)},
-        "total": {"levels_upper": (10, 15), "levels_lower": (0, 0)},
+        "running_upper": (10, 15),
+        "running_lower": (5, 2),
+        "waiting_upper": (2, 5),
+        "waiting_lower": (0, 0),
+        "terminated_upper": (1, 1),
+        "terminated_lower": (0, 0),
+        "total_upper": (10, 15),
+        "total_lower": (0, 0),
     }
 
 
@@ -139,12 +143,11 @@ def test_check_calls_check_levels_with_values(check_levels, check_result, sectio
 
 
 def test_check_calls_check_levels_with_levels_from_params(check_levels, check_result, params):
-    expected_levels = [list(param.values()) for param in params.values()]
     list(check_result)
     actual_levels = []
     for call in check_levels.call_args_list:
-        actual_levels.append([call.kwargs["levels_upper"], call.kwargs["levels_lower"]])
-    assert actual_levels == expected_levels
+        actual_levels.extend([call.kwargs["levels_upper"], call.kwargs["levels_lower"]])
+    assert actual_levels == list(params.values())
 
 
 @pytest.mark.parametrize("params", [{}])

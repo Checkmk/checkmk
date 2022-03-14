@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_lnx_packages import (
     parse_lnx_packages,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -88,4 +90,6 @@ from cmk.base.plugins.agent_based.inventory_lnx_packages import (
     ],
 )
 def test_inventory_lnx_packages(string_table, expected_result):
-    assert list(inventory_lnx_packages(parse_lnx_packages(string_table))) == expected_result
+    assert sort_inventory_result(
+        inventory_lnx_packages(parse_lnx_packages(string_table))
+    ) == sort_inventory_result(expected_result)

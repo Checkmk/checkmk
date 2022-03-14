@@ -5,9 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Any, Mapping, Optional, Sequence, Union
+
+# TODO: Cleanup this separation violation. This should be accessed through the check API
+from cmk.base.config import SpecialAgentConfiguration
 
 
-def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
+def agent_azure_arguments(
+    params: Mapping[str, Any],
+    hostname: str,
+    ipaddress: Optional[str],
+) -> Union[SpecialAgentConfiguration, Sequence[str]]:
     secrets = {
         "secret": params["secret"],
     }
@@ -46,10 +54,7 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
         elif isinstance(requirement, tuple) and requirement[0] == "value":
             args += ["--require-tag-value", tag, requirement[1]]
 
-    # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.config
-
-    return cmk.base.config.SpecialAgentConfiguration(args, json.dumps(secrets))
+    return SpecialAgentConfiguration(args, json.dumps(secrets))
 
 
 special_agent_info["azure"] = agent_azure_arguments

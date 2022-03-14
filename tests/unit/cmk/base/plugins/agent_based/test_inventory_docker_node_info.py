@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_info
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "parsed, expected",
@@ -150,4 +152,6 @@ from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_
     ],
 )
 def test_inv_docker_node_info(fix_register, parsed, expected):
-    assert list(inventory_docker_node_info(parsed)) == expected
+    assert sort_inventory_result(inventory_docker_node_info(parsed)) == sort_inventory_result(
+        expected
+    )

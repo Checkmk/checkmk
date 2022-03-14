@@ -1,0 +1,14 @@
+Title: Checkmk Agent FreeBSD: Empty statgrab sections
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646299112
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In Checkmk version 2.1.0b1 the statgrab sections
+<tt>statgrab_{proc,disk,page,mem}</tt> did not contain
+any data. This is fixed.
+

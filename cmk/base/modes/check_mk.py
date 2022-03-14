@@ -1263,14 +1263,24 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_restart() -> None:
-    cmk.base.core.do_restart(create_core(config.monitoring_core))
+def mode_restart(args: List[str]) -> None:
+    cmk.base.core.do_restart(
+        create_core(config.monitoring_core), hosts_to_update=set(args) if args else None
+    )
 
 
 modes.register(
     Mode(
         long_option="restart",
         short_option="R",
+        argument=True,
+        argument_optional=True,
+        argument_descr="[HostA, HostB]",
+        long_help=[
+            "You may add hostnames as additional arguments. This enables the incremental "
+            "activate mechanism, only compiling these hostnames and using cached data for all "
+            "other hosts. Only supported with Checkmk Microcore."
+        ],
         handler_function=mode_restart,
         short_help="Create core config + core restart",
     )
@@ -1287,14 +1297,24 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_reload() -> None:
-    cmk.base.core.do_reload(create_core(config.monitoring_core))
+def mode_reload(args: List[str]) -> None:
+    cmk.base.core.do_reload(
+        create_core(config.monitoring_core), hosts_to_update=set(args) if args else None
+    )
 
 
 modes.register(
     Mode(
         long_option="reload",
         short_option="O",
+        argument=True,
+        argument_optional=True,
+        argument_descr="[HostA, HostB]",
+        long_help=[
+            "You may add hostnames as additional arguments. This enables the incremental "
+            "activate mechanism, only compiling these hostnames and using cached data for all "
+            "other hosts. Only supported with Checkmk Microcore."
+        ],
         handler_function=mode_reload,
         short_help="Create core config + core reload",
     )
@@ -2001,7 +2021,7 @@ Copyright (C) 2009 Mathias Kettner
 
 """,
         cmk_version.__version__,
-        cmk_version.edition_short().upper(),
+        cmk_version.edition().short.upper(),
     )
 
 

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the folder link of the served host was part of
 the members. This is now moved to the links with this change. In addition,

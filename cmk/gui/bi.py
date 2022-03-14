@@ -40,7 +40,7 @@ from cmk.gui.permissions import (
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
-from cmk.gui.valuespec import DropdownChoiceEntry
+from cmk.gui.valuespec import DropdownChoiceEntries
 
 
 @permission_section_registry.register
@@ -85,7 +85,7 @@ def get_aggregation_group_trees():
     return get_cached_bi_packs().get_aggregation_group_trees()
 
 
-def aggregation_group_choices() -> List[DropdownChoiceEntry]:
+def aggregation_group_choices() -> DropdownChoiceEntries:
     """Returns a sorted list of aggregation group names"""
     return get_cached_bi_packs().get_aggregation_group_choices()
 
@@ -140,9 +140,7 @@ def api_get_aggregation_state(
 
     aggregations = {}
     results = bi_manager.computer.compute_result_for_filter(bi_aggregation_filter)
-    for compiled_aggregation, node_result_bundles in results:
-        if filter_groups and not any(x in filter_groups for x in compiled_aggregation.groups.names):
-            continue
+    for _compiled_aggregation, node_result_bundles in results:
         for node_result_bundle in node_result_bundles:
             aggr_title = node_result_bundle.instance.properties.title
             required_hosts = [x[1] for x in node_result_bundle.instance.get_required_hosts()]
@@ -222,9 +220,9 @@ def _get_state_assumption_key(
 
 @cmk.gui.pages.register("bi_set_assumption")
 def ajax_set_assumption() -> None:
-    site = request.get_unicode_input("site")
-    host = request.get_unicode_input("host")
-    service = request.get_unicode_input("service")
+    site = request.get_str_input("site")
+    host = request.get_str_input("host")
+    service = request.get_str_input("service")
     state = request.var("state")
     if state == "none":
         del user.bi_assumptions[_get_state_assumption_key(site, host, service)]
@@ -237,7 +235,7 @@ def ajax_set_assumption() -> None:
 
 @cmk.gui.pages.register("bi_save_treestate")
 def ajax_save_treestate():
-    path_id = request.get_unicode_input_mandatory("path")
+    path_id = request.get_str_input_mandatory("path")
     current_ex_level_str, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level_str)
 
@@ -251,8 +249,8 @@ def ajax_save_treestate():
 
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
-    aggr_group = request.get_unicode_input("group")
-    aggr_title = request.get_unicode_input("title")
+    aggr_group = request.get_str_input("group")
+    aggr_title = request.get_str_input("title")
     omit_root = bool(request.var("omit_root"))
     only_problems = bool(request.var("only_problems"))
 

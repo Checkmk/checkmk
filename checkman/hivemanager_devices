@@ -1,7 +1,7 @@
 title: Aerohive Hivemanager: Devices
 agents: special
 catalog: hw/network/aerohive
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to a Hivemanager Account and get a list of all connected devices.

@@ -49,8 +49,7 @@ void Module::runPostInstall() {
     }
 }
 
-std::filesystem::path Module::findPackage(
-    const std::filesystem::path &backup_dir) const noexcept {
+fs::path Module::findPackage(const fs::path &backup_dir) const noexcept {
     namespace fs = std::filesystem;
     try {
         auto file = backup_dir / (name() + std::string{kExtension});
@@ -69,8 +68,7 @@ std::filesystem::path Module::findPackage(
     return {};
 }
 
-std::filesystem::path Module::findBin(
-    const std::filesystem::path &modules_dir) const noexcept {
+fs::path Module::findBin(const fs::path &modules_dir) const noexcept {
     namespace fs = std::filesystem;
     fs::path actual_dir = modules_dir.parent_path() / dir();
 
@@ -113,8 +111,8 @@ bool ModuleCommander::IsQuickReinstallAllowed() {
     return cfg::g_quick_module_reinstall_allowed && enabled_in_config;
 }
 
-bool Module::prepareToWork(const std::filesystem::path &backup_dir,
-                           const std::filesystem::path &modules_dir) {
+bool Module::prepareToWork(const fs::path &backup_dir,
+                           const fs::path &modules_dir) {
     // Find Zip
     package_ = findPackage(backup_dir);
     if (package_.empty()) {
@@ -139,24 +137,24 @@ bool Module::prepareToWork(const std::filesystem::path &backup_dir,
 
 namespace {
 /// \brief extracts usual extension and unusual, e.g. ".checkmk.py"
-std::string ExtractExtension(const std::filesystem::path &script) {
+std::string ExtractExtension(const fs::path &script) {
     if (!script.has_extension()) {
         return std::string{kNoExtension};
     }
 
-    std::filesystem::path s{script};
+    fs::path s{script};
     s.replace_extension("");
     return std::string{s.extension().u8string() +
                        script.extension().u8string()};
 }
 }  // namespace
 
-bool Module::isMyScript(const std::filesystem::path &script) const noexcept {
+bool Module::isMyScript(const fs::path &script) const noexcept {
     using cma::tools::IsEqual;
     namespace rs = std::ranges;
 
     try {
-        std::filesystem::path double_extension{ExtractExtension(script)};
+        fs::path double_extension{ExtractExtension(script)};
 
         auto short_extension{double_extension.extension().u8string()};
         if (rs::any_of(exts_, [short_extension](const std::string &ext) {
@@ -188,10 +186,10 @@ void Module::removeExtension(std::string_view ext) {
 }
 
 std::wstring Module::buildCommandLineForced(
-    const std::filesystem::path &script) const noexcept {
+    const fs::path &script) const noexcept {
     try {
         if (bin().empty()) return {};
-        auto actual_dir = std::filesystem::path{GetUserDir()} / dir();
+        auto actual_dir = fs::path{GetUserDir()} / dir();
         auto result =
             fmt::format((actual_dir / exec()).wstring(), script.wstring());
         return result;
@@ -203,15 +201,13 @@ std::wstring Module::buildCommandLineForced(
     return {};
 }
 
-std::wstring Module::buildCommandLine(
-    const std::filesystem::path &script) const noexcept {
+std::wstring Module::buildCommandLine(const fs::path &script) const noexcept {
     if (!isMyScript(script)) return {};
 
     return buildCommandLineForced(script);
 }
 
-[[nodiscard]] bool Module::isModuleZip(
-    const std::filesystem::path &file) const noexcept {
+[[nodiscard]] bool Module::isModuleZip(const fs::path &file) const noexcept {
     try {
         return tools::IsEqual(name() + std::string(kExtension),
                               file.u8string());
@@ -320,7 +316,7 @@ void ModuleCommander::removeSystemExtensions(YAML::Node &node) {
             }
         }
     } catch (const std::exception &e) {
-        XLOG::l.i("Not possible to find modules.*** '{}'", e.what());
+        XLOG::l("Not possible to find modules.*** '{}'", e.what());
     }
 }
 
@@ -329,7 +325,7 @@ void ModuleCommander::readConfig(YAML::Node &node) {
     removeSystemExtensions(node);
 }
 
-int ModuleCommander::findModuleFiles(const std::filesystem::path &root) {
+int ModuleCommander::findModuleFiles(const fs::path &root) {
     namespace fs = std::filesystem;
     files_.clear();
     auto src_root = root / dirs::kFileInstallDir;
@@ -347,7 +343,7 @@ int ModuleCommander::findModuleFiles(const std::filesystem::path &root) {
     return static_cast<int>(files_.size());
 }
 
-bool CreateDir(const std::filesystem::path &mod) noexcept {
+bool CreateDir(const fs::path &mod) noexcept {
     namespace fs = std::filesystem;
     try {
         std::error_code ec;
@@ -365,7 +361,7 @@ bool CreateDir(const std::filesystem::path &mod) noexcept {
     return true;
 }
 
-PathVector ModuleCommander::ScanDir(const std::filesystem::path &dir) noexcept {
+PathVector ModuleCommander::ScanDir(const fs::path &dir) noexcept {
     namespace fs = std::filesystem;
     PathVector vec;
     for (const auto &p : fs::directory_iterator(dir)) {
@@ -384,8 +380,7 @@ PathVector ModuleCommander::ScanDir(const std::filesystem::path &dir) noexcept {
 }
 
 // check that name of the file is found among module names
-bool ModuleCommander::isBelongsToModules(
-    const std::filesystem::path &file) const noexcept {
+bool ModuleCommander::isBelongsToModules(const fs::path &file) const noexcept {
     return std::any_of(
         std::begin(modules_), std::end(modules_), [file](const Module &m) {
             try {
@@ -398,8 +393,8 @@ bool ModuleCommander::isBelongsToModules(
         });
 }
 
-bool ModuleCommander::UninstallModuleZip(
-    const std::filesystem::path &file, const std::filesystem::path &mod_root) {
+bool ModuleCommander::UninstallModuleZip(const fs::path &file,
+                                         const fs::path &mod_root) {
     std::error_code ec;
     if (!fs::exists(file, ec)) {
         XLOG::d.i("'{}' is absent, no need to uninstall", file);
@@ -411,8 +406,7 @@ bool ModuleCommander::UninstallModuleZip(
     auto target_dir = mod_root / name;
 
     auto count = wtools::KillProcessesByDir(target_dir);
-    XLOG::l.i("Killed [{}] processes from dir '{}'", count,
-              target_dir.u8string());
+    XLOG::d.i("Killed [{}] processes from dir '{}'", count, target_dir);
 
     if (IsQuickReinstallAllowed()) {
         try {
@@ -440,7 +434,7 @@ bool ModuleCommander::UninstallModuleZip(
     return true;
 }
 
-void ModuleCommander::CreateBackupFolder(const std::filesystem::path &user) {
+void ModuleCommander::CreateBackupFolder(const fs::path &user) {
     namespace fs = std::filesystem;
     auto mod_backup = ModuleCommander::GetModBackup(user);
     std::error_code ec;
@@ -452,8 +446,8 @@ void ModuleCommander::CreateBackupFolder(const std::filesystem::path &user) {
     fs::create_directories(ModuleCommander::GetModBackup(user), ec);
 }
 
-bool ModuleCommander::BackupModule(const std::filesystem::path &module_file,
-                                   const std::filesystem::path &backup_file) {
+bool ModuleCommander::BackupModule(const fs::path &module_file,
+                                   const fs::path &backup_file) {
     namespace fs = std::filesystem;
     std::error_code ec;
     auto ret = fs::copy_file(module_file, backup_file,
@@ -465,8 +459,7 @@ bool ModuleCommander::BackupModule(const std::filesystem::path &module_file,
     return false;
 }
 
-bool ModuleCommander::PrepareCleanTargetDir(
-    const std::filesystem::path &mod_dir) {
+bool ModuleCommander::PrepareCleanTargetDir(const fs::path &mod_dir) {
     namespace fs = std::filesystem;
 
     if (mod_dir.u8string().size() < kResonableDirLengthMin) {
@@ -493,8 +486,7 @@ std::vector<std::string> ModuleCommander::getExtensions() const {
 }
 
 namespace {
-std::vector<char> ReadFileBeginning(const std::filesystem::path &name,
-                                    size_t count) {
+std::vector<char> ReadFileBeginning(const fs::path &name, size_t count) {
     std::ifstream f;
     f.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try {
@@ -527,7 +519,7 @@ fs::path GetModuleFileName(const Module &mod, const fs::path &root) {
 }  // namespace
 
 std::optional<ModuleCommander::UninstallStore>
-ModuleCommander::GetUninstallStore(const std::filesystem::path &file) {
+ModuleCommander::GetUninstallStore(const fs::path &file) {
     constexpr size_t min_size{1024};
 
     auto path = GetMoveLocation(file);
@@ -570,9 +562,8 @@ ModuleCommander::GetUninstallStore(const std::filesystem::path &file) {
     return {};
 }
 
-bool ModuleCommander::TryQuickInstall(const Module &mod,
-                                      const std::filesystem::path &root,
-                                      const std::filesystem::path &user) {
+bool ModuleCommander::TryQuickInstall(const Module &mod, const fs::path &root,
+                                      const fs::path &user) {
     if (!ModuleCommander::IsQuickReinstallAllowed()) {
         XLOG::l.i("Quick reinstall is not allowed");
         return false;
@@ -604,10 +595,8 @@ bool ModuleCommander::TryQuickInstall(const Module &mod,
 }
 
 // #TODO - simplify the function
-bool ModuleCommander::InstallModule(const Module &mod,
-                                    const std::filesystem::path &root,
-                                    const std::filesystem::path &user,
-                                    InstallMode mode) {
+bool ModuleCommander::InstallModule(const Module &mod, const fs::path &root,
+                                    const fs::path &user, InstallMode mode) {
     XLOG::l.i("Install module {}", mod.name());
 
     fs::path backup_file{GetBackupFileName(mod, user)};
@@ -678,8 +667,7 @@ bool ModuleCommander::InstallModule(const Module &mod,
     return false;
 }
 
-void ModuleCommander::installModules(const std::filesystem::path &root,
-                                     const std::filesystem::path &user,
+void ModuleCommander::installModules(const fs::path &root, const fs::path &user,
                                      InstallMode mode) const {
     auto mod_root = GetModInstall(user);
     auto mod_backup = GetModBackup(user);
@@ -701,7 +689,7 @@ void ModuleCommander::installModules(const std::filesystem::path &root,
     }
 }
 
-void ModuleCommander::moveModulesToStore(const std::filesystem::path &user) {
+void ModuleCommander::moveModulesToStore(const fs::path &user) {
     auto mod_root = GetModInstall(user);
     auto mod_backup = GetModBackup(user);
 
@@ -749,15 +737,14 @@ void ModuleCommander::prepareToWork() {
     }
 }
 
-bool ModuleCommander::isModuleScript(const std::string_view filename) {
+bool ModuleCommander::isModuleScript(std::string_view filename) {
     for (auto &m : modules_) {
         if (m.isMyScript(filename)) return true;
     }
     return false;
 }
 
-std::wstring ModuleCommander::buildCommandLine(
-    const std::string_view filename) {
+std::wstring ModuleCommander::buildCommandLine(std::string_view filename) {
     for (auto &m : modules_) {
         if (m.isMyScript(filename)) {
             return m.buildCommandLine(fs::path{filename});
@@ -766,8 +753,7 @@ std::wstring ModuleCommander::buildCommandLine(
     return {};
 }
 
-std::filesystem::path ModuleCommander::GetMoveLocation(
-    const std::filesystem::path &module_file) {
+fs::path ModuleCommander::GetMoveLocation(const fs::path &module_file) {
     return fs::temp_directory_path() /
            (std::string{g_module_uninstall_path} +
             (cma::IsService() ? "_srv" : "_app")) /

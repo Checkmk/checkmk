@@ -1,21 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Iterable, Literal, Mapping, Optional, Sequence, TypedDict, Union
 
 from cmk.utils.type_defs import Seconds
 
@@ -27,7 +15,7 @@ class UseSNMPTrapTranslation(TypedDict, total=False):
     add_description: Literal[True]
 
 
-SNMPTrapTranslation = Union[Literal[False], Tuple[Literal[True], UseSNMPTrapTranslation]]
+SNMPTrapTranslation = Union[Literal[False], tuple[Literal[True], UseSNMPTrapTranslation]]
 
 ################################################################################
 
@@ -43,7 +31,7 @@ class EMailAction(TypedDict):
     title: str
     hidden: bool
     disabled: bool
-    action: Tuple[Literal["email"], EMailActionConfig]
+    action: tuple[Literal["email"], EMailActionConfig]
 
 
 class ScriptActionConfig(TypedDict):
@@ -55,7 +43,7 @@ class ScriptAction(TypedDict):
     title: str
     hidden: bool
     disabled: bool
-    action: Tuple[Literal["script"], ScriptActionConfig]
+    action: tuple[Literal["script"], ScriptActionConfig]
 
 
 Action = Union[EMailAction, ScriptAction]
@@ -77,8 +65,8 @@ class EventLimits(TypedDict):
 class HostnameTranslation(TypedDict, total=False):
     case: Literal["lower", "upper"]
     drop_domain: bool
-    mapping: Iterable[Tuple[str, str]]
-    regex: Iterable[Tuple[str, str]]
+    mapping: Iterable[tuple[str, str]]
+    regex: Iterable[tuple[str, str]]
 
 
 LogLevel = int
@@ -99,7 +87,7 @@ LogConfig = TypedDict(
 class ReplicationBase(TypedDict):
     connect_timeout: int
     interval: int
-    master: Tuple[str, int]
+    master: tuple[str, int]
 
 
 class Replication(ReplicationBase, total=False):
@@ -140,7 +128,7 @@ State = Union[
     Literal[1],
     Literal[2],
     Literal[3],
-    Tuple[Literal["text_pattern"], StatePatterns],
+    tuple[Literal["text_pattern"], StatePatterns],
 ]
 
 
@@ -150,21 +138,21 @@ class Rule(TypedDict, total=False):
     actions_in_downtime: bool
     autodelete: bool
     cancel_application: str
-    cancel_priority: Tuple[int, int]
+    cancel_priority: tuple[int, int]
     contact_groups: ContactGroups
     expect: Expect
     id: str
     invert_matching: bool
-    livetime: Tuple[Seconds, Iterable[Literal["open", "ack"]]]
+    livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
     match: str
     match_application: str
     match_facility: int
     match_host: str
     match_ipaddress: str
     match_ok: str
-    match_priority: Tuple[int, int]
+    match_priority: tuple[int, int]
     match_site: Iterable[str]
-    match_sl: Tuple[int, int]
+    match_sl: tuple[int, int]
     match_timeperiod: str
     pack: str
     set_application: str
@@ -196,9 +184,9 @@ PrivacyProtocol = Union[
 ]
 
 SNMPV1V2Credentials = str
-SNMPV3NoAuthNoPrivCredentials = Tuple[Literal["noAuthNoPriv"], str]
-SNMPV3AuthNoPrivCredentials = Tuple[Literal["authNoPriv"], AuthenticationProtocol, str, str]
-SNMPV3AuthPrivCredentials = Tuple[
+SNMPV3NoAuthNoPrivCredentials = tuple[Literal["noAuthNoPriv"], str]
+SNMPV3AuthNoPrivCredentials = tuple[Literal["authNoPriv"], AuthenticationProtocol, str, str]
+SNMPV3AuthPrivCredentials = tuple[
     Literal["authPriv"], AuthenticationProtocol, str, str, PrivacyProtocol, str
 ]
 SNMPCredentials = Union[
@@ -234,11 +222,11 @@ class ConfigFromWATO(TypedDict):
     log_messages: bool
     log_rulehits: bool
     mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
-    remote_status: Optional[Tuple[int, bool, Optional[Sequence[str]]]]
+    remote_status: Optional[tuple[int, bool, Optional[Sequence[str]]]]
     replication: Optional[Replication]
     retention_interval: int
     rule_optimizer: bool
-    rule_packs: Sequence[Dict[str, Any]]  # TODO: Mutable??? TypedDict
+    rule_packs: Sequence[dict[str, Any]]  # TODO: Mutable??? TypedDict
     rules: Iterable[Rule]
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int

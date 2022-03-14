@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When configuring a Network Scan on a Folder, IP ranges can be defined
 in the section "IP ranges to scan" and "IP ranges to exclude". Both

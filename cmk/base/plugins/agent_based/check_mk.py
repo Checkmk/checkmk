@@ -4,17 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional
+from typing import Optional
 
 from .agent_based_api.v1 import Attributes, HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
+from .utils.checkmk import CheckmkSection
 
-CheckmkSection = Mapping[str, Optional[str]]
 
-
-# TODO: This is duplicate code with cmk/core_helpers/agent.py
-# For various layering reasons, it's not as easy to deduplicate
-# as you'd think. I am thinking about this. - mo, 2021-12
 def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:
     """
     Example:
@@ -33,7 +29,7 @@ def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:
     provided).
     """
 
-    section: Dict[str, Optional[str]] = {}
+    section: dict[str, Optional[str]] = {}
 
     for line in string_table:
         key = line[0][:-1].lower()
@@ -67,7 +63,7 @@ register.agent_section(
 def inventory_checkmk(section: CheckmkSection) -> InventoryResult:
     yield Attributes(
         path=["networking"],
-        inventory_attributes={"hostname": section.get("Hostname")},
+        inventory_attributes={"hostname": section.get("hostname")},
     )
     yield Attributes(
         path=["software", "applications", "checkmk-agent"],

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -9,7 +8,7 @@ from logging import Logger
 from re import findall
 from time import localtime, mktime, strptime
 from time import time as _time
-from typing import Iterable, Mapping, Optional, Tuple, TypedDict
+from typing import Iterable, Mapping, Optional, TypedDict
 
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
@@ -69,7 +68,7 @@ def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
 
 
 def create_event_from_line(
-    line: str, address: Optional[Tuple[str, int]], logger: Logger, *, verbose: bool = False
+    line: str, address: Optional[tuple[str, int]], logger: Logger, *, verbose: bool = False
 ) -> Event:
     if verbose:
         adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
@@ -374,7 +373,7 @@ def remove_leading_bom(message: str) -> str:
     return message[1:] if message.startswith("\ufeff") else message
 
 
-def split_syslog_structured_data_and_message(sd_and_message: str) -> Tuple[Optional[str], str]:
+def split_syslog_structured_data_and_message(sd_and_message: str) -> tuple[Optional[str], str]:
     """Split a string containing structured data and the message into the two parts"""
     if sd_and_message.startswith("["):
         return _split_syslog_nonnil_sd_and_message(sd_and_message)
@@ -384,7 +383,7 @@ def split_syslog_structured_data_and_message(sd_and_message: str) -> Tuple[Optio
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
-def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> Tuple[str, str]:
+def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
     currently_outside_sd_element = True
     for idx, char in enumerate(sd_and_message):
         if char == "[" and currently_outside_sd_element:
@@ -399,7 +398,7 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> Tuple[str, str]:
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
-def parse_syslog_message_structured_data(structured_data: str) -> Tuple[Mapping[str, str], str]:
+def parse_syslog_message_structured_data(structured_data: str) -> tuple[Mapping[str, str], str]:
     """Checks if the structured data contains Checkmk-specific data and extracts it if found"""
     checkmk_id = "Checkmk@18662"  # SyslogMessage.structured_data_id()
     if not (checkmk_elements := findall(rf"\[{checkmk_id}.*?(?<!\\)\]", structured_data)):

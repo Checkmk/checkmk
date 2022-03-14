@@ -33,24 +33,24 @@ template <class T>
 class DoubleColumn : public Column {
 public:
     using value_type = double;
-    using function_type = std::function<value_type(const T&)>;
+    using function_type = std::function<value_type(const T &)>;
 
-    DoubleColumn(const std::string& name, const std::string& description,
-                 const ColumnOffsets& offsets, const function_type& f)
+    DoubleColumn(const std::string &name, const std::string &description,
+                 const ColumnOffsets &offsets, const function_type &f)
         : Column{name, description, offsets}, f_{f} {}
 
     [[nodiscard]] ColumnType type() const override {
         return ColumnType::double_;
     }
 
-    void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         r.output(getValue(row));
     }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
+        const std::string &value) const override {
         return std::make_unique<DoubleFilter>(
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
@@ -63,7 +63,7 @@ public:
     }
 
     [[nodiscard]] value_type getValue(Row row) const {
-        const T* data = columnData<T>(row);
+        const T *data = columnData<T>(row);
         return data == nullptr ? 0.0 : f_(*data);
     }
 

@@ -12,13 +12,11 @@ from tests.testlib import import_module, repo_path
 
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",
-    "opt_root": "/opt%s",
+    "rrd_multiple_dir": "/opt%s",
+    "rrd_single_dir": "/opt%s",
 }
 
 _STR_PATHS: Final = {
-    "trusted_ca_file",
-    "root_cert_file",
-    "site_cert_file",
     "default_config_dir",
     "main_config_file",
     "final_config_file",
@@ -53,6 +51,7 @@ _STR_PATHS: Final = {
     "livebackendsdir",
     "inventory_output_dir",
     "inventory_archive_dir",
+    "inventory_delta_cache_dir",
     "status_data_dir",
     "robotmk_var_dir",
     "share_dir",

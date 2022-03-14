@@ -1,7 +1,7 @@
 title: Entersekt EMR: Number of HTTP Errors
 agents: snmp
 catalog: app/entersekt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks verifies the number of HTTP errors for Entersekt EMR.

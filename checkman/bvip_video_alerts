@@ -1,7 +1,7 @@
 title: Bosch Video over IP: Video Alerts
 agents: snmp
 catalog: hw/environment/bosch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  If the Camera (or the Camera Stack) reports on error related to the video processing (eg.
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created for each camera.
-

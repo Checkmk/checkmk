@@ -13,6 +13,8 @@ import pytest
 
 from tests.testlib import is_enterprise_repo, is_managed_repo
 
+from livestatus import SiteConfigurations, SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -304,6 +306,7 @@ def test_registered_permissions():
         "general.act",
         "general.agent_pairing",
         "general.change_password",
+        "general.manage_2fa",
         "general.configure_sidebar",
         "general.csv_export",
         "general.delete_foreign_pagetype_topic",
@@ -433,24 +436,19 @@ def test_registered_permissions():
         "notification_plugin.ilert",
         "notification_plugin.slack",
         "notification_plugin.sms",
+        "notification_plugin.sms_api",
         "notification_plugin.spectrum",
         "notification_plugin.victorops",
-        "sidesnap.about",
-        "sidesnap.admin",
         "sidesnap.admin_mini",
         "sidesnap.biaggr_groups",
         "sidesnap.biaggr_groups_tree",
         "sidesnap.bookmarks",
-        "sidesnap.custom_links",
         "sidesnap.dashboards",
         "sidesnap.hostgroups",
-        "sidesnap.hostmatrix",
-        "sidesnap.hosts",
         "sidesnap.master_control",
         "sidesnap.mkeventd_performance",
         "sidesnap.nagvis_maps",
         "sidesnap.performance",
-        "sidesnap.problem_hosts",
         "sidesnap.search",
         "sidesnap.servicegroups",
         "sidesnap.sitestatus",
@@ -459,7 +457,6 @@ def test_registered_permissions():
         "sidesnap.tag_tree",
         "sidesnap.time",
         "sidesnap.views",
-        "sidesnap.wato_folders",
         "sidesnap.wato_foldertree",
         "view.aggr_all",
         "view.aggr_all_api",
@@ -713,6 +710,10 @@ def test_registered_permissions():
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
+            "dashboard.linux_hosts_overview",
+            "dashboard.linux_single_overview",
+            "dashboard.windows_hosts_overview",
+            "dashboard.windows_single_overview",
             "dashboard.problems",
             "dashboard.site",
             "dashboard.ntop_alerts",
@@ -1089,7 +1090,9 @@ def test_permission_sorting(do_sort, result):
     ],
 )
 def test_migrate_old_site_config(site, result):
-    assert cmk.gui.config.prepare_raw_site_config({"mysite": site}) == {"mysite": result}
+    assert cmk.gui.config.prepare_raw_site_config(SiteConfigurations({SiteId("mysite"): site})) == {
+        "mysite": result
+    }
 
 
 @pytest.mark.usefixtures("load_config")

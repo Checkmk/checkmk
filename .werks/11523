@@ -6,7 +6,7 @@ Date: 1608109967
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A Oracle Grid setup may contain more than one {{ORACLE_HOME}} entries. Until
 now {{mk_oracle}} was not aware, that this could be the case and took all of

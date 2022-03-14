@@ -7,7 +7,6 @@
 import os
 import subprocess
 import traceback
-from pathlib import Path
 from typing import Any, Dict
 from typing import Optional as _Optional
 
@@ -22,11 +21,10 @@ from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     add_replication_paths,
     config_domain_registry,
-    config_variable_group_registry,
     config_variable_registry,
     ConfigDomainOMD,
     ConfigVariable,
-    ConfigVariableGroup,
+    ConfigVariableGroupSiteManagement,
     LivestatusViaTCP,
     ReplicationPath,
     site_neutral_path,
@@ -45,16 +43,6 @@ from cmk.gui.valuespec import (
     Optional,
     Tuple,
 )
-
-
-@config_variable_group_registry.register
-class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
-    def title(self):
-        return _("Site Management")
-
-    def sort_index(self):
-        return 30
-
 
 # .
 #   .--omd config----------------------------------------------------------.
@@ -139,7 +127,7 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            LivestatusViaTCP(),
+            valuespec=LivestatusViaTCP(),
             title=_("Access to Livestatus via TCP"),
             help=_(
                 "Check_MK Livestatus usually listens only on a local UNIX socket - "
@@ -164,7 +152,7 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            ListChoice(
+            valuespec=ListChoice(
                 choices=[
                     ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
                     ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
@@ -200,7 +188,7 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Integer(
+            valuespec=Integer(
                 title=_("Port number"),
                 minvalue=1,
                 maxvalue=65535,
@@ -295,7 +283,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
     def default_globals(self):
         diskspace_context: Dict[str, Any] = {}
-        filename = Path(cmk.utils.paths.omd_root, "bin", "diskspace")
+        filename = cmk.utils.paths.omd_root / "bin/diskspace"
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), "exec")
             exec(code, {}, diskspace_context)
@@ -440,18 +428,18 @@ class ConfigDomainApache(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            completed_process = subprocess.run(
                 ["omd", "reload", "apache"],
-                stdin=open(os.devnull),
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
 
-            stdout, _stderr = p.communicate()
-            if p.returncode != 0:
-                raise Exception(stdout)
+            if completed_process.returncode:
+                raise Exception(completed_process.stdout)
 
             return []
         except Exception:
@@ -485,10 +473,8 @@ class ConfigDomainApache(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/apache/apache.conf")]
-        config_files += sorted(
-            Path(cmk.utils.paths.omd_root).joinpath("etc/apache/conf.d").glob("*.conf")
-        )
+        config_files = [cmk.utils.paths.omd_root / "etc/apache/apache.conf"]
+        config_files += sorted((cmk.utils.paths.omd_root / "etc/apache/conf.d").glob("*.conf"))
 
         value = default_value
 
@@ -566,18 +552,18 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            completed_process = subprocess.run(
                 ["omd", "restart", "rrdcached"],
-                stdin=open(os.devnull),
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
 
-            stdout, _stderr = p.communicate()
-            if p.returncode != 0:
-                raise Exception(stdout)
+            if completed_process.returncode:
+                raise Exception(completed_process.stdout)
 
             return []
         except Exception:
@@ -612,10 +598,8 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.conf")]
-        config_files += sorted(
-            Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.d").glob("*.conf")
-        )
+        config_files = [cmk.utils.paths.omd_root / "etc/rrdcached.conf"]
+        config_files += sorted((cmk.utils.paths.omd_root / "etc/rrdcached.d").glob("*.conf"))
 
         value = default_value
 

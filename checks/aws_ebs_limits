@@ -34,8 +34,8 @@ def parse_aws_ebs_limits(info):
             "block_store_space_st1",
         ]:
             # Limit has unit TiB, amount is measured in GiB
-            limit *= 1024 ** 4
-            amount *= 1024 ** 3
+            limit *= 1024**4
+            amount *= 1024**3
             human_readable_func = get_bytes_human_readable
         elif resource_key == "block_store_iops_io1":
             human_readable_func = lambda x: "%s/s" % x

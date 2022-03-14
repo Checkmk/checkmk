@@ -57,8 +57,8 @@ def _vs_s3_buckets():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -82,8 +82,8 @@ def _vs_glacier_vaults():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -107,8 +107,8 @@ def _vs_burst_balance():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -132,8 +132,8 @@ def _vs_cpu_credits_balance():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -220,7 +220,7 @@ def _vs_limits(
                         orientation="horizontal",
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 title=title_default,
                                 totext="",
                             ),
@@ -234,9 +234,9 @@ def _vs_limits(
             Tuple(
                 title=_("No levels"),
                 elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
                 ],
             ),
         ],
@@ -367,8 +367,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -389,8 +389,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -411,8 +411,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -433,8 +433,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -455,8 +455,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -477,8 +477,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -499,8 +499,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -620,7 +620,7 @@ rulespec_registry.register(
 
 def _vs_limits_inst_types():
     return ListOf(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             orientation="horizontal",
             choices=[
                 (
@@ -640,7 +640,7 @@ def _vs_limits_inst_types():
 
 def _vs_limits_vcpu_families():
     return ListOf(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             orientation="horizontal",
             choices=[
                 (
@@ -831,7 +831,7 @@ def _transform_aws_elb_http(p):
 
 def _parameter_valuespec_aws_elb_http():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Upper levels for HTTP errors"),
             elements=[
                 (
@@ -1118,13 +1118,13 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_space_standard",
                 _vs_limits(
-                    _("Total Magnetic volumes space"), 300 * 1024 ** 4, vs_limit_cls=Filesize
+                    _("Total Magnetic volumes space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
                 "block_store_space_io1",
                 _vs_limits(
-                    _("Total Provisioned IOPS SSD space"), 300 * 1024 ** 4, vs_limit_cls=Filesize
+                    _("Total Provisioned IOPS SSD space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
@@ -1134,18 +1134,18 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_space_gp2",
                 _vs_limits(
-                    _("Total General Purpose SSD space"), 300 * 1024 ** 4, vs_limit_cls=Filesize
+                    _("Total General Purpose SSD space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
                 "block_store_space_sc1",
-                _vs_limits(_("Total Cold HDD space"), 300 * 1024 ** 4, vs_limit_cls=Filesize),
+                _vs_limits(_("Total Cold HDD space"), 300 * 1024**4, vs_limit_cls=Filesize),
             ),
             (
                 "block_store_space_st1",
                 _vs_limits(
                     _("Total Throughput Optimized HDD space"),
-                    300 * 1024 ** 4,
+                    300 * 1024**4,
                     vs_limit_cls=Filesize,
                 ),
             ),
@@ -1215,8 +1215,8 @@ def _parameter_valuespec_aws_rds_disk_usage():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -1256,8 +1256,8 @@ def _parameter_valuespec_aws_rds_connections():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -1325,7 +1325,7 @@ def _parameter_valuespec_aws_rds_limits() -> Dictionary:
             ("reserved_db_instances", _vs_limits(_("Reserved DB instances"), 40)),
             (
                 "allocated_storage",
-                _vs_limits(_("Allocated storage"), 100 * 1024 ** 4, vs_limit_cls=Filesize),
+                _vs_limits(_("Allocated storage"), 100 * 1024**4, vs_limit_cls=Filesize),
             ),
             ("db_security_groups", _vs_limits(_("DB security groups"), 25)),
             (

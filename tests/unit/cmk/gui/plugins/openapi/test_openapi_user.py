@@ -10,8 +10,12 @@ import string
 
 import pytest
 from freezegun import freeze_time
+from pytest import MonkeyPatch
+
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.plugins.openapi.endpoints.user_config import (
     _api_to_internal_format,
@@ -20,8 +24,6 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.watolib.users import edit_users
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
@@ -133,10 +135,6 @@ def test_openapi_user_minimal_password_settings(
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
-    )
 
     user_detail = {
         "username": "user",
@@ -165,7 +163,6 @@ def test_openapi_user_minimal_password_settings(
         "contactgroups": [],
         "idle_timeout": {"option": "global"},
         "auth_option": {
-            "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
             "auth_type": "password",
         },
         "contact_options": {
@@ -203,7 +200,6 @@ def test_openapi_user_minimal_password_settings(
         },
         "auth_option": {
             "auth_type": "automation",
-            "secret": "SOMEAUTOMATION",
         },
         "idle_timeout": {
             "option": "disable",
@@ -220,10 +216,6 @@ def test_openapi_user_minimal_password_settings(
 def test_openapi_user_config(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 
     name = _random_string(10)
@@ -260,7 +252,6 @@ def test_openapi_user_config(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypat
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
             "auth_type": "password",
-            "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
@@ -310,10 +301,6 @@ def test_openapi_user_config(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypat
 def test_openapi_user_internal_with_notifications(monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 
     name = _random_string(10)
@@ -371,10 +358,6 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
-    )
 
     name = "foo"
     alias = "Foo Bar"
@@ -400,7 +383,6 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
             "auth_type": "password",
-            "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
@@ -429,7 +411,6 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
             "auth_type": "automation",
-            "secret": "QWXWBFUCSUOXNCPJUMS@",
         },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
@@ -480,7 +461,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch):
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 
-    name = "foo"
+    name = UserId("foo")
 
     edit_users(
         {
@@ -661,7 +642,7 @@ def test_managed_global_internal(monkeypatch):
             }
         }
     )
-    user_internal = _load_user("user")
+    user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
 
@@ -671,10 +652,6 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 
     user_detail = {
@@ -712,7 +689,6 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
             "auth_type": "password",
-            "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         },
         "contact_options": {"email": "user@example.com", "fallback_contact": False},
         "disable_login": False,
@@ -760,21 +736,19 @@ def test_managed_idle_internal(with_automation_user, monkeypatch):
             }
         }
     )
-    user_internal = _load_user("user")
+    user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert "idle_timeout" not in _load_user(username)
     assert user_endpoint_attrs["idle_timeout"] == {"option": "global"}
 
 
 @managedtest
-def test_openapi_user_update_contact_options(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_openapi_user_update_contact_options(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
+) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 
     user_detail = {
@@ -819,7 +793,6 @@ def test_openapi_user_update_contact_options(aut_user_auth_wsgi_app: WebTestAppF
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
             "auth_type": "password",
-            "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
@@ -839,10 +812,6 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-    monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 
     user_detail = {

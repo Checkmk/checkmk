@@ -1,7 +1,7 @@
 title: FireEye Appliances: Active VMs
 agents: snmp
 catalog: hw/network/fireeye
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of Active VMs
@@ -12,4 +12,3 @@ description:
 
 discovery:
  One service is created.
-

@@ -12,7 +12,7 @@
 #include "Table.h"
 #include "data_encoding.h"
 
-std::string mk::test::query(Table& table, const std::list<std::string>& q) {
+std::string mk::test::query(Table &table, const std::list<std::string> &q) {
     bool flag{false};
     OutputBuffer output{-1, [&flag] { return flag; }, table.logger()};
     Query query{q, table, Encoding::utf8, 5000, output, table.logger()};

@@ -8,9 +8,9 @@ from typing import Optional, Tuple
 
 from apispec.ext import marshmallow  # type: ignore[import]
 from apispec.ext.marshmallow import common, field_converter  # type: ignore[import]
-from marshmallow import fields
+from marshmallow import base, fields
 
-from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
+from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
 
 def is_value_typed_dict(schema):
@@ -27,11 +27,11 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
         >>> type_and_format_of_field(fields.String())
         ('string', None)
 
-        >>> type_and_format_of_field(fields.String(format="host"))
+        >>> type_and_format_of_field(fields.String(metadata=dict(format="host")))
         ('string', None)
 
         >>> type_and_format_of_field(fields.Integer())
-        ('integer', 'int32')
+        ('integer', None)
 
     Args:
         field:
@@ -44,7 +44,7 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
     for class_, spec in field_converter.DEFAULT_FIELD_MAPPING.items():
         if isinstance(field, class_):
             return spec
-    raise ValueError("No fitting spec found.")
+    raise ValueError(f"No fitting spec found for field {field!r}.")
 
 
 FieldProperties = typing.TypedDict(
@@ -65,13 +65,13 @@ def field_properties(field: fields.Field) -> FieldProperties:
 
     Examples:
 
-        >>> field_properties(fields.String(format="email"))
+        >>> field_properties(fields.String(metadata=dict(format="email")))
         {'type': 'string', 'format': 'email'}
 
-        >>> field_properties(fields.String(format="email", description="Email"))
+        >>> field_properties(fields.String(metadata=dict(format="email", description="Email")))
         {'type': 'string', 'description': 'Email', 'format': 'email'}
 
-        >>> field_properties(fields.String(format="email", description="Email", required=True))
+        >>> field_properties(fields.String(metadata=dict(format="email", description="Email"), required=True))
         {'type': 'string', 'description': 'Email', 'format': 'email', 'required': True}
 
     Args:
@@ -109,19 +109,19 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):
         if not is_value_typed_dict(schema):
             return super().schema2jsonschema(schema)
 
-        try:
+        if isinstance(schema.value_type, FieldWrapper):
+            properties = field_properties(schema.value_type.field)
+        elif isinstance(schema.value_type, base.SchemaABC) or (
+            isinstance(schema.value_type, type) and issubclass(schema.value_type, base.SchemaABC)
+        ):
             schema_instance = common.resolve_schema_instance(schema.value_type)
-        except ValueError:
-            schema_instance = None
-
-        if schema_instance is None:
-            properties = field_properties(schema.value_type[0])
-        else:
             schema_key = common.make_schema_key(schema_instance)
             if schema_key not in self.refs:
                 component_name = self.schema_name_resolver(schema.value_type)
                 self.spec.components.schema(component_name, schema=schema_instance)
             properties = self.get_ref_dict(schema_instance)
+        else:
+            raise RuntimeError(f"Unsupported value_type: {schema.value_type}")
 
         return {
             "type": "object",

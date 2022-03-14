@@ -10,7 +10,7 @@ does not offer stable APIs. The code may change at any time."""
 
 from __future__ import annotations
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 import datetime
 import enum
@@ -24,7 +24,7 @@ import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import livestatus
 
@@ -33,45 +33,57 @@ from cmk.utils.i18n import _
 from cmk.utils.type_defs._misc import assert_never
 
 
+class _EditionValue(NamedTuple):
+    short: str
+    title: str
+
+
+class Edition(_EditionValue, enum.Enum):
+    CRE = _EditionValue("cre", "Checkmk Raw Edition")
+    CEE = _EditionValue("cee", "Checkmk Enterprise Edition")
+    CPE = _EditionValue("cpe", "Checkmk Enterprise Plus Edition")
+    CME = _EditionValue("cme", "Checkmk Managed Services Edition")
+    CFE = _EditionValue("cfe", "Checkmk Free Edition")
+
+
 @lru_cache
 def omd_version() -> str:
-    version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
+    version_link = cmk.utils.paths.omd_root / "version"
     return version_link.resolve().name
 
 
 @lru_cache
-def edition_short() -> str:
-    return str(omd_version().split(".")[-1])
+def edition() -> Edition:
+    try:
+        return Edition[omd_version().split(".")[-1].upper()]
+    except KeyError:
+        # Without this fallback CI jobs may fail.
+        # The last job known to fail was we the building of the sphinx documentation
+        return Edition.CRE
 
 
 def is_enterprise_edition() -> bool:
-    return edition_short() == "cee"
+    return edition() is Edition.CEE
+
+
+def is_plus_edition() -> bool:
+    return edition() is Edition.CPE
 
 
 def is_raw_edition() -> bool:
-    return edition_short() == "cre"
+    return edition() is Edition.CRE
 
 
 def is_managed_edition() -> bool:
-    return edition_short() == "cme"
+    return edition() is Edition.CME
 
 
 def is_free_edition() -> bool:
-    return edition_short() == "cfe"
+    return edition() is Edition.CFE
 
 
 def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
-
-
-def edition_title():
-    if is_enterprise_edition():
-        return "Checkmk Enterprise Edition"
-    if is_managed_edition():
-        return "Checkmk Managed Services Edition"
-    if is_free_edition():
-        return "Checkmk Free Edition"
-    return "Checkmk Raw Edition"
 
 
 class TrialState(enum.Enum):
@@ -480,7 +492,7 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def major_version_parts(version: str) -> Tuple[int, int, int]:
+def base_version_parts(version: str) -> Tuple[int, int, int]:
     match = re.match(r"(\d+).(\d+).(\d+)", version)
     if not match or len(match.groups()) != 3:
         raise ValueError(_("Unable to parse version: %r") % version)
@@ -501,6 +513,36 @@ def is_daily_build_of_master(version: str) -> bool:
     return re.match(r"\d{4}.\d{2}.\d{2}$", version) is not None
 
 
+def is_same_major_version(this_version: str, other_version: str) -> bool:
+    """
+    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
+
+    >>> c = is_same_major_version
+    >>> c("2.0.0-2022.01.01", "2.0.0p3")
+    True
+    >>> c("2022.01.01", "2.0.0p3")
+    True
+    >>> c("2022.01.01", "1.6.0p3")
+    True
+    >>> c("1.6.0", "1.6.0p2")
+    True
+    >>> c("1.7.0", "1.6.0")
+    False
+    >>> c("1.6.0", "1.7.0")
+    False
+    >>> c("2.1.0i1", "2.1.0p2")
+    True
+    >>> c("2.1.0", "2.1.0")
+    True
+    """
+    # We can not decide which is the current base version of the master daily builds. For this
+    # reason we always treat them to be compatbile.
+    if is_daily_build_of_master(this_version) or is_daily_build_of_master(other_version):
+        return True
+
+    return base_version_parts(this_version)[:-1] == base_version_parts(other_version)[:-1]
+
+
 #   .--general infos-------------------------------------------------------.
 #   |                                      _   _        __                 |
 #   |       __ _  ___ _ __   ___ _ __ __ _| | (_)_ __  / _| ___  ___       |
@@ -519,7 +561,7 @@ def get_general_version_infos() -> Dict[str, Any]:
         "time": time.time(),
         "os": _get_os_info(),
         "version": __version__,
-        "edition": edition_short(),
+        "edition": edition().short,
         "core": _current_monitoring_core(),
         "python_version": sys.version,
         "python_paths": sys.path,
@@ -527,19 +569,22 @@ def get_general_version_infos() -> Dict[str, Any]:
 
 
 def _get_os_info() -> str:
-    if os.path.exists("/etc/redhat-release"):
-        return open("/etc/redhat-release").readline().strip()
-
-    if os.path.exists("/etc/SuSE-release"):
-        return open("/etc/SuSE-release").readline().strip()
+    for path_release_file in (
+        Path("/etc/redhat-release"),
+        Path("/etc/SuSE-release"),
+    ):
+        if path_release_file.exists():
+            with path_release_file.open() as release_file:
+                return release_file.readline().strip()
 
     info = {}
-    for f in ["/etc/os-release", "/etc/lsb-release"]:
-        if os.path.exists(f):
-            for line in open(f).readlines():
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip('"')
+    for path in [Path("/etc/os-release"), Path("/etc/lsb-release")]:
+        if path.exists():
+            with path.open() as release_file:
+                for line in release_file.readlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -558,17 +603,18 @@ def _get_os_info() -> str:
 
 def _current_monitoring_core() -> str:
     try:
-        p = subprocess.Popen(
+        completed_process = subprocess.run(
             ["omd", "config", "show", "CORE"],
             close_fds=True,
-            stdin=open(os.devnull),
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),
+            stderr=subprocess.DEVNULL,
             encoding="utf-8",
+            check=False,
         )
-        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:
             raise
         return "UNKNOWN"
+    return completed_process.stdout.rstrip()

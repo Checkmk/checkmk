@@ -1,0 +1,16 @@
+Title: Add margin to Graph titles in reports
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1644401030
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Some graphs like "bandwith" display the unit of the vertical axis on the top
+left coner of the graph instead of next to the values on the axis.
+
+Werk 12998 resulted in an overlap between the unit of the graph and its title.
+With this Werk an extra margin is added to the title on those graphs.

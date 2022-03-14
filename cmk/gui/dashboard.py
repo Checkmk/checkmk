@@ -10,6 +10,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterable,
@@ -118,7 +119,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -289,7 +290,7 @@ class PermissionSectionDashboard(PermissionSection):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
 
     # Load plugins for dashboards. Currently these files
@@ -411,7 +412,7 @@ class LegacyDashlet(IFrameDashlet):
         return cls._spec.get("opt_params", False)
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
         """Optional validation function in case vs_parameters() returns a list"""
         return cls._spec.get("validate_params")
 
@@ -536,7 +537,7 @@ def _get_default_dashboard_name() -> str:
     """
     if cmk_version.is_raw_edition():
         return "main"  # problems = main in raw edition
-    return "main" if user.may("general.see_all") else "problems"
+    return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 
 def _load_dashboard_with_cloning(
@@ -577,7 +578,7 @@ def draw_dashboard(name: DashboardName) -> None:
     board = _add_context_to_dashboard(board)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
     title = visuals.visual_title("dashboard", board, board_context)
@@ -900,6 +901,7 @@ def _page_menu(
         ],
         breadcrumb=breadcrumb,
         has_pending_changes=bool(get_pending_changes_info()),
+        pending_changes_tooltip=get_pending_changes_tooltip(),
     )
 
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
@@ -1576,7 +1578,7 @@ def ajax_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     board = _add_context_to_dashboard(board)
-    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
     ident = request.get_integer_input_mandatory("id")
@@ -1856,7 +1858,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         title=_("View name"),
         choices=lambda: views.view_choices(allow_empty=False),
         sorted=True,
-        no_preselect=True,
+        no_preselect_title="",
     )
 
     try:

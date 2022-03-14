@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The 2.0.0b4 release introduced a regression in the Linux agent which broke the
 execution of cached agent plugins (which also includes the agent updater for

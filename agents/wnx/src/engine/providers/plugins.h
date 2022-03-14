@@ -34,7 +34,7 @@ public:
         cfg_name_ = cfg::groups::kPlugins;
     }
 
-    PluginsProvider(const std::string_view& name, char separator)
+    PluginsProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {
         setHeaderless();
         timeout_ = 0;
@@ -52,9 +52,9 @@ public:
     std::vector<std::string> gatherAllowedExtensions() const;
 
 protected:
-    static void UpdatePluginMapCmdLine(PluginMap& pm,
-                                       srv::ServiceProcessor* sp);
-    void gatherAllData(std::string& out);
+    static void UpdatePluginMapCmdLine(PluginMap &pm,
+                                       srv::ServiceProcessor *sp);
+    void gatherAllData(std::string &out);
     std::string cfg_name_;
     bool local_;
     PluginMap pm_;
@@ -78,7 +78,7 @@ public:
 };
 
 enum class PluginMode { all, sync, async };
-int FindMaxTimeout(const PluginMap& pm, PluginMode type);
+int FindMaxTimeout(const PluginMap &pm, PluginMode type);
 
 }  // namespace cma::provider
 

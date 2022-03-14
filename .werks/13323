@@ -6,7 +6,7 @@ Date: 1639508820
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There are different situations where host addresses can be configured within
 the Checkmk setup (e.g. Additional IP addresses, host diagnostic, management

@@ -67,7 +67,7 @@ def _parameter_valuespec_oracle_tablespaces():
             (
                 "map_file_online_states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(

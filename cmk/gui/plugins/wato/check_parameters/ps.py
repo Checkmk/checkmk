@@ -278,9 +278,9 @@ def process_level_elements():
                 title=_("Include process arguments in long-output"),
                 label=_("Include per-process arguments (security risk!)"),
                 help=_(
-                    "If non-zero, the the list of all the matching processes and their details"
-                    " in the long-output will include up to the first N arguments of each"
-                    " processes. Please note this may include sensitive data like credentials,"
+                    "If non-zero, the list of all the matching processes and their details in the"
+                    " long-output will include up to the first N characters of all arguments for each"
+                    " process. Please note this may include sensitive data like credentials,"
                     " and is strongly discouraged."
                 ),
                 default_value=0,
@@ -427,7 +427,7 @@ def process_match_options():
                 size=50,
             ),
             Transform(
-                RegExp(
+                valuespec=RegExp(
                     size=50,
                     label=_("Command line:"),
                     mode=RegExp.prefix,
@@ -449,7 +449,7 @@ def process_match_options():
                 back=lambda x: "~" + x,  # prefix ~
             ),
             FixedValue(
-                None,
+                value=None,
                 totext="",
                 title=_("Match all processes"),
             ),
@@ -470,7 +470,7 @@ def user_match_options(extra_elements=None):
                 title=_("Exact name of the operating system user"), label=_("User:"), size=50
             ),
             Transform(
-                RegExp(
+                valuespec=RegExp(
                     size=50,
                     mode=RegExp.prefix,
                 ),
@@ -480,7 +480,7 @@ def user_match_options(extra_elements=None):
                 back=lambda x: "~" + x,  # prefix ~
             ),
             FixedValue(
-                None,
+                value=None,
                 totext="",
                 title=_("Match all users"),
             ),
@@ -512,7 +512,7 @@ def cgroup_match_options():
                         size=50,
                     ),
                     Transform(
-                        RegExp(
+                        valuespec=RegExp(
                             size=50,
                             mode=RegExp.prefix,
                         ),
@@ -525,7 +525,7 @@ def cgroup_match_options():
                         back=lambda x: "~" + x,  # prefix ~
                     ),
                     FixedValue(
-                        None,
+                        value=None,
                         totext="",
                         title=_("Match all control groups"),
                     ),
@@ -554,7 +554,7 @@ def _item_spec_ps():
 
 def _parameter_valuespec_ps():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=process_level_elements(),
             ignored_keys=["match_groups", "cgroup"],
             required_keys=["cpu_rescale_max"],
@@ -591,7 +591,7 @@ def _manual_item_spec_ps():
 
 def _manual_parameter_valuespec_ps():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 ("process", process_match_options()),
                 ("user", user_match_options()),
@@ -646,9 +646,9 @@ def convert_inventory_processes(old_dict):
     return new_dict
 
 
-def _valuespec_inventory_processes_rules():
+def _valuespec_inventory_processes_rules() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Process discovery"),
             help=_(
                 "This ruleset defines criteria for automatically creating checks for running "
@@ -665,7 +665,7 @@ def _valuespec_inventory_processes_rules():
                     user_match_options(
                         [
                             FixedValue(
-                                False,
+                                value=False,
                                 title=_("Grab user from found processess"),
                                 totext="",
                                 help=_(
@@ -685,7 +685,7 @@ def _valuespec_inventory_processes_rules():
                 (
                     "label",
                     Labels(
-                        Labels.World.CONFIG,
+                        world=Labels.World.CONFIG,
                         title=_("Host Label"),
                         help=_(
                             "Here you can set host labels that automatically get created when discovering the services."
@@ -757,7 +757,7 @@ def hr_process_match_name_option():
                 allow_empty=False,
             ),
             Transform(
-                RegExp(
+                valuespec=RegExp(
                     size=50,
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,
@@ -794,7 +794,7 @@ def hr_process_match_path_option():
                 allow_empty=False,
             ),
             Transform(
-                RegExp(
+                valuespec=RegExp(
                     size=50,
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,
@@ -888,7 +888,7 @@ def hr_process_parameter_elements():
         (
             "status",
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         DropdownChoice(

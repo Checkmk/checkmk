@@ -1,7 +1,7 @@
 title: IBM Tape Library: Drive Status
 agents: snmp
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   This check displays technical measures of the drives connected to

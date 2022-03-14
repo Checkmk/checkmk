@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_tinkerforge_arguments(params, hostname, ipaddress):
-    args = ["--host", ipaddress]
+
+def agent_tinkerforge_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    args = ["--host", ipaddress or hostname]
 
     for par in ["port", "segment_display_uid", "segment_display_brightness"]:
         if par in params:

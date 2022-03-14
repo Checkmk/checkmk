@@ -69,7 +69,7 @@ def _discovery_parameters_valuespec_alertmanager():
                             False,
                             _("Create one service per alert rule"),
                             FixedValue(
-                                {},
+                                value={},
                                 title=_("Enabled"),
                                 totext="",
                             ),
@@ -80,7 +80,7 @@ def _discovery_parameters_valuespec_alertmanager():
             (
                 "summary_service",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create a summary service for all alert rules"),
                     totext="",
                 ),
@@ -104,7 +104,7 @@ rulespec_registry.register(
 
 def valuespec_alert_remapping():
     return ListOf(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "rule_names",

@@ -1,7 +1,7 @@
 title: Rittal CMC-III PSM: Plugs
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the power plugs of the

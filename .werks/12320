@@ -6,7 +6,7 @@ Date: 1617115776
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It was discovered that using SNMP-v1 datasource with default(Inline) backend may 
 lead to memory leak in fetcher processes.

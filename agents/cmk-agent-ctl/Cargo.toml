@@ -14,18 +14,36 @@ structopt = { version = "0.3", features = [ "paw" ] }
 reqwest = { version = "0.11.4", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.68" }
+serde_with = { version = "*" }
 uuid = { version = "0.8.2", features = ["v4"] }
 openssl = { version = "*", features = ["vendored"] }
 rustls = { version = "0.20.0" }
 rustls-pemfile = { version = "*" }
-log4rs = { version = "*" }
 log = { version = "*" }
+flexi_logger = { version = "*" }
 http = { version = "*" }
 anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "*" }
 base64 = { version = "*" }
 string_enum = { version = "*" }
-requestty = { version = "*" }
 x509-parser = { version = "*" }
 thiserror = { version = "*" }
 tempfile = { version = "*" }
+flate2 = { version = "*" }
+regex = { version = "*" }
+rand = { version = "*" }
+tokio = { version = "1", features = ["full"] }
+tokio-rustls = { version = "*" }
+async-std = { version = "*" }
+ipnet = { version = "*" }
+toml = { version = "*" }
+rpassword = { version = "*" }
+async-trait = { version = "*" }
+os_info = { version = "*" }
+
+[patch.crates-io]
+wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }
+
+[dev-dependencies]
+assert_cmd = { version = "*" }
+predicates = { version = "*" }

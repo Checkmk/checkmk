@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import dataclasses
 import json
 import os
 import sys
@@ -23,7 +24,7 @@ from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
-from cmk.gui.watolib.automations import MKAutomationException, sync_changes_before_remote_automation
+from cmk.gui.watolib.automations import sync_changes_before_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
@@ -94,6 +95,29 @@ class DiscoveryResult(NamedTuple):
     new_labels: dict
     vanished_labels: dict
     changed_labels: dict
+
+    def serialize(self) -> str:
+        return repr(
+            (
+                self.job_status,
+                self.check_table_created,
+                [dataclasses.astuple(cpe) for cpe in self.check_table],
+                self.host_labels,
+                self.new_labels,
+                self.vanished_labels,
+                self.changed_labels,
+            )
+        )
+
+    @classmethod
+    def deserialize(cls, raw: str) -> "DiscoveryResult":
+        job_status, check_table_created, raw_check_table, *rest = ast.literal_eval(raw)
+        return cls(
+            job_status,
+            check_table_created,
+            [CheckPreviewEntry(*cpe) for cpe in raw_check_table],
+            *rest,
+        )
 
 
 class DiscoveryOptions(NamedTuple):
@@ -306,7 +330,7 @@ class Discovery:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = watolib.Rule.create(folder, ruleset)
+            rule = watolib.Rule.from_ruleset_defaults(folder, ruleset)
 
             conditions = RuleConditions(folder.path())
             conditions.host_name = [self._host.name()]
@@ -507,9 +531,18 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     if site_is_local(discovery_request.host.site_id()):
         return execute_discovery_job(discovery_request)
 
-    discovery_result = _get_check_table_from_remote(discovery_request)
-    discovery_result = _add_missing_discovery_result_fields(discovery_result)
-    return discovery_result
+    sync_changes_before_remote_automation(discovery_request.host.site_id())
+
+    return DiscoveryResult.deserialize(
+        watolib.do_remote_automation(
+            get_site_config(discovery_request.host.site_id()),
+            "service-discovery-job",
+            [
+                ("host_name", discovery_request.host.name()),
+                ("options", json.dumps(discovery_request.options._asdict())),
+            ],
+        )
+    )
 
 
 def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult:
@@ -527,94 +560,7 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
     if job.is_active() and api_request.options.action == DiscoveryAction.STOP:
         job.stop()
 
-    r = job.get_result(api_request)
-    return r
-
-
-def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> DiscoveryResult:
-    # 1.6.0b4 introduced the service labels column which might be missing when
-    # fetching information from remote sites.
-    d = discovery_result._asdict()
-    d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
-
-    # 2.0.0b2 introduced the found_on_nodes info
-    d["check_table"] = [(e + (None,) if len(e) < 12 else e) for e in d["check_table"]]
-
-    return DiscoveryResult(**d)
-
-
-def _deserialize_remote_result(raw_result: str) -> DiscoveryResult:
-    remote_result = ast.literal_eval(raw_result)
-
-    if isinstance(remote_result, tuple):
-        # Previous to 2.0.0p1 the remote call returned
-        # a) a tuple
-        # b) did not know about the new_labels, vanished_labels and changed_labels
-        return DiscoveryResult(
-            job_status=remote_result[0],
-            check_table_created=remote_result[1],
-            check_table=remote_result[2],
-            host_labels=remote_result[3],
-            new_labels={},
-            vanished_labels={},
-            changed_labels={},
-        )
-
-    assert isinstance(remote_result, dict)
-    return DiscoveryResult(**remote_result)
-
-
-def _get_check_table_from_remote(api_request):
-    """Gathers the check table from a remote site
-
-    Cares about pre 1.6 sites that does not support the new service-discovery-job API call.
-    Falling back to the previously existing try-inventry and inventory automation calls.
-    """
-    try:
-        sync_changes_before_remote_automation(api_request.host.site_id())
-
-        return _deserialize_remote_result(
-            watolib.do_remote_automation(
-                get_site_config(api_request.host.site_id()),
-                "service-discovery-job",
-                [
-                    ("host_name", api_request.host.name()),
-                    ("options", json.dumps(api_request.options._asdict())),
-                ],
-            )
-        )
-    except watolib.MKAutomationException as e:
-        if "Invalid automation command: service-discovery-job" not in "%s" % e:
-            raise
-
-        # Compatibility for pre 1.6 remote sites.
-        if api_request.options.action == DiscoveryAction.TABULA_RASA:
-            raise MKAutomationException(_("Tabula rasa not supported any more"))
-
-        if api_request.options.action == DiscoveryAction.REFRESH:
-            options = ["@scan"]
-        else:
-            options = ["@noscan"]
-
-        if not api_request.options.ignore_errors:
-            options.append("@raiseerrors")
-
-        return DiscoveryResult(
-            job_status={
-                "is_active": False,
-                "state": JobStatusStates.INITIALIZED,
-            },
-            check_table=try_discovery(
-                api_request.host.site_id(),
-                options,
-                api_request.host.name(),
-            ).check_table,
-            check_table_created=int(time.time()),
-            host_labels={},
-            new_labels={},
-            vanished_labels={},
-            changed_labels={},
-        )
+    return job.get_result(api_request)
 
 
 @gui_background_job.job_registry.register
@@ -682,14 +628,14 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             ).output
         )
 
-    def _perform_automatic_refresh(self, api_request):
+    def _perform_automatic_refresh(self, api_request: StartDiscoveryRequest) -> None:
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
         discovery(
             api_request.host.site_id(),
             "refresh",
             ["@scan"],
-            api_request.host.name(),
+            [api_request.host.name()],
             non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]

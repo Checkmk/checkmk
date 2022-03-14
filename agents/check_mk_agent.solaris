@@ -26,6 +26,12 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -70,14 +76,25 @@ set_up_process_commandline_arguments() {
     done
 }
 
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
 #
 # END COMMON AGENT CODE
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
-    : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
+    : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
     : "${MK_LOGDIR:=/var/log/check_mk_agent}"
 
     # some 'booleans'
@@ -86,10 +103,6 @@ set_variable_defaults() {
 }
 
 preamble_1() {
-    # Remove locale settings to eliminate localized outputs where possible
-
-    export LC_ALL=C
-    unset LANG
 
     export MK_LIBDIR
     export MK_CONFDIR
@@ -101,21 +114,25 @@ preamble_1() {
 
     # Provide information about the remote host. That helps when data
     # is being sent only once to each remote host.
-    if [ "$REMOTE_HOST" ]; then
-        export REMOTE=$REMOTE_HOST
-    elif [ "$SSH_CLIENT" ]; then
+    if [ "${REMOTE_HOST}" ]; then
+        export REMOTE=${REMOTE_HOST}
+    elif [ "${SSH_CLIENT}" ]; then
         export REMOTE=${SSH_CLIENT%% *}
     fi
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
     # sections and must output headers with '<<<' and '>>>'
-    PLUGINSDIR=$MK_LIBDIR/plugins
+    PLUGINSDIR=${MK_LIBDIR}/plugins
 
     # All executables in LOCALDIR will by executabled and their
     # output inserted into the section <<<local>>>. Please refer
     # to online documentation for details.
-    LOCALDIR=$MK_LIBDIR/local
+    LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply be appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
 }
 
 #
@@ -148,7 +165,8 @@ set_up_profiling() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 
         # SC2016: Expressions don't expand in single quotes, use double quotes for that.
-        # shellcheck disable=SC2016
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
@@ -157,8 +175,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {
@@ -169,7 +186,24 @@ set_up_profiling() {
     fi
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
     export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 #
@@ -177,14 +211,14 @@ set_up_profiling() {
 #
 
 read_python_version() {
-    if inpath "$1"; then
-        version=$($1 -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
+    if inpath "${1}"; then
+        version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
 
         major=${version%%.*}
         minor=${version##*.}
 
-        if [ "$major" -eq "$2" ] && [ "$minor" -ge "$3" ]; then
-            echo "$1"
+        if [ "${major}" -eq "${2}" ] && [ "${minor}" -ge "${3}" ]; then
+            echo "${1}"
             return 0
         fi
     fi
@@ -194,32 +228,34 @@ read_python_version() {
 preamble_3() {
     PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
-    if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
         # shellcheck source=/dev/null
-        . "$MK_CONFDIR/python_path.cfg"
+        . "${MK_CONFDIR}/python_path.cfg"
     fi
     export PYTHON2 PYTHON3
 
-    if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
         NO_PYTHON=true
-    elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
-    elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
-}
-
-file_age() {
-    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
 }
 
 # encryption not implemented
 optionally_encrypt() { cat; }
 
 preamble_4() {
-    if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
+    if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
         # shellcheck source=/dev/null
-        . "$MK_CONFDIR/exclude_sections.cfg"
+        . "${MK_CONFDIR}/exclude_sections.cfg"
     fi
 }
 
@@ -228,7 +264,7 @@ preamble_5() {
     # Treat all pre-Solaris 10 systems as "global"
     if inpath zonename; then
         zonename=$(zonename)
-        pszone="-z $zonename"
+        pszone="-z ${zonename}"
     else
         zonename="global"
         pszone="-A"
@@ -237,24 +273,36 @@ preamble_5() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0i1"
+    echo "Version: 2.2.0i1"
     echo "AgentOS: solaris"
     echo "Hostname: $(hostname)"
-    echo "AgentDirectory: $MK_CONFDIR"
-    echo "DataDirectory: $MK_VARDIR"
-    echo "SpoolDirectory: $SPOOLDIR"
-    echo "PluginsDirectory: $PLUGINSDIR"
-    echo "LocalDirectory: $LOCALDIR"
+    echo "AgentDirectory: ${MK_CONFDIR}"
+    echo "DataDirectory: ${MK_VARDIR}"
+    echo "SpoolDirectory: ${SPOOLDIR}"
+    echo "PluginsDirectory: ${PLUGINSDIR}"
+    echo "LocalDirectory: ${LOCALDIR}"
 
     #
     # BEGIN COMMON AGENT CODE
     #
 
     if [ -n "${NO_PYTHON}" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
+        python_fail_msg="No suitable python installation found."
     elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+        python_fail_msg="Configured python command not found."
     fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
+}
+
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
 }
 
 section_checkmk_agent_plugins() {
@@ -280,34 +328,38 @@ section_job() {
     # is a sub directory per user that ran a job. That directory must be
     # owned by the user so that a symlink or hardlink attack for reading
     # arbitrary files can be avoided.
-    if pushd "${MK_VARDIR}"/job >/dev/null; then
+    (
+        cd "${MK_VARDIR}"/job || return
         echo '<<<job>>>'
         for username in *; do
-            if [ -d "$username" ] && cd "$username"; then
-                count=$(su "$username" -c "ls -1 * | wc -l")
+            if [ -d "${username}" ] && cd "${username}"; then
+                count=$(su "${username}" -c "ls -1 * | wc -l")
 
-                if [ "$count" -eq "1" ]; then
-                    filename=$(su "$username" -c "ls -1 *")
-                    echo "==> $filename <=="
+                if [ "${count}" -eq "1" ]; then
+                    filename=$(su "${username}" -c "ls -1 *")
+                    echo "==> ${filename} <=="
                 fi
 
-                su "$username" -c "head -n1000 *"
+                su "${username}" -c "head -n1000 *"
                 cd ..
             fi
         done
-        popd > /dev/null
-    fi
+    )
 }
 
 section_df() {
     # Filesystem usage for UFS and VXFS
     echo '<<<df>>>'
     for fs in ufs vxfs samfs lofs tmpfs; do
-        df -l -k -F $fs 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
-        while read Filesystem kbytes used avail capacity Mountedon; do
-            kbytes=$((used + avail))
-            echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
-        done
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
+        df -l -k -F ${fs} 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " |
+            while read Filesystem kbytes used avail capacity Mountedon; do
+                kbytes=$((used + avail))
+                echo "${Filesystem} ${fs} ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
+            done
     done
 }
 
@@ -315,8 +367,8 @@ section_zfs() {
     # Filesystem usage for ZFS
     if inpath zfs; then
         echo '<<<zfsget>>>'
-        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null \
-        || zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
+        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null ||
+            zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
         echo '[df]'
         df -l -k -F zfs 2>/dev/null | sed 1d
     fi
@@ -343,29 +395,29 @@ section_ps() {
     # ps command to get the full command line instead. What a hack.
     if [ -x /usr/ucb/ps ]; then
         UCB_PS=$(/usr/ucb/ps -agwwwx)
-        PS=$(ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args $pszone | \
-             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
+        PS=$(ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
+            sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
         while read -r LINE; do
             STATS=${LINE%) *}
             PID=${STATS##*,}
 
             # Directly use ps output when line is too slow to be stripped
             if [ ${#LINE} -lt 100 ]; then
-                echo "$LINE"
+                echo "${LINE}"
                 continue
             fi
 
-            CMD=$(echo "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
-                  awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
+            CMD=$(echo "${UCB_PS}" | grep "^[ ]*${PID} " | head -n1 |
+                awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
             # Only use the ucb ps line when it's not empty (process might already been gone)
-            if [ -z "$CMD" ]; then
-                echo "$LINE"
+            if [ -z "${CMD}" ]; then
+                echo "${LINE}"
             else
                 echo "${STATS}) ${CMD}"
             fi
-        done <<< "$PS"
+        done <<<"${PS}"
     else
-        ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args $pszone | \
+        ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
     fi
 }
@@ -379,22 +431,22 @@ section_statgrab() {
         statgrab_sections="cpu disk page"
 
         # Collect net stats in the global zone and in local zones if dlstat is present.
-        if [ "$zonename" == "global" ] || inpath dlstat; then
-            statgrab_vars="$statgrab_vars net."
-            statgrab_sections="$statgrab_sections net"
+        if [ "${zonename}" == "global" ] || inpath dlstat; then
+            statgrab_vars="${statgrab_vars} net."
+            statgrab_sections="${statgrab_sections} net"
         fi
 
         # shellcheck disable=SC2086
-        statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
-        for s in $statgrab_sections; do
-            echo "<<<statgrab_$s>>>"
-            grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
+        statgrab ${statgrab_vars} | grep -v md 1>/tmp/statgrab.$$
+        for s in ${statgrab_sections}; do
+            echo "<<<statgrab_${s}>>>"
+            grep "^${s}\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
         done
 
         # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
         # since solaris_mem is under suspicion to be buggy.
         echo '<<<statgrab_mem>>>'
-        egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+        grep -E "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
         [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
 
@@ -413,10 +465,10 @@ section_cpu() {
     # /proc/cpu
     # Simulated Output of Linux /proc/cpu
     echo '<<<cpu>>>'
-    load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
+    load=$(uptime | sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
     nthreads=$(($(ps -AL | wc -l)))
     procs=$(($(psrinfo | wc -l)))
-    echo $load 1/$nthreads $$ $procs
+    echo "${load} 1/${nthreads} $$ ${procs}"
 }
 
 section_zpool() {
@@ -435,9 +487,9 @@ section_uptime() {
     # Solaris doesn't always give a consisten output on uptime, thus include side information
     # Tested in VM for solaris 10/11
     echo '<<<uptime>>>'
-    ctime=`nawk 'BEGIN{print srand()}'`;
-    btime=`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;
-    echo $((ctime - btime));
+    ctime=$(nawk 'BEGIN{print srand()}')
+    btime=$(kstat '-p' 'unix:::boot_time' 2>&1 | grep 'boot_time' | awk '{print $2}')
+    echo $((ctime - btime))
     echo '[uptime_solaris_start]'
     uname -a
     zonename
@@ -447,7 +499,7 @@ section_uptime() {
 }
 
 section_ntp() {
-    ps -o comm $pszone | grep -w .*ntpd &>/dev/null || return
+    ps -o comm ${pszone} | grep -w ".*ntpd" &>/dev/null || return
 
     echo '<<<ntp>>>'
     ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
@@ -456,7 +508,7 @@ section_ntp() {
 section_solaris_prtg() {
     if inpath prtdiag; then
         # prtdiag does not work in local zones
-        if [ "$zonename" == "global" ]; then
+        if [ "${zonename}" == "global" ]; then
             run_cached "solaris_prtdiag_status" 300 \
                 'echo <<<solaris_prtdiag_status>>>; /usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
         fi
@@ -466,14 +518,14 @@ section_solaris_prtg() {
 section_tcp() {
     # TCP Connection stats
     echo '<<<tcp_conn_stats>>>'
-    netstat -n -a -f inet -P tcp | tail  +5 | \
-    nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
+    netstat -n -a -f inet -P tcp | tail +5 |
+        nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
 }
 
 section_multipathing() {
     # Multipathing
     if inpath mpathadm; then
-        if [ "$zonename" == "global" ]; then
+        if [ "${zonename}" == "global" ]; then
             echo '<<<solaris_multipath>>>'
             mpathadm list LU | nawk '{if(NR%3==1){dev=$1}
                                       if(NR%3==2){tc=$NF}
@@ -556,105 +608,111 @@ section_checkmk_failed_plugins() {
     if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
         echo "<<<check_mk>>>"
         echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
-        if [ -n "$NO_PYTHON" ]; then
+        if [ -n "${NO_PYTHON}" ]; then
             echo "FailedPythonReason: No suitable python installation found."
-        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+        elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
             echo "FailedPythonReason: Configured python command not found."
         fi
     fi
 }
 
 run_remote_plugins() {
+    [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
+
     # MK's Remote Plugin Executor
-    if test -f "$MK_CONFDIR/mrpe.cfg"; then
-        echo '<<<mrpe>>>'
-        grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
+    echo '<<<mrpe>>>'
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
+    grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | grep -v '^ *$' |
         while read descr cmdline; do
             interval=
-            if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
+            if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
                 parameters=${BASH_REMATCH[1]}
                 cmdline=${BASH_REMATCH[2]}
 
                 # split multiple parameter assignments
-                for par in $(echo $parameters | tr ":" "\n"); do
+                for par in $(echo "${parameters}" | tr ":" "\n"); do
                     # split each assignment
-                    key=$(echo $par | cut -d= -f1)
-                    value=$(echo $par | cut -d= -f2)
+                    key=$(echo "${par}" | cut -d= -f1)
+                    value=$(echo "${par}" | cut -d= -f2)
 
-                    if [ "$key" = "interval" ]; then
-                        interval=$value
+                    if [ "${key}" = "interval" ]; then
+                        interval=${value}
                     fi
                 done
             fi
 
-            if [ -z "$interval" ]; then
-                ${MK_RUN_SYNC_PARTS} && run_mrpe $descr "$cmdline"
+            if [ -z "${interval}" ]; then
+                ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
             else
-                run_cached "mrpe_${descr}" "$interval" "run_mrpe '$descr' '$cmdline'"
+                run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
             fi
         done
-    fi
 }
 
 run_mrpe() {
-    local descr=$1
+    local descr="${1}"
     shift
-    local cmdline="$@"
 
-    echo '<<<mrpe>>>'
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
 
-    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-
-    echo -n "$descr $? $OUTPUT" | tr \\n \\1
-    echo
+    printf "<<<mrpe>>>\n"
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
+    printf "\n"
 }
 
 export -f run_mrpe
 
 # Runs a command asynchronous by use of a cache file
 run_cached() {
-    local NAME=$1
-    local MAXAGE=$2
+    local NAME=${1}
+    local MAXAGE=${2}
     shift 2
-    local CMDLINE="$@"
     local AGE
 
     if ${DISABLE_CACHING:-false}; then
-        # shellcheck disable=SC2090
-        $CMDLINE
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
         return
     fi
 
+    local NOW
+    NOW=$(get_epoch)
+
     if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache; fi
-    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-    if [ -e "$CACHEFILE.new" ]; then
-        AGE=$(file_age "$CACHEFILE.new")
+    # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
+    if [ -e "${CACHEFILE}.new" ]; then
+        AGE=$((NOW - $(get_file_atime "${CACHEFILE}.new")))
         if [ "${AGE}" -ge $((MAXAGE * 2)) ]; then
-            fuser -k "$CACHEFILE.new" >/dev/null 2>&1
-            rm -f "$CACHEFILE.new"
+            fuser -k "${CACHEFILE}.new" >/dev/null 2>&1
+            rm -f "${CACHEFILE}.new"
         fi
     fi
 
     # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ]; then
+    if [ -s "${CACHEFILE}" ]; then
         local MTIME
-        MTIME=$(get_file_mtime "$CACHEFILE")
-        AGE=$(file_age "$CACHEFILE")
+        MTIME=$(get_file_mtime "${CACHEFILE}")
+        AGE=$((NOW - MTIME))
         if [ "${AGE}" -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.
             # The new file will not yet be available.
-            CACHE_INFO="cached($MTIME,$MAXAGE)"
+            CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-                # insert the cache info at the beginning of every non-header line
-                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
+                # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
+                sed -e "/^<<</! s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
-                # insert the cache info in the section header (^= after '!'),
-                # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+                # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi
@@ -662,8 +720,8 @@ run_cached() {
     ${MK_RUN_ASYNC_PARTS} || return
 
     # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
-        echo "eval ${MK_DEFINE_LOG_SECTION_TIME}; set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; ${CMDLINE} && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
+    if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+        echo "eval ${MK_DEFINE_LOG_SECTION_TIME}; set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; $* && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
     fi
 }
 
@@ -672,7 +730,7 @@ run_cached() {
 #
 
 run_local_checks() {
-    cd "$LOCALDIR" || return
+    cd "${LOCALDIR}" || return
 
     if ${MK_RUN_SYNC_PARTS}; then
         echo '<<<local:sep(0)>>>'
@@ -695,7 +753,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return
@@ -795,52 +853,58 @@ run_plugins() {
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk
 
+    _log_section_time section_cmk_agent_ctl_status
+
     [ -z "${MK_SKIP_CHECKMK_AGENT_PLUINGS}" ] && _log_section_time section_checkmk_agent_plugins
 
-    [ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
+    [ -z "${MK_SKIP_JOB}" ] && _log_section_time section_job
 
-    [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
+    [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
 
-    [ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs
+    [ -z "${MK_SKIP_ZFS}" ] && _log_section_time section_zfs
 
-    [ -z "$MK_SKIP_ZFS_ARC_CACHE" ] && _log_section_time section_zfs_arc_cache
+    [ -z "${MK_SKIP_ZFS_ARC_CACHE}" ] && _log_section_time section_zfs_arc_cache
 
-    [ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
+    [ -z "${MK_SKIP_PS}" ] && _log_section_time section_ps
 
-    [ -z "$MK_SKIP_STATGRAB" ] && _log_section_time section_statgrab
+    [ -z "${MK_SKIP_STATGRAB}" ] && _log_section_time section_statgrab
 
-    [ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
+    [ -z "${MK_SKIP_CPU}" ] && _log_section_time section_cpu
 
-    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
+    [ -z "${MK_SKIP_UPTIME}" ] && _log_section_time section_uptime
 
-    [ -z "$MK_SKIP_NTP" ] && _log_section_time section_ntp
+    [ -z "${MK_SKIP_NTP}" ] && _log_section_time section_ntp
 
-    [ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
+    [ -z "${MK_SKIP_TCP}" ] && _log_section_time section_tcp
 
-    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
+    [ -z "${MK_SKIP_MULTIPATHING}" ] && _log_section_time section_multipathing
 
-    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
+    [ -z "${MK_SKIP_FILEINFO}" ] && _log_section_time section_fileinfo
 
-    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
+    [ -z "${MK_SKIP_LIBELLE}" ] && _log_section_time section_libelle
 
-    [ -z "$MK_SKIP_SOLARIS_FMADM" ] && _log_section_time section_solaris_fmadm
+    [ -z "${MK_SKIP_SOLARIS_FMADM}" ] && _log_section_time section_solaris_fmadm
 
-    [ -z "$MK_SKIP_SOLARIS_SERVICES" ] && _log_section_time section_solaris_services
+    [ -z "${MK_SKIP_SOLARIS_SERVICES}" ] && _log_section_time section_solaris_services
 }
 
 run_partially_asynchronous_sections() {
-    [ -z "$MK_SKIP_SOLARIS_PRTG" ] && _log_section_time section_solaris_prtg
+    [ -z "${MK_SKIP_SOLARIS_PRTG}" ] && _log_section_time section_solaris_prtg
 
-    [ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
+    [ -z "${MK_SKIP_ZPOOL}" ] && _log_section_time section_zpool
 }
 
-main_setup(){
+main_setup() {
 
-    exec </dev/null 9>&2 2>/dev/null 
+    exec </dev/null 9>&2 2>/dev/null
 
     set_up_process_commandline_arguments "$@"
 
+    set_up_get_epoch
+
     set_variable_defaults
+
+    unset_locale
 
     preamble_1
 
@@ -862,7 +926,7 @@ main_sync_parts() {
 
 }
 
-main_mixed_parts(){
+main_mixed_parts() {
 
     run_partially_asynchronous_sections
 
@@ -883,7 +947,7 @@ main_mixed_parts(){
 
 }
 
-main_async_parts(){
+main_async_parts() {
     # no run_real_time_checks available
     :
 }
@@ -914,9 +978,9 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt "${PASSPHRASE}" ""
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
 
-        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 
         sleep "${MK_LOOP_INTERVAL}"
 

@@ -6,7 +6,7 @@ Date: 1611320771
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Among other things, the sidebar snapin "Site Status" could crash if a site was
 disabled that has a "None" value configured in the status host configuration.

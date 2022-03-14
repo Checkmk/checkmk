@@ -1,7 +1,7 @@
 title: AKCP: Drycontact Sensor
 agents: snmp
 catalog: hw/environment/akcp
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the status of a AKCP Drycontact Sensor.
@@ -27,4 +27,3 @@ item:
 
 discovery:
  One service is created for each sensor if the sensor is online.
-

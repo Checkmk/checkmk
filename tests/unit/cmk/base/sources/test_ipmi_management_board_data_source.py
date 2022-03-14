@@ -11,12 +11,12 @@ from tests.testlib.base import Scenario
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostName, result, SourceType
 
-from cmk.core_helpers.ipmi import IPMISummarizer
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.ipmi import IPMISource
 
 
@@ -27,7 +27,9 @@ def mode_fixture(request):
 
 def test_attribute_defaults(mode, monkeypatch):
     hostname = HostName("testhost")
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = config.lookup_mgmt_board_ip_address(host_config)
@@ -37,14 +39,10 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections()), mode=mode) == [
-        ActiveCheckResult(0, "Version: unknown")
+    assert source.summarize(result.OK(HostSections[AgentRawDataSection]()), mode=mode) == [
+        ActiveCheckResult(0, "Success")
     ]
     assert source.id == "mgmt_ipmi"
-
-
-def test_summarizer():
-    assert IPMISummarizer._get_ipmi_version(None) == "unknown"
 
 
 def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
@@ -54,7 +52,9 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
         return ipaddress
 
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(
         config,

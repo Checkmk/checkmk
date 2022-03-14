@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The matching of service rule sets (which are used for a lot of different
 settings in Checkmk) could lead to wrong rule matching results in case service

@@ -26,6 +26,12 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -70,54 +76,61 @@ set_up_process_commandline_arguments() {
     done
 }
 
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
 #
 # END COMMON AGENT CODE
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
-    : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
-    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
-
     # some 'booleans'
     [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
     [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
-}
 
-preamble_1() { # TODO: split these up more meaningful
-    # Make sure that locally installed binaries are found
-    PATH=$PATH:/usr/local/bin
-    [ -d /var/qmail/bin ] && PATH=$PATH:/var/qmail/bin
+    # WATCH OUT: These 4 lines are searched for and replaced by the
+    # agent bakery!
+    # TODO: CMK-8339 (proper configuration)
+    : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
+    : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
 
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_VARDIR
     export MK_LOGDIR
 
-    # TODO: CMK-8339 (proper configuration)
-
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
-
-    # The service name gets patched for baked agents to "check-mk-agent"
-    # TODO: Once the the RAW edition agent package is adjusted to the
-    # baked one, we can drop this variable and hardcode "check-mk-agent" instead.
-    XINETD_SERVICE_NAME=check_mk
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
     # sections and must output headers with '<<<' and '>>>'
-    PLUGINSDIR=$MK_LIBDIR/plugins
+    PLUGINSDIR=${MK_LIBDIR}/plugins
 
     # All executables in LOCALDIR will by executabled and their
     # output inserted into the section <<<local>>>. Please
     # refer to online documentation for details about local checks.
-    LOCALDIR=$MK_LIBDIR/local
+    LOCALDIR=${MK_LIBDIR}/local
 
     # All files in SPOOLDIR will simply appended to the agent
     # output if they are not outdated (see below)
-    SPOOLDIR=$MK_VARDIR/spool
+    SPOOLDIR=${MK_VARDIR}/spool
+}
+
+set_up_path() {
+    # Make sure that locally installed binaries are found
+    PATH="${PATH}:/usr/local/bin"
+    [ -d "/var/qmail/bin" ] && PATH="${PATH}:/var/qmail/bin"
 }
 
 set_up_remote() {
@@ -125,10 +138,16 @@ set_up_remote() {
     # is being sent only once to each remote host.
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
+    # If none of the above are set *and* we are configured to, try to read it from stdin
+    [ -z "${REMOTE}" ] && [ "${MK_READ_REMOTE}" = "true" ] && read -r REMOTE
+
+    export REMOTE
+}
+
+announce_remote() {
     # let RTCs know about this remote
     [ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
-    [ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
-    export REMOTE
+    [ -n "${REMOTE}" ] && [ "${REMOTE}" != "push-connection" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
 }
 
 #
@@ -161,7 +180,8 @@ set_up_profiling() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 
         # SC2016: Expressions don't expand in single quotes, use double quotes for that.
-        # shellcheck disable=SC2016
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
@@ -170,8 +190,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {
@@ -182,71 +201,70 @@ set_up_profiling() {
     fi
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
     export MK_DEFINE_LOG_SECTION_TIME
 }
 
-#
-# END COMMON AGENT CODE
-#
-
-# Remove locale settings to eliminate localized outputs where possible
-# The locale logic here is used to make the Python encoding detection work (see CMK-2778).
-preamble_5() {
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
     unset -v LANG
     if inpath locale && inpath paste; then
-        # The space at the beginning of " $(locale ...)" is important, since we also have a space in
-        # the conditions. We need this to also match C.UTF-8 and C.utf8 right at the beginning.
-        # Furthermore, we cannot simply use *'C.UTF-8'* (without the space), because this also
-        # matches e.g. es_EC.UTF-8.
-        case " $(locale -a | paste -sd ' ' -)" in
-            *' C.UTF-8'*) LC_ALL="C.UTF-8" ;;
-            *' C.utf8'*) LC_ALL="C.utf8" ;;
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
         esac
     fi
     LC_ALL="${LC_ALL:-C}"
     export LC_ALL
 }
 
+#
+# END COMMON AGENT CODE
+#
+
 read_python_version() {
-    if inpath "$1"; then
-        version=$($1 -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
+    if inpath "${1}"; then
+        version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
 
         major=${version%%.*}
         minor=${version##*.}
 
-        if [ "$major" -eq "$2" ] && [ "$minor" -ge "$3" ]; then
-            echo "$1"
+        if [ "${major}" -eq "${2}" ] && [ "${minor}" -ge "${3}" ]; then
+            echo "${1}"
             return 0
         fi
     fi
     return 1
 }
 
-preamble_6() {
+detect_python() {
     PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
-    if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
         # shellcheck source=/dev/null
-        . "$MK_CONFDIR/python_path.cfg"
+        . "${MK_CONFDIR}/python_path.cfg"
     fi
     export PYTHON2 PYTHON3
 
-    if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
         NO_PYTHON=true
-    elif [ -n "$PYTHON3" ] && [ "$(
-        $PYTHON3 -c 'pass' >/dev/null 2>&1
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
         echo $?
     )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
-    elif [ -z "$PYTHON3" ] && [ "$(
-        $PYTHON2 -c 'pass' >/dev/null 2>&1
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
         echo $?
     )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
+}
 
-    # Detect whether or not the agent is being executed in a container
-    # environment.
+detect_container_environment() {
     if [ -f /.dockerenv ]; then
         IS_DOCKERIZED=1
     elif grep container=lxc /proc/1/environ >/dev/null 2>&1; then
@@ -261,7 +279,7 @@ preamble_6() {
         unset IS_LXC_CONTAINER
     fi
 
-    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+    if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         if [ "$(stat -fc'%t' /sys/fs/cgroup)" = "63677270" ]; then
             IS_CGROUP_V2=1
             CGROUP_SECTION_SUFFIX="_cgroupv2"
@@ -283,7 +301,7 @@ if inpath timeout; then
 fi
 
 set_up_encryption() {
-    # shellcheck source=/dev/null
+    # shellcheck source=agents/cfg_examples/encryption.cfg
     [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
     define_optionally_encrypt "${ENCRYPTED:-"no"}"
 }
@@ -321,23 +339,17 @@ define_optionally_encrypt() {
 
 }
 
-preamble_7() {
-    if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
-        # shellcheck source=/dev/null
-        . "$MK_CONFDIR/exclude_sections.cfg"
-    fi
-
-    RTC_PLUGINS=""
-    if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
-        # shellcheck source=/dev/null
-        . "$MK_CONFDIR/real_time_checks.cfg"
+set_up_disabled_sections() {
+    if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
+        # shellcheck source=agents/cfg_examples/exclude_sections.cfg
+        . "${MK_CONFDIR}/exclude_sections.cfg"
     fi
 }
 
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.1.0i1
+Version: 2.2.0i1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -345,25 +357,18 @@ DataDirectory: ${MK_VARDIR}
 SpoolDirectory: ${SPOOLDIR}
 PluginsDirectory: ${PLUGINSDIR}
 LocalDirectory: ${LOCALDIR}
-AgentController: $(command -v cmk-agent-ctl)
 HERE
 
-    if id cmk-agent >/dev/null && [ -f ~cmk-agent/"allow-legacy-pull" ]; then
-        printf "LegacyPullMode: yes\n"
-    else
-        printf "LegacyPullMode: no\n"
-    fi
-
     # try to find only_from configuration
-    if [ -n "$REMOTE_HOST" ]; then # xinetd
-        sed -n "/^service[[:space:]]*${XINETD_SERVICE_NAME}/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
+    if [ -n "${REMOTE_HOST}" ]; then # xinetd
+        sed -n "/^service[[:space:]]*check-mk-agent/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
     elif inpath systemctl; then # systemd
-        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' /usr/lib/systemd/system/${XINETD_SERVICE_NAME}.socket
+        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' "/usr/lib/systemd/system/check-mk-agent.socket" 2>/dev/null
         # NOTE: The above line just reads back the socket file we deployed ourselves. Systemd units can be altered by
         # other user defined unit files, so this *may* not be correct. A better way of doing this seemed to be querying
         # systemctl itself about the 'effective' property:
         #
-        #    systemctl show --property IPAddressAllow "${XINETD_SERVICE_NAME}.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
+        #    systemctl show --property IPAddressAllow "check-mk-agent.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
         #
         # However this ("successfully") reports an empty list or '[unprintable]' on older systemd versions :-(
     fi
@@ -373,10 +378,22 @@ HERE
     #
 
     if [ -n "${NO_PYTHON}" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
+        python_fail_msg="No suitable python installation found."
     elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+        python_fail_msg="Configured python command not found."
     fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
+}
+
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
 }
 
 section_checkmk_agent_plugins() {
@@ -411,9 +428,9 @@ section_labels() {
 }
 
 section_mem() {
-    if [ -n "$IS_DOCKERIZED" ]; then
-        echo "<<<docker_container_mem$CGROUP_SECTION_SUFFIX>>>"
-        if [ -n "$IS_CGROUP_V2" ]; then
+    if [ -n "${IS_DOCKERIZED}" ]; then
+        echo "<<<docker_container_mem${CGROUP_SECTION_SUFFIX}>>>"
+        if [ -n "${IS_CGROUP_V2}" ]; then
             cat /sys/fs/cgroup/memory.stat
             echo "memory.current $(cat /sys/fs/cgroup/memory.current)"
             echo "memory.max $(cat /sys/fs/cgroup/memory.max)"
@@ -423,42 +440,45 @@ section_mem() {
             echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
         fi
         grep -F 'MemTotal:' /proc/meminfo
-    elif [ -n "$IS_LXC_CONTAINER" ]; then
+    elif [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '<<<mem>>>'
-        grep -E -v '^Swap:|^Mem:|total:|^Vmalloc|^Committed' </proc/meminfo
+        grep -v -E '^Swap:|^Mem:|total:|^Vmalloc|^Committed' </proc/meminfo
     else
         echo '<<<mem>>>'
-        grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
+        grep -v -E '^Swap:|^Mem:|total:' </proc/meminfo
     fi
 }
 
 section_cpu() {
-    if [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv6l" ]; then
-        CPU_REGEX='^processor'
-    else
-        CPU_REGEX='^CPU|^processor'
-    fi
-    NUM_CPUS=$(grep -c -E $CPU_REGEX </proc/cpuinfo)
+    case "$(uname -m)" in
+        "armv7l" | "armv6l" | "aarch64")
+            CPU_REGEX='^processor'
+            ;;
+        *)
+            CPU_REGEX='^CPU|^processor'
+            ;;
+    esac
+    NUM_CPUS=$(grep -c -E ${CPU_REGEX} </proc/cpuinfo)
 
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
+    if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ]; then
         echo '<<<cpu>>>'
-        echo "$(cat /proc/loadavg) $NUM_CPUS"
+        echo "$(cat /proc/loadavg) ${NUM_CPUS}"
         if [ -f "/proc/sys/kernel/threads-max" ]; then
             cat /proc/sys/kernel/threads-max
         fi
     else
-        if [ -n "$IS_DOCKERIZED" ]; then
-            echo "<<<docker_container_cpu$CGROUP_SECTION_SUFFIX>>>"
+        if [ -n "${IS_DOCKERIZED}" ]; then
+            echo "<<<docker_container_cpu${CGROUP_SECTION_SUFFIX}>>>"
         else
-            echo "<<<lxc_container_cpu$CGROUP_SECTION_SUFFIX>>>"
+            echo "<<<lxc_container_cpu${CGROUP_SECTION_SUFFIX}>>>"
         fi
-        if [ -n "$IS_CGROUP_V2" ]; then
+        if [ -n "${IS_CGROUP_V2}" ]; then
             echo "uptime $(cat /proc/uptime)"
-            echo "num_cpus $NUM_CPUS"
+            echo "num_cpus ${NUM_CPUS}"
             cat /sys/fs/cgroup/cpu.stat
         else
             grep "^cpu " /proc/stat
-            echo "num_cpus $NUM_CPUS"
+            echo "num_cpus ${NUM_CPUS}"
             cat /sys/fs/cgroup/cpuacct/cpuacct.stat
         fi
     fi
@@ -466,10 +486,10 @@ section_cpu() {
 
 section_uptime() {
     echo '<<<uptime>>>'
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -z "${IS_DOCKERIZED}" ]; then
         cat /proc/uptime
     else
-        echo "$(($(date +%s) - $(stat -c %Z /dev/pts)))"
+        echo "$(($(get_epoch) - $(stat -c %Z /dev/pts)))"
     fi
 }
 
@@ -480,14 +500,14 @@ section_uptime() {
 # thousands of agent processes and, ultimately, a dead monitored system.
 # These should generally be monitored on the NFS server, not on the clients.
 section_df() {
-    if [ -n "$IS_DOCKERIZED" ]; then
+    if [ -n "${IS_DOCKERIZED}" ]; then
         return
     fi
 
     # The exclusion list is getting a bit of a problem.
     # -l should hide any remote FS but seems to be all but working.
     excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs -x autofs -x beegfs"
-    if [ -z "$IS_LXC_CONTAINER" ]; then
+    if [ -z "${IS_LXC_CONTAINER}" ]; then
         excludefs="${excludefs} -x zfs"
     fi
 
@@ -540,12 +560,12 @@ section_nfs_mounts() {
         sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read -r MP; do
-                if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-                    waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
-                        echo "$MP hanging 0 0 0 0"
+                if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
+                    waitmax -s 9 5 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
+                        echo "${MP} hanging 0 0 0 0"
                 else
-                    waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
-                        printf '\n' || echo "$MP hanging 0 0 0 0"
+                    waitmax -s 9 5 stat -f -c "${MP} ok %b %f %a %s" "${MP}" &&
+                        printf '\n' || echo "${MP} hanging 0 0 0 0"
                 fi
             done
 
@@ -553,14 +573,14 @@ section_nfs_mounts() {
         sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read -r MP; do
-                if [ ! -r "$MP" ]; then
-                    echo "$MP Permission denied"
-                elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-                    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
-                        echo "$MP hanging 0 0 0 0"
+                if [ ! -r "${MP}" ]; then
+                    echo "${MP} Permission denied"
+                elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
+                    waitmax -s 9 2 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
+                        echo "${MP} hanging 0 0 0 0"
                 else
-                    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
-                        printf '\n' || echo "$MP hanging 0 0 0 0"
+                    waitmax -s 9 2 stat -f -c "${MP} ok %b %f %a %s" "${MP}" &&
+                        printf '\n' || echo "${MP} hanging 0 0 0 0"
                 fi
             done
     fi
@@ -579,7 +599,7 @@ section_ps() {
         if [ -e /sys/fs/cgroup ]; then
             CGROUP="cgroup:512,"
         fi
-        echo "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | tr -s ' ')"
+        echo "[header] $(ps ax -o "${CGROUP}"user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | tr -s ' ')"
     fi
 }
 
@@ -594,17 +614,17 @@ section_lnx_if() {
     echo '<<<lnx_if:sep(58)>>>'
     sed 1,2d /proc/net/dev
     sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
-        echo "[$eth]"
+        echo "[${eth}]"
         if inpath ethtool; then
-            ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
+            ethtool "${eth}" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
         else
             # If interface down we get "Invalid argument"
-            speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
-            if [ -n "$speed" ] && [ "$speed" -ge 0 ]; then
+            speed=$(cat "/sys/class/net/${eth}/speed" 2>/dev/null)
+            if [ -n "${speed}" ] && [ "${speed}" -ge 0 ]; then
                 echo "Speed: ${speed}Mb/s"
             fi
         fi
-        echo "Address: $(cat "/sys/class/net/$eth/address")"
+        echo "Address: $(cat "/sys/class/net/${eth}/address")"
     done
 }
 
@@ -619,11 +639,11 @@ section_bonding_interfaces() {
 section_vswitch_bonding() {
     if inpath ovs-appctl; then
         BONDS=$(ovs-appctl bond/list)
-        COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
+        COL=$(echo "${BONDS}" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
         echo '<<<ovs_bonding:sep(58)>>>'
-        for bond in $(echo "$BONDS" | sed -e 1d | cut -f"${COL}"); do
-            echo "[$bond]"
-            ovs-appctl bond/show "$bond"
+        for bond in $(echo "${BONDS}" | sed -e 1d | cut -f"${COL}"); do
+            echo "[${bond}]"
+            ovs-appctl bond/show "${bond}"
         done
     fi
 }
@@ -650,9 +670,9 @@ section_multipathing() {
 }
 
 section_diskstat() {
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -z "${IS_DOCKERIZED}" ]; then
         echo '<<<diskstat>>>'
-        date +%s
+        get_epoch
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
         if inpath dmsetup; then
             echo '[dmsetup_info]'
@@ -663,21 +683,21 @@ section_diskstat() {
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
     else
-        echo "<<<docker_container_diskstat$CGROUP_SECTION_SUFFIX>>>"
+        echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
         echo "[time]"
-        date +%s
-        if [ -n "$IS_CGROUP_V2" ]; then
+        get_epoch
+        if [ -n "${IS_CGROUP_V2}" ]; then
             echo "[io.stat]"
             cat "/sys/fs/cgroup/io.stat"
         else
             for F in io_service_bytes io_serviced; do
-                echo "[$F]"
-                cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
+                echo "[${F}]"
+                cat "/sys/fs/cgroup/blkio/blkio.throttle.${F}"
             done
         fi
         echo "[names]"
         for F in /sys/block/*; do
-            echo "${F##*/} $(cat "$F/dev")"
+            echo "${F##*/} $(cat "${F}/dev")"
         done
     fi
 }
@@ -694,43 +714,42 @@ section_chrony() {
 }
 
 section_kernel() {
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
+    if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ]; then
         echo '<<<kernel>>>'
-        date +%s
+        get_epoch
         cat /proc/vmstat /proc/stat
     fi
 }
 
 section_ipmitool() {
     if inpath ipmitool; then
-        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
         run_cached "ipmi_discrete" 300 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
     fi
 }
 
 section_ipmisensors() {
-    if (inpath ipmi-sensors && ls /dev/ipmi* >/dev/null); then
-        ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
-        # Newer ipmi-sensors version have new output format; Legacy format can be used
-        if ipmi-sensors --help | grep -q legacy-output; then
-            IPMI_FORMAT="--legacy-output"
-        else
-            IPMI_FORMAT=""
-        fi
-        if ipmi-sensors --help | grep -q " \-\-groups"; then
-            IPMI_GROUP_OPT="-g"
-        else
-            IPMI_GROUP_OPT="-t"
-        fi
-
-        # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-        run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
-            ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache $IPMI_GROUP_OPT \"\$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-            # In case of a timeout immediately leave loop.
-            if [ $? = 255 ]; then break; fi
-        done"
+    inpath ipmi-sensors && ls /dev/ipmi* >/dev/null || return
+    ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
+    # Newer ipmi-sensors version have new output format; Legacy format can be used
+    if ipmi-sensors --help | grep -q legacy-output; then
+        IPMI_FORMAT="--legacy-output"
+    else
+        IPMI_FORMAT=""
     fi
+    if ipmi-sensors --help | grep -q " \-\-groups"; then
+        IPMI_GROUP_OPT="-g"
+    else
+        IPMI_GROUP_OPT="-t"
+    fi
+
+    # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
+    run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
+        ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+        # In case of a timeout immediately leave loop.
+        if [ $? = 255 ]; then break; fi
+    done"
 }
 
 section_md() {
@@ -746,11 +765,11 @@ section_dm_raid() {
         waitmax 20 dmraid -s | grep -e ^name -e ^status
 
         # Output disk names of the RAID disks
-        DISKS=$(echo "$DMSTATUS" | cut -f1 -d":")
+        DISKS=$(echo "${DMSTATUS}" | cut -f1 -d":")
 
-        for disk in $DISKS; do
-            device=$(cat /sys/block/"$(basename "$disk")"/device/model)
-            status=$(echo "$DMSTATUS" | grep "^${disk}")
+        for disk in ${DISKS}; do
+            device=$(cat /sys/block/"$(basename "${disk}")"/device/model)
+            status=$(echo "${DMSTATUS}" | grep "^${disk}")
             echo "${status} Model: ${device}"
         done
     fi
@@ -780,21 +799,21 @@ section_megaraid() {
         MegaCli_bin="unknown"
     fi
 
-    if [ "$MegaCli_bin" != "unknown" ]; then
+    if [ "${MegaCli_bin}" != "unknown" ]; then
         echo '<<<megaraid_pdisks>>>'
-        for part in $($MegaCli_bin -EncInfo -aALL -NoLog </dev/null |
+        for part in $(${MegaCli_bin} -EncInfo -aALL -NoLog </dev/null |
             sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ "$part" = adapter ] && printf "\n"
-            [ "$part" = 'Enclosure' ] && printf "\ndev2enc"
+            [ "${part}" = adapter ] && printf "\n"
+            [ "${part}" = 'Enclosure' ] && printf "\ndev2enc"
             printf " %s" "${part}"
         done
         echo
-        $MegaCli_bin -PDList -aALL -NoLog </dev/null |
+        ${MegaCli_bin} -PDList -aALL -NoLog </dev/null |
             grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
         echo '<<<megaraid_ldisks>>>'
-        $MegaCli_bin -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
+        ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
         echo '<<<megaraid_bbu>>>'
-        $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
+        ${MegaCli_bin} -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
     fi
 }
 
@@ -802,11 +821,11 @@ section_3ware_raid() {
     if inpath tw_cli; then
         for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
             echo '<<<3ware_info>>>'
-            tw_cli "/$C" show all | grep -E 'Model =|Firmware|Serial'
+            tw_cli "/${C}" show all | grep -E 'Model =|Firmware|Serial'
             echo '<<<3ware_disks>>>'
-            tw_cli "/$C" show drivestatus | grep -E 'p[0-9]' | sed "s/^/$C\//"
+            tw_cli "/${C}" show drivestatus | grep -E 'p[0-9]' | sed "s/^/${C}\//"
             echo '<<<3ware_units>>>'
-            tw_cli "/$C" show unitstatus | grep -E 'u[0-9]' | sed "s/^/$C\//"
+            tw_cli "/${C}" show unitstatus | grep -E 'u[0-9]' | sed "s/^/${C}\//"
         done
     fi
 }
@@ -836,13 +855,13 @@ section_nvidia() {
     if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
         echo '<<<nvidia>>>'
         for var in GPUErrors GPUCoreTemp; do
-            DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
+            DISPLAY=:0 waitmax 2 nvidia-settings -t -q ${var} | sed "s/^/${var}: /"
         done
     fi
 }
 
 section_drbd() {
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
+    if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
         cat /sys/kernel/debug/drbd/resources/*/connections/*/0/proc_drbd 2>/dev/null
@@ -861,11 +880,11 @@ section_heartbeat() {
 
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
-            if [ "$NODE" != "$(uname -n | tr '[:upper:]' '[:lower:]')" ]; then
-                STATUS=$(cl_status nodestatus "$NODE")
-                echo -n "$NODE $STATUS"
-                for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
-                    echo -n " $LINK $(cl_status hblinkstatus "$NODE" "$LINK")"
+            if [ "${NODE}" != "$(uname -n | tr '[:upper:]' '[:lower:]')" ]; then
+                STATUS=$(cl_status nodestatus "${NODE}")
+                printf "%s %s" "${NODE}" "${STATUS}"
+                for LINK in $(cl_status listhblinks "${NODE}" 2>/dev/null); do
+                    printf " %s %s" "${LINK}" "$(cl_status hblinkstatus "${NODE}" "${LINK}")"
                 done
                 echo
             fi
@@ -876,20 +895,20 @@ section_heartbeat() {
 ## Postfix mailqueue monitoring
 ## Determine the number of mails and their size in several postfix mail queues
 read_postfix_queue_dirs() {
-    postfix_queue_dir=$1
-    if [ -n "$postfix_queue_dir" ]; then
+    postfix_queue_dir=${1}
+    if [ -n "${postfix_queue_dir}" ]; then
         echo '<<<postfix_mailq>>>'
         echo "[[[${2}]]]"
         for queue in deferred active; do
-            count=$(find "${postfix_queue_dir}/$queue" -type f | wc -l)
-            size=$(du -s "${postfix_queue_dir}/$queue" | awk '{print $1 }')
-            if [ -z "$size" ]; then
+            count=$(find "${postfix_queue_dir}/${queue}" -type f | wc -l)
+            size=$(du -s "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
+            if [ -z "${size}" ]; then
                 size=0
             fi
-            if [ -z "$count" ]; then
+            if [ -z "${count}" ]; then
                 echo "Mail queue is empty"
             else
-                echo "QUEUE_${queue} $size $count"
+                echo "QUEUE_${queue} ${size} ${count}"
             fi
         done
     fi
@@ -902,11 +921,11 @@ section_mailqueue() {
         # Check if multi_instance_directories exists in main.cf and is not empty
         # always takes the last entry, multiple entries possible
         multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
-        if [ -n "$multi_instances_dirs" ]; then
-            for queue_dir in $multi_instances_dirs; do
-                if [ -n "$queue_dir" ]; then
-                    postfix_queue_dir=$(postconf -c "$queue_dir" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
-                    read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
+        if [ -n "${multi_instances_dirs}" ]; then
+            for queue_dir in ${multi_instances_dirs}; do
+                if [ -n "${queue_dir}" ]; then
+                    postfix_queue_dir=$(postconf -c "${queue_dir}" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
+                    read_postfix_queue_dirs "${postfix_queue_dir}" "${queue_dir}"
                 fi
             done
         fi
@@ -922,19 +941,19 @@ section_mailqueue() {
     if inpath postfix; then
         echo "<<<postfix_mailq_status:sep(58)>>>"
         for i in /var/spool/postfix*/; do
-            if [ -e "$i/pid/master.pid" ]; then
-                if [ -r "$i/pid/master.pid" ]; then
-                    postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
+            if [ -e "${i}/pid/master.pid" ]; then
+                if [ -r "${i}/pid/master.pid" ]; then
+                    postfix_pid=$(sed 's/ //g' <"${i}/pid/master.pid") # handle possible spaces in output
                     if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
-                        echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                        echo "${i}:the Postfix mail system is running:PID:${postfix_pid}" | sed 's/\/var\/spool\///g'
                     else
-                        echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                        echo "${i}:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
                     fi
                 else
-                    echo "$i:PID file exists but is not readable"
+                    echo "${i}:PID file exists but is not readable"
                 fi
             else
-                echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+                echo "${i}:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
             fi
         done
     fi
@@ -951,12 +970,12 @@ section_mailqueue() {
         if [ -d /var/spool/nullmailer/queue ]; then
             COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
             SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
-            echo "$SIZE $COUNT deferred"
+            echo "${SIZE} ${COUNT} deferred"
         fi
         if [ -d /var/spool/nullmailer/failed ]; then
             COUNT=$(find /var/spool/nullmailer/failed -type f | wc -l)
             SIZE=$(du -s /var/spool/nullmailer/failed | awk '{print $1 }')
-            echo "$SIZE $COUNT failed"
+            echo "${SIZE} ${COUNT} failed"
         fi
     fi
 }
@@ -968,24 +987,24 @@ section_omd() {
         ${MK_RUN_SYNC_PARTS} || return
 
         echo '<<<mknotifyd:sep(0)>>>'
-        date +%s
+        get_epoch
         for statefile in /omd/sites/*/var/log/mknotifyd.state; do
-            if [ -e "$statefile" ]; then
+            if [ -e "${statefile}" ]; then
                 site=${statefile%/var/log*}
                 site=${site#/omd/sites/}
-                echo "[$site]"
-                grep -v '^#' <"$statefile"
+                echo "[${site}]"
+                grep -v '^#' <"${statefile}"
             fi
         done
 
         echo '<<<omd_apache:sep(124)>>>'
         for statsfile in /omd/sites/*/var/log/apache/stats; do
-            if [ -e "$statsfile" ]; then
+            if [ -e "${statsfile}" ]; then
                 site=${statsfile%/var/log*}
                 site=${site#/omd/sites/}
-                echo "[$site]"
-                cat "$statsfile"
-                : >"$statsfile"
+                echo "[${site}]"
+                cat "${statsfile}"
+                : >"${statsfile}"
                 # prevent next section to fail caused by a missing newline at the end of the statsfile
                 echo
             fi
@@ -1010,7 +1029,7 @@ section_omd() {
             fi
             edition=${number##*.}
             number=${number%.*}
-            echo "$version;$number;$edition;$demo"
+            echo "${version};${number};${edition};${demo}"
         done
         echo '[sites]'
         echo 'site;used_version;autostart'
@@ -1019,10 +1038,10 @@ section_omd() {
             used_version=$(readlink "${sitedir}"/version)
             used_version=${used_version##*/}
             autostart="0"
-            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "$sitedir"/etc/omd/site.conf; then
+            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${sitedir}"/etc/omd/site.conf; then
                 autostart="1"
             fi
-            echo "$site;$used_version;$autostart"
+            echo "${site};${used_version};${autostart}"
         done
     fi
 }
@@ -1042,8 +1061,8 @@ section_veritas_cluster() {
         vcshost=$(hostname | cut -d. -f1)
         waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
         waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
-        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "$vcshost" -attribute State -localclus
-        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "$vcshost" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "${vcshost}" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "${vcshost}" -attribute State -localclus
         waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
     fi
 }
@@ -1052,38 +1071,38 @@ section_omd_core() {
     if cd /omd/sites; then
         echo '<<<livestatus_status:sep(59)>>>'
         for site in *; do
-            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
-                echo "[$site]"
+            if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
+                echo "[${site}]"
                 echo "GET status" |
-                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
+                    waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live"
             fi
         done
 
         echo '<<<livestatus_ssl_certs:sep(124)>>>'
         for site in *; do
-            echo "[$site]"
-            for PEM_PATH in "/omd/sites/$site/etc/ssl/ca.pem" "/omd/sites/$site/etc/ssl/sites/$site.pem"; do
-                if [ -f "$PEM_PATH" ]; then
-                    CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH" | sed 's/notAfter=//')
-                    echo "$PEM_PATH|$(date --date="$CERT_DATE" --utc +%s)"
+            echo "[${site}]"
+            for PEM_PATH in "/omd/sites/${site}/etc/ssl/ca.pem" "/omd/sites/${site}/etc/ssl/sites/${site}.pem"; do
+                if [ -f "${PEM_PATH}" ]; then
+                    CERT_DATE=$(openssl x509 -enddate -noout -in "${PEM_PATH}" | sed 's/notAfter=//')
+                    echo "${PEM_PATH}|$(date --date="${CERT_DATE}" --utc +%s)"
                 fi
             done
         done
 
         echo '<<<mkeventd_status:sep(0)>>>'
         for site in *; do
-            if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
-                echo "[\"$site\"]"
+            if [ -S "/omd/sites/${site}/tmp/run/mkeventd/status" ]; then
+                echo "[\"${site}\"]"
                 (echo "GET status" && echo "OutputFormat: json") |
-                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
+                    waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/mkeventd/status"
             fi
         done
 
         echo '<<<cmk_site_statistics:sep(59)>>>'
         for site in *; do
-            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
-                echo "[$site]"
-                waitmax 5 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+            if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
+                echo "[${site}]"
+                waitmax 5 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live" <<LimitString
 GET hosts
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1097,7 +1116,7 @@ StatsAnd: 2
 Stats: scheduled_downtime_depth > 0
 Filter: custom_variable_names < _REALNAME
 LimitString
-                waitmax 5 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+                waitmax 5 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live" <<LimitString
 GET services
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1147,9 +1166,9 @@ section_mkbackup() {
             JOB_IDENT=${F%.state}
             JOB_IDENT=${JOB_IDENT##*/}
 
-            if [ "$JOB_IDENT" != "restore" ]; then
-                echo "[[[site:$SITE:$JOB_IDENT]]]"
-                cat "$F"
+            if [ "${JOB_IDENT}" != "restore" ]; then
+                echo "[[[site:${SITE}:${JOB_IDENT}]]]"
+                cat "${F}"
                 echo
             fi
         done
@@ -1162,9 +1181,9 @@ section_mkbackup() {
             JOB_IDENT=${F%.state}
             JOB_IDENT=${JOB_IDENT##*/}
 
-            if [ "$JOB_IDENT" != "restore" ]; then
-                echo "[[[system:$JOB_IDENT]]]"
-                cat "$F"
+            if [ "${JOB_IDENT}" != "restore" ]; then
+                echo "[[[system:${JOB_IDENT}]]]"
+                cat "${F}"
                 echo
             fi
         done
@@ -1173,14 +1192,14 @@ section_mkbackup() {
 
 section_job() {
     (
-        cd "$MK_VARDIR/job" 2>/dev/null || return
+        cd "${MK_VARDIR}/job" 2>/dev/null || return
         echo '<<<job>>>'
         for username in *; do
             (
                 # the return below only terminates the subshell, not the entire function
-                cd "$username" 2>/dev/null || return
+                cd "${username}" 2>/dev/null || return
                 if [ "$(id -u)" -eq 0 ]; then
-                    su -s "$SHELL" "$username" -c "head -n -0 -v *"
+                    su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
                 else
                     head -n -0 -v ./*
                 fi
@@ -1190,16 +1209,23 @@ section_job() {
 }
 
 section_thermal() {
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+    if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
         echo '<<<lnx_thermal:sep(124)>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             line="${F##*/}"
-            if [ ! -e "$F/mode" ]; then line="${line}|-"; else line="${line}|$(cat "$F"/mode)"; fi
-            line="${line}|$(cat "${F}/type" "${F}/temp" | tr \\n "|")"
-            for G in "${F}"/trip_point_*_temp "${F}"/trip_point_*_type; do
-                line="${line}$(tr <"$G" \\n "|")"
+            if [ ! -e "${F}/mode" ]; then
+                line="${line}|-"
+            else
+                line="${line}|$(cat "${F}"/mode)"
+            fi
+
+            line="${line}|$(cat "${F}/type")|$(cat "${F}/temp")"
+
+            for G in "${F}"/trip_point_*_temp; do
+                line="${line}|$(cat "$G")|$(cat "${G/%temp/type}")"
             done
-            echo "${line%?}"
+
+            echo "$line"
         done
     fi
 }
@@ -1229,9 +1255,9 @@ section_proxmox() {
 
 section_haproxy() {
     for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
-        if [ -r "$HAPROXY_SOCK" ] && inpath socat; then
+        if [ -r "${HAPROXY_SOCK}" ] && inpath socat; then
             echo "<<<haproxy:sep(44)>>>"
-            echo "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
+            echo "show stat" | socat - "UNIX-CONNECT:${HAPROXY_SOCK}"
         fi
     done
 }
@@ -1287,7 +1313,7 @@ get_ntpq() {
 }
 
 section_timesyncd() {
-    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+    if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         return 0
     fi
     inpath systemctl || return 1
@@ -1295,7 +1321,7 @@ section_timesyncd() {
     systemctl is-enabled systemd-timesyncd.service >/dev/null 2>&1 || return 1
     # debian 10.8 uses ConditionFileIsExecutable to "disable" systemd-timedatectl when ntp is installed.
     # The service is still enabled, but does not start timesyncd as the condition is not met.
-    (inpath ntpd || inpath openntpd) && return 1 # we check the same condition as the systemd condition
+    (inpath ntpd || inpath openntpd || inpath chronyd || inpath VBoxService) && return 1 # we check the same condition as the systemd condition
     timedatectl timesync-status >/dev/null 2>&1 || return 1
 
     ${MK_RUN_SYNC_PARTS} || return 0
@@ -1307,7 +1333,7 @@ section_timesyncd() {
 }
 
 section_ntp() {
-    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+    if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         return 0
     fi
     # First we try to identify if we're beholden to systemd
@@ -1345,7 +1371,9 @@ section_ntp() {
 }
 
 run_real_time_checks() {
-    [ -e "${MK_CONFDIR}/real_time_checks.cfg" ] || return
+    RTC_PLUGINS=""
+    # shellcheck source=agents/cfg_examples/real_time_checks.cfg
+    . "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null || return
 
     # new mechanism to set the passphrase has priority
     secret="${PASSPHRASE:-"${RTC_SECRET}"}"
@@ -1373,11 +1401,11 @@ _rt_pidfile_is_mine() {
 }
 
 _rt_pidfile_is_alive() {
-    [ "$(("$(date +%s)" - "$(stat -c %X "${1}")"))" -le "${RTC_TIMEOUT}" ]
+    [ "$(("$(get_epoch)" - "$(get_file_atime "${1}")"))" -le "${RTC_TIMEOUT}" ]
 }
 
 _rt_timestamp() {
-    date +%s | tr -d '\n'
+    get_epoch | tr -d '\n'
 }
 
 _rt_sendudp() {
@@ -1431,147 +1459,152 @@ run_real_time_checks_for_remote() {
     done
 }
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
+_mrpe_get_interval() {
+    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+}
+
 run_remote_plugins() {
-    configfile="$1"
-    prefix="$2"
-    if [ -e "$configfile" ]; then
-        grep -Ev '^[[:space:]]*($|#)' "$configfile" |
-            while read -r descr cmdline; do
-                interval=
-                # NOTE: Due to an escaping-related bug in some old bash versions
-                # (3.2.x), we have to use an intermediate variable for the pattern.
-                pattern='\(([^\)]*)\)[[:space:]](.*)'
-                if [[ $cmdline =~ $pattern ]]; then
-                    parameters=${BASH_REMATCH[1]}
-                    cmdline=${BASH_REMATCH[2]}
+    configfile="${1}"
+    prefix="${2}"
+    [ -f "${configfile}" ] || return
 
-                    # split multiple parameter assignments
-                    for par in $(echo "$parameters" | tr ":" "\n"); do
-                        # split each assignment
-                        IFS='=' read -r key value <<<"${par}"
-                        if [ "$key" = "interval" ]; then
-                            interval=$value
-                        fi
-                    done
-                fi
+    _non_comment_lines "${configfile}" | while read -r descr rest; do
+        interval="$(_mrpe_get_interval "${rest}")"
+        cmdline="${rest#(*) }"
 
-                if [ -n "$prefix" ]; then
-                    cmdline="$prefix'$cmdline'"
-                fi
-                if [ -z "$interval" ]; then
-                    ${MK_RUN_SYNC_PARTS} && run_mrpe "$descr" "$cmdline"
-                else
-                    run_cached "mrpe_$descr" "$interval" "run_mrpe '$descr' '$cmdline'"
-                fi
-            done
-    fi
+        if [ -n "${prefix}" ]; then
+            cmdline="${prefix}'${cmdline}'"
+        fi
+
+        if [ -z "${interval}" ]; then
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+        else
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+        fi
+
+    done
 }
 
 run_runas_executor() {
-    if [ -e "$MK_CONFDIR/runas.cfg" ]; then
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
-            while read -r type user configfile; do
-                # TODO: cleanup: run_remote_plugins checks for existence.
-                if [ -d "$configfile" ] || [ "$type" = "mrpe" ] && [ -f "$configfile" ]; then
-                    prefix=""
-                    if [ "$user" != "-" ]; then
-                        prefix="su $user -c "
-                    fi
+    [ -f "${MK_CONFDIR}/runas.cfg" ] || return
 
-                    # mrpe includes
-                    if [ "$type" = "mrpe" ]; then
-                        run_remote_plugins "$configfile" "$prefix"
+    _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
+        prefix=""
+        if [ "${user}" != "-" ]; then
+            prefix="su ${user} -c "
+        fi
 
-                    # local and plugin includes
-                    elif [ "$type" = "local" ] || [ "$type" = "plugin" ]; then
-                        if ${MK_RUN_SYNC_PARTS}; then
-                            if [ "$type" = "local" ]; then
-                                echo "<<<local:sep(0)>>>"
-                            fi
+        # mrpe includes
+        if [ "${type}" = "mrpe" ]; then
+            run_remote_plugins "${configfile}" "${prefix}"
 
-                            find "$configfile" -executable -type f |
-                                while read -r filename; do
-                                    if [ -n "$prefix" ]; then
-                                        cmdline="$prefix\"$filename\""
-                                    else
-                                        cmdline=$filename
-                                    fi
-
-                                    _log_section_time "$cmdline"
-                                done
-                        fi
-                    fi
+        # local and plugin includes
+        elif [ "${type}" = "local" ] || [ "${type}" = "plugin" ]; then
+            if ${MK_RUN_SYNC_PARTS}; then
+                if [ "${type}" = "local" ]; then
+                    echo "<<<local:sep(0)>>>"
                 fi
-            done
-    fi
+
+                find "${configfile}/" -executable -type f |
+                    while read -r filename; do
+                        if [ -n "${prefix}" ]; then
+                            cmdline="${prefix}\"${filename}\""
+                        else
+                            cmdline=${filename}
+                        fi
+
+                        _log_section_time "${cmdline}"
+                    done
+            fi
+        fi
+    done
 }
 
-# Runs a command asynchronous by use of a cache file. Usage:
-# run_cached [-s] NAME MAXAGE
-#   -s creates the section header <<<$NAME>>>
-#   NAME is the name of the section (also used as cache file name)
-#   MAXAGE is the maximum cache livetime in seconds
+# Run a command asynchronous by use of a cache file.
+# Usage: run_cached NAME MAXAGE [COMMAND ...]
+#   NAME     name of the section (also used as cache file name)
+#   MAXAGE   maximum cache livetime in seconds
+#   COMMAND  command to run
+#
+# Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
+# This means that extra escaping is required.
+# For example: to run `cat "My File"` every two minutes, you'll have to call
+#
+#     run_cached "my_file_output" 120 "cat \"My File\""
+#
 run_cached() {
-    local NAME=$1
-    local MAXAGE=$2
+    NAME="${1}"
+    MAXAGE="${2}"
     shift 2
-    local CMDLINE=$*
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
+    REFRESH_INTERVAL="${MAXAGE}"
 
     if ${DISABLE_CACHING:-false}; then
-        # shellcheck disable=SC2090
-        $CMDLINE
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
         return
     fi
 
-    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache"; fi
-    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+    [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
-    local NOW
-    NOW=$(date +%s)
+    NOW="$(get_epoch)"
+    MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
 
-    # Check if the creation of the cache takes suspiciously long and kill the
-    # process if the age (access time) of $CACHEFILE.new is twice the MAXAGE.
-    # Output the evantually already cached section anyways and start the cache
-    # update again.
-    if [ -e "$CACHEFILE.new" ]; then
-        local CF_ATIME
-        CF_ATIME=$(stat -c %X "$CACHEFILE.new")
-        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ]; then
-            # Kill the process still accessing that file in case
-            # it is still running. This avoids overlapping processes!
-            fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
-            rm -f "$CACHEFILE.new"
+    if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
+
+        # Output the file (even if it is outdated)
+        CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
+            # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
+            sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+        else
+            # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
+            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
+
     fi
 
-    # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ]; then
-        local MTIME
-        MTIME=$(get_file_mtime "$CACHEFILE")
-        local AGE
-        AGE=$((NOW - MTIME))
-        if [ "$AGE" -le "$MAXAGE" ]; then local USE_CACHEFILE=1; fi
+    if ${MK_RUN_ASYNC_PARTS}; then
 
-        if ${MK_RUN_SYNC_PARTS}; then
-            # Output the file even if it is outdated
-            CACHE_INFO="cached($MTIME,$MAXAGE)"
-            if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
-            else
-                # insert the cache info in the section header (^= after '!'),
-                # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+        # Check if the creation of the cache takes suspiciously long.
+        # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
+        for cfile in "${CACHEFILE}.new."*; do
+            [ -e "${cfile}" ] || break # no match
+            if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
+                kill -9 "${cfile##*.new.}" # TODO: what about child processes?
+                rm -f "${cfile}"
             fi
+        done
+
+        # This does the right thing, regardless whether the pattern matches!
+        _cfile_in_use() {
+            for cfile in "${CACHEFILE}.new."*; do
+                printf "%s\n" "${cfile}"
+                break
+            done
+        }
+
+        # Time to refresh cache file and new job not yet running?
+        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
+            THIS_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
+            # Start it. If the command fails the output is thrown away
+            cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
+eval '${MK_DEFINE_LOG_SECTION_TIME}'
+exec > "${CACHEFILE}.new.\$\$" || exit 1
+$* && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+HERE
         fi
+
     fi
 
-    ${MK_RUN_ASYNC_PARTS} || return
-
-    # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
-        # When the command fails, the output is throws away ignored
-        echo "eval '${MK_DEFINE_LOG_SECTION_TIME}'; set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /bin/bash >/dev/null 2>&1 &
-    fi
+    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO
 }
 
 # Make run_cached available for subshells (plugins, local checks, etc.)
@@ -1582,7 +1615,7 @@ export -f run_cached
 #
 
 run_local_checks() {
-    cd "$LOCALDIR" || return
+    cd "${LOCALDIR}" || return
 
     if ${MK_RUN_SYNC_PARTS}; then
         echo '<<<local:sep(0)>>>'
@@ -1605,7 +1638,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return
@@ -1703,17 +1736,18 @@ run_plugins() {
 #
 
 run_mrpe() {
-    local descr=$1
+    descr="${1}"
     shift
-    local cmdline=$*
 
-    echo '<<<mrpe>>>'
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
 
-    PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-
-    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "$?" "${OUTPUT}" | tr \\n \\1
+    printf "<<<mrpe>>>\n"
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
     printf "\n"
+
+    unset -v descr PLUGIN OUTPUT STATUS
 }
 
 export -f run_mrpe
@@ -1721,112 +1755,114 @@ export -f run_mrpe
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk
 
-    [ -z "$MK_SKIP_LABELS" ] && _log_section_time section_checkmk_agent_plugins
+    _log_section_time section_cmk_agent_ctl_status
 
-    [ -z "$MK_SKIP_LABELS" ] && _log_section_time section_labels
+    [ -z "${MK_SKIP_LABELS}" ] && _log_section_time section_checkmk_agent_plugins
 
-    [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
+    [ -z "${MK_SKIP_LABELS}" ] && _log_section_time section_labels
 
-    [ -z "$MK_SKIP_SYSTEMD" ] && _log_section_time section_systemd
+    [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
+
+    [ -z "${MK_SKIP_SYSTEMD}" ] && _log_section_time section_systemd
 
     # Filesystem usage for ZFS
-    [ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs
+    [ -z "${MK_SKIP_ZFS}" ] && _log_section_time section_zfs
 
     # Check NFS mounts by accessing them with stat -f (System
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
-    [ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time section_nfs_mounts
+    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts
 
     # Check mount options. Filesystems may switch to 'ro' in case
     # of a read error.
-    [ -z "$MK_SKIP_MOUNTS" ] && _log_section_time section_mounts
+    [ -z "${MK_SKIP_MOUNTS}" ] && _log_section_time section_mounts
 
-    [ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
+    [ -z "${MK_SKIP_PS}" ] && _log_section_time section_ps
 
     # Memory usage
-    [ -z "$MK_SKIP_MEM" ] && _log_section_time section_mem
+    [ -z "${MK_SKIP_MEM}" ] && _log_section_time section_mem
 
     # Load and number of processes
-    [ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
+    [ -z "${MK_SKIP_CPU}" ] && _log_section_time section_cpu
 
     # Uptime
-    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
+    [ -z "${MK_SKIP_UPTIME}" ] && _log_section_time section_uptime
 
     # New variant: Information about speed and state in one section
-    [ -z "$MK_SKIP_LNX_IF" ] && _log_section_time section_lnx_if
+    [ -z "${MK_SKIP_LNX_IF}" ] && _log_section_time section_lnx_if
 
     # Current state of bonding interfaces
-    [ -z "$MK_SKIP_BONDING_IF" ] && _log_section_time section_bonding_interfaces
+    [ -z "${MK_SKIP_BONDING_IF}" ] && _log_section_time section_bonding_interfaces
 
     # Same for Open vSwitch bonding
-    [ -z "$MK_SKIP_VSWITCH_BONDING" ] && _log_section_time section_vswitch_bonding
+    [ -z "${MK_SKIP_VSWITCH_BONDING}" ] && _log_section_time section_vswitch_bonding
 
     # Number of TCP connections in the various states
-    [ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
+    [ -z "${MK_SKIP_TCP}" ] && _log_section_time section_tcp
 
     # Linux Multipathing
-    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
+    [ -z "${MK_SKIP_MULTIPATHING}" ] && _log_section_time section_multipathing
 
     # Performancecounter Platten
-    [ -z "$MK_SKIP_DISKSTAT" ] && _log_section_time section_diskstat
+    [ -z "${MK_SKIP_DISKSTAT}" ] && _log_section_time section_diskstat
 
     # Performancecounter Kernel
-    [ -z "$MK_SKIP_KERNEL" ] && _log_section_time section_kernel
+    [ -z "${MK_SKIP_KERNEL}" ] && _log_section_time section_kernel
 
     # RAID status of Linux software RAID
-    [ -z "$MK_SKIP_MD" ] && _log_section_time section_md
+    [ -z "${MK_SKIP_MD}" ] && _log_section_time section_md
 
     # RAID status of Linux RAID via device mapper
-    [ -z "$MK_SKIP_DM_RAID" ] && _log_section_time section_dm_raid
+    [ -z "${MK_SKIP_DM_RAID}" ] && _log_section_time section_dm_raid
 
     # RAID status of LSI controllers via cfggen
-    [ -z "$MK_SKIP_CFGGEN" ] && _log_section_time section_cfggen
+    [ -z "${MK_SKIP_CFGGEN}" ] && _log_section_time section_cfggen
 
     # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
     # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-    [ -z "$MK_SKIP_MEGARAID" ] && _log_section_time section_megaraid
+    [ -z "${MK_SKIP_MEGARAID}" ] && _log_section_time section_megaraid
 
     # RAID status of 3WARE disk controller (by Radoslaw Bak)
-    [ -z "$MK_SKIP_THREE_WARE_RAID" ] && _log_section_time section_3ware_raid
+    [ -z "${MK_SKIP_THREE_WARE_RAID}" ] && _log_section_time section_3ware_raid
 
     # VirtualBox Guests. Section must always been output. Otherwise the
     # check would not be executed in case no guest additions are installed.
     # And that is something the check wants to detect
-    [ -z "$MK_SKIP_VBOX_GUEST" ] && _log_section_time section_vbox_guest
+    [ -z "${MK_SKIP_VBOX_GUEST}" ] && _log_section_time section_vbox_guest
 
     # OpenVPN Clients. Currently we assume that the configuration # is in
     # /etc/openvpn. We might find a safer way to find the configuration later.
-    [ -z "$MK_SKIP_OPENVPN" ] && _log_section_time section_openvpn
+    [ -z "${MK_SKIP_OPENVPN}" ] && _log_section_time section_openvpn
 
-    [ -z "$MK_SKIP_NVIDIA" ] && _log_section_time section_nvidia
+    [ -z "${MK_SKIP_NVIDIA}" ] && _log_section_time section_nvidia
 
-    [ -z "$MK_SKIP_DRBD" ] && _log_section_time section_drbd
+    [ -z "${MK_SKIP_DRBD}" ] && _log_section_time section_drbd
 
     # Heartbeat monitoring
     # Different handling for heartbeat clusters with and without CRM
     # for the resource state
-    [ -z "$MK_SKIP_HEARTBEAT" ] && _log_section_time section_heartbeat
+    [ -z "${MK_SKIP_HEARTBEAT}" ] && _log_section_time section_heartbeat
 
-    [ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time section_mailqueue
+    [ -z "${MK_SKIP_MAILQUEUE}" ] && _log_section_time section_mailqueue
 
     ## Check status of OMD sites and Checkmk Notification spooler
     # Welcome the ZFS check on Linux
     # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
     # check zpool status
-    [ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
+    [ -z "${MK_SKIP_ZPOOL}" ] && _log_section_time section_zpool
 
     # Veritas Cluster Server
     # Software is always installed in /opt/VRTSvcs.
     # Secure mode must be off to allow root to execute commands
-    [ -z "$MK_SKIP_VERITAS" ] && _log_section_time section_veritas_cluster
+    [ -z "${MK_SKIP_VERITAS}" ] && _log_section_time section_veritas_cluster
 
     ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
+    [ -z "${MK_SKIP_FILEINFO}" ] && _log_section_time section_fileinfo
 
     # Get stats about OMD monitoring cores running on this machine.
     # Since cd is a shell builtin the check does not affect the performance
     # on non-OMD machines.
-    [ -z "$MK_SKIP_OMD_CORES" ] && _log_section_time section_omd_core
+    [ -z "${MK_SKIP_OMD_CORES}" ] && _log_section_time section_omd_core
 
     # Collect states of configured Checkmk site backup jobs
     _log_section_time section_mkbackup
@@ -1835,63 +1871,70 @@ run_purely_synchronous_sections() {
     # is a sub directory per user that ran a job. That directory must be
     # owned by the user so that a symlink or hardlink attack for reading
     # arbitrary files can be avoided.
-    [ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
+    [ -z "${MK_SKIP_JOB}" ] && _log_section_time section_job
 
     # Gather thermal information provided e.g. by acpi
     # At the moment only supporting thermal sensors
-    [ -z "$MK_SKIP_THERMAL" ] && _log_section_time section_thermal
+    [ -z "${MK_SKIP_THERMAL}" ] && _log_section_time section_thermal
 
     # Libelle Business Shadow
-    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
+    [ -z "${MK_SKIP_LIBELLE}" ] && _log_section_time section_libelle
 
     # HTTP Accelerator Statistics
-    [ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && _log_section_time section_http_accelerator
+    [ -z "${MK_SKIP_HTTP_ACCELERATOR}" ] && _log_section_time section_http_accelerator
 
     # Proxmox Cluster
-    [ -z "$MK_SKIP_PROXMOX" ] && _log_section_time section_proxmox
+    [ -z "${MK_SKIP_PROXMOX}" ] && _log_section_time section_proxmox
 
-    [ -z "$MK_SKIP_HAPROXY" ] && _log_section_time section_haproxy
+    [ -z "${MK_SKIP_HAPROXY}" ] && _log_section_time section_haproxy
 }
 
 run_partially_asynchronous_sections() {
     # Time synchronization with Chrony
-    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time section_chrony
+    [ -z "${MK_SKIP_CHRONY}" ] && _log_section_time section_chrony
 
     # Hardware sensors via IPMI (need ipmitool)
-    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time section_ipmitool
+    [ -z "${MK_SKIP_IPMITOOL}" ] && _log_section_time section_ipmitool
 
     # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
     # have installed freeipmi that IPMI is really support by your hardware.
-    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time section_ipmisensors
+    [ -z "${MK_SKIP_IPMISENSORS}" ] && _log_section_time section_ipmisensors
 
     # RAID controllers from areca (Taiwan)
     # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-    [ -z "$MK_SKIP_ARECA" ] && _log_section_time section_areca_raid
+    [ -z "${MK_SKIP_ARECA}" ] && _log_section_time section_areca_raid
 
     ## Check status of OMD sites and Checkmk Notification spooler
-    [ -z "$MK_SKIP_OMD" ] && _log_section_time section_omd
+    [ -z "${MK_SKIP_OMD}" ] && _log_section_time section_omd
 
-    if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
+    if [ -z "${MK_SKIP_TIMESYNCHRONISATION}" ]; then
         _log_section_time section_timesyncd || _log_section_time section_ntp
     fi
 }
 
 main_setup() {
 
+    set_up_remote
+
     # close stdin and tempotarily disable stderr
     exec </dev/null 9>&2 2>/dev/null
 
     set_up_process_commandline_arguments "$@"
 
+    set_up_get_epoch
+
     set_variable_defaults
 
-    preamble_1
-    set_up_remote
+    announce_remote # needs MK_VARDIR!
+
+    set_up_path
+
     set_up_profiling
-    preamble_5
-    preamble_6
+    unset_locale
+    detect_python
+    detect_container_environment
     set_up_encryption
-    preamble_7
+    set_up_disabled_sections
 
 }
 
@@ -1909,7 +1952,7 @@ main_mixed_parts() {
     # MK's Remote Plugin Executor
     # run_remote_plugins -> run_mrpe -> _log_section_time CMD
     #                    -> run_cached _log_section_time CMD
-    run_remote_plugins "$MK_CONFDIR/mrpe.cfg" ""
+    run_remote_plugins "${MK_CONFDIR}/mrpe.cfg" ""
 
     # MK's runas Executor
     # run_runas_executor -> _log_section_time CMD
@@ -1935,8 +1978,6 @@ main_async_parts() {
 }
 
 main_finalize_sync() {
-    _log_section_time section_checkmk_failed_plugins
-
     finalize_profiling
 }
 
@@ -1960,9 +2001,9 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt "${PASSPHRASE}" ""
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
 
-        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 
         sleep "${MK_LOOP_INTERVAL}"
 

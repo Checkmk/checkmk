@@ -56,6 +56,10 @@ def check_apt(_no_item, params, section):
         yield 0, NOTHING_PENDING_FOR_INSTALLATION
         return
 
+    if section.no_esm_support:
+        yield 2, "System could receive security updates, but needs extended support license"
+        return
+
     yield (
         section.updates and params["normal"] or 0,
         _format("normal updates", section.updates),

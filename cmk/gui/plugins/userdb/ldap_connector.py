@@ -38,7 +38,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Dict, IO, Iterator, List, Optional, Set
+from typing import Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -79,6 +79,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.sites import has_wato_slave_sites
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    CascadingDropdownChoice,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
@@ -273,7 +274,7 @@ class LDAPUserConnector(UserConnector):
                 conn.set_option(ldap.OPT_REFERRALS, 0)
 
             if "use_ssl" in self._config:
-                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, cmk.utils.paths.trusted_ca_file)
+                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, str(cmk.utils.paths.trusted_ca_file))
 
                 # Caused trouble on older systems or systems with some special configuration or set of
                 # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and
@@ -430,9 +431,10 @@ class LDAPUserConnector(UserConnector):
     def _default_bind(self, conn):
         try:
             if "bind" in self._config:
+                bind_dn, password_id = self._config["bind"]
                 self._bind(
-                    self._replace_macros(self._config["bind"][0]),
-                    ("password", self._config["bind"][1][1]),
+                    self._replace_macros(bind_dn),
+                    password_id,
                     catch=False,
                     conn=conn,
                 )
@@ -447,7 +449,7 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(self, user_dn, password: _Tuple[str, str], catch=True, conn=None):
+    def _bind(self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
@@ -455,7 +457,7 @@ class LDAPUserConnector(UserConnector):
             # ? user_dn seems to have the type str
             conn.simple_bind_s(
                 ensure_str(user_dn),  # pylint: disable= six-ensure-str-bin-call
-                password_store.extract(password),
+                password_store.extract(password_id),
             )
             self._logger.info("  SUCCESS")
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
@@ -1571,7 +1573,7 @@ def ldap_attribute_plugins_elements(connection):
     return elements
 
 
-def register_user_attribute_sync_plugins():
+def register_user_attribute_sync_plugins() -> None:
     """Register sync plugins for all custom user attributes (assuming simple data types)"""
     # Remove old user attribute plugins
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
@@ -1727,7 +1729,6 @@ def _group_membership_parameters():
                     "situation and really need it. The current connection is always used."
                 ),
                 choices=lambda: get_connection_choices(add_this=False),
-                default_value=[None],
             ),
         ),
     ]
@@ -2218,7 +2219,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                 (
                     "groups",
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             elements=[
                                 (
                                     "cn",
@@ -2252,7 +2253,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
             required_keys=["groups"],
         )
 
-    def _get_user_attribute_choices(self):
+    def _get_user_attribute_choices(self) -> Sequence[CascadingDropdownChoice]:
         return [
             (name, attr.valuespec().title(), attr.valuespec())
             for name, attr in get_user_attributes()
@@ -2304,7 +2305,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         user_id: str,
         ldap_user: dict,
         user: dict,
-    ) -> dict:
+    ) -> dict[Literal["roles"], list[str]]:
         ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         # posixGroup objects use the memberUid attribute to specify the group
@@ -2312,7 +2313,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # username needs to be used for filtering here.
         user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
-        roles = set()
+        roles = []
 
         # Loop all roles mentioned in params (configured to be synchronized)
         for role_id, group_specs in params.items():
@@ -2330,14 +2331,14 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
                 # if group could be found and user is a member, add the role
                 if dn in ldap_groups and user_cmp_val in ldap_groups[dn]["members"]:
-                    roles.add(role_id)
+                    roles.append(role_id)
 
         # Load default roles from default user profile when the user got no role
         # by the role sync plugin
         if not roles:
             roles = config.default_user_profile["roles"][:]
 
-        return {"roles": list(roles)}
+        return {"roles": roles}
 
     def fetch_needed_groups_for_groups_to_roles(self, connection, params):
         # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
@@ -2397,9 +2398,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                 (
                     role_id,
                     Transform(
-                        ListOf(
-                            Transform(
-                                Tuple(
+                        valuespec=ListOf(
+                            valuespec=Transform(
+                                valuespec=Tuple(
                                     elements=[
                                         LDAPDistinguishedName(
                                             title=_("Group<nobr> </nobr>DN"),

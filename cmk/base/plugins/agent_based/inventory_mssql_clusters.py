@@ -53,7 +53,7 @@ register.agent_section(
 
 def inventory_mssql_clusters(section: Section) -> InventoryResult:
     path = ["software", "applications", "mssql", "instances"]
-    for inst in sorted(section, key=lambda i: i.instance_id):
+    for inst in section:
         yield TableRow(
             path=path,
             key_columns={

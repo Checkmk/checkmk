@@ -6,26 +6,22 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 # read optional command line argument
 if [ "$#" -eq 1 ]; then
     PYTHON_VERSION=$1
 else
-    cd "${SCRIPT_DIR}"
-    while true; do
-        if [ -e defines.make ]; then
-            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
-            break
-        elif [ $PWD == / ]; then
-            failure "could not determine Python version"
-        else
-            cd ..
-        fi
-    done
+    PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
 fi
 
-pip3 install pipenv==2021.5.29 virtualenv==20.7.2
+PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
+VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
+
+pip3 install \
+    pipenv=="$PIPENV_VERSION" \
+    virtualenv=="$VIRTUALENV_VERSION"
 
 # link pipenv to /usr/bin to be in PATH. Fallback to /opt/bin if no permissions for writting to /usr/bin.
 #   /opt/bin does not work as default, because `make -C omd deb` requires it to be in /usr/bin.

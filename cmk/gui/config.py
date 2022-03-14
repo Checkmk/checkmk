@@ -14,7 +14,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-from livestatus import SiteConfigurations
+from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.utils.paths
 import cmk.utils.tags
@@ -351,20 +351,24 @@ def _migrate_string_encoded_socket(value: str) -> Tuple[str, Union[Dict]]:
 
 
 def default_single_site_configuration() -> SiteConfigurations:
-    return {
-        omd_site(): {
-            "alias": _("Local site %s") % omd_site(),
-            "socket": ("local", None),
-            "disable_wato": True,
-            "disabled": False,
-            "insecure": False,
-            "url_prefix": url_prefix(),
-            "multisiteurl": "",
-            "persist": False,
-            "replicate_ec": False,
-            "replication": None,
-            "timeout": 5,
-            "user_login": True,
-            "proxy": None,
+    return SiteConfigurations(
+        {
+            omd_site(): SiteConfiguration(
+                {
+                    "alias": _("Local site %s") % omd_site(),
+                    "socket": ("local", None),
+                    "disable_wato": True,
+                    "disabled": False,
+                    "insecure": False,
+                    "url_prefix": url_prefix(),
+                    "multisiteurl": "",
+                    "persist": False,
+                    "replicate_ec": False,
+                    "replication": None,
+                    "timeout": 5,
+                    "user_login": True,
+                    "proxy": None,
+                }
+            )
         }
-    }
+    )

@@ -134,7 +134,7 @@ def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True)
     unit = size_prefixes[exponent]
     if add_bytes_prefix:
         unit = (unit + ("B" if use_si_units else "iB")).lstrip("i")
-    scaled_value = float(value) / base ** exponent
+    scaled_value = float(value) / base**exponent
     fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)
     return fmt % scaled_value, unit
 

@@ -9,7 +9,6 @@ This command is normally executed automatically at the end of "omd update" on
 all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
-
 import argparse
 import ast
 import copy
@@ -22,20 +21,46 @@ import re
 import shutil
 import subprocess
 import time
+from contextlib import contextmanager, suppress
 from pathlib import Path, PureWindowsPath
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Set,
+    Tuple,
+)
+
+from cryptography import x509
 
 import cmk.utils
+import cmk.utils.certs as certs
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
+import cmk.utils.site
 import cmk.utils.tty as tty
+from cmk.utils import password_store
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
-from cmk.utils.type_defs import CheckPluginName, HostName, UserId
+from cmk.utils.store import load_from_mk_file, save_mk_file
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    ContactgroupName,
+    HostName,
+    HostOrServiceConditionRegex,
+    UserId,
+)
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -49,7 +74,6 @@ from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 
 import cmk.gui.config
 import cmk.gui.groups
-import cmk.gui.modules
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.utils
 import cmk.gui.visuals as visuals
@@ -57,7 +81,10 @@ import cmk.gui.watolib.groups
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
+from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.log import logger as gui_logger
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     get_all_dashboards,
@@ -73,12 +100,21 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
-from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import (
+    ActivateChangesWriter,
+    add_change,
+    AuditLogStore,
+    ObjectRef,
+    ObjectRefType,
+)
+from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
@@ -113,6 +149,17 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("aruba_wlc_clients"): CheckPluginName("wlc_clients"),
     CheckPluginName("pdu_gude_8301"): CheckPluginName("pdu_gude"),
     CheckPluginName("pdu_gude_8310"): CheckPluginName("pdu_gude"),
+    CheckPluginName("ucd_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("hpux_cpu"): CheckPluginName("cpu_loads"),
+    CheckPluginName("mcafee_emailgateway_cpuload"): CheckPluginName("cpu_loads"),
+    CheckPluginName("statgrab_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("arbor_peakflow_sp_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("arbor_peakflow_tms_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("arbor_pravail_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("lxc_container_cpu"): CheckPluginName("cpu_utilization_os"),
+    CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
+    CheckPluginName("docker_container_diskstat"): CheckPluginName("diskstat"),
+    CheckPluginName("check_mk_agent_update"): CheckPluginName("checkmk_agent"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
@@ -133,6 +180,17 @@ REMOVED_WATO_RULESETS_MAP = {
 _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 
+@contextmanager
+def _save_user_instances(visual_type: str, all_visuals: Dict):
+    modified_user_instances: Set[UserId] = set()
+
+    yield modified_user_instances
+
+    # Now persist all modified instances
+    for user_id in modified_user_instances:
+        visuals.save(visual_type, all_visuals, user_id)
+
+
 class UpdateConfig:
     def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
         super().__init__()
@@ -147,14 +205,18 @@ class UpdateConfig:
             del log.logger.handlers[:]
             logging.getLogger().addHandler(console_handler)
         self._has_errors = False
+        gui_logger.setLevel(
+            _our_logging_level_to_gui_logging_level(self._logger.getEffectiveLevel())
+        )
 
     def run(self) -> bool:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
 
-        cmk.gui.modules.load_plugins()
+        main_modules.load_plugins()
 
-        with gui_context(), SuperUserContext():
+        # Note: Redis has to be disabled first, the other contexts depend on it
+        with cmk.gui.watolib.hosts_and_folders.disable_redis(), gui_context(), SuperUserContext():
             self._check_failed_gui_plugins()
             self._initialize_base_environment()
 
@@ -168,29 +230,40 @@ class UpdateConfig:
             for count, (step_func, title) in enumerate(self._steps(), start=1):
                 self._logger.log(VERBOSE, " %i/%i %s..." % (count, total, title))
                 try:
-                    step_func()
+                    with ActivateChangesWriter.disable():
+                        step_func()
                 except Exception:
                     self._has_errors = True
                     self._logger.error(' + "%s" failed' % title, exc_info=True)
                     if self._arguments.debug:
                         raise
 
+            if not self._has_errors and not is_wato_slave_site():
+                # Force synchronization of the config after a successful configuration update
+                add_change(
+                    "cmk-update-config",
+                    "Successfully updated Checkmk configuration",
+                    need_sync=True,
+                )
+
         self._logger.log(VERBOSE, "Done")
         return self._has_errors
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
+            (self._rewrite_visuals, "Migrate Visuals context"),
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
+            (self._rewrite_password_store, "Rewriting password store"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
-            (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
+            (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
@@ -202,9 +275,12 @@ class UpdateConfig:
                 self._rewrite_servicenow_notification_config,
                 "Rewriting notification configuration for ServiceNow",
             ),
+            (self._renew_site_cert, "Renewing certificates without server name extension"),
+            (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
+            (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
         ]
 
-    def _initialize_base_environment(self):
+    def _initialize_base_environment(self) -> None:
         # Failing to load the config here will result in the loss of *all*
         # services due to an exception thrown by cmk.base.config.service_description
         # in _parse_autocheck_entry of cmk.base.autochecks.
@@ -212,28 +288,28 @@ class UpdateConfig:
         cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
-    def _update_fs_used_name(self):
+    def _update_fs_used_name(self) -> None:
         check_df_includes_use_new_metric()
         cmk.update_rrd_fs_names.update()
 
-    def _rewrite_wato_tag_config(self):
+    def _rewrite_wato_tag_config(self) -> None:
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()
         tag_config = cmk.utils.tags.TagConfig.from_config(tag_config_file.load_for_reading())
         tag_config_file.save(tag_config.get_dict_format())
 
-    def _rewrite_wato_host_and_folder_config(self):
+    def _rewrite_wato_host_and_folder_config(self) -> None:
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
         if root_folder.title() == "Main directory":
             root_folder.edit(new_title="Main", new_attributes=root_folder.attributes())
         root_folder.rewrite_folders()
         root_folder.rewrite_hosts_files()
 
-    def _update_global_settings(self):
+    def _update_global_settings(self) -> None:
         self._update_installation_wide_global_settings()
         self._update_site_specific_global_settings()
         self._update_remote_site_specific_global_settings()
 
-    def _update_installation_wide_global_settings(self):
+    def _update_installation_wide_global_settings(self) -> None:
         """Update the globals.mk of the local site"""
         # Load full config (with undefined settings)
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
@@ -242,7 +318,7 @@ class UpdateConfig:
         self._update_global_config(global_config)
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
-    def _update_site_specific_global_settings(self):
+    def _update_site_specific_global_settings(self) -> None:
         """Update the sitespecific.mk of the local site (which is a remote site)"""
         if not is_wato_slave_site():
             return
@@ -252,7 +328,7 @@ class UpdateConfig:
 
         cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
 
-    def _update_remote_site_specific_global_settings(self):
+    def _update_remote_site_specific_global_settings(self) -> None:
         """Update the site specific global settings in the central site configuration"""
         site_mgmt = SiteManagementFactory().factory()
         configured_sites = site_mgmt.load_sites()
@@ -261,12 +337,18 @@ class UpdateConfig:
                 self._update_global_config(site_spec.setdefault("globals", {}))
         site_mgmt.save_sites(configured_sites, activate=False)
 
-    def _update_global_config(self, global_config):
+    def _update_global_config(
+        self,
+        global_config: GlobalSettings,
+    ) -> GlobalSettings:
         return self._transform_global_config_values(
             self._update_removed_global_config_vars(global_config)
         )
 
-    def _update_removed_global_config_vars(self, global_config):
+    def _update_removed_global_config_vars(
+        self,
+        global_config: GlobalSettings,
+    ) -> GlobalSettings:
         # Replace old settings with new ones
         for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
             if old_config_name in global_config:
@@ -285,10 +367,17 @@ class UpdateConfig:
         global_config = filter_unknown_settings(global_config)
         return global_config
 
-    def _transform_global_config_value(self, config_var, config_val):
+    def _transform_global_config_value(
+        self,
+        config_var: str,
+        config_val: Any,
+    ) -> Any:
         return config_variable_registry[config_var]().valuespec().transform_value(config_val)
 
-    def _transform_global_config_values(self, global_config):
+    def _transform_global_config_values(
+        self,
+        global_config: GlobalSettings,
+    ) -> GlobalSettings:
         global_config.update(
             {
                 config_var: self._transform_global_config_value(config_var, config_val)
@@ -297,7 +386,7 @@ class UpdateConfig:
         )
         return global_config
 
-    def _rewrite_autochecks(self):
+    def _rewrite_autochecks(self) -> None:
         check_variables = cmk.base.config.get_check_variables()
         failed_hosts = []
 
@@ -331,11 +420,46 @@ class UpdateConfig:
             self._logger.error(msg)
             raise MKGeneralException(msg)
 
+    def _rewrite_password_store(self) -> None:
+        """With 2.1 the password store format changed. Ensure all sites get the new format"""
+        if (
+            not password_store.password_store_path().exists()
+            or password_store.password_store_path().stat().st_size == 0
+        ):
+            return
+
+        # First of all update the stored_passwords file
+        if self._is_pre_2_1_password_store():
+            passwords = self._load_pre_2_1_password_store()
+            password_store.save(passwords)
+
+        # Then load and save the setup config to update the passwords.mk
+        store = PasswordStore()
+        store.save(store.load_for_modification())
+
+    def _is_pre_2_1_password_store(self) -> bool:
+        return (
+            int.from_bytes(
+                password_store.password_store_path().read_bytes()[
+                    : password_store.PasswordStore.VERSION_BYTE_LENGTH
+                ],
+                byteorder="big",
+            )
+            != 0
+        )
+
+    def _load_pre_2_1_password_store(self) -> dict[str, str]:
+        passwords = {}
+        for line in password_store.password_store_path().read_text().splitlines():
+            ident, password = line.strip().split(":", 1)
+            passwords[ident] = password
+        return passwords
+
     def _transformed_params(
         self,
         plugin_name: CheckPluginName,
         params: Any,
-        all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
+        all_rulesets: RulesetCollection,
         hostname: str,
     ) -> Any:
         check_plugin = register.get_check_plugin(plugin_name)
@@ -397,7 +521,7 @@ class UpdateConfig:
     def _fix_entry(
         self,
         entry: cmk.base.autochecks.AutocheckEntry,
-        all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
+        all_rulesets: RulesetCollection,
         hostname: str,
     ) -> cmk.base.autochecks.AutocheckEntry:
         """Change names of removed plugins to the new ones and transform parameters"""
@@ -420,18 +544,28 @@ class UpdateConfig:
             service_labels=entry.service_labels,
         )
 
-    def _rewrite_wato_rulesets(self):
+    def _rewrite_wato_rulesets(self) -> None:
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
         self._transform_ignored_checks_to_maincheckified_list(all_rulesets)
         self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
+        self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
+        self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
         self._validate_regexes_in_item_specs(all_rulesets)
+        self._remove_removed_check_plugins_from_ignored_checks(
+            all_rulesets,
+            REMOVED_CHECK_PLUGIN_MAP,
+        )
+        self._validate_rule_values(all_rulesets)
         all_rulesets.save()
 
-    def _transform_ignored_checks_to_maincheckified_list(self, all_rulesets):
+    def _transform_ignored_checks_to_maincheckified_list(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
         ignored_checks_ruleset = all_rulesets.get("ignored_checks")
         if ignored_checks_ruleset.is_empty():
             return
@@ -442,7 +576,10 @@ class UpdateConfig:
             else:
                 rule.value = [maincheckify(s) for s in rule.value]
 
-    def _extract_disabled_snmp_sections_from_ignored_checks(self, all_rulesets):
+    def _extract_disabled_snmp_sections_from_ignored_checks(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
         ignored_checks_ruleset = all_rulesets.get("ignored_checks")
         if ignored_checks_ruleset.is_empty():
             # nothing to do
@@ -474,14 +611,17 @@ class UpdateConfig:
             if not sections_to_disable:
                 continue
 
-            new_rule = cmk.gui.watolib.rulesets.Rule(rule.folder, snmp_exclude_sections_ruleset)
-            new_rule.from_config(rule.to_config())
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                snmp_exclude_sections_ruleset,
+                rule.to_config(),
+            )
             new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
             new_rule.value = {  # type: ignore[assignment]
                 "sections_disabled": sorted(str(s) for s in sections_to_disable),
                 "sections_enabled": [],
             }
-            new_rule.rule_options["comment"] = (
+            new_rule.rule_options.comment = (
                 "%s - Checkmk: automatically converted during upgrade from rule "
                 '"Disabled checks". Please review if these rules can be deleted.'
             ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
@@ -489,7 +629,82 @@ class UpdateConfig:
 
         all_rulesets.set(snmp_exclude_sections_ruleset.name, snmp_exclude_sections_ruleset)
 
-    def _transform_replaced_wato_rulesets(self, all_rulesets):
+    def _extract_checkmk_agent_rule_from_check_mk_config(
+        self, all_rulesets: RulesetCollection
+    ) -> None:
+        target_version_ruleset = all_rulesets.get("check_mk_agent_target_versions")
+        if target_version_ruleset.is_empty():
+            # nothing to do
+            return
+
+        agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
+
+        for folder, _index, rule in target_version_ruleset.get_rules():
+
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                agent_update_ruleset,
+                rule.to_config(),
+            )
+            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
+            new_rule.value = {"agent_version": rule.value}
+            new_rule.rule_options.comment = (
+                "%s - Checkmk: automatically converted during upgrade from rule "
+                '"Check for correct version of Checkmk agent".'
+            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
+
+            agent_update_ruleset.append_rule(folder, new_rule)
+
+        all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
+        all_rulesets.delete("check_mk_agent_target_versions")
+
+    def _extract_checkmk_agent_rule_from_exit_spec(self, all_rulesets: RulesetCollection) -> None:
+        exit_spec_ruleset = all_rulesets.get("check_mk_exit_status")
+        if exit_spec_ruleset.is_empty():
+            # nothing to do
+            return
+
+        agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
+
+        for folder, _index, rule in exit_spec_ruleset.get_rules():
+
+            moved_values = {
+                key: rule.value.pop(key)
+                for key in ("restricted_address_mismatch", "legacy_pull_mode")
+                if key in rule.value
+            }
+            if "wrong_version" in rule.value:
+                moved_values["agent_version_missmatch"] = rule.value.pop("wrong_version")
+            if "wrong_version" in (overall := rule.value.get("overall", {})):
+                moved_values["agent_version_missmatch"] = overall.pop("wrong_version")
+            if "wrong_version" in (individual := rule.value.get("individual", {}).get("agent", {})):
+                moved_values["agent_version_missmatch"] = individual.pop("wrong_version")
+
+            if not moved_values:
+                continue
+
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                agent_update_ruleset,
+                rule.to_config(),
+            )
+            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
+            new_rule.value = moved_values
+            new_rule.rule_options.comment = (
+                "%s - Checkmk: automatically converted during upgrade from rule "
+                '"Status of the Checkmk services".'
+            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
+
+            agent_update_ruleset.append_rule(folder, new_rule)
+
+        all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
+        # TODO: do we have to do this:?
+        all_rulesets.set(exit_spec_ruleset.name, exit_spec_ruleset)
+
+    def _transform_replaced_wato_rulesets(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
         deprecated_ruleset_names: Set[str] = set()
         for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
             if ruleset_name not in REMOVED_WATO_RULESETS_MAP:
@@ -511,7 +726,10 @@ class UpdateConfig:
         for deprecated_ruleset_name in deprecated_ruleset_names:
             all_rulesets.delete(deprecated_ruleset_name)
 
-    def _transform_wato_rulesets_params(self, all_rulesets):
+    def _transform_wato_rulesets_params(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
         num_errors = 0
         for ruleset in all_rulesets.get_rulesets().values():
             valuespec = ruleset.valuespec()
@@ -535,7 +753,10 @@ class UpdateConfig:
         if num_errors and self._arguments.debug:
             raise MKGeneralException("Failed to transform %d rule values" % num_errors)
 
-    def _transform_discovery_disabled_services(self, all_rulesets):
+    def _transform_discovery_disabled_services(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
         """Transform regex escaping of service descriptions
 
         In 1.4.0 disabled services were not quoted in the rules configuration file. Later versions
@@ -554,45 +775,99 @@ class UpdateConfig:
         if not ruleset:
             return
 
+        def _fix_up_escaped_service_pattern(pattern: str) -> HostOrServiceConditionRegex:
+            if pattern == (unescaped_pattern := unescape(pattern)):
+                # If there was nothing to unescape, escaping would break the pattern (e.g. '.foo').
+                # This still breaks half escaped patterns (e.g. '\.foo.')
+                return {"$regex": pattern}
+            return cmk.gui.watolib.rulesets.service_description_to_condition(
+                unescaped_pattern.rstrip("$")
+            )
+
         for _folder, _index, rule in ruleset.get_rules():
+            # We can't truly distinguish between user- and discovery generated rules.
+            # We try our best to detect them, but there will be false positives.
             if not rule.is_discovery_rule():
                 continue
 
             if isinstance(
-                rule.conditions.service_description, dict
-            ) and rule.conditions.service_description.get("$nor"):
+                service_description := rule.conditions.service_description, dict
+            ) and service_description.get("$nor"):
                 rule.conditions.service_description = {
                     "$nor": [
-                        cmk.gui.watolib.rulesets.service_description_to_condition(
-                            unescape(s["$regex"].rstrip("$"))
-                        )
-                        for s in rule.conditions.service_description["$nor"]
-                        if "$regex" in s
+                        _fix_up_escaped_service_pattern(s["$regex"])
+                        for s in service_description["$nor"]
+                        if isinstance(s, dict) and "$regex" in s
                     ]
                 }
 
-            else:
+            elif service_description:
                 rule.conditions.service_description = [
-                    cmk.gui.watolib.rulesets.service_description_to_condition(
-                        unescape(s["$regex"].rstrip("$"))
-                    )
-                    for s in rule.conditions.service_description
-                    if "$regex" in s
+                    _fix_up_escaped_service_pattern(s["$regex"])
+                    for s in service_description
+                    if isinstance(s, dict) and "$regex" in s
                 ]
 
-    def _validate_regexes_in_item_specs(self, all_rulesets):
+    def _validate_rule_values(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
+        rulesets_skip = {
+            # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
+            # see all of them
+            "extra_service_conf:_sla_config",
+        }
+
+        n_invalid = 0
+        for ruleset in all_rulesets.get_rulesets().values():
+            if ruleset.name in rulesets_skip:
+                continue
+
+            for folder, index, rule in ruleset.get_rules():
+                try:
+                    ruleset.rulespec.valuespec.validate_value(
+                        rule.value,
+                        "",
+                    )
+                except MKUserError as excpt:
+                    n_invalid += 1
+                    self._logger.warning(
+                        _format_warning(
+                            "WARNING: Invalid rule configuration detected (Ruleset: %s, Title: %s, "
+                            "Folder: %s,\nRule nr: %s, Exception: %s)"
+                        ),
+                        ruleset.name,
+                        ruleset.title(),
+                        folder.path(),
+                        index + 1,
+                        excpt,
+                    )
+
+        if n_invalid:
+            self._logger.warning(
+                _format_warning(
+                    "Detected %s issue(s) in configured rules.\n"
+                    "To correct these issues, we recommend to open the affected rules in the GUI.\n"
+                    "Upon attempting to save them, any problematic fields will be highlighted."
+                ),
+                n_invalid,
+            )
+
+    def _validate_regexes_in_item_specs(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
         def format_error(msg: str):
             return "\033[91m {}\033[00m".format(msg)
-
-        def format_warning(msg: str):
-            return "\033[93m {}\033[00m".format(msg)
 
         num_errors = 0
         for ruleset in all_rulesets.get_rulesets().values():
             for folder, index, rule in ruleset.get_rules():
-                if not isinstance(rule.get_rule_conditions().service_description, list):
+                if not isinstance(
+                    service_description := rule.get_rule_conditions().service_description, list
+                ):
                     continue
-                for item in rule.get_rule_conditions().service_description:
+                for item in service_description:
                     if not isinstance(item, dict):
                         continue
                     regex = item.get("$regex")
@@ -603,12 +878,14 @@ class UpdateConfig:
                     except re.error as e:
                         self._logger.error(
                             format_error(
-                                "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
-                                "Rule nr: %s, Condition: %s, Exception: %s)"
+                                "ERROR: Invalid regular expression in service condition detected "
+                                "(Ruleset: %s, Title: %s, Folder: %s,\nRule nr: %s, Condition: %s, "
+                                "Exception: %s)"
                             ),
                             ruleset.name,
+                            ruleset.title(),
                             folder.path(),
-                            index,
+                            index + 1,
                             regex,
                             e,
                         )
@@ -618,7 +895,7 @@ class UpdateConfig:
                         regex
                     ):
                         self._logger.warning(
-                            format_warning(
+                            _format_warning(
                                 "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped.\n"
                                 " Use double backslash as directory separator in regex expressions, e.g.\n"
                                 " 'C:\\\\Program Files\\\\'\n"
@@ -634,15 +911,36 @@ class UpdateConfig:
             self._has_errors = True
             self._logger.error(
                 format_error(
-                    "Detected %s errors in service conditions.\n "
-                    "You must correct these errors *before* starting checkmk.\n "
-                    "For more information regarding errors in regular expressions see:\n "
+                    "Detected %s errors in service conditions.\n"
+                    "You must correct these errors *before* starting Checkmk.\n"
+                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
+                    "to save them, any problematic field will be highlighted.\n"
+                    "For more information regarding errors in regular expressions see:\n"
                     "https://docs.checkmk.com/latest/en/regexes.html"
                 ),
                 num_errors,
             )
 
-    def _check_failed_gui_plugins(self):
+    def _remove_removed_check_plugins_from_ignored_checks(
+        self,
+        all_rulesets: RulesetCollection,
+        removed_check_plugins: Container[CheckPluginName],
+    ) -> None:
+        ignored_checks_ruleset = all_rulesets.get("ignored_checks")
+        for _folder, _index, rule in ignored_checks_ruleset.get_rules():
+            if plugins_to_keep := [
+                plugin_str
+                for plugin_str in rule.value
+                if CheckPluginName(plugin_str).create_basic_name() not in removed_check_plugins
+            ]:
+                rule.value = plugins_to_keep
+            else:
+                ignored_checks_ruleset.delete_rule(
+                    rule,
+                    create_change=False,
+                )
+
+    def _check_failed_gui_plugins(self) -> None:
         failed_plugins = cmk.gui.utils.get_failed_plugins()
         if failed_plugins:
             self._logger.error("")
@@ -673,7 +971,7 @@ class UpdateConfig:
                 if e.errno != errno.ENOENT:
                     raise  # Do not fail on missing directories / files
 
-    def _migrate_pagetype_topics_to_ids(self):
+    def _migrate_pagetype_topics_to_ids(self) -> None:
         """Change all visuals / page types to use IDs as topics
 
         2.0 changed the topic from a free form user localizable string to an ID
@@ -698,7 +996,7 @@ class UpdateConfig:
         for user_id in topic_created_for:
             pagetypes.PagetypeTopics.save_user_instances(user_id)
 
-    def _migrate_pagetype_topics(self, topics: Dict):
+    def _migrate_pagetype_topics(self, topics: Dict) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
 
         for page_type_cls in pagetypes.all_page_types().values():
@@ -727,7 +1025,31 @@ class UpdateConfig:
 
         return topic_created_for
 
-    def _migrate_all_visuals_topics(self, topics: Dict):
+    def _rewrite_visuals(self):
+        """This function uses the updates in visuals.transform_old_visual which
+        takes place upon visuals load. However, load forces no save, thus save
+        the transformed visual in this update step. All user configs are rewriten.
+        The load and transform functions are specific to each visual, saving is generic."""
+
+        def updates(visual_type: str, all_visuals: Dict):
+            with _save_user_instances(visual_type, all_visuals) as affected_user:
+                # skip builtins, only users
+                affected_user.update(owner for owner, _name in all_visuals if owner)
+
+        updates("views", get_all_views())
+        updates("dashboards", get_all_dashboards())
+
+        # Reports
+        try:
+            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
+        except ImportError:
+            reporting = None  # type: ignore[assignment]
+
+        if reporting:
+            reporting.load_reports()  # Loading does the transformation
+            updates("reports", reporting.reports)
+
+    def _migrate_all_visuals_topics(self, topics: Dict) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
 
         # Views
@@ -758,25 +1080,26 @@ class UpdateConfig:
 
         return topic_created_for
 
-    def _migrate_visuals_topics(self, topics, visual_type: str, all_visuals: Dict) -> Set[UserId]:
+    def _migrate_visuals_topics(
+        self,
+        topics: Dict,
+        visual_type: str,
+        all_visuals: Dict,
+    ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
-        modified_user_instances: Set[UserId] = set()
+        with _save_user_instances(visual_type, all_visuals) as affected_user:
 
-        # First modify all instances in memory and remember which things have changed
-        for (owner, _name), visual_spec in all_visuals.items():
-            instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                topics, visual_spec
-            )
+            # First modify all instances in memory and remember which things have changed
+            for (owner, _name), visual_spec in all_visuals.items():
+                instance_modified, topic_created = self._transform_pre_17_topic_to_id(
+                    topics, visual_spec
+                )
 
-            if instance_modified and owner:
-                modified_user_instances.add(owner)
+                if instance_modified and owner:
+                    affected_user.add(owner)
 
-            if topic_created and owner:
-                topic_created_for.add(owner)
-
-        # Now persist all modified instances
-        for user_id in modified_user_instances:
-            visuals.save(visual_type, all_visuals, user_id)
+                if topic_created and owner:
+                    topic_created_for.add(owner)
 
         return topic_created_for
 
@@ -835,50 +1158,56 @@ class UpdateConfig:
         spec["topic"] = name
         return True, True
 
-    def _add_missing_type_to_ldap_connections(self):
+    def _migrate_ldap_connections(self) -> None:
         """Each user connections needs to declare it's connection type.
 
         This is done using the "type" attribute. Previous versions did not always set this
-        attribute, which is corrected with this update method."""
+        attribute, which is corrected with this update method.
+
+        Furthermore, convert to password store compatible format"""
         connections = load_connection_config()
         if not connections:
             return
 
         for connection in connections:
             connection.setdefault("type", "ldap")
+
+            dn, password = connection["bind"]
+            if isinstance(password, tuple):
+                continue
+            connection["bind"] = (dn, ("password", password))
+
         save_connection_config(connections)
 
-    def _rewrite_bi_configuration(self):
+    def _rewrite_bi_configuration(self) -> None:
         """Convert the bi configuration to the new (REST API compatible) format"""
         BILegacyPacksConverter(self._logger, BIManager.bi_configuration_file()).convert_config()
 
-    def _migrate_dashlets(self):
+    def _migrate_dashlets(self) -> None:
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
             full_config=True
         )
         filter_group = global_config.get("topology_default_filter_group", "")
 
         dashboards = visuals.load("dashboards", builtin_dashboards)
-        modified_user_instances: Set[UserId] = set()
-        for (owner, _name), dashboard in dashboards.items():
-            for dashlet in dashboard["dashlets"]:
-                if dashlet["type"] == "network_topology":
-                    transform_topology_dashlet(dashlet, filter_group)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in ("hoststats", "servicestats"):
-                    transform_stats_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in (
-                    "single_timeseries",
-                    "custom_graph",
-                    "combined_graph",
-                    "problem_graph",
-                ):
-                    transform_timerange_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-
-        for user_id in modified_user_instances:
-            visuals.save("dashboards", dashboards, user_id)
+        with _save_user_instances("dashboards", dashboards) as affected_user:
+            for (owner, _name), dashboard in dashboards.items():
+                for dashlet in dashboard["dashlets"]:
+                    if dashlet["type"] == "network_topology":
+                        transform_topology_dashlet(dashlet, filter_group)
+                        affected_user.add(owner)
+                    elif dashlet["type"] in ("hoststats", "servicestats"):
+                        transform_stats_dashlet(dashlet)
+                        affected_user.add(owner)
+                    elif dashlet["type"] in (
+                        "single_timeseries",
+                        "custom_graph",
+                        "combined_graph",
+                        "problem_graph",
+                        "pnpgraph",
+                    ):
+                        transform_timerange_dashlet(dashlet)
+                        affected_user.add(owner)
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""
@@ -896,7 +1225,7 @@ class UpdateConfig:
 
         save_users(users)
 
-    def _rewrite_py2_inventory_data(self):
+    def _rewrite_py2_inventory_data(self) -> None:
         done_path = Path(cmk.utils.paths.var_dir, "update_config")
         done_file = done_path / "py2conversion.done"
         if done_file.exists():
@@ -946,7 +1275,7 @@ class UpdateConfig:
         if returncode == 0:
             self._create_donefile(done_file)
 
-    def _create_donefile(self, done_file: Path):
+    def _create_donefile(self, done_file: Path) -> None:
         self._logger.log(VERBOSE, "Creating file %r" % str(done_file))
         done_file.parent.mkdir(parents=True, exist_ok=True)
         done_file.touch(exist_ok=True)
@@ -960,17 +1289,21 @@ class UpdateConfig:
         ] + files
 
         self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
+        completed_process = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=False,
+            check=False,
         )
-        output = p.communicate()[0]
-        if p.returncode != 0:
-            self._logger.error("Failed to run 2to3 (Exit code: %d): %s", p.returncode, output)
+        if completed_process.returncode != 0:
+            self._logger.error(
+                "Failed to run 2to3 (Exit code: %d): %s",
+                completed_process.returncode,
+                completed_process.stdout,
+            )
         self._logger.log(VERBOSE, "Finished.")
-        return p.returncode
+        return completed_process.returncode
 
     def _needs_to_be_converted(self, filepath: Path) -> Optional[Path]:
         with filepath.open(encoding="utf-8") as f:
@@ -984,7 +1317,7 @@ class UpdateConfig:
                 return filepath
         return None
 
-    def _find_files_recursively(self, files: List[Path], path: Path):
+    def _find_files_recursively(self, files: List[Path], path: Path) -> None:
         for f in path.iterdir():
             if f.is_file():
                 if not f.name.endswith(".gz") and not f.name.startswith("."):
@@ -992,7 +1325,7 @@ class UpdateConfig:
             elif f.is_dir():
                 self._find_files_recursively(files, f)
 
-    def _migrate_pre_2_0_audit_log(self):
+    def _migrate_pre_2_0_audit_log(self) -> None:
         old_path = Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")
         new_path = Path(cmk.utils.paths.var_dir, "wato", "log", "wato_audit.log")
 
@@ -1009,7 +1342,7 @@ class UpdateConfig:
 
         old_path.unlink()
 
-    def _read_pre_2_0_audit_log(self, old_path: Path):
+    def _read_pre_2_0_audit_log(self, old_path: Path) -> Iterable[AuditLogStore.Entry]:
         with old_path.open(encoding="utf-8") as fp:
             for line in fp:
                 splitted = line.rstrip().split(None, 4)
@@ -1025,7 +1358,7 @@ class UpdateConfig:
                         diff_text=None,
                     )
 
-    def _sanitize_audit_log(self):
+    def _sanitize_audit_log(self) -> None:
         # Use a file to determine if the sanitization was successfull. Otherwise it would be
         # run on every update and we want to tamper with the audit log as little as possible.
         log_dir = AuditLogStore.make_path().parent
@@ -1074,7 +1407,7 @@ class UpdateConfig:
             return ObjectRef(ObjectRefType.Folder, folder_path)
         return ObjectRef(ObjectRefType.Host, host_name)
 
-    def _rename_discovered_host_label_files(self):
+    def _rename_discovered_host_label_files(self) -> None:
         config_cache = cmk.base.config.get_config_cache()
         for host_name in config_cache.all_configured_realhosts():
             old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
@@ -1096,7 +1429,10 @@ class UpdateConfig:
 
         cmk.gui.watolib.groups.save_group_information(group_information)
 
-    def _transform_contact_groups(self, contact_groups: Dict) -> None:
+    def _transform_contact_groups(
+        self,
+        contact_groups: Mapping[ContactgroupName, MutableMapping[str, Any]],
+    ) -> None:
         # Changed since Checkmk 2.1: see Werk 12390
         # Old entries of inventory paths of multisite contact groups had the following form:
         # {
@@ -1187,6 +1523,92 @@ class UpdateConfig:
 
         save_notification_rules(notification_rules)
 
+    def _renew_site_cert(self) -> None:
+        try:
+            cert, _priv = certs.load_cert_and_private_key(cmk.utils.paths.site_cert_file)
+            if any(isinstance(e.value, x509.SubjectAlternativeName) for e in cert.extensions):
+                self._logger.log(VERBOSE, "Skipping (nothing to do)")
+                return
+        except FileNotFoundError:
+            self._logger.warning(f"No site certificate found at {cmk.utils.paths.site_cert_file}")
+        except OSError as exc:
+            self._logger.warning(f"Unable to load site certificate: {exc}")
+            return
+
+        root_ca_path = certs.root_cert_path(certs.cert_dir(Path(cmk.utils.paths.omd_root)))
+        try:
+            root_ca = certs.RootCA.load(root_ca_path)
+        except OSError as exc:
+            self._logger.warning(f"Unable to load root CA: {exc}")
+            return
+
+        bak = Path(f"{cmk.utils.paths.site_cert_file}.bak")
+        with suppress(FileNotFoundError):
+            bak.write_bytes(cmk.utils.paths.site_cert_file.read_bytes())
+            self._logger.log(VERBOSE, f"Copied certificate to {bak}")
+
+        self._logger.log(VERBOSE, "Creating new certificate...")
+        root_ca.save_new_signed_cert(
+            cmk.utils.paths.site_cert_file,
+            cmk.utils.site.omd_site(),
+        )
+
+    def _add_site_ca_to_trusted_cas(self) -> None:
+        site_ca = (
+            site_cas[-1]
+            if (site_cas := raw_certificates_from_file(cmk.utils.paths.site_cert_file))
+            else None
+        )
+
+        if not site_ca:
+            return
+
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True
+        )
+        cert_settings = global_config.setdefault(
+            "trusted_certificate_authorities", {"use_system_wide_cas": False, "trusted_cas": []}
+        )
+        # For remotes with config sync the settings would be overwritten by activate changes. To keep the config
+        # consistent exclude remotes during the update.
+        if is_wato_slave_site() or site_ca in cert_settings["trusted_cas"]:
+            return
+
+        cert_settings["trusted_cas"].append(site_ca)
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
+    def _update_mknotifyd(self) -> None:
+        """
+        Update the sitespecific mknotifyd config file on central site because
+        this is not handled by the global or sitespecific updates.
+        The encryption key is missing on update from 2.0 to 2.1.
+        """
+        if is_wato_slave_site() or not has_wato_slave_sites():
+            return
+
+        sitespecific_file_path: Path = Path(
+            cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"
+        )
+        if not sitespecific_file_path.exists():
+            return
+
+        mknotifyd_config: Dict[str, Any] = load_from_mk_file(
+            sitespecific_file_path, "notification_spooler_config", {}
+        )
+        if not mknotifyd_config:
+            return
+
+        for key, value in mknotifyd_config.items():
+            if key not in ["incoming", "outgoing"]:
+                continue
+            if key == "incoming":
+                value.setdefault("encryption", "unencrypted")
+            if key == "outgoing":
+                for outgoing in value:
+                    outgoing.setdefault("encryption", "upgradable")
+
+        save_mk_file(sitespecific_file_path, "notification_spooler_config = %s" % mknotifyd_config)
+
 
 class PasswordSanitizer:
     """
@@ -1241,10 +1663,10 @@ class PasswordSanitizer:
     _QUOTED_STRING = r"(\"(?:(?!(?<!\\)\").)*\"|'(?:(?!(?<!\\)').)*')"
 
     NEW_NESTED_PATTERN = re.compile(
-        fr"'login': \({_QUOTED_STRING}, {_QUOTED_STRING}, {_QUOTED_STRING}\)|"
-        fr"\('password', {_QUOTED_STRING}\)|"
-        fr"'(auth|authentication|basicauth|credentials)': \({_QUOTED_STRING}, {_QUOTED_STRING}\)|"
-        fr"'(auth|credentials)': \('(explicit|configured)', \({_QUOTED_STRING}, {_QUOTED_STRING}\)\)"
+        rf"'login': \({_QUOTED_STRING}, {_QUOTED_STRING}, {_QUOTED_STRING}\)|"
+        rf"\('password', {_QUOTED_STRING}\)|"
+        rf"'(auth|authentication|basicauth|credentials)': \({_QUOTED_STRING}, {_QUOTED_STRING}\)|"
+        rf"'(auth|credentials)': \('(explicit|configured)', \({_QUOTED_STRING}, {_QUOTED_STRING}\)\)"
     )
 
     NEW_DICT_ENTRY_PATTERN = (
@@ -1257,7 +1679,7 @@ class PasswordSanitizer:
         r"passwd|"
         r"password|"
         r"secret"
-        fr")': {_QUOTED_STRING}"
+        rf")': {_QUOTED_STRING}"
     )
 
     def replace_password(self, entry: AuditLogStore.Entry) -> AuditLogStore.Entry:
@@ -1308,7 +1730,11 @@ class PasswordSanitizer:
         return hashlib.sha256(password.encode()).hexdigest()[:10]
 
 
-def _add_show_mode(users: Users, user_id: UserId):
+def _format_warning(msg: str) -> str:
+    return "\033[93m {}\033[00m".format(msg)
+
+
+def _add_show_mode(users: Users, user_id: UserId) -> Users:
     """Set show_mode for existing user to 'default to show more' on upgrade to
     2.0"""
     users[user_id]["show_mode"] = "default_show_more"
@@ -1344,8 +1770,15 @@ def _cleanup_ldap_connector(
     return users
 
 
-def _id_from_title(title):
+def _id_from_title(title: str) -> str:
     return re.sub("[^-a-zA-Z0-9_]+", "", title.lower().replace(" ", "_"))
+
+
+def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
+    """The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our default
+    corresponds to INFO in cmk.gui, which results in too much logging.
+    """
+    return lvl + 10
 
 
 def main(args: List[str]) -> int:
@@ -1387,7 +1820,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
 # RRD migration cleaups
 
 
-def check_df_includes_use_new_metric():
+def check_df_includes_use_new_metric() -> None:
     "Check that df.include files can return fs_used metric name"
     df_file = cmk.utils.paths.local_checks_dir / "df.include"
     if df_file.exists():

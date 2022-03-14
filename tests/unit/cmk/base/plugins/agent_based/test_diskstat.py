@@ -8,10 +8,9 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName, LegacyCheckParameters
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base import plugin_contexts
-from cmk.base.check_utils import Service
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -154,14 +153,9 @@ def test_parse_diskstat_predictive(mocker: MockerFixture):
     mocker.patch(
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.1, 4.1, None, None))
     )
-    dummy_service: Service[LegacyCheckParameters] = Service(
-        CheckPluginName("unittest_sd"),
-        parameters={},
-        item="item-nvme0n1",
-        description="unittest_sd_description",
-    )
     with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
-        dummy_service
+        CheckPluginName("unittest_sd"),
+        "unittest_sd_description",
     ):
 
         with pytest.raises(IgnoreResultsError):

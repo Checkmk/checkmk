@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_k8s_ingress_info import inventory_k8s_ingress_info
 
+from .utils_inventory import sort_inventory_result
+
 DATA0 = [
     [
         """
@@ -125,4 +127,6 @@ RESULT0 = [
     ],
 )
 def test_inv_k8s_ingress_info(data: StringTable, result: InventoryResult):
-    assert list(inventory_k8s_ingress_info(json.loads(data[0][0]))) == result
+    assert sort_inventory_result(
+        inventory_k8s_ingress_info(json.loads(data[0][0]))
+    ) == sort_inventory_result(result)

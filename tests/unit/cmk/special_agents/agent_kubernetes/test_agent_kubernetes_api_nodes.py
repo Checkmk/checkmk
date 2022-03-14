@@ -6,11 +6,7 @@ from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import (
-    node_conditions,
-    node_info,
-    parse_metadata,
-)
+from cmk.special_agents.utils_kubernetes.transform import node_conditions, node_info, parse_metadata
 
 
 class TestAPINode:
@@ -28,7 +24,7 @@ class TestAPINode:
             "name": "k8",
             "creation_timestamp": datetime.datetime.strptime(
                 "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
-            ),
+            ).replace(tzinfo=datetime.timezone.utc),
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
             "labels": labels,
         }
@@ -38,7 +34,7 @@ class TestAPINode:
         assert metadata.namespace is None
 
     def test_parse_metadata_datetime(self):
-        now = datetime.datetime(2021, 10, 11, 13, 53, 10)
+        now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)
         node_raw_metadata = {
             "name": "unittest",
             "creation_timestamp": now,
@@ -89,20 +85,44 @@ class TestAPINode:
                     "status": {
                         "conditions": [
                             {
-                                "type": "MemoryPressure",
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:29Z",
+                                "message": "kubelet has no disk pressure",
+                                "reason": "KubeletHasNoDiskPressure",
                                 "status": "False",
-                            },
-                            {
                                 "type": "DiskPressure",
-                                "status": "False",
                             },
                             {
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:29Z",
+                                "message": "kubelet has sufficient memory available",
+                                "reason": "KubeletHasSufficientMemory",
+                                "status": "False",
+                                "type": "MemoryPressure",
+                            },
+                            {
+                                "lastHeartbeatTime": "2019-07-09T16:17:47Z",
+                                "lastTransitionTime": "2019-07-09T16:17:47Z",
+                                "message": "RouteController created a route",
+                                "reason": "RouteCreated",
+                                "status": "False",
+                                "type": "NetworkUnavailable",
+                            },
+                            {
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:29Z",
+                                "message": "kubelet has sufficient PID available",
+                                "reason": "KubeletHasSufficientPID",
+                                "status": "False",
                                 "type": "PIDPressure",
-                                "status": "False",
                             },
                             {
-                                "type": "Ready",
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:49Z",
+                                "message": "kubelet is posting ready status. AppArmor enabled",
+                                "reason": "KubeletReady",
                                 "status": "True",
+                                "type": "Ready",
                             },
                         ],
                     },
@@ -117,7 +137,34 @@ class TestAPINode:
         )
         with Mocketizer():
             node = list(core_client.list_node().items)[0]
-        conditions = node_conditions(node)
+        conditions = node_conditions(node.status)
         assert conditions is not None
-        assert conditions.NetworkUnavailable is None
-        assert conditions.Ready is True
+        assert len(conditions) == 5
+        assert any(c.type_ == "DiskPressure" for c in conditions)
+        assert list(c.status for c in conditions if c.type_ == "Ready") == [
+            api.NodeConditionStatus.TRUE
+        ]
+
+    def test_parse_conditions_no_status(self, core_client, dummy_host):
+        node_with_conditions = {"items": [{"status": {}}]}  # type: ignore
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/nodes",
+            body=json.dumps(node_with_conditions),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            node = list(core_client.list_node().items)[0]
+        assert node_conditions(node.status) is None
+
+    def test_parse_conditions_no_conditions(self, core_client, dummy_host):
+        node_with_conditions = {"items": [{"status": {"conditions": []}}]}  # type: ignore
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/nodes",
+            body=json.dumps(node_with_conditions),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            node = list(core_client.list_node().items)[0]
+        assert node_conditions(node.status) is None

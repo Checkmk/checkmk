@@ -83,10 +83,10 @@ std::string ProduceFileSystemOutput(std::string_view volume_id) {
 
 class VolumeMountData {
 public:
-    VolumeMountData(const VolumeMountData&) = delete;
-    VolumeMountData& operator=(const VolumeMountData&) = delete;
-    VolumeMountData(const VolumeMountData&&) = delete;
-    VolumeMountData& operator=(VolumeMountData&&) = delete;
+    VolumeMountData(const VolumeMountData &) = delete;
+    VolumeMountData &operator=(const VolumeMountData &) = delete;
+    VolumeMountData(const VolumeMountData &&) = delete;
+    VolumeMountData &operator=(VolumeMountData &&) = delete;
 
     explicit VolumeMountData(std::string_view volume_id)
         : storage_{std::make_unique<char[]>(sz_)}
@@ -178,8 +178,8 @@ std::vector<std::string> GetDriveVector() {
     auto drive_string_buffer = std::make_unique<char[]>(sz);
     auto len = ::GetLogicalDriveStringsA(sz, drive_string_buffer.get());
 
-    auto* end = drive_string_buffer.get() + len;
-    auto* drive = drive_string_buffer.get();
+    auto *end = drive_string_buffer.get() + len;
+    auto *drive = drive_string_buffer.get();
 
     std::vector<std::string> drives;
     while (drive < end) {
@@ -200,7 +200,7 @@ std::string Df::makeBody() {
     XLOG::t("Processing of [{}] drives", drives.size());
 
     int count = 0;
-    for (auto& drive : drives) {
+    for (auto &drive : drives) {
         auto drive_type = ::GetDriveTypeA(drive.c_str());
 
         if (drive_type == DRIVE_FIXED)  // means local hard disks

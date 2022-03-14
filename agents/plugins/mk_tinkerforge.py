@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # type: ignore[import]
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.
@@ -73,10 +73,10 @@ def install():
     url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"
     response = urlopen(url)
     buf = BytesIO(response.read())
-    z = ZipFile(buf)
+    with ZipFile(buf) as z:
 
-    extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
-    z.extractall(dest, extract_files)
+        extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
+        z.extractall(dest, extract_files)
 
     shutil.move(os.path.join(dest, "source", "tinkerforge"), os.path.join(dest, "tinkerforge"))
     shutil.rmtree(os.path.join(dest, "source"))
@@ -272,7 +272,8 @@ def read_config(env):
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 
     if os.path.isfile(cfg_path):
-        exec(open(cfg_path).read(), settings, settings)
+        with open(cfg_path) as opened_file:
+            exec(opened_file.read(), settings, settings)
     return settings
 
 

@@ -72,7 +72,7 @@ def format_plugin_output(
         output = output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
 
     prevent_url_icons = (
-        row.get("service_check_command", "") == "check_mk-check_mk_agent_update"
+        row.get("service_check_command", "") == "check_mk-checkmk_agent"
         if row is not None
         else False
     )
@@ -141,7 +141,7 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -
             href=makeuri(request, [("limit", "none")]),
         )
 
-    text += escaping.escape_html_permissive(
+    text += escaping.escape_to_html_permissive(
         " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
     )
     html.show_warning(text)

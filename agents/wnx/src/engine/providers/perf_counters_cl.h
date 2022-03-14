@@ -19,9 +19,9 @@ namespace provider {
 
 // workhorse of execution
 int RunPerf(
-    const std::wstring& peer_name,  // name assigned by starting program
-    const std::wstring& port,       // format as in carrier.h mail:*
-    const std::wstring& answer_id,  // answer id, should be a number
+    const std::wstring &peer_name,  // name assigned by starting program
+    const std::wstring &port,       // format as in carrier.h mail:*
+    const std::wstring &answer_id,  // answer id, should be a number
     int /*timeout*/,                // how long wait for execution
     const std::vector<std::wstring_view> counter_array  // name of counters
 );
@@ -29,7 +29,7 @@ int RunPerf(
 // internal procedure to get all data from all counters and format for CMK
 std::string AccumulateCounters(
     std::wstring_view prefix_name,
-    const std::vector<std::wstring_view>& counter_array);
+    const std::vector<std::wstring_view> &counter_array);
 
 }  // namespace provider
 

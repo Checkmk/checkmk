@@ -8,6 +8,11 @@ import itertools
 
 _flatten = itertools.chain.from_iterable
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def _has_tls(path, hosts):
     """Return True if path is available over TLS, otherwise return False."""

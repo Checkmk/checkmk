@@ -6,7 +6,7 @@ Date: 1637773448
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In rare cases a `cmk-update-config` could silently drop the service of a plugin (see below for which plugins can be affected).
 It would then appear as stale in the service view.

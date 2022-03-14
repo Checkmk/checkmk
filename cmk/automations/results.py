@@ -10,7 +10,6 @@ from dataclasses import asdict, astuple, dataclass
 from typing import Any, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar
 
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.python_printer import pformat
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginNameStr,
@@ -53,7 +52,7 @@ _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
 @dataclass  # type: ignore[misc]  # https://github.com/python/mypy/issues/5374
 class ABCAutomationResult(ABC):
     def serialize(self) -> SerializedResult:
-        return SerializedResult(pformat(astuple(self)))
+        return SerializedResult(repr(astuple(self)))
 
     def to_pre_21(self) -> object:
         # Needed to support remote automation calls from an old central site to a new remote site.
@@ -87,7 +86,7 @@ class DiscoveryResult(ABCAutomationResult):
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
     def serialize(self) -> SerializedResult:
-        return SerializedResult(pformat(self._to_dict()))
+        return SerializedResult(repr(self._to_dict()))
 
     def to_pre_21(self) -> Mapping[Literal["results"], Mapping[HostName, Mapping[str, Any]]]:
         return {"results": self._to_dict()}
@@ -131,6 +130,14 @@ class TryDiscoveryResult(ABCAutomationResult):
 
     def to_pre_21(self) -> Mapping[str, Any]:
         return asdict(self)
+
+    def serialize(self) -> SerializedResult:
+        return SerializedResult(repr(astuple(self)))
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> "TryDiscoveryResult":
+        raw_output, raw_check_table, *raw_rest = literal_eval(serialized_result)
+        return cls(raw_output, [CheckPreviewEntry(*cpe) for cpe in raw_check_table], *raw_rest)
 
     @staticmethod
     def automation_call() -> str:

@@ -20,7 +20,7 @@ def _parameter_valuespec_pll_lock_voltage():
             (
                 "rx",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             Float(title=_("Frequencies up to"), unit="MHz"),
                             Float(title=_("Warning below"), unit="V"),
@@ -41,7 +41,7 @@ def _parameter_valuespec_pll_lock_voltage():
             (
                 "tx",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             Float(title=_("Frequencies up to"), unit="MHz"),
                             Float(title=_("Warning below"), unit="V"),

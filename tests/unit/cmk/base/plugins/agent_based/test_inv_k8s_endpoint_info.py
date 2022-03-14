@@ -11,6 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryR
 from cmk.base.plugins.agent_based.inventory_k8s_endpoint_info import inventory_k8s_endpoints
 from cmk.base.plugins.agent_based.k8s_endpoint_info import parse_k8s_endpoint_info
 
+from .utils_inventory import sort_inventory_result
+
 DATA0 = [
     [
         """{
@@ -159,4 +161,6 @@ RESULT1 = [
     ],
 )
 def test_inv_k8s_endpoint_info(data: StringTable, result: InventoryResult):
-    assert list(inventory_k8s_endpoints(parse_k8s_endpoint_info(data))) == result
+    assert sort_inventory_result(
+        inventory_k8s_endpoints(parse_k8s_endpoint_info(data))
+    ) == sort_inventory_result(result)

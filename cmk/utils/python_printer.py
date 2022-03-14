@@ -78,8 +78,10 @@ def _format_unicode_string(printer: PythonPrinter, obj: _str) -> None:
     # a repr-string where non ascii characters are hex escaped as Python 2 usually does.
     chars: List[str] = []
     for c in obj:
-        if ord(c) > 127:
-            chars.append("\\x{:02x}".format(ord(c)))
+        if 127 < (unicode_code := ord(c)) < 256:
+            chars.append("\\x{:02x}".format(unicode_code))
+        elif unicode_code >= 256:
+            chars.append("\\u{:04x}".format(unicode_code))
         elif c.isalpha():
             chars.append(str(c))
         elif c in quotes:

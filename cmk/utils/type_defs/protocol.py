@@ -6,15 +6,21 @@
 
 import abc
 from contextlib import suppress
-from typing import Any, Iterator, Type, TypeVar
+from typing import Any, Iterator, Protocol, Type, TypeVar
 
-__all__ = ["Protocol"]
-
-TProtocol = TypeVar("TProtocol", bound="Protocol")
+__all__ = ["Serializer", "Deserializer"]
 
 
-class Protocol(abc.ABC):
+class Serializer(Protocol):
     """Base class for serializable data.
+
+    Implementations have the following requirements:
+
+    * They must be immutable.
+    * If both `Serializer` and `Deserializer` are defined, then
+    `bytes(Serializer(Deserializer.from_bytes(x))) == x` must hold
+    for any valid `x`.
+
 
     Note:
         This should be usable as a type. Do not add any
@@ -49,7 +55,30 @@ class Protocol(abc.ABC):
     def __iter__(self) -> Iterator[bytes]:
         raise NotImplementedError
 
+
+TDeserializer = TypeVar("TDeserializer", bound="Deserializer")
+
+
+class Deserializer(Protocol):
+    """Base class for deserializable data.
+
+    Implementations have the same requirements as Serializer.
+
+    Note:
+        This should be usable as a type. Do not add any
+        concrete implementation here.
+
+    """
+
     @classmethod
     @abc.abstractmethod
-    def from_bytes(cls: Type[TProtocol], data: bytes) -> TProtocol:
+    def from_bytes(cls: Type[TDeserializer], data: bytes) -> TDeserializer:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __eq__(self, other: Any) -> bool:
+        return NotImplemented
+
+    @abc.abstractmethod
+    def __hash__(self) -> int:
         raise NotImplementedError

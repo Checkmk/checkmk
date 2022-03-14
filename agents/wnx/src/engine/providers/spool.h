@@ -21,7 +21,7 @@ class SpoolProvider : public Asynchronous {
 public:
     SpoolProvider() : Asynchronous(cma::section::kSpool) {}
 
-    SpoolProvider(const std::string_view& name, char separator)
+    SpoolProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {}
 
     void loadConfig() override;
@@ -34,8 +34,8 @@ public:
 protected:
     std::string makeBody() override;
 };
-bool IsSpoolFileValid(const std::filesystem::path& path);
-bool IsDirectoryValid(const std::filesystem::path& dir);
+bool IsSpoolFileValid(const std::filesystem::path &path);
+bool IsDirectoryValid(const std::filesystem::path &dir);
 }  // namespace cma::provider
 
 #endif  // spool_h__

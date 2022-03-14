@@ -27,7 +27,7 @@ def _item_spec_asm_diskgroup():
 
 def _parameter_valuespec_asm_diskgroup():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=filesystem_elements
             + [
                 (

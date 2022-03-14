@@ -1,7 +1,7 @@
 title: AWS WAFV2: Summary
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives an overall summary of the Web Access Control Lists

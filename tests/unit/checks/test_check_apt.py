@@ -21,6 +21,15 @@ _SECTION_UPDATES_AV = [
     ["Inst librsvg2-2 [2.40.16-1+b1] (2.40.21-0+deb9u1 Debian-Security:9/oldstable [amd64])"],
 ]
 _SECTION_NO_UPDATES = [["No updates pending for installation"]]
+_SECTION_NO_ESM_SUPPORT = [
+    ["Enable UA Infra: ESM to receive additional future security updates."],
+    ["See https://ubuntu.com/16-04 or run: sudo ua status"],
+    ["Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by"],
+    ["applicable law."],
+    [
+        "Inst ubuntu-advantage-tools [27.4.1~16.04.1] (27.4.2~16.04.1 Ubuntu:16.04/xenial-updates [amd64])"
+    ],
+]
 _PARAMS = {
     "normal": 1,
     "removals": 1,
@@ -61,6 +70,11 @@ def test_inventory_apt(section: Section) -> None:
             parse_apt(_SECTION_NO_UPDATES),
             [(0, "No updates pending for installation")],
             id="no_updates",
+        ),
+        pytest.param(
+            parse_apt(_SECTION_NO_ESM_SUPPORT),
+            [(2, "System could receive security updates, but needs extended support license")],
+            id="no_esm_support",
         ),
     ],
 )

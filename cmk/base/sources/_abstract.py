@@ -25,7 +25,7 @@ import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import Fetcher, Parser, Summarizer
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
-from cmk.core_helpers.host_sections import THostSections
+from cmk.core_helpers.host_sections import HostSections, TRawDataSection
 from cmk.core_helpers.type_defs import Mode, SectionNameCollection
 
 import cmk.base.config as config
@@ -35,7 +35,7 @@ __all__ = ["Source"]
 HostConfig = config.HostConfig
 
 
-class Source(Generic[TRawData, THostSections], abc.ABC):
+class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -54,7 +54,7 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
         fetcher_type: FetcherType,
         description: str,
         default_raw_data: TRawData,
-        default_host_sections: THostSections,
+        default_host_sections: HostSections[TRawDataSection],
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -65,7 +65,7 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
         self.default_raw_data: Final = default_raw_data
-        self.default_host_sections: Final[THostSections] = default_host_sections
+        self.default_host_sections: Final[HostSections[TRawDataSection]] = default_host_sections
         self.id: Final[str] = id_
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
@@ -110,7 +110,7 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
         raw_data: result.Result[TRawData, Exception],
         *,
         selection: SectionNameCollection,
-    ) -> result.Result[THostSections, Exception]:
+    ) -> result.Result[HostSections[TRawDataSection], Exception]:
         try:
             return raw_data.map(partial(self._make_parser().parse, selection=selection))
         except Exception as exc:
@@ -122,7 +122,7 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
     @final
     def summarize(
         self,
-        host_sections: result.Result[THostSections, Exception],
+        host_sections: result.Result[HostSections[TRawDataSection], Exception],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
@@ -142,11 +142,11 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_parser(self) -> Parser[TRawData, THostSections]:
+    def _make_parser(self) -> Parser[TRawData, TRawDataSection]:
         """Create a parser with this configuration."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_summarizer(self) -> Summarizer[THostSections]:
+    def _make_summarizer(self) -> Summarizer[TRawDataSection]:
         """Create a summarizer with this configuration."""
         raise NotImplementedError

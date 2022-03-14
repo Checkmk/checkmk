@@ -1,0 +1,16 @@
+Title: agent_smb_share: Special agent for Windows SMB share
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1640765131
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+SMB share special agent can be configured by creating a rule in
+Setup > Agents > Other integrations. Multiple shared folders can
+be configured for a host along with patterns that match files
+to be monitored.
+Monitored files are discovered as fileinfo or fileinfo_groups
+services.

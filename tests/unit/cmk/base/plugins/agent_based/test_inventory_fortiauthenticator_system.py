@@ -9,21 +9,25 @@ from cmk.base.plugins.agent_based.inventory_fortiauthenticator_system import (
     inventory_fortiauthenticator_system,  # yapf: disable
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 def test_inventory_fortiauthenticator_system():
-    assert list(
+    assert sort_inventory_result(
         inventory_fortiauthenticator_system(
             {
                 "model": "FACVM",
                 "serial": "FAC-VMTM18000123",
             }
         )
-    ) == [
-        Attributes(
-            path=["hardware", "system"],
-            inventory_attributes={
-                "Model": "FACVM",
-                "Serial number": "FAC-VMTM18000123",
-            },
-        ),
-    ]
+    ) == sort_inventory_result(
+        [
+            Attributes(
+                path=["hardware", "system"],
+                inventory_attributes={
+                    "Model": "FACVM",
+                    "Serial number": "FAC-VMTM18000123",
+                },
+            ),
+        ]
+    )

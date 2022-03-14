@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Monitor Websphere MQ
 # WWI  Version 18.05.2016
@@ -17,8 +17,7 @@ CMK_VERSION="2.1.0i1"
 # NOTE: This plugin is deprecated. Please use the ibm_mq plugin.
 # plugin for websphere_mq_* checks
 
-if [ "$1" = "" ]
-then
+if [ "$1" = "" ]; then
     # wwi --------------------------------------
     # deletion of "-"
     # preventing a faulty "TCP Connection" section of the main agent
@@ -30,82 +29,79 @@ then
 
 else
     # Loop over all local mq instances
-    for QM in $( ps -ef|grep [/]usr/mqm/bin/runmqlsr|awk -v FS="-m" '{print $2}'|awk '{print $1}'| uniq)
-    do
+    for QM in $(ps -ef | grep "[/]usr/mqm/bin/runmqlsr" | awk -v FS="-m" '{print $2}' | awk '{print $1}' | uniq); do
         echo '<<<websphere_mq_channels>>>'
-        for i in `echo " display CHANNEL (*) TYPE (SDR) " | /usr/bin/runmqsc $QM | grep CHLTYPE | \
-            grep -v SYSTEM | awk '{print $1}'`; do
+        for i in $(echo " display CHANNEL (*) TYPE (SDR) " | /usr/bin/runmqsc "$QM" | grep CHLTYPE |
+            grep -v SYSTEM | awk '{print $1}'); do
 
-            j=`echo "display $i " | /usr/bin/runmqsc $QM | grep XMITQ | tr " " "\n" | \
-                grep XMITQ | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
+            j=$(echo "display $i " | /usr/bin/runmqsc "$QM" | grep XMITQ | tr " " "\n" |
+                grep XMITQ | sed '1,$s/(/ /g' | sed '1,$s/)/ /g' | awk '{print $2 }')
 
-            a=`echo " display qlocal ($j) CURDEPTH " | /usr/bin/runmqsc $QM | grep CURDEPTH | \
-                tr " " "\n" | grep CURDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| \
-                awk '{print $2 }' | tr "\n" " "`
+            a=$(echo " display qlocal ($j) CURDEPTH " | /usr/bin/runmqsc "$QM" | grep CURDEPTH |
+                tr " " "\n" | grep CURDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g' |
+                awk '{print $2 }' | tr "\n" " ")
 
-            c=`echo " display qlocal ($j) MAXDEPTH  " | /usr/bin/runmqsc $QM | grep MAXDEPTH | \
-                tr " " "\n" | grep MAXDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| \
-                awk '{print $2 }' | tr "\n" " "`
+            c=$(echo " display qlocal ($j) MAXDEPTH  " | /usr/bin/runmqsc "$QM" | grep MAXDEPTH |
+                tr " " "\n" | grep MAXDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g' |
+                awk '{print $2 }' | tr "\n" " ")
 
-            l=`echo $i | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
+            l=$(echo "$i" | sed '1,$s/(/ /g' | sed '1,$s/)/ /g' | awk '{print $2 }')
 
-            s=`echo " display chstatus($l)" | /usr/bin/runmqsc $QM | grep STATUS | tail -1 | \
-               sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $NF }'`
+            s=$(echo " display chstatus($l)" | /usr/bin/runmqsc "$QM" | grep STATUS | tail -1 |
+                sed '1,$s/(/ /g' | sed '1,$s/)/ /g' | awk '{print $NF }')
 
-            if [ "$s" = "" ]
-            then
+            if [ "$s" = "" ]; then
                 s="Unknown"
             fi
             echo "$a  $i $c $s"
         done
 
         echo '<<<websphere_mq_queues>>>'
-        for t in `echo " display queue (*) where (USAGE EQ NORMAL) " | /usr/bin/runmqsc $QM | \
-            grep -v SYSTEM | grep -v MQMON | grep -v MONITOR | grep -v _T0 |  grep -v _T1 |  \
-            grep -v _T2 | grep -v _T3 | grep -v mqtest | grep QUEUE | awk '{ print $1 }' | \
-            sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`; do
+        for t in $(echo " display queue (*) where (USAGE EQ NORMAL) " | /usr/bin/runmqsc "$QM" |
+            grep -v SYSTEM | grep -v MQMON | grep -v MONITOR | grep -v _T0 | grep -v _T1 |
+            grep -v _T2 | grep -v _T3 | grep -v mqtest | grep QUEUE | awk '{ print $1 }' |
+            sed '1,$s/(/ /g' | sed '1,$s/)/ /g' | awk '{print $2 }'); do
 
             # wwi MQ admin change, to get more queues which are needed
-            a=`echo " display qlocal ($t) CURDEPTH  " | /usr/bin/runmqsc $QM | grep CURDEPTH  | \
-                tr " " "\n" | grep CURDEPTH  | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| \
-                awk '{print $2 }' | tr "\n" " "`
+            a=$(echo " display qlocal ($t) CURDEPTH  " | /usr/bin/runmqsc "$QM" | grep CURDEPTH |
+                tr " " "\n" | grep CURDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g' |
+                awk '{print $2 }' | tr "\n" " ")
 
-            b=`echo " display qlocal ($t) MAXDEPTH  " | /usr/bin/runmqsc $QM | grep MAXDEPTH | \
-                tr " " "\n" | grep MAXDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| \
-                awk '{print $2 }' | tr "\n" " "`
+            b=$(echo " display qlocal ($t) MAXDEPTH  " | /usr/bin/runmqsc "$QM" | grep MAXDEPTH |
+                tr " " "\n" | grep MAXDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g' |
+                awk '{print $2 }' | tr "\n" " ")
 
-            c=`echo " dis qs($t) monitor " | /usr/bin/runmqsc $QM | grep -e LGETDATE -e LGETTIME | \
-                tr '\n' ' '| awk -v FS="LPUTDATE" '{print $1}'|sed 's/ //g'`
+            c=$(echo " dis qs($t) monitor " | /usr/bin/runmqsc "$QM" | grep -e LGETDATE -e LGETTIME |
+                tr '\n' ' ' | awk -v FS="LPUTDATE" '{print $1}' | sed 's/ //g')
 
             NOW=$(date +%Y_%m_%d"-"%H_%M_%S)
 
             # Muster: Anzahl eingehender Messages $a auf $t Max-Queues $b
             # wwi -------------------------
 
-            if [ "$a" == "" ] || [ "$a" == " " ]; then
-               a=" 0"
-               t=" $t"
-               c="CURDEPTH(0)LGETDATE()LGETTIME()"
+            if [ "$a" = "" ] || [ "$a" = " " ]; then
+                a=" 0"
+                t=" $t"
+                c="CURDEPTH(0)LGETDATE()LGETTIME()"
             fi
 
-            if [ "$b" == "" ]|| [ "$b" == " " ]; then
-               b=0
-               c="CURDEPTH(0)LGETDATE()LGETTIME()"
+            if [ "$b" = "" ] || [ "$b" = " " ]; then
+                b=0
+                c="CURDEPTH(0)LGETDATE()LGETTIME()"
             fi
 
-            if [ "$c" == "" ]|| [ "$c" == " " ]; then
-               c="CURDEPTH(0)LGETDATE()LGETTIME()"
+            if [ "$c" = "" ] || [ "$c" = " " ]; then
+                c="CURDEPTH(0)LGETDATE()LGETTIME()"
             fi
 
             echo "$a $t $b $c $NOW"
         done # for t
-    done # for QM
+    done     # for QM
 fi
 
-
-if type dspmq > /dev/null; then
+if type dspmq >/dev/null; then
     echo "<<<websphere_mq_instance:sep(41)>>>"
     dspmq -x
-    echo "MQv"$(dspmqver|grep -e Version -e ^Level -e Mode|awk -v FS=":" '{print $2","}'|tr -d ' '|tr -d '\n'|sed 's/,$/;/g')
+    echo "MQv$(dspmqver | grep -e Version -e ^Level -e Mode | awk -v FS=":" '{print $2","}' | tr -d ' ' | tr -d '\n' | sed 's/,$/;/g')"
     dspmq -o all
 fi

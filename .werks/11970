@@ -6,7 +6,7 @@ Date: 1612186821
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the REST API returned a 500 error when the collections
 agent endpoint was called. This werk now implements this endpoint and returns

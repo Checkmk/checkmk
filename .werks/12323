@@ -6,7 +6,7 @@ Date: 1620803613
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With this release, the user will receive a clear and unambiguous warning if the 
 MSI-package used for the automatic update contains the wrong version of Python.

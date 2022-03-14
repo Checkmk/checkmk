@@ -67,34 +67,28 @@ def test_discovery():
 
 
 def test_check_postgres_stats_no_data():
-    assert (
-        list(
-            postgres_stats._check_postgres_stats(
-                item="ANALYZE this",
-                params={},
-                section=SECTION,
-                value_store={},
-                now=NOW,
-            )
+    assert list(
+        postgres_stats._check_postgres_stats(
+            item="ANALYZE this",
+            params={},
+            section=SECTION,
+            value_store={},
+            now=NOW,
         )
-        == [IgnoreResults("Login into database failed")]
-    )
+    ) == [IgnoreResults("Login into database failed")]
 
 
 def test_check_postgres_stats_empty_data():
     item = "ANALYZE this"
-    assert (
-        list(
-            postgres_stats._check_postgres_stats(
-                item=item,
-                params={},
-                section={"this": []},
-                value_store={},
-                now=NOW,
-            )
+    assert list(
+        postgres_stats._check_postgres_stats(
+            item=item,
+            params={},
+            section={"this": []},
+            value_store={},
+            now=NOW,
         )
-        == list(postgres_stats._check_never_checked("", [], {}, {}, NOW))
-    )
+    ) == list(postgres_stats._check_never_checked("", [], {}, {}, NOW))
 
 
 def test_check_postgres_stats_oldest_table():

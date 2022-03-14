@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously folders with dots (.) in their filename were erroneously rejected
 by the REST API. This has now been fixed, dots can now be used.

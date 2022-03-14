@@ -21,6 +21,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils import interfaces
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "string_table, result",
@@ -877,4 +879,6 @@ def test_lnx_if_regression(
     ],
 )
 def test_inventory_lnx_if(string_table: List[List[str]], expected_result: InventoryResult):
-    assert list(lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if(string_table))) == expected_result
+    assert sort_inventory_result(
+        lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if(string_table))
+    ) == sort_inventory_result(expected_result)

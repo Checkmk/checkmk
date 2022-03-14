@@ -6,7 +6,7 @@ Date: 1632994130
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The core would not notify if a host or a service is flapping
 if it is in an OK-state at the moment of the notification.

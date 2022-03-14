@@ -7,7 +7,7 @@
 
 import abc
 from collections import Counter
-from datetime import datetime
+from datetime import date, datetime
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
@@ -200,39 +200,14 @@ class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
         return aggregation
 
 
-class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
-    def __init__(
-        self,
-        username: str,
-        subscription_details: RawSubscriptionDetails,
-        short_samples: List,
-    ) -> None:
-        super().__init__(username, subscription_details, short_samples)
-        self._last_daily_services: Dict = {}
+class SubscriptionPeriodError(Exception):
+    pass
 
-    @property
-    def last_daily_services(self) -> Dict:
-        return self._last_daily_services
 
-    def _calculate_daily_services(self) -> DailyServices:
-        daily_services: DailyServices = {}
-        for site_id, history in self._short_samples:
-            self._last_daily_services.setdefault(site_id, history[0] if history else None)
-
-            for sample in history:
-                sample_date = datetime.fromtimestamp(sample.sample_time)
-                daily_services.setdefault(
-                    datetime(sample_date.year, sample_date.month, sample_date.day),
-                    Counter(),
-                ).update(num_services=sample.num_services)
-        return daily_services
-
-    def get_aggregation(self) -> Dict:
-        aggregation = super().get_aggregation()
-        aggregation.update(
-            {
-                "daily_services": self.daily_services,
-                "monthly_service_averages": self.monthly_service_averages,
-            }
-        )
-        return aggregation
+def validate_subscription_period(attrs: Dict) -> None:
+    delta = date.fromtimestamp(attrs["subscription_end"]) - date.fromtimestamp(
+        attrs["subscription_start"]
+    )
+    # full year is e.g. 01.01.1970-31.12.1970 (364 days)
+    if delta.days < 364:
+        raise SubscriptionPeriodError()

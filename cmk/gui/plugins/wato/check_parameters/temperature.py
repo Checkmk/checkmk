@@ -29,12 +29,12 @@ from cmk.gui.valuespec import (
 # item (other than None).
 def _parameter_valuespec_temperature():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",
                     Transform(
-                        Tuple(
+                        valuespec=Tuple(
                             title=_("Upper Temperature Levels"),
                             elements=[
                                 Float(title=_("Warning at"), unit="°C", default_value=26),
@@ -47,7 +47,7 @@ def _parameter_valuespec_temperature():
                 (
                     "levels_lower",
                     Transform(
-                        Tuple(
+                        valuespec=Tuple(
                             title=_("Lower Temperature Levels"),
                             elements=[
                                 Float(title=_("Warning below"), unit="°C", default_value=0),

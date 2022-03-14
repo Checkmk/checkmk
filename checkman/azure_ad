@@ -1,7 +1,7 @@
 title: Microsoft Azure AD Connect: General Information
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the state of Microsoft Azure AD Connect. The check shows the number of user accounts.

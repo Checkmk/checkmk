@@ -9,6 +9,7 @@ from typing import List, Union
 
 import pytest
 
+import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
 
 from cmk.base.agent_based import inventory
@@ -26,6 +27,10 @@ def test_aggregator_raises_collision():
         Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),
         TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}),
     ]
+
+    # For some reason, the callee raises instead of returning the exception if
+    # it runs in debug mode.  So let us explicitly disable that here.
+    cmk.utils.debug.disable()
 
     result = inventory.TreeAggregator().aggregate_results(
         inventory_generator=inventory_items,

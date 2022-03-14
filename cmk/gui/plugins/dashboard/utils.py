@@ -29,7 +29,7 @@ from typing import (
     Union,
 )
 
-from livestatus import LivestatusColumn, LivestatusResponse
+from livestatus import LivestatusColumn, LivestatusResponse, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
@@ -116,7 +116,7 @@ def macro_mapping_from_context(
 
     if "$HOST_ALIAS$" in title and "$HOST_NAME$" in macro_mapping:
         macro_mapping["$HOST_ALIAS$"] = get_alias_of_host(
-            additional_macros.get("$SITE$"),
+            SiteId(additional_macros.get("$SITE$", "")),
             macro_mapping["$HOST_NAME$"],
         )
 
@@ -225,7 +225,7 @@ class Dashlet(abc.ABC):
         return False
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
         """Optional validation function in case vs_parameters() returns a list"""
         return None
 
@@ -382,7 +382,7 @@ class Dashlet(abc.ABC):
         return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
     def _dashlet_context_vars(self) -> HTTPVariables:
-        return visuals.get_context_uri_vars(self.context, self.single_infos())
+        return visuals.context_to_uri_vars(self.context)
 
     def unconfigured_single_infos(self) -> Set[str]:
         """Returns infos that are not set by the dashlet config"""
@@ -528,7 +528,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
             (
                 "type",
                 FixedValue(
-                    dashlet_type.type_name(),
+                    value=dashlet_type.type_name(),
                     totext=dashlet_type.title(),
                     title=_("Element type"),
                 ),
@@ -715,7 +715,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
     @classmethod
     def vs_parameters(cls) -> ValueSpec:
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 title=_("Properties"),
                 render="form",
                 optional_keys=False,

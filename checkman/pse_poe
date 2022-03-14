@@ -1,7 +1,7 @@
 title: Generic PSE Device: Power over Ethernet
 agents: snmp
 catalog: hw/power/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

@@ -29,17 +29,17 @@ const std::map<std::string, unsigned long> known_attributes = {
 
 using modified_attributes = std::bitset<32>;
 
-std::string refValueFor(const std::string& value, Logger* logger) {
+std::string refValueFor(const std::string &value, Logger *logger) {
     if (isdigit(value[0]) != 0) {
         return value;
     }
 
     std::vector<char> value_vec(value.begin(), value.end());
     value_vec.push_back('\0');
-    char* scan = &value_vec[0];
+    char *scan = &value_vec[0];
 
     modified_attributes values;
-    for (const char* t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
+    for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
             Informational(logger)
@@ -51,9 +51,9 @@ std::string refValueFor(const std::string& value, Logger* logger) {
     return std::to_string(values.to_ulong());
 }
 
-unsigned long decode(const std::vector<AttributeBit>& mask) {
+unsigned long decode(const std::vector<AttributeBit> &mask) {
     unsigned long out = 0;
-    for (const auto& bit : mask) {
+    for (const auto &bit : mask) {
         out |= static_cast<int>(bit.value) << bit.index;
     }
     return out;
@@ -68,12 +68,12 @@ std::vector<AttributeBit> encode(unsigned long mask) {
     return out;
 }
 
-std::vector<AttributeBit> encode(const std::vector<std::string>& strs) {
+std::vector<AttributeBit> encode(const std::vector<std::string> &strs) {
     std::vector<AttributeBit> out;
     for (std::size_t ii = 0; ii < modified_attributes().size(); ++ii) {
         out.emplace_back(ii, false);
     }
-    for (const auto& str : strs) {
+    for (const auto &str : strs) {
         auto it = known_attributes.find(str);
         if (it != known_attributes.end()) {
             out[it->second].value = true;
@@ -86,8 +86,8 @@ std::vector<AttributeBit> encode(const std::vector<std::string>& strs) {
 
 namespace column::detail {
 template <>
-std::string serialize(const column::attribute_list::AttributeBit& bit) {
-    for (const auto& [k, v] : column::attribute_list::known_attributes) {
+std::string serialize(const column::attribute_list::AttributeBit &bit) {
+    for (const auto &[k, v] : column::attribute_list::known_attributes) {
         if (v == bit.index && bit.value) {
             return k;
         }

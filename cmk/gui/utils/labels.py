@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from ast import literal_eval
 from typing import Dict, Iterable, List, Mapping, Set, Tuple, TYPE_CHECKING
 
 from redis.client import Pipeline
@@ -29,13 +30,15 @@ def encode_label_for_livestatus(
     column: str,
     label_id: str,
     label_value: str,
+    negate: bool = False,
 ) -> str:
     """
     >>> encode_label_for_livestatus("labels", "key", "value")
     "Filter: labels = 'key' 'value'"
     """
-    return "Filter: %s = %s %s" % (
+    return "Filter: %s %s %s %s" % (
         lqencode(column),
+        "!=" if negate else "=",
         lqencode(quote_dict(label_id)),
         lqencode(quote_dict(label_value)),
     )
@@ -97,7 +100,7 @@ class LabelsCache:
             site_ids.append(site_id)
         return site_ids
 
-    def get_labels(self) -> _Labels:
+    def get_labels_list(self) -> list[tuple[str, str]]:
         """Main function to query, check and update caches"""
         integrity_function = self._verify_cache_integrity
         update_function = self._redis_update_labels
@@ -109,45 +112,90 @@ class LabelsCache:
 
         return all_labels
 
-    def _redis_query_labels(self) -> _Labels:
+    def _redis_query_labels(self) -> list[tuple[str, str]]:
         """Query all labels from redis"""
         cache_names: List = []
         for site_id in self._get_site_ids():
             for label_type in [self._hst_label, self._svc_label]:
                 cache_names.append("%s:%s:%s" % (self._namespace, site_id, label_type))
 
-        all_labels = {}
         with self._redis_client.pipeline() as pipeline:
             for cache in cache_names:
                 pipeline.hgetall(cache)
             result = pipeline.execute()
-            for labels in result:
-                all_labels.update(labels)
+            return self._get_deserialized_labels(result)
+
+    def _get_deserialized_labels(self, result: list[dict[str, str]]) -> list[tuple[str, str]]:
+        all_labels: list[tuple[str, str]] = []
+        for labels in result:
+            deserialized_labels = self._deserialize_labels(labels)
+            for label in deserialized_labels:
+                all_labels.append(label)
+
         return all_labels
 
     def _livestatus_get_labels(
-        self, only_sites: List[str]
+        self, only_sites: List[SiteId]
     ) -> Tuple[Mapping[SiteId, _Labels], Mapping[SiteId, _Labels]]:
         """Get labels for all sites that need an update and the user is authorized for"""
+        return self._collect_labels_from_livestatus_rows(self._query_livestatus(only_sites))
+
+    def _query_livestatus(
+        self,
+        only_sites: List[SiteId],
+    ) -> List[Tuple[SiteId, Dict[str, str], Dict[str, str]]]:
         query: str = "GET services\n" "Cache: reload\n" "Columns: host_labels labels\n"
 
         with sites.prepend_site(), sites.only_sites(only_sites):
             rows = [(x[0], x[1], x[2]) for x in sites.live(user).query(query)]
 
-        host_labels: Dict[SiteId, Dict[str, str]] = {}
-        service_labels: Dict[SiteId, Dict[str, str]] = {}
-        for row in rows:
-            site_id = row[0]
-            host_label = row[1]
-            service_label = row[2]
+        return rows
 
-            for key, value in host_label.items():
-                host_labels.setdefault(site_id, {}).update({key: value})
+    def _collect_labels_from_livestatus_rows(
+        self,
+        rows: List[Tuple[SiteId, Dict[str, str], Dict[str, str]]],
+    ) -> Tuple[Mapping[SiteId, _Labels], Mapping[SiteId, _Labels]]:
+        all_host_labels: Dict[SiteId, Dict[str, str]] = {}
+        all_service_labels: Dict[SiteId, Dict[str, str]] = {}
+        site_host_labels: Dict[str, Set[str]] = {}
+        site_service_labels: Dict[str, Set[str]] = {}
+        for site_id, host_labels, service_labels in rows:
+            if site_id not in all_host_labels:
+                site_host_labels = {}
+            all_site_host_labels = self._get_all_labels_from_row(
+                host_labels,
+                site_host_labels,
+            )
+            all_host_labels.setdefault(site_id, {}).update(
+                self._serialize_labels(all_site_host_labels)
+            )
 
-            for key, value in service_label.items():
-                service_labels.setdefault(site_id, {}).update({key: value})
+            if site_id not in all_service_labels:
+                site_service_labels = {}
 
-        return (host_labels, service_labels)
+            all_site_service_labels = self._get_all_labels_from_row(
+                service_labels,
+                site_service_labels,
+            )
+            all_service_labels.setdefault(site_id, {}).update(
+                self._serialize_labels(all_site_service_labels)
+            )
+
+        return (all_host_labels, all_service_labels)
+
+    def _get_all_labels_from_row(
+        self,
+        labels: Dict[str, str],
+        site_labels: Dict[str, Set[str]],
+    ) -> Dict[str, Set[str]]:
+        for key, value in labels.items():
+            if key not in site_labels:
+                site_labels[key] = set([value])
+                continue
+
+            site_labels[key].add(value)
+
+        return site_labels
 
     def _redis_update_labels(self, pipeline: Pipeline) -> None:
         """Set cache for all sites that need an update"""
@@ -169,6 +217,9 @@ class LabelsCache:
         sites_list: List[SiteId] = []
         for site_id, label in labels.items():
             if site_id not in self._sites_to_update:
+                continue
+
+            if not label:
                 continue
 
             label_key = "%s:%s:%s" % (self._namespace, site_id, label_type)
@@ -208,16 +259,30 @@ class LabelsCache:
 
         for site_id, last_program_start in last_program_starts.items():
 
+            # How can last_program_start be None if it is a Dict[str, str]?
+            # Perhaps _redis_get_last_program_starts() should return something like an Optional[Mapping[SiteId, Optional[int]].
             if last_program_start is None or (
-                int(last_program_start) != self._livestatus_get_last_program_start(site_id)
+                int(last_program_start) != self._livestatus_get_last_program_start(SiteId(site_id))
             ):
 
-                self._sites_to_update.update([site_id])
+                self._sites_to_update.update([SiteId(site_id)])
 
         if self._sites_to_update:
             return IntegrityCheckResponse.UPDATE
 
         return IntegrityCheckResponse.USE
+
+    def _serialize_labels(self, labels: Dict[str, Set[str]]) -> Dict[str, str]:
+        return {k: repr(sorted(v)) for k, v in labels.items()}
+
+    def _deserialize_labels(self, labels: _Labels) -> list[tuple[str, str]]:
+        all_labels = []
+        for key, value in labels.items():
+            value_list = literal_eval(value)
+            for entry in value_list:
+                all_labels.append((key, entry))
+
+        return all_labels
 
 
 @request_memoize()

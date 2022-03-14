@@ -113,7 +113,7 @@ def test_plug(request_context):
 
 def test_context(request_context):
     table_id = 0
-    rows = [(i, i ** 3) for i in range(10)]
+    rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
     with output_funnel.plugged():
         with table_element(table_id="%d" % table_id, searchable=False, sortable=False) as table:
@@ -209,7 +209,7 @@ def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 
     # Test data
-    rows = [(i, i ** 3) for i in range(10)]
+    rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
 
     # Table options

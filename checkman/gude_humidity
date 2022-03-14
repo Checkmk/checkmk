@@ -1,7 +1,7 @@
 title: GUDE Power Control: Humidity
 agents: snmp
 catalog: hw/power/gude
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors humidity of a GUDE Power

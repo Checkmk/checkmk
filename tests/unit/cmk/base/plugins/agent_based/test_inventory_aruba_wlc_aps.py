@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.aruba_wlc_aps import inventory_aruba_wlc_aps, parse_aruba_wlc_aps
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "raw_section, expected_result",
@@ -51,4 +53,6 @@ from cmk.base.plugins.agent_based.aruba_wlc_aps import inventory_aruba_wlc_aps, 
     ],
 )
 def test_inventory_aruba_wlc_aps(raw_section, expected_result):
-    assert list(inventory_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))) == expected_result
+    assert sort_inventory_result(
+        inventory_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))
+    ) == sort_inventory_result(expected_result)

@@ -74,7 +74,13 @@ class SectionMarker(NamedTuple):
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b"<<<>>>"
+        # There is no section footer in the protocol but some non-compliant
+        # plugins still add one and we accept it.
+        return (
+            len(line) >= 6
+            and line == b"<<<>>>"
+            or (line.startswith(b"<<<:") and line.endswith(b">>>"))
+        )
 
     @classmethod
     def default(cls, name: SectionName):

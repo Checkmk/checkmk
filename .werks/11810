@@ -6,7 +6,7 @@ Date: 1625065038
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On standard site installations, locks during mkbackup are now site specific.
 This results in multiple sites being able to be backed-up simultaneously.

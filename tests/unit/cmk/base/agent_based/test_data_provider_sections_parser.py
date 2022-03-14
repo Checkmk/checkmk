@@ -8,7 +8,10 @@ from typing import Callable
 
 import pytest
 
+import cmk.utils.debug
 from cmk.utils.type_defs import SectionName
+
+from cmk.core_helpers.host_sections import HostSections
 
 from cmk.base import crash_reporting
 from cmk.base.agent_based.data_provider import SectionsParser
@@ -16,7 +19,7 @@ from cmk.base.api.agent_based.register.section_plugins import (
     AgentSectionPlugin,
     trivial_section_factory,
 )
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 
 
 def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:
@@ -29,7 +32,7 @@ class TestSectionsParser:
     @pytest.fixture
     def sections_parser(self) -> SectionsParser:
         return SectionsParser(
-            host_sections=AgentHostSections(
+            host_sections=HostSections[AgentRawDataSection](
                 sections={
                     SectionName("one"): [],
                     SectionName("two"): [],
@@ -56,7 +59,8 @@ class TestSectionsParser:
             "create_section_crash_dump",
             lambda **kw: "crash dump msg",
         )
-
+        # Debug mode raises instead of creating the crash report that we want here.
+        cmk.utils.debug.disable()
         section = _section("one", lambda x: 1 / 0)
 
         assert sections_parser.parse(section) is None

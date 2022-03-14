@@ -1,7 +1,7 @@
 title: Netgear Switches: Fans
 agents: snmp
 catalog: hw/network/netgear
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors fans of Netgear switches

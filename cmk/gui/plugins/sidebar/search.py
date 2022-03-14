@@ -316,8 +316,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         hosts / services / hostgroups / servicegroups
 
         {table} -> {is_included_in_table}
-        Hostgroups -> Hosts -> Services
-        Servicegroups -> Services
+        Host groups -> Hosts -> Services
+        Service groups -> Services
         """
 
         preferred_tables = []
@@ -700,7 +700,7 @@ class QuicksearchSnapin(SidebarSnapin):
     def description(cls):
         return _(
             "Interactive search field for direct access to monitoring instances (hosts, services, "
-            "host- and servicegroups).<br>You can use the following filters: <i>h:</i> Host,<br> "
+            "host and service groups).<br>You can use the following filters: <i>h:</i> Host,<br> "
             "<i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> Service group,<br><i>ad:</i> "
             "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hl:</i> Host label, <i>sl:</i> "
             "Service label"
@@ -729,7 +729,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def _ajax_search(self) -> None:
         """Generate the search result list"""
-        query = _maybe_strip(request.get_unicode_input("q"))
+        query = _maybe_strip(request.get_str_input("q"))
         if not query:
             return
 
@@ -908,8 +908,8 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
 
     def get_match_topic(self) -> str:
         if self._group_type == "host":
-            return _("Hostgroup")
-        return _("Servicegroup")
+            return _("Host group")
+        return _("Service group")
 
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
         if livestatus_table == "%sgroups" % self._group_type:
@@ -1507,7 +1507,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
         tooltip = _(
             "Search with regular expressions for menu entries, \n"
-            "hosts, services or host- and servicegroups.\n\n"
+            "hosts, services or host and service groups.\n\n"
             "You can use the following filters:\n"
             "h: Host\n"
             "s: Service\n"
@@ -1544,7 +1544,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
 @page_registry.register_page("ajax_search_monitoring")
 class PageSearchMonitoring(AjaxPage):
     def page(self):
-        query = request.get_unicode_input_mandatory("q")
+        query = request.get_str_input_mandatory("q")
         return MenuSearchResultsRenderer("monitoring").render(query)
 
 
@@ -1580,7 +1580,7 @@ class SetupSearch(ABCMegaMenuSearch):
 @page_registry.register_page("ajax_search_setup")
 class PageSearchSetup(AjaxPage):
     def page(self):
-        query = request.get_unicode_input_mandatory("q")
+        query = request.get_str_input_mandatory("q")
         try:
             return MenuSearchResultsRenderer("setup").render(query)
         except IndexNotFoundException:

@@ -25,7 +25,7 @@ def _oracle_instance_transform_oracle_instance_params(p):
 
 def _parameter_valuespec_oracle_instance():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Consider state of Archivelogmode: "),
             elements=[
                 (

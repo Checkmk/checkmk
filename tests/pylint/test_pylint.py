@@ -62,16 +62,16 @@ def _get_files_to_check(pylint_test_dir):
     # Not checking compiled check, inventory, bakery plugins with Python 3
     files = [pylint_test_dir]
 
-    p = subprocess.Popen(
+    completed_process = subprocess.run(
         ["%s/scripts/find-python-files" % repo_path()],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         shell=False,
         close_fds=True,
+        check=False,
     )
-    stdout = p.communicate()[0]
 
-    for fname in stdout.splitlines():
+    for fname in completed_process.stdout.splitlines():
         # Thin out these excludes some day...
         rel_path = fname[len(repo_path()) + 1 :]
 

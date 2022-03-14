@@ -163,7 +163,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
 
     @property
     def title(self):
-        return _("BI Aggregations for Hosts by Hostgroups")
+        return _("BI aggregations for hosts by host groups")
 
     @property
     def table(self):

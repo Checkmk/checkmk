@@ -22,8 +22,18 @@ def _parameter_valuespec_fortigate_antivirus_ips(rate_name: str) -> Dictionary:
                     title=_("Detection rate"),
                     help=_("Define levels on the %s detection rate.") % rate_name,
                     elements=[
-                        Float(title=_("Warning at"), unit=_("detections/s"), default_value=100),
-                        Float(title=_("Critical at"), unit=_("detections/s"), default_value=300),
+                        Float(
+                            title=_("Warning at"),
+                            size=6,
+                            unit=_("detections/s"),
+                            default_value=100.00,
+                        ),
+                        Float(
+                            title=_("Critical at"),
+                            size=6,
+                            unit=_("detections/s"),
+                            default_value=300.00,
+                        ),
                     ],
                 ),
             ),

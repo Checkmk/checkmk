@@ -11,7 +11,8 @@ from tests.testlib.base import Scenario
 
 @pytest.fixture(name="core_scenario")
 def fixture_core_scenario(monkeypatch):
-    ts = Scenario().add_host("test-host")
+    ts = Scenario()
+    ts.add_host("test-host")
     ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
     return ts.apply(monkeypatch)
 

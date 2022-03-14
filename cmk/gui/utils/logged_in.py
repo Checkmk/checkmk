@@ -21,7 +21,7 @@ import cmk.gui.permissions as permissions
 import cmk.gui.sites as sites
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, local, request
+from cmk.gui.globals import config, endpoint, local, request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
@@ -337,24 +337,49 @@ class LoggedInUser:
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
-            return dict(unfiltered_sites)
+            return SiteConfigurations(dict(unfiltered_sites))
 
-        return {
-            site_id: s for site_id, s in unfiltered_sites.items() if site_id in authorized_sites  #
-        }
+        return SiteConfigurations(
+            {
+                site_id: s
+                for site_id, s in unfiltered_sites.items()
+                if site_id in authorized_sites  #
+            }
+        )
 
     def authorized_login_sites(self) -> SiteConfigurations:
         login_site_ids = sites.get_login_slave_sites()
         return self.authorized_sites(
-            {site_id: s for site_id, s in sites.allsites().items() if site_id in login_site_ids}
+            SiteConfigurations(
+                {
+                    site_id: s
+                    for site_id, s in sites.allsites().items()
+                    if site_id in login_site_ids  #
+                }
+            )
         )
 
     def may(self, pname: str) -> bool:
         if pname in self._permissions:
             return self._permissions[pname]
-        he_may = may_with_roles(self.role_ids, pname)
-        self._permissions[pname] = he_may
-        return he_may
+        they_may = may_with_roles(self.role_ids, pname)
+        self._permissions[pname] = they_may
+
+        is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
+        if is_rest_api_call:
+            endpoint.remember_checked_permission(pname)
+            if (
+                endpoint.permissions_required is not None
+                and not endpoint.permissions_required.validate(list(endpoint._used_permissions))
+            ):
+                raise PermissionError(
+                    f"Required permissions not specified for endpoint.\n"
+                    f"Endpoint: {endpoint}\n"
+                    f"Required: {endpoint.permissions_required}\n"
+                    f"Triggered: {endpoint._used_permissions}\n",
+                )
+
+        return they_may
 
     def need_permission(self, pname: str) -> None:
         if not self.may(pname):

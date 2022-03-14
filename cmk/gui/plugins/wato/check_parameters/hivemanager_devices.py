@@ -47,7 +47,7 @@ def _parameter_valuespec_hivemanager_devices():
             (
                 "alert_on_loss",
                 FixedValue(
-                    False,
+                    value=False,
                     totext="",
                     title=_("Do not alert on connection loss"),
                 ),

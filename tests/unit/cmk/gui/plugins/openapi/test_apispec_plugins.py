@@ -8,11 +8,13 @@ from typing import Type
 
 import pytest
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import fields, post_load, Schema, ValidationError
+from marshmallow import post_load, Schema, ValidationError
 from marshmallow.base import SchemaABC
 
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
+
+from cmk import fields
 
 
 class Movie:
@@ -82,19 +84,19 @@ class MovieDictSchema(ValueTypedDictSchema):
 
 
 class CustomTagDictSchema(ValueTypedDictSchema):
-    value_type = (fields.String(
+    value_type = ValueTypedDictSchema.field(fields.String(
         description="Tag value here",
         pattern="foo|bar",
         required=True,
-    ),)
+    ))
 
 
 class IntegerDictSchema(ValueTypedDictSchema):
-    value_type = (fields.Integer(),)
+    value_type = ValueTypedDictSchema.field(fields.Integer())
 
 
 class EmailSchema(ValueTypedDictSchema):
-    value_type = (fields.Email(),)
+    value_type = ValueTypedDictSchema.field(fields.Email())
 
 
 @pytest.fixture(name="spec", scope='function')

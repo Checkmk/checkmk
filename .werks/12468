@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some search operations for BI nodes lead to similar (but not equal) results.
 However, the generated aggregation nodes from these results could be identical.

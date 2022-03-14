@@ -1,7 +1,7 @@
 title: Alertmanager: Groups
 agents: alertmanager
 catalog: app/alertmanager
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows a summary of all alert rules in one alert rule group that
@@ -22,4 +22,3 @@ discovery:
  all alert rule services within the group.
  Group services are only created if the amount of alert rules within this
  alert rule group is bigger than the necessary amount configured.
-

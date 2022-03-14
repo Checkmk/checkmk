@@ -5,6 +5,7 @@
 
 #include "pch.h"
 
+#include "agent_controller.h"
 #include "cfg.h"
 #include "common/version.h"
 #include "common/wtools.h"
@@ -24,9 +25,9 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+namespace fs = std::filesystem;
 
 namespace cma::provider {
-
 static const std::string section_name{cma::section::kUseEmbeddedName};
 
 class Empty : public Synchronous {
@@ -58,7 +59,7 @@ TEST(SectionProviders, BasicUptime) {
     EXPECT_EQ(uptime_provider.getEngine().getUniqName(),
               cma::section::kUptimeName);
 
-    auto& e3 = uptime_provider.getEngine();
+    auto &e3 = uptime_provider.getEngine();
     auto uptime = e3.generateContent(section_name);
     ASSERT_TRUE(!uptime.empty());
     auto result = cma::tools::SplitString(uptime, "\n");
@@ -72,7 +73,7 @@ TEST(SectionProviders, BasicDf) {
     cma::srv::SectionProvider<cma::provider::Df> df_provider;
     EXPECT_EQ(df_provider.getEngine().getUniqName(), cma::section::kDfName);
 
-    auto& e2 = df_provider.getEngine();
+    auto &e2 = df_provider.getEngine();
     auto df = e2.generateContent(section_name);
     ASSERT_TRUE(!df.empty());
     auto result = cma::tools::SplitString(df, "\n");
@@ -99,7 +100,7 @@ TEST(SectionProviders, BasicDf) {
 TEST(SectionProviders, SystemTime) {
     auto seconds_since_epoch = tools::SecondsSinceEpoch();
     srv::SectionProvider<SystemTime> system_time_provider;
-    auto& engine = system_time_provider.getEngine();
+    auto &engine = system_time_provider.getEngine();
 
     EXPECT_EQ(engine.getUniqName(), section::kSystemTime);
 
@@ -115,9 +116,9 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
-    static constexpr size_t core_lines_ = 18;
+    static constexpr size_t core_lines_ = 19;
     static constexpr size_t full_lines_ = core_lines_ + 3;
-    static constexpr std::string_view names_[] = {
+    static constexpr std::string_view names_[core_lines_ - 1] = {
         "Version",          "BuildDate",       "AgentOS",
         "Hostname",         "Architecture",    "WorkingDirectory",
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
@@ -143,22 +144,10 @@ public:
     }
     std::vector<std::string> getCoreResultAsTable() {
         auto result = getFullResultAsTable();
-        if (result.size() == full_lines_ &&
-            result[core_lines_] + "\n" ==
-                section::MakeHeader(section::kCheckMk)) {
-            result.resize(core_lines_);
-        }
         result.erase(result.begin());
         return result;
     }
-    CheckMk& getEngine() { return check_mk_provider_.getEngine(); }
-
-    YAML::Node getWorkingCfg() {
-        if (!temp_fs_) {
-            temp_fs_ = std::move(tst::TempCfgFs::CreateNoIo());
-        }
-        return cfg::GetLoadedConfig();
-    }
+    CheckMk &getEngine() { return check_mk_provider_.getEngine(); }
 
     std::filesystem::path createDataDir() {
         if (!temp_fs_) {
@@ -167,7 +156,7 @@ public:
         return temp_fs_->data();
     }
 
-    auto get_val(const std::string& raw) -> std::string {
+    auto get_val(const std::string &raw) -> std::string {
         auto tbl = tools::SplitString(raw, ": ");
         if (tbl.size() == 2) {
             return tbl[1];
@@ -186,35 +175,48 @@ TEST_F(SectionProviderCheckMkFixture, Name) {
 }
 
 TEST_F(SectionProviderCheckMkFixture, ConstFields) {
-    auto cfg = getWorkingCfg();
+    createDataDir();
+    auto cfg = cfg::GetLoadedConfig();
     cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] = YAML::Load("127.0.0.1");
 
     auto result = getCoreResultAsTable();
 
-    const auto* expected_name = names_;
-    for (const auto& r : result) {
+    const auto *expected_name = names_;
+    EXPECT_EQ(result[result.size() - 1] + "\n",
+              section::MakeHeader(section::kCheckMkCtlStatus));
+    result.pop_back();
+    for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
-        EXPECT_EQ(values.size(), 2);
         EXPECT_EQ(values[0], std::string{*expected_name++});
-        EXPECT_FALSE(values[1].empty());
+        EXPECT_EQ(values.size(), 2);
     }
 }
 
 TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
+    createDataDir();
     auto result = getCoreResultAsTable();
     EXPECT_EQ(get_val(result[0]), CHECK_MK_VERSION);
     EXPECT_EQ(get_val(result[2]), "windows");
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
+    EXPECT_EQ(result[result.size() - 1] + "\n",
+              section::MakeHeader(section::kCheckMkCtlStatus));
+    tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
+                        "test");
+    result = getCoreResultAsTable();
+    EXPECT_EQ(result[result.size() - 1] + "\n",
+              section::MakeHeader(section::kCheckMkCtlStatus));
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
-    auto cfg = getWorkingCfg();
+    createDataDir();
+    auto cfg = cfg::GetLoadedConfig();
 
     for (auto p : only_from_cases_) {
         cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] =
             YAML::Load(std::string{p.first});
         auto result = getCoreResultAsTable();
+        result.pop_back();
         EXPECT_EQ(get_val(*std::prev(result.end())), std::string{p.second});
     }
 }
@@ -223,6 +225,8 @@ TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
     tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
 
     auto result = getFullResultAsTable();
+    EXPECT_EQ(result[full_lines_ - 3] + "\n",
+              section::MakeHeader(section::kCheckMk));
     EXPECT_TRUE(result[full_lines_ - 2].starts_with("UpdateFailed:"));
     EXPECT_TRUE(result[full_lines_ - 1].starts_with("UpdateRecoverAction:"));
 }
@@ -257,7 +261,7 @@ public:
     std::vector<Row> rows_;
 
 private:
-    Mem& getEngine() { return mem_provider_.getEngine(); }
+    Mem &getEngine() { return mem_provider_.getEngine(); }
     srv::SectionProvider<Mem> mem_provider_;
 };
 
@@ -266,7 +270,7 @@ TEST_F(SectionProvidersMemFixture, Mem) {
     EXPECT_EQ(header_, "<<<mem>>>");
     ASSERT_EQ(rows_.size(), 8);
     for (size_t i = 0; i < rows_.size(); ++i) {
-        const auto& row = rows_[i];
+        const auto &row = rows_[i];
         EXPECT_EQ(row.title, field_names_[i]);
         EXPECT_TRUE(std::stoll(row.value) > 0);
         EXPECT_EQ(row.kb, "kB");
@@ -275,7 +279,7 @@ TEST_F(SectionProvidersMemFixture, Mem) {
 
 class SectionProvidersFixture : public ::testing::Test {
 public:
-    Services& getEngine() { return services_provider.getEngine(); }
+    Services &getEngine() { return services_provider.getEngine(); }
 
 private:
     srv::SectionProvider<Services> services_provider;
@@ -325,5 +329,4 @@ TEST(SectionHeaders, MakeEmptyHeader) {
 TEST(SectionHeaders, MakeLocalHeader) {
     EXPECT_EQ(section::MakeLocalHeader(), "<<<local:sep(0)>>>\n");
 }
-
 }  // namespace cma::provider

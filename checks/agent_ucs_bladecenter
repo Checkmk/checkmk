@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_ucsbladecenter_arguments(params, hostname, ipaddress):
-    args = []
 
-    args += ["-u", params["username"]]
-    args += ["-p", params["password"]]
+def agent_ucsbladecenter_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    args = ["-u", f"{params['username']}", "-p", f"{params['password']}"]
 
     if params.get("no_cert_check"):
         args.append("--no-cert-check")
 
-    args.append(ipaddress)
+    args.append(ipaddress or hostname)
     return args
 
 

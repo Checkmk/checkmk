@@ -50,7 +50,7 @@ class FakeStatusSocket:
 def fixture_settings():
     return ec.settings(
         "1.2.3i45",
-        pathlib.Path(cmk.utils.paths.omd_root),
+        cmk.utils.paths.omd_root,
         pathlib.Path(cmk.utils.paths.default_config_dir),
         ["mkeventd"],
     )

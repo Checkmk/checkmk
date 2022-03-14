@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments.
 """
+from livestatus import SiteId
+
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
@@ -91,7 +93,7 @@ def acknowledge_servicegroup_problem(
     user: str = "",
     comment: str = "",
 ):
-    """Acknowledge the problems of the current services of the servicegroup
+    """Acknowledge the problems of the current services of the service group
 
     When acknowledging a problem, further notifications for the respective services are disabled, as
     long as a specific service doesn't change state. At state change, notifications are re-enabled.
@@ -119,7 +121,7 @@ def acknowledge_servicegroup_problem(
 
     Raises:
         ValueError:
-            When the servicegroup could not be found.
+            When the service group could not be found.
 
     """
     with detailed_connection(connection) as conn:
@@ -223,7 +225,7 @@ def acknowledge_hostgroup_problem(
     user: str = "",
     comment: str = "",
 ):
-    """Acknowledge the problems of the current hosts of the hostgroup
+    """Acknowledge the problems of the current hosts of the host group
 
     When acknowledging a problem, further notifications for the respective services are disabled, as
     long as a specific service doesn't change state. At state change, notifications are re-enabled.
@@ -251,7 +253,7 @@ def acknowledge_hostgroup_problem(
 
     Raises:
         ValueError:
-            when the Hostgroup in question doesn't exist.
+            when the host group in question doesn't exist.
 
     """
     with detailed_connection(connection) as conn:
@@ -279,9 +281,9 @@ def acknowledge_hostgroup_problem(
             )
 
 
-def _query_site(connection, host_name: str) -> str:
+def _query_site(connection, host_name: str) -> SiteId:
     with detailed_connection(connection) as conn:
         site_id = Query([Hosts.name], Hosts.name.equals(host_name)).first_value(conn)
         if not isinstance(site_id, str):
             raise QueryException
-    return site_id
+    return SiteId(site_id)

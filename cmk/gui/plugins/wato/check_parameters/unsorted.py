@@ -88,7 +88,7 @@ def _valuespec_inventory_sap_values():
                             size=100,
                         ),
                         Transform(
-                            RegExp(
+                            valuespec=RegExp(
                                 size=100,
                                 mode=RegExp.prefix,
                             ),
@@ -101,7 +101,7 @@ def _valuespec_inventory_sap_values():
                             back=lambda x: "~" + x,  # prefix ~
                         ),
                         FixedValue(
-                            None,
+                            value=None,
                             totext="",
                             title=_("Match all nodes"),
                         ),
@@ -140,7 +140,7 @@ rulespec_registry.register(
 
 def _valuespec_sap_value_groups():
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             help=_("This defines one value grouping pattern"),
             show_titles=True,
             orientation="horizontal",

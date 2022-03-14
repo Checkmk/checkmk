@@ -43,7 +43,7 @@ def parse_windows_updates(string_table: StringTable) -> Optional[Section]:
         forced_reboot: Optional[float] = time.mktime(
             time.strptime(" ".join(next(lines_iter)), "%Y-%m-%d %H:%M:%S")
         )
-    except StopIteration:
+    except (StopIteration, ValueError):
         forced_reboot = None
 
     return Section(

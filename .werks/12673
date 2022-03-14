@@ -6,7 +6,7 @@ Date: 1619102058
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When discovering services on a Cisco Nexus device, a duplicated "CPU utilization"
 service may be discovered, with check commands check_mk-cisco_cpu and

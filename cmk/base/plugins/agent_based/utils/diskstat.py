@@ -132,6 +132,15 @@ def compute_rates_multiple_disks(
     return disks_with_rates
 
 
+_METRICS_TO_BE_AVERAGED = {
+    "utilization",
+    "latency",
+    "read_latency",
+    "write_latency",
+    "queue_length",
+}
+
+
 def combine_disks(disks: Iterable[Disk]) -> Disk:
 
     # In summary mode we add up the throughput values, but
@@ -168,7 +177,7 @@ def combine_disks(disks: Iterable[Disk]) -> Disk:
             n_contributions[key] += 1
 
     for key in combined_disk:
-        if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
+        if key.startswith("ave") or key in _METRICS_TO_BE_AVERAGED:
             combined_disk[key] /= n_contributions[key]
 
     return combined_disk

@@ -26,11 +26,11 @@ from cmk.gui.globals import config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import permission_section_registry, PermissionSection
-from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
+from cmk.gui.valuespec import DropdownChoiceEntries
 
 
 def _socket_path() -> Path:
-    return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
+    return cmk.utils.paths.omd_root / "tmp/run/mkeventd/status"
 
 
 def mib_upload_dir() -> Path:
@@ -46,7 +46,7 @@ def mib_dirs() -> List[Tuple[Path, str]]:
     ]
 
 
-syslog_priorities: List[DropdownChoiceEntry] = [
+syslog_priorities: DropdownChoiceEntries = [
     (0, "emerg"),
     (1, "alert"),
     (2, "crit"),
@@ -57,7 +57,7 @@ syslog_priorities: List[DropdownChoiceEntry] = [
     (7, "debug"),
 ]
 
-syslog_facilities: DropdownChoices = [
+syslog_facilities: DropdownChoiceEntries = [
     (0, "kern"),
     (1, "user"),
     (2, "mail"),
@@ -86,11 +86,11 @@ syslog_facilities: DropdownChoices = [
 ]
 
 phase_names = {
-    "counting": _l("counting"),
-    "delayed": _l("delayed"),
-    "open": _l("open"),
-    "ack": _l("acknowledged"),
-    "closed": _l("closed"),
+    "counting": _("counting"),
+    "delayed": _("delayed"),
+    "open": _("open"),
+    "ack": _("acknowledged"),
+    "closed": _("closed"),
 }
 
 action_whats = {
@@ -146,9 +146,7 @@ def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
 @request_memoize()
 def _eventd_configuration() -> ec.ConfigFromWATO:
     return ec.load_config(
-        ec.settings(
-            "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
-        )
+        ec.settings("", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""])
     )
 
 

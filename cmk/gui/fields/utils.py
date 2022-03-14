@@ -19,12 +19,12 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroup
 # TODO: Clean this dependency on the plugins up by moving the plugins to cmk.gui.watolib
 import cmk.gui.plugins.wato.builtin_attributes  # pylint: disable=unused-import
 import cmk.gui.watolib.groups  # pylint: disable=unused-import
-
-#
-from cmk.gui import fields, sites, watolib
+from cmk.gui import sites, watolib
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.tags import load_tag_config
+
+from cmk import fields
 
 
 class Attr(NamedTuple):
@@ -61,19 +61,19 @@ def collect_attributes(
     Examples:
 
         >>> attrs = collect_attributes('host', 'create')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('host', 'update')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('cluster', 'create')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('cluster', 'update')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('folder', 'create')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('folder', 'update')
         >>> assert len(attrs) > 10

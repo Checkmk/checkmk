@@ -21,7 +21,7 @@ import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.globals import config, html, transactions, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
@@ -34,8 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.utils.escaping import escape_html_permissive
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.valuespec import (
     AbsoluteDate,
     CascadingDropdown,
@@ -88,19 +87,23 @@ def save_gui_messages(messages, user_id=None):
 def _messaging_methods() -> Dict[str, Dict[str, Any]]:
     return {
         "gui_popup": {
-            "title": _("Open window in the user interface"),
+            "title": _("Show popup message"),
+            "confirmation_title": _("as a popup message"),
             "handler": message_gui,
         },
         "gui_hint": {
             "title": _("Show hint in the 'User' menu"),
+            "confirmation_title": _("as a hint in the 'User' menu"),
             "handler": message_gui,
         },
         "mail": {
-            "title": _("Send an E-Mail"),
+            "title": _("Send email"),
+            "confirmation_title": _("as an email"),
             "handler": message_mail,
         },
         "dashlet": {
-            "title": _("Show message in dashboard element 'User messages'"),
+            "title": _("Show in the dashboard element 'User messages'"),
+            "confirmation_title": _("in the dashboard element 'User messages'"),
             "handler": message_gui,
         },
     }
@@ -110,7 +113,7 @@ permission_registry.register(
     Permission(
         section=PermissionSectionGeneral,
         name="message",
-        title=_l("Message users"),
+        title=_l("Send user message"),
         description=_l(
             "This permission allows users to send messages to the users of "
             "the monitoring system using the web interface."
@@ -125,7 +128,7 @@ def page_message():
     if not user.may("general.message"):
         raise MKAuthException(_("You are not allowed to use the message module."))
 
-    title = _("Message users")
+    title = _("Send user message")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
     menu = _page_menu(breadcrumb)
     html.header(title, breadcrumb, menu)
@@ -182,7 +185,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 def _vs_message():
     dest_choices: List[CascadingDropdownChoice] = [
-        ("broadcast", _("Everybody (Broadcast)")),
+        ("all_users", _("All users")),
         (
             "list",
             _("A list of specific users"),
@@ -203,7 +206,7 @@ def _vs_message():
             (
                 "text",
                 TextAreaUnicode(
-                    title=_("Text"),
+                    title=_("Message"),
                     help=_("Insert the text to be sent to all reciepents."),
                     allow_empty=False,
                     empty_text=_("You need to provide a text."),
@@ -225,7 +228,7 @@ def _vs_message():
             (
                 "methods",
                 ListChoice(
-                    title=_("How to message"),
+                    title=_("Messaging methods"),
                     allow_empty=False,
                     choices=[(k, v["title"]) for k, v in _messaging_methods().items()],
                     default_value=["popup"],
@@ -234,11 +237,12 @@ def _vs_message():
             (
                 "valid_till",
                 Optional(
-                    AbsoluteDate(
+                    valuespec=AbsoluteDate(
                         include_time=True,
+                        label=_("at"),
                     ),
-                    title=_("Automatically invalidate message"),
-                    label=_("Enable automatic invalidation at"),
+                    title=_("Message expiration"),
+                    label=_("Expire message"),
                     help=_(
                         "It is possible to automatically delete messages when the "
                         "configured time is reached. This makes it possible to inform "
@@ -279,7 +283,7 @@ def _process_message_message(msg):
     else:
         dest_what = msg["dest"][0]
 
-    if dest_what == "broadcast":
+    if dest_what == "all_users":
         recipients = list(config.multisite_users.keys())
     elif dest_what == "online":
         recipients = userdb.get_online_user_ids()
@@ -290,7 +294,7 @@ def _process_message_message(msg):
 
     num_recipients = len(recipients)
 
-    num_success = {}
+    num_success: Dict[str, int] = {}
     for method in msg["methods"]:
         num_success[method] = 0
 
@@ -305,23 +309,24 @@ def _process_message_message(msg):
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = escape_html_permissive(_("The message has been sent via"))
+    message = escape_to_html(_("The message has successfully been sent..."))
     message += html.render_br()
 
     parts = []
     for method in msg["methods"]:
         parts.append(
-            html.render_tr(
-                html.render_td(_messaging_methods()[method]["title"])
-                + html.render_td(
-                    _("to %d of %d recipients") % (num_success[method], num_recipients)
+            html.render_li(
+                _messaging_methods()[method]["confirmation_title"]
+                + (
+                    _(" for all recipients.")
+                    if num_success[method] == num_recipients
+                    else _(" for %d of %d recipients.") % (num_success[method], num_recipients)
                 )
             )
         )
-    message += html.render_table(HTML().join(parts))
 
-    message += html.render_p(_("Sent message to: %s") % ", ".join(recipients))
-    message += html.render_a(_("Back to previous page"), href=makeuri(request, []))
+    message += html.render_ul(HTML().join(parts))
+    message += html.render_p(_("Recipients: %s") % ", ".join(recipients))
     html.show_message(message)
 
     if errors:
@@ -331,7 +336,7 @@ def _process_message_message(msg):
             table_rows = HTML()
             for user_id, exception in method_errors:
                 table_rows += html.render_tr(
-                    html.render_td(html.render_tt(user_id)) + html.render_td(exception)
+                    html.render_td(html.render_tt(user_id)) + html.render_td(str(exception))
                 )
             error_message += html.render_table(table_rows) + html.render_br()
         html.show_error(error_message)
@@ -421,13 +426,14 @@ def message_mail(user_id, msg):
         )
 
     try:
-        p = subprocess.Popen(
+        completed_process = subprocess.run(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            check=False,
+            input=body,
         )
     except OSError as e:
         raise MKInternalError(
@@ -435,11 +441,9 @@ def message_mail(user_id, msg):
             % (" ".join(command), e)
         )
 
-    stdout, _stderr = p.communicate(input=body)
-    exitcode = p.returncode
-    if exitcode != 0:
+    if completed_process.returncode:
         raise MKInternalError(
             _("Mail could not be delivered. Exit code of command is %r. " "Output is: %s")
-            % (exitcode, stdout)
+            % (completed_process.returncode, completed_process.stdout)
         )
     return True

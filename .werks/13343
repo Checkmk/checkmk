@@ -1,0 +1,9 @@
+Title: KUBE: kube_pod_info addition of the controller name
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1646218504
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1

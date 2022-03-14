@@ -47,8 +47,8 @@ def _parameter_valuespec_sap_hana_backup():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -92,8 +92,8 @@ def _parameter_valuespec_sap_hana_license():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -114,8 +114,8 @@ def _parameter_valuespec_sap_hana_license():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],

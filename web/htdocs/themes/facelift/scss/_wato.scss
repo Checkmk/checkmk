@@ -100,7 +100,7 @@
   td {
     padding: 2px 8px;
     margin: 2px;
-    background-color: rgb(255, 255, 0);
+    background-color: $color-state-1-background;
   }
 }
 
@@ -220,12 +220,11 @@ div#fixall_container {
   overflow: hidden;
 
   img {
-    float: left;
-    margin: $spacing 0 0 $spacing;
+    margin-left: $spacing;
   }
 
   ul {
-    float: left;
+    display: inline-block;
     list-style: none;
     margin: 15px 0 15px 0;
     padding-left: $spacing;
@@ -239,6 +238,14 @@ div#fixall_container {
 
   li:last-child {
     border-right: none;
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      opacity: 0.5;
+    }
   }
 
   span {
@@ -466,77 +473,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   position: relative;
   top: 3px;
   float: right;
-}
-
-/* Special styles for configuration and rule editor */
-/* TODO: Reproduce these .rule elements */
-.wato div.rule {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: 500px;
-  height: 140px;
-  margin-top: 10px;
-  background-color: rgba($white, 0.3);
-  border: 1px solid $white;
-  border-radius: 4px;
-
-  div.nr {
-    position: absolute;
-    top: 9px;
-    left: 9px;
-    width: 20px;
-    height: 20px;
-    color: $font-color-black;
-    text-align: center;
-    background-color: rgb(252, 211, 64);
-    border: 1px solid $white;
-    border-radius: 10px;
-
-    b {
-      position: relative;
-      top: 3px;
-    }
-  }
-
-  div.title {
-    position: absolute;
-    top: 12px;
-    font-weight: bold;
-    color: $font-color-white;
-
-    &.conditions {
-      left: 40px;
-    }
-  }
-
-  div.value.title {
-    left: 390px;
-  }
-
-  div.box {
-    position: absolute;
-    top: 30px;
-    height: 90px;
-    padding: 5px;
-    background-color: rgb(167, 190, 195);
-    border: 1px solid $white;
-    border-radius: 4px;
-
-    &.conditions {
-      left: 40px;
-      width: 330px;
-    }
-
-    &.value {
-      left: 390px;
-      width: 90px;
-    }
-  }
-
-  div.condition {
-    float: none;
-  }
 }
 
 .wato img.trans {
@@ -875,14 +811,6 @@ div.filter_buttons {
   pointer-events: none;
 }
 
-.wato .pending_changes_header {
-  #row_info {
-    float: right;
-    padding-right: $spacing;
-    font-weight: $font-weight-default;
-  }
-}
-
 .wato table.changes {
   width: 100%;
 
@@ -941,7 +869,7 @@ div.filter_buttons {
       top: 4px;
       left: 0;
       z-index: 0;
-      width: 160px;
+      width: 0;
       height: 24px;
       padding-top: 10px;
       color: $font-color-black;
@@ -951,6 +879,7 @@ div.filter_buttons {
 
       &.in_progress {
         background: $repprogress-progress-bg-color;
+        transition: width 1s;
       }
 
       &.state_success {
@@ -962,7 +891,7 @@ div.filter_buttons {
       }
 
       &.state_warning {
-        background: $yellow;
+        background: $color-state-1-background;
       }
     }
   }
@@ -988,172 +917,24 @@ table.data tr.data.dcd_log_entries {
   }
 }
 
-/*-------------------------------------------------------------------------.
-|               ____                                                       |
-|              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |
-|              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|                   |
-|              |  __/| | | (_) | (_| | | |  __/\__ \__ \                   |
-|              |_|   |_|  \___/ \__, |_|  \___||___/___/                   |
-|                               |___/                                      |
-+--------------------------------------------------------------------------+
-| Interactive progress bar, e.g. used in bulk inventory.                   |
-'-------------------------------------------------------------------------*/
-
-.wato table.progress {
-  width: 50%;
-  color: $font-color-black;
-  background: $bg-color-secondary;
-  border: 1px solid $color-table-border;
-  border-radius: $theme-border-radius;
-
-  th {
-    padding: 3px 0;
-    background-color: $white;
+.wato form.rule_representation {
+  div.success.hidden {
+    display: none;
   }
 
-  td {
-    /* Log window */
-    &.log {
-      padding: 12px 12px 0;
-      font-family: $font-family-monospace;
-
-      > div {
-        height: 250px;
-        padding: 8px 16px;
-        margin: 16px;
-        overflow: auto;
-        font-family: $font-family-monospace;
-        font-weight: $font-weight-default;
-        color: $font-color-light-grey;
-        text-align: left;
-        background: $navigation-bg-color;
-        border: 1px solid $color-table-border-dark;
-        border-radius: $theme-border-radius;
-        box-shadow: none;
-      }
-
-      div.exc {
-        padding: 5px;
-        margin: 10px;
-        border: 1px solid rgb(255, 0, 0);
-      }
-    }
-
-    /* progress bar */
-    /* TODO: Reproduce these td.bar and #progress_bar elements */
-    &.bar {
-      height: 46px;
-      padding: 0 12px;
-
-      table {
-        position: relative;
-        top: 12px;
-        width: 100%;
-        height: 22px;
-        background-color: $white;
-        border-spacing: 1px 2px;
-      }
-
-      #progress_title {
-        position: relative;
-        top: -6px;
-        left: 0;
-        z-index: 40;
-        float: left;
-        width: 100%;
-        height: 0;
-        font-weight: bold;
-        text-align: center;
-        white-space: nowrap;
-      }
-
-      img.glass {
-        position: relative;
-        top: -10px;
-        z-index: 30;
-        width: 100%;
-        height: 22px;
-      }
-
-      td.left {
-        width: 0%;
-        background-color: rgb(64, 128, 255);
-      }
-
-      td.right {
-        width: 100%;
-      }
-    }
-
-    /* Statistics table */
-    /* TODO: Reproduce these td.stats elements */
-    &.stats {
-      padding: 24px 12px 18px;
-
-      table {
-        border: 1px solid $white;
-        border-collapse: collapse;
-        border-spacing: 0;
-      }
-
-      th,
-      td {
-        padding: 6px 0;
-        border-bottom: 1px solid $white;
-        border-color: $color-table-border;
-      }
-
-      th {
-        text-align: left;
-        background-color: transparent;
-      }
-
-      td {
-        width: 4em;
-        text-align: right;
-        background-color: rgba($white, 0.3);
-      }
-    }
-
-    /* Buttons */
-    /* TODO: Reproduce this html element */
-    &.buttons {
-      padding: 0 12px 12px;
-      text-align: right;
-      vertical-align: bottom;
-    }
-  }
-}
-
-.wato #progress_bar.finished {
-  td.left {
-    padding: 0;
-    background-color: $color-state-success-background;
-    box-shadow: none;
-  }
-
-  td.right {
-    width: 0;
+  textarea#rule_representation {
+    min-width: 400px;
+    min-height: 200px;
+    padding: $spacing;
+    margin-right: $spacing;
+    overflow: auto;
+    font-family: $font-family-monospace;
+    border: 1px solid $color-table-border;
   }
 }
 
 .wato div.error pre {
   white-space: pre-wrap;
-}
-
-/* TODO: Reproduce this html element */
-.wato div.error div.err {
-  position: relative;
-  left: -8px;
-  float: left;
-  width: 100%;
-  padding: 2px 5px;
-  margin: 2px;
-  font-weight: bold;
-  color: $font-color-black;
-  background-color: rgb(255, 255, 0);
-  border-radius: 3px;
-  opacity: 0.9;
 }
 
 /* Logwatch pattern editor */

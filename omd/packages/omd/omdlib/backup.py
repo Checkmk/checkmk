@@ -26,36 +26,41 @@
 
 import errno
 import fnmatch
+import io
 import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, cast, List, Tuple
+from typing import BinaryIO, cast, List, Tuple, Union
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
 
 
 def backup_site_to_tarfile(
-    site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions, verbose: bool
+    site: SiteContext,
+    fh: Union[BinaryIO, io.BufferedWriter],
+    mode: str,
+    options: CommandOptions,
+    verbose: bool,
 ) -> None:
 
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
-    tar = cast(
-        BackupTarFile,
-        BackupTarFile.open(  # type: ignore[call-arg]
-            fileobj=fh, mode=mode, site=site, verbose=verbose
-        ),
-    )
+    with BackupTarFile.open(  # type: ignore[call-arg]
+        fileobj=fh,
+        mode=mode,
+        site=site,
+        verbose=verbose,
+    ) as backup_tar:
+        tar = cast(BackupTarFile, backup_tar)
 
-    # Add the version symlink as first file to be able to
-    # check a) the sitename and b) the version before reading
-    # the whole tar archive. Important for streaming.
-    # The file is added twice to get the first for validation
-    # and the second for excration during restore.
-    tar.add(site.dir + "/version", site.name + "/version")
-    _backup_site_files_to_tarfile(site, tar, options)
-    tar.close()
+        # Add the version symlink as first file to be able to
+        # check a) the sitename and b) the version before reading
+        # the whole tar archive. Important for streaming.
+        # The file is added twice to get the first for validation
+        # and the second for excration during restore.
+        tar.add(site.dir + "/version", site.name + "/version")
+        _backup_site_files_to_tarfile(site, tar, options)
 
 
 def get_exclude_patterns(options: CommandOptions) -> List[str]:

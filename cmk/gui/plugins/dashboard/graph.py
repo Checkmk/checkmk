@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DictionaryEntry,
-    DropdownChoiceValue,
+    DropdownChoiceModel,
     DropdownChoiceWithHostAndServiceHints,
     Timerange,
     ValueSpec,
@@ -76,17 +76,13 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         }
         super().__init__(**kwargs_with_defaults)
 
-    def _validate_value(
-        self,
-        value: DropdownChoiceValue,
-        varprefix: str,
-    ) -> None:
+    def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
         if not value or value == self._MARKER_DEPRECATED_CHOICE:
             raise MKUserError(varprefix, _("Please select a graph."))
 
-    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+    def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
         if not value:
-            return self.choices()
+            return list(self.choices())
         return [
             next(
                 (
@@ -111,7 +107,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             )
         ]
 
-    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+    def render_input(self, varprefix: str, value: DropdownChoiceModel) -> None:
         return super().render_input(
             varprefix,
             self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
@@ -195,6 +191,8 @@ class GraphDashlet(Dashlet):
             raise
         except livestatus.MKLivestatusNotFoundError:
             raise make_mk_missing_data_error()
+        except MKUserError as e:
+            raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 

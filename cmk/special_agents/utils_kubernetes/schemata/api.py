@@ -20,6 +20,8 @@ from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.fields import Field
 
+CronJobUID = NewType("CronJobUID", str)
+JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
 LabelName = NewType("LabelName", str)
 LabelValue = NewType("LabelValue", str)
@@ -52,16 +54,29 @@ class MetaData(BaseModel):
     namespace: Optional[Namespace] = None
     creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
-    prefix = ""
-    use_namespace = False
 
 
-class NodeConditions(BaseModel):
-    NetworkUnavailable: Optional[bool] = None
-    MemoryPressure: bool
-    DiskPressure: bool
-    PIDPressure: bool
-    Ready: bool
+class NodeMetaData(MetaData):
+    creation_timestamp: CreationTimestamp
+    labels: Labels
+
+
+class PodMetaData(MetaData):
+    namespace: Namespace
+
+
+class NodeConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNOWN = "Unknown"
+
+
+class NodeCondition(BaseModel):
+    status: NodeConditionStatus
+    type_: Optional[str]
+    reason: Optional[str]
+    detail: Optional[str]
+    last_transition_time: Optional[int]
 
 
 class NodeResources(BaseModel):
@@ -86,6 +101,7 @@ class KubeletInfo(BaseModel):
     """section: kube_node_kubelet_v1"""
 
     version: str
+    proxy_version: str
     health: HealthZ
 
 
@@ -93,22 +109,36 @@ class NodeInfo(BaseModel):
     architecture: str
     kernel_version: str
     os_image: str
+    operating_system: str
+    container_runtime_version: str
+
+
+class NodeAddress(BaseModel):
+    address: IpAddress
+    # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw
+    # "InternalDNS" and "ExternalDNS" on an eks cluster
+    type_: str
+
+
+NodeAddresses = Sequence[NodeAddress]
 
 
 class NodeStatus(BaseModel):
-    conditions: NodeConditions
+    conditions: Optional[Sequence[NodeCondition]]
     node_info: NodeInfo
+    addresses: NodeAddresses
 
 
 class Node(BaseModel):
-    metadata: MetaData
+    metadata: NodeMetaData
     status: NodeStatus
     control_plane: bool
     resources: Dict[str, NodeResources]
     kubelet_info: KubeletInfo
 
 
-class DeploymentReplicas(BaseModel):
+class Replicas(BaseModel):
+    replicas: int
     updated: int
     available: int
     ready: int
@@ -122,7 +152,6 @@ class ConditionStatus(str, enum.Enum):
 
 
 class DeploymentCondition(BaseModel):
-    type_: str
     status: ConditionStatus
     last_transition_time: float
     reason: str
@@ -131,19 +160,65 @@ class DeploymentCondition(BaseModel):
 
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
-    replicas: DeploymentReplicas
-    conditions: Sequence[DeploymentCondition]
+    replicas: Replicas
+    conditions: Mapping[str, DeploymentCondition]
+
+
+class MatchExpression(BaseModel):
+    key: LabelName
+    operator: Literal["In", "NotIn", "Exists", "DoesNotExist"]
+    values: Sequence[LabelValue]
+
+
+MatchLabels = Mapping[LabelName, LabelValue]
+MatchExpressions = Sequence[MatchExpression]
+
+
+class Selector(BaseModel):
+    match_labels: MatchLabels
+    match_expressions: MatchExpressions
+
+
+class RollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    max_surge: str
+    max_unavailable: str
+
+
+class Recreate(BaseModel):
+    type_: Literal["Recreate"] = Field("Recreate", const=True)
+
+
+class OnDelete(BaseModel):
+    type_: Literal["OnDelete"] = Field("OnDelete", const=True)
+
+
+class DeploymentSpec(BaseModel):
+    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
+    selector: Selector
 
 
 class Deployment(BaseModel):
     metadata: MetaData
+    spec: DeploymentSpec
     status: DeploymentStatus
     pods: Sequence[PodUID]
 
 
-class Resources(BaseModel):
-    limit: float = float("inf")
-    requests: float = 0.0
+class DaemonSetSpec(BaseModel):
+    strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
+    selector: Selector
+
+
+class DaemonSet(BaseModel):
+    metadata: MetaData
+    spec: DaemonSetSpec
+    pods: Sequence[PodUID]
+
+
+class StatefulSet(BaseModel):
+    metadata: MetaData
+    pods: Sequence[PodUID]
 
 
 class Phase(str, enum.Enum):
@@ -151,12 +226,26 @@ class Phase(str, enum.Enum):
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
-    UNKNOWN = "unknown "
+    UNKNOWN = "unknown"
 
 
-class PodUsageResources(BaseModel):
-    cpu: Resources
-    memory: Resources
+class ResourcesRequirements(BaseModel):
+    memory: Optional[float] = None
+    cpu: Optional[float] = None
+
+
+class ContainerResources(BaseModel):
+    limits: ResourcesRequirements
+    requests: ResourcesRequirements
+
+
+ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
+
+
+class ContainerSpec(BaseModel):
+    resources: ContainerResources
+    name: str
+    image_pull_policy: ImagePullPolicy
 
 
 class PodSpec(BaseModel):
@@ -164,6 +253,8 @@ class PodSpec(BaseModel):
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
     restart_policy: RestartPolicy
+    containers: Sequence[ContainerSpec]
+    init_containers: Sequence[ContainerSpec]
 
 
 class ContainerRunningState(BaseModel):
@@ -186,8 +277,9 @@ class ContainerTerminatedState(BaseModel):
     detail: Optional[str]
 
 
-class ContainerInfo(BaseModel):
-    id: Optional[str]  # id of non-ready container is None
+class ContainerStatus(BaseModel):
+    container_id: Optional[str]  # container_id of non-ready container is None
+    image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
     ready: bool
@@ -236,20 +328,42 @@ class PodStatus(BaseModel):
 
 class Pod(BaseModel):
     uid: PodUID
-    metadata: MetaData
+    metadata: PodMetaData
     status: PodStatus
     spec: PodSpec
-    resources: PodUsageResources
-    containers: Mapping[str, ContainerInfo]
+    containers: Mapping[str, ContainerStatus]
+    init_containers: Mapping[str, ContainerStatus]
 
 
-class ClusterInfo(BaseModel):
+class ConcurrencyPolicy(enum.Enum):
+    # specifies how to treat concurrent executions of a Job.
+    Allow = "Allow"  # allows concurrently running jobs
+    Forbid = "Forbid"  # does not allow concurrent runs
+    Replace = "Replace"  # replaces the currently running job
+
+
+class CronJobSpec(BaseModel):
+    concurrency_policy: ConcurrencyPolicy
+    schedule: str
+
+
+class CronJob(BaseModel):
+    uid: CronJobUID
+    metadata: MetaData
+    spec: CronJobSpec
+    pod_uids: Sequence[PodUID]
+
+
+class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
 
 
 class API(Protocol):
+    def cron_jobs(self) -> Sequence[CronJob]:
+        ...
+
     def nodes(self) -> Sequence[Node]:
         ...
 
@@ -259,5 +373,11 @@ class API(Protocol):
     def deployments(self):
         ...
 
-    def cluster_details(self) -> ClusterInfo:
+    def daemon_sets(self):
+        ...
+
+    def statefulsets(self):
+        ...
+
+    def cluster_details(self) -> ClusterDetails:
         ...

@@ -342,7 +342,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             "double",
             True,
             Optional(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         Percentage(
                             title=_("Warning below"),
@@ -441,7 +441,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                 label=_("Just show the availability (i.e. OK/UP)"),
             ),
         ),
-        # Group by Host, Hostgroup or Servicegroup?
+        # Group by host, host group or service group?
         (
             "grouping",
             "single",
@@ -965,7 +965,8 @@ def get_availability_rawdata(
             tl_host,
             tl_service,
         )
-        only_sites = [SiteId(tl_site)]
+        assert tl_site is not None
+        only_sites = [tl_site]
     elif what == "service":
         av_filter += "Filter: service_description !=\n"
     else:
@@ -1691,7 +1692,7 @@ def _annotation_affects_time_range(annotation_from, annotation_until, from_time,
 # nur noch 1:1 dargestellt werden müssen.
 # Beispiel für einen Rückgabewert:
 # {
-#    "title" : "Hostgroup foobar",
+#    "title" : "Host group foobar",
 #    "headers" : [ "OK, "CRIT", "Downtime" ],
 #    "rows" : [ ... ],
 #    "summary" : [ ("84.50%", "crit"), ("15.50%", "crit"), ("0.00%", "p"),  ("0.00%", "p") ],

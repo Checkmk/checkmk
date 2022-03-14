@@ -106,11 +106,13 @@ def test_mk_errpt_aix(tmpdir, state_file_name, errpt_output, last_reported, expe
 
         prepare_state(tmp_dir, state_file_name, state)
 
-        p = subprocess.Popen(PLUGIN, env=env, stdout=subprocess.STDOUT)
-        output = p.communicate()[0]
+        completed_process = subprocess.run(PLUGIN, env=env, stdout=subprocess.STDOUT, check=False)
 
         expected = _format_expected(expected)
-        assert output == expected, "expected\n  %r, but got\n  %r" % (expected, output)
+        assert completed_process.stdout == expected, "expected\n  %r, but got\n  %r" % (
+            expected,
+            completed_process.stdout,
+        )
 
         new_state = read_state(tmp_dir)
 

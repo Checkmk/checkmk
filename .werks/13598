@@ -1,0 +1,15 @@
+Title: Windows agent flag sendall is correctly defined now
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1642519334
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously WATO used invalid flag name <tt>send_all</tt>.
+Thus making impossible to set the flag using WATO.
+
+With this release WATO uses correct flag name 
+<tt>sendall</tt>.

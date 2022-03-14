@@ -1,11 +1,10 @@
 title: Citrix: Sessions
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of active, inactive an total Sessions on a citrix server. In Order to work the plugin {{citrix_sessions.ps1}} is needed.
 
 discovery:
  One service is created.
-

@@ -66,8 +66,7 @@ def run_pylint(base_path, check_files):
         f"Running pylint in '{base_path}' with: {subprocess.list2cmdline(cmd)}"
         f" [{len(files)} files omitted]"
     )
-    p = subprocess.Popen(cmd + files, shell=False, cwd=base_path)
-    exit_code = p.wait()
+    exit_code = subprocess.run(cmd + files, shell=False, cwd=base_path, check=False).returncode
     print(f"Finished with exit code: {exit_code}")
 
     return exit_code
@@ -213,16 +212,18 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
 
 # Is called by pylint to load this plugin
 def register(linter):
-    # Disable some CEE/CME specific things when linting CRE repos
+    # Disable some CEE/CME/CPE specific things when linting CRE repos
     if not is_enterprise_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
         linter.global_set_option(
-            "ignored-modules", "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed"
+            "ignored-modules",
+            "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.base.cpe,cmk.gui.cpe",
         )
         # This disables no-member errors
         linter.global_set_option(
-            "generated-members", r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?"
+            "generated-members",
+            r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.base\.cpe|cmk\.gui\.cpe)(\..*)?",
         )
 
     linter.register_reporter(CMKColorizedTextReporter)

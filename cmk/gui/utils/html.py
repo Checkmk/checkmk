@@ -34,6 +34,13 @@ class HTML:
         self.value = value if isinstance(value, str) else str(value)
 
     def _ensure_str(self, value: HTMLInput) -> str:
+        """return escaped string or HTML as str
+
+        >>> HTML()._ensure_str("foo<b>bar</b>")
+        'foo&lt;b&gt;bar&lt;/b&gt;'
+        >>> HTML()._ensure_str(HTML("foo<b>bar</b>"))
+        'foo<b>bar</b>'
+        """
         return html.escape(value) if isinstance(value, str) else str(value)
 
     def __str__(self) -> str:
@@ -58,6 +65,7 @@ class HTML:
         return HTML(self._ensure_str(other) + self.value)
 
     def join(self, iterable: Iterable[HTMLInput]) -> HTML:
+        """add to the HTML object but escape if str"""
         return HTML(self.value.join(map(self._ensure_str, iterable)))
 
     def __eq__(self, other: Any) -> bool:

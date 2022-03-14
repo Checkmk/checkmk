@@ -6,7 +6,7 @@ Date: 1634736621
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Both columns didn't take the local time zone offset into account.
 Furthermore, 'next_transition' was off by a factor of 1e9, leading

@@ -9,29 +9,26 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # this is for users who compiled statgrab on hp-ux.
 # note you'll need a 0.18+ version, from their github page at
 # https://github.com/i-scream/libstatgrab
 # flags used for compiling - disable documentation, examples and set*id
 
-
-if which statgrab > /dev/null ; then
-    if statgrab const. cpu. general. mem. page. proc. swap. user. > /tmp/statgrab.$$ 2>/dev/null
-        then
-        for s in proc cpu page
-        do
+if command -v statgrab >/dev/null; then
+    if statgrab const. cpu. general. mem. page. proc. swap. user. >"/tmp/statgrab.$$" 2>/dev/null; then
+        for s in proc cpu page; do
             echo "<<<statgrab_$s>>>"
-            cat /tmp/statgrab.$$ | grep "^$s\." | cut -d. -f2-99 | sed 's/ *= */ /'
+            grep "^$s\." "/tmp/statgrab.$$" | cut -d. -f2-99 | sed 's/ *= */ /'
         done
 
         echo '<<<statgrab_mem>>>'
-        cat /tmp/statgrab.$$ | egrep "^(swap|mem)\." | sed 's/ *= */ /'
+        grep -E "^(swap|mem)\." "/tmp/statgrab.$$" | sed 's/ *= */ /'
 
         echo '<<<uptime>>>'
-        cat /tmp/statgrab.$$ | egrep "^general\.uptime" | sed 's/.* //'
+        grep -E "^general\.uptime" "/tmp/statgrab.$$" | sed 's/.* //'
 
     fi
-    [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
+    [ -f "/tmp/statgrab.$$" ] && rm -f "/tmp/statgrab.$$"
 fi

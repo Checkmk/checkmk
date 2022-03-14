@@ -1,7 +1,7 @@
 title: Microsoft Azure: Summary of VMs
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about VMs configured in the Microsoft Azure cloud.

@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "types": [
+            "node",
+            "jquery"
+        ],
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
+        "strict": false,
+        "noEmit": true,
+        "moduleResolution": "node",
+        "esModuleInterop": false,
+        "module": "CommonJS",
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": "./",
+        "paths": {
+            "*": [
+                "*",
+                "web/*",
+                "web/htdocs/js/modules/*",
+                "web/htdocs/js/modules/figures/*",
+                "web/htdocs/js/modules/node_visualization/*",
+                "enterprise/web/htdocs/js/modules/*",
+                "enterprise/web/htdocs/js/modules/figures/*",
+                "enterprise/web/htdocs/js/modules/license_usage/*",
+                "enterprise/web/htdocs/js/modules/ntop/*"
+            ]
+        }
+    },
+    "include": [
+        "./web/**/*",
+        "./enterprise/web/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

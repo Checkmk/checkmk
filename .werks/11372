@@ -6,7 +6,7 @@ Date: 1637835239
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 As VictorOps is now part of Splunk, the notification tool has been renamed
 to Splunk On-Call. To reduce confusion and possible incompatibilities the

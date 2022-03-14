@@ -13,7 +13,7 @@ import threading
 import urllib.parse
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
-from typing import Any, Dict, Generator, Iterator, Literal, NamedTuple, Optional
+from typing import Any, Dict, Iterator, Literal, NamedTuple, Optional
 
 import pytest
 import webtest  # type: ignore[import]
@@ -25,11 +25,12 @@ from mock import MagicMock
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import modules, watolib
+from cmk.gui import main_modules, watolib
 from cmk.gui.globals import config
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
@@ -57,14 +58,14 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture()
-def request_context():
+def request_context() -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     with application_and_request_context():
         yield
 
 
 @pytest.fixture()
-def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, None]:
+def monkeypatch(monkeypatch: MonkeyPatch, request_context: None) -> Iterator[MonkeyPatch]:
     """Makes patch/undo of request globals possible
 
     In the GUI we often use the monkeypatch for patching request globals (e.g.
@@ -83,7 +84,7 @@ def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, No
 
 
 @pytest.fixture()
-def load_config(request_context):
+def load_config(request_context: None) -> Iterator[None]:
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
     config_module.initialize()
     yield
@@ -91,46 +92,46 @@ def load_config(request_context):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def load_plugins():
-    modules.load_plugins()
+def load_plugins() -> None:
+    main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
 
 
 @pytest.fixture(name="patch_json", autouse=True)
-def fixture_patch_json():
+def fixture_patch_json() -> Iterator[None]:
     with patch_json(json):
         yield
 
 
 @pytest.fixture()
-def with_user(request_context, load_config):
+def with_user(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=False, role="user") as user:
         yield user
 
 
 @pytest.fixture()
-def with_user_login(with_user):
+def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_user[0]
     with login.UserSessionContext(user_id):
         yield user_id
 
 
 @pytest.fixture()
-def with_admin(request_context, load_config):
+def with_admin(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=False, role="admin") as user:
         yield user
 
 
 @pytest.fixture()
-def with_admin_login(with_admin):
+def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.UserSessionContext(user_id):
         yield user_id
 
 
 @pytest.fixture()
-def suppress_remote_automation_calls(mocker):
+def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutomation]:
     """Stub out calls to the remote automation system
     This is needed because in order for remote automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
@@ -143,7 +144,7 @@ def suppress_remote_automation_calls(mocker):
 
 
 @pytest.fixture()
-def make_html_object_explode(mocker):
+def make_html_object_explode(mocker: MagicMock) -> None:
     class HtmlExploder:
         def __init__(self, *args, **kw):
             raise NotImplementedError("Tried to instantiate html")
@@ -152,7 +153,7 @@ def make_html_object_explode(mocker):
 
 
 @pytest.fixture()
-def inline_background_jobs(mocker):
+def inline_background_jobs(mocker: MagicMock) -> None:
     """Prevent multiprocess.Process to spin off a new process
 
     This will run the code (non-concurrently, blocking) in the main execution path.
@@ -174,12 +175,12 @@ def inline_background_jobs(mocker):
 
 
 @pytest.fixture()
-def with_automation_user(request_context, load_config):
+def with_automation_user(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=True, role="admin") as user:
         yield user
 
 
-def get_link(resp, rel: str):
+def get_link(resp: dict, rel: str):
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
             return link
@@ -195,7 +196,7 @@ def get_link(resp, rel: str):
     raise KeyError("%r not found" % (rel,))
 
 
-def _expand_rel(rel):
+def _expand_rel(rel: str) -> str:
     if rel.startswith(".../"):
         rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
     if rel.startswith("cmk/"):
@@ -206,12 +207,12 @@ def _expand_rel(rel):
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
-        self.username = None
-        self.password = None
+        self.username: Optional[str] = None
+        self.password: Optional[str] = None
 
-    def set_credentials(self, username, password):
+    def set_credentials(self, username, password) -> None:
         self.username = username
         self.password = password
 

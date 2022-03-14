@@ -45,7 +45,7 @@ def check_juniper_trpz_aps(section: Section) -> CheckResult:
     yield from _check_common_juniper_trpz_aps("", section)
 
 
-def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResult:
+def cluster_check_juniper_trpz_aps(section: Mapping[str, Optional[Section]]) -> CheckResult:
     """
     >>> for result in cluster_check_juniper_trpz_aps({"node1": (1, 2), "node2": (3, 4)}):
     ...   print(result)
@@ -55,8 +55,8 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResul
     Result(state=<State.OK: 0>, summary='[node1] Online access points: 1, Sessions: 2')
     Result(state=<State.OK: 0>, summary='[node2] Online access points: 3, Sessions: 4')
     """
-    total_aps = sum(n[0] for n in section.values())
-    total_sessions = sum(n[1] for n in section.values())
+    total_aps = sum(n[0] for n in section.values() if n)
+    total_sessions = sum(n[1] for n in section.values() if n)
 
     if len(section) > 1:
         yield Result(
@@ -67,7 +67,8 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResul
     yield Metric("total_sessions", total_sessions)
 
     for node_name, node_section in section.items():
-        yield from _check_common_juniper_trpz_aps(node_name, node_section)
+        if node_section is not None:
+            yield from _check_common_juniper_trpz_aps(node_name, node_section)
 
 
 register.snmp_section(

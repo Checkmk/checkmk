@@ -6,7 +6,7 @@ Date: 1612171687
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since this release access to the internal communication channel of the
 Windows agent is granted only for users and/or processes with administrative

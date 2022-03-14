@@ -1,0 +1,16 @@
+Title: Reports: Change color properties to take rgb values
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 2.1.0b1
+Date: 1643362588
+Class: feature
+
+Two report related color properties took percentage values as input to define a color (from red,
+green and blue). This is changed to the common format of rgb color codes ([0, 255]).
+Changed properties:
+<ul>
+<li>Create/Edit report: Default table layout > Background shading for rows</li>
+<li>Create new/Edit fixed element: Color</li>
+</ul>

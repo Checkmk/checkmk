@@ -55,8 +55,6 @@ __all__ = [
     "SNMPSummarizer",
 ]
 
-SNMPHostSections = HostSections[SNMPRawDataSection]
-
 
 class SNMPPluginStoreItem(NamedTuple):
     trees: Sequence[BackendSNMPTree]
@@ -402,7 +400,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
 
 
-class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
+class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
     """A parser for SNMP data.
 
     Note:
@@ -433,7 +431,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
-    ) -> SNMPHostSections:
+    ) -> HostSections[SNMPRawDataSection]:
         sections = dict(raw_data)
         now = int(time.time())
 
@@ -450,13 +448,13 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return SNMPHostSections(new_sections, cache_info=cache_info)
+        return HostSections[SNMPRawDataSection](new_sections, cache_info=cache_info)
 
 
-class SNMPSummarizer(Summarizer[SNMPHostSections]):
+class SNMPSummarizer(Summarizer[SNMPRawDataSection]):
     def summarize_success(
         self,
-        host_sections: SNMPHostSections,
+        host_sections: HostSections[SNMPRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:

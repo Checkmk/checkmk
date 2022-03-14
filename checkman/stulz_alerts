@@ -1,7 +1,7 @@
 title: STULZ Clima Unit: Alerts
 agents: snmp
 catalog: hw/environment/stulz
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This plugin checks all connected clima units on a stulz management for an alert state.

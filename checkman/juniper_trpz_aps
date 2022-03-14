@@ -1,7 +1,7 @@
 title: Juniper Devices: Number of Online Access Points
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Shows the number of online access points registered on the controller
@@ -14,4 +14,3 @@ cluster:
  Displays the total number of active access points and the total number of
  sessions on these access points. Furthermore this check lists the online
  access points and related sessions per node.
-

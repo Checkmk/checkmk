@@ -91,7 +91,7 @@ class MrpeProvider : public Asynchronous {
 public:
     MrpeProvider() : Asynchronous(cma::section::kMrpe) {}
 
-    MrpeProvider(const std::string_view &name, char separator)
+    MrpeProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {}
 
     void loadConfig() override;

@@ -13,6 +13,8 @@ import pytest
 
 import tests.testlib as testlib
 
+from livestatus import SiteConfiguration, SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -37,13 +39,13 @@ def _expected_replication_paths():
         ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),
         ReplicationPath("file", "htpasswd", "etc/htpasswd", []),
         ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
+        ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath(
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
-        ReplicationPath("file", "omd", "etc/omd/sitespecific.mk", []),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -106,7 +108,7 @@ def _expected_replication_paths():
     return expected
 
 
-def test_get_replication_paths_defaults(edition_short, monkeypatch):
+def test_get_replication_paths_defaults(edition, monkeypatch):
     expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
@@ -115,9 +117,11 @@ def test_get_replication_paths_defaults(edition_short, monkeypatch):
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
 @pytest.mark.parametrize("is_pre_17_remote_site", [True, False])
 def test_get_replication_components(
-    edition_short, monkeypatch, replicate_ec, replicate_mkps, is_pre_17_remote_site
+    edition, monkeypatch, replicate_ec, replicate_mkps, is_pre_17_remote_site
 ):
-    partial_site_config = {}
+    partial_site_config = SiteConfiguration({})
+    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    # pylint: disable=unsupported-assignment-operation
     if replicate_ec is not None:
         partial_site_config["replicate_ec"] = replicate_ec
     if replicate_mkps is not None:
@@ -164,6 +168,12 @@ def test_get_replication_components(
                 site_path="etc/check_mk/conf.d/distributed_wato.mk",
                 excludes=[".*new*"],
             ),
+            ReplicationPath(
+                ty="dir",
+                ident="omd",
+                site_path="etc/omd",
+                excludes=["allocated_ports", "site.conf", ".*new*"],
+            ),
         ]
 
     assert sorted(
@@ -172,7 +182,7 @@ def test_get_replication_components(
 
 
 def test_add_replication_paths_pre_17(monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "omd_root", "/path")
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", Path("/path"))
     # dir/file, ident, path, optional list of excludes
     activate_changes.add_replication_paths(
         [
@@ -237,11 +247,23 @@ def test_automation_get_config_sync_state():
                 None,
                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             ),
+            "etc/check_mk/mkeventd.d/wato/rules.mk": (
+                33200,
+                147,
+                None,
+                "b129ce86d7aa063c31b0de5062196082744813a1ab506308aae36e5919badc50",
+            ),
             "etc/htpasswd": (
                 33200,
                 0,
                 None,
                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            ),
+            "etc/omd/site.conf": (
+                33200,
+                683,
+                None,
+                "f549a7f82c6841c886b56d4290c325faa939aa74f37a4b577e46d5789d10d0f5",
             ),
         },
         0,
@@ -249,7 +271,7 @@ def test_automation_get_config_sync_state():
 
 
 def test_get_config_sync_file_infos():
-    base_dir = Path(cmk.utils.paths.omd_root) / "replication"
+    base_dir = cmk.utils.paths.omd_root / "replication"
     _create_get_config_sync_file_infos_test_config(base_dir)
 
     replication_paths = [
@@ -566,7 +588,7 @@ def _get_test_sync_archive(tmp_path):
 
 
 def test_automation_receive_config_sync(monkeypatch, tmp_path):
-    remote_path = tmp_path.joinpath("remote")
+    remote_path = tmp_path / "remote"
     monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
 
     # Disable for the moment, because the unit test fake environment is not ready for this yet
@@ -601,7 +623,7 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
     automation = activate_changes.AutomationReceiveConfigSync()
     automation.execute(
         activate_changes.ReceiveConfigSyncRequest(
-            site_id="remote",
+            site_id=SiteId("remote"),
             sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
             to_delete=[
                 "to_delete",

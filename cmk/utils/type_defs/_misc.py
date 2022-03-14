@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import enum
 import sys
 from collections.abc import Container
@@ -86,7 +87,51 @@ class _RuleSpecBase(TypedDict):
 
 
 class RuleSpec(_RuleSpecBase, total=False):
-    options: RuleOptions
+    options: RuleOptionsSpec
+
+
+class RuleOptionsSpec(TypedDict, total=False):
+    disabled: bool
+    description: str
+    comment: str
+    docu_url: str
+    predefined_condition_id: str
+
+
+@dataclasses.dataclass()
+class RuleOptions:
+    disabled: Optional[bool]
+    description: str
+    comment: str
+    docu_url: str
+    predefined_condition_id: Optional[str] = None
+
+    @classmethod
+    def from_config(
+        cls,
+        rule_options_config: RuleOptionsSpec,
+    ) -> RuleOptions:
+        return cls(
+            disabled=rule_options_config.get("disabled", None),
+            description=rule_options_config.get("description", ""),
+            comment=rule_options_config.get("comment", ""),
+            docu_url=rule_options_config.get("docu_url", ""),
+            predefined_condition_id=rule_options_config.get("predefined_condition_id"),
+        )
+
+    def to_config(self) -> RuleOptionsSpec:
+        rule_options_config: RuleOptionsSpec = {}
+        if self.disabled is not None:
+            rule_options_config["disabled"] = self.disabled
+        if self.description:
+            rule_options_config["description"] = self.description
+        if self.comment:
+            rule_options_config["comment"] = self.comment
+        if self.docu_url:
+            rule_options_config["docu_url"] = self.docu_url
+        if self.predefined_condition_id:
+            rule_options_config["predefined_condition_id"] = self.predefined_condition_id
+        return rule_options_config
 
 
 HostOrServiceConditionRegex = TypedDict(
@@ -104,7 +149,6 @@ HostOrServiceConditions = Union[
     HostOrServiceConditionsNegated,
 ]  # TODO: refine type
 
-RuleOptions = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
@@ -140,6 +184,8 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
+
+LabelConditions = Dict[str, Union[str, TagConditionNE]]
 
 
 class GroupedTagSpec(TypedDict):
@@ -195,7 +241,7 @@ MetricTuple = Tuple[
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
 
-LegacyCheckParameters = Union[None, Mapping, Tuple, List, str]
+LegacyCheckParameters = Union[None, Mapping, Tuple, List, str, int, bool]
 
 SetAutochecksTable = Dict[
     Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels, List[HostName]]

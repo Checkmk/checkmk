@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The f5_bigip_fan check returned the status message "could not detect speed" in
 the event that speed was 0 RPM. This has been fixed.

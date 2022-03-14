@@ -10,8 +10,6 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["alcatel_temp"] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
-
 alcatel_power_aos7_operability_to_status_mapping = {
     "1": "up",
     "2": "down",

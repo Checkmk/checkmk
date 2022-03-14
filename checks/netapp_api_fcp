@@ -8,6 +8,8 @@
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
+from typing import Dict, Optional
+
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.interfaces import (
     get_specific_traffic_levels,
@@ -172,24 +174,46 @@ def _notice_only_fy(state, text, metrics):
     return state, f"{newline}{text}", metrics
 
 
+def _get_and_try_cast_to_int(key: str, container: Dict, default_value: Optional[int] = None) -> int:
+    try:
+        to_be_casted = (
+            container.get(key, default_value) if default_value is not None else container[key]
+        )
+        return int(to_be_casted)
+    except ValueError as e:
+        # Some NetApp firmware versions return corrupt data.
+        # Known reported tickets (among others):
+        # SUP-9508, SUP-5407, SUP-6805
+        raise RuntimeError(
+            "Unable to cast the data to integer. "
+            "The reason therfore may be an issue in the used NetApp Firmware. "
+            "Consider upgrading and/or getting in touch with NetApp."
+            "Received data was: %s" % to_be_casted
+        ) from e
+
+
 def parse_netapp_api_fcp(info):
     now = time.time()
     parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
-        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn"), "now": now}
-        fcp_data["total_ops"] = int(values.get("total_ops", 0))
-        speed = int(values.get("data-link-rate", 0)) * 1000 ** 3
+        fcp_data = {
+            "state": values.get("state"),
+            "address": values.get("port_wwpn"),
+            "now": now,
+            "total_ops": _get_and_try_cast_to_int("total_ops", values, 0),
+        }
+        speed = _get_and_try_cast_to_int("data-link-rate", values, 0) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 
         for what in ["read_ops", "write_ops", "read_data", "write_data"]:
             if what in values:
-                fcp_data[what.replace("data", "bytes")] = int(values[what])
+                fcp_data[what.replace("data", "bytes")] = _get_and_try_cast_to_int(what, values)
 
         for what in ["avg_latency", "avg_read_latency", "avg_write_latency"]:
             if what in values:
-                fcp_data[what] = int(values[what]) / 1000.0
+                fcp_data[what] = _get_and_try_cast_to_int(what, values) / 1000.0
         fcp_interfaces[key] = fcp_data
 
     return fcp_interfaces

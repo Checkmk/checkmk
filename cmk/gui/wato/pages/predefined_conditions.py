@@ -11,7 +11,6 @@ import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
 from cmk.gui.plugins.wato.utils import (
     ConfigDomainCore,
     mode_registry,
@@ -34,20 +33,34 @@ from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets
-from cmk.gui.watolib.rulespecs import ServiceRulespec
+from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
+
+
+class DummyRulespecGroup(RulespecGroup):
+    @property
+    def name(self):
+        return "dummy"
+
+    @property
+    def title(self):
+        return "Dummy"
+
+    @property
+    def help(self):
+        return "Dummy"
 
 
 def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
-        group=RulespecGroupMonitoringConfiguration,
-        valuespec=lambda: FixedValue(None),
+        group=DummyRulespecGroup,
+        valuespec=lambda: FixedValue(value=None),
     )
 
 
 def vs_conditions():
     return Transform(
-        VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
+        valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         forth=lambda c: RuleConditions("").from_config(c),
         back=lambda c: c.to_config_with_folder(),
     )
@@ -196,7 +209,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         if user.may("wato.edit_all_predefined_conditions"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Administrators"),
                     totext=_(
                         "Administrators (having the permission "

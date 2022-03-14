@@ -279,27 +279,27 @@ def test_registered_configvars_types():
 
 def test_registered_configvar_groups():
     expected_groups = [
-        "Administration Tool (WATO)",
+        "Setup",
         "Event Console: Generic",
-        "Event Console: Logging & Diagnose",
+        "Event Console: Logging & diagnose",
         "Event Console: SNMP traps",
         "Execution of checks",
         "Notifications",
         "Service discovery",
-        "Site Management",
-        "User Interface",
-        "User Management",
+        "Site management",
+        "User interface",
+        "User management",
         "Support",
     ]
 
     if not cmk_version.is_raw_edition():
         expected_groups += [
-            "Dynamic Configuration",
+            "Dynamic configuration",
             "Automatic agent updates",
-            "Alert Handlers",
-            "Livestatus Proxy",
+            "Alert handlers",
+            "Livestatus proxy",
             "Reporting",
-            "Monitoring Core",
+            "Monitoring core",
             "Ntopng (chargeable add-on)",
         ]
 

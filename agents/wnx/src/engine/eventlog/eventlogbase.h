@@ -18,6 +18,9 @@
 #include "common/wtools.h"
 
 namespace cma::evl {
+enum class SkipDuplicatedRecords { no, yes };
+constexpr std::string_view kSkippedMessageFormat =
+    "[the above message was repeated {} times]\n";
 class EventLogRecordBase {
 public:
     using ptr = std::unique_ptr<EventLogRecordBase>;
@@ -165,6 +168,7 @@ using EvlProcessor = std::function<bool(const std::string &)>;
 // third call
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cma::cfg::EventLevels level, bool hide_context,
+                       SkipDuplicatedRecords skip,
                        const EvlProcessor &processor);
 // internal
 inline uint64_t choosePos(uint64_t last_read_pos) {

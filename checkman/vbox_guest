@@ -1,7 +1,7 @@
 title: VirtualBox: Linux Guest Additions
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses {VBoxControl} to query the version and revision of the
@@ -15,4 +15,3 @@ discovery:
  additions installed(!). If you want to force the check on {all}
  of your Linux guests, you need to configure explicit checks using
  {checks=}.
-

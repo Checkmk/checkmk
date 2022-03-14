@@ -1,5 +1,5 @@
---- asio-asio-1-18-2/asio/include/asio/basic_socket_streambuf.hpp	2019-07-09 01:55:21.000000000 +0200
-+++ includes/asio/asio/basic_socket_streambuf.hpp	2019-10-22 11:05:39.374459211 +0200
+--- asio-asio-1-18-2.orig/asio/include/asio/basic_socket_streambuf.hpp	2019-07-09 01:55:21.000000000 +0200
++++ asio-asio-1-18-2/asio/include/asio/basic_socket_streambuf.hpp	2019-10-22 11:05:39.374459211 +0200
 @@ -247,7 +247,7 @@
    virtual ~basic_socket_streambuf()
    {

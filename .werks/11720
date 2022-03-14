@@ -6,7 +6,7 @@ Date: 1608196016
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 All graphs showing average metrics (e.g. "In_avg15" for the 15-minutes average
 value of incoming traffic) have been removed from all interface services, as

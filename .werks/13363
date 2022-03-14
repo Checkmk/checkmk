@@ -6,7 +6,7 @@ Date: 1637750397
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 You can now monitor the status and the time since last execution of the
 Continuous Data Protection (CDP) jobs run by Veeam.

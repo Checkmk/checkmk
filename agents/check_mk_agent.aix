@@ -26,6 +26,12 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -70,6 +76,17 @@ set_up_process_commandline_arguments() {
     done
 }
 
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -85,17 +102,11 @@ set_variable_defaults() {
     [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
 }
 
-
-preamble_1() {  # TODO: split these up more meaningful
+preamble_1() { # TODO: split these up more meaningful
     # force load of environment
 
-    if [ -e "${HOME}"/.profile ]; then
-        . "${HOME}"/.profile >/dev/null 2>&1
-    fi
-
-    # Remove locale settings to eliminate localized outputs where possible
-    export LC_ALL=C
-    unset LANG
+    # shellcheck disable=SC1090
+    . "${HOME}/.profile" >/dev/null 2>&1
 
     export MK_LIBDIR
     export MK_CONFDIR
@@ -161,7 +172,8 @@ set_up_profiling() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 
         # SC2016: Expressions don't expand in single quotes, use double quotes for that.
-        # shellcheck disable=SC2016
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
@@ -170,8 +182,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {
@@ -182,7 +193,24 @@ set_up_profiling() {
     fi
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
     export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 #
@@ -190,14 +218,14 @@ set_up_profiling() {
 #
 
 read_python_version() {
-    if inpath "$1"; then
-        version=$($1 -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
+    if inpath "${1}"; then
+        version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
 
         major=${version%%.*}
         minor=${version##*.}
 
-        if [ "$major" -eq "$2" ] && [ "$minor" -ge "$3" ]; then
-            echo "$1"
+        if [ "${major}" -eq "${2}" ] && [ "${minor}" -ge "${3}" ]; then
+            echo "${1}"
             return 0
         fi
     fi
@@ -209,15 +237,21 @@ preamble_3() {
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
     if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
         # shellcheck source=/dev/null
-        . "{$MK_CONFDIR}/python_path.cfg"
+        . "${MK_CONFDIR}/python_path.cfg"
     fi
     export PYTHON2 PYTHON3
 
     if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
         NO_PYTHON=true
-    elif [ -n "${PYTHON3}" ] && [ "$(${PYTHON3} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
-    elif [ -z "${PYTHON3}" ] && [ "$(${PYTHON2} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
 }
@@ -230,31 +264,31 @@ optionally_encrypt() { cat; }
 # of the command. It is successfull if the command terminated
 # in time.
 waitmax() {
-   TIMEOUT=${1}0
-   shift
+    TIMEOUT=${1}0
+    shift
 
-   # Run command in background
-   ksh -c "$*" &
-   PID=$!
+    # Run command in background
+    ksh -c "$*" &
+    PID=$!
 
-   # Wait for termination within TIMOUT seconds
-   while [ "${TIMEOUT}" -gt 0 ]; do
-       TIMEOUT=$((TIMEOUT - 1))
-       if [ ! -e /proc/$PID ]; then
-           return 0
-       fi
-       perl -e "select(undef, undef, undef, 0.1);"
-   done
+    # Wait for termination within TIMOUT seconds
+    while [ "${TIMEOUT}" -gt 0 ]; do
+        TIMEOUT=$((TIMEOUT - 1))
+        if [ ! -e /proc/${PID} ]; then
+            return 0
+        fi
+        perl -e "select(undef, undef, undef, 0.1);"
+    done
 
-   # Process did not terminate in time. Kill and
-   # return with an error
-   kill -9 $PID
-   return 255
+    # Process did not terminate in time. Kill and
+    # return with an error
+    kill -9 ${PID}
+    return 255
 }
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0i1"
+    echo "Version: 2.2.0i1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -268,10 +302,22 @@ section_checkmk() {
     #
 
     if [ -n "${NO_PYTHON}" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
+        python_fail_msg="No suitable python installation found."
     elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+        python_fail_msg="Configured python command not found."
     fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
+}
+
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
 }
 
 section_checkmk_agent_plugins() {
@@ -314,15 +360,15 @@ section_nfs_mounts() {
     # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
     if inpath stat; then
         echo '<<<nfsmounts>>>'
-        mount | grep ' nfs' | awk '{print $3;}' | while read MP; do
+        mount | grep ' nfs' | while read -r _ _ MP _; do
             waitmax 5 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" || echo "${MP} hanging 0 0 0 0"
         done
         echo '<<<cifsmounts>>>'
-        mount | grep ' cifs' | awk '{print $3;}' | while read MP; do
+        mount | grep ' cifs' | while read -r _ _ MP _; do
             if [ ! -r "${MP}" ]; then
                 echo "${MP} Permission denied"
             else
-                waitmax 2 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" || \
+                waitmax 2 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" ||
                     echo "${MP} hanging 0 0 0 0"
             fi
         done
@@ -336,8 +382,8 @@ section_ps() {
 
 section_lparstat_aix() {
     if inpath lparstat; then
-      echo '<<<lparstat_aix>>>'
-      lparstat 1 1
+        echo '<<<lparstat_aix>>>'
+        lparstat 1 1
     fi
 }
 
@@ -353,7 +399,7 @@ section_aix_diskio() {
 
 section_aix_memory() {
     echo '<<<aix_memory>>>'
-    vmstat -v  | tr -s ' '
+    vmstat -v | tr -s ' '
     swap -s
 }
 
@@ -380,15 +426,15 @@ section_cpu() {
 section_aix_if() {
     echo "<<<aix_if>>>"
     for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
-        echo "[$ent]"
-        entstat "$ent" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
-        entstat "$ent" | grep -p "Driver Flags:"
+        echo "[${ent}]"
+        entstat "${ent}" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
+        entstat "${ent}" | grep -p "Driver Flags:"
     done
 }
 
 section_ntp() {
     if inpath ntpq; then
-        if [ "$(lssrc -s xntpd|grep -c active)" -gt 0 ]; then
+        if [ "$(lssrc -s xntpd | grep -c active)" -gt 0 ]; then
             echo '<<<ntp>>>'
             ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
         fi
@@ -415,50 +461,46 @@ section_tcp() {
 section_libelle() {
     # Libelle Business Shadow
     if inpath trd; then
-      echo '<<<libelle_business_shadow:sep(58)>>>'
-      $(which trd) -s
+        echo '<<<libelle_business_shadow:sep(58)>>>'
+        trd -s
     fi
 }
 
-section_mailqueue () {
+section_mailqueue() {
     if [ -x /usr/sbin/sendmail ]; then
-        echo '<<<postfix_mailq>>>';
+        echo '<<<postfix_mailq>>>'
         mailq 2>&1 | tail -n 6
     fi
 }
 
 section_uptime() {
-    # uptime formats
-    # 12:55pm  up 105 days, 21 hrs,  2 users, load average: 0.26, 0.26, 0.26 --> 9147600
-    # 1:41pm   up 105 days, 21:46,   2 users, load average: 0.28, 0.28, 0.27 --> 9150360
-    # 05:26PM  up           1:16,    1 user,  load average: 0.33, 0.21, 0.20 --> 4560
-    # 06:13PM  up           2:03,    1 user,  load average: 1.16, 1.07, 0.91 --> 7380
-    # 08:43AM  up 29 mins,           1 user,  load average: 0.09, 0.18, 0.21 --> 1740
-    # 08:47AM  up 66 days,  18:34,   1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
-    # 08:45AM  up 76 days,  34 mins, 1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
     echo '<<<uptime>>>'
     UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
     case ${UPTIME} in
-        *day* ) DAYS=$(echo "${UPTIME}" | sed -e 's/days\{0,1\},.*//g') ;;
-        * ) DAYS="0" ;;
+        *day*) DAYS="${UPTIME%% day*}" ;;
+        *) DAYS="0" ;;
     esac
 
     case ${UPTIME} in
-        *:* )
+        *:*)
             HOURS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
-            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g') ;;
-        *hr* )
+            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
+            ;;
+        *hr*)
             HOURS=$(echo "${UPTIME}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
-            MINS=0 ;;
-        *min* )
+            MINS=0
+            ;;
+        *min*)
             HOURS=0
-            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g') ;;
-        * )
+            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
+            ;;
+        *)
             HOURS="0"
-            MINS=0 ;;
+            MINS=0
+            ;;
     esac
 
-    echo $(((DAYS*86400)+(HOURS*3600)+(MINS*60)))
+    echo $(((DAYS * 86400) + (HOURS * 3600) + (MINS * 60)))
 }
 
 #
@@ -513,8 +555,8 @@ section_aix_hacmp() {
             nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
             list_active_nodes=""
             for node in ${nodes}; do
-                active_nodes=$(clgetactivenodes -n ${node})
-                if echo ${active_nodes} | grep -q ${node}; then
+                active_nodes=$(clgetactivenodes -n "${node}")
+                if echo "${active_nodes}" | grep -q "${node}"; then
                     list_active_nodes=${list_active_nodes}"\n${node}"
                 fi
             done
@@ -546,26 +588,26 @@ section_job() {
     if [ -d "${MK_VARDIR}/job" ]; then
         echo '<<<job>>>'
         CDIR=$(pwd)
-        cd "${MK_VARDIR}/job" 2> /dev/null || exit
+        cd "${MK_VARDIR}/job" 2>/dev/null || exit
         for username in *; do
             if [ -d "${username}" ] && cd "${username}"; then
                 for i in *; do
-                   echo "==> ${i} <=="
-                   cat "${i}"
+                    echo "==> ${i} <=="
+                    cat "${i}"
                 done
-                cd .. > /dev/null
+                cd .. >/dev/null
             fi
         done
-        cd "${CDIR}" 2> /dev/null || exit
+        cd "${CDIR}" 2>/dev/null || exit
     fi
 }
 
 run_cached() {
-    NAME=$1
+    NAME=${1}
     # Be aware: Maxage was expected to be given in minutes but this was
     # confusing because all other agents use seconds here. So this has
     # been changed to be compatible.
-    MAXAGE=$2
+    MAXAGE=${2}
     shift 2
     CMDLINE=$*
 
@@ -575,27 +617,29 @@ run_cached() {
         return
     fi
 
+    NOW=$(get_epoch)
+
     if [ ! -e "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
-    CACHEFILE=$MK_VARDIR/cache/$NAME.cache
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     USE_CACHEFILE=""
     # Check if file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
-        AGE=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' ${CACHEFILE} )
-        if (( AGE < MAXAGE )); then
+        AGE=$((NOW - $(get_file_mtime "${CACHEFILE}")))
+        if ((AGE < MAXAGE)); then
             USE_CACHEFILE=1
         fi
 
         if ${MK_RUN_SYNC_PARTS}; then
             # get file time for cache
-            MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' ${CACHEFILE})
+            MTIME=$(get_file_mtime "${CACHEFILE}")
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [[ ${NAME} == local_* ]]; then
-                sed -e "/^<<</! s/^/${CACHE_INFO} /" "${CACHEFILE}"
+                # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
+                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
-                # insert the cache info in the section header (^= after '!'),
-                # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+                # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi
@@ -603,7 +647,10 @@ run_cached() {
     ${MK_RUN_ASYNC_PARTS} || return
 
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        nohup sh -c "eval ${MK_DEFINE_LOG_SECTION_TIME}; ${CMDLINE}" > "${CACHEFILE}.new" 2> /dev/null && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}.new" "${CACHEFILE}"  &
+        {
+            nohup sh -c "eval ${MK_DEFINE_LOG_SECTION_TIME}; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null &&
+                mv -f "${CACHEFILE}.new" "${CACHEFILE}"
+        } || rm -f "${CACHEFILE}.new" "${CACHEFILE}" &
     fi
 }
 
@@ -612,7 +659,7 @@ run_cached() {
 #
 
 run_local_checks() {
-    cd "$LOCALDIR" || return
+    cd "${LOCALDIR}" || return
 
     if ${MK_RUN_SYNC_PARTS}; then
         echo '<<<local:sep(0)>>>'
@@ -635,7 +682,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return
@@ -736,65 +783,71 @@ run_remote_plugins() {
     # caching currently not supported
     ${MK_RUN_SYNC_PARTS} || return
 
+    [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
+
     # MK's Remote Plugin Executor
-    if [ -e "${MK_CONFDIR}/mrpe.cfg" ]; then
-        echo '<<<mrpe>>>'
-        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" | \
+    echo '<<<mrpe>>>'
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
+    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
         while read descr cmdline; do
             PLUGIN=${cmdline%% *}
             OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
             echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
             echo
         done
-    fi
 }
 
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk
 
+    _log_section_time section_cmk_agent_ctl_status
+
     [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && log_section_time section_checkmk_agent_plugins
 
-    [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
+    [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
 
-    [ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time section_nfs_mounts
+    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts
 
-    [ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
+    [ -z "${MK_SKIP_PS}" ] && _log_section_time section_ps
 
-    [ -z "$MK_SKIP_AIX_LPARSTAT" ] && _log_section_time section_lparstat_aix
+    [ -z "${MK_SKIP_AIX_LPARSTAT}" ] && _log_section_time section_lparstat_aix
 
-    [ -z "$MK_SKIP_AIX_VMSTAT" ] && _log_section_time section_vmstat_aix
+    [ -z "${MK_SKIP_AIX_VMSTAT}" ] && _log_section_time section_vmstat_aix
 
-    [ -z "$MK_SKIP_AIX_DISKIO" ] && _log_section_time section_aix_diskio
+    [ -z "${MK_SKIP_AIX_DISKIO}" ] && _log_section_time section_aix_diskio
 
-    [ -z "$MK_SKIP_AIX_MEM" ] && _log_section_time section_aix_memory
+    [ -z "${MK_SKIP_AIX_MEM}" ] && _log_section_time section_aix_memory
 
-    [ -z "$MK_SKIP_AIX_MPSTAT" ] && _log_section_time section_mpstat_aix
+    [ -z "${MK_SKIP_AIX_MPSTAT}" ] && _log_section_time section_mpstat_aix
 
-    [ -z "$MK_SKIP_AIX_PAGING" ] && _log_section_time section_aix_paging
+    [ -z "${MK_SKIP_AIX_PAGING}" ] && _log_section_time section_aix_paging
 
-    [ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
+    [ -z "${MK_SKIP_CPU}" ] && _log_section_time section_cpu
 
-    [ -z "$MK_SKIP_AIX_IF" ] && _log_section_time section_aix_if
+    [ -z "${MK_SKIP_AIX_IF}" ] && _log_section_time section_aix_if
 
-    [ -z "$MK_SKIP_TIMESYNCHRONISATION" ] && _log_section_time section_ntp
+    [ -z "${MK_SKIP_TIMESYNCHRONISATION}" ] && _log_section_time section_ntp
 
-    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
+    [ -z "${MK_SKIP_MULTIPATHING}" ] && _log_section_time section_multipathing
 
-    [ -z "$MK_SKIP_AIX_LVM" ] && _log_section_time section_aix_lvm
+    [ -z "${MK_SKIP_AIX_LVM}" ] && _log_section_time section_aix_lvm
 
-    [ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
+    [ -z "${MK_SKIP_TCP}" ] && _log_section_time section_tcp
 
-    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
+    [ -z "${MK_SKIP_LIBELLE}" ] && _log_section_time section_libelle
 
-    [ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time section_mailqueue
+    [ -z "${MK_SKIP_MAILQUEUE}" ] && _log_section_time section_mailqueue
 
-    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
+    [ -z "${MK_SKIP_UPTIME}" ] && _log_section_time section_uptime
 
-    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
+    [ -z "${MK_SKIP_FILEINFO}" ] && _log_section_time section_fileinfo
 
-    [ -z "$MK_SKIP_AIX_HACMP" ] && _log_section_time section_aix_hacmp
+    [ -z "${MK_SKIP_AIX_HACMP}" ] && _log_section_time section_aix_hacmp
 
-    [ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
+    [ -z "${MK_SKIP_JOB}" ] && _log_section_time section_job
 }
 
 run_partially_asynchronous_sections() {
@@ -804,7 +857,10 @@ run_partially_asynchronous_sections() {
 
 main_setup() {
     exec </dev/null 9>&2 2>/dev/null
-    set_up_process_commandline_arguments "$@" 
+    set_up_process_commandline_arguments "$@"
+    set_up_get_epoch
+    set_variable_defaults
+    unset_locale
     preamble_1
     preamble_2
     preamble_3
@@ -864,9 +920,9 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt "${PASSPHRASE}" ""
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
 
-        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 
         sleep "${MK_LOOP_INTERVAL}"
 

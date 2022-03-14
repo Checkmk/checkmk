@@ -70,7 +70,7 @@ def _parameter_valuespec_cisco_mem():
         ),
     ]
     return Transform(
-        Dictionary(elements=elements + size_trend_elements),
+        valuespec=Dictionary(elements=elements + size_trend_elements),
         forth=_transform_wrapper,
     )
 

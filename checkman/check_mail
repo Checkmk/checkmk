@@ -1,7 +1,7 @@
 title: POP3/IMAP Connection and Optional Mail Forwarding
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Logs in into an IMAP or POP3 mailbox to monitor whether or not the login is possible.

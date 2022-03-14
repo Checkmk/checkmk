@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
@@ -14,5 +17,7 @@ RSYNC_OPTS="-a
            --exclude=Makefile
            --exclude=*.cc"
 
-sudo rsync $RSYNC_OPTS ./ $ROOT/lib/nagios/plugins
-sudo rsync $RSYNC_OPTS --delete-after ./ $ROOT/share/doc/check_mk/treasures/active_checks
+# shellcheck disable=SC2086
+sudo rsync $RSYNC_OPTS ./ "$ROOT/lib/nagios/plugins"
+# shellcheck disable=SC2086
+sudo rsync $RSYNC_OPTS --delete-after ./ "$ROOT/share/doc/check_mk/treasures/active_checks"

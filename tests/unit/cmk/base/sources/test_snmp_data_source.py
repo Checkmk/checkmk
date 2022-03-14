@@ -14,12 +14,13 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKIPAddressLookupError, OnError
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPSource
 
 
@@ -40,7 +41,9 @@ def ipaddress_fixture():
 
 @pytest.fixture(name="scenario")
 def scenario_fixture(hostname, monkeypatch):
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
 
 @pytest.fixture(name="source")
@@ -58,7 +61,9 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")
 
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(
         config,
@@ -88,7 +93,9 @@ class TestSNMPSource_SNMP:
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
         source = SNMPSource.snmp(
             HostName(hostname),
@@ -158,7 +165,7 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):
-        assert source.summarize(result.OK(AgentHostSections()), mode=mode) == [
+        assert source.summarize(result.OK(HostSections[AgentRawDataSection]()), mode=mode) == [
             ActiveCheckResult(0, "Success")
         ]
 

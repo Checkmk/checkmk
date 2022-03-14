@@ -6,7 +6,7 @@ Date: 1633080858
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For services of the plugin <i>netapp_api_fcp</i> the tool
 <i>cmk-update-config</i> reported "Transform failed".

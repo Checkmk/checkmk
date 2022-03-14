@@ -25,7 +25,7 @@ def _parameter_valuespec_temperature_trends():
             (
                 "trend_range",
                 Optional(
-                    Integer(
+                    valuespec=Integer(
                         title=_("Time range for temperature trend computation"),
                         default_value=30,
                         minvalue=5,

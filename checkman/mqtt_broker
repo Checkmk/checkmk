@@ -1,7 +1,7 @@
 title: MQTT: Broker miscellaneous information
 agents: mqtt
 catalog: app/mqtt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures miscellaneous information of a MQTT broker instance. It

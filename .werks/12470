@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Due to race conditions, the BI aggregates could be compiled too often.
 This had only one effect on performance, but now other visible drawbacks.

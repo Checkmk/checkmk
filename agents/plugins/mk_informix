@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Informix
 # Make ENV-VARs avail for subshells
@@ -24,7 +24,6 @@ set -a
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
-
 do_check() {
     # $1:section, $2:excludelist
     if echo "$2" | grep -qe "${1}"; then
@@ -34,7 +33,6 @@ do_check() {
     fi
 }
 
-
 sql() {
     db="sysmaster"
     sqltxt="$1"
@@ -42,14 +40,13 @@ sql() {
     echo "$sqltxt" | dbaccess ${db}
 }
 
-
 set_excludes() {
-    excludes=""
+    exclude=""
     if [ "$EXCLUDES" = "ALL" ]; then
-        excludes="$all_sections"
+        exclude="$all_sections"
         global_exclude=true
-    elif [ ! -z "$EXCLUDES" ]; then
-        excludes=$EXCLUDES
+    elif [ -n "$EXCLUDES" ]; then
+        exclude=$EXCLUDES
         global_exclude=true
     else
         global_exclude=false
@@ -58,13 +55,12 @@ set_excludes() {
     if [ "$global_exclude" = "false" ]; then
         excludes_i="EXCLUDES_${1}"
         if [ "${!excludes_i}" = "ALL" ]; then
-            excludes="$all_sections"
-        elif [ ! -z "${!excludes_i}" ]; then
-            excludes=${!excludes_i}
+            exclude="$all_sections"
+        elif [ -n "${!excludes_i}" ]; then
+            exclude=${!excludes_i}
         fi
     fi
 }
-
 
 #.
 #   .--sqls----------------------------------------------------------------.
@@ -76,39 +72,34 @@ set_excludes() {
 #   |                                  |_|                                 |
 #   '----------------------------------------------------------------------'
 
-
 all_sections="sessions locks tabextents dbspaces logusage"
 
-
-informix_status(){
+informix_status() {
     echo "<<<informix_status:sep(58)>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
-    $INFORMIXDIR/bin/onstat - >/dev/null 2>&1
+    "$INFORMIXDIR/bin/onstat" - >/dev/null 2>&1
     state=$?
     echo "Status:"$state
-    $INFORMIXDIR/bin/onstat -g dis
-    port=$(grep $INFORMIXSERVER /etc/services)
-    echo "PORT:"$port
+    "$INFORMIXDIR/bin/onstat" -g dis
+    port=$(grep "$INFORMIXSERVER" /etc/services)
+    echo "PORT:$port"
 }
 
-
-informix_sessions(){
+informix_sessions() {
     echo "<<<informix_sessions>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     # don't count our own session
     sql "select 'SESSIONS', (count(*)-1)::int from syssessions"
 }
 
-
-informix_locks(){
+informix_locks() {
     echo "<<<informix_locks>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     # don't count our own session
     sql "select 'LOCKS', (count(*)-1)::int, type from syslocks group by type"
 }
 
-
-informix_tabextents(){
+informix_tabextents() {
     echo "<<<informix_tabextents>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select first 10
@@ -125,8 +116,7 @@ informix_tabextents(){
         order by extents desc"
 }
 
-
-informix_dbspaces(){
+informix_dbspaces() {
     echo "<<<informix_dbspaces>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select
@@ -149,8 +139,7 @@ informix_dbspaces(){
         order by sd.name"
 }
 
-
-informix_logusage(){
+informix_logusage() {
     echo "<<<informix_logusage>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select 'LOGUSAGE',
@@ -170,7 +159,6 @@ informix_logusage(){
         order by number"
 }
 
-
 #.
 #   .--config--------------------------------------------------------------.
 #   |                                      __ _                            |
@@ -181,7 +169,6 @@ informix_logusage(){
 #   |                                           |___/                      |
 #   '----------------------------------------------------------------------'
 
-
 # Config opts:
 # - oninit-path; Default is empty, which means autodetection:
 #       ONINIT_PATH=<path to oninit-binary>
@@ -191,14 +178,11 @@ informix_logusage(){
 #       EXCLUDES="SECTION SECTION ..."
 #       EXCLUDES=ALL
 
+# shellcheck source=agents/cfg_examples/informix.cfg
+. "$MK_CONFDIR/informix.cfg" 2>/dev/null
 
-if [ -f "$MK_CONFDIR/informix.cfg" ]; then
-    . $MK_CONFDIR/informix.cfg
-fi
-
-
-if [ -z "$ONINIT_PATH" -o ! -x "$ONINIT_PATH" ]; then
-    ONINIT=$(UNIX95=true ps ax  | grep oninit | grep -v grep | head -1 | awk '{print $1 " " $5}')
+if [ -z "$ONINIT_PATH" ] || [ ! -x "$ONINIT_PATH" ]; then
+    ONINIT=$(UNIX95=true ps ax | grep oninit | grep -v grep | head -1 | awk '{print $1 " " $5}')
     if [ -z "$ONINIT" ]; then
         exit 0
     fi
@@ -206,19 +190,18 @@ if [ -z "$ONINIT_PATH" -o ! -x "$ONINIT_PATH" ]; then
     ONINIT_PATH=${ONINIT#* }
     ONINIT_PID=${ONINIT% *}
     case "$ONINIT_PATH" in
-    /*)
-        ;;
-    *)    # BUG not platform independent!
-        ONINIT_PATH=$(ls -l /proc/$ONINIT_PID/exe 2>/dev/null| sed 's/.* //')
-        ;;
+        /*) ;;
+
+        *) # BUG not platform independent!
+            ONINIT_PATH=$(readlink "/proc/$ONINIT_PID/exe")
+            ;;
     esac
 
     # If not set in config or not found we end up here
-    if [ -z "$ONINIT_PATH" -o ! -f "$ONINIT_PATH" ]; then
+    if [ -z "$ONINIT_PATH" ] || [ ! -f "$ONINIT_PATH" ]; then
         exit 1
     fi
 fi
-
 
 #.
 #   .--main----------------------------------------------------------------.
@@ -230,52 +213,60 @@ fi
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
-    $INFORMIXDIR/bin/onstat -g dis | \
-        egrep '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' | \
+for IDSENV in $(
+    # FIXME: This is supressed, so we can enable the shellcheck.
+    # I think the shellchecker is right here: INFORMIXDIR will not
+    # be available in the for-loops body.
+    # shellcheck disable=SC2030
+    export INFORMIXDIR=${ONINIT_PATH%/bin*}
+    "$INFORMIXDIR/bin/onstat" -g dis |
+        grep -E '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' |
         sed -e 's/Server Number/SERVERNUM/' \
             -e 's/Server/INFORMIXSERVER/' \
             -e 's/SQLHOSTS/INFORMIXSQLHOSTS/' \
-            -e 's/[     ]*:[    ]*/=/' | \
-         tr '\n' ';' | \
+            -e 's/[     ]*:[    ]*/=/' |
+        tr '\n' ';' |
         sed -e 's/;$/\n/' -e 's/;\(INFORMIXSERVER=[^;]*;\)/\n\1/g'
 
-    ) ; do
+); do
     (
         # Set environment
-        eval $IDSENV
-    	PATH=$INFORMIXDIR/bin:$PATH
+        eval "$IDSENV"
+        # FIXME: This is supressed, so we can enable the shellcheck.
+        # I think the shellchecker is right here: INFORMIXDIR will not
+        # be available in the for-loops body.
+        # shellcheck disable=SC2031
+        PATH="$INFORMIXDIR/bin:$PATH"
 
-	    # try to set them via 'onstat -g env' otherwise
-	    # DB HAS TO BE RUNNING
-	    if [ -z "$INFORMIXSQLHOSTS" -o -z "$ONCONFIG" ]; then
-	        onstat -g env | egrep -e '^INFORMIXSQLHOSTS' \
-	    	                      -e '^ONCONFIG' |       \
-	    	                sed   -e 's/[         ][      ]*/=/'
-	    fi
+        # try to set them via 'onstat -g env' otherwise
+        # DB HAS TO BE RUNNING
+        if [ -z "$INFORMIXSQLHOSTS" ] || [ -z "$ONCONFIG" ]; then
+            onstat -g env | grep -E -e '^INFORMIXSQLHOSTS' \
+                -e '^ONCONFIG' |
+                sed -e 's/[         ][      ]*/=/'
+        fi
 
         informix_status
 
-        set_excludes $INFORMIXSERVER
+        set_excludes "$INFORMIXSERVER"
 
-        if do_check "sessions" "$excludes"; then
+        if do_check "sessions" "$exclude"; then
             informix_sessions
         fi
 
-        if do_check "locks" "$excludes"; then
+        if do_check "locks" "$exclude"; then
             informix_locks
         fi
 
-        if do_check "tabextents" "$excludes"; then
+        if do_check "tabextents" "$exclude"; then
             informix_tabextents
         fi
 
-        if do_check "dbspaces" "$excludes"; then
+        if do_check "dbspaces" "$exclude"; then
             informix_dbspaces
         fi
 
-        if do_check "logusage" "$excludes"; then
+        if do_check "logusage" "$exclude"; then
             informix_logusage
         fi
     )

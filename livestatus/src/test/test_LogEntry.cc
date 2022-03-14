@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -51,7 +52,7 @@ const strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
                       "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
                       "FLAPPINGSTOP"};
 
-std::string parens(const std::string& f, const std::string& arg) {
+std::string parens(const std::string &f, const std::string &arg) {
     return f + " (" + arg + ")";
 }
 
@@ -61,19 +62,19 @@ std::chrono::system_clock::time_point tp(time_t t) {
 
 // host_or_svc_state | reason (host_or_svc_state) | ALERTHANDLER (exit_code)
 template <class T>
-info_table notification_state_types(const table<T>& states) {
+info_table notification_state_types(const table<T> &states) {
     info_table result;
-    for (const auto& [state_name, state] : states) {
+    for (const auto &[state_name, state] : states) {
         result.push_back({state_name,  //
                           static_cast<int>(state),
                           parens("NOTIFY", state_name)});
-        for (const auto& reason : reasons) {
+        for (const auto &reason : reasons) {
             result.push_back({parens(reason, state_name),
                               static_cast<int>(state),
                               parens(reason, state_name)});
         }
     }
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         result.push_back({parens("ALERTHANDLER", code_name),  //
                           code,                               //
                           parens("EXIT_CODE", info)});
@@ -84,8 +85,8 @@ info_table notification_state_types(const table<T>& states) {
 
 TEST(LogEntry, InitialHostState) {
     // The host state string is directly taken from a log line field.
-    for (const auto& [state_name, state] : host_states) {
-        for (const auto& state_type : host_service_state_types) {
+    for (const auto &[state_name, state] : host_states) {
+        for (const auto &state_type : host_service_state_types) {
             auto line =
                 "[1551424305] INITIAL HOST STATE: huey;"s.append(state_name)
                     .append(";")
@@ -143,7 +144,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
 }
 
 TEST(LogEntry, InitialHostStateWithMultiLine) {
-    const auto* line =
+    const auto *line =
         R"([1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output;Laaanger\nLong\nOutput)";
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
@@ -169,8 +170,8 @@ TEST(LogEntry, InitialHostStateWithMultiLine) {
 
 TEST(LogEntry, CurrentHostState) {
     // The host state string is directly taken from a log line field.
-    for (const auto& [state_name, state] : host_states) {
-        for (const auto& state_type : host_service_state_types) {
+    for (const auto &[state_name, state] : host_states) {
+        for (const auto &state_type : host_service_state_types) {
             auto line =
                 "[1551424315] CURRENT HOST STATE: dewey;"s.append(state_name)
                     .append(";")
@@ -205,8 +206,8 @@ TEST(LogEntry, CurrentHostState) {
 
 TEST(LogEntry, HostAlert) {
     // The host state string is directly taken from a log line field.
-    for (const auto& [state_name, state] : host_states) {
-        for (const auto& state_type : host_service_state_types) {
+    for (const auto &[state_name, state] : host_states) {
+        for (const auto &state_type : host_service_state_types) {
             auto line = "[1551424323] HOST ALERT: huey;"s.append(state_name)
                             .append(";")
                             .append(state_type)
@@ -239,7 +240,7 @@ TEST(LogEntry, HostAlert) {
 }
 
 TEST(LogEntry, HostDowntimeAlert) {
-    for (const auto& state_type : downtime_flapping_state_types) {
+    for (const auto &state_type : downtime_flapping_state_types) {
         auto line = "[1551424323] HOST DOWNTIME ALERT: huey;" + state_type +
                     ";Komisch...";
         LogEntry e{123456, line};
@@ -265,7 +266,7 @@ TEST(LogEntry, HostDowntimeAlert) {
 }
 
 TEST(LogEntry, HostAcknowledgeAlert) {
-    for (const auto& state_type : acknowledge_state_types) {
+    for (const auto &state_type : acknowledge_state_types) {
         auto line = "[1551424323] HOST ACKNOWLEDGE ALERT: huey;" + state_type +
                     ";King Kong;foo bar";
         LogEntry e{123456, line};
@@ -291,7 +292,7 @@ TEST(LogEntry, HostAcknowledgeAlert) {
 }
 
 TEST(LogEntry, HostFlappingAlert) {
-    for (const auto& state_type : downtime_flapping_state_types) {
+    for (const auto &state_type : downtime_flapping_state_types) {
         auto line =
             "[1551424323] HOST FLAPPING ALERT: huey;" + state_type + ";foo bar";
         LogEntry e{123456, line};
@@ -318,8 +319,8 @@ TEST(LogEntry, HostFlappingAlert) {
 
 TEST(LogEntry, InitialServiceState) {
     // The service state string is directly taken from a log line field.
-    for (const auto& [state_name, state] : service_states) {
-        for (const auto& state_type : host_service_state_types) {
+    for (const auto &[state_name, state] : service_states) {
+        for (const auto &state_type : host_service_state_types) {
             auto line = "[1551424325] INITIAL SERVICE STATE: louie;servus 1;"s
                             .append(state_name)
                             .append(";")
@@ -354,8 +355,8 @@ TEST(LogEntry, InitialServiceState) {
 
 TEST(LogEntry, CurrentServiceState) {
     // The service state string is directly taken from a log line field.
-    for (const auto& [state_name, state] : service_states) {
-        for (const auto& state_type : host_service_state_types) {
+    for (const auto &[state_name, state] : service_states) {
+        for (const auto &state_type : host_service_state_types) {
             auto line = "[1551424335] CURRENT SERVICE STATE: donald;gruezi 2;"s
                             .append(state_name)
                             .append(";")
@@ -390,8 +391,8 @@ TEST(LogEntry, CurrentServiceState) {
 
 TEST(LogEntry, ServiceAlert) {
     // The service state string is directly taken from a log line field.
-    for (const auto& [state_name, state] : service_states) {
-        for (const auto& state_type : host_service_state_types) {
+    for (const auto &[state_name, state] : service_states) {
+        for (const auto &state_type : host_service_state_types) {
             auto line =
                 "[1551424323] SERVICE ALERT: huey;hi!;"s.append(state_name)
                     .append(";")
@@ -425,7 +426,7 @@ TEST(LogEntry, ServiceAlert) {
 }
 
 TEST(LogEntry, ServiceDowntimeAlert) {
-    for (const auto& state_type : downtime_flapping_state_types) {
+    for (const auto &state_type : downtime_flapping_state_types) {
         auto line = "[1551424323] SERVICE DOWNTIME ALERT: huey;hi, ho!;" +
                     state_type + ";Komisch...";
         LogEntry e{123456, line};
@@ -451,7 +452,7 @@ TEST(LogEntry, ServiceDowntimeAlert) {
 }
 
 TEST(LogEntry, ServiceAcknowledgeAlert) {
-    for (const auto& state_type : acknowledge_state_types) {
+    for (const auto &state_type : acknowledge_state_types) {
         auto line = "[1551424323] SERVICE ACKNOWLEDGE ALERT: huey;hi!;" +
                     state_type + ";King Kong;foo bar";
         LogEntry e{123456, line};
@@ -477,7 +478,7 @@ TEST(LogEntry, ServiceAcknowledgeAlert) {
 }
 
 TEST(LogEntry, ServiceFlappingAlert) {
-    for (const auto& state_type : downtime_flapping_state_types) {
+    for (const auto &state_type : downtime_flapping_state_types) {
         auto line = "[1551424323] SERVICE FLAPPING ALERT: huey;hi!;" +
                     state_type + ";foo bar";
         LogEntry e{123456, line};
@@ -526,7 +527,7 @@ TEST(LogEntry, TimeperiodTransition) {
 }
 
 TEST(LogEntry, HostNotification) {
-    for (const auto& [state_name, state, info] :
+    for (const auto &[state_name, state, info] :
          notification_state_types(host_states)) {
         auto line = "[1551424305] HOST NOTIFICATION: King Kong;donald;"s +
                     state_name +
@@ -556,7 +557,7 @@ TEST(LogEntry, HostNotification) {
 }
 
 TEST(LogEntry, ServiceNotification) {
-    for (const auto& [state_name, state, info] :
+    for (const auto &[state_name, state, info] :
          notification_state_types(service_states)) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION: King Kong;donald;duck;"s +
@@ -588,7 +589,7 @@ TEST(LogEntry, ServiceNotification) {
 TEST(LogEntry, HostNotificationResult) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line = "[1551424305] HOST NOTIFICATION RESULT: King Kong;donald;" +
                     code_name + ";commando;viel output...;blah blubb";
         LogEntry e{42, line};
@@ -618,7 +619,7 @@ TEST(LogEntry, HostNotificationResult) {
 TEST(LogEntry, ServiceNotificationResult) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION RESULT: King Kong;donald;duck;" +
             code_name + ";commando;viel output...;blah blubb";
@@ -649,7 +650,7 @@ TEST(LogEntry, ServiceNotificationResult) {
 TEST(LogEntry, HostNotificationProgress) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST NOTIFICATION PROGRESS: King Kong;donald;" +
             code_name + ";commando;viel output...";
@@ -679,7 +680,7 @@ TEST(LogEntry, HostNotificationProgress) {
 TEST(LogEntry, ServiceNotificationProgress) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION PROGRESS: King Kong;donald;duck;" +
             code_name + ";commando;viel output...";
@@ -755,7 +756,7 @@ TEST(LogEntry, ServiceAlertHandlerStarted) {
 TEST(LogEntry, HostAlertHandlerStopped) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST ALERT HANDLER STOPPED: donald;commando;"s +
             code_name + ";es war einmal...";
@@ -785,7 +786,7 @@ TEST(LogEntry, HostAlertHandlerStopped) {
 TEST(LogEntry, ServiceAlertHandlerStopped) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE ALERT HANDLER STOPPED: donald;duck;commando;"s +
             code_name + ";once upon a time...";
@@ -814,7 +815,7 @@ TEST(LogEntry, ServiceAlertHandlerStopped) {
 
 TEST(LogEntry, PassiveServiceCheck) {
     // The service state integer is directly taken from a log line field.
-    for (const auto& [state_name, state] : service_states) {
+    for (const auto &[state_name, state] : service_states) {
         auto line = "[1551424305] PASSIVE SERVICE CHECK: donald;duck;" +
                     std::to_string(static_cast<int>(state)) +
                     ";Isch hab Ruecken!";
@@ -843,7 +844,7 @@ TEST(LogEntry, PassiveServiceCheck) {
 
 TEST(LogEntry, PassiveHostCheck) {
     // The host state integer is directly taken from a log line field.
-    for (const auto& [state_name, state] : host_states) {
+    for (const auto &[state_name, state] : host_states) {
         auto line = "[1551424305] PASSIVE HOST CHECK: donald;" +
                     std::to_string(static_cast<int>(state)) +
                     ";Isch hab Ruecken!";
@@ -1048,46 +1049,13 @@ TEST(LogEntry, CoreStopping3) {
 
 TEST(LogEntry, ShortMessage) {
     auto line = "[oh no..."s;
-    LogEntry e{42, line};
-    EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(tp(0), e.time());
-    EXPECT_EQ(LogEntry::Class::invalid, e.log_class());
-    EXPECT_EQ(LogEntryKind::none, e.kind());
-    EXPECT_EQ(line, e.message());
-    EXPECT_EQ(""s, e.options());
-    EXPECT_EQ(""s, e.type());
-    EXPECT_EQ("", e.host_name());
-    EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e.command_name());
-    EXPECT_EQ("", e.contact_name());
-    EXPECT_EQ(0, e.state());
-    EXPECT_EQ("", e.state_type());
-    EXPECT_EQ(0, e.attempt());
-    EXPECT_EQ("", e.plugin_output());
-    EXPECT_EQ("", e.comment());
-    EXPECT_EQ("", e.state_info());
+    EXPECT_THROW(LogEntry e(42, line), std::invalid_argument);
 }
 
 TEST(LogEntry, InvalidTimeStamp) {
     auto line = "[nonsense!!] this is total;nonsense"s;
-    LogEntry e{42, line};
-    EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(tp(0), e.time());
-    EXPECT_EQ(LogEntry::Class::invalid, e.log_class());
-    EXPECT_EQ(LogEntryKind::none, e.kind());
-    EXPECT_EQ(line, e.message());
-    EXPECT_EQ(""s, e.options());
-    EXPECT_EQ(""s, e.type());
-    EXPECT_EQ("", e.host_name());
-    EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e.command_name());
-    EXPECT_EQ("", e.contact_name());
-    EXPECT_EQ(0, e.state());
-    EXPECT_EQ("", e.state_type());
-    EXPECT_EQ(0, e.attempt());
-    EXPECT_EQ("", e.plugin_output());
-    EXPECT_EQ("", e.comment());
-    EXPECT_EQ("", e.state_info());
+    // NOLINTNEXTLINE(hicpp-avoid-goto)
+    EXPECT_THROW(LogEntry e(42, line), std::invalid_argument);
 }
 
 TEST(LogEntry, NoColon) {
@@ -1115,7 +1083,7 @@ TEST(LogEntry, NoColon) {
 TEST(LogEntry, HostNotificationSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [state_name, state, info] :
+    for (const auto &[state_name, state, info] :
          notification_state_types(host_states)) {
         auto line =
             "[1551424305] HOST NOTIFICATION: King Kong;donald;check-mk-notify;"s +
@@ -1147,7 +1115,7 @@ TEST(LogEntry, HostNotificationSwapped) {
 TEST(LogEntry, ServiceNotificationSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [state_name, state, info] :
+    for (const auto &[state_name, state, info] :
          notification_state_types(service_states)) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION: King Kong;donald;duck;check-mk-notify;"s +
@@ -1179,7 +1147,7 @@ TEST(LogEntry, ServiceNotificationSwapped) {
 TEST(LogEntry, HostNotificationResultSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST NOTIFICATION RESULT: King Kong;donald;check-mk-notify;" +
             code_name + ";viel output...;blah blubb";
@@ -1210,7 +1178,7 @@ TEST(LogEntry, HostNotificationResultSwapped) {
 TEST(LogEntry, ServiceNotificationResultSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION RESULT: King Kong;donald;duck;check-mk-notify;" +
             code_name + ";viel output...;blah blubb";
@@ -1241,7 +1209,7 @@ TEST(LogEntry, ServiceNotificationResultSwapped) {
 TEST(LogEntry, HostNotificationProgressSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST NOTIFICATION PROGRESS: King Kong;donald;check-mk-notify;" +
             code_name + ";viel output...";
@@ -1272,7 +1240,7 @@ TEST(LogEntry, HostNotificationProgressSwapped) {
 TEST(LogEntry, ServiceNotificationProgressSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code, info] : exit_codes) {
+    for (const auto &[code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION PROGRESS: King Kong;donald;duck;check-mk-notify;" +
             code_name + ";viel output...";

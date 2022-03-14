@@ -74,7 +74,7 @@ def _heartbeat_crm_transform_heartbeat_crm(params):
 
 def _parameter_valuespec_heartbeat_crm():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "max_age",

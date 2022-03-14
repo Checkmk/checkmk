@@ -112,7 +112,9 @@ def package_list(args: List[str]) -> None:
                 if package is None:
                     table.append([pacname, "package info is missing or broken", "0"])
                 else:
-                    table.append([pacname, package["title"], str(package["num_files"])])
+                    table.append(
+                        [pacname, package["title"], str(packaging.package_num_files(package))]
+                    )
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
             for pacname in packaging.installed_names():
@@ -137,8 +139,8 @@ def show_package_info(name: PackageName) -> None:
 def show_package(name: PackageName, show_info: bool = False) -> None:
     try:
         if name.endswith(PACKAGE_EXTENSION):
-            tar = tarfile.open(name, "r:gz")
-            info = tar.extractfile("info")
+            with tarfile.open(name, "r:gz") as tar:
+                info = tar.extractfile("info")
             if info is None:
                 raise PackageException('Failed to extract "info"')
             package = parse_package_info(info.read().decode())
@@ -172,10 +174,9 @@ def show_package(name: PackageName, show_info: bool = False) -> None:
         if logger.isEnabledFor(VERBOSE):
             sys.stdout.write("Files in package %s:\n" % name)
             for part in get_package_parts():
-                files = package["files"].get(part.ident, [])
-                if len(files) > 0:
+                if part_files := package["files"].get(part.ident, []):
                     sys.stdout.write("  %s%s%s:\n" % (tty.bold, part.title, tty.normal))
-                    for f in files:
+                    for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
             for part in get_package_parts():
@@ -194,18 +195,21 @@ def package_create(args: List[str]) -> None:
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = get_initial_package_info(pacname)
     filelists = package["files"]
-    num_files = 0
     for part in get_package_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)
         filelists[part.ident] = files
-        num_files += len(files)
         if len(files) > 0:
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in files:
                 logger.log(VERBOSE, "    %s", f)
 
     write_package_info(package)
-    logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
+    logger.log(
+        VERBOSE,
+        "New package %s created with %d files.",
+        pacname,
+        packaging.package_num_files(package),
+    )
     logger.log(
         VERBOSE,
         "Please edit package details in %s%s%s",

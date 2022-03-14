@@ -9,13 +9,18 @@ from __future__ import annotations
 import copy
 import json
 import os
+import pickle
+import re
 import sys
 import traceback
+from enum import Enum
 from itertools import chain, starmap
+from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
+    Final,
     Iterator,
     List,
     Literal,
@@ -38,8 +43,10 @@ import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
+import cmk.gui.query_filters as query_filters
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
@@ -85,7 +92,7 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import save_user_file
@@ -102,6 +109,7 @@ from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     CascadingDropdown,
     Checkbox,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     DualListChoice,
@@ -109,13 +117,27 @@ from cmk.gui.valuespec import (
     GroupedListOfMultipleChoices,
     IconSelector,
     Integer,
+    JSONValue,
     ListOfMultiple,
     ListOfMultipleChoiceGroup,
     TextAreaUnicode,
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecDefault,
+    ValueSpecHelp,
+    ValueSpecText,
+    ValueSpecValidateFunc,
 )
+
+CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
+
+
+class VisualType(Enum):
+    views: VisualTypeName = "views"
+    dashboards: VisualTypeName = "dashboards"
+    reports: VisualTypeName = "reports"
+
 
 T = TypeVar("T")
 #   .--Plugins-------------------------------------------------------------.
@@ -133,7 +155,7 @@ title_functions: List[Callable] = []
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     global title_functions
     title_functions = []
     _register_pre_21_plugin_api()
@@ -248,30 +270,6 @@ def declare_visual_permissions(what, what_plural):
 #   '----------------------------------------------------------------------'
 
 
-class UserVisualsCache:
-    """Realizes a in memory cache (per apache process). This has been introduced to improve the
-    situation where there are hundreds of custom visuals (views here). These visuals are rarely
-    changed, but read and evaluated(!) during each page request which costs a lot of time."""
-
-    def __init__(self):
-        super().__init__()
-        self._cache = {}
-
-    def get(self, path):
-        try:
-            cached_mtime, cached_user_visuals = self._cache[path]
-            current_mtime = os.stat(path).st_mtime
-            return cached_user_visuals if current_mtime <= cached_mtime else None
-        except (KeyError, IOError):
-            return None
-
-    def add(self, path, modification_timestamp, user_visuals):
-        self._cache[path] = modification_timestamp, user_visuals
-
-
-_user_visuals_cache = UserVisualsCache()
-
-
 def save(what, visuals, user_id=None):
     if user_id is None:
         user_id = user.id
@@ -282,15 +280,13 @@ def save(what, visuals, user_id=None):
         if user_id == owner_id:
             uservisuals[name] = visual
     save_user_file("user_" + what, uservisuals, user_id=user_id)
+    _CombinedVisualsCache(VisualType(what)).invalidate_cache()
 
 
-# FIXME: Currently all user visual files of this type are locked. We could optimize
-# this not to lock all files but only lock the files the user is about to modify.
 def load(
     what: str,
     builtin_visuals: Dict[Any, Any],
     skip_func: Optional[Callable[[Dict[Any, Any]], bool]] = None,
-    lock: bool = False,
 ) -> Dict[Tuple[UserId, str], Dict[str, Any]]:
     visuals: Dict[Tuple[UserId, str], Dict[str, Any]] = {}
 
@@ -307,8 +303,8 @@ def load(
 
         visuals[(UserId(""), name)] = visual
 
-    # Now scan users subdirs for files "user_*.mk"
-    visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
+    # Add custom "user_*.mk" visuals
+    visuals.update(_CombinedVisualsCache(VisualType(what)).load(builtin_visuals, skip_func))
 
     return visuals
 
@@ -331,15 +327,23 @@ def transform_old_visual(visual):
     visual.setdefault("is_show_more", False)
 
     # 2.1
-    visual["context"] = cleaup_context_filters(visual["context"], visual["single_infos"])
+    visual["context"] = cleanup_context_filters(visual["context"], visual["single_infos"])
 
 
-def cleaup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
+def transform_pre_2_1_discovery_state(
+    fident: FilterName, vals: FilterHTTPVariables
+) -> Tuple[FilterName, FilterHTTPVariables]:
     # Fix context into type VisualContext
-    if filter_conf := context.get("discovery_state"):
-        # CMK-6606: States were saved as bools instead of str
-        context["discovery_state"] = {key: "on" if val else "" for key, val in filter_conf.items()}
+    if fident == "discovery_state":
+        return "discovery_state", {key: "on" if val else "" for key, val in vals.items()}
+    return fident, vals
 
+
+def transform_pre_2_1_single_infos(
+    single_infos: SingleInfos,
+) -> Callable[
+    [FilterName, Union[str, int, FilterHTTPVariables]], Tuple[FilterName, FilterHTTPVariables]
+]:
     # Remove the old single infos
     single_info_keys = get_single_info_keys(single_infos)
 
@@ -362,55 +366,160 @@ def cleaup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
             % (fident, vals)
         )
 
-    return dict(starmap(unsingle, context.items()))
+    return unsingle
 
 
-def load_user_visuals(
+def transform_pre_2_1_range_filters() -> Callable[
+    [FilterName, FilterHTTPVariables], Tuple[FilterName, FilterHTTPVariables]
+]:
+    # Update Visual Range Filters
+    range_filters = [
+        filter_ident
+        for filter_ident, filter_object in filter_registry.items()
+        if hasattr(filter_object, "query_filter")
+        and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
+    ]
+
+    def transform_range_vars(
+        fident: FilterName, vals: FilterHTTPVariables
+    ) -> Tuple[FilterName, FilterHTTPVariables]:
+        if fident in range_filters:
+            return fident, {
+                re.sub("_to(_|$)", "_until\\1", request_var): value
+                for request_var, value in vals.items()
+            }
+        return fident, vals
+
+    return transform_range_vars
+
+
+def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
+    new_context_vars = starmap(transform_pre_2_1_single_infos(single_infos), context.items())
+    new_context_vars = starmap(transform_pre_2_1_discovery_state, new_context_vars)
+    new_context_vars = starmap(transform_pre_2_1_range_filters(), new_context_vars)
+
+    return dict(new_context_vars)
+
+
+class _CombinedVisualsCache:
+    _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
+
+    def __init__(self, visual_type: VisualType):
+        self._visual_type: Final[VisualType] = visual_type
+
+    @classmethod
+    def invalidate_all_caches(cls) -> None:
+        for visual_type in VisualType:
+            _CombinedVisualsCache(visual_type).invalidate_cache()
+
+    def invalidate_cache(self) -> None:
+        self._update_cache_info_timestamp()
+
+    def _update_cache_info_timestamp(self) -> None:
+        cache_info_filename = self._info_filename
+        cache_info_filename.parent.mkdir(parents=True, exist_ok=True)
+        cache_info_filename.touch()
+
+    @property
+    def _info_filename(self) -> Path:
+        return self._visuals_cache_dir / f"last_update_{self._visual_type.value}"
+
+    @property
+    def _content_filename(self) -> Path:
+        return self._visuals_cache_dir / f"cached_{self._visual_type.value}"
+
+    def load(
+        self,
+        builtin_visuals: Dict[Any, Any],
+        skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+    ) -> CustomUserVisuals:
+
+        if self._may_use_cache():
+            if (content := self._read_from_cache()) is not None:
+                return content
+        return self._compute_and_write_cache(builtin_visuals, skip_func)
+
+    def _may_use_cache(self) -> bool:
+        if not self._content_filename.exists():
+            return False
+
+        if not self._info_filename.exists():
+            # Create a new file for future reference (this obviously has the newest timestamp)
+            self.invalidate_cache()
+            return False
+
+        if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
+            return False
+
+        return True
+
+    def _compute_and_write_cache(
+        self,
+        builtin_visuals: Dict[Any, Any],
+        skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+    ) -> CustomUserVisuals:
+        visuals = _load_custom_user_visuals(self._visual_type.value, builtin_visuals, skip_func)
+        self._write_to_cache(visuals)
+        return visuals
+
+    def _read_from_cache(self) -> Optional[CustomUserVisuals]:
+        try:
+            return pickle.loads(store.load_bytes_from_file(self._content_filename))
+        except (TypeError, pickle.UnpicklingError):
+            return None
+
+    def _write_to_cache(self, visuals: CustomUserVisuals) -> None:
+        store.save_bytes_to_file(self._content_filename, pickle.dumps(visuals))
+        self._update_cache_info_timestamp()
+
+
+hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
+hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
+
+
+def _load_custom_user_visuals(
     what: str,
     builtin_visuals: Dict[Any, Any],
     skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
-    lock: bool,
-) -> Dict[Tuple[UserId, str], Dict]:
-    visuals: Dict[Tuple[UserId, str], Dict] = {}
+) -> CustomUserVisuals:
+    """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
+    measurably slower (7 times), due to path object creation and concatenation. This function
+    can iterate over several thousand files, which may take 250ms (Path) or 50ms(os.path)"""
 
-    for dirpath in cmk.utils.paths.profile_dir.iterdir():
+    visuals: CustomUserVisuals = {}
+    visual_filename = "user_%s.mk" % what
+    old_views_filename = "views.mk"
+
+    for dirname in cmk.utils.paths.profile_dir.iterdir():
         try:
-            if not dirpath.exists():
-                continue
-
+            user_dirname = os.path.join(cmk.utils.paths.profile_dir, dirname)
+            visual_path = os.path.join(user_dirname, visual_filename)
             # Be compatible to old views.mk. The views.mk contains customized views
             # in an old format which will be loaded, transformed and when saved stored
             # in users_views.mk. When this file exists only this file is used.
-            path = dirpath.joinpath("user_%s.mk" % what)
-            if what == "views" and not path.exists():
-                path = dirpath.joinpath("%s.mk" % what)
+            if what == "views" and not os.path.exists(visual_path):
+                visual_path = os.path.join(user_dirname, old_views_filename)
 
-            if not path.exists():
+            if not os.path.exists(visual_path):
                 continue
 
-            user_id = dirpath.name
+            user_id = os.path.basename(dirname)
             if not userdb.user_exists(UserId(user_id)):
                 continue
 
-            user_visuals = _user_visuals_cache.get(path)
-            if user_visuals is None:
-                modification_timestamp = os.stat(path).st_mtime
-                user_visuals = load_visuals_of_a_user(
-                    what, builtin_visuals, skip_func, lock, path, user_id
-                )
-                _user_visuals_cache.add(path, modification_timestamp, user_visuals)
-
-            visuals.update(user_visuals)
+            visuals.update(
+                load_visuals_of_a_user(what, builtin_visuals, skip_func, visual_path, user_id)
+            )
 
         except SyntaxError as e:
-            raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
+            raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, visual_path, e))
 
     return visuals
 
 
-def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user_id):
-    user_visuals: Dict[Tuple[UserId, str], Dict] = {}
-    for name, visual in store.load_object_from_file(path, default={}, lock=lock).items():
+def load_visuals_of_a_user(what, builtin_visuals, skip_func, path, user_id) -> CustomUserVisuals:
+    user_visuals: CustomUserVisuals = {}
+    for name, visual in store.load_object_from_file(path, default={}).items():
         visual["owner"] = user_id
         visual["name"] = name
 
@@ -625,7 +734,7 @@ def page_list(
     delname = request.var("_delete")
     if delname and transactions.check_transaction():
         if user.may("general.delete_foreign_%s" % what):
-            user_id_str = request.get_unicode_input("_user_id", user.id)
+            user_id_str = request.get_str_input("_user_id", user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
         else:
             user_id = user.id
@@ -926,7 +1035,7 @@ def visual_spec_single(info_key):
     info = visual_info_registry[info_key]()
 
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=info.title,
             form_isopen=True,
             optional_keys=True,
@@ -986,7 +1095,15 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
-def _vs_general(single_infos, default_id, visual_type, visibility_elements):
+def _vs_general(
+    single_infos,
+    default_id,
+    visual_type,
+    visibility_elements,
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+    mode: str,
+    what: str,
+):
     return Dictionary(
         title=_("General Properties"),
         render="form",
@@ -1099,12 +1216,16 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
                 ),
             ),
         ],
+        validate=validate_id(
+            mode,
+            {k: v for k, v in available(what, all_visuals).items() if v["owner"] == user.id},
+        ),
     )
 
 
 def page_edit_visual(
     what: Literal["dashboards", "views", "reports"],
-    all_visuals: Dict[Any, Dict[str, Any]],
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
     create_handler=None,
     load_handler=None,
@@ -1135,7 +1256,7 @@ def page_edit_visual(
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
     if visualname:
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
+        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy
@@ -1197,7 +1318,7 @@ def page_edit_visual(
         (
             "hidden",
             FixedValue(
-                True,
+                value=True,
                 title=_("Hide this %s in the monitor menu") % visual_type.title,
                 totext="",
             ),
@@ -1205,7 +1326,7 @@ def page_edit_visual(
         (
             "hidebutton",
             FixedValue(
-                True,
+                value=True,
                 title=_("Hide this %s in dropdown menus") % visual_type.title,
                 totext="",
             ),
@@ -1243,6 +1364,9 @@ def page_edit_visual(
         ),
         visual_type,
         visibility_elements,
+        all_visuals,
+        mode,
+        what,
     )
     context_specs = get_context_specs(visual, info_handler)
 
@@ -1319,6 +1443,7 @@ def page_edit_visual(
                     )
 
                 if transactions.check_transaction():
+                    assert owner_user_id is not None
                     all_visuals[(owner_user_id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
@@ -1506,23 +1631,15 @@ def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List
     return show_filters
 
 
-def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
+def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
+    # return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
+    # During CMK 2.1 beta look for things to break. If no bugs are found use line above
     uri_vars: HTTPVariables = []
-    single_info_keys = get_single_info_keys(single_infos)
-
-    for filter_name, filter_vars in context.items():
-        # Enforce the single context variables that are available in the visual context
-        if filter_name in single_info_keys:
-            uri_vars.append((filter_name, str(filter_vars)))
-
-        if not isinstance(filter_vars, dict):
-            continue  # Skip invalid filter values
-
-        # This is a multi-context filter
+    for filter_vars in context.values():
         for uri_varname, value in filter_vars.items():
-            uri_vars.append((uri_varname, "%s" % value))
-
+            assert isinstance(value, str)
+            uri_vars.append((uri_varname, value))
     return uri_vars
 
 
@@ -1619,7 +1736,7 @@ class VisualFilterList(ListOfMultiple):
     @classmethod
     def _get_filter_specs(cls, info: str) -> Iterator[Tuple[str, VisualFilter]]:
         for fname, filter_ in filters_allowed_for_info(info):
-            yield fname, VisualFilter(fname, title=filter_.title)
+            yield fname, VisualFilter(name=fname, title=filter_.title)
 
     def __init__(self, info_list, **kwargs):
         self._filters = filters_allowed_for_infos(info_list)
@@ -1636,8 +1753,8 @@ class VisualFilterList(ListOfMultiple):
             for info in info_list
         ]
         super().__init__(
-            grouped,
-            "ajax_visual_filter_list_get_choice",
+            choices=grouped,
+            choice_page_name="ajax_visual_filter_list_get_choice",
             page_request_vars={
                 "infos": info_list,
             },
@@ -1730,17 +1847,20 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
-def active_context_from_request(infos: List[str]) -> VisualContext:
+def active_context_from_request(infos: List[str], context: VisualContext) -> VisualContext:
     vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
+
     # Test if filters are in url and rescostruct them. This is because we
     # contruct crosslinks manually without the filter menu.
+    # We must merge with the view context as many views have defaults, which
+    # are not included in the crosslink.
     if flag := active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
         with request.stashed_vars():
             request.set_var("_active", flag)
-            return vs_filterlist.from_html_vars("")
-    return {}
+            return get_merged_context(context, vs_filterlist.from_html_vars(""))
+    return context
 
 
 @page_registry.register_page("ajax_visual_filter_list_get_choice")
@@ -1835,43 +1955,51 @@ def _show_filter_form_buttons(
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.
 class VisualFilter(ValueSpec):
-    def __init__(self, name, **kwargs):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        name: str,
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[T]] = None,
+    ):
         self._name = name
         self._filter = filter_registry[name]
-
-        ValueSpec.__init__(self, **kwargs)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
     def title(self):
         return self._filter.title
 
-    def canonical_value(self):
+    def canonical_value(self) -> FilterHTTPVariables:
         return {}
 
-    def render_input(self, varprefix: str, value: FilterHTTPVariables):
+    def render_input(self, varprefix: str, value: FilterHTTPVariables) -> None:
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter, value)
 
-    def from_html_vars(self, varprefix) -> FilterHTTPVariables:
+    def from_html_vars(self, varprefix: str) -> FilterHTTPVariables:
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix, _("The value must be of type dict, but it has type %s") % type(value)
             )
 
-    def validate_value(self, value, varprefix):
+    def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
 
-    def value_to_html(self, value):
-        raise NotImplementedError()
+    def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_to_json(self, value):
-        raise NotImplementedError()
+    def value_to_json(self, value: FilterHTTPVariables) -> JSONValue:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_from_json(self, json_value):
-        raise NotImplementedError()
+    def value_from_json(self, json_value: JSONValue) -> FilterHTTPVariables:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
@@ -1900,7 +2028,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
             "no_restriction",
             _("No restrictions to specific objects"),
             FixedValue(
-                [],
+                value=[],
                 totext="",
             ),
         ),
@@ -1912,7 +2040,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
                 "single_host",
                 _("Restrict to a single host"),
                 FixedValue(
-                    ["host"],
+                    value=["host"],
                     totext="",
                 ),
             ),
@@ -1935,8 +2063,8 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
     # valuespec expects a list of strings (since this was once the DualListChoice now located under
     # "manual_selection").
     return Transform(
-        CascadingDropdown(
-            cascading_dropdown_choices,
+        valuespec=CascadingDropdown(
+            choices=cascading_dropdown_choices,
             title=_("Specific objects"),
             sorted=False,
         ),
@@ -1999,7 +2127,7 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
     return (
         "single_infos",
         FixedValue(
-            single_infos,
+            value=single_infos,
             title=_("Show information of single"),
             totext=single_infos
             and ", ".join(single_infos)
@@ -2097,13 +2225,25 @@ def get_single_info_keys(single_infos: SingleInfos) -> Set[FilterName]:
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:
+    # Link filters only happen when switching from (host/service)group
+    # datasource to host/service datasource. As this function is datasource
+    # unaware we optionally test for this posibility when (host/service)group
+    # is a single info.
+    link_filters = {
+        "hostgroup": "opthostgroup",
+        "servicegroup": "optservicegroup",
+    }
+
     def var_value(filter_name: FilterName) -> str:
         if filter_vars := context.get(filter_name):
             if filt := filter_registry.get(filter_name):
                 return filter_vars.get(filt.htmlvars[0], "")
         return ""
 
-    return {key: var_value(key) for key in get_single_info_keys(single_infos)}
+    return {
+        key: var_value(key) or var_value(link_filters.get(key, ""))
+        for key in get_single_info_keys(single_infos)
+    }
 
 
 def may_add_site_hint(

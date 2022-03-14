@@ -24,7 +24,7 @@ def _parameter_valuespec_cisco_wlc():
             (
                 "ap_name",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             TextInput(title=_("AP name")),
                             MonitoringState(title=_("State when missing"), default_value=2),

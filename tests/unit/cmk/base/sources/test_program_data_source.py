@@ -18,7 +18,7 @@ import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
-fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (  #  #  #
+fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
     (SpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
@@ -42,7 +42,9 @@ class TestDSProgramChecker:
     def test_attribute_defaults(self, ipaddress, monkeypatch):
         template = ""
         hostname = HostName("testhost")
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
         source = DSProgramSource(
             hostname,
@@ -60,7 +62,9 @@ class TestDSProgramChecker:
     def test_template_translation(self, ipaddress, monkeypatch):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
         hostname = HostName("testhost")
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
         source = DSProgramSource(hostname, ipaddress, template=template)
 
         assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
@@ -111,7 +115,9 @@ class TestSpecialAgentChecker:
     ):
         hostname = HostName("testhost")
         params: Dict[Any, Any] = {}
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
         # end of setup
 

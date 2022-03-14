@@ -34,6 +34,7 @@ from tests.testlib.utils import (
     get_standard_linux_agent_output,
     is_enterprise_repo,
     is_managed_repo,
+    is_plus_repo,
     is_running_as_site_user,
     repo_path,
     site_id,
@@ -79,6 +80,8 @@ def fake_version_and_paths():
 
     if is_managed_repo():
         edition_short = "cme"
+    elif is_plus_repo():
+        edition_short = "cpe"
     elif is_enterprise_repo():
         edition_short = "cee"
     else:
@@ -87,6 +90,16 @@ def fake_version_and_paths():
     monkeypatch.setattr(
         cmk_version, "omd_version", lambda: "%s.%s" % (cmk_version.__version__, edition_short)
     )
+
+    # Unit test context: load all available modules
+    monkeypatch.setattr(
+        cmk_version,
+        "is_raw_edition",
+        lambda: not (is_enterprise_repo() and is_managed_repo() and is_plus_repo()),
+    )
+    monkeypatch.setattr(cmk_version, "is_enterprise_edition", is_enterprise_repo)
+    monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
+    monkeypatch.setattr(cmk_version, "is_plus_edition", is_plus_repo)
 
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
@@ -99,6 +112,10 @@ def fake_version_and_paths():
         "cmk.utils.paths.inventory_archive_dir",
         os.path.join(tmp_dir, "var/check_mk/inventory_archive"),
     )
+    monkeypatch.setattr(
+        "cmk.utils.paths.inventory_delta_cache_dir",
+        os.path.join(tmp_dir, "var/check_mk/inventory_delta_cache"),
+    )
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))
@@ -110,7 +127,7 @@ def fake_version_and_paths():
         "cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir, "tmp/check_mk/cache")
     )
     monkeypatch.setattr(
-        "cmk.utils.paths.trusted_ca_file", os.path.join(tmp_dir, "var/ssl/ca-certificates.crt")
+        "cmk.utils.paths.trusted_ca_file", Path(tmp_dir, "var/ssl/ca-certificates.crt")
     )
     monkeypatch.setattr(
         "cmk.utils.paths.data_source_cache_dir",
@@ -235,6 +252,10 @@ def fake_version_and_paths():
         Path(cmk.utils.paths._r4r_base_dir, "DECLINED"),
     )
     monkeypatch.setattr(
+        "cmk.utils.paths.r4r_declined_bundles_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DECLINED-BUNDLES"),
+    )
+    monkeypatch.setattr(
         "cmk.utils.paths.r4r_ready_dir",
         Path(cmk.utils.paths._r4r_base_dir, "READY"),
     )
@@ -303,11 +324,11 @@ def wait_until_liveproxyd_ready(site: Site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site: Site, log_path, default_timeout=5):
+    def __init__(self, site: Site, default_timeout: Optional[int] = None):
         self._site = site
-        self._log_path = log_path
+        self._log_path = site.core_history_log()
         self._log: Optional[TextIO] = None
-        self._default_timeout = default_timeout
+        self._default_timeout = default_timeout or site.core_history_log_timeout()
 
     def __enter__(self):
         if not self._site.file_exists(self._log_path):

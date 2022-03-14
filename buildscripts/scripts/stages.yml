@@ -16,7 +16,7 @@ VARIABLES:
       SH: "git rev-parse ${PATCHSET_REVISION}^"
 
     - NAME: CHANGED_FILES_REL
-      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sed -E 's#(enterprise|managed)/cmk/#cmk/#g' | sort"
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sed -E 's#(enterprise|managed|plus)/cmk/#cmk/#g' | sort"
 
     - NAME: CHANGED_FILES_ABS
       # prefix ${WORKSPACE} to every line, make sure empty input won't be handled as a line
@@ -145,9 +145,17 @@ STAGES:
       COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
 
+    - NAME: 'Shell check'
+      DIR: 'tests'
+      ENV_VARS:
+        SHELLCHECK_OUTPUT_ARGS: -e SC1091
+      COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
+
     - NAME: 'Shell Unit'
       DIR: 'tests'
-      COMMAND: "make test-unit-sh-docker &> ${RESULTS}/shell-unit.txt"
+      COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'

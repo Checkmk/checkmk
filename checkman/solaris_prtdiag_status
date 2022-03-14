@@ -1,7 +1,7 @@
 title: Solaris: Health (prtdiag)
 agents: solaris
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check looks for the return value of the prtdiag command on solaris based systems.

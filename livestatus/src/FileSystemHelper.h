@@ -12,12 +12,12 @@
 namespace mk {
 
 /// Replace \\\\ with \\, and \\s with space.
-std::string unescape_filename(const std::string& filename);
+std::string unescape_filename(const std::string &filename);
 
 /// Return true if path is in directory, otherwise return false.
 /// The function always returns false if path does not exist.
-bool path_contains(const std::filesystem::path& directory,
-                   const std::filesystem::path& path);
+bool path_contains(const std::filesystem::path &directory,
+                   const std::filesystem::path &path);
 
 }  // namespace mk
 

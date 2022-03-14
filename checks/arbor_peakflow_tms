@@ -9,12 +9,6 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.arbor import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
 
 # .1.3.6.1.4.1.9694.1.5.2.1.0 No Fault --> PEAKFLOW-TMS-MIB::tmsHostFault.0
@@ -36,10 +30,9 @@ def parse_peakflow_tms(info):
     health = info[0][0]
     updates = info[1][0]
     return {
-        "cpu_loads": health[:3],
-        "disk": health[3],
-        "memory": health[4:6],
-        "host_fault": health[6],
+        "disk": health[0],
+        "memory": health[1:3],
+        "host_fault": health[3],
         "update": {"Device": updates[0], "Mitigation": updates[1]},
     }
 
@@ -56,9 +49,6 @@ check_info["arbor_peakflow_tms"] = {
         (
             ".1.3.6.1.4.1.9694.1.5.2",
             [
-                "3.0",  # deviceCpuLoadAvg1min
-                "4.0",  # deviceCpuLoadAvg5min
-                "5.0",  # deviceCpuLoadAvg15min
                 "6.0",  # deviceDiskUsage
                 "7.0",  # devicePhysicalMemoryUsage
                 "8.0",  # deviceSwapSpaceUsage
@@ -74,14 +64,6 @@ check_info["arbor_peakflow_tms"] = {
         ),
     ],
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow"),
-}
-
-check_info["arbor_peakflow_tms.cpu_load"] = {
-    "check_function": check_arbor_cpu_load,
-    "inventory_function": inventory_arbor_cpu_load,
-    "service_description": "CPU load",
-    "has_perfdata": True,
-    "group": "cpu_load",
 }
 
 check_info["arbor_peakflow_tms.disk_usage"] = {

@@ -1,0 +1,14 @@
+Title: <tt>ntp_peer</tt>: Fix "TypeError (tuple indices must be integers or slices, not str)"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1641917390
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>ntp_peer</tt> crashed with
+"TypeError (tuple indices must be integers or slices, not str)"
+when using user-defined parameters.
+

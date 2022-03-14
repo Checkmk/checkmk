@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous 2.0.0 releases it was not possible to use the display options
 to change the refresh interval of views.

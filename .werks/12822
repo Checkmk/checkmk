@@ -6,7 +6,7 @@ Date: 1628170077
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The following additional metrics will be monitored by the AWS Lambda Performance check:
 * init duration

@@ -7,6 +7,7 @@
 import os
 from enum import Enum
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -32,8 +33,18 @@ class CMKEdition(Enum):
         return self is CMKEdition.cee
 
 
+def _local_apache_port() -> int:
+    for site_config_line in (
+        Path(os.environ["OMD_ROOT"], "etc", "omd", "site.conf").read_text().splitlines()
+    ):
+        key, value = site_config_line.split("=")
+        if key == "CONFIG_APACHE_TCP_PORT":
+            return int(value.strip("'"))
+    return 80
+
+
 def _local_rest_api_url() -> str:
-    return f"http://localhost/{os.environ['OMD_SITE']}/check_mk/api/1.0"
+    return f"http://localhost:{_local_apache_port()}/{os.environ['OMD_SITE']}/check_mk/api/1.0"
 
 
 def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:

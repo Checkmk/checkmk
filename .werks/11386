@@ -6,7 +6,7 @@ Date: 1611048733
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In some cases it is not sufficient to have the state hard coded in case the
 Managed Recovery Process is started or stopped. With this werk you are able

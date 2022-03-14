@@ -6,7 +6,7 @@ Date: 1625556614
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 While a background job is running, the background job detail page shows
 the current state of the background job and reloaded the information

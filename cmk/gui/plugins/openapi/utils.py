@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Dict, Literal, Optional
+from typing import Any, cast, Dict, Iterable, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -23,7 +23,7 @@ def problem(
     detail: Optional[str] = None,
     type_: Optional[str] = None,
     ext: Optional[Dict[str, Any]] = None,
-):
+) -> Response:
     problem_dict = {
         "title": title,
         "status": status,
@@ -68,10 +68,10 @@ class ProblemException(HTTPException):
         self.type = type_
         self.ext = ext
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ, start_response) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 
-    def to_problem(self):
+    def to_problem(self) -> Response:
         return problem(
             status=self.code,
             title=self.description,  # same as title
@@ -136,7 +136,7 @@ def param_description(
 
     docstring = docstring_parser.parse(string)
     for param in docstring.params:
-        if param.arg_name == param_name:
+        if param.arg_name == param_name and param.description is not None:
             return param.description.replace("\n", " ")
     if errors == "raise":
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")

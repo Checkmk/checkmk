@@ -10,10 +10,10 @@ from typing import Final, Optional
 import cmk.utils.misc
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
-from cmk.core_helpers.agent import AgentHostSections, AgentParser
+from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
-from cmk.core_helpers.type_defs import AgentRawDataSection
+from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
 
@@ -22,7 +22,7 @@ from ._abstract import Source
 __all__ = ["AgentSource"]
 
 
-class AgentSource(Source[AgentRawData, AgentHostSections]):
+class AgentSource(Source[AgentRawData, AgentRawDataSection]):
     """Configure agent checkers and fetchers.
 
     Args:
@@ -51,7 +51,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             fetcher_type=fetcher_type,
             description=description,
             default_raw_data=AgentRawData(b""),
-            default_host_sections=AgentHostSections(),
+            default_host_sections=HostSections[AgentRawDataSection](),
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) / "persisted")

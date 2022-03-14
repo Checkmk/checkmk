@@ -1,7 +1,7 @@
 title: Nullmailer: Mailqueue Length
 agents: linux
 catalog: app/nullmailer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

@@ -25,8 +25,8 @@ Status LdapControl::userAdd(std::wstring_view user_name,
                             std::wstring_view pwd_string) noexcept {
     USER_INFO_1 user_info;
     // Set up the USER_INFO_1 structure.
-    user_info.usri1_name = const_cast<wchar_t*>(user_name.data());
-    user_info.usri1_password = const_cast<wchar_t*>(pwd_string.data());
+    user_info.usri1_name = const_cast<wchar_t *>(user_name.data());
+    user_info.usri1_password = const_cast<wchar_t *>(pwd_string.data());
     user_info.usri1_priv = USER_PRIV_USER;
 
     wchar_t user_home_dir[] = L"";
@@ -40,18 +40,18 @@ Status LdapControl::userAdd(std::wstring_view user_name,
     wchar_t user_script_path[] = L"";
     user_info.usri1_script_path = user_script_path;
     unsigned long parm_err = 0;
-    auto err = ::NetUserAdd(primary_dc_name_,            // PDC name
-                            1,                           // level
-                            (unsigned char*)&user_info,  // input buffer
-                            &parm_err);                  // parameter in error
+    auto err = ::NetUserAdd(primary_dc_name_,             // PDC name
+                            1,                            // level
+                            (unsigned char *)&user_info,  // input buffer
+                            &parm_err);                   // parameter in error
 
     switch (err) {
         case 0:
-            XLOG::l.i("User successfully created.");
+            XLOG::d.i("User successfully created.");
             setAsSpecialUser(user_name);
             return Status::success;
         case NERR_UserExists:
-            XLOG::l.i("User already exists.");
+            XLOG::d.i("User already exists.");
             return Status::exists;
         default:
             XLOG::l("Error adding user: [{}]", err);
@@ -63,10 +63,10 @@ Status LdapControl::userAdd(std::wstring_view user_name,
 Status LdapControl::changeUserPassword(std::wstring_view user_name,
                                        std::wstring_view pwd_string) {
     USER_INFO_1003 pwd_data;
-    pwd_data.usri1003_password = const_cast<wchar_t*>(pwd_string.data());
+    pwd_data.usri1003_password = const_cast<wchar_t *>(pwd_string.data());
 
     auto ret = ::NetUserSetInfo(primary_dc_name_, user_name.data(), 1003,
-                                reinterpret_cast<BYTE*>(&pwd_data), nullptr);
+                                reinterpret_cast<BYTE *>(&pwd_data), nullptr);
 
     if (ret == NERR_Success) return Status::success;
 
@@ -84,16 +84,16 @@ bool LdapControl::clearAsSpecialUser(std::wstring_view user_name) {
 
 Status LdapControl::userDel(std::wstring_view user_name) noexcept {
     auto err =
-        ::NetUserDel(primary_dc_name_,                         // PDC name
-                     const_cast<wchar_t*>(user_name.data()));  // user name
+        ::NetUserDel(primary_dc_name_,                          // PDC name
+                     const_cast<wchar_t *>(user_name.data()));  // user name
 
     switch (err) {
         case 0:
             clearAsSpecialUser(user_name);
-            XLOG::l.i("User successfully removed.");
+            XLOG::d.i("User successfully removed.");
             return Status::success;
         case NERR_UserNotFound:
-            XLOG::l.i("User already removed.");
+            XLOG::d.i("User already removed.");
             return Status::absent;
         default:
             XLOG::l("Error removing user: [{}]", err);
@@ -138,7 +138,7 @@ public:
         }
     }
 
-    const std::vector<std::wstring>& groups() const { return groups_; }
+    const std::vector<std::wstring> &groups() const { return groups_; }
 
 private:
     std::vector<std::wstring> groups_;
@@ -168,22 +168,22 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
     }
 
     LOCALGROUP_INFO_1 lg_info;
-    lg_info.lgrpi1_name = const_cast<wchar_t*>(group_name.data());
-    lg_info.lgrpi1_comment = const_cast<wchar_t*>(group_comment.data());
+    lg_info.lgrpi1_name = const_cast<wchar_t *>(group_name.data());
+    lg_info.lgrpi1_comment = const_cast<wchar_t *>(group_comment.data());
 
     unsigned long parm_err = 0;
-    auto err = ::NetLocalGroupAdd(primary_dc_name_,          // PDC name
-                                  1,                         // level
-                                  (unsigned char*)&lg_info,  // input buffer
+    auto err = ::NetLocalGroupAdd(primary_dc_name_,           // PDC name
+                                  1,                          // level
+                                  (unsigned char *)&lg_info,  // input buffer
                                   &parm_err);  // parameter in error
 
     switch (err) {
         case 0:
-            XLOG::l.i("Local group successfully created.");
+            XLOG::d.i("Local group successfully created.");
             return Status::success;
         case ERROR_ALIAS_EXISTS:
         case NERR_GroupExists:
-            XLOG::l.i("Local group already exists.");
+            XLOG::d.i("Local group already exists.");
             return Status::exists;
         default:
             XLOG::l("Error adding local group: [{}]", err);
@@ -198,17 +198,17 @@ Status LdapControl::localGroupDel(std::wstring_view group_name) {
         return Status::error;
     }
 
-    auto g_name = const_cast<wchar_t*>(group_name.data());
+    auto g_name = const_cast<wchar_t *>(group_name.data());
 
     auto err = ::NetLocalGroupDel(primary_dc_name_,  // PDC name
                                   g_name);
 
     switch (err) {
         case 0:
-            XLOG::l.i("Local group successfully removed");
+            XLOG::d.i("Local group successfully removed");
             return Status::success;
         case NERR_GroupNotFound:
-            XLOG::l.i("Local group already removed");
+            XLOG::d.i("Local group already removed");
             return Status::absent;
         default:
             XLOG::l("Error removing local group: [{}]", err);
@@ -219,22 +219,22 @@ Status LdapControl::localGroupDel(std::wstring_view group_name) {
 Status LdapControl::localGroupAddMembers(std::wstring_view group_name,
                                          std::wstring_view user_name) {
     LOCALGROUP_MEMBERS_INFO_3 lg_members;
-    lg_members.lgrmi3_domainandname = const_cast<wchar_t*>(user_name.data());
+    lg_members.lgrmi3_domainandname = const_cast<wchar_t *>(user_name.data());
 
     auto err = ::NetLocalGroupAddMembers(
-        primary_dc_name_,                               // PDC name
-        const_cast<wchar_t*>(group_name.data()),        // group name
-        3,                                              // name
-        reinterpret_cast<unsigned char*>(&lg_members),  // buffer
-        1);                                             // count
+        primary_dc_name_,                                // PDC name
+        const_cast<wchar_t *>(group_name.data()),        // group name
+        3,                                               // name
+        reinterpret_cast<unsigned char *>(&lg_members),  // buffer
+        1);                                              // count
 
     switch (err) {
         case 0:
-            XLOG::l.i("User successfully added to local group.");
+            XLOG::d.i("User successfully added to local group.");
             return Status::success;
 
         case ERROR_MEMBER_IN_ALIAS:
-            XLOG::l.i("User already in local group.");
+            XLOG::d.i("User already in local group.");
             return Status::exists;
 
         default:
@@ -246,21 +246,21 @@ Status LdapControl::localGroupAddMembers(std::wstring_view group_name,
 Status LdapControl::localGroupDelMembers(std::wstring_view group_name,
                                          std::wstring_view user_name) {
     LOCALGROUP_MEMBERS_INFO_3 lg_members;
-    lg_members.lgrmi3_domainandname = const_cast<wchar_t*>(user_name.data());
+    lg_members.lgrmi3_domainandname = const_cast<wchar_t *>(user_name.data());
 
     auto err = NetLocalGroupDelMembers(
-        primary_dc_name_,                               // PDC name
-        const_cast<wchar_t*>(group_name.data()),        // group name
-        3,                                              // name
-        reinterpret_cast<unsigned char*>(&lg_members),  // buffer
-        1);                                             // count
+        primary_dc_name_,                                // PDC name
+        const_cast<wchar_t *>(group_name.data()),        // group name
+        3,                                               // name
+        reinterpret_cast<unsigned char *>(&lg_members),  // buffer
+        1);                                              // count
 
     switch (err) {
         case 0:
-            XLOG::l.i("User successfully removed from local group.");
+            XLOG::d.i("User successfully removed from local group.");
             return Status::success;
         case ERROR_MEMBER_NOT_IN_ALIAS:
-            XLOG::l.i("User already removed from local group.");
+            XLOG::d.i("User already removed from local group.");
             return Status::absent;
         default:
             XLOG::l("Error removing user from local group: [{}]", err);
@@ -271,7 +271,7 @@ Status LdapControl::localGroupDelMembers(std::wstring_view group_name,
 Status LdapControl::chooseDomain(std::wstring_view server_name,
                                  std::wstring_view domain_name) {
     if (primary_dc_name_) {
-        ::NetApiBufferFree(static_cast<void*>(primary_dc_name_));
+        ::NetApiBufferFree(static_cast<void *>(primary_dc_name_));
         primary_dc_name_ = nullptr;
     }
     // First get the name of the primary domain controller.
@@ -279,7 +279,7 @@ Status LdapControl::chooseDomain(std::wstring_view server_name,
     auto err = ::NetGetDCName(
         server_name.data(),  // local computer
         domain_name.data(),  // domain name
-        reinterpret_cast<unsigned char**>(&primary_dc_name_));  // returned PDC
+        reinterpret_cast<unsigned char **>(&primary_dc_name_));  // returned PDC
 
     if (err == 0) return Status::success;
     if (err == NERR_ServiceNotInstalled || err == NERR_DCNotFound) {
@@ -293,7 +293,7 @@ Status LdapControl::chooseDomain(std::wstring_view server_name,
 
 LdapControl::~LdapControl() {
     if (primary_dc_name_)
-        ::NetApiBufferFree(static_cast<void*>(primary_dc_name_));
+        ::NetApiBufferFree(static_cast<void *>(primary_dc_name_));
 }
 
 }  // namespace uc

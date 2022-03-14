@@ -6,7 +6,7 @@ Date: 1614698163
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With Werk #11080, we made the huge step to port the entire Checkmk
 codebase from Python 2 to Python 3. This also affects all Python based

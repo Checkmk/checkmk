@@ -31,7 +31,7 @@ def check_mongodb_mem(_no_item, params, parsed):
 
     for key in ("resident", "virtual", "mapped"):
         if key in parsed:  # 'mapped' only for the MMAPv1 storage engine, deprecated with 4x
-            value_bytes = parsed[key] * 1024 ** 2
+            value_bytes = parsed[key] * 1024**2
             levels = params.get("%s_levels" % key, (None, None))
             yield check_levels(
                 value_bytes,

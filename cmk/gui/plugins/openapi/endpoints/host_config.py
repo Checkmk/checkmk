@@ -47,7 +47,8 @@ from urllib.parse import urlencode
 import cmk.utils.version as cmk_version
 
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import fields, watolib
+from cmk.gui import fields as gui_fields
+from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
@@ -60,8 +61,26 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
+from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
+from cmk.gui.watolib.hosts_and_folders import CREFolder
+
+from cmk import fields
+
+BAKE_AGENT_PARAM_NAME = "bake_agent"
+BAKE_AGENT_PARAM = {
+    BAKE_AGENT_PARAM_NAME: fields.Boolean(
+        load_default=False,
+        required=False,
+        example=False,
+        description=(
+            "Tries to bake the agents for the just created hosts. This process is started in the "
+            "background after configuring the host. Please note that the backing may take some "
+            "time and might block subsequent API calls. "
+            "This only works when using the Enterprise Editions."
+        ),
+    )
+}
 
 
 @Endpoint(
@@ -71,14 +90,18 @@ from cmk.gui.watolib.utils import try_bake_agents_for_hosts
     etag="output",
     request_schema=request_schemas.CreateHost,
     response_schema=response_schemas.HostConfigSchema,
+    query_params=[BAKE_AGENT_PARAM],
 )
 def create_host(params):
     """Create a host"""
     body = params["body"]
     host_name = body["host_name"]
+    folder: CREFolder = body["folder"]
 
     # is_cluster is defined as "cluster_hosts is not None"
-    body["folder"].create_hosts([(host_name, body["attributes"], None)])
+    folder.create_hosts(
+        [(host_name, body["attributes"], None)], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
+    )
 
     host = watolib.Host.load_host(host_name)
     return _serve_host(host, False)
@@ -91,6 +114,7 @@ def create_host(params):
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
     response_schema=response_schemas.HostConfigSchema,
+    query_params=[BAKE_AGENT_PARAM],
 )
 def create_cluster_host(params):
     """Create a cluster host
@@ -99,8 +123,11 @@ def create_cluster_host(params):
     All the services of the individual nodes will be collated on the cluster host."""
     body = params["body"]
     host_name = body["host_name"]
+    folder: CREFolder = body["folder"]
 
-    body["folder"].create_hosts([(host_name, body["attributes"], body["nodes"])])
+    folder.create_hosts(
+        [(host_name, body["attributes"], body["nodes"])], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
+    )
 
     host = watolib.Host.load_host(host_name)
     return _serve_host(host, effective_attributes=False)
@@ -112,6 +139,7 @@ def create_cluster_host(params):
     method="post",
     request_schema=request_schemas.BulkCreateHost,
     response_schema=response_schemas.HostConfigCollection,
+    query_params=[BAKE_AGENT_PARAM],
 )
 def bulk_create_hosts(params):
     """Bulk create hosts"""
@@ -119,7 +147,7 @@ def bulk_create_hosts(params):
     entries = body["entries"]
 
     failed_hosts = []
-    folder: watolib.CREFolder
+    folder: CREFolder
     for folder, grouped_hosts in itertools.groupby(body["entries"], operator.itemgetter("folder")):
         validated_entries = []
         folder.prepare_create_hosts()
@@ -134,7 +162,8 @@ def bulk_create_hosts(params):
 
         folder.create_validated_hosts(validated_entries, bake_hosts=False)
 
-    try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
+    if params[BAKE_AGENT_PARAM_NAME]:
+        hosts_and_folders.try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
 
     if failed_hosts:
         return problem(
@@ -174,7 +203,7 @@ def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
     method="put",
     path_params=[
         {
-            "host_name": fields.HostField(
+            "host_name": gui_fields.HostField(
                 description="A cluster host.",
                 should_be_cluster=True,
             ),
@@ -353,7 +382,7 @@ def move(params):
     host: watolib.CREHost = watolib.Host.load_host(host_name)
     _require_host_etag(host)
     current_folder = host.folder()
-    target_folder: watolib.CREFolder = params["body"]["target_folder"]
+    target_folder: CREFolder = params["body"]["target_folder"]
     if target_folder is current_folder:
         return problem(
             status=400,
@@ -413,7 +442,7 @@ def bulk_delete(params):
     query_params=[
         {
             "effective_attributes": fields.Boolean(
-                missing=False,
+                load_default=False,
                 required=False,
                 example=False,
                 description=(

@@ -6,7 +6,7 @@ Date: 1612365600
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When setting custom dashlet titles using the configuration
 option "Custom title", you can now use macros such as

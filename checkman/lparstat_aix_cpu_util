@@ -1,7 +1,7 @@
 title: AIX lparstat: CPU Utilization
 agents: aix
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check executes the {lparstat} command on a logical partition (LPAR) under
@@ -15,4 +15,3 @@ description:
 
 discovery:
  One service is created on each LPAR.
-

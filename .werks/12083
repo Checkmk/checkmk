@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 {{varnishstats}} might generate bad values for uptime, e.g. 18446744073709545410.
 This change catches the error and provides the user with a hint to {{varnishstats}}.

@@ -9,64 +9,63 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # gets optional socket as argument
 do_query() {
 
-  # we use the sockets full name as instance name:
-  INSTANCE_HEADER="[[$2]]"
+    # we use the sockets full name as instance name:
+    INSTANCE_HEADER="[[$2]]"
 
-  # Check if mysqld is running and root password setup
-  echo "<<<mysql_ping>>>"
-  echo "$INSTANCE_HEADER"
-  mysqladmin --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
+    # Check if mysqld is running and root password setup
+    echo "<<<mysql_ping>>>"
+    echo "$INSTANCE_HEADER"
+    mysqladmin --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
 
-  echo "<<<mysql>>>"
-  echo "$INSTANCE_HEADER"
-  mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
-     -e "show global status ; show global variables ;"
+    echo "<<<mysql>>>"
+    echo "$INSTANCE_HEADER"
+    mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+        -e "show global status ; show global variables ;"
 
-  echo "<<<mysql_capacity>>>"
-  echo "$INSTANCE_HEADER"
-  mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
-      -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
+    echo "<<<mysql_capacity>>>"
+    echo "$INSTANCE_HEADER"
+    mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+        -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
          FROM information_schema.TABLES GROUP BY table_schema"
 
-  echo "<<<mysql_slave>>>"
-  echo "$INSTANCE_HEADER"
-  mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
-     -e "show slave status\G"
+    echo "<<<mysql_slave>>>"
+    echo "$INSTANCE_HEADER"
+    mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
+        -e "show slave status\G"
 
 }
 
 if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
-    cat <<EOF > "${MK_CONFDIR}/mysql.local.cfg"
+    cat <<EOF >"${MK_CONFDIR}/mysql.local.cfg"
 # This file is created because some versions of mysqladmin
 # issue a warning if there are missing includes.
 EOF
 fi
 
-if type mysqladmin >/dev/null
-then
-  mysql_sockets=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-  alias=$(fgrep -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
-  if [ -z "$mysql_sockets" ] ; then
-    mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-  fi
-  if [ -z "$mysql_sockets" ] ; then
-    do_query "" "$alias"
-  else
-    for socket in $mysql_sockets ; do
-      if [ -z "$alias" ] ; then
-        do_query "$socket" "$socket"
-      else
-        do_query "$socket" "$alias"
-      fi
-    done
-  fi
+if type mysqladmin >/dev/null; then
+    mysql_sockets=$(grep -F -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+    alias=$(grep -F -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
+    if [ -z "$mysql_sockets" ]; then
+        mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+    fi
+    if [ -z "$mysql_sockets" ]; then
+        do_query "" "$alias"
+    else
+        for socket in $mysql_sockets; do
+            if [ -z "$alias" ]; then
+                do_query "$socket" "$socket"
+            else
+                do_query "$socket" "$alias"
+            fi
+        done
+    fi
 
-  # In async execution the cache file would be removed if the plugin exits with non-zero exit code.
-  # Avoid this from happening, just because the last mysql command failed (due to missing permissions).
-  exit 0
+    # In async execution the cache file would be removed if the plugin exits with non-zero exit code.
+    # Avoid this from happening, just because the last mysql command failed (due to missing permissions).
+    exit 0
 fi

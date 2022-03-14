@@ -471,7 +471,7 @@ def check_oracle_asm_diskgroup(
 
 
 def cluster_check_oracle_asm_diskgroup(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Section]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[Section]]
 ) -> CheckResult:
 
     # only use data from 1. node in agent output
@@ -482,6 +482,8 @@ def cluster_check_oracle_asm_diskgroup(
     #       point to find a possible node with mounted DG.
 
     for node_section in section.values():
+        if node_section is None:
+            continue
         yield from check_oracle_asm_diskgroup(item, params, node_section)
         return
 

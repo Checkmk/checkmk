@@ -1,7 +1,7 @@
 title: AVM Fritz!Box: WAN Network Interface
 agents: fritzbox
 catalog: hw/network/avm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operational status, link speed and traffic of a

@@ -6,7 +6,7 @@ Date: 1614588297
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the local site needs no restart, no activation of changes is needed. But in
 earlier versions, the activation also triggered the commit command for done

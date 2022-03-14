@@ -1,7 +1,7 @@
 title: PostgreSQL: Statistics
 agents: linux
 catalog: app/postgresql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check handles the metrics returned from PostgreSQL's statistics
@@ -25,4 +25,3 @@ item:
 
 discovery:
  One service is created for each database.
-

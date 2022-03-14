@@ -1,7 +1,7 @@
 title: NetApp Filer: vFiler Status
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the states of the vServers in a NetApp environment.
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each vFiler.
-

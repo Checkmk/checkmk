@@ -37,7 +37,7 @@ mailqueue_params = Dictionary(
 
 def _parameter_valuespec_mail_queue_length():
     return Transform(
-        mailqueue_params,
+        valuespec=mailqueue_params,
         forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
     )
 

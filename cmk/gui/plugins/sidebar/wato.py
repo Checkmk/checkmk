@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import cmk.gui.dashboard as dashboard
 import cmk.gui.sites as sites
@@ -23,7 +23,7 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
-from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -145,37 +145,6 @@ match_item_generator_registry.register(
         mega_menu_registry["setup"].topics,
     )
 )
-
-
-@snapin_registry.register
-class SidebarSnapinWATO(SidebarSnapin):
-    @staticmethod
-    def type_name():
-        return "admin"
-
-    @classmethod
-    def title(cls):
-        return _("Setup")
-
-    @classmethod
-    def has_show_more_items(cls):
-        return True
-
-    @classmethod
-    def description(cls):
-        return _("Direct access to the setup menu")
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["admin", "user"]
-
-    # refresh pending changes, if other user modifies something
-    @classmethod
-    def refresh_regularly(cls):
-        return True
-
-    def show(self):
-        render_wato(mini=False)
 
 
 @snapin_registry.register
@@ -345,15 +314,23 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         #
         # Render link target selection
         #
-        selected_topic, selected_target = user.load_file("foldertree", (_("Hosts"), "allhosts"))
-
         # Apply some view specific filters
-        views_to_show = [
-            (name, view)
-            for name, view in views.get_permitted_views().items()
-            if (not config.visible_views or name in config.visible_views)
-            and (not config.hidden_views or name not in config.hidden_views)
-        ]
+        views_to_show: List[Tuple[str, ViewSpec]] = []
+        dflt_target_name: str = "allhosts"
+        dflt_topic_name: str = ""
+        for name, view in views.get_permitted_views().items():
+            if (not config.visible_views or name in config.visible_views) and (
+                not config.hidden_views or name not in config.hidden_views
+            ):
+                views_to_show.append((name, view))
+                if name == dflt_target_name:
+                    dflt_topic_name = view["topic"]
+
+        selected_topic_name: str
+        selected_target_name: str
+        selected_topic_name, selected_target_name = user.load_file(
+            "foldertree", (dflt_topic_name, dflt_target_name)
+        )
 
         visuals_to_show = [("views", e) for e in views_to_show]
         visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
@@ -367,7 +344,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.dropdown(
             "topic",
             topic_choices,
-            deflt=selected_topic,
+            deflt=selected_topic_name,
             onchange="cmk.sidebar.wato_tree_topic_changed(this)",
         )
         html.close_td()
@@ -385,11 +362,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
                     name = item.name
                 targets.append((name, item.title))
 
-            if topic.title != selected_topic:
+            if topic.name != selected_topic_name:
                 default = ""
                 style: Optional[str] = "display:none"
             else:
-                default = selected_target
+                default = selected_target_name
                 style = None
             html.dropdown(
                 "target_%s" % topic.title,
@@ -407,31 +384,4 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         if user_folders:
             render_tree_folder(
                 "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
-            )
-
-
-@snapin_registry.register
-class SidebarSnapinWATOFolders(SidebarSnapin):
-    @staticmethod
-    def type_name():
-        return "wato_folders"
-
-    @classmethod
-    def title(cls):
-        return _("Folders")
-
-    @classmethod
-    def description(cls):
-        return _(
-            "This snapin shows the folders defined in WATO. It can "
-            "be used to open views filtered by the WATO folder. This "
-            'snapin interacts with the "Views" snapin, when both are '
-            "enabled."
-        )
-
-    def show(self):
-        user_folders = compute_foldertree()
-        if user_folders:
-            render_tree_folder(
-                "wato-folders", list(user_folders.values())[0], "cmk.sidebar.wato_folders_clicked"
             )

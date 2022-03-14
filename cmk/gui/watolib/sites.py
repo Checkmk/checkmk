@@ -7,10 +7,9 @@
 import os
 import re
 import time
-from pathlib import Path
 from typing import Any, NamedTuple, Type
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -75,7 +74,7 @@ class SiteManagement:
     @classmethod
     def livestatus_proxy_valuespec(cls):
         return FixedValue(
-            None,
+            value=None,
             title=_("Use Livestatus Proxy Daemon"),
             totext=_("Connect directly (not available in CRE)"),
         )
@@ -87,7 +86,7 @@ class SiteManagement:
                 "local",
                 _("Connect to the local site"),
                 FixedValue(
-                    None,
+                    value=None,
                     totext="",
                 ),
             ),
@@ -152,7 +151,7 @@ class SiteManagement:
                 (
                     "plain_text",
                     _("Plain text (Unencrypted)"),
-                    FixedValue({}, totext=_("Use plain text, unencrypted transport")),
+                    FixedValue(value={}, totext=_("Use plain text, unencrypted transport")),
                 ),
                 (
                     "encrypted",
@@ -313,7 +312,7 @@ class SiteManagement:
         return sites
 
     @classmethod
-    def save_sites(cls, sites, activate=True):
+    def save_sites(cls, sites: SiteConfigurations, activate=True):
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import Folder
 
@@ -414,12 +413,12 @@ class CEESiteManagement(SiteManagement):
             title=_("Use Livestatus Proxy Daemon"),
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Connect directly, without Livestatus Proxy"),
                     totext="",
                 ),
                 Transform(
-                    Dictionary(
+                    valuespec=Dictionary(
                         title=_("Use Livestatus Proxy Daemon"),
                         optional_keys=["tcp"],
                         columns=1,
@@ -430,7 +429,7 @@ class CEESiteManagement(SiteManagement):
                                     title=_("Parameters"),
                                     elements=[
                                         FixedValue(
-                                            None,
+                                            value=None,
                                             title=_("Use global connection parameters"),
                                             totext=_(
                                                 'Use the <a href="%s">global parameters</a> for this connection'
@@ -654,7 +653,7 @@ class LivestatusViaTCP(Dictionary):
             (
                 "tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Encrypt communication"),
                     totext=_("Encrypt TCP Livestatus connections"),
                     help=_(
@@ -722,7 +721,7 @@ def _update_distributed_wato_file(sites):
             distributed = True
         if site_is_local(siteid):
             cmk.gui.watolib.activate_changes.create_distributed_wato_files(
-                base_dir=Path(cmk.utils.paths.omd_root),
+                base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
                 is_remote=False,
             )
@@ -762,7 +761,7 @@ def _delete_distributed_wato_file():
 
 
 class PushSnapshotRequest(NamedTuple):
-    site_id: str
+    site_id: SiteId
     tar_content: bytes
 
 
@@ -778,7 +777,7 @@ class AutomationPushSnapshot(AutomationCommand):
         return "push-snapshot"
 
     def get_request(self) -> PushSnapshotRequest:
-        site_id = request.get_ascii_input_mandatory("siteid")
+        site_id = SiteId(request.get_ascii_input_mandatory("siteid"))
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
         snapshot = request.uploaded_file("snapshot")
@@ -792,7 +791,7 @@ class AutomationPushSnapshot(AutomationCommand):
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 api_request.site_id,
                 api_request.tar_content,
-                Path(cmk.utils.paths.omd_root),
+                cmk.utils.paths.omd_root,
                 cmk.gui.watolib.activate_changes.get_replication_paths(),
             )
 
@@ -805,7 +804,7 @@ def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname:
         current_settings = load_configuration_settings(site_specific=True)
     else:
         sites = SiteManagementFactory.factory().load_sites()
-        current_settings = sites.get(site_id, {}).get("globals", {})
+        current_settings = sites.get(site_id, SiteConfiguration({})).get("globals", {})
 
     if varname in current_settings:
         return current_settings[varname]

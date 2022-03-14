@@ -1,7 +1,7 @@
 title: Rittal CMC-III LCP: Air Out Temperature
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Note: This check is obsolete, the individual temperatures (top, middle, bottom) are

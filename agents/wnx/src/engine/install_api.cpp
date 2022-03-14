@@ -141,7 +141,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
     return ret_path / msi_name;
 }
 
-static void LogPermissions(const std::string& file_name) noexcept {
+static void LogPermissions(const std::string &file_name) noexcept {
     try {
         wtools::ACLInfo acl(file_name.c_str());
         auto ret = acl.query();
@@ -149,12 +149,12 @@ static void LogPermissions(const std::string& file_name) noexcept {
             XLOG::l("Permissions:\n{}", acl.output());
         else
             XLOG::l("Permission access failed with error {:#X}", ret);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Exception hit in bad place {}", e.what());
     }
 }
 
-static bool RmFileWithRename(const std::filesystem::path& file_name,
+static bool RmFileWithRename(const std::filesystem::path &file_name,
                              std::error_code ec) noexcept {
     XLOG::l(
         "Updating is NOT possible, can't delete file '{}', error [{}]. Trying rename.",
@@ -178,14 +178,14 @@ static bool RmFileWithRename(const std::filesystem::path& file_name,
 }
 
 namespace {
-std::wstring MsiFileToRecoverMsi(const std::wstring& name) {
+std::wstring MsiFileToRecoverMsi(const std::wstring &name) {
     return name + L".recover";
 }
 }  // namespace
 
 // remove file with diagnostic
 // for internal use by cma::install
-bool RmFile(const std::filesystem::path& file_name) noexcept {
+bool RmFile(const std::filesystem::path &file_name) noexcept {
     std::error_code ec;
     if (!fs::exists(file_name, ec)) {
         XLOG::l.t("File '{}' is absent, no need to delete", file_name);
@@ -203,8 +203,8 @@ bool RmFile(const std::filesystem::path& file_name) noexcept {
 
 // MOVE(rename) file with diagnostic
 // for internal use by cma::install
-bool MvFile(const std::filesystem::path& source_file,
-            const std::filesystem::path& destination_file) noexcept {
+bool MvFile(const std::filesystem::path &source_file,
+            const std::filesystem::path &destination_file) noexcept {
     std::error_code ec;
     fs::rename(source_file, destination_file, ec);
     if (ec.value() != 0) {
@@ -221,8 +221,8 @@ bool MvFile(const std::filesystem::path& source_file,
 // store file in the folder
 // used to save last installed MSI
 // no return because we will install new MSI always
-void BackupFile(const std::filesystem::path& file_name,
-                const std::filesystem::path& backup_dir) noexcept {
+void BackupFile(const std::filesystem::path &file_name,
+                const std::filesystem::path &backup_dir) noexcept {
     std::error_code ec;
 
     if (backup_dir.empty() || !fs::exists(backup_dir, ec) ||
@@ -251,8 +251,8 @@ void BackupFile(const std::filesystem::path& file_name,
 // return true when BackupDir is absent, BackupDir/IncomingFile.filename absent
 // or when IncomingFile is newer than BackupDir/IncomingFile.filename
 // Diagnostic for the "install" case
-bool NeedInstall(const std::filesystem::path& incoming_file,
-                 const std::filesystem::path& backup_dir) noexcept {
+bool NeedInstall(const std::filesystem::path &incoming_file,
+                 const std::filesystem::path &backup_dir) noexcept {
     std::error_code ec;
 
     if (!fs::exists(incoming_file, ec)) {
@@ -286,7 +286,7 @@ bool NeedInstall(const std::filesystem::path& incoming_file,
 ///
 /// In the case of any problems returns true
 /// No unit tests
-bool NeedInstall(const std::filesystem::path& incoming_file) noexcept {
+bool NeedInstall(const std::filesystem::path &incoming_file) noexcept {
     std::error_code ec;
 
     if (!fs::exists(incoming_file, ec)) {
@@ -381,7 +381,7 @@ bool ExecuteUpdate::copyScriptToTemp() const {
         fs::copy_file(base_script_file_, temp_script_file_,
                       fs::copy_options::overwrite_existing);
         return fs::exists(temp_script_file_);
-    } catch (const fs::filesystem_error& e) {
+    } catch (const fs::filesystem_error &e) {
         XLOG::l("Failure in copyScriptToTemp '{}' f1= '{}' f2= '{}'", e.what(),
                 e.path1(), e.path2());
     }
@@ -389,9 +389,9 @@ bool ExecuteUpdate::copyScriptToTemp() const {
     return false;
 }
 
-void ExecuteUpdate::prepare(const std::filesystem::path& exe,
-                            const std::filesystem::path& msi,
-                            const std::filesystem::path& recover_msi,
+void ExecuteUpdate::prepare(const std::filesystem::path &exe,
+                            const std::filesystem::path &msi,
+                            const std::filesystem::path &recover_msi,
                             bool validate_script_exists) {
     auto [command_tail, log_file_name] = MakeCommandLine();
     log_file_name_ = log_file_name;
@@ -433,7 +433,7 @@ namespace {
 /// Name is based on the msi to be installed with special extension.
 /// The file content will be find in the windows install base
 /// Never fail.
-fs::path CreateRecoveryFile(const fs::path& msi_to_install) {
+fs::path CreateRecoveryFile(const fs::path &msi_to_install) {
     auto recover_file = MsiFileToRecoverMsi(msi_to_install);
 
     if (!RmFile(recover_file)) {
@@ -461,7 +461,7 @@ fs::path CreateRecoveryFile(const fs::path& msi_to_install) {
 ///
 /// Move MSI to be installed into temp
 /// May fail. On fail caller should stop installation.
-std::optional<fs::path> CreateInstallFile(const fs::path& msi_base,
+std::optional<fs::path> CreateInstallFile(const fs::path &msi_base,
                                           std::wstring_view msi_name) {
     auto msi_to_install = MakeTempFileNameInTempPath(msi_name);
     if (msi_to_install.empty()) {
@@ -543,7 +543,7 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
 
         auto command = eu.getCommand();
         return {command, tools::RunStdCommand(command, false) != 0};
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Unexpected exception '{}' during attempt to exec update ",
                 e.what());
     }
@@ -591,7 +591,7 @@ std::optional<fs::path> FindMsiLog() {
 }
 
 /// \brief reads the file which must be encoded as LE BOM<summary>
-std::wstring ReadLeBom(const fs::path& file) {
+std::wstring ReadLeBom(const fs::path &file) {
     constexpr size_t max_log_size{8192 * 1024};
     try {
         std::ifstream f1(file, std::ifstream::binary | std::ifstream::ate);
@@ -603,7 +603,7 @@ std::wstring ReadLeBom(const fs::path& file) {
         f1.seekg(0, std::ifstream::beg);
         constexpr std::array<unsigned char, 2> le_bom_marker{'\xFF', '\xFE'};
         std::array<unsigned char, 2> buf;
-        f1.read(reinterpret_cast<char*>(buf.data()), buf.size());
+        f1.read(reinterpret_cast<char *>(buf.data()), buf.size());
         if (buf != le_bom_marker) {
             XLOG::l(
                 "Expected LE BOM file {}, but at the start we have '{:X} {:X}'",
@@ -613,17 +613,17 @@ std::wstring ReadLeBom(const fs::path& file) {
         }
         std::wstring ret;
         ret.resize(size - 2);
-        f1.read(reinterpret_cast<char*>(ret.data()), size - 2);
+        f1.read(reinterpret_cast<char *>(ret.data()), size - 2);
         return ret;
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Error during attempt to read LE BOM file {}", e.what());
     }
     return {};
 }
 
-std::vector<std::wstring> FindStringsByMarker(const std::wstring& content,
-                                              const std::wstring& marker) {
+std::vector<std::wstring> FindStringsByMarker(const std::wstring &content,
+                                              const std::wstring &marker) {
     std::vector<std::wstring> strings;
     size_t cur_offset = 0;
     while (true) {
@@ -658,7 +658,7 @@ std::optional<std::wstring> GetLastInstallFailReason() {
     }
     auto content = ReadLeBom(*msi_log);
     auto product_strings = FindStringsByMarker(content, ExpectedMarker());
-    if (rs::any_of(product_strings, [](const std::wstring& value) -> bool {
+    if (rs::any_of(product_strings, [](const std::wstring &value) -> bool {
             return value.find(L"Installation failed") != std::wstring::npos;
         })) {
         return {product_strings[0]};

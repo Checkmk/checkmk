@@ -1,7 +1,7 @@
 title: Citrix: Server Load
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The Citrix Server load is score calculated by citrix (See:
@@ -11,4 +11,3 @@ description:
 
 discovery:
  One service is created.
-

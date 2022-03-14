@@ -77,7 +77,7 @@ def _transform(
 
 def _parameter_valuespec_plugs() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             ignored_keys=["discovered_state"],
             elements=[
                 (

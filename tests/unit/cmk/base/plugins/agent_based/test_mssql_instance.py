@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based.mssql_instance import (
     parse_mssql_instance,
 )
 
+from .utils_inventory import sort_inventory_result
+
 _AGENT_OUTPUT_1 = [
     ["MSSQL_MSSQLSERVER", "config", "10.50.6000.34", "Standard Edition", ""],
     ["MSSQL_ABC", "config", "10.50.6000.34", "Standard Edition", ""],
@@ -331,4 +333,6 @@ def test_check_mssql_instance(fix_register, string_table, item, expected_result)
     ],
 )
 def test_inventory_mssql_instance(string_table, expected_result):
-    assert list(inventory_mssql_instance(parse_mssql_instance(string_table))) == expected_result
+    assert sort_inventory_result(
+        inventory_mssql_instance(parse_mssql_instance(string_table))
+    ) == sort_inventory_result(expected_result)

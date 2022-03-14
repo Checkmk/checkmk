@@ -15,22 +15,26 @@
 #include "common/yaml.h"
 #include "logger.h"
 namespace cma::yml {
-void LogException(const std::string& format, std::string_view group,
-                  std::string_view name, const std::exception& e);
-void LogException(const std::string& format, std::string_view name,
-                  const std::exception& e);
+void LogException(const std::string &format, std::string_view group,
+                  std::string_view name, const std::exception &e);
+void LogException(const std::string &format, std::string_view name,
+                  const std::exception &e);
 template <typename T>
-std::optional<T> GetVal(YAML::Node yaml, const std::string& group_name,
-                        const std::string& value_name) noexcept {
+std::optional<T> GetVal(YAML::Node yaml, const std::string &group_name,
+                        const std::string &value_name) noexcept {
     if (yaml.size() == 0) return {};
 
     try {
         auto group = yaml[group_name];
-        if (!group.IsMap()) return {};
+        if (!group.IsMap()) {
+            return {};
+        }
         auto val = group[value_name];
-        if (val.IsScalar()) return val.as<T>();
+        if (val.IsDefined() && !val.IsNull()) {
+            return val.as<T>();
+        }
         return {};
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         LogException("Cannot get yml value {} with {}.{} code:{}", group_name,
                      value_name, e);
     }
@@ -39,16 +43,16 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string& group_name,
 }
 
 template <typename T>
-T GetVal(YAML::Node yaml, const std::string& group_name,
-         const std::string& value_name, const T& dflt) noexcept {
+T GetVal(YAML::Node yaml, const std::string &group_name,
+         const std::string &value_name, const T &dflt) noexcept {
     auto ret = GetVal<T>(yaml, group_name, value_name);
     if (ret) return *ret;
 
     return dflt;
 }
 
-inline YAML::Node GetNode(YAML::Node yaml, const std::string& section,
-                          const std::string& name) noexcept {
+inline YAML::Node GetNode(YAML::Node yaml, const std::string &section,
+                          const std::string &name) noexcept {
     auto ret = GetVal<YAML::Node>(yaml, section, name);
 
     if (ret) return *ret;
@@ -57,13 +61,13 @@ inline YAML::Node GetNode(YAML::Node yaml, const std::string& section,
 }
 
 inline std::optional<YAML::Node> GetGroup(
-    YAML::Node yaml, const std::string& value_name) noexcept {
+    YAML::Node yaml, const std::string &value_name) noexcept {
     if (yaml.size() == 0) return {};
 
     try {
         auto node = yaml[value_name];
         return node;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         LogException("Absent {} in YAML exception is '{}'", value_name, e);
     }
     return {};
@@ -71,7 +75,7 @@ inline std::optional<YAML::Node> GetGroup(
 
 // safe method yo extract value from the yaml
 template <typename T>
-std::optional<T> GetVal(YAML::Node yaml, const std::string& name) noexcept {
+std::optional<T> GetVal(YAML::Node yaml, const std::string &name) noexcept {
     if (yaml.size() == 0) return {};
 
     try {
@@ -81,7 +85,7 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string& name) noexcept {
         if (val.IsScalar()) return val.as<T>();
         if (val.IsNull()) return {};
         return {};
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         LogException("Cannot read yml value '{}' code: [{}]", name, e);
     }
 
@@ -90,12 +94,12 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string& name) noexcept {
 
 template <>
 inline std::optional<YAML::Node> GetVal(YAML::Node yaml,
-                                        const std::string& name) noexcept {
+                                        const std::string &name) noexcept {
     if (yaml.size() == 0) return {};
 
     try {
         return yaml[name];
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         LogException("Cannot read yml node '{}' code: [{}]", name, e);
     }
 
@@ -103,15 +107,15 @@ inline std::optional<YAML::Node> GetVal(YAML::Node yaml,
 }
 
 template <typename T>
-T GetVal(const YAML::Node& yaml, const std::string& name, T dflt) noexcept {
+T GetVal(const YAML::Node &yaml, const std::string &name, T dflt) noexcept {
     auto ret = GetVal<T>(yaml, name);
     if (ret) return *ret;
 
     return dflt;
 }
 
-inline YAML::Node GetNode(const YAML::Node& yaml,
-                          const std::string& name) noexcept {
+inline YAML::Node GetNode(const YAML::Node &yaml,
+                          const std::string &name) noexcept {
     auto ret = GetVal<YAML::Node>(yaml, name);
     if (ret) return *ret;
 

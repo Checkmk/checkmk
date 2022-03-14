@@ -1,7 +1,7 @@
 title: AWS ELB: HTTP ELB
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of HTTP 4XX and 5XX server errors

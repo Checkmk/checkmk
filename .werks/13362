@@ -6,15 +6,19 @@ Date: 1637052624
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 UI adjustments to service discovery page:
 <ul>
-<li>Make the tables for each section foldable
+<li>Make the tables for each section foldable and unfolded by default
 <li>Remove icons from table headers
 <li>Swap the order of services and labels sections
-<li>Bring the "Fix all" button into line with all other buttons and rename to "Apply changes"
+<li>Bring the "Fix all" button into line with all other buttons and rename to "Accept all"
+<li>Rename the "Full service scan" button to "Rescan"
 <li>Remove message "Discovered no service yet." when creating a new host
 <li>Remove the rows section and show the row entries for each table separately in brackets after the title
-<li>No longer display the "Full scan finished..." message after a sucessfull scan
+<li>No longer display the "Full scan finished..." message after a sucessfull scan.
+    The message still appears if there are any warnings.
+<li>The scan results now link to the respective section.
+<li>Improve alignment of "Active checks" and "Enforced services" sections
 </ul>

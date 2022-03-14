@@ -10,9 +10,11 @@ from typing import Dict, Iterable, Mapping, Tuple
 
 from cmk.utils.type_defs import MetricName
 
+import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.metrics.utils import (
@@ -28,6 +30,7 @@ from cmk.gui.plugins.visuals.utils import (
     livestatus_query_bare,
     livestatus_query_bare_string,
 )
+from cmk.gui.query_filters import sites_options
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import autocompleter_registry
 
@@ -78,6 +81,23 @@ def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
     return match_list
 
 
+@autocompleter_registry.register_expression("sites")
+def sites_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+
+    choices: Choices = sorted(
+        (v for v in sites_options() if value.lower() in v[1].lower()),
+        key=lambda a: a[1].lower(),
+    )
+
+    # This part should not exists as the optional(not enforce) would better be not having the filter at all
+    if not params.get("strict"):
+        empty_choice: Choices = [("", "All Sites")]
+        choices = empty_choice + choices
+    return choices
+
+
 @autocompleter_registry.register_expression("allgroups")
 def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
@@ -98,6 +118,37 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     return choices
 
 
+@autocompleter_registry.register_expression("check_cmd")
+def check_command_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    choices: Choices = [
+        (x, x)
+        for x in sites.live().query_column_unique("GET commands\nCache: reload\nColumns: name\n")
+        if value.lower() in x.lower()
+    ]
+    empty_choices: Choices = [("", "")]
+    return empty_choices + choices
+
+
+@autocompleter_registry.register_expression("service_levels")
+def service_levels_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    choices: Choices = mkeventd.service_levels()
+    empty_choices: Choices = [("", "")]
+    return empty_choices + choices
+
+
+@autocompleter_registry.register_expression("syslog_facilities")
+def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
+    empty_choices: Choices = [("", "")]
+    return empty_choices + choices
+
+
 @autocompleter_registry.register_expression("monitored_service_description")
 def monitored_service_description_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
@@ -110,6 +161,11 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
 
     return _sorted_unique_lq(query, 200, value, params)
+
+
+@autocompleter_registry.register_expression("wato_folder_choices")
+def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
+    return watolib.Folder.folder_choices_fulltitle()
 
 
 @autocompleter_registry.register_expression("monitored_metrics")
@@ -125,7 +181,32 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
     else:
         metrics = set(registered_metrics())
 
-    return sorted((v for v in metrics if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
+    return sorted(
+        (v for v in metrics if value.lower() in v[1].lower() or value == v[0]),
+        key=lambda a: a[1].lower(),
+    )
+
+
+@autocompleter_registry.register_expression("tag_groups")
+def tag_group_autocompleter(value: str, params: Dict) -> Choices:
+    return sorted(
+        (v for v in config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
+        key=lambda a: a[1].lower(),
+    )
+
+
+@autocompleter_registry.register_expression("tag_groups_opt")
+def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
+    grouped: Choices = []
+
+    for tag_group in config.tags.tag_groups:
+        if tag_group.id == params["group_id"]:
+            grouped.append(("", ""))
+            for grouped_tag in tag_group.tags:
+                tag_id = "" if grouped_tag.id is None else grouped_tag.id
+                if value.lower() in grouped_tag.title:
+                    grouped.append((tag_id, grouped_tag.title))
+    return grouped
 
 
 def _graph_choices_from_livestatus_row(row) -> Iterable[Tuple[str, str]]:
@@ -134,7 +215,7 @@ def _graph_choices_from_livestatus_row(row) -> Iterable[Tuple[str, str]]:
         return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
     def _graph_template_title(graph_template: Mapping) -> str:
-        return str(graph_template.get("title")) or _metric_title_from_id(graph_template["id"])
+        return str(graph_template.get("title", "")) or _metric_title_from_id(graph_template["id"])
 
     yield from (
         (
@@ -190,6 +271,10 @@ def validate_autocompleter_data(api_request):
     if value is None:
         raise MKUserError("params", _('You need to set the "%s" parameter.') % "value")
 
+    ident = api_request.get("ident")
+    if ident is None:
+        raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
+
 
 @page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
@@ -197,8 +282,6 @@ class PageVsAutocomplete(AjaxPage):
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]
-        if not ident:
-            raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
 
         completer = autocompleter_registry.get(ident)
         if completer is None:

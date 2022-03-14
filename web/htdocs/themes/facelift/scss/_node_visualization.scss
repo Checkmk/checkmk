@@ -24,7 +24,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background: rgb(248, 248, 255); // ghostwhite
+  background-color: $bg-color-secondary;
 }
 
 div.node_vis {
@@ -247,7 +247,7 @@ div.node_vis {
   }
 
   .node_element.focus circle {
-    stroke: rgb(25, 90, 230) !important; // blue
+    stroke: $blue !important;
     stroke-width: 3;
   }
 
@@ -329,7 +329,7 @@ div.node_vis {
 
   g.generic_stop_growth circle {
     stroke-width: 1;
-    stroke: #000;
+    stroke: $black;
   }
 
   g.generic_growth_possible circle {

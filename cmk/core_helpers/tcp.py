@@ -12,13 +12,14 @@ from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
 from cmk.utils import paths
-from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
+from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
 
@@ -131,24 +132,34 @@ class TCPFetcher(AgentFetcher):
         except socket.error as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
-        protocol = self._detect_transport_protocol(raw_protocol)
+        protocol = self._detect_transport_protocol(
+            raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
+        )
 
         self._validate_protocol(protocol)
 
         if protocol is TransportProtocol.TLS:
             with self._wrap_tls() as ssock:
-                agent_data = self._recvall(ssock)
-            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
+                raw_agent_data = self._recvall(ssock)
+            try:
+                agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
+            except ValueError as e:
+                raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
+            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(
+                agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
+            )
 
         return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
 
-    def _detect_transport_protocol(self, raw_protocol: bytes) -> TransportProtocol:
+    def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
         try:
             protocol = TransportProtocol(raw_protocol)
-            self._logger.debug("Detected transport protocol: {protocol} ({raw_protocol!r})")
+            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
             return protocol
         except ValueError:
-            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+            if raw_protocol:
+                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+            raise MKFetcherError(empty_msg)
 
     def _validate_protocol(self, protocol: TransportProtocol) -> None:
         if protocol is TransportProtocol.TLS:
@@ -171,17 +182,14 @@ class TCPFetcher(AgentFetcher):
             )
 
     def _wrap_tls(self) -> ssl.SSLSocket:
-        controller_uuid = UUIDLinkManager(
-            received_outputs_dir=paths.received_outputs_dir,
-            data_source_dir=paths.data_source_push_agent_dir,
-        ).get_uuid(self.host_name)
+        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
 
         if controller_uuid is None:
             raise MKFetcherError("Agent controller not registered")
 
         self._logger.debug("Reading data from agent via TLS socket")
         try:
-            ctx = ssl.create_default_context(cafile=paths.root_cert_file)
+            ctx = ssl.create_default_context(cafile=str(paths.root_cert_file))
             ctx.load_cert_chain(certfile=paths.site_cert_file)
             return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
         except ssl.SSLError as e:
@@ -223,8 +231,8 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
     def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
-        if not output:  # may be caused by xinetd not allowing our address
-            raise MKFetcherError("Empty output from agent at %s:%d" % self.address)
         if len(output) < 16:
-            raise MKFetcherError("Too short output from agent: %r" % output)
+            raise MKFetcherError(
+                f"Too short payload from agent at {self.address[0]}:{self.address[1]}: {output!r}"
+            )
         return output

@@ -56,7 +56,7 @@ class ModeObjectParameters(WatoMode):
         self._host.need_permission("read")
 
         # TODO: Validate?
-        self._service = request.get_unicode_input("service")
+        self._service = request.get_str_input("service")
 
     def title(self):
         title = _("Effective parameters of") + " " + self._hostname
@@ -98,15 +98,16 @@ class ModeObjectParameters(WatoMode):
     def page(self):
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
+        for_host: bool = not self._service
 
         # Object type specific detail information
-        if self._service:
-            self._show_service_info(all_rulesets)
-        else:
+        if for_host:
             self._show_host_info()
+        else:
+            self._show_service_info(all_rulesets)
 
         last_maingroup = None
-        for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
+        for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host)):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(
                 rulespec_registry.get_by_group(groupname), key=lambda x: x.title or ""

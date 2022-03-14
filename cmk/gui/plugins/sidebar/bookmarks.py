@@ -11,7 +11,7 @@ import cmk.utils.store as store
 
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, user
+from cmk.gui.globals import request, transactions, user
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import (
@@ -96,8 +96,8 @@ class BookmarkList(pagetypes.Overridable):
                             # is exactly the thing we want. But we want to store the data as dict. This is a
                             # nasty hack to use the transform by default. Better would be to make Dict render
                             # the same way the tuple is rendered.
-                            Transform(
-                                Tuple(
+                            valuespec=Transform(
+                                valuespec=Tuple(
                                     elements=[
                                         (
                                             TextInput(
@@ -138,7 +138,7 @@ class BookmarkList(pagetypes.Overridable):
         return Alternative(
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Use default topic"),
                     totext="",
                 ),
@@ -279,7 +279,11 @@ class Bookmarks(SidebarSnapin):
                     iconlink(bookmark["title"], bookmark["url"], icon)
 
         begin_footnote_links()
-        link(_("Add Bookmark"), "javascript:void(0)", onclick="cmk.sidebar.add_bookmark()")
+        link(
+            _("Add Bookmark"),
+            "javascript:void(0)",
+            onclick="cmk.sidebar.add_bookmark('%s')" % transactions.get(),
+        )
         link(_("Edit"), "bookmark_lists.py")
         end_footnote_links()
 
@@ -302,7 +306,7 @@ class Bookmarks(SidebarSnapin):
     def _ajax_add_bookmark(self) -> None:
         title = request.var("title")
         url = request.var("url")
-        if title and url:
+        if title and url and transactions.transaction_valid():
             BookmarkList.validate_url(url, "url")
             self._add_bookmark(title, url)
         self.show()

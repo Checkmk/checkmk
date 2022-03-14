@@ -1,7 +1,7 @@
 title: Kentix Alarmmanager Pro: Leakage Sensor
 agents: snmp
 catalog: hw/environment/kentix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of a leakage sensor connected to the

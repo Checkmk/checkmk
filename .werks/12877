@@ -6,7 +6,7 @@ Date: 1620283623
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>printer_supply</tt>, which monitors the fill levels of
 printer supplies via SNMP, is now able to handle trailing null bytes in the

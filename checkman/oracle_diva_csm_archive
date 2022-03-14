@@ -1,7 +1,7 @@
 title: DIVA Content Storage Management: Archive Status
 agents: snmp
 catalog: hw/storagehw/oraclehw
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check tests the status of DIVA CSM Archive.

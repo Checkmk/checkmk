@@ -14,7 +14,6 @@ from tests.testlib import Check, MissingCheckInfoError
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.check_utils import Service
 from cmk.base.plugin_contexts import current_host, current_service
 
 from ..checktestlib import (
@@ -222,14 +221,7 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
         print("Dataset item %r in check %r" % (item, check.name))
         immu.register(params, "params")
 
-        with current_service(
-            Service(
-                item=item,
-                check_plugin_name=check_plugin_name,
-                description="unit test description",
-                parameters={},
-            )
-        ):
+        with current_service(check_plugin_name, "unit test description"):
             result = CheckResult(check.run_check(item, params, info_arg))
 
         immu.test(" after check (%s): " % check_func.__name__)

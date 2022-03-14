@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When trying to sort a host view by the IPv4 address column, an exception like
 "TypeError ('>' not supported between instances of 'str' and 'tuple')" occurred

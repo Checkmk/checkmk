@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 An exception "KeyError: force_authuser_webservice" could occur on the Users
 page of the Setup. This was caused by the removal of the deprecated attribute

@@ -1,7 +1,7 @@
 title: Proxmox VE: Disk usage
 agents: proxmox_ve
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is OK when disk usage is below a configurable set of levels or if no levels have

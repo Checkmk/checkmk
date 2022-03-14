@@ -3,22 +3,19 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
-from typing import Literal, Tuple, TypedDict
+import re
+from typing import Literal, Mapping, Optional, Tuple, Union
 
-from .agent_based_api.v1 import check_levels, register, Service
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import NodeCount
+from .utils.kube import NodeCount, ReadyCount
+
+OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
 
 
-class K8sNodeCountLevelsVSResult(TypedDict, total=False):
-    levels_upper: Tuple[int, int]
-    levels_lower: Tuple[int, int]
-
-
-class K8sNodeCountVSResult(TypedDict, total=False):
-    worker: K8sNodeCountLevelsVSResult
-    control_plane: K8sNodeCountLevelsVSResult
+KubeNodeCountVSResult = Mapping[str, OptionalLevels]
 
 
 def parse(string_table: StringTable) -> NodeCount:
@@ -29,28 +26,52 @@ def discovery(section: NodeCount) -> DiscoveryResult:
     yield Service()
 
 
+def _get_levels(
+    params: KubeNodeCountVSResult,
+    name: Literal["worker", "control_plane"],
+    level_name: Literal["levels_lower", "levels_upper"],
+) -> Optional[Tuple[int, int]]:
+    level = params.get(f"{name}_{level_name}", "no_levels")
+    if level == "no_levels":
+        return None
+    return level[1]
+
+
 def _check_levels(
-    value: int, name: Literal["worker", "control_plane"], params: K8sNodeCountVSResult
+    ready_count: ReadyCount, name: Literal["worker", "control_plane"], params: KubeNodeCountVSResult
 ) -> CheckResult:
-    levels_upper = None
-    levels_lower = None
-    if name in params:
-        levels_upper = params[name].get("levels_upper")
-        levels_lower = params[name].get("levels_lower")
-    yield from check_levels(
-        value,
-        metric_name=f"k8s_node_count_{name}",
+    levels_upper = _get_levels(params, name, "levels_upper")
+    levels_lower = _get_levels(params, name, "levels_lower")
+    result, metric = check_levels(
+        ready_count.ready,
+        metric_name=f"kube_node_count_{name}_ready",
         levels_upper=levels_upper,
         levels_lower=levels_lower,
         render_func=lambda x: str(int(x)),
-        label=f"Number of {name.replace('_', ' ')} nodes",
+        label=f"{name.replace('_', ' ')} nodes".capitalize(),
         boundaries=(0, None),
     )
+    assert isinstance(result, Result)
+    levels = ""
+    # if '(warn/crit below 3/1)' is part of the summary, append it to our summary
+    if match := re.match(r"[^(]+(\([^)]+\))", result.summary):
+        levels = " " + match.groups()[0]
+
+    yield Result(
+        state=result.state,
+        summary=f"{name.replace('_', ' ').capitalize()} nodes {ready_count.ready}/{ready_count.total}{levels}",
+    )
+    yield metric
+    yield Metric(f"kube_node_count_{name}_not_ready", ready_count.not_ready)
+    yield Metric(f"kube_node_count_{name}_total", ready_count.total)
 
 
-def check(params: K8sNodeCountVSResult, section: NodeCount) -> CheckResult:
+def check(params: KubeNodeCountVSResult, section: NodeCount) -> CheckResult:
     yield from _check_levels(section.worker, "worker", params)
-    yield from _check_levels(section.control_plane, "control_plane", params)
+    if section.control_plane.total == 0:
+        yield Result(state=State.OK, summary="No control plane nodes found")
+    else:
+        yield from _check_levels(section.control_plane, "control_plane", params)
 
 
 register.agent_section(
@@ -59,16 +80,13 @@ register.agent_section(
     parsed_section_name="kube_node_count",
 )
 
-check_default_parameters: K8sNodeCountVSResult = {
-    "worker": {"levels_lower": (3, 1)},
-    "control_plane": {"levels_lower": (3, 1)},
-}
+check_default_parameters: KubeNodeCountVSResult = {}
 
 register.check_plugin(
     name="kube_node_count",
-    service_name="Node Count",
+    service_name="Nodes",
     discovery_function=discovery,
     check_function=check,
-    check_ruleset_name="k8s_node_count",
+    check_ruleset_name="kube_node_count",
     check_default_parameters=check_default_parameters,
 )

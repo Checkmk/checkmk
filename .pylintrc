@@ -22,7 +22,7 @@ init-hook=
 load-plugins=
     tests.testlib.pylint_cmk,
     tests.testlib.pylint_checker_localization,
-    tests.testlib.pylint_checker_forbidden_functions,
+    tests.testlib.pylint_checker_forbidden_objects,
     tests.testlib.pylint_checker_cmk_module_layers,
     pylint.extensions.bad_builtin
 jobs=0
@@ -152,7 +152,7 @@ disable=
     assigning-non-slot,
     #---------------------------------------------------------------------------
     # Lots of findings, but these should *really* be fixed!
-    consider-using-with,
+    #consider-using-with,
     #---------------------------------------------------------------------------
     # Useful, but quite a few findings.
     use-implicit-booleaness-not-comparison,

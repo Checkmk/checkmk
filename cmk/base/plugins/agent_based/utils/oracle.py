@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Any, Dict, List, Mapping, Optional, Tuple, TypedDict
 
 from ..agent_based_api.v1 import State
@@ -10,7 +16,7 @@ class DatafilesException(RuntimeError):
 class OraErrors:
     """
     >>> for line in ([""], ["", "FAILURE","ORA-", "foo"], ["", "FAILURE","ORA-"], ["", "FAILURE"],
-    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"]):
+    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"], ["Error", "Message:", "Hello"]):
     ...     [OraErrors(line).ignore,OraErrors(line).has_error,
     ...     OraErrors(line).error_text,OraErrors(line).error_severity]
     [False, False, '', <State.OK: 0>]
@@ -20,6 +26,7 @@ class OraErrors:
     [True, False, '', <State.OK: 0>]
     [False, True, 'Found error in agent output "ORA-bar"', <State.UNKNOWN: 3>]
     [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
+    [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
 
     def __init__(self, line: List[str]):
@@ -42,7 +49,7 @@ class OraErrors:
 
         if line[0].startswith("ORA-"):
             self.has_error = True
-            self.error_text = 'Found error in agent output "%s"' % " ".join(line)
+            self.error_text = _error_summary_text(" ".join(line))
             self.error_severity = State.UNKNOWN
             return
 
@@ -62,9 +69,20 @@ class OraErrors:
             return
         if line[1].startswith("ORA-"):
             self.has_error = True
-            self.error_text = 'Found error in agent output "%s"' % " ".join(line[1:])
+            self.error_text = _error_summary_text(" ".join(line[1:]))
             self.error_severity = State.UNKNOWN
             return
+
+        # Handle error output from 1.6 solaris agent, see SUP-9521
+        if line[0] == "Error":
+            self.has_error = True
+            self.error_text = _error_summary_text(" ".join(line[1:]))
+            self.error_severity = State.UNKNOWN
+            return
+
+
+def _error_summary_text(agent_output_string: str) -> str:
+    return f'Found error in agent output "{agent_output_string}"'
 
 
 DataFiles = TypedDict(

@@ -7,10 +7,12 @@
 import json
 import re
 from contextlib import contextmanager, nullcontext
+from enum import auto, Enum
 from typing import (
     Any,
     ContextManager,
     Dict,
+    Final,
     Iterator,
     List,
     Literal,
@@ -27,7 +29,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.globals import config, html, output_funnel, request, response, transactions, user
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
 if TYPE_CHECKING:
@@ -69,13 +71,19 @@ class GroupHeader(NamedTuple):
 TableRows = List[Union[TableRow, GroupHeader]]
 
 
+class Foldable(Enum):
+    NOT_FOLDABLE = auto()
+    FOLDABLE_SAVE_STATE = auto()
+    FOLDABLE_STATELESS = auto()
+
+
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
     title: Optional["HTMLContent"] = None,
     searchable: bool = True,
     sortable: bool = True,
-    foldable: bool = False,
+    foldable: Foldable = Foldable.NOT_FOLDABLE,
     limit: Union[None, int, Literal[False]] = None,
     output_format: str = "html",
     omit_if_empty: bool = False,
@@ -85,6 +93,7 @@ def table_element(
     empty_text: Optional[str] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
+    isopen: bool = True,
 ) -> Iterator["Table"]:
     with output_funnel.plugged():
         table = Table(
@@ -102,6 +111,7 @@ def table_element(
             empty_text=empty_text,
             help=help,
             css=css,
+            isopen=isopen,
         )
         try:
             yield table
@@ -136,7 +146,7 @@ class Table:
         title: Optional["HTMLContent"] = None,
         searchable: bool = True,
         sortable: bool = True,
-        foldable: bool = False,
+        foldable: Foldable = Foldable.NOT_FOLDABLE,
         limit: Union[None, int, Literal[False]] = None,
         output_format: str = "html",
         omit_if_empty: bool = False,
@@ -146,6 +156,7 @@ class Table:
         empty_text: Optional[str] = None,
         help: Optional[str] = None,  # pylint: disable=redefined-builtin
         css: Optional[str] = None,
+        isopen: bool = True,
     ):
         super().__init__()
         self.next_func = lambda: None
@@ -184,6 +195,7 @@ class Table:
         self.help = help
         self.css = css
         self.mode = "row"
+        self.isopen: Final = isopen
 
     def row(
         self,
@@ -267,7 +279,9 @@ class Table:
         if isinstance(text, HTML):
             content = text
         else:
-            content = escape_html_permissive(str(text) if not isinstance(text, str) else text)
+            content = escape_to_html_permissive(
+                str(text) if not isinstance(text, str) else text, escape_links=False
+            )
 
         htmlcode: HTML = content + HTML(output_funnel.drain())
 
@@ -276,8 +290,8 @@ class Table:
         else:
             if title is None:
                 title = ""
-            header_title = escape_html_permissive(
-                str(title) if not isinstance(title, str) else title
+            header_title = escape_to_html_permissive(
+                str(title) if not isinstance(title, str) else title, escape_links=False
             )
 
         if self.options["collect_headers"] is True:
@@ -309,14 +323,18 @@ class Table:
 
         container: ContextManager[bool] = nullcontext(False)
         if self.title:
-            if self.options["foldable"]:
+            if self.options["foldable"] in [
+                Foldable.FOLDABLE_SAVE_STATE,
+                Foldable.FOLDABLE_STATELESS,
+            ]:
                 html.open_div(class_="foldable_wrapper")
                 container = foldable_container(
                     treename="table",
                     id_=self.id,
-                    isopen=True,
+                    isopen=self.isopen,
                     indent=False,
                     title=html.render_h3(self.title, class_=["treeangle", "title"]),
+                    save_state=self.options["foldable"] == Foldable.FOLDABLE_SAVE_STATE,
                 )
             else:
                 html.h3(self.title, class_="table")
@@ -366,7 +384,10 @@ class Table:
                 rows, num_rows_unlimited, self._show_action_row(), actions_visible, search_term
             )
 
-        if self.title and self.options["foldable"]:
+        if self.title and self.options["foldable"] in [
+            Foldable.FOLDABLE_SAVE_STATE,
+            Foldable.FOLDABLE_STATELESS,
+        ]:
             html.close_div()
 
         return
@@ -397,7 +418,7 @@ class Table:
             table_opts["actions_visible"] = actions_visible
 
         if self.options["searchable"]:
-            search_term = request.get_unicode_input_mandatory("search", "")
+            search_term = request.get_str_input_mandatory("search", "")
             # Search is always lower case -> case insensitive
             search_term = search_term.lower()
             if search_term:

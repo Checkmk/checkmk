@@ -1,7 +1,7 @@
 title: Socomec UPS Device: Power Source for Output Phases
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks by which source the output phase is powered. Warns if the device

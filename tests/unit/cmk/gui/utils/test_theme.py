@@ -92,14 +92,26 @@ def test_base_dir(th: Theme) -> None:
     assert th.base_dir() == cmk.utils.paths.local_web_dir / "htdocs" / "themes" / "modern-dark"
 
 
-@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
+@pytest.mark.parametrize(
+    "edition",
+    [
+        cmk.utils.version.Edition.CRE,
+        cmk.utils.version.Edition.CEE,
+        cmk.utils.version.Edition.CME,
+        cmk.utils.version.Edition.CPE,
+    ],
+)
 @pytest.mark.parametrize("with_logo", [True, False])
-def test_has_custom_logo(monkeypatch, th: Theme, edition_short: str, with_logo: bool) -> None:
-    monkeypatch.setattr("cmk.utils.version.edition_short", lambda: edition_short)
+def test_has_custom_logo(
+    monkeypatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.utils.theme.is_managed_edition", lambda: edition is cmk.utils.version.Edition.CME
+    )
     if with_logo:
         th.base_dir().joinpath("images").mkdir(parents=True, exist_ok=True)
         th.base_dir().joinpath("images", "mk-logo.png").touch()
-    assert th.has_custom_logo() is (edition_short == "cme" and with_logo)
+    assert th.has_custom_logo() is (edition is cmk.utils.version.Edition.CME and with_logo)
 
 
 def test_theme_choices_empty(theme_dirs):

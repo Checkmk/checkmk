@@ -51,5 +51,5 @@ class AutomationPing(AutomationCommand):
     def execute(self, _unused_request: None) -> Dict[str, str]:
         return {
             "version": cmk_version.__version__,
-            "edition": cmk_version.edition_short(),
+            "edition": cmk_version.edition().short,
         }

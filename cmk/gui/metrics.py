@@ -96,7 +96,7 @@ RequiredMetricNames = Set[str]
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
 
@@ -728,7 +728,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 def page_host_service_graph_popup() -> None:
     site_id = request.var("site")
     host_name = request.var("host_name")
-    service_description = request.get_unicode_input("service")
+    service_description = request.get_str_input("service")
     host_service_graph_popup_cmk(site_id, host_name, service_description)
 
 

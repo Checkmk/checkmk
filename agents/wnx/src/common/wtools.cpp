@@ -29,12 +29,14 @@
 #include "logger.h"
 #include "tools/_raii.h"
 #include "upgrade.h"
+namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace wtools {
 bool ChangeAccessRights(
-    const wchar_t* object_name,   // name of object
+    const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
-    const wchar_t* trustee_name,  // trustee for new ACE
+    const wchar_t *trustee_name,  // trustee for new ACE
     TRUSTEE_FORM trustee_form,    // format of trustee structure
     DWORD access_rights,          // access mask for new ACE
     ACCESS_MODE access_mode,      // type of ACE
@@ -56,14 +58,13 @@ bool ChangeAccessRights(
     ON_OUT_OF_SCOPE(if (sd != nullptr) LocalFree((HLOCAL)sd));
 
     // Initialize an EXPLICIT_ACCESS structure for the new ACE.
-
     EXPLICIT_ACCESS ea;
     ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
     ea.grfAccessPermissions = access_rights;
     ea.grfAccessMode = access_mode;
     ea.grfInheritance = inheritance;
     ea.Trustee.TrusteeForm = trustee_form;
-    ea.Trustee.ptstrName = const_cast<wchar_t*>(trustee_name);
+    ea.Trustee.ptstrName = const_cast<wchar_t *>(trustee_name);
 
     // Create a new ACL that merges the new ACE
     // into the existing DACL.
@@ -75,9 +76,9 @@ bool ChangeAccessRights(
     }
 
     ON_OUT_OF_SCOPE(if (new_dacl != nullptr) LocalFree((HLOCAL)new_dacl));
-    // Attach the new ACL as the object's DACL.
 
-    result = ::SetNamedSecurityInfo(const_cast<wchar_t*>(object_name),
+    // Attach the new ACL as the object's DACL.
+    result = ::SetNamedSecurityInfo(const_cast<wchar_t *>(object_name),
                                     object_type, DACL_SECURITY_INFORMATION,
                                     nullptr, nullptr, new_dacl, nullptr);
     if (ERROR_SUCCESS != result) {
@@ -90,12 +91,16 @@ bool ChangeAccessRights(
 
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     HANDLE h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-    if (nullptr == h) return {0, GetLastError()};
+    if (nullptr == h) {
+        return {0, GetLastError()};
+    }
 
     ON_OUT_OF_SCOPE(::CloseHandle(h));
     DWORD exit_code = 0;
     auto success = ::GetExitCodeProcess(h, &exit_code);
-    if (FALSE == success) return {-1, GetLastError()};
+    if (FALSE == success) {
+        return {-1, GetLastError()};
+    }
 
     return {exit_code, 0};
 }
@@ -112,18 +117,19 @@ std::wstring GetProcessPath(uint32_t pid) noexcept {
     return {};
 }
 
-// returns count of killed processes
-int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
+/// \b returns count of killed processes, -1 if dir is bad
+int KillProcessesByDir(const fs::path &dir) noexcept {
     constexpr size_t minimum_path_len = 12;  // safety
 
-    if (dir.empty()) return -1;
-
-    if (dir.u8string().size() < minimum_path_len) return -1;
+    if (dir.u8string().size() < minimum_path_len) {
+        // safety again
+        return -1;
+    }
 
     int killed_count = 0;
 
-    ScanProcessList([dir, &killed_count](const PROCESSENTRY32W& entry) -> bool {
-        namespace fs = std::filesystem;
+    ScanProcessList([dir, &killed_count](const PROCESSENTRY32W &entry) -> bool {
+        ;
         auto pid = entry.th32ProcessID;
         auto exe = wtools::GetProcessPath(pid);
         if (exe.length() < minimum_path_len) return true;  // skip short path
@@ -132,7 +138,7 @@ int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
 
         auto shift = p.lexically_relative(dir).u8string();
         if (!shift.empty() && shift[0] != '.') {
-            XLOG::l.i("Killing process '{}'", p);
+            XLOG::d.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;
         }
@@ -161,18 +167,18 @@ void AppRunner::cleanResources() noexcept {
     stderr_.shutdown();
 }
 
-// returns PID or 0,
-uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
+/// \b returns PID or 0,
+uint32_t AppRunner::goExecAsJob(std::wstring_view command_line) noexcept {
     try {
         if (process_id_ != 0) {
             XLOG::l.bp("Attempt to reuse AppRunner");
             return 0;
         }
 
-        prepareResources(CommandLine, true);
+        prepareResources(command_line, true);
 
         auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
-            CommandLine.data(), TRUE, stdio_.getWrite(), stderr_.getWrite());
+            command_line.data(), TRUE, stdio_.getWrite(), stderr_.getWrite());
         // store data to reuse
         process_id_ = pid;
         job_handle_ = jh;
@@ -187,25 +193,25 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
         cleanResources();
 
         return 0;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
     }
     return 0;
 }
 
-uint32_t AppRunner::goExecAsJobAndUser(std::wstring_view user,
-                                       std::wstring_view password,
-                                       std::wstring_view CommandLine) noexcept {
+uint32_t AppRunner::goExecAsJobAndUser(
+    std::wstring_view user, std::wstring_view password,
+    std::wstring_view command_line) noexcept {
     try {
         if (process_id_ != 0) {
             XLOG::l.bp("Attempt to reuse AppRunner");
             return 0;
         }
 
-        prepareResources(CommandLine, true);
+        prepareResources(command_line, true);
 
         auto [pid, jh, ph] =
-            runas::RunAsJob(user, password, CommandLine.data(), TRUE,
+            runas::RunAsJob(user, password, command_line.data(), TRUE,
                             stdio_.getWrite(), stderr_.getWrite());
         // store data to reuse
         process_id_ = pid;
@@ -221,88 +227,84 @@ uint32_t AppRunner::goExecAsJobAndUser(std::wstring_view user,
         cleanResources();
 
         return 0;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
     }
     return 0;
 }
 
 // returns process id
-uint32_t AppRunner::goExecAsUpdater(std::wstring_view CommandLine) noexcept {
+uint32_t AppRunner::goExecAsDetached(std::wstring_view command_line) noexcept {
     try {
         if (process_id_ != 0) {
             XLOG::l.bp("Attempt to reuse AppRunner/updater");
             return 0;
         }
-        prepareResources(CommandLine, true);
+        prepareResources(command_line, true);
 
         process_id_ = cma::tools::RunStdCommand(
-            CommandLine, false, TRUE, stdio_.getWrite(), stderr_.getWrite(),
+            command_line, false, TRUE, stdio_.getWrite(), stderr_.getWrite(),
             CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
+        if (process_id_ != 0) {
+            return process_id_;
+        }
 
-        // check and return on success
-        if (process_id_ != 0) return process_id_;
-
-        // failure s here
         XLOG::l(XLOG_FLINE + " Failed updater RunStd: [{}]*", GetLastError());
-
         cleanResources();
         return 0;
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
     }
     return 0;
 }
 
 std::mutex ServiceController::s_lock_;                          // NOLINT
-ServiceController* ServiceController::s_controller_ = nullptr;  // NOLINT
+ServiceController *ServiceController::s_controller_ = nullptr;  // NOLINT
 
 // normal API
 ServiceController::ServiceController(
-    std::unique_ptr<wtools::BaseServiceProcessor> Processor) {
-    if (nullptr == Processor) {
-        XLOG::l.crit("Processor is nullptr unique");
+    std::unique_ptr<wtools::BaseServiceProcessor> processor) {
+    if (processor == nullptr) {
+        XLOG::l.crit("Processor is nullptr");
         return;
     }
     std::lock_guard lk(s_lock_);
     if (processor_ == nullptr && s_controller_ == nullptr) {
-        processor_ = std::move(Processor);
+        processor_ = std::move(processor);
         s_controller_ = this;
     }
 }
 
-void WINAPI ServiceController::ServiceMain(DWORD Argc, wchar_t** Argv) {
+void WINAPI ServiceController::ServiceMain(DWORD argc, wchar_t **argv) {
     // Register the handler function for the service
     XLOG::l.i("Service Main");
-    s_controller_->Start(Argc, Argv);
+    s_controller_->Start(argc, argv);
 }
 
 // no return from here
 // can print on screen
 ServiceController::StopType ServiceController::registerAndRun(
-    const wchar_t* ServiceName,  //
-    bool CanStop,                // t
-    bool CanShutdown,            // t
-    bool CanPauseContinue) {     // t
+    const wchar_t *service_name, bool can_stop, bool can_shutdown,
+    bool can_pause_continue) {
     if (!processor_) {
         XLOG::l.bp("No processor");
         return StopType::fail;
     }
-    if (ServiceName == nullptr) {
+    if (service_name == nullptr) {
         XLOG::l.bp("No Service name");
         return StopType::fail;
     }
 
     // strange code below
-    auto* allocated = new wchar_t[wcslen(ServiceName) + 1];
+    auto *allocated = new wchar_t[wcslen(service_name) + 1];
 #pragma warning(push)
 #pragma warning(disable : 4996)  //_CRT_SECURE_NO_WARNINGS
-    wcscpy(allocated, ServiceName);
+    wcscpy(allocated, service_name);
 #pragma warning(pop)
     name_.reset(allocated);
 
-    initStatus(CanStop, CanShutdown, CanPauseContinue);
+    initStatus(can_stop, can_shutdown, can_pause_continue);
 
     SERVICE_TABLE_ENTRY service_table[] = {{allocated, ServiceMain},
                                            {nullptr, nullptr}};
@@ -324,11 +326,11 @@ ServiceController::StopType ServiceController::registerAndRun(
 
             XLOG::l(XLOG::kStdio)
                 .crit("Cannot Start Service '{}' error = [{}]",
-                      ToUtf8(ServiceName), error);
+                      ToUtf8(service_name), error);
             return StopType::fail;
         }
         return StopType::normal;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         XLOG::l(XLOG::kStdio)
             .crit("Exception '{}' in Service start with error [{}]", e.what(),
                   GetLastError());
@@ -360,9 +362,9 @@ ServiceController::StopType ServiceController::registerAndRun(
 //   NOTE: If the function fails to install the service, it prints the error
 //   in the standard output stream for users to diagnose the problem.
 //
-bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
-                    uint32_t StartType, const wchar_t* Dependencies,
-                    const wchar_t* Account, const wchar_t* Password) {
+bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
+                    uint32_t start_type, const wchar_t *dependencies,
+                    const wchar_t *account, const wchar_t *password) {
     wchar_t service_path[MAX_PATH];
     XLOG::setup::ColoredOutputOnStdio(true);
 
@@ -387,26 +389,26 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
     ON_OUT_OF_SCOPE(CloseServiceHandle(service_manager););
 
     // Install the service into SCM by calling CreateService
-    auto* service = ::CreateService(service_manager,       // SCManager database
-                                    ServiceName,           // Name of service
-                                    DisplayName,           // Name to display
+    auto *service = ::CreateService(service_manager,       // SCManager database
+                                    service_name,          // Name of service
+                                    display_name,          // Name to display
                                     SERVICE_QUERY_STATUS,  // Desired access
                                     SERVICE_WIN32_OWN_PROCESS,  // Service type
-                                    StartType,             // Service start type
+                                    start_type,            // Service start type
                                     SERVICE_ERROR_NORMAL,  // Error control type
                                     service_path,          // Service's binary
                                     nullptr,       // No load ordering group
                                     nullptr,       // No tag identifier
-                                    Dependencies,  // Dependencies
-                                    Account,       // Service running account
-                                    Password       // Password of the account
+                                    dependencies,  // Dependencies
+                                    account,       // Service running account
+                                    password       // Password of the account
     );
     if (service == nullptr) {
         auto error = GetLastError();
         if (error == ERROR_SERVICE_EXISTS) {
             XLOG::l(XLOG::kStdio)
                 .crit("The Service '{}' already exists",
-                      wtools::ToUtf8(ServiceName));
+                      wtools::ToUtf8(service_name));
             return false;
         }
         XLOG::l(XLOG::kStdio).crit("CreateService failed w/err {}", error);
@@ -414,7 +416,7 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
     ON_OUT_OF_SCOPE(CloseServiceHandle(service););
 
     XLOG::l(XLOG::kStdio)
-        .i("The Service '{}' is installed.", ToUtf8(ServiceName));
+        .i("The Service '{}' is installed.", ToUtf8(service_name));
 
     return true;
 }
@@ -432,7 +434,7 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   error in the standard output stream for users to diagnose the problem.
 //
 // StopService by default is true, use false only during testing
-bool UninstallService(const wchar_t* service_name,
+bool UninstallService(const wchar_t *service_name,
                       UninstallServiceMode uninstall_mode) {
     XLOG::setup::ColoredOutputOnStdio(true);
     if (service_name == nullptr) {
@@ -502,8 +504,8 @@ bool UninstallService(const wchar_t* service_name,
     return true;
 }
 
-void ServiceController::initStatus(bool CanStop, bool CanShutdown,
-                                   bool CanPauseContinue) {
+void ServiceController::initStatus(bool can_stop, bool can_shutdown,
+                                   bool can_pause_continue) {
     // The service runs in its own process.
     status_.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 
@@ -512,9 +514,15 @@ void ServiceController::initStatus(bool CanStop, bool CanShutdown,
 
     // The accepted commands of the service.
     DWORD controls_accepted = 0;
-    if (CanStop) controls_accepted |= SERVICE_ACCEPT_STOP;
-    if (CanShutdown) controls_accepted |= SERVICE_ACCEPT_SHUTDOWN;
-    if (CanPauseContinue) controls_accepted |= SERVICE_ACCEPT_PAUSE_CONTINUE;
+    if (can_stop) {
+        controls_accepted |= SERVICE_ACCEPT_STOP;
+    }
+    if (can_shutdown) {
+        controls_accepted |= SERVICE_ACCEPT_SHUTDOWN;
+    }
+    if (can_pause_continue) {
+        controls_accepted |= SERVICE_ACCEPT_PAUSE_CONTINUE;
+    }
     status_.dwControlsAccepted = controls_accepted;
 
     status_.dwWin32ExitCode = NO_ERROR;
@@ -535,7 +543,7 @@ void ServiceController::Stop() {
     if (!processor_) return;  // #TODO: trace
 
     auto original_state = status_.dwCurrentState;
-    const auto* log_name = processor_->getMainLogName();
+    const auto *log_name = processor_->getMainLogName();
     try {
         // Tell SCM that the service is stopping.
         XLOG::l.i("Initiating stop routine...");
@@ -547,7 +555,7 @@ void ServiceController::Stop() {
 
         // Tell SCM that the service is stopped.
         setServiceStatus(SERVICE_STOPPED);
-    } catch (const DWORD& error_exception) {
+    } catch (const DWORD &error_exception) {
         // Log the error.
         xlog::SysLogEvent(log_name, xlog::LogEvents::kError, error_exception,
                           L"Stop Service");
@@ -577,7 +585,7 @@ void ServiceController::Stop() {
 //   * argc   - number of command line arguments
 //   * argv - array of command line arguments
 //
-void ServiceController::Start(DWORD /*agc*/, wchar_t** /*argv*/) {
+void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
     if (!processor_) {
         XLOG::l.crit("Unbelievable, but process_ is nullptr");
         return;
@@ -616,7 +624,7 @@ void ServiceController::Start(DWORD /*agc*/, wchar_t** /*argv*/) {
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
 
-    } catch (const DWORD& error_exception) {
+    } catch (const DWORD &error_exception) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Start");
@@ -653,7 +661,7 @@ void ServiceController::Pause() {
 
         // Tell SCM that the service is paused.
         setServiceStatus(SERVICE_PAUSED);
-    } catch (const DWORD& error_exception) {
+    } catch (const DWORD &error_exception) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Pause");
@@ -688,7 +696,7 @@ void ServiceController::Continue() {
 
         // Tell SCM that the service is running.
         setServiceStatus(SERVICE_RUNNING);
-    } catch (const DWORD& error_exception) {
+    } catch (const DWORD &error_exception) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Continue");
@@ -720,7 +728,7 @@ void ServiceController::Shutdown() {
 
         // Tell SCM that the service is stopped.
         setServiceStatus(SERVICE_STOPPED);
-    } catch (const DWORD& error_exception) {
+    } catch (const DWORD &error_exception) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Shutdown");
@@ -778,9 +786,9 @@ void WINAPI ServiceController::ServiceCtrlHandler(DWORD control_code) {
 
 DWORD WINAPI ServiceController::ServiceCtrlHandlerEx(DWORD control_code,
                                                      DWORD event_type,
-                                                     void* /*event_data*/,
-                                                     void* /*context*/) {
-    XLOG::l.t("[----Control Code {:#X} Event Type {:#X}------]", control_code,
+                                                     void * /*event_data*/,
+                                                     void * /*context*/) {
+    XLOG::d.t("[----Control Code {:#X} Event Type {:#X}------]", control_code,
               event_type);
 
     switch (control_code) {
@@ -816,7 +824,7 @@ namespace perf {
 std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     DWORD counters_size = 0;
 
-    auto* key = type == PerfCounterReg::national ? HKEY_PERFORMANCE_NLSTEXT
+    auto *key = type == PerfCounterReg::national ? HKEY_PERFORMANCE_NLSTEXT
                                                  : HKEY_PERFORMANCE_TEXT;
 
     // preflight
@@ -844,15 +852,15 @@ std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key) {
 
     for (auto reg_type : {PerfCounterReg::national, PerfCounterReg::english}) {
         auto counter_str = ReadPerfCounterKeyFromRegistry(reg_type);
-        auto* data = counter_str.data();
-        const auto* end = counter_str.data() + counter_str.size();
+        auto *data = counter_str.data();
+        const auto *end = counter_str.data() + counter_str.size();
         for (;;) {
             // get id
-            auto* potential_id = GetMultiSzEntry(data, end);
+            auto *potential_id = GetMultiSzEntry(data, end);
             if (potential_id == nullptr) break;
 
             // get name
-            auto* potential_name = GetMultiSzEntry(data, end);
+            auto *potential_name = GetMultiSzEntry(data, end);
             if (potential_name == nullptr) break;
 
             // check name
@@ -870,15 +878,15 @@ std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key) {
 NameMap GenerateNameMap() {
     NameMap nm;
     auto counter_str = ReadPerfCounterKeyFromRegistry(PerfCounterReg::english);
-    auto* data = counter_str.data();
-    const auto* end = counter_str.data() + counter_str.size();
+    auto *data = counter_str.data();
+    const auto *end = counter_str.data() + counter_str.size();
     while (true) {
         // get id
-        auto* id_as_text = GetMultiSzEntry(data, end);
+        auto *id_as_text = GetMultiSzEntry(data, end);
         if (id_as_text == nullptr) break;
 
         // get name
-        auto* potential_name = GetMultiSzEntry(data, end);
+        auto *potential_name = GetMultiSzEntry(data, end);
         if (potential_name == nullptr) break;
 
         // check name
@@ -891,54 +899,54 @@ NameMap GenerateNameMap() {
 // Low level API to access to performance data
 // Code below is not clean
 // #TODO refactor to normal CMK standard
-inline auto FindFirstObject(const PERF_DATA_BLOCK* PerfDataBlock) {
-    return static_cast<const PERF_OBJECT_TYPE*>(cma::tools::GetOffsetInBytes(
+inline auto FindFirstObject(const PERF_DATA_BLOCK *PerfDataBlock) {
+    return static_cast<const PERF_OBJECT_TYPE *>(cma::tools::GetOffsetInBytes(
         PerfDataBlock, PerfDataBlock->HeaderLength));
 }
 
-inline auto FindNextObject(const PERF_OBJECT_TYPE* Object) {
-    return reinterpret_cast<const PERF_OBJECT_TYPE*>(
-        reinterpret_cast<const BYTE*>(Object) + Object->TotalByteLength);
+inline auto FindNextObject(const PERF_OBJECT_TYPE *Object) {
+    return reinterpret_cast<const PERF_OBJECT_TYPE *>(
+        reinterpret_cast<const BYTE *>(Object) + Object->TotalByteLength);
 }
 
-inline auto FirstCounter(const PERF_OBJECT_TYPE* Object) {
-    return reinterpret_cast<const PERF_COUNTER_DEFINITION*>(
-        reinterpret_cast<const BYTE*>(Object) + Object->HeaderLength);
+inline auto FirstCounter(const PERF_OBJECT_TYPE *Object) {
+    return reinterpret_cast<const PERF_COUNTER_DEFINITION *>(
+        reinterpret_cast<const BYTE *>(Object) + Object->HeaderLength);
 }
 
-inline auto NextCounter(const PERF_COUNTER_DEFINITION* PerfCounter) {
-    return reinterpret_cast<const PERF_COUNTER_DEFINITION*>(
-        reinterpret_cast<const BYTE*>(PerfCounter) + PerfCounter->ByteLength);
+inline auto NextCounter(const PERF_COUNTER_DEFINITION *PerfCounter) {
+    return reinterpret_cast<const PERF_COUNTER_DEFINITION *>(
+        reinterpret_cast<const BYTE *>(PerfCounter) + PerfCounter->ByteLength);
 }
 
-inline auto GetCounterBlock(PERF_INSTANCE_DEFINITION* Instance) {
-    return reinterpret_cast<PERF_COUNTER_BLOCK*>(
-        reinterpret_cast<BYTE*>(Instance) + Instance->ByteLength);
+inline auto GetCounterBlock(PERF_INSTANCE_DEFINITION *Instance) {
+    return reinterpret_cast<PERF_COUNTER_BLOCK *>(
+        reinterpret_cast<BYTE *>(Instance) + Instance->ByteLength);
 }
 
-inline auto GetCounterBlock(const PERF_INSTANCE_DEFINITION* Instance) {
-    return reinterpret_cast<const PERF_COUNTER_BLOCK*>(
-        reinterpret_cast<const BYTE*>(Instance) + Instance->ByteLength);
+inline auto GetCounterBlock(const PERF_INSTANCE_DEFINITION *Instance) {
+    return reinterpret_cast<const PERF_COUNTER_BLOCK *>(
+        reinterpret_cast<const BYTE *>(Instance) + Instance->ByteLength);
 }
 
-inline auto FirstInstance(PERF_OBJECT_TYPE* Object) {
-    return reinterpret_cast<PERF_INSTANCE_DEFINITION*>(
-        reinterpret_cast<BYTE*>(Object) + Object->DefinitionLength);
+inline auto FirstInstance(PERF_OBJECT_TYPE *Object) {
+    return reinterpret_cast<PERF_INSTANCE_DEFINITION *>(
+        reinterpret_cast<BYTE *>(Object) + Object->DefinitionLength);
 }
-inline auto FirstInstance(const PERF_OBJECT_TYPE* Object) {
-    return reinterpret_cast<const PERF_INSTANCE_DEFINITION*>(
-        reinterpret_cast<const BYTE*>(Object) + Object->DefinitionLength);
+inline auto FirstInstance(const PERF_OBJECT_TYPE *Object) {
+    return reinterpret_cast<const PERF_INSTANCE_DEFINITION *>(
+        reinterpret_cast<const BYTE *>(Object) + Object->DefinitionLength);
 }
 
-inline auto NextInstance(PERF_INSTANCE_DEFINITION* Instance) {
-    return reinterpret_cast<PERF_INSTANCE_DEFINITION*>(
-        reinterpret_cast<BYTE*>(Instance) + Instance->ByteLength +
+inline auto NextInstance(PERF_INSTANCE_DEFINITION *Instance) {
+    return reinterpret_cast<PERF_INSTANCE_DEFINITION *>(
+        reinterpret_cast<BYTE *>(Instance) + Instance->ByteLength +
         GetCounterBlock(Instance)->ByteLength);
 }
 
-inline auto NextInstance(const PERF_INSTANCE_DEFINITION* Instance) {
-    return reinterpret_cast<const PERF_INSTANCE_DEFINITION*>(
-        reinterpret_cast<const BYTE*>(Instance) + Instance->ByteLength +
+inline auto NextInstance(const PERF_INSTANCE_DEFINITION *Instance) {
+    return reinterpret_cast<const PERF_INSTANCE_DEFINITION *>(
+        reinterpret_cast<const BYTE *>(Instance) + Instance->ByteLength +
         GetCounterBlock(Instance)->ByteLength);
 }
 
@@ -946,9 +954,9 @@ inline auto NextInstance(const PERF_INSTANCE_DEFINITION* Instance) {
 // DataSequence is primitive wrapper over data buffer
 // DataSequence takes ownership over buffer
 DataSequence ReadPerformanceDataFromRegistry(
-    const std::wstring& counter_name) noexcept {
+    const std::wstring &counter_name) noexcept {
     DWORD buf_size = 40000;
-    BYTE* buffer = nullptr;
+    BYTE *buffer = nullptr;
 
     while (true) {
         // allocation(a bit stupid, but we do not want to have STL inside
@@ -983,14 +991,14 @@ DataSequence ReadPerformanceDataFromRegistry(
     return DataSequence(static_cast<int>(buf_size), buffer);
 }
 
-const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& data_buffer,
+const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_buffer,
                                        DWORD counter_index) noexcept {
-    auto* data = data_buffer.data_;
+    auto *data = data_buffer.data_;
     auto max_offset = data_buffer.len_;
     if (data == nullptr || max_offset == 0) return nullptr;
 
-    auto* data_block = reinterpret_cast<PERF_DATA_BLOCK*>(data);
-    const auto* object = FindFirstObject(data_block);
+    auto *data_block = reinterpret_cast<PERF_DATA_BLOCK *>(data);
+    const auto *object = FindFirstObject(data_block);
 
     for (DWORD i = 0; i < data_block->NumObjectTypes; ++i) {
         // iterate to the object we requested since apparently there can be
@@ -1004,20 +1012,20 @@ const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& data_buffer,
     return nullptr;
 }
 
-std::vector<const PERF_INSTANCE_DEFINITION*> GenerateInstances(
-    const PERF_OBJECT_TYPE* Object) noexcept {
+std::vector<const PERF_INSTANCE_DEFINITION *> GenerateInstances(
+    const PERF_OBJECT_TYPE *Object) noexcept {
     if (Object->NumInstances <= 0L) return {};
 
-    std::vector<const PERF_INSTANCE_DEFINITION*> result;
+    std::vector<const PERF_INSTANCE_DEFINITION *> result;
     try {
         result.reserve(Object->NumInstances);  // optimization
 
-        const auto* instance = FirstInstance(Object);
+        const auto *instance = FirstInstance(Object);
         for (auto i = 0L; i < Object->NumInstances; ++i) {
             result.push_back(instance);
             instance = NextInstance(instance);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
     }
 
@@ -1025,22 +1033,22 @@ std::vector<const PERF_INSTANCE_DEFINITION*> GenerateInstances(
 }
 
 std::vector<std::wstring> GenerateInstanceNames(
-    const PERF_OBJECT_TYPE* Object) noexcept {
+    const PERF_OBJECT_TYPE *Object) noexcept {
     // check for nothing
     if (Object->NumInstances <= 0L) return {};
 
     std::vector<std::wstring> result;
     try {
         result.reserve(Object->NumInstances);  // optimization
-        const auto* instance = FirstInstance(Object);
+        const auto *instance = FirstInstance(Object);
         for (auto i = 0L; i < Object->NumInstances; ++i) {
             auto offset =
-                reinterpret_cast<const BYTE*>(instance) + instance->NameOffset;
+                reinterpret_cast<const BYTE *>(instance) + instance->NameOffset;
             result.emplace_back(reinterpret_cast<LPCWSTR>(offset));
 
             instance = NextInstance(instance);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " disaster in names: '{}'", e.what());
     }
     return result;
@@ -1048,15 +1056,15 @@ std::vector<std::wstring> GenerateInstanceNames(
 
 // Instance less support
 // DataBlock is filled when NumInstances below or equal 0
-std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
-    const PERF_OBJECT_TYPE* Object,
-    const PERF_COUNTER_BLOCK*& DataBlock) noexcept {
-    std::vector<const PERF_COUNTER_DEFINITION*> result;
+std::vector<const PERF_COUNTER_DEFINITION *> GenerateCounters(
+    const PERF_OBJECT_TYPE *Object,
+    const PERF_COUNTER_BLOCK *&DataBlock) noexcept {
+    std::vector<const PERF_COUNTER_DEFINITION *> result;
     DataBlock = nullptr;
     try {
         result.reserve(Object->NumCounters);  // optimization
 
-        const auto* counter = FirstCounter(Object);
+        const auto *counter = FirstCounter(Object);
         for (DWORD i = 0UL; i < Object->NumCounters; ++i) {
             result.push_back(counter);
             counter = NextCounter(counter);
@@ -1065,8 +1073,8 @@ std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
         // when object has no instances immediately after the counters
         // we have data block, ergo a code a bit strange
         if (Object->NumInstances <= 0)
-            DataBlock = reinterpret_cast<const PERF_COUNTER_BLOCK*>(counter);
-    } catch (const std::exception& e) {
+            DataBlock = reinterpret_cast<const PERF_COUNTER_BLOCK *>(counter);
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " disaster in instance less counters: '{}'",
                 e.what());
     }
@@ -1074,19 +1082,19 @@ std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
 }
 
 // simplified version ignoring datablock
-std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
-    const PERF_OBJECT_TYPE* Object) noexcept {
-    const PERF_COUNTER_BLOCK* block = nullptr;
+std::vector<const PERF_COUNTER_DEFINITION *> GenerateCounters(
+    const PERF_OBJECT_TYPE *Object) noexcept {
+    const PERF_COUNTER_BLOCK *block = nullptr;
     return perf::GenerateCounters(Object, block);
 }
 
 // used only in skype
 // build map of the <id:name>
-std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE* object,
-                                               const NameMap& name_map) {
+std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE *object,
+                                               const NameMap &name_map) {
     std::vector<std::wstring> result;
 
-    const auto* counter = FirstCounter(object);
+    const auto *counter = FirstCounter(object);
     for (DWORD i = 0UL; i < object->NumCounters; ++i) {
         auto index = counter->CounterNameTitleIndex;
         auto iter = name_map.find(index);
@@ -1107,19 +1115,19 @@ std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE* object,
 // Based on OWA => INVALID
 // #TODO http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
 static uint64_t GetCounterValueFromBlock(
-    const PERF_COUNTER_DEFINITION& Counter,
-    const PERF_COUNTER_BLOCK* Block) noexcept {
+    const PERF_COUNTER_DEFINITION &Counter,
+    const PERF_COUNTER_BLOCK *Block) noexcept {
     unsigned offset = Counter.CounterOffset;
-    const auto* data = cma::tools::GetOffsetInBytes(Block, offset);
+    const auto *data = cma::tools::GetOffsetInBytes(Block, offset);
 
     constexpr DWORD perf_size_mask = 0x00000300;
 
-    auto* dwords = static_cast<const uint32_t*>(data);
+    auto *dwords = static_cast<const uint32_t *>(data);
     switch (Counter.CounterType & perf_size_mask) {
         case PERF_SIZE_DWORD:
             return static_cast<uint64_t>(dwords[0]);
         case PERF_SIZE_LARGE:
-            return *(UNALIGNED uint64_t*)data;  // NOLINT
+            return *(UNALIGNED uint64_t *)data;  // NOLINT
         case PERF_SIZE_ZERO:
             return 0;
         case PERF_SIZE_VARIABLE_LEN:
@@ -1144,19 +1152,19 @@ static uint64_t GetCounterValueFromBlock(
 }
 
 std::vector<uint64_t> GenerateValues(
-    const PERF_COUNTER_DEFINITION& Counter,
-    std::vector<const PERF_INSTANCE_DEFINITION*>& Instances) noexcept {
+    const PERF_COUNTER_DEFINITION &Counter,
+    std::vector<const PERF_INSTANCE_DEFINITION *> &Instances) noexcept {
     std::vector<uint64_t> result;
     try {
         if (!Instances.empty()) {
             result.reserve(Instances.size());
-            for (const auto* instance : Instances) {
-                auto* counter_block = GetCounterBlock(instance);
+            for (const auto *instance : Instances) {
+                auto *counter_block = GetCounterBlock(instance);
                 result.emplace_back(
                     GetCounterValueFromBlock(Counter, counter_block));
             }
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
         return {};
     }
@@ -1164,8 +1172,8 @@ std::vector<uint64_t> GenerateValues(
     return result;
 }
 
-uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION& Counter,
-                           const PERF_COUNTER_BLOCK* Block) noexcept {
+uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION &Counter,
+                           const PERF_COUNTER_BLOCK *Block) noexcept {
     if (Block) {
         return GetCounterValueFromBlock(Counter, Block);
     }
@@ -1320,7 +1328,7 @@ bool IsWindowsComInitialized() {
 }
 
 // # TODO gtest[-]
-bool WmiObjectContains(IWbemClassObject* object, const std::wstring& name) {
+bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name) {
     if (object == nullptr) {
         XLOG::l.crit(XLOG_FUNC + "Bad Parameter");
         return false;
@@ -1334,7 +1342,7 @@ bool WmiObjectContains(IWbemClassObject* object, const std::wstring& name) {
     return value.vt != VT_NULL;
 }
 
-std::wstring WmiGetWstring(const VARIANT& Var) {
+std::wstring WmiGetWstring(const VARIANT &Var) {
     if (Var.vt & VT_ARRAY) {
         return L"<array>";
     }
@@ -1374,11 +1382,11 @@ std::wstring WmiGetWstring(const VARIANT& Var) {
     }
 }
 
-std::wstring WmiStringFromObject(IWbemClassObject* object,
-                                 const std::vector<std::wstring>& names,
+std::wstring WmiStringFromObject(IWbemClassObject *object,
+                                 const std::vector<std::wstring> &names,
                                  std::wstring_view separator) {
     std::wstring result;
-    for (const auto& name : names) {
+    for (const auto &name : names) {
         // data
         VARIANT value;
 
@@ -1410,8 +1418,8 @@ std::wstring WmiStringFromObject(IWbemClassObject* object,
 }
 
 // optimized versions
-std::wstring WmiStringFromObject(IWbemClassObject* Object,
-                                 const std::wstring& Name) {
+std::wstring WmiStringFromObject(IWbemClassObject *Object,
+                                 const std::wstring &Name) {
     // data
     VARIANT value;
     // Get the value of the Name property
@@ -1423,8 +1431,8 @@ std::wstring WmiStringFromObject(IWbemClassObject* Object,
 }
 
 // optimized version
-std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,
-                                            const std::wstring& Name) {
+std::optional<std::wstring> WmiTryGetString(IWbemClassObject *Object,
+                                            const std::wstring &Name) {
     // data
     VARIANT value;
     // Get the value of the Name property
@@ -1436,8 +1444,8 @@ std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,
     return wtools::WmiGetWstring(value);
 }
 
-uint64_t WmiUint64FromObject(IWbemClassObject* Object,
-                             const std::wstring& Name) {
+uint64_t WmiUint64FromObject(IWbemClassObject *Object,
+                             const std::wstring &Name) {
     // data
     VARIANT value;
     // Get the value of the Name property
@@ -1452,8 +1460,8 @@ uint64_t WmiUint64FromObject(IWbemClassObject* Object,
 // gtest
 // returns name vector
 // on error returns empty
-std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
-    SAFEARRAY* names = nullptr;
+std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject *WmiObject) {
+    SAFEARRAY *names = nullptr;
     HRESULT res = WmiObject->GetNames(
         nullptr, WBEM_FLAG_ALWAYS | WBEM_FLAG_NONSYSTEM_ONLY, nullptr, &names);
     if (FAILED(res) || nullptr == names) {
@@ -1499,10 +1507,10 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
 }
 
 // returns valid enumerator or nullptr
-IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
-                                   const std::wstring& Query) noexcept {
+IEnumWbemClassObject *WmiExecQuery(IWbemServices *Services,
+                                   const std::wstring &Query) noexcept {
     XLOG::t("Query is '{}'", ToUtf8(Query));
-    IEnumWbemClassObject* enumerator = nullptr;
+    IEnumWbemClassObject *enumerator = nullptr;
     auto hres = Services->ExecQuery(
         bstr_t("WQL"),          // always the same
         bstr_t(Query.c_str()),  // text of query
@@ -1521,11 +1529,11 @@ bool WmiWrapper::open() noexcept {  // Obtain the initial locator to Windows
                                     // Management
                                     // on a particular host computer.
     std::lock_guard lk(lock_);
-    IWbemLocator* locator = nullptr;
+    IWbemLocator *locator = nullptr;
 
     auto hres =
         CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_IWbemLocator, reinterpret_cast<void**>(&locator));
+                         IID_IWbemLocator, reinterpret_cast<void **>(&locator));
 
     if (FAILED(hres)) {
         XLOG::l.crit("Can't Create Instance WMI {:#X}",
@@ -1553,7 +1561,7 @@ void WmiWrapper::close() noexcept {
 // connect to the WMI namespace, root\\Something
 // returns true when connect succeed or connect exists
 // thread safe
-bool WmiWrapper::connect(const std::wstring& NameSpace) noexcept {
+bool WmiWrapper::connect(const std::wstring &NameSpace) noexcept {
     if (NameSpace.empty()) {
         XLOG::l.crit(XLOG_FUNC + " nullptr!");
         return false;
@@ -1620,14 +1628,14 @@ bool WmiWrapper::impersonate() noexcept {
 
 // RETURNS RAW OBJECT
 // returns nullptr, WmiStatus
-std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject* Enumerator, uint32_t timeout) {
+std::tuple<IWbemClassObject *, WmiStatus> WmiGetNextObject(
+    IEnumWbemClassObject *Enumerator, uint32_t timeout) {
     if (nullptr == Enumerator) {
         XLOG::l.e("nullptr in Enumerator");
         return {nullptr, WmiStatus::error};
     }
     ULONG returned = 0;
-    IWbemClassObject* wmi_object = nullptr;
+    IWbemClassObject *wmi_object = nullptr;
 
     auto hres = Enumerator->Next(timeout * 1000, 1, &wmi_object,
                                  &returned);  // legacy code
@@ -1638,8 +1646,8 @@ std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
 
     if (WBEM_S_FALSE == hres) return {nullptr, WmiStatus::ok};  // no more data
     if (WBEM_NO_ERROR != hres) {
-        XLOG::l.t("Return {:#X} probably object doesn't exist",
-                  static_cast<unsigned int>(hres));
+        XLOG::t("Return {:#X} probably object doesn't exist",
+                static_cast<unsigned int>(hres));
         return {nullptr, WmiStatus::error};
     }
 
@@ -1648,9 +1656,9 @@ std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
     return {wmi_object, WmiStatus::ok};
 }
 
-static void FillAccuAndNames(std::wstring& accu,
-                             std::vector<std::wstring>& names,
-                             IWbemClassObject* wmi_object,
+static void FillAccuAndNames(std::wstring &accu,
+                             std::vector<std::wstring> &names,
+                             IWbemClassObject *wmi_object,
                              std::wstring_view separator) {
     if (names.empty()) {
         // we have asking for everything, ergo we have to use
@@ -1666,8 +1674,8 @@ static void FillAccuAndNames(std::wstring& accu,
 
 // returns nullptr, WmiStatus
 std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
-    IEnumWbemClassObject* enumerator,
-    const std::vector<std::wstring>& existing_names,
+    IEnumWbemClassObject *enumerator,
+    const std::vector<std::wstring> &existing_names,
     std::wstring_view separator, uint32_t wmi_timeout) noexcept {
     // preparation
     std::wstring accu;
@@ -1700,16 +1708,13 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
     return {accu, status_to_return};
 }
 
-std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
-                                   const std::wstring& Target) noexcept {
-    // build name_list string if any or assign "*"
-    auto name_list = cma::tools::JoinVector(Names, L",");
+std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring> &names,
+                                   const std::wstring &Target) noexcept {
+    auto name_list = cma::tools::JoinVector(names, L",");
 
     if (name_list.empty()) {
         name_list = L"*";
     }
-
-    // build query itself
     std::wstring query_text = L"SELECT " + name_list + L" FROM " + Target;
     return query_text;
 }
@@ -1717,13 +1722,13 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
 // work horse to ask certain names from the target
 // returns "", Status
 std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
-    const std::vector<std::wstring>& names, const std::wstring& target,
+    const std::vector<std::wstring> &names, const std::wstring &target,
     std::wstring_view separator, uint32_t wmi_timeout) noexcept {
     auto query_text = makeQuery(names, target);
 
     // Send a query to system
     std::lock_guard lk(lock_);
-    auto* enumerator = wtools::WmiExecQuery(services_, query_text);
+    auto *enumerator = wtools::WmiExecQuery(services_, query_text);
 
     // make a table using enumerator and supplied Names vector
     if (nullptr == enumerator) {
@@ -1737,34 +1742,33 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
 
 // special purposes: formatting for PS for example
 // on error returns nullptr
-// Release MUST!!!
-IEnumWbemClassObject* WmiWrapper::queryEnumerator(
-    const std::vector<std::wstring>& Names,
-    const std::wstring& Target) noexcept {
-    auto query_text = makeQuery(Names, Target);
+IEnumWbemClassObject *WmiWrapper::queryEnumerator(
+    const std::vector<std::wstring> &names,
+    const std::wstring &target) noexcept {
+    auto query_text = makeQuery(names, target);
 
     // Send a query to system
     std::lock_guard lk(lock_);
     return wtools::WmiExecQuery(services_, query_text);
 }
 
-HMODULE LoadWindowsLibrary(const std::wstring& DllPath) {
+HMODULE LoadWindowsLibrary(const std::wstring &dll_path) {
     // this should be sufficient most of the time
-    constexpr size_t buffer_size = 128;
+    constexpr size_t buffer_size = 512;
 
     std::wstring dllpath_expanded;
     dllpath_expanded.resize(buffer_size, '\0');
     DWORD required =
-        ExpandEnvironmentStringsW(DllPath.c_str(), &dllpath_expanded[0],
+        ExpandEnvironmentStringsW(dll_path.c_str(), &dllpath_expanded[0],
                                   static_cast<DWORD>(dllpath_expanded.size()));
 
     if (required > dllpath_expanded.size()) {
         dllpath_expanded.resize(required + 1);
         required = ExpandEnvironmentStringsW(
-            DllPath.c_str(), &dllpath_expanded[0],
+            dll_path.c_str(), &dllpath_expanded[0],
             static_cast<DWORD>(dllpath_expanded.size()));
     } else if (required == 0) {
-        dllpath_expanded = DllPath;
+        dllpath_expanded = dll_path;
     }
     if (required != 0) {
         // required includes the zero terminator
@@ -1779,43 +1783,39 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath) {
         DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
 }
 
-// Look into the registry in order to find out, which
-// event logs are available
-// return false only when something wrong with registry
-std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
-    // Open Key for enumerating
+/// Look into the registry in order to find out, which event logs are available
+std::vector<std::string> EnumerateAllRegistryKeys(const char *reg_path) {
     HKEY key = nullptr;
-    DWORD r = ::RegOpenKeyExA(HKEY_LOCAL_MACHINE, RegPath, 0,
-                              KEY_ENUMERATE_SUB_KEYS, &key);  // NOLINT
+    auto r =
+        ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, ConvertToUTF16(reg_path).c_str(), 0,
+                        KEY_ENUMERATE_SUB_KEYS, &key);  // NOLINT
     if (r != ERROR_SUCCESS) {
-        XLOG::l(" Cannot open registry key '{}' error [{}]", RegPath,
-                GetLastError());
+        XLOG::l(" Cannot open registry key '{}' error [{}]", reg_path,
+                ::GetLastError());
         return {};
     }
-    ON_OUT_OF_SCOPE(RegCloseKey(key));
+    ON_OUT_OF_SCOPE(::RegCloseKey(key));
 
     std::vector<std::string> entries;
-
-    // Enumerate all sub keys
     constexpr int buf_len = 1024;
     for (DWORD i = 0; r == ERROR_SUCCESS || r == ERROR_MORE_DATA; ++i) {
-        char key_name[buf_len];
+        wchar_t key_name[buf_len];
         DWORD len = buf_len;
-        r = ::RegEnumKeyExA(key, i, key_name, &len, nullptr, nullptr, nullptr,
+        r = ::RegEnumKeyExW(key, i, key_name, &len, nullptr, nullptr, nullptr,
                             nullptr);
-        if (r == ERROR_NO_MORE_ITEMS) break;
-
-        if (r != ERROR_SUCCESS) {
-            XLOG::l("Failed to enum '{}' error [{}]", key_name, r);
+        if (r == ERROR_NO_MORE_ITEMS) {
             break;
         }
-        entries.emplace_back(key_name);
+
+        if (r != ERROR_SUCCESS) {
+            XLOG::l("Failed to enum '{}' error [{}]", ToUtf8(key_name), r);
+            break;
+        }
+        entries.emplace_back(ToUtf8(key_name));
     };
     return entries;
 }
 
-// gtest [+]
-// returns data from the root machine registry
 uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                           uint32_t dflt) noexcept {
     HKEY hkey = nullptr;
@@ -1831,9 +1831,8 @@ uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
             return buffer;
         }
     }
-    // failure here
-    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ToUtf8(path),
-              ToUtf8(value_name), ret);
+    XLOG::t(XLOG_FLINE + "Absent {}\\{} query [{}]", ToUtf8(path),
+            ToUtf8(value_name), ret);
     return dflt;
 }
 
@@ -1874,13 +1873,13 @@ HKEY CreateRegistryKey(std::wstring_view path) noexcept {
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value, DWORD type) noexcept {
-    auto* key = CreateRegistryKey(path);
+    auto *key = CreateRegistryKey(path);
     if (key == nullptr) return false;
 
     // Set full application path with a keyname to registry
     auto ret =
         ::RegSetValueEx(key, value_name.data(), 0, type,
-                        reinterpret_cast<const BYTE*>(value.data()),
+                        reinterpret_cast<const BYTE *>(value.data()),
                         static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
     ::RegCloseKey(key);
     return ERROR_SUCCESS == ret;
@@ -1944,7 +1943,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
     if (ret == ERROR_MORE_DATA) {
         // realloc required
         DWORD type = REG_SZ;
-        auto* buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
+        auto *buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
         ON_OUT_OF_SCOPE(delete[] buffer_big);
         DWORD count = sizeof(count);
         ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
@@ -1972,7 +1971,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
 
 // process terminators
 bool KillProcess(uint32_t pid, int code) noexcept {
-    auto* handle = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    auto *handle = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
     if (handle == nullptr) {
         if (::GetLastError() == 5) {
             XLOG::d("Can't open process for termination ACCESS is DENIED [{}]",
@@ -1995,9 +1994,9 @@ bool KillProcess(uint32_t pid, int code) noexcept {
 }
 
 // process terminator
-// used to kill OpenHardwareMonitor
+// used to kill OpenHardwareMonitor or Agent controller
 bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
-    auto* snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+    auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) return false;
 
     auto current_process_id = GetCurrentProcessId();
@@ -2011,7 +2010,7 @@ bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
         if (cma::tools::IsEqual(std::wstring_view(entry32.szExeFile),
                                 process_name) &&
             (entry32.th32ProcessID != current_process_id)) {
-            auto* process =
+            auto *process =
                 ::OpenProcess(PROCESS_TERMINATE, 0, entry32.th32ProcessID);
             if (process != nullptr) {
                 ::TerminateProcess(process, exit_code);
@@ -2058,7 +2057,7 @@ static std::string MakeWmiTailForData(StatusColumn status_column,
 // Name,Freq,WMIStatus
 // Total, 500, OK
 // Empty or quite short strings are replaced with WMIStatus\nTimeout\n
-std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
+std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
                            char separator) {
     if (in.size() < 5) {  // 5 is meaningless, just anything low
         // error and cached data absent
@@ -2077,7 +2076,7 @@ std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
 
     // data(body), first line of the table is skipped
     std::transform(table.begin() + 1, table.end(), table.begin() + 1,
-                   [tail_for_data](const std::string& value) {
+                   [tail_for_data](const std::string &value) {
                        return value + tail_for_data;
                    });
 
@@ -2088,8 +2087,8 @@ std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
 // based on ToolHelp api family
 // normally require elevation
 // if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(const std::function<bool(const PROCESSENTRY32&)>& op) {
-    auto* snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
+    auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) {
         return false;
     }
@@ -2112,13 +2111,13 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32&)>& op) {
 }
 
 // finds all process and kills them with all their children
-bool KillProcessFully(const std::wstring& process_name,
+bool KillProcessFully(const std::wstring &process_name,
                       int exit_code) noexcept {
     std::vector<DWORD> processes_to_kill;
     auto name = process_name;
     cma::tools::WideLower(name);
     ScanProcessList(
-        [&processes_to_kill, name](const PROCESSENTRY32& entry) -> bool {
+        [&processes_to_kill, name](const PROCESSENTRY32 &entry) -> bool {
             std::wstring incoming_name = entry.szExeFile;
             cma::tools::WideLower(incoming_name);
             if (name == incoming_name)
@@ -2139,7 +2138,7 @@ int FindProcess(std::wstring_view process_name) noexcept {
     int count = 0;
     std::wstring name(process_name);
     cma::tools::WideLower(name);
-    ScanProcessList([name, &count](const PROCESSENTRY32& entry) -> bool {
+    ScanProcessList([name, &count](const PROCESSENTRY32 &entry) -> bool {
         std::wstring incoming_name = entry.szExeFile;
         cma::tools::WideLower(incoming_name);
         if (name == incoming_name) count++;
@@ -2171,7 +2170,7 @@ void KillProcessTree(uint32_t ProcessId) {
 
 std::wstring GetArgv(uint32_t index) noexcept {
     int n_args = 0;
-    auto* argv = ::CommandLineToArgvW(GetCommandLineW(), &n_args);
+    auto *argv = ::CommandLineToArgvW(GetCommandLineW(), &n_args);
 
     if (argv == nullptr) return {};
 
@@ -2182,7 +2181,7 @@ std::wstring GetArgv(uint32_t index) noexcept {
     return {};
 }
 
-std::filesystem::path GetCurrentExePath() {
+fs::path GetCurrentExePath() {
     WCHAR path[MAX_PATH];
     auto ret = ::GetModuleFileNameW(nullptr, path, MAX_PATH);
     if (ret) return {path};
@@ -2195,7 +2194,7 @@ size_t GetOwnVirtualSize() noexcept {
     PROCESS_MEMORY_COUNTERS_EX pmcx = {};
     pmcx.cb = sizeof(pmcx);
     ::GetProcessMemoryInfo(GetCurrentProcess(),
-                           reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmcx),
+                           reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmcx),
                            pmcx.cb);
 
     return pmcx.WorkingSetSize;
@@ -2220,7 +2219,7 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
     (HANDLE ProcessHandle, ULONG ProcessInformationClass,
      PVOID ProcessInformation, ULONG ProcessInformationLength,
      PULONG ReturnLength) = nullptr;
-    *(FARPROC*)&nt_query_information_process = ::GetProcAddress(
+    *(FARPROC *)&nt_query_information_process = ::GetProcAddress(
         LoadLibraryA("NTDLL.DLL"), "NtQueryInformationProcess");  // NOLINT
     if (nt_query_information_process == nullptr) return 0;
 
@@ -2248,7 +2247,7 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
 #define EXECUTE_PERMISSIONS (FILE_READ_DATA | FILE_EXECUTE)  // NOLINT
 
 // Constructor
-ACLInfo::ACLInfo(const _bstr_t& bstrPath) noexcept {
+ACLInfo::ACLInfo(const _bstr_t &bstrPath) noexcept {
     ace_list_ = nullptr;
     path_ = bstrPath;
 }
@@ -2261,8 +2260,8 @@ ACLInfo::~ACLInfo() {
 
 // Free the nodes of ace_list
 void ACLInfo::clearAceList() noexcept {
-    AceList* ace_list = ace_list_;
-    AceList* next = nullptr;
+    AceList *ace_list = ace_list_;
+    AceList *next = nullptr;
     while (nullptr != ace_list) {
         next = ace_list->next;
         free(ace_list);  // NOLINT
@@ -2274,7 +2273,7 @@ void ACLInfo::clearAceList() noexcept {
 
 HRESULT ACLInfo::query() noexcept {
     BOOL success = TRUE;
-    BYTE* security_descriptor_buffer = nullptr;
+    BYTE *security_descriptor_buffer = nullptr;
     DWORD size_needed = 0;
 
     // clear any previously queried information
@@ -2307,7 +2306,7 @@ HRESULT ACLInfo::query() noexcept {
     BOOL dacl_present = FALSE;
     BOOL dacl_defaulted = FALSE;
     success = ::GetSecurityDescriptorDacl(
-        reinterpret_cast<SECURITY_DESCRIPTOR*>(security_descriptor_buffer),
+        reinterpret_cast<SECURITY_DESCRIPTOR *>(security_descriptor_buffer),
         &dacl_present, &acl, &dacl_defaulted);
 
     // Check if we successfully retrieved DACL
@@ -2327,14 +2326,14 @@ HRESULT ACLInfo::query() noexcept {
     // Now, we should fill in the linked list of ACEs
     // Iterate through ACEs (Access Control Entries) of DACL
     for (USHORT i = 0; i < acl->AceCount; i++) {
-        void* ace = nullptr;
+        void *ace = nullptr;
         success = ::GetAce(acl, i, &ace);
         if (success == FALSE) {
             DWORD error = ::GetLastError();
             XLOG::l("Failed to get ace {}, {}", i, error);
             continue;
         }
-        HRESULT hr = addAceToList(static_cast<ACE_HEADER*>(ace));
+        HRESULT hr = addAceToList(static_cast<ACE_HEADER *>(ace));
         if (FAILED(hr)) {
             XLOG::l("Failed to add ace {} to list", i);
             continue;
@@ -2343,14 +2342,9 @@ HRESULT ACLInfo::query() noexcept {
     return S_OK;
 }
 
-HRESULT ACLInfo::addAceToList(ACE_HEADER* Ace) noexcept {
-    auto* new_ace = static_cast<AceList*>(malloc(sizeof(AceList)));  // NOLINT
-    if (nullptr == new_ace) {
-        return E_OUTOFMEMORY;
-    }
-
-    // Check Ace type and update new list entry accordingly
-    switch (Ace->AceType) {
+HRESULT ACLInfo::addAceToList(ACE_HEADER *ace) noexcept {
+    auto *new_ace = static_cast<AceList *>(malloc(sizeof(AceList)));  // NOLINT
+    switch (ace->AceType) {
         case ACCESS_ALLOWED_ACE_TYPE: {
             new_ace->allowed = TRUE;
             break;
@@ -2362,7 +2356,7 @@ HRESULT ACLInfo::addAceToList(ACE_HEADER* Ace) noexcept {
     }
     // Update the remaining fields
     // We add new entry to the head of list
-    new_ace->ace = Ace;
+    new_ace->ace = ace;
     new_ace->next = ace_list_;
 
     ace_list_ = new_ace;
@@ -2370,125 +2364,95 @@ HRESULT ACLInfo::addAceToList(ACE_HEADER* Ace) noexcept {
     return S_OK;
 }
 
-static std::string MakeReadableString(bool allowed, const std::string& domain,
-                                      const std::string& name,
-                                      ACCESS_MASK mask_permissions) {
+namespace {
+std::string PrintPermissions(bool allowed, ACCESS_MASK permissions) {
+    constexpr std::array<std::pair<int, const char *>, 3> mapping = {
+        std::pair{READ_PERMISSIONS, "R"}, std::pair{WRITE_PERMISSIONS, "W"},
+        std::pair{EXECUTE_PERMISSIONS, "X"}};
+    std::string os;
+    if (allowed) {
+        for (const auto [value, text] : mapping) {
+            os += (value & permissions) == value ? text : " ";
+        }
+    } else {
+        for (const auto [value, text] : mapping) {
+            os += (value & permissions) != 0 ? text : " ";
+        }
+    }
+    return os;
+}
+
+std::string MakeReadableString(bool allowed, const std::string &domain,
+                               const std::string &name,
+                               ACCESS_MASK permissions) {
     std::string os;
     // Output Account info (in NT4 style: domain\user)
-    if (allowed) {
-        os += "Allowed to: ";
-    } else {
-        os += "Denied from: ";
-    }
+    os += allowed ? "Allowed to: " : "Denied from: ";
 
     if (!domain.empty()) {
         os += domain;
         os += "\\";
     }
-    if (!name.empty()) {
-        os += name;
-    }
-
-    // Output permissions (Read/Write/Execute)
+    os += name;
     os += " [";
-
-    // For Allowed aces
-    if (allowed) {
-        // Read Permissions
-        if ((mask_permissions & READ_PERMISSIONS) == READ_PERMISSIONS) {
-            os += "R";
-        } else {
-            os += " ";
-        }
-        // Write permissions
-        if ((mask_permissions & WRITE_PERMISSIONS) == WRITE_PERMISSIONS) {
-            os += "W";
-        } else {
-            os += " ";
-        }
-        // Execute Permissions
-        if ((mask_permissions & EXECUTE_PERMISSIONS) == EXECUTE_PERMISSIONS) {
-            os += "X";
-        } else {
-            os += " ";
-        }
-    } else
-    // Denied Ace permissions
-    {
-        // Read Permissions
-        if ((mask_permissions & READ_PERMISSIONS) != 0) {
-            os += "R";
-        } else {
-            os += " ";
-        }
-        // Write permissions
-        if ((mask_permissions & WRITE_PERMISSIONS) != 0) {
-            os += "W";
-        } else {
-            os += " ";
-        }
-        // Execute Permissions
-        if ((mask_permissions & EXECUTE_PERMISSIONS) != 0) {
-            os += "X";
-        } else {
-            os += " ";
-        }
-    }
+    os += PrintPermissions(allowed, permissions);
     os += "]";
     return os;
 }
 
-// code below has not very high quality
-// copy pasted from MSDN
+SID *ExtractSid(ACLInfo::AceList *list) {
+    auto *ace = list->ace;
+    auto *sid_start =
+        list->allowed ? &reinterpret_cast<ACCESS_ALLOWED_ACE *>(ace)->SidStart
+                      : &reinterpret_cast<ACCESS_DENIED_ACE *>(ace)->SidStart;
+
+    return reinterpret_cast<SID *>(sid_start);
+}
+
+ACCESS_MASK ExtractPermissions(const ACLInfo::AceList *list) {
+    const auto *ace = list->ace;
+    return list->allowed
+               ? reinterpret_cast<const ACCESS_ALLOWED_ACE *>(ace)->Mask
+               : reinterpret_cast<const ACCESS_DENIED_ACE *>(ace)->Mask;
+}
+std::pair<std::string, std::string> GetAccountName(SID *sid) {
+    SID_NAME_USE sid_name_use{SidTypeUser};
+    char name_buffer[MAX_PATH];
+    char domain_buffer[MAX_PATH];
+    DWORD name_len = sizeof(name_buffer);
+    DWORD domain_name_len = sizeof(domain_buffer);
+
+    // Get account name for SID
+    if (::LookupAccountSidA(nullptr, sid, name_buffer, &name_len, domain_buffer,
+                            &domain_name_len, &sid_name_use) == FALSE) {
+        XLOG::l("Failed to get account for SID, error = [{}]",
+                ::GetLastError());
+        return {{}, {}};
+    }
+    return {domain_buffer, name_buffer};
+}
+}  // namespace
+
 std::string ACLInfo::output() {
-    if (nullptr == ace_list_) return "No ACL Info\n";
-
-    ACE_HEADER* ace = nullptr;
-    SID* ace_sid = nullptr;
-    ACCESS_MASK mask_permissions = 0;
-    auto* list = ace_list_;
-    // Iterate through ACEs list and
-    // out put information
+    if (ace_list_ == nullptr) {
+        return "No ACL Info\n";
+    }
+    auto *list = ace_list_;
     std::string os;
-    while (nullptr != list) {
-        {
-            ace = list->ace;
-            if (list->allowed == TRUE) {
-                auto* allowed = reinterpret_cast<ACCESS_ALLOWED_ACE*>(ace);
-                ace_sid = reinterpret_cast<SID*>(&(allowed->SidStart));
-                mask_permissions = allowed->Mask;
-            } else {
-                auto* denied = reinterpret_cast<ACCESS_DENIED_ACE*>(ace);
-                ace_sid = reinterpret_cast<SID*>(&(denied->SidStart));
-                mask_permissions = denied->Mask;
-            }
-        }
-
-        SID_NAME_USE sid_name_use{SidTypeUser};
-        char name_buffer[MAX_PATH];
-        char domain_buffer[MAX_PATH];
-        DWORD name_len = sizeof(name_buffer);
-        DWORD domain_name_len = sizeof(domain_buffer);
-
-        // Get account name for SID
-        auto ret =
-            LookupAccountSidA(nullptr, ace_sid, name_buffer, &name_len,
-                              domain_buffer, &domain_name_len, &sid_name_use);
-        if (ret == FALSE) {
-            XLOG::l("Failed to get account for SID");
+    while (list != nullptr) {
+        const auto [domain, name] = GetAccountName(ExtractSid(list));
+        if (name.empty()) {
             continue;
         }
-
-        os += MakeReadableString(list->allowed == TRUE, domain_buffer,
-                                 name_buffer, mask_permissions);
+        os += MakeReadableString(list->allowed == TRUE, domain, name,
+                                 ExtractPermissions(list));
         os += "\n";
-
         list = list->next;
     }
     return os;
 }
 
-std::string ReadWholeFile(const std::filesystem::path& fname) noexcept {
+std::string ReadWholeFile(const fs::path &fname) noexcept {
     try {
         std::ifstream f(fname.u8string(), std::ios::binary);
 
@@ -2503,9 +2467,9 @@ std::string ReadWholeFile(const std::filesystem::path& fname) noexcept {
         f.seekg(0, std::ios::beg);
         std::string v;
         v.resize(fsize);
-        f.read(reinterpret_cast<char*>(v.data()), fsize);
+        f.read(reinterpret_cast<char *>(v.data()), fsize);
         return v;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         // catching possible exceptions in the
         // ifstream or memory allocations
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
@@ -2514,7 +2478,7 @@ std::string ReadWholeFile(const std::filesystem::path& fname) noexcept {
     return {};
 }
 
-bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
+bool PatchFileLineEnding(const fs::path &fname) noexcept {
     auto result = ReadWholeFile(fname);
     if (result.empty()) return false;
 
@@ -2522,7 +2486,7 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
         std::ofstream tst(fname.u8string());  // text file
         tst.write(result.c_str(), result.size());
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Error during patching file line ending {}", e.what());
         return false;
     }
@@ -2548,8 +2512,12 @@ std::wstring GenerateRandomString(size_t max_length) noexcept {
 }
 
 static std::wstring CmaUserPrefix() noexcept {
-    if (cma::IsService()) return L"cmk_in_";
-    if (cma::IsTest()) return L"cmk_TST_";
+    if (cma::IsService()) {
+        return L"cmk_in_";
+    }
+    if (cma::IsTest()) {
+        return L"cmk_TST_";
+    }
     return {};
 }
 
@@ -2566,7 +2534,7 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
     return {};
 }
 
-InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
+InternalUser CreateCmaUserInGroup(const std::wstring &group) noexcept {
     auto name = GenerateCmaUserNameInGroup(group);
     if (name.empty()) {
         XLOG::l("Failed to create user name");
@@ -2600,13 +2568,13 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
     return {};
 }
 
-bool RemoveCmaUser(const std::wstring& user_name) noexcept {
+bool RemoveCmaUser(const std::wstring &user_name) noexcept {
     uc::LdapControl primary_dc;
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
-void ProtectPathFromUserWrite(const std::filesystem::path& path,
-                              std::vector<std::wstring>& commands) {
+void ProtectPathFromUserWrite(const fs::path &path,
+                              std::vector<std::wstring> &commands) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
@@ -2623,8 +2591,8 @@ void ProtectPathFromUserWrite(const std::filesystem::path& path,
     XLOG::l.i("Protect path from User write '{}'", path);
 }
 
-void ProtectFileFromUserWrite(const std::filesystem::path& path,
-                              std::vector<std::wstring>& commands) {
+void ProtectFileFromUserWrite(const fs::path &path,
+                              std::vector<std::wstring> &commands) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
@@ -2641,10 +2609,9 @@ void ProtectFileFromUserWrite(const std::filesystem::path& path,
     XLOG::l.i("Protect file from User write '{}'", path);
 }
 
-void ProtectPathFromUserAccess(const std::filesystem::path& entry,
-                               std::vector<std::wstring>& commands) {
+void ProtectPathFromUserAccess(const fs::path &entry,
+                               std::vector<std::wstring> &commands) {
     // CONTEXT: some files must be protected from the user fully
-
     constexpr std::wstring_view command_templates[] = {
         L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
         L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user rights
@@ -2658,9 +2625,9 @@ void ProtectPathFromUserAccess(const std::filesystem::path& entry,
 }
 
 namespace {
-std::filesystem::path MakeCmdFileInTemp(
-    std::wstring_view name, const std::vector<std::wstring>& commands) {
-    namespace fs = std::filesystem;
+fs::path MakeCmdFileInTemp(std::wstring_view name,
+                           const std::vector<std::wstring> &commands) {
+    ;
     try {
         auto pid = ::GetCurrentProcessId();
         static int counter = 0;
@@ -2671,22 +2638,22 @@ std::filesystem::path MakeCmdFileInTemp(
         auto tmp_file =
             temp_folder / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
         std::ofstream ofs(tmp_file, std::ios::trunc);
-        for (const auto& c : commands) {
+        for (const auto &c : commands) {
             ofs << ToUtf8(c) << "\n";
         }
 
         return tmp_file;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Exception creating file '{}'", e.what());
         return {};
     }
 }
 }  // namespace
 
-std::filesystem::path ExecuteCommands(std::wstring_view name,
-                                      const std::vector<std::wstring>& commands,
-                                      bool wait_for_end) {
-    XLOG::l.i("'{}' Starting executing commands [{}]", ToUtf8(name),
+fs::path ExecuteCommands(std::wstring_view name,
+                         const std::vector<std::wstring> &commands,
+                         bool wait_for_end) {
+    XLOG::d.i("'{}' Starting executing commands [{}]", ToUtf8(name),
               commands.size());
     if (commands.empty()) {
         return {};
@@ -2696,7 +2663,7 @@ std::filesystem::path ExecuteCommands(std::wstring_view name,
     if (!to_exec.empty()) {
         auto pid = cma::tools::RunStdCommand(to_exec.wstring(), wait_for_end);
         if (pid != 0) {
-            XLOG::l.i("Process is started '{}'  with pid [{}]", to_exec, pid);
+            XLOG::d.i("Process is started '{}'  with pid [{}]", to_exec, pid);
             return to_exec;
         }
 
@@ -2706,18 +2673,18 @@ std::filesystem::path ExecuteCommands(std::wstring_view name,
     return {};
 }
 
-std::filesystem::path ExecuteCommandsAsync(
-    std::wstring_view name, const std::vector<std::wstring>& commands) {
+fs::path ExecuteCommandsAsync(std::wstring_view name,
+                              const std::vector<std::wstring> &commands) {
     return ExecuteCommands(name, commands, false);
 }
 
-std::filesystem::path ExecuteCommandsSync(
-    std::wstring_view name, const std::vector<std::wstring>& commands) {
+fs::path ExecuteCommandsSync(std::wstring_view name,
+                             const std::vector<std::wstring> &commands) {
     return ExecuteCommands(name, commands, true);
 }
 
-// simple scanner of multi_sz strings
-const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end) {
+// simple scanner of Windows(tm) multi_sz strings
+const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end) {
     if (pos == nullptr || end == nullptr) {
         XLOG::l(XLOG_FUNC + "-Bad data");
         return nullptr;
@@ -2738,7 +2705,9 @@ const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end) {
 }
 
 std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
-    if (str.empty()) return std::wstring{str};
+    if (str.empty()) {
+        return {};
+    }
 
     auto log_error_and_return_default = [](std::wstring_view str) {
         XLOG::l("Can't expand the string #1 '{}' [{}]", ToUtf8(str),
@@ -2748,17 +2717,20 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
 
     std::wstring result;
     auto ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), 0);
-    if (ret == 0) return log_error_and_return_default(str);
+    if (ret == 0) {
+        return log_error_and_return_default(str);
+    }
 
     result.resize(ret - 1);
     ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), ret);
-    if (ret == 0) return log_error_and_return_default(str);
+    if (ret == 0) {
+        return log_error_and_return_default(str);
+    }
 
     return result;
 }
 
 std::wstring ToCanonical(std::wstring_view raw_app_name) {
-    namespace fs = std::filesystem;
     constexpr int buf_size = 16 * 1024 + 1;
     auto buf = std::make_unique<wchar_t[]>(buf_size);
     auto expand_size =
@@ -2772,7 +2744,7 @@ std::wstring ToCanonical(std::wstring_view raw_app_name) {
         return p.wstring();
     }
 
-    XLOG::l.i(
+    XLOG::d.i(
         "Path '{}' cannot be canonical: probably based on the environment variables",
         wtools::ToUtf8(raw_app_name));
 
@@ -2781,7 +2753,7 @@ std::wstring ToCanonical(std::wstring_view raw_app_name) {
 
 namespace {
 struct SidStore {
-    SID* sid() const noexcept { return sid_; }
+    SID *sid() const noexcept { return sid_; }
     size_t count() const noexcept { return count_; }
     bool makeAdmin() { return assignAdmin(); }
     bool makeCreator() { return assignCreator(); }
@@ -2830,21 +2802,20 @@ private:
     }
 
     char buf_[32];
-    SID* sid_{reinterpret_cast<SID*>(buf_)};
+    SID *sid_{reinterpret_cast<SID *>(buf_)};
     size_t count_{0};
 };
 
-ACL* CombineSidsIntoACl(SidStore& first, SidStore& second) {
-    // compute size of acl
+ACL *CombineSidsIntoACl(SidStore &first, SidStore &second) {
     auto acl_size = sizeof(ACL) +
                     2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
                     GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
                     GetSidLengthRequired(static_cast<UCHAR>(second.count()));
 
-    // create ACL
-    auto acl = static_cast<ACL*>(ProcessHeapAlloc(acl_size));
+    // alloc
+    auto acl = static_cast<ACL *>(ProcessHeapAlloc(acl_size));
 
-    // init ACL
+    // init
     if (acl != nullptr &&
         ::InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) == TRUE &&
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
@@ -2859,10 +2830,11 @@ ACL* CombineSidsIntoACl(SidStore& first, SidStore& second) {
 
 }  // namespace
 
-ACL* BuildStandardAcl() {
+ACL *BuildStandardAcl() {
     SidStore everyone;
     SidStore owner;
 
+    // initialize well known SID's
     if (!everyone.makeEveryone() || !owner.makeCreator()) {
         return nullptr;
     }
@@ -2870,7 +2842,7 @@ ACL* BuildStandardAcl() {
     return CombineSidsIntoACl(everyone, owner);
 }
 
-ACL* BuildAdminAcl() {
+ACL *BuildAdminAcl() {
     SidStore admin;
     SidStore owner;
 
@@ -2887,9 +2859,7 @@ SecurityAttributeKeeper::SecurityAttributeKeeper(SecurityLevel sl) {
         cleanupAll();
     }
 }
-SecurityAttributeKeeper::~SecurityAttributeKeeper() {
-    cleanupAll();  //
-}
+SecurityAttributeKeeper::~SecurityAttributeKeeper() { cleanupAll(); }
 
 bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
     // this trash is referenced in the Security
@@ -2903,9 +2873,9 @@ bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
             break;
     }
 
-    sd_ = static_cast<SECURITY_DESCRIPTOR*>(
+    sd_ = static_cast<SECURITY_DESCRIPTOR *>(
         ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
-    sa_ = static_cast<SECURITY_ATTRIBUTES*>(
+    sa_ = static_cast<SECURITY_ATTRIBUTES *>(
         ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
 
     if (acl_ != nullptr && sd_ != nullptr &&
@@ -2929,7 +2899,7 @@ void SecurityAttributeKeeper::cleanupAll() {
     sa_ = nullptr;
 }
 
-std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE& sid_type) {
+std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type) {
     constexpr DWORD buf_size = 256;
     PSID psid{nullptr};
 
@@ -2949,6 +2919,83 @@ std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE& sid_type) {
         return name;
     }
     return {};
+}
+
+namespace {
+
+std::pair<size_t, bool> ReadHandle(std::span<char> buffer, HANDLE h) {
+    auto store = buffer.data();
+    DWORD read_in_fact = 0;
+    auto count = static_cast<DWORD>(buffer.size());
+    return {read_in_fact, ::ReadFile(h, store, count, &read_in_fact, nullptr)};
+}
+
+// add content of file to the buffer
+bool AppendHandleContent(std::vector<char> &buffer, HANDLE h,
+                         size_t count) noexcept {
+    auto buf_size = buffer.size();
+    try {
+        buffer.resize(buf_size + count);
+    } catch (const std::exception &e) {
+        XLOG::l(" exception: '{}'", e.what());
+        return false;
+    }
+    auto [read_in_fact, success] =
+        ReadHandle(std::span{buffer.data() + buf_size, count}, h);
+    if (!success) {
+        return false;
+    }
+
+    if (read_in_fact != count) {
+        buffer.resize(buf_size + read_in_fact);
+    }
+
+    return true;
+}
+}  // namespace
+
+std::vector<char> ReadFromHandle(HANDLE handle) {
+    std::vector<char> buf;
+    while (true) {
+        auto read_count = wtools::DataCountOnHandle(handle);
+        if (read_count == 0) {  // no data or error
+            break;
+        }
+        if (!AppendHandleContent(buf, handle, read_count)) {
+            break;
+        }
+    }
+    return buf;
+}
+
+std::string RunCommand(std::wstring_view cmd) {
+    wtools::AppRunner ar;
+    auto ret = ar.goExecAsJob(cmd);
+    if (ret == 0) {
+        XLOG::d("Failed to run '{}'", ToUtf8(cmd));
+        return {};
+    }
+    auto pid = ar.processId();
+    auto timeout = 20'000ms;
+    constexpr auto grane = 50ms;
+    std::string r;
+    while (true) {
+        auto [code, error] = GetProcessExitCode(pid);
+        if (code != 0 && code != STATUS_PENDING) {
+            XLOG::l("RunCommand '{}' fails with code [{}] and error [{}]",
+                    ToUtf8(cmd), code, error);
+            break;
+        }
+        auto result = ReadFromHandle(ar.getStdioRead());
+        r += std::string{result.begin(), result.end()};
+        std::this_thread::sleep_for(grane);
+        timeout = timeout - grane;
+        if (timeout <= 0s || code == 0) {
+            break;
+        }
+    }
+
+    return r;
 }
 
 #if 0
@@ -3059,12 +3106,10 @@ Cleanup:
 }  // namespace wtools
 
 // verified code from the legacy client
-// gtest is not required
-inline SOCKET RemoveSocketInheritance(SOCKET OldSocket) {
+SOCKET RemoveSocketInheritance(SOCKET socket) {
     HANDLE new_handle = nullptr;
 
-    ::DuplicateHandle(::GetCurrentProcess(),
-                      reinterpret_cast<HANDLE>(OldSocket),
+    ::DuplicateHandle(::GetCurrentProcess(), reinterpret_cast<HANDLE>(socket),
                       ::GetCurrentProcess(), &new_handle, 0, FALSE,
                       DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);
 
@@ -3072,7 +3117,7 @@ inline SOCKET RemoveSocketInheritance(SOCKET OldSocket) {
 }
 
 //
-// replaced WSASocketW in asio.hpp
+// replaces WSASocketW in asio.hpp
 // This is BAD method, still we have no other choice
 //
 SOCKET WSASocketW_Hook(int af, int type, int protocol,
@@ -3080,7 +3125,7 @@ SOCKET WSASocketW_Hook(int af, int type, int protocol,
                        DWORD flags) {
     auto handle = ::WSASocketW(af, type, protocol, protocol_info, g, flags);
     if (handle == INVALID_SOCKET) {
-        XLOG::l.bp("Error on socket creation {}", GetLastError());
+        XLOG::l("Error on socket creation {}", GetLastError());
         return handle;
     }
 

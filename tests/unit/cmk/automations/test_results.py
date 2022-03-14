@@ -10,7 +10,13 @@ from typing import Mapping, Sequence
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.version import is_raw_edition
 
-from cmk.automations.results import ABCAutomationResult, DiscoveryResult, result_type_registry
+from cmk.automations.results import (
+    ABCAutomationResult,
+    CheckPreviewEntry,
+    DiscoveryResult,
+    result_type_registry,
+    TryDiscoveryResult,
+)
 
 from cmk.base.automations import automations
 
@@ -88,3 +94,31 @@ class TestDiscoveryResult:
         assert DiscoveryResult.deserialize(
             DiscoveryResult(self.HOSTS).serialize()
         ) == DiscoveryResult(self.HOSTS)
+
+
+class TestTryDiscoveryResult:
+    def test_serialization(self):
+        result = TryDiscoveryResult(
+            output="output",
+            check_table=[
+                CheckPreviewEntry(
+                    check_source="check_source",
+                    check_plugin_name="check_plugin_name",
+                    ruleset_name=None,
+                    item=None,
+                    discovered_parameters=None,
+                    effective_parameters=None,
+                    description="description",
+                    state=0,
+                    output="output",
+                    metrics=[],
+                    labels={},
+                    found_on_nodes=[],
+                )
+            ],
+            host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+        )
+        assert TryDiscoveryResult.deserialize(result.serialize()) == result

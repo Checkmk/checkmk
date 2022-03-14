@@ -117,7 +117,7 @@ def _parameter_valuespec_el_inphase():
             (
                 "map_device_states",
                 ListOf(
-                    Tuple(elements=[TextInput(size=10), MonitoringState()]),
+                    valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                     title=_("Map device state"),
                     help=_(
                         "Here you can enter either device state number (eg. from SNMP devices) "
@@ -156,7 +156,7 @@ def _transform_parameter_valuespec_ups_outphase(params: Dict[str, Any]) -> Dict[
 
 def _parameter_valuespec_ups_outphase() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This rule allows you to specify levels for the voltage, current, load, power "
                 "and apparent power of your device. The levels will only be applied if the device "
@@ -177,7 +177,7 @@ def _parameter_valuespec_ups_outphase() -> Transform:
                 (
                     "map_device_states",
                     ListOf(
-                        Tuple(elements=[TextInput(size=10), MonitoringState()]),
+                        valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                         title=_("Map device state"),
                         help=_(
                             "Here you can enter either device state number (eg. from SNMP devices) "

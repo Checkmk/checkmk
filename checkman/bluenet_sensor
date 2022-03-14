@@ -1,7 +1,7 @@
 title: Bachmann Bluenet Monitored Power Distribution Unit: Temperature
 agents: snmp
 catalog: hw/environment/bachmann
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature measured by the sensors of Bachmann
@@ -18,4 +18,3 @@ discovery:
 item:
  The name of the sensor, which is either "internal" or "external {<ID>}",
  and {<ID>} is the numerical ID of the sensor.
-

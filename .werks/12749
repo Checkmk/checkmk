@@ -6,7 +6,7 @@ Date: 1619163636
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If tag IDs were changed that are already in use by some folder, hosts or rules,
 there was no confirm dialog to fix the affected objects. The changes were

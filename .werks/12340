@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Deleting downtimes by id could in some circumstances result in an
 error indicating that many downtimes, instead of the expected one,

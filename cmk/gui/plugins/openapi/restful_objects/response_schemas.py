@@ -11,8 +11,10 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.defines import weekday_ids
 
-from cmk.gui import fields
+from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+
+from cmk import fields
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
@@ -24,12 +26,12 @@ class ApiError(BaseSchema):
         required=True,
         example=404,
     )
-    message = fields.Str(
+    message = fields.String(
         description="Detailed information on what exactly went wrong.",
         required=True,
         example="The resource could not be found.",
     )
-    title = fields.Str(
+    title = fields.String(
         description="A summary of the problem.",
         required=True,
         example="Not found",
@@ -44,12 +46,12 @@ class ApiError(BaseSchema):
 
 
 class UserSchema(BaseSchema):
-    id = fields.Int(dump_only=True)
-    name = fields.Str(description="The user's name")
+    id = fields.Integer(dump_only=True)
+    name = fields.String(description="The user's name")
     created = fields.DateTime(
         dump_only=True,
         format="iso8601",
-        default=dt.datetime.utcnow,
+        dump_default=dt.datetime.utcnow,
         doc_default="The current datetime",
     )
 
@@ -66,7 +68,7 @@ class LinkSchema(BaseSchema):
         required=True,
         example="self",
     )
-    href = fields.Str(
+    href = fields.String(
         description=(
             "The (absolute) address of the related resource. Any characters that are "
             "invalid in URLs must be URL encoded."
@@ -107,6 +109,7 @@ class Linkable(BaseSchema):
         fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
+        example=None,
     )
 
 
@@ -119,7 +122,7 @@ class Parameter(Linkable):
         required=True,
         example="folder-move",
     )
-    number = fields.Int(
+    number = fields.Integer(
         description="the number of the parameter (starting from 0)", required=True, example=0
     )
     name = fields.String(
@@ -135,7 +138,7 @@ class Parameter(Linkable):
         required=False,
         example="The destination",
     )
-    optional = fields.Bool(
+    optional = fields.Boolean(
         description="indicates whether the action parameter is optional",
         required=False,
         example=False,
@@ -149,7 +152,7 @@ class Parameter(Linkable):
         ),
         required=False,
     )
-    maxLength = fields.Int(
+    maxLength = fields.Integer(
         description=(
             "for string action parameters, indicates the maximum allowable length. A "
             "value of 0 means unlimited."
@@ -186,7 +189,7 @@ class ObjectMemberBase(Linkable):
         allow_none=True,
     )
     x_ro_invalidReason = fields.String(
-        dump_to="x-ro-invalidReason",
+        data_key="x-ro-invalidReason",
         description=(
             "Provides the reason why a SET OF proposed values for properties or arguments "
             "is invalid."
@@ -243,7 +246,7 @@ class ObjectMember(OneOfSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType: fields.Field = fields.String(
+    resultType: gui_fields.Field = fields.String(
         enum=["object", "scalar"],
         description="The type of the result.",
     )
@@ -300,7 +303,7 @@ class ActionResult(OneOfSchema):
 
 
 class DomainObject(Linkable):
-    domainType: fields.Field = fields.String(
+    domainType: gui_fields.Field = fields.String(
         required=True,
         description='The "domain-type" of the object.',
     )
@@ -311,17 +314,19 @@ class DomainObject(Linkable):
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    members: fields.Field = fields.Dict(
+    members: gui_fields.Field = fields.Dict(
         description="The container for external resources, like linked foreign objects or actions.",
     )
-    extensions: fields.Field = fields.Dict(description="All the attributes of the domain object.")
+    extensions: gui_fields.Field = fields.Dict(
+        description="All the attributes of the domain object."
+    )
 
 
 class HostExtensions(BaseSchema):
-    folder = fields.FolderField(
+    folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "host",
         "update",
         description="Attributes of this host.",
@@ -339,9 +344,9 @@ class HostExtensions(BaseSchema):
         description="Whether the host is offline",
     )
     cluster_nodes = fields.List(
-        fields.HostField(),
+        gui_fields.HostField(),
         allow_none=True,
-        missing=None,
+        load_default=None,
         description="In the case this is a cluster host, these are the cluster nodes.",
     )
 
@@ -361,7 +366,7 @@ class FolderExtensions(BaseSchema):
     path = fields.String(
         description="The full path of this folder, slash delimited.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "folder",
         "update",
         description=(
@@ -478,15 +483,15 @@ class ConcreteHostTagGroup(DomainObject):
 class DomainObjectCollection(Linkable):
     id = fields.String(
         description="The name of this collection.",
-        missing="all",
+        load_default="all",
     )
-    domainType: fields.Field = fields.String(
+    domainType: gui_fields.Field = fields.String(
         description="The domain type of the objects in the collection."
     )
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    value: fields.Field = fields.Nested(
+    value: gui_fields.Field = fields.Nested(
         CollectionItem,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,
@@ -517,14 +522,14 @@ class FolderCollection(DomainObjectCollection):
 
 
 class User(Linkable):
-    userName = fields.Str(description="A unique user name.")
-    friendlyName = fields.Str(
+    userName = fields.String(description="A unique user name.")
+    friendlyName = fields.String(
         required=True,
         description="The user's name in a form suitable to be rendered in a UI.",
     )
-    email = fields.Str(description="(optional) the user's email address, if known.")
+    email = fields.String(description="(optional) the user's email address, if known.")
     roles = fields.List(
-        fields.Str(),
+        fields.String(),
         description="List of unique role names that apply to this user (can be empty).",
     )
 
@@ -616,7 +621,7 @@ class PasswordExtension(BaseSchema):
         attribute="shared_with",
         description="The list of members the password is shared with",
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=True,
         should_exist=True,
     )
@@ -643,43 +648,43 @@ class InstalledVersions(BaseSchema):
     rest_api = fields.Dict(description="The REST-API version", example={"revision": "1.0.0"})
     versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
     edition = fields.String(description="The Checkmk edition.", example="raw")
-    demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
+    demo = fields.Boolean(description="Whether this is a demo version or not.", example=False)
 
 
 class VersionCapabilities(BaseSchema):
-    blobsClobs = fields.Bool(
+    blobsClobs = fields.Boolean(
         required=False,
         description="attachment support",
     )
-    deleteObjects = fields.Bool(
+    deleteObjects = fields.Boolean(
         required=False,
         description=(
             "deletion of persisted objects through the DELETE Object resource C14.3," " see A3.5"
         ),
     )
-    domainModel = fields.Str(
+    domainModel = fields.String(
         required=False,
         description=(
             'different domain metadata representations. A value of "selectable" means '
             "that the reserved x-domain-model query parameter is supported, see A3.1"
         ),
     )
-    protoPersistentObjects = fields.Bool()
-    validateOnly = fields.Bool(
+    protoPersistentObjects = fields.Boolean()
+    validateOnly = fields.Boolean(
         required=False,
         description="the reserved x-ro-validate-only query parameter, see A3.2",
     )
 
 
 class Version(LinkSchema):
-    specVersion = fields.Str(
+    specVersion = fields.String(
         description=(
             'The "major.minor" parts of the version of the spec supported by this '
             'implementation, e.g. "1.0"'
         ),
         required=False,
     )
-    implVersion = fields.Str(
+    implVersion = fields.String(
         description=(
             "(optional) Version of the implementation itself (format is specific to "
             "the implementation)"
@@ -690,7 +695,7 @@ class Version(LinkSchema):
 
 
 class X509PEM(BaseSchema):
-    cert = fields.Str(
+    cert = fields.String(
         required=True,
         description="PEM-encoded X.509 certificate.",
     )

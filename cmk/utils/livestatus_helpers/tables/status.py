@@ -84,16 +84,16 @@ class Status(Table):
     check_host_freshness = Column(
         'check_host_freshness',
         col_type='int',
-        description='Whether host freshness checking is activated in general (0/1), always enabled in CMC',
+        description='Whether host freshness checking is activated in general (0/1)',
     )
-    """Whether host freshness checking is activated in general (0/1), always enabled in CMC"""
+    """Whether host freshness checking is activated in general (0/1)"""
 
     check_service_freshness = Column(
         'check_service_freshness',
         col_type='int',
-        description='Whether service freshness checking is activated in general (0/1), always enabled in CMC',
+        description='Whether service freshness checking is activated in general (0/1)',
     )
-    """Whether service freshness checking is activated in general (0/1), always enabled in CMC"""
+    """Whether service freshness checking is activated in general (0/1)"""
 
     connections = Column(
         'connections',
@@ -259,9 +259,9 @@ class Status(Table):
     interval_length = Column(
         'interval_length',
         col_type='int',
-        description='The default interval length, this is fixed to 60 in Check_MK Micro Core',
+        description='The default interval length',
     )
-    """The default interval length, this is fixed to 60 in Check_MK Micro Core"""
+    """The default interval length"""
 
     is_trial_expired = Column(
         'is_trial_expired',
@@ -272,10 +272,10 @@ class Status(Table):
 
     last_command_check = Column(
         'last_command_check',
-        col_type='int',
-        description='The time of the last check for a command as UNIX timestamp, also 0 for Check_MK Micro Core',
+        col_type='time',
+        description='The time of the last check for a command as UNIX timestamp',
     )
-    """The time of the last check for a command as UNIX timestamp, also 0 for Check_MK Micro Core"""
+    """The time of the last check for a command as UNIX timestamp"""
 
     last_log_rotation = Column(
         'last_log_rotation',
@@ -329,9 +329,9 @@ class Status(Table):
     livestatus_queued_connections = Column(
         'livestatus_queued_connections',
         col_type='int',
-        description='The current number of queued connections to MK Livestatus, always 0 for Check_MK Micro Core',
+        description='The current number of queued connections to MK Livestatus',
     )
-    """The current number of queued connections to MK Livestatus, always 0 for Check_MK Micro Core"""
+    """The current number of queued connections to MK Livestatus"""
 
     livestatus_threads = Column(
         'livestatus_threads',
@@ -370,7 +370,7 @@ class Status(Table):
 
     mk_inventory_last = Column(
         'mk_inventory_last',
-        col_type='int',
+        col_type='time',
         description='The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory',
     )
     """The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory"""
@@ -427,16 +427,16 @@ class Status(Table):
     obsess_over_hosts = Column(
         'obsess_over_hosts',
         col_type='int',
-        description='Whether Nagios will obsess over host checks (0/1), always 0, not supported by CMC',
+        description='Whether Nagios will obsess over host checks (0/1)',
     )
-    """Whether Nagios will obsess over host checks (0/1), always 0, not supported by CMC"""
+    """Whether Nagios will obsess over host checks (0/1)"""
 
     obsess_over_services = Column(
         'obsess_over_services',
         col_type='int',
-        description='Whether Nagios will obsess over service checks and run the ocsp_command (0/1), not supported by CMC',
+        description='Whether Nagios will obsess over service checks and run the ocsp_command (0/1)',
     )
-    """Whether Nagios will obsess over service checks and run the ocsp_command (0/1), not supported by CMC"""
+    """Whether Nagios will obsess over service checks and run the ocsp_command (0/1)"""
 
     process_performance_data = Column(
         'process_performance_data',

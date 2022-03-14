@@ -1,7 +1,7 @@
 title: Virtual Machine under ESX: Number of Virtual CPUs and Demanded CPU GHz
 agents: vsphere
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  For a virtual machine running on ESX this check reports the number of

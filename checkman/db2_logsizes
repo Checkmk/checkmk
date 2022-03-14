@@ -1,7 +1,7 @@
 title: DB2: Instance Logfile Usage
 agents: aix, linux
 catalog: app/db2
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors amount of free logfile space.
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each database.
-

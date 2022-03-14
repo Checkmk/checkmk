@@ -7,17 +7,107 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.inventory_statgrab_net import (
     inventory_statgrab_net,
     parse_statgrab_net,
 )
+from cmk.base.plugins.agent_based.utils.interfaces import Interface, Section
+
+from .utils_inventory import sort_inventory_result
+
+_SECTION = [
+    Interface(
+        index="1",
+        descr="lo0",
+        alias="lo0",
+        type="24",
+        speed=0,
+        oper_status="1",
+        in_octets=0,
+        in_ucast=0,
+        in_mcast=0,
+        in_bcast=0,
+        in_discards=0,
+        in_errors=0,
+        out_octets=0,
+        out_ucast=0,
+        out_mcast=0,
+        out_bcast=0,
+        out_discards=0,
+        out_errors=0,
+        out_qlen=0,
+        phys_address="",
+        oper_status_name="up",
+        speed_as_text="",
+        group=None,
+        node=None,
+        admin_status=None,
+        total_octets=0,
+    ),
+    Interface(
+        index="2",
+        descr="mac",
+        alias="mac",
+        type="6",
+        speed=0,
+        oper_status="2",
+        in_octets=125659024941,
+        in_ucast=50729410,
+        in_mcast=0,
+        in_bcast=0,
+        in_discards=0,
+        in_errors=0,
+        out_octets=482272878,
+        out_ucast=102,
+        out_mcast=0,
+        out_bcast=0,
+        out_discards=0,
+        out_errors=0,
+        out_qlen=0,
+        phys_address="",
+        oper_status_name="down",
+        speed_as_text="",
+        group=None,
+        node=None,
+        admin_status=None,
+        total_octets=126141297819,
+    ),
+    Interface(
+        index="3",
+        descr="vnet0",
+        alias="vnet0",
+        type="6",
+        speed=10000000,
+        oper_status="1",
+        in_octets=125659024941,
+        in_ucast=1268296097,
+        in_mcast=0,
+        in_bcast=0,
+        in_discards=0,
+        in_errors=0,
+        out_octets=19679032546569,
+        out_ucast=13022050069,
+        out_mcast=0,
+        out_bcast=0,
+        out_discards=0,
+        out_errors=0,
+        out_qlen=0,
+        phys_address="",
+        oper_status_name="up",
+        speed_as_text="",
+        group=None,
+        node=None,
+        admin_status=None,
+        total_octets=19804691571510,
+        extra_info=None,
+    ),
+]
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_result",
-    [
-        ([], []),
-        (
+def test_parse_statgrab_net() -> None:
+    assert (
+        parse_statgrab_net(
             [
                 ["lo0.duplex", "unknown"],
                 ["lo0.interface_name", "lo0"],
@@ -71,7 +161,21 @@ from cmk.base.plugins.agent_based.inventory_statgrab_net import (
                 ["vnet0.systime", "1413287036"],
                 ["vnet0.tx", "19679032546569"],
                 ["vnet0.up", "true"],
-            ],
+            ]
+        )
+        == _SECTION
+    )
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            [],
+            [],
+        ),
+        (
+            _SECTION,
             [
                 TableRow(
                     path=["networking", "interfaces"],
@@ -102,5 +206,10 @@ from cmk.base.plugins.agent_based.inventory_statgrab_net import (
         ),
     ],
 )
-def test_inventory_statgrab_net(string_table, expected_result):
-    assert list(inventory_statgrab_net(parse_statgrab_net(string_table))) == expected_result
+def test_inventory_statgrab_net(
+    section: Section,
+    expected_result: InventoryResult,
+) -> None:
+    assert sort_inventory_result(inventory_statgrab_net(section)) == sort_inventory_result(
+        expected_result
+    )

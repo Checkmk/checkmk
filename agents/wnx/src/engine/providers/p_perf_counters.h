@@ -20,10 +20,10 @@ class UptimeSync : public Synchronous {
 public:
     UptimeSync() : Synchronous(cma::section::kUptimeName, 0) {}
 
-    UptimeSync(const std::string& name, char separator = 0)
+    UptimeSync(const std::string &name, char separator = 0)
         : Synchronous(name, separator) {}
 
-    UptimeSync(const std::string& name) : Synchronous(name, 0) {}
+    UptimeSync(const std::string &name) : Synchronous(name, 0) {}
 
 protected:
     std::string makeBody() override;
@@ -33,10 +33,10 @@ class UptimeAsync : public Asynchronous {
 public:
     UptimeAsync() : Asynchronous(cma::section::kUptimeName, 0) {}
 
-    UptimeAsync(const std::string& name, char separator = 0)
+    UptimeAsync(const std::string &name, char separator = 0)
         : Asynchronous(name, separator) {}
 
-    UptimeAsync(const std::string& name) : Asynchronous(name, 0) {}
+    UptimeAsync(const std::string &name) : Asynchronous(name, 0) {}
 
 protected:
     std::string makeBody() override;
@@ -45,14 +45,14 @@ protected:
 // probably should go in another namespace(used also by skype)
 namespace details {
 // low level registry scanners
-wtools::perf::DataSequence LoadWinPerfData(const std::wstring& key,
-                                           uint32_t& key_index);
+wtools::perf::DataSequence LoadWinPerfData(const std::wstring &key,
+                                           uint32_t &key_index);
 
 // first line
 std::string MakeWinPerfStamp(uint32_t key_index);
 // header
 std::string MakeWinPerfHeader(std::wstring_view prefix, std::wstring_view name);
-std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* perf_object,
+std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE *perf_object,
                                  uint32_t key_index);
 }  // namespace details
 

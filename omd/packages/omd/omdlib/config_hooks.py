@@ -38,6 +38,7 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
 
 from cmk.utils.exceptions import MKTerminate
@@ -64,15 +65,11 @@ def create_config_environment(site: "SiteContext") -> None:
 
 # TODO: RENAME
 def save_site_conf(site: "SiteContext") -> None:
-    confdir = site.dir + "/etc/omd"
-
-    if not os.path.exists(confdir):
-        os.mkdir(confdir)
-
-    f = open(site.dir + "/etc/omd/site.conf", "w")
-
-    for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
-        f.write("CONFIG_%s='%s'\n" % (hook_name, value))
+    confdir = Path(site.dir, "etc/omd")
+    confdir.mkdir(exist_ok=True)
+    with Path(site.dir, "etc/omd/site.conf").open(mode="w") as f:
+        for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
+            f.write("CONFIG_%s='%s'\n" % (hook_name, value))
 
 
 # Get information about all hooks. Just needed for
@@ -104,19 +101,20 @@ def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
 
     description = ""
     description_active = False
-    for line in open(site.dir + "/lib/omd/hooks/" + hook_name):
-        if line.startswith("# Alias:"):
-            hook["alias"] = line[8:].strip()
-        elif line.startswith("# Menu:"):
-            hook["menu"] = line[7:].strip()
-        elif line.startswith("# Deprecated: yes"):
-            hook["deprecated"] = True
-        elif line.startswith("# Description:"):
-            description_active = True
-        elif line.startswith("#  ") and description_active:
-            description += line[3:].strip() + "\n"
-        else:
-            description_active = False
+    with Path(site.dir, "lib/omd/hooks", hook_name).open() as hook_file:
+        for line in hook_file:
+            if line.startswith("# Alias:"):
+                hook["alias"] = line[8:].strip()
+            elif line.startswith("# Menu:"):
+                hook["menu"] = line[7:].strip()
+            elif line.startswith("# Deprecated: yes"):
+                hook["deprecated"] = True
+            elif line.startswith("# Description:"):
+                description_active = True
+            elif line.startswith("#  ") and description_active:
+                description += line[3:].strip() + "\n"
+            else:
+                description_active = False
     hook["description"] = description
 
     def get_hook_info(info: str) -> str:
@@ -185,19 +183,18 @@ def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHoo
 
     logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
 
-    p = subprocess.Popen(
+    completed_process = subprocess.run(
         cmd,
         env=hook_env,
         close_fds=True,
         shell=False,
         stdout=subprocess.PIPE,
         encoding="utf-8",
+        check=False,
     )
-    content = p.communicate()[0].strip()
-    exitcode = p.poll()
-    assert exitcode is not None  # we have terminated, so there *is* an exit code
+    content = completed_process.stdout.strip()
 
-    if exitcode and args[0] != "depends":
+    if completed_process.returncode and args[0] != "depends":
         sys.stderr.write("Error running %s: %s\n" % (subprocess.list2cmdline(cmd), content))
 
-    return exitcode, content
+    return completed_process.returncode, content

@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Garbage Collection
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the count and assumed time of the garbage collection. It
@@ -21,4 +21,3 @@ item:
 
 discovery:
  One service is created for each garbage collector sent by the Jolokia agent.
-

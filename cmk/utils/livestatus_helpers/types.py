@@ -26,11 +26,7 @@ class Table(abc.ABC):
     This class doesn't do much, it just acts as a container for `Column` instances.
     """
 
-    @classmethod
-    @property
-    @abc.abstractmethod
-    def __tablename__(cls) -> str:
-        raise NotImplementedError("Please set __tablename__ to the name of the livestatus table")
+    __tablename__: str
 
     @classmethod
     def __columns__(cls) -> List[str]:
@@ -48,11 +44,6 @@ class NoTable(Table):
     Can be used in place of an actual table, in order to not have to use `Optional` types when
     something is initialized only later.
     """
-
-    @classmethod
-    @property
-    def __tablename__(cls) -> str:
-        raise AttributeError("This table has no name.")
 
     @classmethod
     def __columns__(cls) -> List[str]:

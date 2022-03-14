@@ -181,6 +181,12 @@ def check_logwatch(
     )
 
 
+def cluster_check_logwatch(
+    item: str, section: Mapping[str, Optional[logwatch.Section]]
+) -> CheckResult:
+    yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
+
+
 register.check_plugin(
     name="logwatch",
     service_name="Log %s",
@@ -193,7 +199,7 @@ register.check_plugin(
     # There *are* already check parameters, they're just bypassing the official API.
     # Make sure to give the check ruleset a general name, so we can (maybe, someday)
     # incorporate those.
-    cluster_check_function=check_logwatch,
+    cluster_check_function=cluster_check_logwatch,
 )
 
 # .
@@ -316,6 +322,16 @@ def check_logwatch_groups(
     )
 
 
+def cluster_check_logwatch_groups(
+    item: str,
+    params: DiscoveredGroupParams,
+    section: Mapping[str, Optional[logwatch.Section]],
+) -> CheckResult:
+    yield from check_logwatch_groups(
+        item, params, {k: v for k, v in section.items() if v is not None}
+    )
+
+
 register.check_plugin(
     name="logwatch_groups",
     service_name="Log %s",
@@ -326,7 +342,7 @@ register.check_plugin(
     discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
     check_default_parameters={"group_patterns": []},
-    cluster_check_function=check_logwatch_groups,
+    cluster_check_function=cluster_check_logwatch_groups,
 )
 
 
@@ -428,19 +444,21 @@ class LogwatchBlockCollector:
         return "%s messages" % ", ".join(count_txt)
 
 
+def _logmsg_file_path(item: str) -> pathlib.Path:
+    logmsg_dir = pathlib.Path(cmk.utils.paths.var_dir, "logwatch", host_name())
+    logmsg_dir.mkdir(parents=True, exist_ok=True)
+    return logmsg_dir / item.replace("/", "\\")
+
+
 def check_logwatch_generic(
     *,
     item: str,
     patterns,
-    loglines,
+    loglines: Iterable[str],
     found: bool,
     max_filesize: int,
 ) -> CheckResult:
-    logmsg_dir = pathlib.Path(cmk.utils.paths.var_dir, "logwatch", host_name())
-
-    logmsg_dir.mkdir(parents=True, exist_ok=True)
-
-    logmsg_file_path = logmsg_dir / item.replace("/", "\\")
+    logmsg_file_path = _logmsg_file_path(item)
 
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
@@ -481,7 +499,7 @@ def check_logwatch_generic(
 
     # process new input lines - but only when there is some room left in the file
     block_collector.extend(
-        _extract_blocks([header] + loglines, patterns, False, limit=max_filesize - output_size)
+        _extract_blocks([header, *loglines], patterns, True, limit=max_filesize - output_size)
     )
 
     # when reclassifying, rewrite the whole file, otherwise append

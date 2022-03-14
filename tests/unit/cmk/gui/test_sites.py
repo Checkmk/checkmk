@@ -6,6 +6,8 @@
 
 import pytest
 
+from livestatus import SiteId
+
 import cmk.gui.sites as sites
 from cmk.gui.globals import user
 
@@ -34,7 +36,7 @@ from cmk.gui.globals import user
     ],
 )
 def test_encode_socket_for_livestatus(site_spec, result):
-    assert sites.encode_socket_for_livestatus("mysite", site_spec) == result
+    assert sites.encode_socket_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
 @pytest.mark.parametrize(
@@ -57,7 +59,7 @@ def test_encode_socket_for_livestatus(site_spec, result):
     ],
 )
 def test_site_config_for_livestatus_tcp_tls(site_spec, result):
-    assert sites._site_config_for_livestatus("mysite", site_spec) == result
+    assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
 def test_sorted_sites(with_user_login, mocker):

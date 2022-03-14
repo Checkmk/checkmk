@@ -16,6 +16,7 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.utils.html import HTML
@@ -67,11 +68,8 @@ class ABCConfigDomain(abc.ABC):
         return True
 
     @classmethod
-    def get_all_default_globals(cls):
-        settings: Dict[str, Any] = {}
-        for domain in ABCConfigDomain.enabled_domains():
-            settings.update(domain().default_globals())
-        return settings
+    def get_all_default_globals(cls) -> Dict[str, Any]:
+        return _get_all_default_globals()
 
     @abc.abstractmethod
     def config_dir(self):
@@ -140,12 +138,20 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> Optional[SerializedSettings]:
-        return change.get("domain_settings", {}).get(cls.ident())
+    def get_domain_settings(cls, change) -> SerializedSettings:
+        return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
     def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
         return DomainRequest(cls.ident())
+
+
+@request_memoize()
+def _get_all_default_globals() -> Dict[str, Any]:
+    settings: Dict[str, Any] = {}
+    for domain in ABCConfigDomain.enabled_domains():
+        settings.update(domain().default_globals())
+    return settings
 
 
 def get_config_domain(domain_ident: ConfigDomainName):

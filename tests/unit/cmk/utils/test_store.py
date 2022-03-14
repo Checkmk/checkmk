@@ -17,6 +17,7 @@ import pytest
 
 from tests.testlib import import_module, wait_until
 
+import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store.host_storage import (
@@ -100,18 +101,24 @@ def test_load_data_from_file_locking(tmp_path, path_type):
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_not_permitted_file(tmp_path, path_type):
+    # Note: The code is actually a lot more expressive in debug mode.
+    cmk.utils.debug.disable()
+
     locked_file = tmp_path / "test"
     locked_file.write_text("[1, 2]", encoding="utf-8")
     os.chmod(str(locked_file), 0o200)
 
     with pytest.raises(MKGeneralException) as e:
         store.load_object_from_file(path_type(locked_file), default=None)
-    assert str(locked_file) in "%s" % e
-    assert "Permission denied" in "%s" % e
+    assert str(locked_file) in f"{e!s}"
+    assert "Permission denied" in f"{e!s}"
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_dict(tmp_path, path_type):
+    # Note: The code is actually a lot more expressive in debug mode.
+    cmk.utils.debug.disable()
+
     locked_file = tmp_path / "test"
     locked_file.write_bytes(repr({"1": 2, "ä": "ß"}).encode())
 
@@ -144,7 +151,7 @@ def test_save_data_to_file_pretty(tmp_path, path_type):
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
     store.save_object_to_file(path, data, pretty=True)
-    assert open(str(path)).read().count("\n") > 4
+    assert Path(path).read_text().count("\n") > 4
     assert store.load_object_from_file(path, default=None) == data
 
 
@@ -161,7 +168,7 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
     store.save_object_to_file(path, data)
-    assert open(str(path)).read().count("\n") == 1
+    assert Path(path).read_text().count("\n") == 1
     assert store.load_object_from_file(path, default=None) == data
 
 
@@ -350,7 +357,9 @@ def test_release_lock_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._locks._get_lock(str(path)))  # pylint:disable=no-value-for-parameter
+    fd = store._locks._get_lock(str(path))
+    assert isinstance(fd, int)
+    os.close(fd)
 
     store.release_lock(path)
     assert store.have_lock(path) is False
@@ -387,7 +396,9 @@ def test_release_all_locks_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._locks._get_lock(str(path)))  # pylint:disable=no-value-for-parameter
+    fd = store._locks._get_lock(str(path))
+    assert isinstance(fd, int)
+    os.close(fd)
 
     store.release_all_locks()
     assert store.have_lock(path) is False

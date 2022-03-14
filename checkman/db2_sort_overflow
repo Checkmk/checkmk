@@ -1,7 +1,7 @@
 title: DB2: Instance Sort Overflow Percentage
 agents: aix, linux
 catalog: app/db2
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the amount of sort overflows in percent.
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each database.
-

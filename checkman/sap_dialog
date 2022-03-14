@@ -1,7 +1,7 @@
 title: SAP R/3: Dialog Statistics
 agents: linux
 catalog: app/sap
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the data provided by the {mk_sap} agent plugin, which uses
@@ -20,4 +20,3 @@ item:
 discovery:
  One service is created for each SAP system ID which at least provides
  the {SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime}.
-

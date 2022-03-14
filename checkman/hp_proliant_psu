@@ -1,7 +1,7 @@
 title: HP Proliant Servers: Power Supplies
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system

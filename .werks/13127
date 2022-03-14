@@ -6,7 +6,7 @@ Date: 1629712185
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This is an addition to Werk #10435, where the caller's hostname, if provided in the
 request, was added to the error information.

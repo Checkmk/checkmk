@@ -105,7 +105,7 @@ def _parameter_valuespec_windows_tasks():
             (
                 "exit_code_to_state",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "exit_code",

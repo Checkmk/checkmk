@@ -6,7 +6,7 @@ Date: 1632738625
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In a clustered setup, the check plugin <tt>logwatch_ec</tt>, used for
 forwarding log messages collected by the logwatch agent plugin to the

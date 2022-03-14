@@ -1,7 +1,7 @@
 title: QLogic SANbox Fibre Channel Switches: Status of Power Supplies
 agents: snmp
 catalog: hw/storagehw/qlogic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of power supplies in QLogic SANbox Fibre Channel Switches.

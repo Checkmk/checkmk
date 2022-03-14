@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal, Mapping
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -14,13 +16,18 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Transform
 
 
+def _forth(p: object) -> Mapping[Literal["levels"], object]:
+    return p if isinstance(p, dict) and list(p) == ["levels"] else {"levels": p}
+
+
 def _parameter_valuespec_cpu_load():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",
                     Levels(
+                        title=_("Levels on CPU load"),
                         help=_(
                             "The CPU load of a system is the number of processes currently being "
                             "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
@@ -39,7 +46,7 @@ def _parameter_valuespec_cpu_load():
             ],
             optional_keys=False,
         ),
-        forth=lambda params: params if isinstance(params, dict) else {"levels": params},
+        forth=_forth,
     )
 
 

@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Memory Pool Usage
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows to monitor the usage of memory pools
@@ -18,4 +18,3 @@ item:
 
 discovery:
  One service is created for each Jolokia instance sent by the agent.
-

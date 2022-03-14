@@ -19,7 +19,7 @@ def _parameter_valuespec_websphere_mq_manager():
             (
                 "map_manager_states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(
@@ -47,7 +47,7 @@ def _parameter_valuespec_websphere_mq_manager():
             (
                 "map_standby_states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(

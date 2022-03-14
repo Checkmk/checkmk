@@ -1,7 +1,7 @@
 title: Proxmox VE: VM Backup Status
 agents: proxmox_ve
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is OK when a successful backup has been identified for the given VM which meets the

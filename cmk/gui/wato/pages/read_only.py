@@ -92,12 +92,12 @@ class ModeManageReadOnly(WatoMode):
                         title=_("Enabled"),
                         elements=[
                             FixedValue(
-                                False,
+                                value=False,
                                 title=_("Disabled "),
                                 totext="Not enabled",
                             ),
                             FixedValue(
-                                True,
+                                value=True,
                                 title=_("Enabled permanently"),
                                 totext=_("Enabled until disabling"),
                             ),
@@ -121,7 +121,7 @@ class ModeManageReadOnly(WatoMode):
                 (
                     "rw_users",
                     ListOf(
-                        userdb.UserSelection(),
+                        valuespec=userdb.UserSelection(),
                         title=_("Can still edit"),
                         help=_("Users listed here are still allowed to modify things."),
                         movable=False,

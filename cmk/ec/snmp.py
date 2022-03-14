@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -7,7 +6,7 @@
 import traceback
 from logging import Logger
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, Optional
 
 import pyasn1.error  # type: ignore[import]
 import pysnmp.debug  # type: ignore[import]
@@ -30,7 +29,7 @@ from cmk.utils.render import Age
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
 from .settings import Settings
 
-VarBind = Tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
+VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Iterable[VarBind]
 
 
@@ -45,7 +44,7 @@ class SNMPTrapEngine:
         settings: Settings,
         config: Config,
         logger: Logger,
-        callback: Callable[[Iterable[Tuple[str, str]], str], None],
+        callback: Callable[[Iterable[tuple[str, str]], str], None],
     ) -> None:
         super().__init__()
         self._logger = logger
@@ -69,7 +68,7 @@ class SNMPTrapEngine:
         )
 
     @staticmethod
-    def _auth_proto_for(proto_name: AuthenticationProtocol) -> Tuple[int, ...]:
+    def _auth_proto_for(proto_name: AuthenticationProtocol) -> tuple[int, ...]:
         if proto_name == "md5":
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
@@ -85,7 +84,7 @@ class SNMPTrapEngine:
         raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
     @staticmethod
-    def _priv_proto_for(proto_name: PrivacyProtocol) -> Tuple[int, ...]:
+    def _priv_proto_for(proto_name: PrivacyProtocol) -> tuple[int, ...]:
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
         if proto_name == "3DES-EDE":
@@ -118,9 +117,9 @@ class SNMPTrapEngine:
             # SNMPv3
             if credentials[0] == "noAuthNoPriv":
                 user_id = credentials[1]
-                auth_proto: Tuple[int, ...] = pysnmp.entity.config.usmNoAuthProtocol
+                auth_proto: tuple[int, ...] = pysnmp.entity.config.usmNoAuthProtocol
                 auth_key = None
-                priv_proto: Tuple[int, ...] = pysnmp.entity.config.usmNoPrivProtocol
+                priv_proto: tuple[int, ...] = pysnmp.entity.config.usmNoPrivProtocol
                 priv_key = None
             elif credentials[0] == "authNoPriv":
                 user_id = credentials[2]
@@ -157,7 +156,7 @@ class SNMPTrapEngine:
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id),
                 )
 
-    def process_snmptrap(self, message: bytes, sender_address: Tuple[str, int]) -> None:
+    def process_snmptrap(self, message: bytes, sender_address: tuple[str, int]) -> None:
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
         self._logger.log(
@@ -277,12 +276,12 @@ class SNMPTrapTranslator:
             logger.exception("Exception: %s" % e)
             return None
 
-    def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> List[Tuple[str, str]]:
+    def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:
         return [self._translate_binding_simple(oid, value) for oid, value in var_bind_list]
 
     def _translate_binding_simple(
         self, oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0):
             key = "Uptime"
         else:
@@ -294,12 +293,12 @@ class SNMPTrapTranslator:
             val = value.prettyPrint()
         return key, val
 
-    def _translate_via_mibs(self, ipaddress: str, var_bind_list: VarBinds) -> List[Tuple[str, str]]:
+    def _translate_via_mibs(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:
         if self._mib_resolver is None:
             self._logger.warning("Failed to translate OIDs, no modules loaded (see above)")
             return self._translate_simple(ipaddress, var_bind_list)
 
-        var_binds: List[Tuple[str, str]] = []
+        var_binds: list[tuple[str, str]] = []
         for oid, value in var_bind_list:
             try:
                 translated_oid, translated_value = self._translate_binding_via_mibs(oid, value)
@@ -319,7 +318,7 @@ class SNMPTrapTranslator:
 
     def _translate_binding_via_mibs(
         self, oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         # Disable mib_var[0] type detection
         mib_var = pysnmp.smi.rfc1902.ObjectType(
             pysnmp.smi.rfc1902.ObjectIdentity(oid), value

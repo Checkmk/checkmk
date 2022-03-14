@@ -1,0 +1,13 @@
+Title: Views/Dashboards/Reports are now rendered faster in setups with a large number of users
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1642493583
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The loading time of customized views, dashboards and reports no longer increases with the number of configured users.
+Due to various (unsuccessful) attempts to load customized elements for users, a monitoring system with 2000 users
+could introduce an additional rendering latency of ~200ms on every page.

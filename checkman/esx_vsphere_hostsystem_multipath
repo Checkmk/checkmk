@@ -1,7 +1,7 @@
 title: VMWare ESX Host Systems: Multipath State
 agents: vsphere
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of all Multipath devices
@@ -19,4 +19,3 @@ discovery:
 
 item:
  The unique ID of the path
-

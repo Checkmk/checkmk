@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 From ceph version pacific info USED is no longer notional size of data, but total size.
 STORED is now used for calculation of metrics.

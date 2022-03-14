@@ -437,7 +437,11 @@ class ModeAuditLog(WatoMode):
         html.show_user_errors()
 
         for name, vs in self._audit_log_options():
-            html.render_floating_option(name, "single", "options_", vs, self._options[name])
+
+            def renderer(name=name, vs=vs) -> None:
+                vs.render_input("options_" + name, self._options[name])
+
+            html.render_floating_option(name, "single", vs.title(), renderer)
 
         html.close_div()
 
@@ -606,10 +610,11 @@ class ModeAuditLog(WatoMode):
             if entry.user_id != self._options["user_id"]:
                 return False
 
-        if self._options["filter_regex"]:
+        filter_regex: str = self._options["filter_regex"]
+        if filter_regex:
             return any(
-                re.search(self._options["filter_regex"], val)
-                for val in [entry.user_id, entry.action, entry.text]
+                re.search(filter_regex, val)
+                for val in [entry.user_id, entry.action, str(entry.text)]
             )
 
         return True

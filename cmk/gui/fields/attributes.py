@@ -7,17 +7,17 @@ import datetime
 import re
 import typing
 
-from marshmallow import fields as _fields
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
-from marshmallow.fields import Time
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.fields.definitions import GroupField, Integer, List, Nested, String, Timestamp
+from cmk.gui.fields.definitions import GroupField, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
-from cmk.gui.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
+
+from cmk.fields import Boolean, Constant, DateTime, Integer, List, Nested, String, Time
+from cmk.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
 # TODO: make wrong 'tuple_fields' entries fail at compile not, not at runtime.
 
@@ -64,7 +64,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
         description="The replacement string. Match-groups can only be identified by `\\1`, `\\2`, "
         "etc. Highest supported match group is `\\99`. Named lookups are not "
         "supported.",
-        maxLenth=30,
+        maxLength=30,
         required=True,
     )
 
@@ -105,7 +105,7 @@ class IPAddressRange(BaseSchema, CheckmkTuple):
     tuple_fields = ("type", ("from_address", "to_address"))
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="A range of addresses.",
         constant="ip_range",
     )
@@ -123,7 +123,7 @@ class IPNetwork(BaseSchema, CheckmkTuple):
     tuple_fields = ("type", "network")
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="A single IPv4 network in CIDR notation.",
         constant="ip_network",
     )
@@ -154,7 +154,7 @@ class IPAddresses(BaseSchema, CheckmkTuple):
     tuple_fields = ("type", "addresses")
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="A list of single IPv4 addresses.",
         constant="ip_list",
     )
@@ -178,7 +178,7 @@ class IPRegexp(BaseSchema, CheckmkTuple):
     tuple_fields = ("type", "regexp_list")
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="IPv4 addresses which match a regexp pattern",
         constant="ip_regex_list",
     )
@@ -318,11 +318,11 @@ def _enum_options(options: typing.List[typing.Tuple[str, str]]) -> str:
 class DirectMapping(BaseSchema, CheckmkTuple):
     tuple_fields = ("hostname", "replace_with")
 
-    hostname = _fields.String(
+    hostname = String(
         description="The hostname to be replaced.",
         required=True,
     )
-    replace_with = _fields.String(
+    replace_with = String(
         description="The replacement string.",
         required=True,
     )
@@ -340,9 +340,9 @@ class TranslateNames(BaseSchema):
             ]
         ),
         enum=["nop", "lower", "upper"],
-        missing="nop",
+        load_default="nop",
     )
-    drop_domain = _fields.Boolean(
+    drop_domain = Boolean(
         description=(
             "Drop the rest of the domain, only keep the hostname. Will not affect "
             "IP addresses.\n\n"
@@ -428,7 +428,7 @@ class NetworkScan(BaseSchema):
     )
     scan_interval = Integer(
         description="Scan interval in seconds. Default is 1 day, minimum is 1 hour.",
-        missing=60 * 60 * 24,
+        load_default=60 * 60 * 24,
         minimum=3600,
     )
     time_allowed = List(
@@ -436,17 +436,17 @@ class NetworkScan(BaseSchema):
         description="Only execute the discovery during this time range each day..",
         required=True,
     )
-    set_ipaddress = _fields.Boolean(
+    set_ipaddress = Boolean(
         data_key="set_ip_address",
         description="When set, the found IPv4 address is set on the discovered host.",
-        missing=True,
+        load_default=True,
     )
     max_parallel_pings = Integer(
         description="Set the maximum number of concurrent pings sent to target IP addresses.",
         required=False,
         minimum=1,
         maximum=200,
-        missing=100,
+        load_default=100,
     )
     run_as = String(
         description=(
@@ -460,12 +460,12 @@ class NetworkScan(BaseSchema):
 
 
 class NetworkScanResult(BaseSchema):
-    start = _fields.DateTime(description="When the scan started")
-    end = _fields.DateTime(
+    start = DateTime(description="When the scan started")
+    end = DateTime(
         description="When the scan finished. Will be Null if not yet run.",
         allow_none=True,
     )
-    state = _fields.String(
+    state = String(
         description="Last scan result",
         enum=[
             "not_started",
@@ -540,8 +540,8 @@ class MappingConverter(Converter):
 class SNMPCommunity(BaseSchema):
     cast_to_dict = True
 
-    type = _fields.Constant(constant="v1_v2_community")
-    community = _fields.String(
+    type = Constant(constant="v1_v2_community")
+    community = String(
         description="SNMP community (SNMP Versions 1 and 2c)",
     )
 
@@ -576,7 +576,7 @@ class SNMPv3NoAuthNoPrivacy(BaseSchema, CheckmkTuple):
     tuple_fields = ("type", "security_name")
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="The type of credentials to use.",
         constant="noAuthNoPriv",
     )
@@ -591,7 +591,7 @@ class SNMPv3AuthNoPrivacy(BaseSchema, CheckmkTuple):
     converter = (None, MappingConverter(AUTH_PROT_MAP), None, None)
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="The type of credentials to use.",
         constant="authNoPriv",
     )
@@ -630,7 +630,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
     )
     cast_to_dict = True
 
-    type = _fields.Constant(
+    type = Constant(
         description="SNMPv3 with authentication and privacy.",
         constant="authPriv",
     )
@@ -745,8 +745,8 @@ class SNMPCredentials(OneOfSchema):
 class IPMIParameters(BaseSchema):
     cast_to_dict = True
 
-    username = _fields.String(required=True)
-    password = _fields.String(required=True)
+    username = String(required=True)
+    password = String(required=True)
 
 
 class MetaData(BaseSchema):
@@ -763,7 +763,7 @@ class MetaData(BaseSchema):
     )
 
 
-class HostAttributeManagementBoardField(_fields.String):
+class HostAttributeManagementBoardField(String):
     def __init__(self) -> None:
         super().__init__(
             description=(
@@ -803,11 +803,11 @@ class HostContactGroup(BaseSchema):
         required=True,
         description="A list of contact groups.",
     )
-    use = _fields.Boolean(
+    use = Boolean(
         description="Add these contact groups to the host.",
-        missing=False,
+        load_default=False,
     )
-    use_for_services = _fields.Boolean(
+    use_for_services = Boolean(
         description=(
             "<p>Always add host contact groups also to its services.</p>"
             "With this option contact groups that are added to hosts are always being added to "
@@ -815,13 +815,13 @@ class HostContactGroup(BaseSchema):
             "groups to services via rules in <i>Host & Service Parameters</i>. As long as you do "
             "not have any such rule a service always inherits all contact groups from its host."
         ),
-        missing=False,
+        load_default=False,
     )
-    recurse_use = _fields.Boolean(
+    recurse_use = Boolean(
         description="Add these groups as contacts to all hosts in all sub-folders of this folder.",
-        missing=False,
+        load_default=False,
     )
-    recurse_perms = _fields.Boolean(
+    recurse_perms = Boolean(
         description="Give these groups also permission on all sub-folders.",
-        missing=False,
+        load_default=False,
     )

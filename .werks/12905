@@ -6,7 +6,7 @@ Date: 1627156479
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agents now append all sections found in the spool directory
 to the agent output, like most of the other *nix agents do.

@@ -31,7 +31,7 @@ def _parameter_valuespec_inotify():
             (
                 "age_last_operation",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             DropdownChoice(
                                 title=_("INotify Operation"),

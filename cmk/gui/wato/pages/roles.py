@@ -59,7 +59,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.sites import get_login_sites
-from cmk.gui.table import table_element
+from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 
 
@@ -301,7 +301,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         if html.form_submitted("search"):
             return None
 
-        alias = request.get_unicode_input_mandatory("alias")
+        alias = request.get_str_input_mandatory("alias")
 
         unique, info = watolib.is_alias_used("roles", self._role_id, alias)
         if not unique:
@@ -475,7 +475,7 @@ class ModeRoleMatrix(WatoMode):
             with table_element(
                 section.name,
                 section.title,
-                foldable=True,
+                foldable=Foldable.FOLDABLE_SAVE_STATE,
             ) as table:
 
                 permission_list = permission_registry.get_sorted_permissions(section)

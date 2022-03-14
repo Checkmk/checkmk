@@ -1,0 +1,15 @@
+Title: KUBE agent_kube handling of exception case when no cluster collector data is processed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646148019
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The cluster collector is considered healthy even if it never received data
+from its node collectors. This behaviour was previously also reflected in the Cluster
+Collector service, where processing was considered successful even though no data
+was processed. This werk changes that, and the service will make a clear distinction
+when no data has been received from the cluster collector endpoint.

@@ -46,7 +46,7 @@ def _parameter_valuespec_hw_fans():
         optional_keys=["upper", "output_metrics"],
     )
     return Transform(
-        hw_fans_dict,
+        valuespec=hw_fans_dict,
         forth=lambda spec: spec if isinstance(spec, dict) else {"lower": spec},
     )
 

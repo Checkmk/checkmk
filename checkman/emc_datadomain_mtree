@@ -1,7 +1,7 @@
 title: EMC Datadomain: MTree Usage
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the Precompiled MTree usage in GB of the EMC Data Domain

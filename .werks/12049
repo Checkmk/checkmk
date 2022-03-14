@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In checkmk versions 2.0.0i1 to 2.0.0b6 the memory service could be missing
 for LCX container and some hosts with reduced memory information.

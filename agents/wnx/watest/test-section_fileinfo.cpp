@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 
 namespace cma::provider {
 namespace {
-std::vector<std::string> MakeBody(FileInfo& fi) {
+std::vector<std::string> MakeBody(FileInfo &fi) {
     auto table = tools::SplitString(fi.generateContent(), "\n");
     table.erase(table.begin());
     return table;
@@ -29,13 +29,13 @@ std::vector<std::string> MakeBody(FileInfo& fi) {
 
 }  // namespace
 
-static void CheckString(std::string& x) {
+static void CheckString(std::string &x) {
     EXPECT_TRUE(!x.empty());
     ASSERT_EQ(x.back(), '\n');
     x.pop_back();
 }
 
-static void CheckTableMissing(std::vector<std::string>& table,
+static void CheckTableMissing(std::vector<std::string> &table,
                               std::string_view name, FileInfo::Mode mode) {
     ASSERT_TRUE(table.size() >= 2);
     EXPECT_EQ(table[0], name.data());
@@ -46,7 +46,7 @@ static void CheckTableMissing(std::vector<std::string>& table,
     }
 }
 
-static void CheckTablePresent(std::vector<std::string>& table,
+static void CheckTablePresent(std::vector<std::string> &table,
                               std::string_view name, FileInfo::Mode mode) {
     auto shift = mode == FileInfo::Mode::modern ? 1 : 0;
 
@@ -74,8 +74,8 @@ fs::path BuildTestUNC() {
 
 TEST(FileInfoTest, Split) {
     {
-        const wchar_t* head = L"\\\\DEV\\";
-        const wchar_t* body = L"path\\to*";
+        const wchar_t *head = L"\\\\DEV\\";
+        const wchar_t *body = L"path\\to*";
 
         std::wstring fname = head;
         fname += body;
@@ -85,8 +85,8 @@ TEST(FileInfoTest, Split) {
     }
 
     {
-        const wchar_t* head = L"c:\\";
-        const wchar_t* body = L"path\\to*";
+        const wchar_t *head = L"c:\\";
+        const wchar_t *body = L"path\\to*";
 
         std::wstring fname = head;
         fname += body;
@@ -96,8 +96,8 @@ TEST(FileInfoTest, Split) {
     }
 
     {
-        const wchar_t* head = L"c:";
-        const wchar_t* body = L"path\\to*";
+        const wchar_t *head = L"c:";
+        const wchar_t *body = L"path\\to*";
 
         std::wstring fname = head;
         fname += body;
@@ -107,8 +107,8 @@ TEST(FileInfoTest, Split) {
     }
 
     {
-        const wchar_t* head = L"";
-        const wchar_t* body = L"path\\to*";
+        const wchar_t *head = L"";
+        const wchar_t *body = L"path\\to*";
 
         std::wstring fname = head;
         fname += body;
@@ -139,7 +139,7 @@ TEST(FileInfoTest, ValidFileInfoPathEntry) {
     EXPECT_TRUE(details::ValidFileInfoPathEntry("D:\\a\\x"));
 }
 
-constexpr const char* hdr = "<<<fileinfo:sep(124)>>>";
+constexpr const char *hdr = "<<<fileinfo:sep(124)>>>";
 TEST(FileInfoTest, ValidateConfig) {
     auto test_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
@@ -256,7 +256,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
     std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
                                                      {a / "a2.txt", "a2"}};
 
-    for (const auto& [path, content] : data) tst::CreateTextFile(path, content);
+    for (const auto &[path, content] : data) tst::CreateTextFile(path, content);
 
     auto cfg = cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[cfg::groups::kFileInfo];
@@ -302,7 +302,7 @@ TEST(FileInfoTest, CheckOutput) {
                                                      {b / "b3.txt", "b3"},
                                                      {a / "a2.cmd", "a2"}};
 
-    for (const auto& [path, content] : data) tst::CreateTextFile(path, content);
+    for (const auto &[path, content] : data) tst::CreateTextFile(path, content);
 
     auto cfg = cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[cfg::groups::kFileInfo];
@@ -344,7 +344,7 @@ TEST(FileInfoTest, CheckOutput) {
             auto f = std::any_of(
                 std::begin(data), std::end(data),
                 [values](std::tuple<fs::path, std::string_view> entry) {
-                    auto const& [path, _] = entry;
+                    auto const &[path, _] = entry;
                     return tools::IsEqual(path.u8string(), values[0]);
                 });
             EXPECT_TRUE(f);
@@ -387,7 +387,7 @@ TEST(FileInfoTest, CheckOutput) {
             auto f = std::any_of(
                 std::begin(data), std::end(data),
                 [values](std::tuple<fs::path, std::string_view> entry) {
-                    auto const& [path, _] = entry;
+                    auto const &[path, _] = entry;
                     return tools::IsEqual(path.u8string(), values[0]);
                 });
             EXPECT_TRUE(f);
@@ -437,7 +437,7 @@ TEST(FileInfoTest, GlobRecursive) {
     auto sorted = files;
     std::ranges::sort(sorted);
     EXPECT_TRUE(files == sorted) << "output should be sorted";
-    for (auto& f : files) {
+    for (auto &f : files) {
         EXPECT_TRUE(fs::is_regular_file(f));
     }
 }
@@ -484,7 +484,7 @@ TEST(FileInfoTest, Unicode) {
             auto utf8_name_2 = wtools::ToUtf8(w_name);
             EXPECT_TRUE(std::find(files.begin(), files.end(), w_name) !=
                         std::end(files));
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             XLOG::l("Error {} ", e.what());
         }
     } else {
@@ -499,7 +499,7 @@ TEST(FileInfoTest, MakeFileInfoMissing) {
     static constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
                                                FileInfo::Mode::modern};
 
-    for (auto& n : names) {
+    for (auto &n : names) {
         for (auto m : modes) {
             SCOPED_TRACE(
                 fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
@@ -517,7 +517,7 @@ namespace {
 ///
 /// function which was valid in 1.6 and still valid
 /// because experimental is deprecated we can't it use anymore, but we can test
-int64_t SecondsSinceEpoch(const std::string& name) {
+int64_t SecondsSinceEpoch(const std::string &name) {
     namespace fs = std::experimental::filesystem::v1;
     fs::path fp{name};
 
@@ -582,7 +582,7 @@ TEST(FileInfoTest, MakeFileInfo) {
     static constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
                                                FileInfo::Mode::modern};
 
-    for (auto& n : names) {
+    for (auto &n : names) {
         for (auto m : modes) {
             SCOPED_TRACE(
                 fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
@@ -596,7 +596,7 @@ TEST(FileInfoTest, MakeFileInfo) {
     }
 
     static constexpr std::string_view names_2[] = {"C:\\Windows\\notEpAd.exe"};
-    for (auto& n : names_2) {
+    for (auto &n : names_2) {
         for (auto m : modes) {
             SCOPED_TRACE(
                 fmt::format("'{}' mode is {}", n, static_cast<int>(m)));

@@ -1,0 +1,22 @@
+Title: Remove report element "Paragraph of text fetched via HTTP(s)"
+Class: security
+Compatible: incomp
+Component: reporting
+Date: 1644393159
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In previous versions one could add text from foreign websites into reports.
+<i>Paragraph of text fetched via HTTP(s)</i> The functionality was very
+limited since no parsing was done. This functionality broke with version
+2.0.0.
+
+Additionally this could enable a malicious actor to retrieve sensitive
+information from systems accessible to the Checkmk server (SSRF). Therefore the
+functionality is removed.
+
+Existing report elements of type <i>Paragraph of text fetched via HTTP(s)</i>
+will be converted to <i>Paragraph of text</i> elements with text refering to
+the URL. Unfortunately no macros will be resolved.

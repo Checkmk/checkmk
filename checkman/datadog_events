@@ -1,7 +1,7 @@
 title: Datadog: events
 agents: datadog
 catalog: cloud/datadog
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the number of events forwarded to the Event Console by

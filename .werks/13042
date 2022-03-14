@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The <tt>--debug</tt> flag for <tt>check_mail_loop</tt> did not affect all
 possible exceptions.

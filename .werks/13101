@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the "Master switch" toggle was used on page "Automatic agent updates", all
 conditions were restored to not selected after toggling, even if condition have

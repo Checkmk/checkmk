@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A user with permissions to edit tag groups could trigger a stored XSS issue on
 the host and folder properties pages. This may lead to javascript code being

@@ -1,7 +1,7 @@
 title: Sophos Device: CPU Usage
 agents: snmp
 catalog: hw/network/sophos
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the current cpu usage for Sophos devices.

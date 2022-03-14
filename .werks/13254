@@ -6,7 +6,7 @@ Date: 1637133454
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Connection timeout specified on command line would be ignored for IMAP mode.
 Using the socket module for setting timeouts it works for both POP3 and IMAP now.

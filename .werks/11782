@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Empty SNMP values for load or values would result in an unhandled exception
 {{ValueError (invalid literal for int() with base 10: '')}}.

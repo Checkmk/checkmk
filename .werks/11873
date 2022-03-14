@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When some kind of custom host attribute has been defined and is used in the host
 configuration, this may lead to an exception like this when editing or deleting

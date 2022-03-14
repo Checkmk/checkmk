@@ -6,7 +6,7 @@ Date: 1612798519
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, when creating, editing or deleting a password
 via the API, the change was not registered as a pending change state. This

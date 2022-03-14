@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The command "cmk --scan-parents" was detecting all hosts to be not pingable in
 previous Checkmk 2.0 releases on Checkmk servers that use a localized

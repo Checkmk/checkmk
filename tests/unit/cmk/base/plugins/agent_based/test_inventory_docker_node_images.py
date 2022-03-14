@@ -13,6 +13,8 @@ from cmk.base.plugins.agent_based.inventory_docker_node_images import (
     parse_docker_node_images,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 def test_inventory_docker_node_images_empty():
     with pytest.raises(docker.AgentOutputMalformatted) as e:
@@ -68,58 +70,64 @@ AGENT_OUTPUT_NULL_LABELS_ST = [
 
 def test_inventory_docker_node_images():
     parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert list(inventory_docker_node_images(parse_docker_node_images(parsed))) == [
-        TableRow(
-            path=["software", "applications", "docker", "images"],
-            key_columns={
-                "id": "b2bf42ca5d8f",
-            },
-            inventory_columns={
-                "repotags": "hello:world",
-                "repodigests": "",
-                "creation": "2021-02-12T11:29:33.063968737Z",
-                "size": 1231733,
-                "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
-            },
-            status_columns={
-                "amount_containers": 1,
-            },
-        ),
-        TableRow(
-            path=["software", "applications", "docker", "containers"],
-            key_columns={
-                "id": "891a6f6a1c28",
-            },
-            inventory_columns={},
-            status_columns={
-                "image": "b2bf42ca5d8f",
-                "name": "/relaxed_shaw",
-                "creation": "2021-02-12T12:15:28.230110819Z",
-                "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
-                "status": "running",
-            },
-        ),
-    ]
+    assert sort_inventory_result(
+        inventory_docker_node_images(parse_docker_node_images(parsed))
+    ) == sort_inventory_result(
+        [
+            TableRow(
+                path=["software", "applications", "docker", "images"],
+                key_columns={
+                    "id": "b2bf42ca5d8f",
+                },
+                inventory_columns={
+                    "repotags": "hello:world",
+                    "repodigests": "",
+                    "creation": "2021-02-12T11:29:33.063968737Z",
+                    "size": 1231733,
+                    "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
+                },
+                status_columns={
+                    "amount_containers": 1,
+                },
+            ),
+            TableRow(
+                path=["software", "applications", "docker", "containers"],
+                key_columns={
+                    "id": "891a6f6a1c28",
+                },
+                inventory_columns={},
+                status_columns={
+                    "image": "b2bf42ca5d8f",
+                    "name": "/relaxed_shaw",
+                    "creation": "2021-02-12T12:15:28.230110819Z",
+                    "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
+                    "status": "running",
+                },
+            ),
+        ]
+    )
 
 
 def test_inventory_docker_node_images_labels_null():
-    assert list(
+    assert sort_inventory_result(
         inventory_docker_node_images(parse_docker_node_images(AGENT_OUTPUT_NULL_LABELS_ST))
-    ) == [
-        TableRow(
-            path=["software", "applications", "docker", "images"],
-            key_columns={
-                "id": "666620a54926",
-            },
-            inventory_columns={
-                "repotags": "plantuml:latest",
-                "repodigests": "",
-                "creation": "2021-02-25T08:42:22.47977742Z",
-                "size": 389770065,
-                "labels": "",
-            },
-            status_columns={
-                "amount_containers": 0,
-            },
-        ),
-    ]
+    ) == sort_inventory_result(
+        [
+            TableRow(
+                path=["software", "applications", "docker", "images"],
+                key_columns={
+                    "id": "666620a54926",
+                },
+                inventory_columns={
+                    "repotags": "plantuml:latest",
+                    "repodigests": "",
+                    "creation": "2021-02-25T08:42:22.47977742Z",
+                    "size": 389770065,
+                    "labels": "",
+                },
+                status_columns={
+                    "amount_containers": 0,
+                },
+            ),
+        ]
+    )

@@ -14,7 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import ObjectStore
 from cmk.utils.type_defs import CheckPluginName, HostName, Item
 
-from cmk.base.check_utils import LegacyCheckParameters
+from cmk.base.check_utils import LegacyCheckParameters, ServiceID
 
 
 # If we switched to something less stupid than "LegacyCheckParameters", see
@@ -28,7 +28,7 @@ class AutocheckEntry(NamedTuple):
     @staticmethod
     def _parse_parameters(parameters: object) -> LegacyCheckParameters:
         # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
-        if parameters is None or isinstance(parameters, (dict, tuple, list, str)):
+        if parameters is None or isinstance(parameters, (dict, tuple, list, str, int, bool)):
             return parameters
         # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
         raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
@@ -41,6 +41,9 @@ class AutocheckEntry(NamedTuple):
             parameters=cls._parse_parameters(raw_dict["parameters"]),
             service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
         )
+
+    def id(self) -> ServiceID:
+        return self.check_plugin_name, self.item
 
     def dump(self) -> Mapping[str, Any]:
         return {

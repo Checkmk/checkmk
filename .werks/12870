@@ -6,7 +6,7 @@ Date: 1622452306
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Werk #11202 introduced the option "Site custom field ID", which was mandatory
 instead of optional.

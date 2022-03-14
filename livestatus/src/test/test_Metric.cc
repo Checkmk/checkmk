@@ -17,7 +17,7 @@
 
 namespace fs = std::filesystem;
 
-bool operator<(const Metric::MangledName& x, const Metric::MangledName& y) {
+bool operator<(const Metric::MangledName &x, const Metric::MangledName &y) {
     return x.string() < y.string();
 }
 
@@ -34,11 +34,11 @@ public:
                                          Metric::MangledName{"pqr 6"}};
     const fs::path basepath{fs::temp_directory_path() / "metric_tests"};
 
-    static void dump(fs::path&& path, const Metric::Names& metrics) {
+    static void dump(fs::path &&path, const Metric::Names &metrics) {
         auto out = std::ofstream{path};
         out << "<?xml version=\"1.0\">\n"
                "<NAGIOS>\n";
-        for (auto&& m : metrics) {
+        for (auto &&m : metrics) {
             out << "  <DATASOURCE>\n";
             out << "    <TEMPLATE>template</TEMPLATE>\n";
             out << "    <NAME>" + m.string() + "</NAME>\n";
@@ -63,10 +63,10 @@ public:
 };
 
 /// Return sorted string vectors to make the diff readable.
-std::vector<std::string> human_readable(const Metric::Names& in) {
+std::vector<std::string> human_readable(const Metric::Names &in) {
     std::vector<std::string> out(in.size());
     std::transform(std::begin(in), std::end(in), std::begin(out),
-                   [](auto&& elem) { return elem.string(); });
+                   [](auto &&elem) { return elem.string(); });
     std::sort(std::begin(out), std::end(out));
     return out;
 }
@@ -74,7 +74,7 @@ std::vector<std::string> human_readable(const Metric::Names& in) {
 TEST_F(MetricFixture, ScanRRDFindsMetrics) {
     ASSERT_TRUE(fs::exists(basepath));
     ASSERT_FALSE(fs::is_empty(basepath));
-    Logger* const logger{Logger::getLogger("test")};
+    Logger *const logger{Logger::getLogger("test")};
 
     const auto names = scan_rrd(basepath, desc, logger);
     EXPECT_EQ(human_readable(metrics), human_readable(names));

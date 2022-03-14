@@ -32,6 +32,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Average.h"
@@ -40,7 +41,6 @@
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
-#include "NagiosGlobals.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
 #include "Queue.h"
@@ -599,13 +599,26 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
                 ._is_service = dt->service_description != nullptr,
                 ._host = hst,
                 ._service = svc,
-                ._triggered_by = dt->triggered_by});
+                ._triggered_by = dt->triggered_by,
+                ._is_active = false,  // TODO(sp) initial state?
+            });
             break;
         }
         case NEBTYPE_DOWNTIME_DELETE:
             if (fl_downtimes.erase(id) == 0) {
                 Informational(fl_logger_nagios)
                     << "Cannot delete non-existing downtime " << id;
+            }
+            break;
+        case NEBTYPE_DOWNTIME_START:
+            if (auto it = fl_downtimes.find(id); it != fl_downtimes.end()) {
+                it->second->_is_active = true;
+            }
+            break;
+
+        case NEBTYPE_DOWNTIME_STOP:
+            if (auto it = fl_downtimes.find(id); it != fl_downtimes.end()) {
+                it->second->_is_active = false;
             }
             break;
         default:

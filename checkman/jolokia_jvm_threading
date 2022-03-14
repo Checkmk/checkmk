@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Number of Threads
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check works on the number of threads running in a JVM.
@@ -18,5 +18,3 @@ item:
 
 discovery:
  One service is created for each JVM sent by the Jolokia agent.
-
-

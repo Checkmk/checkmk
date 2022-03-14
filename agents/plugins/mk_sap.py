@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 # This agent plugin has been built to collect information from SAP R/3 systems
 # using RFC calls. It needs the python module sapnwrfc (available in Checkmk
@@ -156,7 +156,8 @@ config_file = MK_CONFDIR + "/sap.cfg"
 
 cfg = {}  # type: Union[List[Dict[Any, Any]], Dict[Any, Any]]
 if os.path.exists(config_file):
-    exec(open(config_file).read())
+    with open(config_file) as opened_file:
+        exec(opened_file.read())
     if isinstance(cfg, dict):
         cfg = [cfg]
 else:
@@ -164,7 +165,8 @@ else:
 
 # Load the state file into memory
 try:
-    states = ast.literal_eval(open(STATE_FILE).read())
+    with open(STATE_FILE) as opened_file:
+        states = ast.literal_eval(opened_file.read())
 except IOError:
     states = {}
 

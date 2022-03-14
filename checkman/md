@@ -1,7 +1,7 @@
 title: Linux Softraid Devices
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current state of a Linux MD raid array. The information

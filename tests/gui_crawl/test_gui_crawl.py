@@ -267,7 +267,8 @@ class Crawler:
             return False
 
         try:
-            tar = tarfile.open(fileobj=io.BytesIO(response.content))
+            with tarfile.open(fileobj=io.BytesIO(response.content)) as tar:
+                crash_info = tar.extractfile("crash.info")
         except tarfile.ReadError:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),
@@ -276,7 +277,6 @@ class Crawler:
             )
             return False
 
-        crash_info = tar.extractfile("crash.info")
         if crash_info is None:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),
@@ -423,7 +423,6 @@ class Crawler:
     def check_logs(self, url: Url, logs: Iterable[str]):
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
-            "Error with Feature-Policy header: Unrecognized feature:",
         ]
         for log in logs:
             if not any(accepted_log in log for accepted_log in accepted_logs):
@@ -433,6 +432,7 @@ class Crawler:
         parsed = urlsplit(url)
         if parsed.scheme != "http":
             raise InvalidUrl(url, f"invalid scheme: {parsed.scheme}")
+
         # skip external urls
         if url.startswith("http://") and not url.startswith(self.site.internal_url):
             raise InvalidUrl(url, "external url")
@@ -445,6 +445,10 @@ class Crawler:
             or "../nagios/" in parsed.path
         ):
             raise InvalidUrl(url, "non Check_MK URL")
+
+        file_name = os.path.basename(parsed.path)
+        query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+
         # skip current url with link to index
         if "index.py?start_url=" in url:
             raise InvalidUrl(url, "link to index with current URL")
@@ -469,6 +473,36 @@ class Crawler:
         # Skip agent download files
         if parsed.path.startswith(f"/{self.site.id}/check_mk/agents/"):
             raise InvalidUrl(url, "agent download file")
+
+        # Skip combined graph pages which take way too long for our crawler with unrestricted
+        # contexts. These pages take >10 seconds to load while crawling
+        if file_name == "combined_graphs.py" and not query.get("host"):
+            raise InvalidUrl(url, "combined graph with unrestricted context")
+
+        # From the list visuals page (e.g. edit_views.py) there are links with explicit "owner="
+        # query string. These parameters are useful for admins, in case they want to display the
+        # view of a specific user. In our crawl scenario this results in all view related pages
+        # (regular view, availability sub-views, reports and so on) being crawled twice. To reduce
+        # the number of URLs being crawled, we exclude the view.py with empty "owner" parameter.
+        if file_name == "view.py" and query.get("owner") == "":
+            raise InvalidUrl(url, "explicit empty owner (redundant view)")
+
+        # Do not crawl the thousands of werk pages. Visit at least some of them to be able to catch
+        # some general rendering issues.
+        if file_name == "werk.py" and query.get("werk") not in [
+            "11363",
+            "5605",
+            "12908",
+            "12389",
+            "7352",
+            "11361",
+            "12149",
+            "5744",
+            "8350",
+            "6240",
+            "5958",
+        ]:
+            raise InvalidUrl(url, "Skip werk pages")
 
     def normalize_url(self, url: str) -> str:
         url = urljoin(self.site.internal_url, url.rstrip("#"))

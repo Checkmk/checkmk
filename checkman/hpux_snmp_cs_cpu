@@ -1,7 +1,7 @@
 title: HP-UX: CPU Utilization (via SNMP)
 agents: hpux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check

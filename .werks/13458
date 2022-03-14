@@ -1,0 +1,16 @@
+Title: Add support for GlobalProtect Gateway Utilization
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1644504265
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+New check GlobalProtect Gateway Utilization is added. It reports
+utilization of the gateway as a percentage, number of active sessions
+and maximal allowed number of sessions.
+
+It is possible to configure thresholds in the ruleset 'GlobalProtect Utilization'
+to detect excessive utilization.

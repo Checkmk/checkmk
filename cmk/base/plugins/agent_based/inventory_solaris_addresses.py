@@ -106,7 +106,7 @@ def inventory_solaris_addresses(section: Section) -> InventoryResult:
     interfaces, addresses = section
 
     ifaces_path = ["networking", "interfaces"]
-    for iface in sorted(interfaces, key=lambda i: i.idx):
+    for iface in interfaces:
         yield TableRow(
             path=ifaces_path,
             key_columns={
@@ -123,7 +123,7 @@ def inventory_solaris_addresses(section: Section) -> InventoryResult:
         )
 
     addresses_path = ["networking", "addresses"]
-    for address in sorted(addresses, key=lambda i: i.device):
+    for address in addresses:
         yield TableRow(
             path=addresses_path,
             key_columns={

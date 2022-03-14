@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import json
 import logging
 import typing as t
 import warnings
@@ -17,7 +18,7 @@ import pytest
 from pipfile import Pipfile  # type: ignore[import]
 
 from tests.testlib import repo_path
-from tests.testlib.utils import current_base_branch_name, is_enterprise_repo
+from tests.testlib.utils import is_enterprise_repo
 
 IGNORED_LIBS = set(["cmk", "livestatus", "mk_jolokia"])  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
@@ -30,17 +31,40 @@ PackageName = t.NewType("PackageName", str)  # Name in Pip(file)
 ImportName = t.NewType("ImportName", str)  # Name in Source (import ...)
 
 
-@pytest.mark.skipif(
-    current_base_branch_name() == "master",
-    reason="In master we use latest and greatest, but once we release we start pinning...",
-)
-def test_all_deployment_packages_pinned() -> None:
-    parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
-    unpinned_packages = [f"'{n}'" for n, v in parsed_pipfile.data["default"].items() if v == "*"]
+@pytest.fixture(name="loaded_pipfile")
+def load_pipfile():
+    return Pipfile.load(filename=repo_path() + "/Pipfile")
+
+
+def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
+    unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
         "For the sake of reproducibility, all deployment packages must be pinned to a version!"
     ) % " ,".join(unpinned_packages)
+
+
+def test_pipfile_syntax(loaded_pipfile) -> None:
+    # pipenv is currently (e.g. in version 2022.1.8) accepting false Pipfile syntax like:
+    # pysmb = "1.2"
+    # So it will not throw an error or warning if the comparision operator is missing.
+    # Remove this test as soon pipenv is getting smarter..
+    packages_with_faulty_syntax = []
+
+    for type_ in ("default", "develop"):
+        packages_with_faulty_syntax.extend(
+            [
+                (n, s)
+                for n, s in loaded_pipfile.data[type_].items()
+                if isinstance(s, str) and s[0].isnumeric()
+            ]
+        )
+    assert not any(packages_with_faulty_syntax), (
+        "The following packages seem to have a faulty Pipfile syntax: %s. "
+        "Assuming you forgot to add a comparision operator, like '<', '==' etc. '"
+        "Have a look at: https://github.com/pypa/pipfile"
+        % ",".join([f"Package {n} with Version: {v}" for n, v in packages_with_faulty_syntax])
+    )
 
 
 def iter_sourcefiles(basepath: Path) -> t.Iterable[Path]:
@@ -229,8 +253,8 @@ CEE_UNUSED_PACKAGES = [
     "chardet",
     "click",
     "defusedxml",
-    "dnspython",
     "docutils",
+    "exchangelib",  # TODO: Clean this up once the call sites have been added
     "gunicorn",
     "idna",
     "importlib_metadata",
@@ -304,3 +328,15 @@ def test_dependencies_are_declared() -> None:
             ]
         )
     )
+
+
+def _get_lockfile_hash(lockfile_path) -> str:
+    lockfile = json.loads(lockfile_path.read_text())
+    if "_meta" in lockfile and hasattr(lockfile, "keys"):
+        return lockfile["_meta"].get("hash", {}).get("sha256")
+    return ""
+
+
+def test_pipfile_lock_up_to_date(loaded_pipfile):
+    lockfile_hash = _get_lockfile_hash(Path(repo_path(), "Pipfile.lock"))
+    assert loaded_pipfile.hash == lockfile_hash

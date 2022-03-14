@@ -1,7 +1,7 @@
 title: Fujitsu SC2: CPU Status
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU status
@@ -16,4 +16,3 @@ item:
 
 discovery:
  One service is created for each CPU.
-

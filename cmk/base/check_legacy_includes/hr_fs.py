@@ -69,11 +69,11 @@ def check_hr_fs(item, params, info):
             unit_size = saveint(hrunits)
             hrsize = saveint(hrsize)
             if hrsize < 0:
-                hrsize = hrsize + 2 ** 32
+                hrsize = hrsize + 2**32
             size = hrsize * unit_size
             hrused = saveint(hrused)
             if hrused < 0:
-                hrused = hrused + 2 ** 32
+                hrused = hrused + 2**32
             used = hrused * unit_size
             size_mb = size / 1048576.0
             used_mb = used / 1048576.0

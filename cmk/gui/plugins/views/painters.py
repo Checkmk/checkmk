@@ -5,10 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import io
-import os
 import time
 from fnmatch import fnmatch
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.man_pages as man_pages
@@ -65,7 +64,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DropdownChoice,
-    DropdownChoiceEntry,
+    DropdownChoiceEntries,
     Integer,
     ListChoice,
     ListChoiceChoices,
@@ -1473,7 +1472,10 @@ class PainterCheckManpage(Painter):
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
     text = HTML(", ").join(
-        [html.render_i(a) + escaping.escape_html_permissive(": %s" % c) for _id, a, c in comments]
+        [
+            html.render_i(a) + escaping.escape_to_html_permissive(": %s" % c, escape_links=False)
+            for _id, a, c in comments
+        ]
     )
     return "", text
 
@@ -1518,26 +1520,37 @@ class PainterSvcAcknowledged(Painter):
         return paint_nagiosflag(row, "service_acknowledged", False)
 
 
-def notes_matching_pattern_entries(dirs: Iterable[str], item: str) -> Iterable[str]:
-    matching = []
-    for directory in dirs:
-        if os.path.isdir(directory):
-            entries = sorted([d for d in os.listdir(directory) if d[0] != "."], reverse=True)
-            for pattern in entries:
-                if pattern[0] != "." and fnmatch(item, pattern):
-                    matching.append(directory + "/" + pattern)
-    return matching
+def notes_matching_pattern_entries(dirs: Iterable[Path], item: str) -> Iterable[Path]:
+    yield from (
+        sub_path
+        for directory in dirs
+        if directory.is_dir()
+        for sub_path in directory.iterdir()
+        if not sub_path.name.startswith(".") and fnmatch(item, sub_path.name)
+    )
 
 
 def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        notes_dir = cmk.utils.paths.default_config_dir + "/notes/services"
-        dirs = notes_matching_pattern_entries([notes_dir], host)
+        dirs = notes_matching_pattern_entries(
+            [
+                Path(
+                    cmk.utils.paths.default_config_dir,
+                    "/notes/services",
+                )
+            ],
+            host,
+        )
         item = svc
     else:
-        dirs = [cmk.utils.paths.default_config_dir + "/notes/hosts"]
+        dirs = [
+            Path(
+                cmk.utils.paths.default_config_dir,
+                "/notes/hosts",
+            )
+        ]
         item = host
 
     assert isinstance(item, str)
@@ -1561,7 +1574,7 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
         )
 
     for f in files:
-        contents.append(replace_tags(io.open(f, encoding="utf8").read().strip()))
+        contents.append(replace_tags(f.read_text(encoding="utf8").strip()))
     return "", "<hr>".join(contents)
 
 
@@ -1723,7 +1736,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         raise NotImplementedError()
 
     @property
@@ -1765,7 +1778,7 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
     def _object_type(self) -> str:
         return "service"
 
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for ident, attr_spec in config.custom_service_attributes.items():
             choices.append((ident, attr_spec["title"]))
@@ -1803,7 +1816,7 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
     def _object_type(self) -> str:
         return "host"
 
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for attr_spec in config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))
@@ -3302,15 +3315,15 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
                 "ignored": html.render_icon_button(
                     ruleset_url, _("Disabled (configured away by admin)"), "rulesets"
                 )
-                + escaping.escape_html_permissive(_("Disabled (configured away by admin)")),
+                + escaping.escape_to_html(_("Disabled (configured away by admin)")),
                 "vanished": html.render_icon_button(
                     discovery_url, _("Vanished (checked, but no longer exist)"), "services"
                 )
-                + escaping.escape_html_permissive(_("Vanished (checked, but no longer exist)")),
+                + escaping.escape_to_html(_("Vanished (checked, but no longer exist)")),
                 "unmonitored": html.render_icon_button(
                     discovery_url, _("Available (missing)"), "services"
                 )
-                + escaping.escape_html_permissive(_("Available (missing)")),
+                + escaping.escape_to_html(_("Available (missing)")),
             }.get(value, value),
         )
     if field == "discovery_service" and row["discovery_state"] == "vanished":
@@ -3397,7 +3410,7 @@ class PainterHostgroupHosts(Painter):
         return "hostgroup_hosts"
 
     def title(self, cell: Cell) -> str:
-        return _("Hosts colored according to state (Host Group)")
+        return _("Hosts colored according to state (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Hosts")
@@ -3428,7 +3441,7 @@ class PainterHgNumServices(Painter):
         return "hg_num_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services (Host Group)")
+        return _("Number of services (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return ""
@@ -3448,7 +3461,7 @@ class PainterHgNumServicesOk(Painter):
         return "hg_num_services_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state OK (Host Group)")
+        return _("Number of services in state OK (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("O")
@@ -3471,7 +3484,7 @@ class PainterHgNumServicesWarn(Painter):
         return "hg_num_services_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state WARN (Host Group)")
+        return _("Number of services in state WARN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
@@ -3494,7 +3507,7 @@ class PainterHgNumServicesCrit(Painter):
         return "hg_num_services_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state CRIT (Host Group)")
+        return _("Number of services in state CRIT (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("C")
@@ -3517,7 +3530,7 @@ class PainterHgNumServicesUnknown(Painter):
         return "hg_num_services_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state UNKNOWN (Host Group)")
+        return _("Number of services in state UNKNOWN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
@@ -3540,7 +3553,7 @@ class PainterHgNumServicesPending(Painter):
         return "hg_num_services_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state PENDING (Host Group)")
+        return _("Number of services in state PENDING (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("P")
@@ -3563,7 +3576,7 @@ class PainterHgNumHostsUp(Painter):
         return "hg_num_hosts_up"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state UP (Host Group)")
+        return _("Number of hosts in state UP (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Up")
@@ -3586,7 +3599,7 @@ class PainterHgNumHostsDown(Painter):
         return "hg_num_hosts_down"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state DOWN (Host Group)")
+        return _("Number of hosts in state DOWN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Dw")
@@ -3609,7 +3622,7 @@ class PainterHgNumHostsUnreach(Painter):
         return "hg_num_hosts_unreach"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state UNREACH (Host Group)")
+        return _("Number of hosts in state UNREACH (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Un")
@@ -3632,7 +3645,7 @@ class PainterHgNumHostsPending(Painter):
         return "hg_num_hosts_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state PENDING (Host Group)")
+        return _("Number of hosts in state PENDING (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
@@ -3655,7 +3668,7 @@ class PainterHgName(Painter):
         return "hg_name"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostgroup name")
+        return _("Host group name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Name")
@@ -3675,7 +3688,7 @@ class PainterHgAlias(Painter):
         return "hg_alias"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostgroup alias")
+        return _("Host group alias")
 
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
@@ -3703,7 +3716,7 @@ class PainterSgServices(Painter):
         return "sg_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Services colored according to state (Service Group)")
+        return _("Services colored according to state (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Services")
@@ -3723,7 +3736,7 @@ class PainterSgNumServices(Painter):
         return "sg_num_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services (Service Group)")
+        return _("Number of services (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return ""
@@ -3743,7 +3756,7 @@ class PainterSgNumServicesOk(Painter):
         return "sg_num_services_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state OK (Service Group)")
+        return _("Number of services in state OK (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("O")
@@ -3763,7 +3776,7 @@ class PainterSgNumServicesWarn(Painter):
         return "sg_num_services_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state WARN (Service Group)")
+        return _("Number of services in state WARN (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
@@ -3783,7 +3796,7 @@ class PainterSgNumServicesCrit(Painter):
         return "sg_num_services_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state CRIT (Service Group)")
+        return _("Number of services in state CRIT (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("C")
@@ -3803,7 +3816,7 @@ class PainterSgNumServicesUnknown(Painter):
         return "sg_num_services_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state UNKNOWN (Service Group)")
+        return _("Number of services in state UNKNOWN (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
@@ -3823,7 +3836,7 @@ class PainterSgNumServicesPending(Painter):
         return "sg_num_services_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state PENDING (Service Group)")
+        return _("Number of services in state PENDING (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("P")
@@ -3843,7 +3856,7 @@ class PainterSgName(Painter):
         return "sg_name"
 
     def title(self, cell: Cell) -> str:
-        return _("Servicegroup name")
+        return _("Service group name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Name")
@@ -3863,7 +3876,7 @@ class PainterSgAlias(Painter):
         return "sg_alias"
 
     def title(self, cell: Cell) -> str:
-        return _("Servicegroup alias")
+        return _("Service group alias")
 
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
@@ -4583,20 +4596,20 @@ class PainterLogIcon(Painter):
 
         if log_type == "SERVICE ALERT":
             img = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(row["log_state"])
-            title = _("Service Alert")
+            title = _("Service alert")
 
         elif log_type == "HOST ALERT":
             img = {0: "up", 1: "down", 2: "unreach"}.get(row["log_state"])
-            title = _("Host Alert")
+            title = _("Host alert")
 
         elif log_type.endswith("ALERT HANDLER STARTED"):
             img = "alert_handler_started"
-            title = _("Alert Handler Started")
+            title = _("Alert handler started")
 
         elif log_type.endswith("ALERT HANDLER STOPPED"):
             if log_state == 0:
                 img = "alert_handler_stopped"
-                title = _("Alert handler Stopped")
+                title = _("Alert handler stopped")
             else:
                 img = "alert_handler_failed"
                 title = _("Alert handler failed")
@@ -4965,7 +4978,10 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
         return "", html.render_br().join(
-            [escaping.escape_html_permissive("%s: %s" % e) for e in sorted(entries)]
+            [
+                escaping.escape_to_html_permissive("%s: %s" % e, escape_links=False)
+                for e in sorted(entries)
+            ]
         )
 
     def _get_entries(self, row):

@@ -6,7 +6,7 @@ Date: 1636398822
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>cisco_ucs_hdd</tt> used to go to a 
 <i>CRITICAL</i> for all disks in the state "inoperable".

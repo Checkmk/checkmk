@@ -69,7 +69,7 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
         }
 
         if (!dll) {
-            XLOG::l("Failed to load dll '{}'", wtools::ToUtf8(dllpath));
+            XLOG::l("Failed to load dll '{}' error = [{}]", wtools::ToUtf8(dllpath), ::GetLastError());
             return {};
         }
     }

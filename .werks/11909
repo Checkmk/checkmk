@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The field "Hostname" was required for searching for any host. This is of course
 not intended in a search and has been fixed.

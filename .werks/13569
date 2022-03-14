@@ -1,0 +1,16 @@
+Title: Make ntopng integration vlan aware
+Class: feature
+Compatible: compat
+Component: ntopng_integration
+Date: 1639052988
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the past, the ntopng integration could not deal with vlan aware ntopng instances.
+A Host in ntopng is in this case suffixed with its vlan id, e.g.: 10.1.2.3@4
+With this werk, the ntopng integration into checkmk is now vlan aware.
+Keep in mind, that this feature is still experimental as we're trying to gain more information about such setups.
+

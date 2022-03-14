@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_hp_msa_arguments(params, hostname, ipaddress):
-    return ["-u", params["username"], "-p", params["password"], ipaddress]
+
+def agent_hp_msa_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    return ["-u", params["username"], "-p", params["password"], ipaddress or hostname]
 
 
 special_agent_info["hp_msa"] = agent_hp_msa_arguments

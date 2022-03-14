@@ -1,7 +1,7 @@
 title: Oracle Database: Long Active Sessions
 agents: linux, solaris, hpux
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:

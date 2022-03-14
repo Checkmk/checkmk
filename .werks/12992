@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On the service view of this check-plugin the memory value was displayed as a
 large number. Now, memory is correctly represented in bytes.

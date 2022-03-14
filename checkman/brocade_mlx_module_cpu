@@ -1,7 +1,7 @@
 title: Brocade NetIron MLX Devices: CPU Utilization
 agents: snmp
 catalog: hw/network/brocade
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Module CPU Utilization of a NI-MLX or BR-MLX module in Brocade
@@ -21,4 +21,3 @@ item:
 discovery:
  One service is created for each NI-MLX or BR-MLX module.
  Modules with state "empty" or "Blocked for full height card" are omitted.
-

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import traceback
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
 from cmk.utils.paths import omd_root, var_dir
@@ -16,9 +17,9 @@ from cmk.utils.type_defs import HostName
 opt_verbose = "-v" in sys.argv
 opt_force = "-f" in sys.argv
 
-config_file = str(omd_root / "etc/diskspace.conf")
-plugin_dir = str(omd_root / "share/diskspace")
-plugin_dir_local = str(omd_root / "local/share/diskspace")
+config_file = omd_root / "etc/diskspace.conf"
+plugin_dir = omd_root / "share/diskspace"
+plugin_dir_local = omd_root / "local/share/diskspace"
 
 # Configuration variables
 min_free_bytes: Optional[int] = None
@@ -56,7 +57,7 @@ def _read_config() -> None:
     globals().update(default_config)
 
     try:
-        exec(open(config_file).read(), globals(), globals())
+        exec(config_file.read_text(), globals(), globals())
     except IOError:
         pass  # ignore non existant config
     except Exception as e:
@@ -107,11 +108,11 @@ def _resolve_paths() -> None:
 
 def _load_plugins() -> None:
     try:
-        local_plugins: List[str] = os.listdir(plugin_dir_local)
+        local_plugins: List[str] = list(p.name for p in plugin_dir_local.iterdir())
     except OSError:
         local_plugins = []  # this is optional
 
-    plugin_files: List[str] = [p for p in os.listdir(plugin_dir) if p not in local_plugins]
+    plugin_files: List[str] = [p.name for p in plugin_dir.iterdir() if p.name not in local_plugins]
 
     for base_dir, file_list in [(plugin_dir, plugin_files), (plugin_dir_local, local_plugins)]:
         for file_name in file_list:
@@ -120,10 +121,14 @@ def _load_plugins() -> None:
 
             plugins[file_name] = {}
 
-            path = base_dir + "/" + file_name
+            path = base_dir / file_name
             _verbose("Loading plugin: %s" % path)
             try:
-                exec(open(path).read(), plugins[file_name], plugins[file_name])
+                exec(
+                    path.read_text(),
+                    plugins[file_name],
+                    plugins[file_name],
+                )
             except Exception as e:
                 _error('Exception while loading plugin "%s": %s' % (path, e))
 
@@ -297,10 +302,15 @@ def _get_configured_hosts() -> Tuple[Set, Set, bool]:
     all_hosts: Set = set([])
     is_wato_remote_site = True
 
-    distr_wato_filepath: str = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
     file_vars: dict = {}
-    if os.path.exists(distr_wato_filepath):
-        exec(open(distr_wato_filepath).read(), file_vars, file_vars)
+    if (
+        distr_wato_filepath := Path("~/etc/check_mk/conf.d/distributed_wato.mk").expanduser()
+    ).exists():
+        exec(
+            distr_wato_filepath.read_text(),
+            file_vars,
+            file_vars,
+        )
 
     if not file_vars.get("is_wato_slave_site", False):
         is_wato_remote_site = False

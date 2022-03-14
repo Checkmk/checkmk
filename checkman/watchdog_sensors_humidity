@@ -1,7 +1,7 @@
 title: GEIST Watchdog: Humidity Sensor
 agents: snmp
 catalog: hw/environment/geist
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the humidity of an area where a watchdog sensor is

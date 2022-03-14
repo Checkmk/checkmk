@@ -25,7 +25,7 @@ from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 try:
-    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend
+    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
@@ -90,7 +90,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
             + auth,
             close_fds=True,
             # Silence the very noisy output. May be useful to enable this for debugging tests
-            # stdout=open(os.devnull, "w"),
+            # stdout=subprocess.DEVNULL,
             # stderr=subprocess.STDOUT,
         ),
     )
@@ -119,6 +119,13 @@ def _create_auth_list():
             "--v3-auth-proto=SHA",
             "--v3-priv-key=aesencryption",
             "--v3-priv-proto=AES",
+        ],
+        [
+            "--v3-user=authPrivUser",
+            "--v3-auth-key=A_long_authKey",
+            "--v3-auth-proto=SHA512",
+            "--v3-priv-key=A_long_privKey",
+            "--v3-priv-proto=DES",
         ],
     ]
 

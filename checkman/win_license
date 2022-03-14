@@ -1,7 +1,7 @@
 title: Windows: License Information
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check parses the information provided by the slmgr.vbs command on a
@@ -15,4 +15,3 @@ description:
 
 discovery:
  One service named {Windows License} is created.
-

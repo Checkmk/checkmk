@@ -1,7 +1,7 @@
 title: Veritas VxVM: Multipath
 agents: hpux, linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check verifies status of multipath devices managed using
@@ -19,4 +19,3 @@ item:
 
 discovery:
  One service is created for each multipathed LUN.
-

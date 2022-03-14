@@ -1,7 +1,7 @@
 title: USV Eltek Valere: Battery Current and Voltage
 agents: snmp
 catalog: hw/power/eltek
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the battery voltage and current of a Eltek Valere USV.

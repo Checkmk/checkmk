@@ -58,7 +58,7 @@ TEST_F(CrashReportFixture, ForEachCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
     std::optional<CrashReport> result;
 
-    mk::crash_report::any(basepath, [&result](const CrashReport& cr) {
+    mk::crash_report::any(basepath, [&result](const CrashReport &cr) {
         result = cr;
         return true;
     });
@@ -71,7 +71,7 @@ TEST_F(CrashReportFixture, TestDeleteId) {
     ASSERT_TRUE(fs::exists(fullpath));
     const std::string other{"01234567-0123-4567-89ab-0123456789abc"};
     ASSERT_NE(uuid, other);
-    Logger* const logger{Logger::getLogger("test")};
+    Logger *const logger{Logger::getLogger("test")};
     EXPECT_TRUE(mk::crash_report::delete_id(basepath, uuid, logger));
     EXPECT_FALSE(fs::exists(fullpath));
 }
@@ -80,7 +80,7 @@ TEST_F(CrashReportFixture, TestDeleteIdWithNonExistingId) {
     ASSERT_TRUE(fs::exists(fullpath));
     const std::string other{"01234567-0123-4567-89ab-0123456789abc"};
     ASSERT_NE(uuid, other);
-    Logger* const logger{Logger::getLogger("test")};
+    Logger *const logger{Logger::getLogger("test")};
     EXPECT_FALSE(mk::crash_report::delete_id(basepath, other, logger));
     EXPECT_TRUE(fs::exists(fullpath));
 }

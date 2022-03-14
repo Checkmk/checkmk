@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=undefined-variable
+import json
+from typing import Final
+
 import pytest
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -12,9 +15,26 @@ from cmk.utils.piggyback import PiggybackRawDataInfo
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostName
 
 import cmk.core_helpers.piggyback
-from cmk.core_helpers.agent import AgentHostSections, AgentSummarizer, AgentSummarizerDefault
+from cmk.core_helpers.agent import AgentRawDataSection, AgentSummarizer, AgentSummarizerDefault
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
+
+CONTROLLER_STATUS_LEGACY: Final = json.dumps(
+    {
+        "allow_legacy_pull": True,
+        "connections": [],
+    }
+).split()
+
+CONTROLLER_STATUS_REGISTERED: Final = json.dumps(
+    {
+        "allow_legacy_pull": False,
+        "connections": [
+            {"connection": "localhost:8000/heute"},  # shortened for readability
+        ],
+    }
+).split()
 
 
 class Summarizer(AgentSummarizer):
@@ -50,284 +70,20 @@ class TestAgentSummarizer:
 class TestAgentSummarizerDefault_AllModes:
     @pytest.fixture
     def summarizer(self):
-        return AgentSummarizerDefault(
-            ExitSpec(),
-            is_cluster=False,
-            agent_min_version=0,
-            agent_target_version=None,
-            only_from=None,
-        )
+        return AgentSummarizerDefault(ExitSpec())
 
     @pytest.fixture(params=Mode)
     def mode(self, request):
         return request.param
 
     def test_missing_section(self, summarizer, mode):
-        assert not summarizer.summarize_check_mk_section(None, mode=mode)
+        assert summarizer.summarize_success(None, mode=mode) == [ActiveCheckResult(0, "Success")]
 
     def test_random_section(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [["some_random", "data"], ["that_does", "nothing"]],
-                mode=mode,
-            )
-            == []
-        )
-
-    def test_clear_version_and_os(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [["version:"], ["agentos:"]],
-                mode=mode,
-            )
-            == []
-        )
-
-    def test_set_version_and_os(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(
-            [["version:", "42"], ["agentos:", "BeOS", "or", "Haiku", "OS"]],
+        assert summarizer.summarize_success(
+            [["some_random", "data"], ["that_does", "nothing"]],
             mode=mode,
-        ) == [
-            ActiveCheckResult(0, "Version: 42"),
-            ActiveCheckResult(0, "OS: BeOS or Haiku OS"),
-        ]
-
-
-class TestAgentSummarizerDefault_OnlyFrom:
-    @pytest.fixture
-    def summarizer(self):
-        return AgentSummarizerDefault(
-            ExitSpec(),
-            is_cluster=False,
-            agent_min_version=0,
-            agent_target_version=None,
-            only_from=["deep_space"],
-        )
-
-    @pytest.fixture
-    def mode(self):
-        # Only Mode.CHECKING triggers check_only_from
-        return Mode.CHECKING
-
-    def test_allowed(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "deep_space"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Allowed IP ranges: deep_space")]
-        )
-
-    def test_exceeding(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "deep_space somewhere_else"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(1, "Unexpected allowed IP ranges (exceeding: somewhere_else)")]
-        )
-
-    def test_exceeding_missing(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(
-            [
-                ["onlyfrom:", "somewhere_else"],
-            ],
-            mode=mode,
-        ) == [
-            ActiveCheckResult(
-                1,
-                "Unexpected allowed IP ranges (exceeding: somewhere_else, missing: deep_space)",
-            )
-        ]
-
-    @pytest.mark.parametrize("state", [0, 1, 2, 3])
-    def test_configure_missmatch(self, mode, state):
-        assert (
-            AgentSummarizerDefault(
-                ExitSpec(restricted_address_mismatch=state),
-                is_cluster=False,
-                agent_min_version=0,
-                agent_target_version=None,
-                only_from=["deep_space"],
-            )
-            .summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "somewhere_else"],
-                ],
-                mode=mode,
-            )[0]
-            .state
-            == state
-        )
-
-
-class TestAgentSummarizerDefault_FailedPythonPlugins:
-    @pytest.fixture
-    def summarizer(self):
-        return AgentSummarizerDefault(
-            ExitSpec(),
-            is_cluster=False,
-            agent_min_version=0,
-            agent_target_version=None,
-            only_from=None,
-        )
-
-    @pytest.fixture
-    def mode(self):
-        # Only Mode.CHECKING triggers _check_python_plugins
-        return Mode.CHECKING
-
-    def test_two_plugins_failed(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(
-            [
-                ["version:"],
-                ["agentos:"],
-                ["FailedPythonPlugins:", "one"],
-                ["FailedPythonPlugins:", "two"],
-                ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
-            ],
-            mode=mode,
-        ) == [
-            ActiveCheckResult(
-                1,
-                "Failed to execute python plugins: one two"
-                " (I'm not in the mood to execute python plugins)",
-            )
-        ]
-
-    def test_no_plugins_failed(self, summarizer, mode):
-        assert not summarizer.summarize_check_mk_section(
-            [
-                ["version:"],
-                ["agentos:"],
-                ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
-            ],
-            mode=mode,
-        )
-
-
-class TestAgentSummarizerDefault_Fails:
-    @pytest.fixture
-    def summarizer(self):
-        return AgentSummarizerDefault(
-            ExitSpec(),
-            is_cluster=False,
-            agent_min_version=0,
-            agent_target_version=None,
-            only_from=None,
-        )
-
-    @pytest.fixture
-    def mode(self):
-        # Only Mode.CHECKING triggers _check_agent_update
-        return Mode.CHECKING
-
-    def test_update_agent_fail(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:"],
-                    ["agentos:"],
-                    ["UpdateFailed:", "what"],
-                    ["UpdateRecoverAction:", "why"],
-                ],
-                mode=Mode.CHECKING,
-            )
-            == [ActiveCheckResult(1, "what why")]
-        )
-
-    def test_update_agent_success(self, summarizer, mode):
-        assert not summarizer.summarize_check_mk_section(
-            [
-                ["version:"],
-                ["agentos:"],
-                ["UpdateFailed:", "what"],
-            ],
-            mode=mode,
-        )
-
-
-class TestAgentSummarizerDefault_CheckVersion:
-    # TODO(ml): This is incomplete.
-    @pytest.fixture
-    def summarizer(self, request):
-        return AgentSummarizerDefault(
-            ExitSpec(),
-            is_cluster=False,
-            agent_min_version=0,
-            agent_target_version=request.param,
-            only_from=None,
-        )
-
-    @pytest.fixture
-    def mode(self):
-        # Only Mode.CHECKING triggers check_version
-        return Mode.CHECKING
-
-    @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
-    def test_match(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "42"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 42")]
-        )
-
-    @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
-    def test_mismatch(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(
-            [
-                ["version:", "69"],
-                ["agentos:"],
-            ],
-            mode=mode,
-        ) == [
-            ActiveCheckResult(0, "Version: 69"),
-            ActiveCheckResult(1, "unexpected agent version 69 (should be 42)"),
-        ]
-
-    @pytest.mark.parametrize(
-        "summarizer",
-        [
-            # This type of AgentTargetVersion does not seem to be handled at all.
-            ("at_least", "0"),
-            ("at_least", "333"),
-            ("at_least", "random value"),
-        ],
-        indirect=True,
-    )
-    def test_at_least_str_success(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 69")]
-        )
-
-    @pytest.mark.parametrize("summarizer", [("at_least", {})], indirect=True)
-    def test_at_least_dict_empty(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 69")]
-        )
+        ) == [ActiveCheckResult(0, "Success")]
 
 
 class TestPiggybackSummarizer:
@@ -351,7 +107,7 @@ class TestPiggybackSummarizer:
 
     @pytest.fixture
     def host_sections(self):
-        return AgentHostSections(
+        return HostSections[AgentRawDataSection](
             sections={},
             cache_info={},
             piggybacked_raw_data={HostName("other"): [b"line0", b"line1"]},
@@ -391,13 +147,10 @@ class TestPiggybackSummarizer:
     ):
         monkeypatch.setattr(summarizer, "always", True)
 
-        assert (
-            summarizer.summarize_success(
-                host_sections,
-                mode=Mode.CHECKING,
-            )
-            == [ActiveCheckResult(1, "Missing data")]
-        )
+        assert summarizer.summarize_success(
+            host_sections,
+            mode=Mode.CHECKING,
+        ) == [ActiveCheckResult(1, "Missing data")]
 
     def test_summarize_existing_data_with_always_option(
         self,

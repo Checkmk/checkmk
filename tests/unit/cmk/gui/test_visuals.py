@@ -27,6 +27,7 @@ def test_get_not_existing_filter():
     with pytest.raises(KeyError):
         visuals.get_filter("dingelig")
 
+
 # TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info():
     allowed = dict(visuals.filters_allowed_for_info("host"))
@@ -722,7 +723,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_address', 'host_address_prefix'],
         'info': 'host',
         'link_columns': ['host_address'],
@@ -802,7 +803,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_ipv4_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_ipv4_address', 'host_ipv4_address_prefix'],
         'info': 'host',
         'link_columns': [],
@@ -811,7 +812,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_ipv6_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_ipv6_address', 'host_ipv6_address_prefix'],
         'info': 'host',
         'link_columns': [],
@@ -1302,6 +1303,15 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'link_columns': [],
         'sort_index': 800,
         'title': u'Networking \u27a4 Ports'
+    },
+    'inv_networking_hostname': {
+        'comment': None,
+        'filter_class': 'FilterInvText',
+        'htmlvars': ['inv_networking_hostname_from', 'inv_networking_hostname_to'],
+        'info': 'host',
+        'link_columns': [],
+        'sort_index': 800,
+        'title': u'Networking \u27a4 Hostname'
     },
     'inv_networking_total_interfaces': {
         'comment': None,
@@ -3704,27 +3714,24 @@ def test_registered_info_attributes():
         assert info.single_site == spec.get("single_site", True)
 
 
-@pytest.mark.parametrize("visual,expected_vars", [
-    # No single context, no filter
-    ({"single_infos": [], "context": {}}, []),
-    # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
-    # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
-    # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, []),
-    # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
-        [("host", "abc"), ("service", u"äää")]),
-])
-def test_get_context_uri_vars(request_context, visual, expected_vars):
-    context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
+@pytest.mark.parametrize(
+    "context,expected_vars",
+    [
+        # No single context, use multi filter
+        ({"filter_name": {"filter_var": "eee"}}, [('filter_var', 'eee')]),
+        # Single host context
+        ({"host": {"host": "abc"}}, [("host", "abc")]),
+        # Single host context, and other filters
+        ({"host": {"host": "abc"}, "bla": {"blub": "ble"}},
+         [('blub', 'ble'), ('host', 'abc')]),
+        # Single host context, missing filter -> no failure
+        ({}, []),
+        # Single host + service context
+        ({"host": {"host": "abc"}, "service": {"service": "äää"}},
+         [("host", "abc"), ("service", u"äää")]),
+    ])
+def test_context_to_uri_vars(context, expected_vars):
+    context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
 
@@ -3787,63 +3794,109 @@ def test_get_merged_context(request_context, uri_vars, visual, expected_context)
 
 
 def test_get_missing_single_infos_has_context():
-    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": {"host": "abc"}}) == set()
+    assert (
+        visuals.get_missing_single_infos(single_infos=["host"], context={"host": {"host": "abc"}})
+        == set()
+    )
 
 
 def test_get_missing_single_infos_missing_context():
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
-@pytest.mark.parametrize("context, single_infos, expected_context", [
-    pytest.param(
-        {
-            "discovery_state": {
-                'discovery_state_ignored': True,
-                'discovery_state_vanished': False,
-                'discovery_state_unmonitored': True
-            }
-        }, [], {
-            "discovery_state": {
-                'discovery_state_ignored': 'on',
-                'discovery_state_vanished': '',
-                'discovery_state_unmonitored': 'on'
-            }
-        },
-        id="1.6.0->2.1.0 CMK-6606"),
-    pytest.param({"host": {
-        "host": "heute"
-    }}, ["host"], {"host": {
-        "host": "heute"
-    }},
-                  id="-> 2.1.0 Idempotent on already transformed single_info"),
-    pytest.param({
-        "host": "heute",
-        "event_id": 5
-    }, ["host", "history"], {
-        "host": {
-            "host": "heute"
-        },
-        "event_id": {
-            "event_id": "5"
-        }
-    },
-                 id="-> 2.1.0 No single_info, only FilterHTTPVariables VisualContext"),
-    pytest.param({
-        "site": "heute",
-        "sites": "heute|morgen",
-        "siteopt": "heute"
-    }, [], {
-        "site": {
-            "site": "heute"
-        },
-        "siteopt": {
-            "site": "heute"
-        },
-        "sites": {
-            "sites": "heute|morgen"
-        }
-    },
-                 id="-> 2.1.0 Site hint is not bound to single info"),
-])
+@pytest.mark.parametrize(
+    "context, single_infos, expected_context",
+    [
+        pytest.param(
+            {
+                "discovery_state": {
+                    "discovery_state_ignored": True,
+                    "discovery_state_vanished": False,
+                    "discovery_state_unmonitored": True,
+                }
+            },
+            [],
+            {
+                "discovery_state": {
+                    "discovery_state_ignored": "on",
+                    "discovery_state_vanished": "",
+                    "discovery_state_unmonitored": "on",
+                }
+            },
+            id="1.6.0->2.1.0 CMK-6606",
+        ),
+        pytest.param(
+            {"host": {"host": "heute"}},
+            ["host"],
+            {"host": {"host": "heute"}},
+            id="-> 2.1.0 Idempotent on already transformed single_info",
+        ),
+        pytest.param(
+            {"host": "heute", "event_id": 5},
+            ["host", "history"],
+            {"host": {"host": "heute"}, "event_id": {"event_id": "5"}},
+            id="-> 2.1.0 No single_info, only FilterHTTPVariables VisualContext",
+        ),
+        pytest.param(
+            {"site": "heute", "sites": "heute|morgen", "siteopt": "heute"},
+            [],
+            {
+                "site": {"site": "heute"},
+                "siteopt": {"site": "heute"},
+                "sites": {"sites": "heute|morgen"},
+            },
+            id="-> 2.1.0 Site hint is not bound to single info",
+        ),
+        pytest.param(
+            {
+                "invinterface_last_change": {
+                    "invinterface_last_change_from_days": "1",
+                    "invinterface_last_change_to_days": "5",
+                },
+                "inv_hardware_cpu_bus_speed": {
+                    "inv_hardware_cpu_bus_speed_from": "10",
+                    "inv_hardware_cpu_bus_speed_to": "20",
+                },
+                "event_count": {"event_count_from": "1", "event_count_to": "123"},
+                # Never existed with "to", just for the test
+                "history_time": {
+                    "history_time_from": "2001-02-03",
+                    "history_time_from_range": "abs",
+                    "history_time_to": "2001-02-05",
+                    "history_time_to_range": "abs",
+                },
+                # Not range filter
+                "another_filter": {
+                    "another_filter_to": "2001-02-05",
+                    "another_filter_to_range": "abs",
+                },
+            },
+            [],
+            {
+                "invinterface_last_change": {
+                    "invinterface_last_change_from_days": "1",
+                    "invinterface_last_change_until_days": "5",
+                },
+                "inv_hardware_cpu_bus_speed": {
+                    "inv_hardware_cpu_bus_speed_from": "10",
+                    "inv_hardware_cpu_bus_speed_until": "20",
+                },
+                "event_count": {"event_count_from": "1", "event_count_until": "123"},
+                "history_time": {
+                    "history_time_from": "2001-02-03",
+                    "history_time_from_range": "abs",
+                    "history_time_until": "2001-02-05",
+                    "history_time_until_range": "abs",
+                },
+                # Not range filter
+                "another_filter": {
+                    "another_filter_to": "2001-02-05",
+                    "another_filter_to_range": "abs",
+                },
+            },
+            id="-> 2.1.0 Range Filters have homogenous request vars",
+        ),
+    ],
+)
 def test_cleanup_contexts(context, single_infos, expected_context):
-    assert visuals.cleaup_context_filters(context, single_infos) == expected_context
+    assert visuals.cleanup_context_filters(context, single_infos) == expected_context

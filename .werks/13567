@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 mk_logwatch.py was raising IOError in debug mode although a logwatch.cfg existed in either logwatch.d or MK_CONFDIR.
 It is now only raising if no configuration at all was found.

@@ -49,8 +49,11 @@ class CoreAction(enum.Enum):
     STOP = "stop"
 
 
-def do_reload(core: MonitoringCore) -> None:
-    do_restart(core, action=CoreAction.RELOAD)
+def do_reload(
+    core: MonitoringCore,
+    hosts_to_update: HostsToUpdate = None,
+) -> None:
+    do_restart(core, action=CoreAction.RELOAD, hosts_to_update=hosts_to_update)
 
 
 def do_restart(
@@ -108,14 +111,19 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     else:
         command = ["omd", action.value, "cmc"]
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-    result = p.wait()
-    if result != 0:
-        assert p.stdout is not None
-        output = p.stdout.read()
+    completed_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        check=False,
+    )
+    if completed_process.returncode != 0:
         if not quiet:
-            out.output("ERROR: %r\n" % output)
-        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, output))
+            out.output("ERROR: %r\n" % completed_process.stdout)
+        raise MKGeneralException(
+            "Cannot %s the monitoring core: %r" % (action.value, completed_process.stdout)
+        )
     if not quiet:
         out.output(tty.ok + "\n")
 

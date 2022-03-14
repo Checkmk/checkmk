@@ -6,9 +6,9 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
-if type zorpctl > /dev/null ; then
-  echo '<<<zorp_connections>>>'
-  zorpctl szig -r zorp.stats.active_connections
+if type zorpctl >/dev/null; then
+    echo '<<<zorp_connections>>>'
+    zorpctl szig -r zorp.stats.active_connections
 fi

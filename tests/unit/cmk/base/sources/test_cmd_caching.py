@@ -14,7 +14,6 @@ from functools import partial
 import pytest
 
 from tests.testlib.base import Scenario
-from tests.testlib.debug_utils import cmk_debug_enabled
 from tests.testlib.utils import is_enterprise_repo
 
 import cmk.utils.paths
@@ -40,14 +39,6 @@ from cmk.base.sources.tcp import TCPSource
 @pytest.fixture(autouse=True)
 def mock_license_usage(monkeypatch):
     monkeypatch.setattr(license_usage, "try_history_update", lambda: None)
-
-
-@pytest.fixture(scope="module", autouse=True)
-def enable_debug_mode():
-    # `debug.disabled()` hides exceptions and makes it
-    # *impossible* to debug anything.
-    with cmk_debug_enabled():
-        yield
 
 
 @pytest.fixture(name="scenario")

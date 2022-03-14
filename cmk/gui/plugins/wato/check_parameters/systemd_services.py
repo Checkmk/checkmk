@@ -43,13 +43,13 @@ def _discovery_forth(discovery_params: Mapping[str, Sequence[str]]) -> Mapping[s
 
 def _valuespec_discovery_systemd_units_services_rules() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Systemd single services discovery"),
             elements=[
                 (
                     "descriptions",
                     ListOf(
-                        TextOrRegExp(),
+                        valuespec=TextOrRegExp(),
                         title=_("Restrict by description"),
                         help=_("Restrict the systemd services by description."),
                         allow_empty=False,
@@ -58,7 +58,7 @@ def _valuespec_discovery_systemd_units_services_rules() -> Transform:
                 (
                     "names",
                     ListOf(
-                        TextOrRegExp(),
+                        valuespec=TextOrRegExp(),
                         title=_("Restrict by service unit name"),
                         help=_("Restrict the systemd services by unit name."),
                         allow_empty=False,

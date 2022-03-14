@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The "Staleness value" is set to 1.5 by default and can be customized using the
 global settings. However, this change had no effect on the views using the

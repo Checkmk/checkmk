@@ -6,7 +6,7 @@ Date: 1619168557
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agent_innovaphone is now ready to handle TLS connections.
 The parameters "Protocol" and "SSL certificate verification" were added to agent_innovaphone.

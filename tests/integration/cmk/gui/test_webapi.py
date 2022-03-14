@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 from io import BytesIO
+from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
@@ -461,7 +462,7 @@ def test_write_host_tags(web, site: Site):  # noqa: F811 # pylint: disable=redef
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-            "cmk_agent_connection": {},
+            "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],
         }
@@ -499,7 +500,7 @@ def test_write_host_labels(web, site: Site):  # noqa: F811 # pylint: disable=red
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-            "cmk_agent_connection": {},
+            "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],
         }
@@ -601,11 +602,12 @@ def test_edit_group_missing(web, group_type):  # noqa: F811 # pylint: disable=re
 def test_edit_cg_group_with_nagvis_maps(
     web, site
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
-    dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
-    dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
+    dummy_map_filepath1 = Path(site.root, "etc", "nagvis", "maps", "blabla.cfg")
+    dummy_map_filepath2 = Path(site.root, "etc", "nagvis", "maps", "bloblo.cfg")
     try:
-        open(dummy_map_filepath1, "w")
-        open(dummy_map_filepath2, "w")
+        dummy_map_filepath1.open(mode="w")
+
+        dummy_map_filepath2.open(mode="w")
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
@@ -622,8 +624,8 @@ def test_edit_cg_group_with_nagvis_maps(
         assert "bloblo" in all_groups["nagvis_test"]["nagvis_maps"]
     finally:
         web.delete_group("contact", "nagvis_test")
-        os.unlink(dummy_map_filepath1)
-        os.unlink(dummy_map_filepath2)
+        dummy_map_filepath1.unlink()
+        dummy_map_filepath2.unlink()
 
 
 # TODO: Parameterize test for cme / non cme
@@ -843,14 +845,15 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
         )
         for attempt in range(50):
             time.sleep(0.1)
-            proc = subprocess.Popen(
+            proc = subprocess.run(
                 [site.path("bin/unixcat"), site.path("tmp/run/rrdcached.sock")],
-                stdin=subprocess.PIPE,
+                check=False,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 encoding="utf-8",
+                input="FLUSH %s\n" % rrd_path,
             )
-            out, err = proc.communicate("FLUSH %s\n" % rrd_path)
+
             if os.path.exists(rrd_path):
                 break
             sys.stdout.write(
@@ -858,8 +861,8 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
                 % (
                     rrd_path,
                     attempt + 1,  #
-                    ", stdout: %s" % out if out else "",
-                    ", stderr: %s" % err if err else "",
+                    ", stdout: %s" % proc.stdout,
+                    ", stderr: %s" % proc.stderr,
                 )
             )
         else:
@@ -1515,8 +1518,8 @@ def test_get_combined_graph_identifications(
             "datasource": "services",
             "context": {
                 "service": {"service": "CPU load"},
-                "site": {"site": web.site.id},
-                "host": "test-host-get-graph",
+                "siteopt": {"site": web.site.id},
+                "host": {"host": "test-host-get-graph"},
             },
         }
     )
@@ -1527,9 +1530,9 @@ def test_get_combined_graph_identifications(
                 "combined",
                 {
                     "context": {
-                        "host": "test-host-get-graph",
+                        "host": {"host": "test-host-get-graph"},
                         "service": {"service": "CPU load"},
-                        "site": {
+                        "siteopt": {
                             "site": web.site.id,
                         },
                     },

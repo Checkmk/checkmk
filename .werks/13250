@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a LDAP connection used OpenLDAP and the attribute sync plugins "Contactgroup
 Membership" and "Roles" were configured, the users did not get the roles and

@@ -1,0 +1,20 @@
+Title: netapp_api_qtree_quota: Volume added to service name
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1640860574
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+NetApp Qtree service had a name that consisted of quota and quota-users.
+For some setups, the name wasn't unique, which led to some services not
+being discovered.
+To resolve the problem, volume is added to the service name. This however,
+can lead to incompatibility. Your services will be discovered again by
+a different name.
+If you want to prevent the incompatibility and are sure that your setup
+doesn't have clashing names, you can remove the volume from the service
+name by enbling Service discovery rules > NetApp Qtree discovery >
+Exclude volume from service name option.

@@ -52,7 +52,7 @@ INSTANTIATE_TEST_SUITE_P(UnboundedQueueTests, UnboundedQueueTest,
 
 class BoundedQueueTest : public ::testing::Test {
 public:
-    Queue<int> queue{5};
+    Queue<int> queue{queue_join_strategy::shutdown_push_pop, 5};
 };
 
 TEST_F(BoundedQueueTest, LimitIsSet) {
@@ -124,10 +124,10 @@ public:
     class MoveOnly {
     public:
         explicit MoveOnly(std::string id) : id_{std::move(id)} {};
-        MoveOnly(const MoveOnly&) = delete;
-        MoveOnly& operator=(const MoveOnly&) = delete;
-        MoveOnly(MoveOnly&&) noexcept = default;
-        MoveOnly& operator=(MoveOnly&&) noexcept = default;
+        MoveOnly(const MoveOnly &) = delete;
+        MoveOnly &operator=(const MoveOnly &) = delete;
+        MoveOnly(MoveOnly &&) noexcept = default;
+        MoveOnly &operator=(MoveOnly &&) noexcept = default;
         [[nodiscard]] std::string id() const { return id_; }
 
     private:

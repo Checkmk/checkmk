@@ -6,7 +6,7 @@ Date: 1614256116
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, it was possible to configure the Windows agent in WATO in such 
 a way that installing on older operating systems would cause the Windows 

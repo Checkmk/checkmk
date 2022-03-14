@@ -1,7 +1,7 @@
 title: Hitachi HNAS: FibreChannel Interfaces
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors FibreChannel interfaces of Hitachi HNAS storage systems.
@@ -40,4 +40,3 @@ cluster:
  rules defining the interface groups must be configured to apply to the nodes, not
  to the cluster host (the latter has no effect). In case the grouping configurations
  vary across the nodes, the last node wins.
-

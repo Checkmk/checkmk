@@ -70,7 +70,7 @@ register.agent_section(
 
 def inventory_oracle_dataguard_stats(section: Section) -> InventoryResult:
     path = ["software", "applications", "oracle", "dataguard_stats"]
-    for inst, data in sorted(section.items()):
+    for inst, data in section.items():
         try:
             db_name, db_unique_name = inst.split(".", 1)
         except ValueError:

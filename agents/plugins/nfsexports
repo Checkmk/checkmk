@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # this check will only run if we have a working nfs environment or SHOULD have one.
 # not tested for nfs3
@@ -19,8 +19,7 @@ if [ -r /etc/exports ]; then
     EXPORTS=$(grep -v -e ^# -e ^$ /etc/exports)
 fi
 
-if [ "$EXPORTS" ] && pgrep '(portmap|rpcbind)' >/dev/null && pgrep rpc.mountd >/dev/null
-then
+if [ "$EXPORTS" ] && pgrep '(portmap|rpcbind)' >/dev/null && pgrep rpc.mountd >/dev/null; then
     echo "<<<nfsexports>>>"
     waitmax 3 showmount --no-headers -e
 fi

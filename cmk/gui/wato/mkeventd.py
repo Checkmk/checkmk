@@ -64,13 +64,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.wato.check_mk_configuration import (
-    ConfigVariableGroupUserInterface,
-    ConfigVariableGroupWATO,
-    RulespecGroupHostsMonitoringRulesVarious,
-    RulespecGroupMonitoringConfigurationVarious,
-)
-from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     add_change,
@@ -80,6 +73,9 @@ from cmk.gui.plugins.wato.utils import (
     ConfigDomainGUI,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableGroupNotifications,
+    ConfigVariableGroupUserInterface,
+    ConfigVariableGroupWATO,
     ContactGroupSelection,
     flash,
     get_search_expression,
@@ -94,6 +90,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringConfigurationVarious,
     sample_config_generator_registry,
     SampleConfigGenerator,
     ServiceRulespec,
@@ -104,7 +102,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import allsites, get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
-from cmk.gui.utils.escaping import escape_html, escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeuri_contextless,
@@ -204,7 +202,9 @@ def substitute_help():
     ]
 
     return (
-        escape_html(_("The following macros will be substituted by value from the actual event:"))
+        escape_to_html(
+            _("The following macros will be substituted by value from the actual event:")
+        )
         + html.render_br()
         + html.render_br()
         + html.render_table(HTML().join(_help_rows), class_="help")
@@ -228,7 +228,7 @@ def ActionList(vs, **kwargs):
                             % action_id,
                         )
 
-    return ListOf(vs, validate=validate_action_list, **kwargs)
+    return ListOf(valuespec=vs, validate=validate_action_list, **kwargs)
 
 
 class RuleState(CascadingDropdown):
@@ -301,8 +301,8 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
             (
                 "id",
                 FixedValue(
-                    title=_("Rule pack ID"),
                     value=fixed_id,
+                    title=_("Rule pack ID"),
                     help=_("The ID of an exported rule pack cannot be modified."),
                 ),
             )
@@ -325,8 +325,8 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
             (
                 "title",
                 FixedValue(
-                    title=_("Title"),
                     value=fixed_title,
+                    title=_("Title"),
                     help=_("The title of an exported rule pack cannot be modified."),
                 ),
             )
@@ -388,7 +388,7 @@ def vs_mkeventd_rule(customer=None):
                 (
                     "customer",
                     FixedValue(
-                        customer,
+                        value=customer,
                         title=_("Customer"),
                         totext="%s (%s)"
                         % (managed.get_customer_name_by_id(customer), _("Set by rule pack")),
@@ -467,7 +467,7 @@ def vs_mkeventd_rule(customer=None):
                     (
                         "groups",
                         ListOf(
-                            ContactGroupSelection(),
+                            valuespec=ContactGroupSelection(),
                             title=_("Contact groups"),
                             movable=False,
                         ),
@@ -586,7 +586,7 @@ def vs_mkeventd_rule(customer=None):
                 ),
                 elements=[
                     FixedValue(
-                        None,
+                        value=None,
                         title=_("Use global rule limit"),
                         totext="",
                     ),
@@ -652,7 +652,7 @@ def vs_mkeventd_rule(customer=None):
                     (
                         "count_duration",
                         Optional(
-                            Age(
+                            valuespec=Age(
                                 label=_("Count only for"),
                                 help=_(
                                     "When the event is in the state <i>open</i> for that time span "
@@ -816,7 +816,7 @@ def vs_mkeventd_rule(customer=None):
                     (
                         "merge",
                         Transform(
-                            CascadingDropdown(
+                            valuespec=CascadingDropdown(
                                 title=_("Merge with open event"),
                                 help=_(
                                     "If there already exists an open event because of absent "
@@ -1402,7 +1402,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             raise MKUserError("event_p_host", _("Please specify a host name"))
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
-            escape_html(_("Test event generated and sent to Event Console."))
+            escape_to_html(_("Test event generated and sent to Event Console."))
             + html.render_br()
             + html.render_pre(rfc)
         )
@@ -2801,9 +2801,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     def title(self):
         if self._search:
-            return escape_html_permissive(
-                _("Event Console configuration matching '%s'") % self._search
-            )
+            return escape_to_html(_("Event Console configuration matching '%s'") % self._search)
         return _("Event Console configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2885,7 +2883,7 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
     def title(self):
-        return _("Event Console: Logging & Diagnose")
+        return _("Event Console: Logging & diagnose")
 
     def sort_index(self):
         return 19
@@ -3215,29 +3213,30 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # their path.
     def _is_zipfile(self, fo):
         try:
-            zipfile.ZipFile(fo)
+            with zipfile.ZipFile(fo) as _opened_file:
+                pass
             return True
         except zipfile.BadZipfile:
             return False
 
     def _process_uploaded_zip_file(self, filename, content):
-        zip_obj = zipfile.ZipFile(io.BytesIO(content))
-        messages = []
-        for entry in zip_obj.infolist():
-            success, fail = 0, 0
-            try:
-                mib_file_name = entry.filename
-                if mib_file_name[-1] == "/":
-                    continue  # silently skip directories
-
-                self._validate_mib_file_name(mib_file_name)
-
-                mib_obj = zip_obj.open(mib_file_name)
-                messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
-                success += 1
-            except Exception as e:
-                messages.append(_("Skipped %s: %s") % (escape_html_permissive(mib_file_name), e))
-                fail += 1
+        with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
+            messages = []
+            for entry in zip_obj.infolist():
+                success, fail = 0, 0
+                try:
+                    mib_file_name = entry.filename
+                    if mib_file_name[-1] == "/":
+                        continue  # silently skip directories
+                    self._validate_mib_file_name(mib_file_name)
+                    with zip_obj.open(mib_file_name) as mib_obj:
+                        messages.append(
+                            self._process_uploaded_mib_file(mib_file_name, mib_obj.read())
+                        )
+                    success += 1
+                except Exception as e:
+                    messages.append(_("Skipped %s: %s") % (mib_file_name, e))
+                    fail += 1
 
         return "<br>\n".join(
             messages
@@ -3555,7 +3554,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Integer(
                         title=_("Port number:"),
@@ -3579,7 +3578,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
                         false_label=_("no commands"),
                     ),
                     Optional(
-                        ListOfStrings(
+                        valuespec=ListOfStrings(
                             help=_(
                                 "The access to the event status via TCP will only be allowed from "
                                 "this source IP addresses"
@@ -3619,7 +3618,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Dictionary(
+            valuespec=Dictionary(
                 optional_keys=["takeover", "fallback", "disabled", "logging"],
                 elements=[
                     (
@@ -3701,7 +3700,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                     (
                         "disabled",
                         FixedValue(
-                            True,
+                            value=True,
                             totext=_("Replication is disabled"),
                             title=_("Currently disable replication"),
                             help=_(
@@ -3714,7 +3713,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                     (
                         "logging",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Log replication events"),
                             totext=_("logging is enabled"),
                             help=_(
@@ -3856,7 +3855,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
     def valuespec(self):
         return ActionList(
             Foldable(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("Action"),
                     optional_keys=False,
                     elements=[
@@ -4281,7 +4280,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            CascadingDropdown(
+            valuespec=CascadingDropdown(
                 choices=[
                     (False, _("Do not translate SNMP traps")),
                     (
@@ -4292,7 +4291,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
                                 (
                                     "add_description",
                                     FixedValue(
-                                        True,
+                                        value=True,
                                         title=_("Add OID descriptions"),
                                         totext=_("Append descriptions of OIDs to message texts"),
                                     ),
@@ -4326,7 +4325,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Dictionary(
+            valuespec=Dictionary(
                 elements=[
                     (
                         "description",
@@ -4411,7 +4410,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 title=_("Log level"),
                 help=_(
                     "You can configure the Event Console to log more details about it's actions. "
@@ -4601,7 +4600,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            TextInput(
+            valuespec=TextInput(
                 title=_("Host running Event Console"),
             ),
             title=_("Send notifications to remote Event Console"),
@@ -4727,7 +4726,7 @@ def convert_mkevents_hostspec(value):
 
 def _valuespec_extra_host_conf__ec_event_limit():
     return Transform(
-        vs_ec_host_limit(title=_("Host event limit")),
+        valuespec=vs_ec_host_limit(title=_("Host event limit")),
         forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
         back=lambda x: "%d:%s" % (x["limit"], x["action"]),
     )
@@ -4755,7 +4754,7 @@ def _valuespec_active_checks_mkevents():
             (
                 "hostspec",
                 Transform(
-                    Alternative(
+                    valuespec=Alternative(
                         title=_("Host specification"),
                         elements=[
                             ListChoice(
@@ -4814,7 +4813,7 @@ def _valuespec_active_checks_mkevents():
             (
                 "ignore_acknowledged",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Ignore acknowledged events"),
                     help=_(
                         "If you check this box then only open events are honored when "
@@ -4830,7 +4829,7 @@ def _valuespec_active_checks_mkevents():
                     title=_("Access to the Event Console"),
                     elements=[
                         FixedValue(
-                            None,
+                            value=None,
                             title=_("Connect to the local Event Console"),
                             totext=_("local connect"),
                         ),

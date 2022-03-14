@@ -19,7 +19,7 @@ def _parameter_valuespec_fortimail_queue():
             (
                 "queue_length",
                 Tuple(
-                    [
+                    elements=[
                         Integer(
                             title=_("Warning at"),
                             unit=_("mails"),

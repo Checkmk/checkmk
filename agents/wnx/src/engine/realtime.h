@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef realtime_h__
 #define realtime_h__
@@ -29,7 +30,7 @@ using RtBlock = std::vector<uint8_t>;
 using RtTable = std::vector<std::string_view>;
 
 // Crypt is nullptr when encryption is not required
-RtBlock PackData(std::string_view Output, const cma::encrypt::Commander* Crypt);
+RtBlock PackData(std::string_view Output, const cma::encrypt::Commander *Crypt);
 
 // has internal thread
 // should be start-stopped
@@ -39,17 +40,17 @@ public:
     Device() = default;
     ~Device() { clear(); }
 
-    Device(const Device&) = delete;
-    Device& operator=(const Device&) = delete;
+    Device(const Device &) = delete;
+    Device &operator=(const Device &) = delete;
 
-    Device(Device&&) = delete;
-    Device& operator=(Device&&) = delete;
+    Device(Device &&) = delete;
+    Device &operator=(Device &&) = delete;
 
     void stop();
     bool start();
 
     void connectFrom(std::string_view Address, int Port,
-                     const RtTable& Sections, std::string_view Passphrase,
+                     const RtTable &Sections, std::string_view Passphrase,
                      int Timeout = cma::cfg::kDefaultRealtimeTimeout);
 
     bool started() const noexcept { return started_; }

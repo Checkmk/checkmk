@@ -4,57 +4,98 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-def inventory_cmciii_lcp_waterflow(info):
-    if info:
-        return [(None, None)]
+from typing import NamedTuple, Optional
 
 
-def check_cmciii_lcp_waterflow(item, params, info):
-    if info[0]:
-        # We have a list of values where no item has a fixed index. We
-        # try to detect the starting index for the needed values now.
-        try:
-            index = info[0].index("Waterflow")
-            name, flow, maxflow, minflow, status = info[0][index : index + 5]
-        except ValueError:
-            return 3, "Waterflow information not found"
+class WaterflowReading(NamedTuple):
+    name: str
+    status: str
+    unit: str
+    flow: float
+    minflow: float
+    maxflow: float
 
-        unit = flow.split(" ", 1)[1]
-        flow = float(flow.split(" ", 1)[0])
-        minflow = float(minflow.split(" ", 1)[0])
-        maxflow = float(maxflow.split(" ", 1)[0])
 
-        sym = ""
-        state = 0
-        if status != "OK":
-            state = 2
-            sym = "(!!)"
-        elif flow < minflow or flow > maxflow:
-            state = 1
-            sym = "(!)"
+Section = Optional[WaterflowReading]
 
-        info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" % (
-            name,
-            status,
-            flow,
-            sym,
-            minflow,
-            maxflow,
+
+def parse_cmciii_lcp_waterflow(info) -> Section:
+    if not info:
+        return None
+
+    # We have a list of values where no item has a fixed index. We
+    # try to detect the starting index for the needed values now.
+    iter_info = iter(info[0])
+    name = None
+    for line in iter_info:
+        if line == "Waterflow":
+            name = line
+            break
+
+    if name is None:
+        return None
+
+    flow, unit = next(iter_info).split(" ", 1)
+    maxflow = next(iter_info).split(" ", 1)[0]
+    minflow = next(iter_info).split(" ", 1)[0]
+    status = next(iter_info)
+
+    return WaterflowReading(
+        name=name,
+        status=status,
+        unit=unit,
+        flow=float(flow),
+        minflow=float(minflow),
+        maxflow=float(maxflow),
+    )
+
+
+def inventory_cmciii_lcp_waterflow(section: Section):
+    if section:
+        yield None, {}
+
+
+def check_cmciii_lcp_waterflow(item, params, section: Section):
+    if not section:
+        return
+
+    sym = ""
+    state = 0
+    if section.status != "OK":
+        state = 2
+        sym = "(!!)"
+    elif section.flow < section.minflow or section.flow > section.maxflow:
+        state = 1
+        sym = "(!)"
+
+    info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" % (
+        section.name,
+        section.status,
+        section.flow,
+        sym,
+        section.minflow,
+        section.maxflow,
+    )
+
+    perfdata = [
+        (
+            "flow",
+            str(section.flow) + section.unit,
+            str(section.minflow) + ":" + str(section.maxflow),
+            0,
+            0,
         )
+    ]
 
-        perfdata = [("flow", str(flow) + unit, str(minflow) + ":" + str(maxflow), 0, 0)]
-
-        return state, info_text, perfdata
-
-    return (3, "no SNMP data found")
+    return state, info_text, perfdata
 
 
 check_info["cmciii_lcp_waterflow"] = {
+    "parse_function": parse_cmciii_lcp_waterflow,
     "check_function": check_cmciii_lcp_waterflow,
     "inventory_function": inventory_cmciii_lcp_waterflow,
     "has_perfdata": True,
     "service_description": "LCP Fanunit WATER FLOW",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP"),
-    "snmp_info": (".1.3.6.1.4.1.2606.7.4.2.2.1.10.2", list(range(74, 87))),
+    "snmp_info": (".1.3.6.1.4.1.2606.7.4.2.2.1.10.2", list(range(74, 88))),
 }

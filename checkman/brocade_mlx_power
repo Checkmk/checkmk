@@ -1,7 +1,7 @@
 title: Brocade NetIron MLX / ADX / FGS / ICX Devices: Power Supplies
 agents: snmp
 catalog: hw/power/brocade
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the operational status of power supplies on Brocade NetIron MLX  / ADX

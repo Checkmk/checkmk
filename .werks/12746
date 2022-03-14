@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If images where used in reports, e.g. for icons like "Log: event icon" in
 scheduled downtimes, an UnicodeDecodeError could occur.

@@ -1,7 +1,7 @@
 title: Kentix Alarmmanager Pro: Humidity Sensor
 agents: snmp
 catalog: hw/environment/kentix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the humidity measured by the

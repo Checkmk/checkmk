@@ -1,9 +1,14 @@
 title: Kubernetes: Node and Cluster Level Network Usage
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_kubernetes) are deprecated
+ and will be removed in Checkmk version 2.2.0.
+
+ Please configure the new special agent using the "Kubernetes" ruleset.
+
  This check monitors at cluster and node level the network interfaces. It
  gives the link speed, packet counts, discards and errors.
 

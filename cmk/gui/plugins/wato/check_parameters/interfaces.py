@@ -129,7 +129,7 @@ def _vs_single_discovery():
                 False,
                 _("Do not discover single interfaces"),
                 FixedValue(
-                    {},
+                    value={},
                     totext="",
                 ),
             ),
@@ -152,7 +152,7 @@ def _vs_grouping():
                 False,
                 _("Do not group interfaces"),
                 FixedValue(
-                    {"group_items": []},
+                    value={"group_items": []},
                     totext="",
                 ),
             ),
@@ -164,8 +164,6 @@ def _vs_grouping():
                         (
                             "group_items",
                             ListOf(
-                                title=_("Interface groups"),
-                                add_label=_("Add pattern"),
                                 valuespec=Dictionary(
                                     elements=[
                                         (
@@ -190,6 +188,8 @@ def _vs_grouping():
                                     ],
                                     optional_keys=False,
                                 ),
+                                title=_("Interface groups"),
+                                add_label=_("Add pattern"),
                                 allow_empty=False,
                             ),
                         ),
@@ -266,7 +266,7 @@ def _vs_matching_conditions():
                 True,
                 _("Match all interfaces"),
                 FixedValue(
-                    {},
+                    value={},
                     totext="",
                 ),
             ),
@@ -440,7 +440,7 @@ def _validate_valuespec_inventory_if_rules(value, varprefix):
 
 def _valuespec_inventory_if_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Network interface and switch port discovery"),
             help=_(
                 "Configure the discovery of services monitoring network interfaces and switch "
@@ -490,7 +490,7 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
     (
         "iftype",
         Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 title=_("Select interface port type"),
                 choices=ListChoice.dict_choices(defines.interface_port_types()),
                 help=_(
@@ -542,7 +542,7 @@ vs_elements_if_groups_group = [
 def _valuespec_if_groups():
     node_name_elements: List[DictionaryEntry] = [("node_name", TextInput(title=_("Node name")))]
     return Transform(
-        Alternative(
+        valuespec=Alternative(
             title=_("Network interface groups"),
             help=_(
                 "Normally the Interface checks create a single service for interface. "
@@ -554,17 +554,14 @@ def _valuespec_if_groups():
             ),
             elements=[
                 ListOf(
-                    title=_("Groups on single host"),
-                    add_label=_("Add pattern"),
                     valuespec=Dictionary(
                         elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
                         required_keys=["group_name", "group_presence"],
                     ),
+                    title=_("Groups on single host"),
+                    add_label=_("Add pattern"),
                 ),
                 ListOf(
-                    magic="@!!",
-                    title=_("Groups on cluster"),
-                    add_label=_("Add pattern"),
                     valuespec=Dictionary(
                         elements=vs_elements_if_groups_group
                         + [
@@ -583,6 +580,9 @@ def _valuespec_if_groups():
                         ],
                         optional_keys=[],
                     ),
+                    magic="@!!",
+                    title=_("Groups on cluster"),
+                    add_label=_("Add pattern"),
                 ),
             ],
         ),
@@ -849,16 +849,16 @@ def _vs_alternative_levels(  # pylint: disable=redefined-builtin
 
 def _vs_state_mappings() -> CascadingDropdown:
     return CascadingDropdown(
-        [
+        choices=[
             (
                 "independent_mappings",
                 _("Map operational and admin state independently"),
                 Dictionary(
-                    [
+                    elements=[
                         (
                             "map_operstates",
                             ListOf(
-                                Tuple(
+                                valuespec=Tuple(
                                     orientation="horizontal",
                                     elements=[
                                         ListChoice(
@@ -877,7 +877,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                         (
                             "map_admin_states",
                             ListOf(
-                                Tuple(
+                                valuespec=Tuple(
                                     orientation="horizontal",
                                     elements=[
                                         ListChoice(
@@ -904,11 +904,11 @@ def _vs_state_mappings() -> CascadingDropdown:
                 "combined_mappings",
                 _("Map combinations of operational and admin state"),
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(
-                                [
+                                choices=[
                                     (
                                         str(key),
                                         f"{key} - {value}",
@@ -918,7 +918,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                                 title=_("Operational state"),
                             ),
                             DropdownChoice(
-                                [
+                                choices=[
                                     (
                                         str(key),
                                         f"{key} - {value}",
@@ -954,7 +954,7 @@ def _parameter_valuespec_if():
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
     # keys where each was configured with an Alternative valuespec
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             ignored_keys=[
                 "aggregate",
                 "discovered_oper_status",
@@ -1006,7 +1006,7 @@ def _parameter_valuespec_if():
                 (
                     "state",
                     Optional(
-                        ListChoice(
+                        valuespec=ListChoice(
                             title=_("Allowed operational states:"),
                             choices=defines.interface_oper_states(),
                             allow_empty=False,
@@ -1025,7 +1025,7 @@ def _parameter_valuespec_if():
                 (
                     "admin_state",
                     Optional(
-                        ListChoice(
+                        valuespec=ListChoice(
                             title=_("Allowed admin states:"),
                             choices=_admin_states(),
                             allow_empty=False,
@@ -1136,7 +1136,7 @@ def _parameter_valuespec_if():
                 (
                     "traffic",
                     ListOf(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             title=_("Direction"),
                             orientation="horizontal",
                             choices=[
@@ -1165,7 +1165,7 @@ def _parameter_valuespec_if():
                             (
                                 "levels",
                                 ListOf(
-                                    vs_interface_traffic(),
+                                    valuespec=vs_interface_traffic(),
                                     title=_("Provide levels"),
                                     help=_(
                                         "Levels on the total bandwidth will act the same way as they do for "
@@ -1334,6 +1334,10 @@ rulespec_registry.register(
 
 
 def _parameter_valuespec_k8s_if():
+    ######################################################################
+    # NOTE: This valuespec and associated check are deprecated and will be
+    #       removed in Checkmk version 2.2.
+    ######################################################################
     return Dictionary(
         elements=[
             (
@@ -1396,5 +1400,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_if,
         title=lambda: _("Kubernetes Network interfaces"),
+        is_deprecated=True,
     )
 )

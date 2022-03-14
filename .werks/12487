@@ -6,7 +6,7 @@ Date: 1618931929
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Users in a role with permission "Edit foreign reports"(only admins by
 default) could access and edit the properties of reports configured by

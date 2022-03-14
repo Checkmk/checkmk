@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 `hrStorageType` defines the type of information provided via SNMP handled by `hr_mem`. Very often
 invalid values for `hrStorageType` are being provided, which leads to unhandled ValueError()

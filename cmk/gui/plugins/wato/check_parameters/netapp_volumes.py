@@ -24,7 +24,7 @@ from cmk.gui.valuespec import Alternative, Dictionary, ListChoice, TextInput, Tr
 
 def _parameter_valuespec_netapp_volumes():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",
@@ -36,7 +36,7 @@ def _parameter_valuespec_netapp_volumes():
                         elements=[
                             get_free_used_dynamic_valuespec("used", "volume", maxvalue=None),
                             Transform(
-                                get_free_used_dynamic_valuespec(
+                                valuespec=get_free_used_dynamic_valuespec(
                                     "free", "volume", default_value=(20.0, 10.0)
                                 ),
                                 forth=transform_filesystem_free,

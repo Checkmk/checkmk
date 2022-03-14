@@ -1,7 +1,7 @@
 title: Aruba WLAN Controller: Clients
 agents: snmp
 catalog: hw/network/aruba
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the amount of WLAN controller clients.

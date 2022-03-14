@@ -17,6 +17,7 @@ import re
 import time
 import traceback
 from contextlib import suppress
+from html import unescape
 from pathlib import Path
 from typing import (
     Any,
@@ -1359,8 +1360,8 @@ def make_linked_visual_url(
 
     # Include visual default context. This comes from the hard_filters. Linked
     # view would have no _active flag. Thus prepend the default context
-    required_vars = [(visual_type.ident_attr, name)] + visuals.get_context_uri_vars(
-        visual.get("context", {}), visual.get("single_infos", [])
+    required_vars = [(visual_type.ident_attr, name)] + visuals.context_to_uri_vars(
+        visual.get("context", {})
     )
 
     # add context link to this visual. For reports we put in
@@ -1368,7 +1369,9 @@ def make_linked_visual_url(
     if visual_type.multicontext_links:
         # Keeping the _active flag is a long distance hack to be able to rebuild the
         # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
-        return makeuri(request, required_vars, filename=filename)
+        return makeuri(
+            request, required_vars, filename=filename, delvars=["show_checkboxes", "selection"]
+        )
 
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
     # For views and dashboards currently the current filter settings
@@ -1971,6 +1974,10 @@ class Cell:
         if painter_spec:
             self._from_view(painter_spec)
 
+    @property
+    def view(self) -> "View":
+        return self._view
+
     def _from_view(self, painter_spec: PainterSpec) -> None:
         self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):
@@ -2240,7 +2247,7 @@ class Cell:
                 txt = escaping.strip_tags(str(txt))
 
             elif not isinstance(txt, tuple):
-                txt = escaping.unescape_attributes(txt)
+                txt = unescape(txt)
                 txt = escaping.strip_tags(txt)
 
             return css_classes, txt

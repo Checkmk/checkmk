@@ -1,0 +1,22 @@
+title: Checkmk Agent: Deployment properties
+agents: solaris, aix, linux, freebsd, openwrt, windows
+catalog: app/cmk
+license: GPLv2
+distribution: check_mk
+description:
+
+ This plugin makes sure that the Checkmk agent deploy mechanism (if used) is working properly.
+ It checks the time of the last successful connect to the deployment server and if there are any error messages.
+
+ Also it monitors the deployed agent plugins and local checks.
+ In any case it will display their respective number.
+ If levels are configured useing the WATO ruleset "Checkmk agent plugins", the plugins versions are compared to the target versions.
+ For this to work, the versions must be included in the plugins in one of the standardised formats:
+  * CMK_VERSION="2.1.0p12" (e.g. shell, php)
+  * __version__=... (python)
+
+ If the version of a plugin is found but can not be parsed, the service wil go to UNKNOWN.
+ You can exclude plugins from the version check using a regex pattern in the WATO ruleset.
+
+discovery:
+ One service is created.

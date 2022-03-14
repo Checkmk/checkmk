@@ -472,7 +472,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
             )
         else:
             vs_id = FixedValue(
-                self._id,
+                value=self._id,
                 title=id_title,
             )
 
@@ -839,11 +839,11 @@ class ModeEditTagGroup(ABCEditTagMode):
         # We want the compact tuple style visualization which is not
         # supported by the Dictionary valuespec. Transform!
         return Transform(
-            ListOf(
-                Tuple(
+            valuespec=ListOf(
+                valuespec=Tuple(
                     elements=[
                         Transform(
-                            TextInput(
+                            valuespec=TextInput(
                                 title=_("Tag ID"),
                                 size=40,
                                 regex="^[-a-z0-9A-Z_]*$",
@@ -862,7 +862,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                             size=60,
                         ),
                         Foldable(
-                            ListChoice(
+                            valuespec=ListChoice(
                                 title=_("Auxiliary tags"),
                                 choices=self._effective_config.aux_tag_list.get_choices(),
                             ),

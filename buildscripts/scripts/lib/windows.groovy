@@ -24,6 +24,8 @@ def build(Map args) {
                 } else if (args.TARGET == "agent_no_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd'
                     ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
+                } else if (args.TARGET == "cmk_agent_ctl_no_sign") {
+                    bat 'cd agents\\cmk-agent-ctl && call cargo_build.cmd'
                 } else if (args.TARGET == "test_unit") {
                     bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
                 } else if (args.TARGET == "test_integration") {

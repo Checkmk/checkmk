@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The SLA timeline shows the state of a service by colored bars. Each element's
 width should be in relation to the duration the service was in this state.

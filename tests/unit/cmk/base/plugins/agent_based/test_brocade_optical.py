@@ -84,15 +84,12 @@ def test_discover_brocade_optical(params, expect_service):
         }
     }
     services = [Service(item="1410", parameters={}, labels=[])]
-    assert (
-        list(
-            brocade_optical.discover_brocade_optical(
-                params,
-                section,
-            )
+    assert list(
+        brocade_optical.discover_brocade_optical(
+            params,
+            section,
         )
-        == (expect_service and services or [])
-    )
+    ) == (expect_service and services or [])
 
 
 @pytest.mark.parametrize(

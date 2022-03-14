@@ -1,12 +1,27 @@
 title: Kubernetes: Memory
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check monitors the used memory relative to the configured memory limits of a
- Kubernetes entity. If at least one container of a pod does not specify limits, then
- only the raw usage value will be shown.
+ This check shows the memory usage of a Kubernetes object, its requests utilization and its limits
+ utilization.
+
+ Requests utilization is the memory usage divided by the sum of all configured container memory
+ requests. Limit utilization is computed in the same manner. The utilization percentage values are
+ omitted if any of the associated request/limit value are not configured. Moreover, limits
+ utilization is omitted if any container has a limit of zero. The reason for omission is displayed
+ in the check's details.
+
+ The service includes metrics for the memory usage, the requests utilization, the limits utilization,
+ the memory requests and memory limits of the Kubernetes object.
+
+ There are no default thresholds for this service. However, thresholds can be configured via the
+ "Kubernetes memory resource utilization" ruleset.
+
+ Currently, this check does not have swap support.
+
+ The check requires that the special agent kube is configured.
 
 discovery:
- One service is created.
+ One service is created per Kubernetes object.

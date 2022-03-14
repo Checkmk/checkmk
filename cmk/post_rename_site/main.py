@@ -22,7 +22,7 @@ from cmk.utils.version import is_raw_edition
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
 # the moment we need to deal with it.
-import cmk.gui.modules
+from cmk.gui import main_modules
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 
@@ -114,7 +114,7 @@ def run(arguments: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId)
     has_errors = False
     logger.debug("Initializing application...")
 
-    cmk.gui.modules.load_plugins()
+    main_modules.load_plugins()
 
     with gui_context(), SuperUserContext():
         logger.debug("Starting actions...")

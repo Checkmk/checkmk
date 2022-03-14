@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import Mapping, Optional
 
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service
 from .agent_based_api.v1 import State as state
@@ -15,11 +15,15 @@ from .utils import sap_hana
 def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
-        section.setdefault(f"Status {sid_instance}", {})
-        section.setdefault(f"Version {sid_instance}", {})
-
         for line in lines:
-            if line[0].lower() == "all started":
+            if line[0].startswith("hdbsql ERROR"):
+                item_name = "Status"
+                item_data = {
+                    "instance": sid_instance,
+                    "state_name": "error",
+                    "message": line[0],
+                }
+            elif line[0].lower() == "all started":
                 item_name = "Status"
                 item_data = {
                     "instance": sid_instance,
@@ -47,7 +51,7 @@ def _check_sap_hana_status_data(data):
     state_name = data["state_name"]
     if state_name.lower() == "ok":
         cur_state = state.OK
-    elif state_name.lower() == "unknown":
+    elif state_name.lower() in ["unknown", "error"]:
         cur_state = state.CRIT
     else:
         cur_state = state.WARN
@@ -74,12 +78,12 @@ def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckRe
 
 def cluster_check_sap_hana_status(
     item: str,
-    section: Dict[str, sap_hana.ParsedSection],
+    section: Mapping[str, Optional[sap_hana.ParsedSection]],
 ) -> CheckResult:
 
     yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
-        if item in node_section:
+        if node_section is not None and item in node_section:
             yield from check_sap_hana_status(item, node_section)
             return
 

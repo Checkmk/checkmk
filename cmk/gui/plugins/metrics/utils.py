@@ -65,7 +65,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DropdownChoiceValue, DropdownChoiceWithHostAndServiceHints
+from cmk.gui.valuespec import DropdownChoiceModel, DropdownChoiceWithHostAndServiceHints
 
 LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
@@ -852,7 +852,6 @@ def get_graph_template(template_id: str) -> GraphTemplate:
 def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
-        "title": metric_name,
         "metrics": [
             (metric_name, "area"),
         ],
@@ -1352,8 +1351,8 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         }
         super().__init__(**kwargs_with_defaults)
 
-    def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
-        # ? DropdownChoiceValue is an alias for Any
+    def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
+        # ? DropdownChoiceModel is an alias for Any
         if (
             value is not None
             and self._regex
@@ -1361,9 +1360,9 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         ):
             raise MKUserError(varprefix, self._regex_error)
 
-    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+    def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
         if value is None:
-            return self.choices()
+            return list(self.choices())
         # Need to create an on the fly metric option
         return [
             next(

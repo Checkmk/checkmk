@@ -1,0 +1,12 @@
+Title: Veeam: Make veeam_cdp_jobs section optional
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646120018
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The CDP job option is now optional since not every Veeam instance supports it.

@@ -78,6 +78,8 @@ SERVICE_ID = {
     "57": "cloud-api",
     "58": "threat-analytics",
     "59": "taxii",
+    "60": "bfd",
+    "61": "outbound",
 }
 STATUS_ID = {
     "1": "working",

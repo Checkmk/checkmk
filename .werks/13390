@@ -1,0 +1,12 @@
+Title: Export rule representation for API: New page, styling and navigation
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.1.0i1
+Date: 1643708266
+Class: fix
+
+When editing a rule, one could choose "Export for API" from the page menu to view the API-specific
+rule representation. This page is newly styled (fixing the broken light theme styles) and now
+reachable from any list of rulesets through a new icon button.

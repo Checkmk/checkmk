@@ -56,7 +56,7 @@ TEST(DfTest, ProduceMountPointsOutput) {
 
     std::set<std::string> all;
 
-    for (auto& raw : raws) {
+    for (auto &raw : raws) {
         auto table = tools ::SplitString(raw, "\t");
         EXPECT_EQ(table.size(), 7);
         all.insert(raw);
@@ -96,7 +96,7 @@ TEST(DfTest, Integration) {
     EXPECT_TRUE(rows.size() > 1);
     EXPECT_EQ(rows[0], "<<<df:sep(9)>>>");
     rows.erase(rows.begin());
-    for (auto& r : rows) {
+    for (auto &r : rows) {
         auto table = tools::SplitString(r, "\t");
         EXPECT_EQ(table.size(), 7);
     }

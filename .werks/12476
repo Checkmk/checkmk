@@ -6,7 +6,7 @@ Date: 1615475142
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 "Host report for multiple hosts" and "Service report of multiple services"
 are elements that produce subreports where the context filters are directly

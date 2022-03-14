@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
 
 def _valuespec_ntp_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("NTP discovery"),
             elements=[
                 (
@@ -86,7 +86,7 @@ def _ntp_params():
 
 def _parameter_valuespec_ntp_peer():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 ("ntp_levels", _ntp_params()),
             ],
@@ -105,7 +105,7 @@ rulespec_registry.register(
         check_group_name="ntp_peer",
         group=RulespecGroupCheckParametersOperatingSystem,
         item_spec=_item_spec_ntp_peer,
-        parameter_valuespec=_ntp_params,
+        parameter_valuespec=_parameter_valuespec_ntp_peer,
         title=lambda: _("State of NTP peer"),
     )
 )
@@ -113,7 +113,7 @@ rulespec_registry.register(
 
 def _parameter_valuespec_ntp_time():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "ntp_levels",

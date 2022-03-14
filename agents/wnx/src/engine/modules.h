@@ -29,7 +29,7 @@ constexpr std::string_view g_module_uninstall_path =
 class Module {
 public:
     // loader
-    [[nodiscard]] bool loadFrom(const YAML::Node& node);
+    [[nodiscard]] bool loadFrom(const YAML::Node &node);
 
     // accessors
     [[nodiscard]] bool valid() const noexcept { return !name_.empty(); }
@@ -42,20 +42,20 @@ public:
     [[nodiscard]] auto package() const noexcept { return package_; }
 
     [[nodiscard]] bool isModuleZip(
-        const std::filesystem::path& file) const noexcept;
+        const std::filesystem::path &file) const noexcept;
 
     // finds the package and executable
-    bool prepareToWork(const std::filesystem::path& backup_dir,
-                       const std::filesystem::path& modules_dir);
+    bool prepareToWork(const std::filesystem::path &backup_dir,
+                       const std::filesystem::path &modules_dir);
 
     //
-    bool isMyScript(const std::filesystem::path& script) const noexcept;
+    bool isMyScript(const std::filesystem::path &script) const noexcept;
     std::wstring buildCommandLine(
-        const std::filesystem::path& script) const noexcept;
+        const std::filesystem::path &script) const noexcept;
 
     // makes command line with script, if bin_ is empty returns nothing
     std::wstring buildCommandLineForced(
-        const std::filesystem::path& script) const noexcept;
+        const std::filesystem::path &script) const noexcept;
 
     void removeExtension(std::string_view ext);
 
@@ -72,10 +72,10 @@ private:
     std::filesystem::path package_;  // path to valid package file
 
     std::filesystem::path findPackage(
-        const std::filesystem::path& backup_dir) const noexcept;
+        const std::filesystem::path &backup_dir) const noexcept;
 
     std::filesystem::path findBin(
-        const std::filesystem::path& modules_dir) const noexcept;
+        const std::filesystem::path &modules_dir) const noexcept;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ModulesTest;
@@ -90,7 +90,7 @@ private:
 #endif
 };
 
-[[nodiscard]] std::vector<Module> LoadFromConfig(const YAML::Node& yaml);
+[[nodiscard]] std::vector<Module> LoadFromConfig(const YAML::Node &yaml);
 
 enum class InstallMode { normal, force };
 
@@ -106,30 +106,30 @@ public:
     };
     void LoadDefault() noexcept;
     void InstallDefault(InstallMode mode) noexcept;
-    void readConfig(YAML::Node& node);
+    void readConfig(YAML::Node &node);
 
     static bool IsQuickReinstallAllowed();
 
     void prepareToWork();
-    bool isModuleScript(const std::string_view filename);
-    std::wstring buildCommandLine(const std::string_view filename);
+    bool isModuleScript(std::string_view filename);
+    std::wstring buildCommandLine(std::string_view filename);
 
-    int findModuleFiles(const std::filesystem::path& root);
-    void installModules(const std::filesystem::path& root,
-                        const std::filesystem::path& user,
+    int findModuleFiles(const std::filesystem::path &root);
+    void installModules(const std::filesystem::path &root,
+                        const std::filesystem::path &user,
                         InstallMode mode) const;
 
-    static void moveModulesToStore(const std::filesystem::path& user);
+    static void moveModulesToStore(const std::filesystem::path &user);
 
     std::vector<std::string> getExtensions() const;
 
     static std::filesystem::path GetModBackup(
-        const std::filesystem::path& user) {
+        const std::filesystem::path &user) {
         return user / dirs::kUserInstallDir / dirs::kInstalledModules;
     }
 
     static std::filesystem::path GetModInstall(
-        const std::filesystem::path& user) {
+        const std::filesystem::path &user) {
         return user / dirs::kUserModules;
     }
 
@@ -137,36 +137,36 @@ public:
 
     /// \brief Returns path in the %temp% where content of module will be moved
     static std::filesystem::path GetMoveLocation(
-        const std::filesystem::path& module_file);
+        const std::filesystem::path &module_file);
 
 private:
-    void removeSystemExtensions(YAML::Node& node);
+    void removeSystemExtensions(YAML::Node &node);
 
     // internals static API
-    static bool TryQuickInstall(const Module& mod,
-                                const std::filesystem::path& root,
-                                const std::filesystem::path& user);
+    static bool TryQuickInstall(const Module &mod,
+                                const std::filesystem::path &root,
+                                const std::filesystem::path &user);
 
-    static bool InstallModule(const Module& mod,
-                              const std::filesystem::path& root,
-                              const std::filesystem::path& user,
+    static bool InstallModule(const Module &mod,
+                              const std::filesystem::path &root,
+                              const std::filesystem::path &user,
                               InstallMode mode);
 
     // returns true when changes had been made
-    static bool UninstallModuleZip(const std::filesystem::path& file,
-                                   const std::filesystem::path& mod_root);
+    static bool UninstallModuleZip(const std::filesystem::path &file,
+                                   const std::filesystem::path &mod_root);
 
     // \brief Validates that default move dir contains good module
     static std::optional<UninstallStore> GetUninstallStore(
-        const std::filesystem::path& file);
+        const std::filesystem::path &file);
 
-    static bool BackupModule(const std::filesystem::path& module_file,
-                             const std::filesystem::path& backup_file);
-    static bool PrepareCleanTargetDir(const std::filesystem::path& mod_dir);
-    static void CreateBackupFolder(const std::filesystem::path& user);
+    static bool BackupModule(const std::filesystem::path &module_file,
+                             const std::filesystem::path &backup_file);
+    static bool PrepareCleanTargetDir(const std::filesystem::path &mod_dir);
+    static void CreateBackupFolder(const std::filesystem::path &user);
     // internal API
-    bool isBelongsToModules(const std::filesystem::path& file) const noexcept;
-    static PathVector ScanDir(const std::filesystem::path& dir) noexcept;
+    bool isBelongsToModules(const std::filesystem::path &file) const noexcept;
+    static PathVector ScanDir(const std::filesystem::path &dir) noexcept;
     std::vector<std::filesystem::path> files_;
     std::vector<Module> modules_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)

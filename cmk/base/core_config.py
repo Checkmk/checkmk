@@ -25,10 +25,12 @@ from typing import (
     Union,
 )
 
+import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
@@ -43,14 +45,11 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import VersionedConfigPath
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import ConfiguredService
 from cmk.base.config import (
     ConfigCache,
     HostCheckCommand,
@@ -229,9 +228,9 @@ def autodetect_plugin(command_line: str) -> str:
         return command_line
 
     for directory in ["local", ""]:
-        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins/"
+        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins"
         if (path / plugin_name).exists():
-            command_line = f"{path}{command_line}"
+            command_line = f"{path}/{command_line}"
             break
 
     return command_line
@@ -301,11 +300,6 @@ def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None
     and available for starting the monitoring.
     """
     out.output("Generating configuration for core (type %s)...\n" % core.name())
-    if hosts_to_update is not None:
-        out.output(
-            "Reuse old configuration, create new configuration for %s and dependant hosts\n"
-            % ", ".join(hosts_to_update)
-        )
 
     try:
         _create_core_config(core, hosts_to_update=hosts_to_update)
@@ -381,19 +375,8 @@ def _create_core_config(
     config_cache = config.get_config_cache()
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
-        # TODO: Remove once we drop the binary config
-        # Purpose of code is to delete the old config file after format switching to have precisely
-        # one microcore config in core config directory.
-        if config.is_cmc():
-            try:
-                if config.get_microcore_config_format() == "protobuf":
-                    os.remove(cmk.utils.paths.var_dir + "/core/config")
-                else:
-                    os.remove(cmk.utils.paths.var_dir + "/core/config.pb")
-            except OSError as _:
-                pass
 
-    cmk.utils.password_store.save(config.stored_passwords)
+    cmk.utils.password_store.save_for_helpers(config_path)
 
     return get_configuration_warnings()
 
@@ -478,6 +461,7 @@ def _prepare_check_command(
     """
     passwords: List[Tuple[str, str, str]] = []
     formated: List[str] = []
+    stored_passwords = cmk.utils.password_store.load()
     for arg in command_spec:
         if isinstance(arg, (int, float)):
             formated.append("%s" % arg)
@@ -488,7 +472,7 @@ def _prepare_check_command(
         elif isinstance(arg, tuple) and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
             try:
-                password = config.stored_passwords[pw_ident]["password"]
+                password = stored_passwords[pw_ident]
             except KeyError:
                 if hostname and description:
                     descr = ' used by service "%s" on host "%s"' % (description, hostname)
@@ -531,7 +515,7 @@ def _prepare_check_command(
 def get_cmk_passive_service_attributes(
     config_cache: ConfigCache,
     host_config: HostConfig,
-    service: Service,
+    service: ConfiguredService,
     check_mk_attrs: ObjectAttributes,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
@@ -552,7 +536,7 @@ def get_service_attributes(
     description: ServiceName,
     config_cache: ConfigCache,
     check_plugin_name: Optional[CheckPluginName] = None,
-    params: Union[LegacyCheckParameters, TimespecificParameters] = None,
+    params: Optional[TimespecificParameters] = None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
         hostname, description, config_cache, check_plugin_name, params
@@ -575,7 +559,7 @@ def _extra_service_attributes(
     description: ServiceName,
     config_cache: ConfigCache,
     check_plugin_name: Optional[CheckPluginName],
-    params: Union[LegacyCheckParameters, TimespecificParameters],
+    params: Optional[TimespecificParameters],
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 

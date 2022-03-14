@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously the "column" parameter on the host and service endpoints
 did not work as intended. This has been fixed and the column now

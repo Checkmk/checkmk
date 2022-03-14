@@ -17,7 +17,6 @@ from cmk.utils.type_defs import CheckPluginName
 import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 from cmk.base import check_api
-from cmk.base.check_utils import Service
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
@@ -338,7 +337,8 @@ def test_http_proxy(mocker):
 
 
 def test_get_effective_service_level(monkeypatch):
-    ts = Scenario().add_host("testhost1")
+    ts = Scenario()
+    ts.add_host("testhost1")
     ts.add_host("testhost2")
     ts.add_host("testhost3")
     ts.set_ruleset(
@@ -356,14 +356,7 @@ def test_get_effective_service_level(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    with plugin_contexts.current_service(
-        Service(
-            item=None,
-            check_plugin_name=CheckPluginName("cpu_loads"),
-            description="CPU load",
-            parameters={},
-        )
-    ):
+    with plugin_contexts.current_service(CheckPluginName("cpu_loads"), "CPU load"):
 
         with plugin_contexts.current_host("testhost1"):
             assert check_api.get_effective_service_level() == 33

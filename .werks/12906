@@ -6,7 +6,7 @@ Date: 1627215171
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This incompatible API change only affects users who use
 the function <tt>run_cached</tt> exported by the agents.

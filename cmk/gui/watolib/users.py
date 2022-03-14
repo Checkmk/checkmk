@@ -127,7 +127,7 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
+def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True) -> None:
     # Check user_id
     if is_new_user:
         if user_id in all_users:
@@ -232,12 +232,12 @@ def get_vs_user_idle_timeout():
         title=_("Session idle timeout"),
         elements=[
             FixedValue(
-                None,
+                value=None,
                 title=_("Use the global configuration"),
                 totext="",
             ),
             FixedValue(
-                False,
+                value=False,
                 title=_("Disable the login timeout"),
                 totext="",
             ),
@@ -268,8 +268,8 @@ def get_vs_flexible_notifications():
                 "flexible",
                 _("Flexible Custom Notifications"),
                 ListOf(
-                    Foldable(
-                        Dictionary(
+                    valuespec=Foldable(
+                        valuespec=Dictionary(
                             optional_keys=[
                                 "service_blacklist",
                                 "only_hosts",

@@ -167,7 +167,25 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
 
     health_test = section.get("Healthcheck", {}).get("Test")
     if health_test:
-        yield Result(state=state.OK, summary="Health test: %s" % " ".join(health_test))
+        yield _health_test_result(f"Health test: {' '.join(health_test)}")
+
+
+def _health_test_result(health_test: str) -> Result:
+    """
+    >>> _health_test_result("Health test: ./my_health_tests_script.sh")
+    Result(state=<State.OK: 0>, summary='Health test: ./my_health_tests_script.sh')
+
+    >>> r = _health_test_result("Health test: CMD-SHELL #!/bin/bash\\n\\nexit 0\\n")
+    >>> r.summary
+    'Health test: CMD-SHELL'
+    >>> r.details
+    'Health test: CMD-SHELL #!/bin/bash\\n\\nexit 0\\n'
+    """
+    return Result(
+        state=state.OK,
+        summary=health_test.split("\n", 1)[0].split("#!", 1)[0].strip(),
+        details=health_test,
+    )
 
 
 register.check_plugin(

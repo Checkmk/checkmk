@@ -111,12 +111,16 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
         return {};
     }
     XLOG::d.t("Processing {} bytes of data", length);
-    constexpr uint32_t kMaxSizeSupported = 20 * 1024 * 1024;
-    if (length > kMaxSizeSupported) {
-        XLOG::l.crit("Size of data is too big {} ", length);
+
+    // ATTENTION: Value below must be bigger than cap.py::MAX_ALLOWED_SIZE
+    // This limit is only to avoid RAM problems, real control should be
+    // performed by WATO.
+    constexpr uint32_t max_allowed_size = 1024 * 1024 * 1024;
+    if (length > max_allowed_size) {
+        XLOG::l.crit("Size of data is too big {} allowed {}", length,
+                     max_allowed_size);
         return {};
     }
-
     size_t buffer_length = length;
     std::vector<char> dataBuffer(buffer_length, 0);
     CapFile.read(dataBuffer.data(), length);
@@ -462,6 +466,12 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
     // we remove target file always good or bad our
     // This is uninstall process
     details::UninstallYaml(bakery_yaml, target_yaml);
+
+    // In 1.6 target_yml was not presented
+    if (fs::exists(bakery_yaml, ec)) {
+        XLOG::d.i("Looks as 1.6 installation: remove '{}'", bakery_yaml);
+        fs::remove(bakery_yaml, ec);
+    }
 
     try {
         auto yaml = YAML::LoadFile(source_yaml.u8string());

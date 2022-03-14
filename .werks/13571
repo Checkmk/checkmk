@@ -1,0 +1,17 @@
+Title: VLAN aware ntop setups
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1643207225
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk ships multiple fixes regarding the integration with a vlan aware ntop setup.
+You were affected by the fixed issues in case:
+
+* you're ntopng instance is vlan aware
+* you're using the ntop Checkmk integration
+* you cannot access the ntop host details in Checkmk

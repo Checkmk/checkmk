@@ -6,7 +6,7 @@ Date: 1630415730
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When creating multiple combined graphs the order of the
 graphs would be undefined which looks like the appear

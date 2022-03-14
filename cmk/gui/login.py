@@ -50,7 +50,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.utils.mobile import is_mobile
@@ -259,16 +259,35 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username, session_id)
 
+    _redirect_for_password_change(username)
+    _redirect_for_two_factor_authentication(username)
+
+    # Return the authenticated username
+    return username
+
+
+def _redirect_for_password_change(user_id: UserId) -> None:
     if requested_file_name(request) != "user_change_pw":
-        result = userdb.need_to_change_pw(username)
+        result = userdb.need_to_change_pw(user_id)
         if result:
             raise HTTPRedirect(
                 "user_change_pw.py?_origtarget=%s&reason=%s"
                 % (urlencode(makeuri(request, [])), result)
             )
 
-    # Return the authenticated username
-    return username
+
+def _redirect_for_two_factor_authentication(user_id: UserId) -> None:
+    if requested_file_name(request) in (
+        "user_login_two_factor",
+        "user_webauthn_login_begin",
+        "user_webauthn_login_complete",
+    ):
+        return
+
+    if userdb.is_two_factor_login_enabled(user_id) and not userdb.is_two_factor_completed():
+        raise HTTPRedirect(
+            "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+        )
 
 
 def _fetch_cookie(cookie_name: str) -> str:
@@ -309,10 +328,10 @@ def _check_auth(req: Request) -> Optional[UserId]:
     if req.var("_secret"):
         user_id = _check_auth_automation()
 
-    elif config.auth_by_http_header:
+    elif auth_by_http_header := config.auth_by_http_header:
         if not config.user_login:
             return None
-        user_id = _check_auth_http_header()
+        user_id = _check_auth_http_header(auth_by_http_header)
 
     if user_id is None:
         if not config.user_login:
@@ -348,7 +367,7 @@ def verify_automation_secret(user_id: UserId, secret: str) -> bool:
 
 def _check_auth_automation() -> UserId:
     secret = request.get_str_input_mandatory("_secret", "").strip()
-    user_id = request.get_unicode_input_mandatory("_username", "")
+    user_id = request.get_str_input_mandatory("_username", "")
 
     user_id = UserId(user_id.strip())
     request.del_var_from_env("_username")
@@ -362,10 +381,9 @@ def _check_auth_automation() -> UserId:
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
-def _check_auth_http_header() -> Optional[UserId]:
+def _check_auth_http_header(auth_by_http_header: str) -> Optional[UserId]:
     """When http header auth is enabled, try to read the user_id from the var"""
-    assert isinstance(config.auth_by_http_header, str)
-    user_id = request.get_request_header(config.auth_by_http_header)
+    user_id = request.get_request_header(auth_by_http_header)
     if not user_id:
         return None
 
@@ -477,7 +495,7 @@ class LoginPage(Page):
             if not config.user_login:
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
-            username_var = request.get_unicode_input("_username", "")
+            username_var = request.get_str_input("_username", "")
             assert username_var is not None
             username = UserId(username_var.rstrip())
             if not username:
@@ -522,6 +540,12 @@ class LoginPage(Page):
                         "user_change_pw.py?_origtarget=%s&reason=%s"
                         % (urlencode(origtarget), change_pw_result)
                     )
+
+                if userdb.is_two_factor_login_enabled(username):
+                    raise HTTPRedirect(
+                        "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                    )
+
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username)
@@ -597,7 +621,7 @@ class LoginPage(Page):
             footer.append(html.render_a(title, href=url, target=target))
 
         if "hide_version" not in config.login_screen:
-            footer.append(escape_html("Version: %s" % cmk_version.__version__))
+            footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
 
         footer.append(
             HTML(

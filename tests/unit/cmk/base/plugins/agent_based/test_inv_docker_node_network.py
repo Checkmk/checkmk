@@ -10,6 +10,8 @@ from cmk.base.plugins.agent_based.inventory_docker_node_network import (
     parse_docker_node_network,
 )
 
+from .utils_inventory import sort_inventory_result
+
 AGENT_OUTPUT = (
     '@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}\n'
     '{"Name": "asd", "Id": "f42d7f03e6d710662f70ebab8d5ff83538a729022ae97ad65f92c479e98126af", "Scope": '
@@ -20,16 +22,19 @@ AGENT_OUTPUT = (
 
 def test_inv_docker_node_network():
     pre_parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    result = inventory_docker_node_network(parse_docker_node_network(pre_parsed))
-    assert list(result) == [
-        Attributes(
-            path=["software", "applications", "docker", "networks", "asd"],
-            inventory_attributes={
-                "name": "asd",
-                "network_id": "f42d7f03e6d7",
-                "scope": "local",
-                "labels": "label_asd: 1, label_asd_2: 2",
-            },
-            status_attributes={},
-        ),
-    ]
+    assert sort_inventory_result(
+        inventory_docker_node_network(parse_docker_node_network(pre_parsed))
+    ) == sort_inventory_result(
+        [
+            Attributes(
+                path=["software", "applications", "docker", "networks", "asd"],
+                inventory_attributes={
+                    "name": "asd",
+                    "network_id": "f42d7f03e6d7",
+                    "scope": "local",
+                    "labels": "label_asd: 1, label_asd_2: 2",
+                },
+                status_attributes={},
+            ),
+        ]
+    )

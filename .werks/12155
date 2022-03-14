@@ -6,7 +6,7 @@ Date: 1616764448
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When configuring the ruleset "Automatic agent updates" to use a proxy
 server for connection, the agent updater will fail executing on the host,

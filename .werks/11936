@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 All tables with a summary of OK, Warn, Unknown and Critical (p.e. All hosts) now
 highlight non-zero values with the respective background color.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If several keys were used for label conditions in rulesets, e.g. "foo:bar" and
 "foo:baz", the first label was silently overwritten by the last label.

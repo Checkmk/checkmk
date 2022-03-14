@@ -52,7 +52,7 @@ class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
     source_results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]]
     parsing_errors: Sequence[str]
-    safe_to_write: bool
+    processing_failed: bool
 
 
 #   .--cmk -i--------------------------------------------------------------.
@@ -149,11 +149,10 @@ def _commandline_inventory_on_host(
 
 @decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
-    # TODO: drop '_inv_'
-    _inv_hw_changes = options.get("hw-changes", 0)
-    _inv_sw_changes = options.get("sw-changes", 0)
-    _inv_sw_missing = options.get("sw-missing", 0)
-    _inv_fail_status = options.get("inv-fail-status", 1)
+    hw_changes = options.get("hw-changes", 0)
+    sw_changes = options.get("sw-changes", 0)
+    sw_missing = options.get("sw-missing", 0)
+    fail_status = options.get("inv-fail-status", 1)
 
     host_config = config.HostConfig.make_host_config(hostname)
 
@@ -174,30 +173,28 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
         do_update=bool(host_config.inv_retention_intervals),
     )
 
-    if inv_result.safe_to_write:
+    if inv_result.processing_failed:
+        old_tree = None
+        update_result = ActiveCheckResult(1, "Cannot update tree")
+    else:
         old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult()
-    else:
-        old_tree, sources_state = None, 1
-        update_result = ActiveCheckResult(
-            sources_state, f"Cannot update tree{state_markers[sources_state]}"
-        )
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 
     return ActiveCheckResult.from_subresults(
         update_result,
-        *_check_inventory_tree(trees, old_tree, _inv_sw_missing, _inv_sw_changes, _inv_hw_changes),
+        *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
         *check_sources(
             source_results=inv_result.source_results,
             mode=Mode.INVENTORY,
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-            override_non_ok_state=_inv_fail_status,
+            override_non_ok_state=fail_status,
         ),
         *check_parsing_errors(
             errors=inv_result.parsing_errors,
-            error_state=_inv_fail_status,
+            error_state=fail_status,
         ),
     )
 
@@ -266,7 +263,7 @@ def _inventorize_host(
             trees=_do_inv_for_cluster(host_config),
             source_results=(),
             parsing_errors=(),
-            safe_to_write=True,
+            processing_failed=False,
         )
 
     ipaddress = config.lookup_ip_address(host_config)
@@ -288,23 +285,17 @@ def _inventorize_host(
     return ActiveInventoryResult(
         trees=_do_inv_for_realhost(
             host_config,
-            ipaddress,
             parsed_sections_broker=broker,
             run_plugin_names=run_plugin_names,
             retentions_tracker=retentions_tracker,
         ),
         source_results=results,
         parsing_errors=parsing_errors,
-        safe_to_write=(
-            _safe_to_write_tree(results)
-            and selected_sections is NO_SELECTION  #
-            and run_plugin_names is EVERYTHING  #
-            and not parsing_errors  #
-        ),
+        processing_failed=(_sources_failed(results) or bool(parsing_errors)),
     )
 
 
-def _safe_to_write_tree(
+def _sources_failed(
     results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
 ) -> bool:
     """Check if data sources of a host failed
@@ -314,13 +305,12 @@ def _safe_to_write_tree(
     of the tree, which would blow up the inventory history (in terms of disk usage).
     """
     # If a result is not OK, that means the corresponding sections have not been added.
-    return all(source_result.is_ok() for _source, source_result in results)
+    return any(not source_result.is_ok() for _source, source_result in results)
 
 
 def do_inventory_actions_during_checking_for(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     *,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
@@ -333,8 +323,7 @@ def do_inventory_actions_during_checking_for(
         return  # nothing to do here
 
     trees = _do_inv_for_realhost(
-        host_config,
-        ipaddress,
+        host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         retentions_tracker=RetentionsTracker([]),
@@ -361,7 +350,6 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
 
 def _do_inv_for_realhost(
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     *,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
@@ -376,10 +364,10 @@ def _do_inv_for_realhost(
         if inventory_plugin.name not in run_plugin_names:
             continue
 
-        for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
+        for host_key in (host_config.host_key, host_config.host_key_mgmt):
             kwargs = get_section_kwargs(
                 parsed_sections_broker,
-                HostKey(host_config.hostname, ipaddress, source_type),
+                host_key,
                 inventory_plugin.sections,
             )
             if not kwargs:

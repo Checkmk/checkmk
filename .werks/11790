@@ -6,7 +6,7 @@ Date: 1612287992
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This change is only incompatible if you match for the state
 (OK, WARN, ...) in the "Status detail" of the service output.

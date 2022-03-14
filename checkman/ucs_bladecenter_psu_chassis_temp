@@ -1,7 +1,7 @@
 title: UCS Bladecenter: Chassis Temperature
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature levels for each chassis
@@ -16,4 +16,3 @@ item:
 
 discovery:
  One service is created for each chassis module.
-

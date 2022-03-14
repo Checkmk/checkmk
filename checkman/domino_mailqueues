@@ -1,7 +1,7 @@
 title: IBM Lotus Domino: Mail Queues
 agents: snmp
 catalog: app/lotusnotes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses snmp to extract the number of mails present in various
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each mailqueue if the corresponding OID is found.
-

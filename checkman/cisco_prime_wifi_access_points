@@ -1,7 +1,7 @@
 title: Cisco Prime WiFi access points
 agents: agent_cisco_prime
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check returns {{OK}} when the percentage of non-operational access points

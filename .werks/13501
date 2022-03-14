@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a LDAP user did a login, all LDAP connections were contacted, what could
 lead to the error "LDAP connection failed", even if the LDAP server of the

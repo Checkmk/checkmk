@@ -1,0 +1,16 @@
+title: Kubernetes: Pod Conditions
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ A pod's status depends on an array of PodConditions through which the
+ Pod has or has not yet passed. This check monitors the status of each
+ condition (scheduled, initialized, containersready and ready) and the
+ duration if the condition has not yet passed.
+
+ Upper levels for {WARN}/{CRIT} can be defined for time until a
+ condition is not yet passed.
+
+discovery:
+ One service is created representing pod conditions.

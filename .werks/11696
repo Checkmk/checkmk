@@ -6,7 +6,7 @@ Date: 1606745427
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The filestats check has the option to enable additional rules for certain files
 within a file group. A new parameter has been added that gives the user the

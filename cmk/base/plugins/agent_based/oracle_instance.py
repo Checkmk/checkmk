@@ -4,86 +4,116 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional, Sequence, Union
+import dataclasses
+from typing import Mapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-
-Instance = Mapping[str, Union[None, str, bool]]
-
-Section = Mapping[str, Instance]
 
 # <<<oracle_instance:sep(124)>>>
 # XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
 # last entry: db creation time 'ddmmyyyyhh24mi'
 
 
-def create_oracle_instance(info_line: Sequence[str]) -> Instance:
-    result: Dict[str, Union[None, str, bool]] = {}
-    result["general_error"] = None
+@dataclasses.dataclass(frozen=True)
+class InvalidData:
+    sid: str
+
+
+@dataclasses.dataclass(frozen=True)
+class GeneralError:
+    sid: str
+    err: str
+
+
+@dataclasses.dataclass
+class Instance:
+    sid: str
+    version: Optional[str] = None
+    openmode: Optional[str] = None
+    logins: Optional[str] = None
+    archiver: Optional[str] = None
+    up_seconds: Optional[str] = None
+    log_mode: Optional[str] = None
+    database_role: Optional[str] = None
+    force_logging: Optional[str] = None
+    name: Optional[str] = None
+    db_creation_time: Optional[str] = None
+    pluggable: Optional[str] = None
+    pname: Optional[str] = None
+    popenmode: Optional[str] = None
+    prestricted: Optional[str] = None
+    ptotal_size: Optional[str] = None
+    pup_seconds: Optional[str] = None
+    old_agent: bool = False
+    pdb: bool = False
+
+
+Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]
+
+
+def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, Instance]:
+    sid = line[0]
+
     # In case of a general error (e.g. authentication failed), the second
     # column contains the word "FAILURE"
-    if info_line[1] == "FAILURE":
-        result["general_error"] = " ".join(info_line[2:])
+    if general_error := " ".join(line[2:]) if line[1] == "FAILURE" else None:
+        return GeneralError(
+            sid=sid,
+            err=general_error,
+        )
 
     # lines can have different length
-    line_len = len(info_line)
-    result["invalid_data"] = result["general_error"] is not None or line_len not in [6, 11, 12, 22]
+    if (line_len := len(line)) not in [6, 11, 12, 22]:
+        return InvalidData(sid=sid)
 
     def getcolumn(column_index: int, default: Optional[str] = None) -> Optional[str]:
-        if (result["general_error"] and column_index != 0) or column_index >= line_len:
-            return default
-        return info_line[column_index]
+        return default if column_index >= line_len else line[column_index]
 
     # assign columns
-    result["sid"] = getcolumn(0)
-    result["version"] = getcolumn(1)
-    result["openmode"] = getcolumn(2)
-    result["logins"] = getcolumn(3)
-    result["archiver"] = getcolumn(4) if line_len > 6 else None
-    result["up_seconds"] = getcolumn(5) if line_len > 6 else None
+    instance = Instance(sid)
+    instance.version = getcolumn(1)
+    instance.openmode = getcolumn(2)
+    instance.logins = getcolumn(3)
+    instance.archiver = getcolumn(4) if line_len > 6 else None
+    instance.up_seconds = getcolumn(5) if line_len > 6 else None
     # line_len > 6
-    result["_dbid"] = getcolumn(6)
-    result["log_mode"] = getcolumn(7)
-    result["database_role"] = getcolumn(8)
-    result["force_logging"] = getcolumn(9)
-    result["name"] = getcolumn(10)
+    # 6: dbid
+    instance.log_mode = getcolumn(7)
+    instance.database_role = getcolumn(8)
+    instance.force_logging = getcolumn(9)
+    instance.name = getcolumn(10)
     # line_len > 11
-    result["db_creation_time"] = getcolumn(11)
+    instance.db_creation_time = getcolumn(11)
     # line_len > 12
-    result["pluggable"] = getcolumn(12, "FALSE")
-    result["_con_id"] = getcolumn(13)
-    result["pname"] = getcolumn(14)
-    result["_pdbid"] = getcolumn(15)
-    result["popenmode"] = getcolumn(16)
-    result["prestricted"] = getcolumn(17)
-    result["ptotal_size"] = getcolumn(18)
-    result["_precovery_status"] = getcolumn(19)
-    result["pup_seconds"] = getcolumn(20)
-    result["_pblock_size"] = getcolumn(21)
+    instance.pluggable = getcolumn(12, "FALSE")
+    con_id = getcolumn(13)
+    instance.pname = getcolumn(14)
+    # 15: pdbid
+    instance.popenmode = getcolumn(16)
+    instance.prestricted = getcolumn(17)
+    instance.ptotal_size = getcolumn(18)
+    # 19: precovery_status
+    instance.pup_seconds = getcolumn(20)
+    # 21: pblock_size
 
-    result["old_agent"] = False
-    result["pdb"] = False
+    # Detect old oracle agent plugin output
+    instance.old_agent = line_len == 6
 
-    if not result["general_error"]:
-        # Detect old oracle agent plugin output
-        if line_len == 6:
-            result["old_agent"] = True
+    # possible multitenant entry?
+    # every pdb has a con_id != 0
+    if line_len > 12 and instance.pluggable == "TRUE" and con_id != "0":
+        instance.pdb = True
 
-        # possible multitenant entry?
-        # every pdb has a con_id != 0
-        if line_len > 12 and result["pluggable"] == "TRUE" and result["_con_id"] != "0":
-            result["pdb"] = True
+        if str(instance.prestricted).lower() == "no":
+            instance.logins = "RESTRICTED"
+        else:
+            instance.logins = "ALLOWED"
 
-            if str(result["prestricted"]).lower() == "no":
-                result["logins"] = "RESTRICTED"
-            else:
-                result["logins"] = "ALLOWED"
+        instance.openmode = instance.popenmode
+        instance.up_seconds = instance.pup_seconds
 
-            result["openmode"] = result["popenmode"]
-            result["up_seconds"] = result["pup_seconds"]
-
-    return result
+    return instance
 
 
 def parse_oracle_instance(string_table: StringTable) -> Section:
@@ -99,13 +129,19 @@ def parse_oracle_instance(string_table: StringTable) -> Section:
         if line[0].startswith("ORA-") and line[0][4].isdigit() and len(line[0]) < 16:
             continue
 
-        item_data = create_oracle_instance(line)
+        item_data = _parse_agent_line(line)
 
-        item_name = str(item_data["sid"])
+        item_name = item_data.sid
 
         # Multitenant use DB_NAME.PDB_NAME as Service
-        if item_data["pdb"]:
-            item_name = "%s.%s" % (item_data["sid"], item_data["pname"])
+        if (
+            isinstance(
+                item_data,
+                Instance,
+            )
+            and item_data.pdb
+        ):
+            item_name = "%s.%s" % (item_data.sid, item_data.pname)
 
         parsed[item_name] = item_data
 
@@ -118,7 +154,7 @@ register.agent_section(
 )
 
 
-def _parse_raw_db_creation_time(raw_str) -> Optional[str]:
+def _parse_raw_db_creation_time(raw_str: Optional[str]) -> Optional[str]:
     """ "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
 
     >>> _parse_raw_db_creation_time("080220151025")
@@ -135,25 +171,46 @@ def _parse_raw_db_creation_time(raw_str) -> Optional[str]:
 def inventory_oracle_instance(section: Section) -> InventoryResult:
     path = ["software", "applications", "oracle", "instance"]
 
-    for item_data in sorted(section.values(), key=lambda v: str(v["sid"])):
-        if item_data["invalid_data"]:
+    for item_data in section.values():
+        if isinstance(
+            item_data,
+            InvalidData,
+        ):
             continue
 
+        if isinstance(
+            item_data,
+            GeneralError,
+        ):
+            yield TableRow(
+                path=path,
+                key_columns={"sid": item_data.sid},
+                inventory_columns={
+                    "pname": None,
+                    "version": None,
+                    "openmode": None,
+                    "logmode": None,
+                    "logins": None,
+                    "db_creation_time": None,
+                },
+            )
+            return
+
         try:
-            status_columns = {"db_uptime": int(item_data["up_seconds"])}  # type: ignore[arg-type]
+            status_columns = {"db_uptime": int(item_data.up_seconds)}  # type: ignore[arg-type]
         except (TypeError, ValueError):
             status_columns = {}
 
         yield TableRow(
             path=path,
-            key_columns={"sid": item_data["sid"]},
+            key_columns={"sid": item_data.sid},
             inventory_columns={
-                "pname": item_data["pname"],
-                "version": item_data["version"],
-                "openmode": item_data["openmode"],
-                "logmode": item_data["log_mode"],
-                "logins": item_data["logins"],
-                "db_creation_time": _parse_raw_db_creation_time(item_data["db_creation_time"]),
+                "pname": item_data.pname,
+                "version": item_data.version,
+                "openmode": item_data.openmode,
+                "logmode": item_data.log_mode,
+                "logins": item_data.logins,
+                "db_creation_time": _parse_raw_db_creation_time(item_data.db_creation_time),
             },
             status_columns=status_columns,
         )

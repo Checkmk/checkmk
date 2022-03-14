@@ -309,7 +309,8 @@ def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
 
     tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
 
-    member_names = [m.name for m in tarfile.open(tar_path).getmembers()]
+    with tarfile.open(tar_path) as tar_file:
+        member_names = [m.name for m in tar_file.getmembers()]
     history = [n for n in member_names if fnmatch.fnmatch(n, "*/var/check_mk/core/archive/*")]
     logs = [n for n in member_names if fnmatch.fnmatch(n, "*/var/log/*.log")]
     rrds = [n for n in member_names if n.endswith(".rrd")]

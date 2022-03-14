@@ -29,10 +29,10 @@ struct AttributeBitmaskColumn : IntColumn<T, Default> {
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
+        const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, this->name(),
-            [this](Row row, const contact* auth_user) {
+            [this](Row row, const contact *auth_user) {
                 return this->getValue(row, auth_user);
             },
             relOp, column::attribute_list::refValueFor(value, this->logger()));

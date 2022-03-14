@@ -10,9 +10,10 @@ import shutil
 import tarfile
 from io import BytesIO
 from pathlib import Path
+from typing import Callable
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest_mock import MockerFixture
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
@@ -44,7 +45,7 @@ def clean_dirs():
 
 
 @pytest.fixture(name="mkp_bytes")
-def fixture_mkp_bytes():
+def fixture_mkp_bytes(build_setup_search_index):
     # Create package information
     _create_simple_test_package("aaa")
     package_info = _read_package_info("aaa")
@@ -56,6 +57,8 @@ def fixture_mkp_bytes():
 
     # Remove files from local hierarchy
     packaging.remove(package_info)
+    build_setup_search_index.assert_called_once()
+    build_setup_search_index.reset_mock()
     assert packaging._package_exists("aaa") is False
 
     return mkp
@@ -70,12 +73,19 @@ def fixture_mkp_file(tmp_path, mkp_bytes):
     return mkp_path
 
 
-@pytest.fixture(scope="function", autouse=True)
-def fixture_build_setup_search_index_background(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        packaging,
-        "_build_setup_search_index_background",
-        lambda: None,
+@pytest.fixture(name="build_setup_search_index")
+def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Callable[[], None]:
+    return mocker.patch(
+        "cmk.utils.packaging._build_setup_search_index_background",
+        side_effect=lambda: None,
+    )
+
+
+@pytest.fixture(name="reload_apache")
+def fixture_reload_apache(mocker: MockerFixture) -> Callable[[], None]:
+    return mocker.patch(
+        "cmk.utils.packaging._reload_apache",
+        side_effect=lambda: None,
     )
 
 
@@ -220,7 +230,9 @@ def test_create_twice():
 
 def test_read_package_info():
     _create_simple_test_package("aaa")
-    assert _read_package_info("aaa")["version"] == "1.0"
+    package_info = _read_package_info("aaa")
+    assert package_info["version"] == "1.0"
+    assert packaging.package_num_files(package_info) == 1
 
 
 def test_read_package_info_not_existing():
@@ -267,8 +279,9 @@ def test_edit_rename_conflict():
         packaging.edit("aaa", new_package_info)
 
 
-def test_install(mkp_bytes):
+def test_install(mkp_bytes, build_setup_search_index):
     packaging.install(mkp_bytes)
+    build_setup_search_index.assert_called_once()
 
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
@@ -277,8 +290,9 @@ def test_install(mkp_bytes):
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_install_by_path(mkp_file):
+def test_install_by_path(mkp_file, build_setup_search_index):
     packaging.install_by_path(mkp_file)
+    build_setup_search_index.assert_called_once()
 
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
@@ -310,23 +324,25 @@ def test_write_file():
     packaging.write_file(package_info, mkp)
     mkp.seek(0)
 
-    tar = tarfile.open(fileobj=mkp, mode="r:gz")
-    assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
+    with tarfile.open(fileobj=mkp, mode="r:gz") as tar:
+        assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
 
-    info_file = tar.extractfile("info")
-    assert info_file is not None
-    info = ast.literal_eval(info_file.read().decode())
+        info_file = tar.extractfile("info")
+        assert info_file is not None
+        info = ast.literal_eval(info_file.read().decode())
+
+        info_json_file = tar.extractfile("info.json")
+        assert info_json_file is not None
+        info2 = json.loads(info_json_file.read())
+
     assert info["name"] == "aaa"
-
-    info_json_file = tar.extractfile("info.json")
-    assert info_json_file is not None
-    info2 = json.loads(info_json_file.read())
     assert info2["name"] == "aaa"
 
 
-def test_remove():
+def test_remove(build_setup_search_index):
     package_info = _create_simple_test_package("aaa")
     packaging.remove(package_info)
+    build_setup_search_index.assert_called_once()
     assert packaging._package_exists("aaa") is False
 
 
@@ -386,24 +402,6 @@ def test_unpackaged_files():
 # def test_package_part_info()
 
 
-def test_get_all_package_infos():
-    # Create some unpackaged file and a package
-    _create_test_file("abc")
-    _create_simple_test_package("p1")
-
-    # Create a disabled package
-    _create_simple_test_package("disabled")
-    package_info = packaging.read_package_info("disabled")
-    assert package_info is not None
-    packaging.disable("disable", package_info)
-
-    result = packaging.get_all_package_infos()
-    assert "p1" in result["installed"]
-    assert result["unpackaged"]["checks"] == ["abc"]
-    assert result["optional_packages"] == {}
-    assert "agent_based" in result["parts"]
-
-
 def test_get_optional_package_infos_none():
     assert packaging.get_optional_package_infos() == {}
 
@@ -434,20 +432,23 @@ def test_parse_package_info():
     assert packaging.parse_package_info(info_str)["name"] == "pkgname"
 
 
-def test_disable_package(mkp_file):
-    _install_and_disable_package(mkp_file)
+def test_disable_package(mkp_file, build_setup_search_index):
+    _install_and_disable_package(mkp_file, build_setup_search_index)
 
 
-def test_is_disabled(mkp_file):
-    package_file_name = _install_and_disable_package(mkp_file)
+def test_is_disabled(mkp_file, build_setup_search_index):
+    package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
     assert packaging.is_disabled(package_file_name)
 
     packaging.enable(package_file_name)
+    build_setup_search_index.assert_called_once()
     assert not packaging.is_disabled(package_file_name)
 
 
-def _install_and_disable_package(mkp_file):
+def _install_and_disable_package(mkp_file, build_setup_search_index):
     packaging.install_by_path(mkp_file)
+    build_setup_search_index.assert_called_once()
+    build_setup_search_index.reset_mock()
     assert packaging._package_exists("aaa") is True
 
     package_info = packaging.read_package_info("aaa")
@@ -455,24 +456,53 @@ def _install_and_disable_package(mkp_file):
     package_file_name = packaging.format_file_name(name="aaa", version=package_info["version"])
 
     packaging.disable("aaa", package_info)
+    build_setup_search_index.assert_called_once()
+    build_setup_search_index.reset_mock()
     assert packaging._package_exists("aaa") is False
     assert cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
     assert not cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
     return package_file_name
 
 
-def test_enable_disabled_package(mkp_file):
-    package_file_name = _install_and_disable_package(mkp_file)
+def test_enable_disabled_package(mkp_file, build_setup_search_index):
+    package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
 
     packaging.enable(package_file_name)
+    build_setup_search_index.assert_called_once()
     assert packaging._package_exists("aaa") is True
     assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_remove_disabled_package(mkp_file):
-    package_file_name = _install_and_disable_package(mkp_file)
+def test_remove_disabled_package(mkp_file, build_setup_search_index):
+    package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
 
     packaging.remove_disabled(package_file_name)
+    build_setup_search_index.assert_not_called()
     assert packaging._package_exists("aaa") is False
     assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
+
+
+def test_reload_gui_without_gui_files(reload_apache, build_setup_search_index) -> None:
+    package = packaging.get_initial_package_info("ding")
+    packaging._execute_post_package_change_actions(package)
+    build_setup_search_index.assert_called_once()
+    reload_apache.assert_not_called()
+
+
+def test_reload_gui_with_gui_part(reload_apache, build_setup_search_index) -> None:
+    package = packaging.get_initial_package_info("ding")
+    package["files"] = {"gui": ["a"]}
+
+    packaging._execute_post_package_change_actions(package)
+    build_setup_search_index.assert_called_once()
+    reload_apache.assert_called_once()
+
+
+def test_reload_gui_with_web_part(reload_apache, build_setup_search_index) -> None:
+    package = packaging.get_initial_package_info("ding")
+    package["files"] = {"web": ["a"]}
+
+    packaging._execute_post_package_change_actions(package)
+    build_setup_search_index.assert_called_once()
+    reload_apache.assert_called_once()

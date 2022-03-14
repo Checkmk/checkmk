@@ -7,15 +7,16 @@
 #
 set -e -o pipefail
 
-source "$(dirname $0)/lib-precommit"
+# shellcheck source=scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
 
-REPO_PATH="$(git rev-parse --show-toplevel)"
-PIPENV="$REPO_PATH/scripts/run-pipenv"
+#REPO_PATH="$(git rev-parse --show-toplevel)"
+#PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 printf -v files " %s" "$@"
 PYTHON_FILES=$(python_files 2 "$files")
 
-if [ ! -z "$PYTHON_FILES" ]; then
+if [ -n "$PYTHON_FILES" ]; then
     export PYTHON_FILES
     tests/test-futurize
 fi

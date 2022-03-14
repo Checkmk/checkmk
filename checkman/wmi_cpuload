@@ -1,7 +1,7 @@
 title: Windows CPU Load
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the process queue length and produces 1, 5 and
@@ -18,4 +18,3 @@ description:
 
 discovery:
  One service is created.
-

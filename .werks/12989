@@ -6,7 +6,7 @@ Date: 1627283107
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For some hosts, the inventory plugin <tt>mem_used</tt> crashed with
 "KeyError: 'SwapTotal'".

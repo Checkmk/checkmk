@@ -1,10 +1,21 @@
 title: Kubernetes: Deployment Info
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- TODO: addition of manpage description
+ This check provides an informational overview of a Kubernetes deployment
+ by displaying
+
+ - Name
+
+ - Namespace
+
+ - Age, based on the creationTimestamp
+
+ This is provided by the API server. The service is always {OK}.
+
+ It requires that the special agent kube is configured.
 
 discovery:
- One service is created.
+ One service is created for each deployment.

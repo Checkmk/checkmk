@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based.hp_proliant_da_phydrv import (
     parse_hp_proliant_da_phydrv,
 )
 
+from .utils_inventory import sort_inventory_result
+
 _AGENT_OUTPUT = [
     [
         "3",
@@ -1069,7 +1071,6 @@ def test_check_hp_proliant_da_phydrv(string_table, item, expected_result):
     ],
 )
 def test_inventory_hp_proliant_da_phydrv(string_table, expected_result):
-    assert (
-        list(inventory_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table)))
-        == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table))
+    ) == sort_inventory_result(expected_result)

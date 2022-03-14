@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 from .agent_based_api.v1 import IgnoreResults, register, Result, Service
 from .agent_based_api.v1 import State as state
@@ -89,12 +89,12 @@ def check_mssql_databases(
 def cluster_check_mssql_databases(
     item: str,
     params: Mapping[str, Any],
-    section: Dict[str, SectionDatabases],
+    section: Mapping[str, Optional[SectionDatabases]],
 ) -> CheckResult:
 
     conflated_section: SectionDatabases = {}
     for node_data in section.values():
-        conflated_section.update(node_data)
+        conflated_section.update(node_data or {})
     yield from check_mssql_databases(item, params, conflated_section)
 
 

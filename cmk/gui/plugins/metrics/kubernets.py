@@ -7,6 +7,12 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
+###########################################################################
+# NOTE: These metrics (and associated special agent/checks) are deprecated and
+#       will be removed in Checkmk version 2.2.
+###########################################################################
+
+
 # .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -26,18 +32,6 @@ metric_info["k8s_nodes"] = {  # legacy kubernetes checks
     "title": _("Nodes"),
     "unit": "count",
     "color": "11/a",
-}
-
-metric_info["k8s_node_count_worker"] = {
-    "title": _("Worker nodes"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["k8s_node_count_control_plane"] = {
-    "title": _("Control plane nodes"),
-    "unit": "count",
-    "color": "42/a",
 }
 
 metric_info["k8s_pods_request"] = {
@@ -208,6 +202,19 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
+metric_info["ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["total_replicas"] = {
+    "title": _("Total replicas"),
+    "unit": "",
+    "color": "35/a",
+}
+
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -281,10 +288,14 @@ graph_info["k8s_pod_container"] = {
     ],
 }
 
-graph_info["k8s_node_count"] = {
-    "title": _("Nodes"),
+
+graph_info["replicas"] = {
+    "title": _("Replicas"),
     "metrics": [
-        ("k8s_node_count_control_plane", "stack"),
-        ("k8s_node_count_worker", "stack"),
+        ("ready_replicas", "area"),
+        ("total_replicas", "line"),
+    ],
+    "scalars": [
+        "ready_replicas:crit",
     ],
 }

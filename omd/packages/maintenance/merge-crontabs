@@ -4,10 +4,15 @@
 #
 import os
 import sys
+from pathlib import Path
 from typing import Dict
 
 omd_config: Dict[str, str] = {}
-exec(open("%s/etc/omd/site.conf" % os.environ["OMD_ROOT"]).read(), {}, omd_config)
+exec(
+    Path(os.environ["OMD_ROOT"], "etc/omd/site.conf").read_text(),
+    {},
+    omd_config,
+)
 
 sys.stdout.write(
     """#
@@ -32,9 +37,10 @@ sys.stdout.write("# ------------------------------------------------------------
 
 for fn in sys.argv[1:]:
     lineno = 0
-    sys.stdout.write("# %s\n" % (fn))
-    for line in open(fn):
-        lineno += 1
-        ls = line.strip()
-        sys.stdout.write(line)
+    sys.stdout.write("# %s\n" % fn)
+    with Path(fn).open() as opened_file:
+        for line in opened_file:
+            lineno += 1
+            ls = line.strip()
+            sys.stdout.write(line)
     sys.stdout.write("# ------------------------------------------------------------\n")

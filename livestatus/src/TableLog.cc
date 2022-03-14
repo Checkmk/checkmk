@@ -6,18 +6,14 @@
 #include "TableLog.h"
 
 #include <bitset>
+#include <chrono>
 #include <cstdint>
-#include <map>
-#include <mutex>
 #include <optional>
 #include <stdexcept>
-#include <utility>
 
 #include "Column.h"
 #include "IntColumn.h"
-#include "LogCache.h"
 #include "LogEntry.h"
-#include "Logfile.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -150,12 +146,20 @@ std::string TableLog::name() const { return "log"; }
 std::string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
-    std::lock_guard<std::mutex> lg(_log_cache->_lock);
-    _log_cache->update();
-    if (_log_cache->empty()) {
+    auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
+    if (log_filter.classmask == 0) {
         return;
     }
+    auto process_log_entry = [core = core(), query](const LogEntry &entry) {
+        LogRow r{entry, core};
+        return query->processDataset(Row{&r});
+    };
+    _log_cache->for_each(log_filter, process_log_entry);
+}
 
+// static
+LogFilter TableLog::constructFilter(Query *query,
+                                    size_t max_lines_per_logfile) {
     // Optimize time interval for the query. In log querys there should always
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
@@ -169,63 +173,16 @@ void TableLog::answerQuery(Query *query) {
 
     // The second optimization is for log message types. We want to load only
     // those log type that are queried.
-    auto classmask = query->valueSetLeastUpperBoundFor("class")
-                         .value_or(~std::bitset<32>())
-                         .to_ulong();
-    if (classmask == 0) {
-        return;
-    }
-
-    /* This code start with the oldest log entries. I'm going
-       to change this and start with the newest. That way,
-       the Limit: header produces more reasonable results. */
-
-    /* NEW CODE - NEWEST FIRST */
-    auto it = _log_cache->end();  // it now points beyond last log file
-    --it;  // switch to last logfile (we have at least one)
-
-    // Now find newest log where 'until' is contained. The problem
-    // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last.
-    while (it != _log_cache->begin() && it->first > until) {
-        // while logfiles are too new go back in history
-        --it;
-    }
-    if (it->first > until) {
-        return;  // all logfiles are too new
-    }
-
-    while (true) {
-        if (!answerQueryReverse(query, it->second.get(), classmask, since,
-                                until)) {
-            break;  // end of time range found
-        }
-        if (it == _log_cache->begin()) {
-            break;  // this was the oldest one
-        }
-        --it;
-    }
-}
-
-bool TableLog::answerQueryReverse(Query *query, Logfile *logfile,
-                                  unsigned long classmask,
-                                  std::chrono::system_clock::time_point since,
-                                  std::chrono::system_clock::time_point until) {
-    const auto *entries =
-        logfile->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
-    auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
-    while (it != entries->begin()) {
-        --it;
-        const auto &entry = *it->second;
-        if (entry.time() < since) {
-            return false;  // time limit exceeded
-        }
-        LogRow r{entry, core()};
-        if (!query->processDataset(Row{&r})) {
-            return false;
-        }
-    }
-    return true;
+    auto classmask =
+        static_cast<unsigned>(query->valueSetLeastUpperBoundFor("class")
+                                  .value_or(~std::bitset<32>())
+                                  .to_ulong());
+    return {
+        .max_lines_per_logfile = max_lines_per_logfile,
+        .classmask = classmask,
+        .since = since,
+        .until = until,
+    };
 }
 
 namespace {

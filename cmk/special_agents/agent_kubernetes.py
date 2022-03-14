@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Special agent for monitoring Kubernetes clusters. The fully supported API version of Kubernetes
-depends on the corresponding python module. E.g. v11 of the python module will support mainly
-Kubernetes API v1.15. Please take a look on the official website to see, if you API version
-is supported: https://github.com/kubernetes-client/python
+This special agent is deprecated. Please use agent_kube.
 """
+
+####################################################################################
+# NOTE: This special agent is deprecated and will be removed in Checkmk version 2.2.
+#       It is replaced by agent_kube
+####################################################################################
 
 from __future__ import annotations
 
@@ -128,17 +130,17 @@ def parse_frac_prefix(value: str) -> float:
 
 def parse_memory(value: str) -> float:
     if value.endswith("Ki"):
-        return 1024 ** 1 * float(value[:-2])
+        return 1024**1 * float(value[:-2])
     if value.endswith("Mi"):
-        return 1024 ** 2 * float(value[:-2])
+        return 1024**2 * float(value[:-2])
     if value.endswith("Gi"):
-        return 1024 ** 3 * float(value[:-2])
+        return 1024**3 * float(value[:-2])
     if value.endswith("Ti"):
-        return 1024 ** 4 * float(value[:-2])
+        return 1024**4 * float(value[:-2])
     if value.endswith("Pi"):
-        return 1024 ** 5 * float(value[:-2])
+        return 1024**5 * float(value[:-2])
     if value.endswith("Ei"):
-        return 1024 ** 6 * float(value[:-2])
+        return 1024**6 * float(value[:-2])
 
     if value.endswith("K") or value.endswith("k"):
         return 1e3 * float(value[:-1])

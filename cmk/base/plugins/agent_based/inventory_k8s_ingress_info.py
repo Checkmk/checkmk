@@ -9,6 +9,11 @@ import typing as t
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult
 
+########################################################################
+# NOTE: This inv plugin (and associated special agent) is deprecated and
+#       will be removed in Checkmk version 2.2.
+########################################################################
+
 #
 # There will be a new concept of kubernetes services which will
 # make this inventory obsolete, see CMK-2884
@@ -17,7 +22,7 @@ from .agent_based_api.v1.type_defs import InventoryResult
 
 def inventory_k8s_ingress_info(section: t.Any) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "ingresses"]
-    for name, data in sorted(section.items()):
+    for name, data in section.items():
         for service_path, service_name, service_port in data["backends"]:
             yield TableRow(
                 path=path + [name, "backends"],

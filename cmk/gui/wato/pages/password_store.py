@@ -6,6 +6,8 @@
 
 from typing import List, Optional, Type
 
+from cmk.utils.password_store import Password
+
 from cmk.gui.globals import html, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -16,61 +18,64 @@ from cmk.gui.plugins.wato.utils import (
     SimpleModeType,
     WatoMode,
 )
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
+from cmk.gui.table import Table
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import (
     Alternative,
     DictionaryEntry,
     DropdownChoice,
     DualListChoice,
     FixedValue,
-    Password,
-    ValueSpec,
 )
+from cmk.gui.valuespec import Password as PasswordValuespec
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
 
 
-class PasswordStoreModeType(SimpleModeType):
-    def type_name(self):
+class PasswordStoreModeType(SimpleModeType[Password]):
+    def type_name(self) -> str:
         return "password"
 
-    def name_singular(self):
+    def name_singular(self) -> str:
         return _("password")
 
-    def is_site_specific(self):
+    def is_site_specific(self) -> bool:
         return False
 
-    def can_be_disabled(self):
+    def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self):
+    def affected_config_domains(self) -> list[Type[ABCConfigDomain]]:
         return [ConfigDomainCore]
 
 
 @mode_registry.register
 class ModePasswords(SimpleListMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "passwords"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["passwords"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
         self._contact_groups = load_contact_group_information()
 
-    def title(self):
+    def title(self) -> str:
         return _("Passwords")
 
-    def _table_title(self):
+    def _table_title(self) -> str:
         return _("Passwords")
 
-    def _delete_confirm_message(self):
+    def _delete_confirm_message(self) -> str:
         return " ".join(
             [
                 _(
@@ -81,7 +86,7 @@ class ModePasswords(SimpleListMode):
             ]
         )
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "This password management module stores the passwords you use in your checks and "
@@ -98,7 +103,7 @@ class ModePasswords(SimpleListMode):
         )
         super().page()
 
-    def _show_entry_cells(self, table, ident, entry):
+    def _show_entry_cells(self, table: Table, ident: str, entry: Password) -> None:
         table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
@@ -113,35 +118,35 @@ class ModePasswords(SimpleListMode):
         else:
             html.write_text(", ".join([self._contact_group_alias(g) for g in entry["shared_with"]]))
 
-    def _contact_group_alias(self, name):
+    def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
 @mode_registry.register
 class ModeEditPassword(SimpleEditMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_password"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["passwords"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModePasswords
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
 
-    def _vs_individual_elements(self):
+    def _vs_individual_elements(self) -> List[DictionaryEntry]:
         if user.may("wato.edit_all_passwords"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Administrators"),
                     totext=_(
                         "Administrators (having the permission " '"Write access to all passwords")'
@@ -154,7 +159,7 @@ class ModeEditPassword(SimpleEditMode):
         elements: List[DictionaryEntry] = [
             (
                 "password",
-                Password(
+                PasswordValuespec(
                     title=_("Password"),
                     allow_empty=False,
                 ),

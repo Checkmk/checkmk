@@ -1,7 +1,7 @@
 title: Microsoft Azure Storage Accounts: Location
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the kind and location of an Azure storage account.

@@ -73,7 +73,7 @@ class ModeAutomationLogin(AjaxPage):
             central_version,
             central_edition_short,
             cmk_version.__version__,
-            cmk_version.edition_short(),
+            cmk_version.edition().short,
         ):
             raise MKGeneralException(
                 _(
@@ -84,7 +84,7 @@ class ModeAutomationLogin(AjaxPage):
                     central_version,
                     central_edition_short,
                     cmk_version.__version__,
-                    cmk_version.edition_short(),
+                    cmk_version.edition().short,
                 )
             )
 
@@ -92,7 +92,7 @@ class ModeAutomationLogin(AjaxPage):
             repr(
                 {
                     "version": cmk_version.__version__,
-                    "edition_short": cmk_version.edition_short(),
+                    "edition_short": cmk_version.edition().short,
                     "login_secret": _get_login_secret(create_on_demand=True),
                 }
             )
@@ -129,7 +129,7 @@ class ModeAutomation(AjaxPage):
             central_version,
             central_edition_short,
             cmk_version.__version__,
-            cmk_version.edition_short(),
+            cmk_version.edition().short,
         ):
             raise MKGeneralException(
                 _(
@@ -140,7 +140,7 @@ class ModeAutomation(AjaxPage):
                     central_version,
                     central_edition_short,
                     cmk_version.__version__,
-                    cmk_version.edition_short(),
+                    cmk_version.edition().short,
                 )
             )
 
@@ -277,7 +277,7 @@ def _set_version_headers() -> None:
     Has been added with 2.0.0p13.
     """
     response.headers["x-checkmk-version"] = cmk_version.__version__
-    response.headers["x-checkmk-edition"] = cmk_version.edition_short()
+    response.headers["x-checkmk-edition"] = cmk_version.edition().short
 
 
 def _get_login_secret(create_on_demand=False):

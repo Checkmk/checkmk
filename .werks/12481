@@ -6,7 +6,7 @@ Date: 1617710593
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Exported view column had a static name depending on the type of the
 columns. With parametrizable columns like for Metric History, which content

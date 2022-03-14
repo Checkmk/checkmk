@@ -6,7 +6,7 @@ Date: 1627046557
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Changing the logging level for the liveproxy Deamon in the global
 settings ("Livestatus Proxy logging") had no effect. This has been

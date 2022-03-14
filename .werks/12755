@@ -6,7 +6,7 @@ Date: 1619766836
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If flexible notifications with option "Restrict to nth to mth notification
 (escalation)" were used, notifications failed with an AssertionError in

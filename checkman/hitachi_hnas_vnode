@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Status of Virtual Nodes (VNodes or EVS)
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of Virtual Nodes (VNodes, also called EVS) in Hitachi

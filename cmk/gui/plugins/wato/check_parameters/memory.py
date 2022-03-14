@@ -17,7 +17,7 @@ from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, Tran
 # if you refactor this: grep for "DualMemoryLevels"
 def _parameter_valuespec_memory():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",
@@ -59,7 +59,7 @@ def _parameter_valuespec_memory():
                                 ],
                             ),
                             Transform(
-                                Alternative(
+                                valuespec=Alternative(
                                     elements=[
                                         Tuple(
                                             title=_("Specify levels in percentage of total RAM"),

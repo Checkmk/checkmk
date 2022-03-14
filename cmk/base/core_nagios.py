@@ -14,10 +14,12 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 
+import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -35,9 +37,6 @@ from cmk.utils.type_defs import (
     ServiceName,
     TimeperiodName,
 )
-
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -290,6 +289,8 @@ def _create_nagios_host_spec(
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
     for key, value in host_config.extra_host_attributes.items():
+        if key == "cmk_agent_connection":
+            continue
         if host_config.is_cluster and key == "parents":
             continue
         host_spec[key] = value
@@ -338,9 +339,8 @@ def _create_nagios_servicedefs(
     host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
-    for service in sorted(host_check_table.values(), key=lambda s: (s.check_plugin_name, s.item)):
+    for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
 
-        # TODO (mo): This should be done by the service object, much earlier.
         if not service.description:
             core_config.warning(
                 "Skipping invalid service with empty description (plugin: %s) on host %s"
@@ -423,7 +423,9 @@ def _create_nagios_servicedefs(
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
 
-                description = config.active_check_service_description(hostname, acttype, params)
+                description = config.active_check_service_description(
+                    hostname, host_attrs["alias"], acttype, params
+                )
 
                 if not description:
                     core_config.warning(
@@ -715,25 +717,18 @@ def _create_nagios_config_hostgroups(cfg: NagiosConfig) -> None:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Host groups (controlled by define_hostgroups)\n")
         cfg.write("# ------------------------------------------------------------\n")
-        hgs = sorted(cfg.hostgroups_to_define)
-        for hg in hgs:
-            try:
-                alias = config.define_hostgroups[hg]
-            except KeyError:
-                alias = hg
-
+        for hg in sorted(cfg.hostgroups_to_define):
             cfg.write(
                 _format_nagios_object(
                     "hostgroup",
                     {
                         "hostgroup_name": hg,
-                        "alias": alias,
+                        "alias": config.define_hostgroups.get(hg, hg),
                     },
                 )
             )
 
-    # No creation of host groups but we need to define
-    # default host group
+    # No creation of host groups but we need to define default host group
     elif config.default_host_group in cfg.hostgroups_to_define:
         cfg.write(
             _format_nagios_object(
@@ -747,57 +742,36 @@ def _create_nagios_config_hostgroups(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_servicegroups(cfg: NagiosConfig) -> None:
-    if config.define_servicegroups:
-        cfg.write("\n# ------------------------------------------------------------\n")
-        cfg.write("# Service groups (controlled by define_servicegroups)\n")
-        cfg.write("# ------------------------------------------------------------\n")
-        sgs = sorted(cfg.servicegroups_to_define)
-        for sg in sgs:
-            try:
-                alias = config.define_servicegroups[sg]
-            except KeyError:
-                alias = sg
-
-            cfg.write(
-                _format_nagios_object(
-                    "servicegroup",
-                    {
-                        "servicegroup_name": sg,
-                        "alias": alias,
-                    },
-                )
+    if not config.define_servicegroups:
+        return
+    cfg.write("\n# ------------------------------------------------------------\n")
+    cfg.write("# Service groups (controlled by define_servicegroups)\n")
+    cfg.write("# ------------------------------------------------------------\n")
+    for sg in sorted(cfg.servicegroups_to_define):
+        cfg.write(
+            _format_nagios_object(
+                "servicegroup",
+                {
+                    "servicegroup_name": sg,
+                    "alias": config.define_servicegroups.get(sg, sg),
+                },
             )
+        )
 
 
 def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
-    # TODO: According to our types, define_contactgroups can NEVER be False,
-    # but to be sure (old user configs lying around???) we keep the test and
-    # shut up mypy. :-/
-    if config.define_contactgroups is False:  # type: ignore[comparison-overlap]
+    if not cfg.contactgroups_to_define:
         return
-
-    cgs = cfg.contactgroups_to_define
-    if not cgs:
-        return
-
     cfg.write("\n# ------------------------------------------------------------\n")
     cfg.write("# Contact groups (controlled by define_contactgroups)\n")
     cfg.write("# ------------------------------------------------------------\n\n")
-    for name in sorted(cgs):
-        if isinstance(config.define_contactgroups, dict):
-            alias = config.define_contactgroups.get(name, name)
-        else:
-            alias = name
-
+    for name in sorted(cfg.contactgroups_to_define):
         contactgroup_spec = {
             "contactgroup_name": name,
-            "alias": alias,
+            "alias": config.define_contactgroups.get(name, name),
         }
-
-        members = config.contactgroup_members.get(name)
-        if members:
+        if members := config.contactgroup_members.get(name):
             contactgroup_spec["members"] = ",".join(members)
-
         cfg.write(_format_nagios_object("contactgroup", contactgroup_spec))
 
 
@@ -1207,7 +1181,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.utils.log\n")
     output.write("import cmk.utils.debug\n")
     output.write("from cmk.utils.exceptions import MKTerminate\n")
-    output.write("from cmk.core_helpers.config_path import LATEST_CONFIG\n")
+    output.write("from cmk.utils.config_path import LATEST_CONFIG\n")
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")

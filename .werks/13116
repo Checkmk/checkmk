@@ -6,7 +6,7 @@ Date: 1627314410
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On Windows systems, the PostgreSQL agent plugin (<tt>mk_postgres</tt>) now looks
 for the PostgreSQL binary <tt>psql.exe</tt> in additional places. Before, the

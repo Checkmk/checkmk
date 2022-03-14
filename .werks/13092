@@ -1,0 +1,23 @@
+Title: Fixed types of various CMC Livestatus columns
+Class: fix
+Compatible: incomp
+Component: livestatus
+Date: 1643707210
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+NOTE: If you don't query some of the more esoteric Livestatus columns in
+your own scripts, plugins, etc., you don't have to do anything.  If you do,
+read on...
+
+Some Livestatus columns had a wrong type when the CMC was used, and those
+types were inconsistent with the corresponding Livestatus colulmns when the
+Nagios Core was used. The CMC column types have been fixed now, in detail:
+
+The "x_3d", "y_3d", "z_3d" columns of hosts have the correct type "double"
+now, previously they were a "string".
+
+The "last_command_check" column of the status table has type "time" now,
+previously it was a "string".

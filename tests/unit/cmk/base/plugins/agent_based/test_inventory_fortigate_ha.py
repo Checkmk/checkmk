@@ -10,6 +10,8 @@ from cmk.base.plugins.agent_based.inventory_fortigate_ha import (
     parse_fortigate_ha,
 )
 
+from .utils_inventory import sort_inventory_result
+
 SECTION = {
     "mode": "activePassive",
     "group_id": "11",
@@ -37,15 +39,17 @@ def test_parse_fortigate_ha():
 
 
 def test_inventory_fortigate_ha():
-    assert list(inventory_fortigate_ha(SECTION)) == [
-        Attributes(
-            path=["software", "applications", "fortinet", "fortigate_high_availability"],
-            inventory_attributes={
-                "Mode": "activePassive",
-                "Priority": "128",
-                "Schedule": "roundRobin",
-                "Group ID": "11",
-                "Group Name": "SZAG-DE-SAR-FF",
-            },
-        ),
-    ]
+    assert sort_inventory_result(inventory_fortigate_ha(SECTION)) == sort_inventory_result(
+        [
+            Attributes(
+                path=["software", "applications", "fortinet", "fortigate_high_availability"],
+                inventory_attributes={
+                    "Mode": "activePassive",
+                    "Priority": "128",
+                    "Schedule": "roundRobin",
+                    "Group ID": "11",
+                    "Group Name": "SZAG-DE-SAR-FF",
+                },
+            ),
+        ]
+    )

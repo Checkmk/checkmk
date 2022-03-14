@@ -1,7 +1,7 @@
 title: AWS RDS: Transaction Logs
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the transaction logs disk usage of

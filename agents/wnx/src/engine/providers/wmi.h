@@ -88,7 +88,7 @@ bool IsHeaderless(std::string_view name) noexcept;
 
 class Wmi : public Asynchronous {
 public:
-    Wmi(const std::string& name, char separator)
+    Wmi(const std::string &name, char separator)
         : Asynchronous(name, separator) {
         setupByName();
     }
@@ -96,7 +96,7 @@ public:
     // accessors, mostly for a testing
     const auto object() const { return object_; }
     const auto nameSpace() const { return name_space_; }
-    const auto& columns() const { return columns_; }
+    const auto &columns() const { return columns_; }
 
     virtual bool isAllowedByCurrentConfig() const;
 
@@ -127,11 +127,11 @@ private:
 
 // this is proposed API
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
-    const std::wstring& NameSpace, const std::wstring& Object,
-    const std::vector<std::wstring>& Columns, std::wstring_view separator);
+    const std::wstring &NameSpace, const std::wstring &Object,
+    const std::vector<std::wstring> &Columns, std::wstring_view separator);
 
-std::string WmiCachedDataHelper(std::string& cache_data,
-                                const std::string& wmi_data, char separator);
+std::string WmiCachedDataHelper(std::string &cache_data,
+                                const std::string &wmi_data, char separator);
 }  // namespace provider
 
 };  // namespace cma

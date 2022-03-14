@@ -37,7 +37,8 @@ from typing import List
 
 from werkzeug.datastructures import ETags
 
-from cmk.gui import fields, watolib
+from cmk.gui import fields as gui_fields
+from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.host_config import host_collection
@@ -51,8 +52,10 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib import CREFolder
 
+from cmk import fields
+
 PATH_FOLDER_FIELD = {
-    "folder": fields.FolderField(
+    "folder": gui_fields.FolderField(
         description=(
             "The path of the folder being requested. Please be aware that slashes can't "
             "be used in the URL. Also, escaping the slashes via %2f will not work. Please "
@@ -257,7 +260,7 @@ def move(params):
             detail=exc.message,
             status=400,
         )
-    folder = fields.FolderField.load_folder(folder_id)
+    folder = gui_fields.FolderField.load_folder(folder_id)
     return _serve_folder(folder)
 
 
@@ -267,15 +270,15 @@ def move(params):
     method="get",
     query_params=[
         {
-            "parent": fields.FolderField(
+            "parent": gui_fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
-                missing=watolib.Folder.root_folder,  # because we can't load it too early.
+                load_default=watolib.Folder.root_folder,  # because we can't load it too early.
             ),
             "recursive": fields.Boolean(
                 description="List the folder (default: root) and all its sub-folders recursively.",
                 example=False,
-                missing=False,
+                load_default=False,
             ),
             "show_hosts": fields.Boolean(
                 description=(
@@ -284,7 +287,7 @@ def move(params):
                     "is switched off."
                 ),
                 example=False,
-                missing=False,
+                load_default=False,
             ),
         }
     ],
@@ -311,8 +314,12 @@ def _folders_collection(
                 name="hosts",
                 domain_type="folder_config",
                 entries=[
-                    constructors.collection_item("host_config", {"title": host, "id": host})
-                    for host in folder.hosts()
+                    constructors.collection_item(
+                        "host_config",
+                        title=host_name,
+                        identifier=host_name,
+                    )
+                    for host_name in folder.hosts()
                 ],
                 base="",
             )
@@ -349,7 +356,7 @@ def _folders_collection(
                     "is switched off."
                 ),
                 example=False,
-                missing=False,
+                load_default=False,
             )
         }
     ],
@@ -407,10 +414,8 @@ def _serialize_folder(folder: CREFolder, show_hosts):
             value=[
                 constructors.collection_item(
                     domain_type="host_config",
-                    obj={
-                        "id": host.id(),
-                        "title": host.name(),
-                    },
+                    identifier=host.id(),
+                    title=host.name(),
                 )
                 for host in folder.hosts().values()
             ],

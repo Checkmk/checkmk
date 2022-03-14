@@ -11,6 +11,8 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
 from cmk.base.plugins.agent_based.k8s_pod_container import inventory_k8s_pod_container
 
+from .utils_inventory import sort_inventory_result
+
 _SECTION = {
     "pi": {
         "image_pull_policy": "Always",
@@ -86,4 +88,6 @@ def test_check_k8s_pod_container(fix_register, section, expected_result):
     ],
 )
 def test_inventory_k8s_pod_container(section, expected_result):
-    assert list(inventory_k8s_pod_container(section)) == expected_result
+    assert sort_inventory_result(inventory_k8s_pod_container(section)) == sort_inventory_result(
+        expected_result
+    )

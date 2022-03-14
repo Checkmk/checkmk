@@ -6,7 +6,7 @@ Date: 1638354025
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The support for IE11 is dropped beginning with version 2.1 of Checkmk. Since some of our
 dependencies already dropped the support and we don't want to ship old/outdated versions

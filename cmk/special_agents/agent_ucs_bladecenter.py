@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 import requests
-from requests.packages import urllib3  # pylint: disable=import-error
+import urllib3
 
 from cmk.utils.exceptions import MKException
 

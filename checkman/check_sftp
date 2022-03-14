@@ -1,7 +1,7 @@
 title: SFTP Server
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -13,4 +13,3 @@ description:
  not neccessary to create a file as the check will do that if the given file
  does not exist. Also same or another file or the timestamp of a file of the
  server can be fetched. The Service will go {CRIT} if one of the tests fails.
-

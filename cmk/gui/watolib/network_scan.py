@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The WATO folders network scan for new hosts"""
 
-import os
 import re
 import socket
 import subprocess
@@ -213,7 +212,7 @@ def _ip_addresses_of_ranges(ip_ranges):
     return addresses
 
 
-_FULL_IPV4 = (2 ** 32) - 1
+_FULL_IPV4 = (2**32) - 1
 
 
 def _ip_addresses_of_range(spec):
@@ -346,7 +345,7 @@ def _ping(address: HostAddress) -> bool:
     return (
         subprocess.Popen(
             ["ping", "-c2", "-w2", address],
-            stdout=open(os.devnull, "a"),
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
             close_fds=True,

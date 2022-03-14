@@ -10,24 +10,36 @@ def REPO_PATCH_RULES = [\
     "folders_to_be_removed": [\
         "enterprise", \
         "managed", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee}"],\
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"],\
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee}"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"]], \
 "enterprise": [\
     "folders_to_be_removed": [\
         "managed", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
 "free": [\
+    "folders_to_be_removed": [\
+        "managed", \
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
+"managed": [\
+    "folders_to_be_removed": [\
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"]], \
+"plus": [\
     "folders_to_be_removed": [\
         "managed", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
-"managed": [\
-    "folders_to_be_removed": [],\
-    "folders_to_be_created": []] \
 ]
 
 def get_branch(scm) {
@@ -114,14 +126,8 @@ def patch_themes(EDITION) {
                 """
             }
             break
+        case 'plus':
         case 'enterprise':
-            // Workaround since scss does not support conditional includes
-            THEME_LIST.each { THEME ->
-                sh """
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                """
-            }
-            break
         case 'free':
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
@@ -157,12 +163,15 @@ def delete_non_cre_files() {
     non_cre_paths = [
         "enterprise",
         "managed",
+        "plus",
         "check_mk_enterprise",
         "check_mk_managed",
         "cee",
         "cme",
+        "cpe",
         "cee.py",
-        "cme.py"
+        "cme.py",
+        "cpe.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
     sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""

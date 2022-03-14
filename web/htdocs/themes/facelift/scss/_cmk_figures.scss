@@ -248,7 +248,7 @@ div.cmk_figure {
     }
 
     path.host.hilite {
-      stroke: rgb(70, 130, 180);
+      stroke: $scatterplot-hilite-color;
     }
 
     circle.scatterdot {

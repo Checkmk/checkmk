@@ -63,7 +63,6 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
     return out_string;
 }
 
-// not static: tested
 // returns FORMATTED table of the processes
 std::wstring GetProcessListFromWmi(std::wstring_view separator) {
     wtools::WmiWrapper wmi;
@@ -87,9 +86,10 @@ std::string ExtractProcessOwner(HANDLE process) {
     HANDLE raw_handle{wtools::InvalidHandle()};
 
     if (::OpenProcessToken(process, TOKEN_READ, &raw_handle) == FALSE) {
-        if (GetLastError() != 5)
+        if (::GetLastError() != ERROR_ACCESS_DENIED) {
             XLOG::t.w("Failed to open process  to get a token {} ",
-                      GetLastError());
+                      ::GetLastError());
+        }
         return {};
     }
     ON_OUT_OF_SCOPE(::CloseHandle(raw_handle));
@@ -159,7 +159,7 @@ std::wstring GetFullPath(IWbemClassObject *wbem_object) {
     ON_OUT_OF_SCOPE(::LocalFree(argv));
     for (int i = 1; i < argc; ++i) {
         if (argv[i] != nullptr) {
-            process_name += std::wstring(L" ") + argv[i];
+            process_name += std::wstring(L"\t") + argv[i];
         }
     }
     return process_name;

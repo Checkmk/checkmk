@@ -1,7 +1,7 @@
 title: Couchbase Nodes: Memory Usage
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the memory usage of the nodes.

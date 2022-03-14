@@ -1,7 +1,7 @@
 title: Jira: Custom Service
 agents: jira
 catalog: app/jira
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  With this check you can monitor custom Jira queries. It outputs the number of

@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 template <class T>
 std::string type_name() {
     typedef typename std::remove_reference<T>::type TR;
-    std::unique_ptr<char, void (*)(void*)> own(
+    std::unique_ptr<char, void (*)(void *)> own(
 #ifndef _MSC_VER
         abi::__cxa_demangle(typeid(TR).name(), nullptr, nullptr, nullptr),
 #else
@@ -141,7 +141,7 @@ TEST(CvtTest, CrLf) {
 }
 
 void AddKeyedPattern(YAML::Node Node, const std::string Key,
-                     const std::string& Pattern, const std::string& Value);
+                     const std::string &Pattern, const std::string &Value);
 
 TEST(CvtTest, Keyed) {
     auto result = ToYamlKeyedString("key", "pattern", "0");

@@ -1,7 +1,7 @@
 title: LSI MegaRAID: State of Battery Backup Unit (BBU)
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the existance and status of battery backup units on controllers
@@ -29,5 +29,3 @@ item:
 
 discovery:
   One service is created for each adapter that has an attached BBU module.
-
-

@@ -1,7 +1,7 @@
 title: HPE 3PAR: Remote Copy
 agents: 3par
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows general information about the replication status of the

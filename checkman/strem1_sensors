@@ -1,7 +1,7 @@
 title: Sensatronics EM1 Devices: Temperature, Humidity, Wetness
 agents: snmp
 catalog: hw/environment/sensatronics
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the data gathered by the sensors attached
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created for each available sensor.
-

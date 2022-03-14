@@ -1,7 +1,7 @@
 title: Errors and Traffic over Network Interfaces
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the inbound and output traffic over a local
@@ -17,4 +17,3 @@ item:
 
 discovery:
  One service is created for each network interface except {lo} and {sit...}.
-

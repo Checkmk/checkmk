@@ -176,8 +176,9 @@ logwatch:
     
     sendall: no   # this value is MANDATORY, yes is useful only for debugging
     vista_api: no # this is RECOMMENDED
+    skip_duplicated: no # if yes the same messages will be replaced with text [the above messages repeated <n> times]
     max_size: 500000 #
-    max_line_length: -1 # -1 to ignore, or any positive, max lingth of the line
+    max_line_length: -1 # -1 to ignore, or any positive, max length of the line
     max_entries: -1     # -1 to ignore, or any positive, max count to receive
     timeout: -1         # -1 to ignore, or any positive, in seconds
 
@@ -274,6 +275,9 @@ modules:
 
 system:
     enabled: yes
+
+    controller:
+        run: yes        # start controller if controller presented
 
     firewall:
         mode: configure # allowed none, remove, configure

@@ -8,7 +8,8 @@
 # For now this script is optional, yet emits it's errors.
 # set -e -o pipefail
 
-source "$(dirname $0)/lib-precommit"
+# shellcheck source=scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
@@ -22,7 +23,8 @@ PYTHON3_FILES=$(python_files 3 "$files")
 # F841 - is assigned to but never used
 IGNORE="--ignore E,W,F401,F841"
 
-if [ ! -z "$PYTHON3_FILES" ]; then
+if [ -n "$PYTHON3_FILES" ]; then
+    # shellcheck disable=SC2086
     $PIPENV run flake8 $IGNORE $PYTHON3_FILES
 fi
 exit 0

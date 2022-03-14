@@ -295,7 +295,7 @@ class ModeBulkRenameHost(WatoMode):
                 (
                     "renamings",
                     ListOf(
-                        self._vs_host_renaming(),
+                        valuespec=self._vs_host_renaming(),
                         title=_("Renaming Operations"),
                         add_label=_("Add renaming"),
                         allow_empty=False,
@@ -383,8 +383,9 @@ def rename_hosts_background_job(renamings, job_interface=None):
     )  # Already activates the changes!
     watolib.confirm_all_local_changes()  # All activated by the underlying rename automation
     action_txt = "".join(["<li>%s</li>" % a for a in actions])
-    message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (
+    message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
         len(renamings),
+        ungettext("host", "hosts", len(renamings)),
         action_txt,
     )
     if auth_problems:

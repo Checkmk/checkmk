@@ -7,6 +7,10 @@
 #exit
 export _EDC_ADD_ERRNO2=1
 export PATH=/bin
+# We're suppressing this, so we can enable the shell check.
+# TODO: Find out which shell we're actually using, and enforce it!
+# shellcheck disable=SC2039 # In POSIX sh, set option pipecurrent is undefined.
 set -o pipecurrent
-cd $(dirname $0)/
+cd "$(dirname "$0")/" || exit 1
+# shellcheck disable=1091,1094 # no point in following this one...
 . ./check_mk_agent | iconv -fIM1047 -tUTF8 | cat

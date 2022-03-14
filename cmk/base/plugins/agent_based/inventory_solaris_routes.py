@@ -42,7 +42,7 @@ register.agent_section(
 
 def inventory_solaris_routes(section: Section) -> InventoryResult:
     path = ["networking", "routes"]
-    for route in sorted(section, key=lambda r: r["target"]):
+    for route in section:
         yield TableRow(
             path=path,
             key_columns={

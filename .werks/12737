@@ -6,7 +6,7 @@ Date: 1617974377
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When sorting by ip address in views, an internal error "'>' not supported
 between instances of 'tuple' and 'str'" occurred, if there were hosts in the

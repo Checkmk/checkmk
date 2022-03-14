@@ -14,11 +14,12 @@ import re
 import urllib.parse
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.regex
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
 
@@ -208,3 +209,21 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
         if suggestion not in used_names_set:
             return suggestion
         nr += 1
+
+
+def validate_id(
+    mode: str,
+    existing_entries: Dict[str, Any],
+) -> Callable[[Dict[str, Any], str], None,]:
+    """Validate ID of newly created or cloned pagetype or visual"""
+    from cmk.gui.i18n import _
+
+    def _validate(properties: Dict[str, Any], varprefix: str) -> None:
+        name = properties["name"]
+        if existing_entries.get(name) and mode in ["create", "clone"]:
+            raise MKUserError(
+                varprefix + "_p_name",
+                _("You already have an element with the ID <b>%s</b>") % name,
+            )
+
+    return _validate

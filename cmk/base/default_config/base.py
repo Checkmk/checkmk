@@ -9,6 +9,7 @@ from typing import List as _List
 from typing import Literal as _Literal
 from typing import Optional as _Optional
 
+from cmk.utils.password_store import Password
 from cmk.utils.type_defs import Ruleset, TagConfigSpec, TagsOfHosts, TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
@@ -35,7 +36,6 @@ use_dns_cache = True  # prevent DNS by using own cache file
 delay_precompile = False  # delay Python compilation to Nagios execution
 restart_locking = "abort"  # also possible: "wait", None
 check_submission = "file"  # alternative: "pipe"
-agent_min_version = 0  # warn, if plugin has not at least version
 default_host_group = "check_mk"
 
 check_max_cachefile_age = 0  # per default do not use cache files when checking
@@ -55,7 +55,7 @@ debug_log = False  # deprecated
 monitoring_host = None  # deprecated
 max_num_processes = 50
 fallback_agent_output_encoding = "latin-1"
-stored_passwords: _Dict = {}
+stored_passwords: _Dict[str, Password] = {}
 # Collection of predefined rule conditions. For the moment this setting is only stored
 # in this config domain but not used by the base code. The WATO logic for writing out
 # rule.mk files is resolving the predefined conditions.
@@ -200,9 +200,9 @@ service_notification_periods: _List = []
 host_notification_periods: _List = []
 host_contactgroups: _List = []
 parents: _List = []
-define_hostgroups = None
-define_servicegroups = None
-define_contactgroups: _Optional[_Dict[str, str]] = None
+define_hostgroups: _Dict[str, str] = {}
+define_servicegroups: _Dict[str, str] = {}
+define_contactgroups: _Dict[str, str] = {}
 contactgroup_members: _Dict = {}
 contacts: _Dict = {}
 # needed for WATO
@@ -285,5 +285,4 @@ legacy_checks: _List = []
 
 logwatch_rules: _List = []
 
-config_storage_format: _Literal["standard", "raw", "pickle"] = "pickle"  # new in 2.1.
-microcore_config_format: _Literal["binary", "protobuf"] = "protobuf"  # new in 2.1.
+config_storage_format: _Literal["standard", "raw", "pickle"] = "pickle"

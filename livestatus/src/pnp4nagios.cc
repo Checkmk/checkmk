@@ -17,7 +17,7 @@
 namespace {
 
 // TODO(sp): Move this to some kind of C++ string utility file.
-std::string replace_all(const std::string& str, const std::string& chars,
+std::string replace_all(const std::string &str, const std::string &chars,
                         char replacement) {
     std::string result(str);
     size_t i = 0;
@@ -28,14 +28,14 @@ std::string replace_all(const std::string& str, const std::string& chars,
 }
 }  // namespace
 
-std::string pnp_cleanup(const std::string& name) {
+std::string pnp_cleanup(const std::string &name) {
     return replace_all(name, R"( /\:)", '_');
 }
 
 #ifndef CMC
 // TODO(sp) Merge this with Perfdatabase::getPNPXMLPath
-int pnpgraph_present(MonitoringCore* mc, const std::string& host,
-                     const std::string& service) {
+int pnpgraph_present(MonitoringCore *mc, const std::string &host,
+                     const std::string &service) {
     std::filesystem::path pnp_path = mc->pnpPath();
     if (pnp_path.empty()) {
         return -1;

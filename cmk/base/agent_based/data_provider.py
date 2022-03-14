@@ -42,7 +42,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import fetch_all, make_cluster_sources, make_sources
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 
 if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
@@ -212,6 +212,9 @@ class ParsedSectionsBroker:
         super().__init__()
         self._providers: Final = providers
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(providers={self._providers!r})"
+
     def get_cache_info(
         self,
         parsed_section_names: List[ParsedSectionName],
@@ -347,7 +350,7 @@ def _collect_host_sections(
             source.hostname,
             collected_host_sections.setdefault(
                 HostKey(source.hostname, source.ipaddress, SourceType.HOST),
-                AgentHostSections(),
+                HostSections[AgentRawDataSection](),
             ).piggybacked_raw_data,
         )
 

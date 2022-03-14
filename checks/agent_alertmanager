@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
+from typing import Any, Mapping, Optional
 
 # TODO: Cleanup this separation violation. This should be accessed through the check API
-import cmk.base.config
+from cmk.base.config import SpecialAgentConfiguration
 
 
-def agent_alertmanager_arguments(params, hostname, ipaddress):
-    alertmanager_params = copy.copy(params)
-    alertmanager_params.update({"host_address": ipaddress, "host_name": hostname})
-    return cmk.base.config.SpecialAgentConfiguration([], repr(alertmanager_params))
+def agent_alertmanager_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> SpecialAgentConfiguration:
+    alertmanager_params = {**params, "host_address": ipaddress, "host_name": hostname}
+    return SpecialAgentConfiguration([], repr(alertmanager_params))
 
 
 special_agent_info["alertmanager"] = agent_alertmanager_arguments

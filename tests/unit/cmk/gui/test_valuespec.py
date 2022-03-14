@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import hashlib
 from contextlib import nullcontext
 from enum import Enum
-from pathlib import Path
 
 import pytest
 
 from tests.testlib import on_time
 
 import cmk.utils.paths
+from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
@@ -122,9 +123,14 @@ def test_absolutedate_value_to_json_conversion(value, result):
 )
 def test_tuple_value_to_json_conversion(value, result):
     with on_time("2020-03-02", "UTC"):
-        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_html(value) == result
-        json_value = vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
-        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value) == value
+        assert (
+            vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_html(value) == result
+        )
+        json_value = vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
+        assert (
+            vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value)
+            == value
+        )
 
 
 @pytest.mark.parametrize(
@@ -154,9 +160,9 @@ def test_age_value_to_json_conversion(value, result):
     ],
 )
 def test_dropdownchoice_value_to_json_conversion(choices, value, result):
-    assert vs.DropdownChoice(choices).value_to_html(value) == result
-    json_value = vs.DropdownChoice(choices).value_to_json(value)
-    assert vs.DropdownChoice(choices).value_from_json(json_value) == value
+    assert vs.DropdownChoice(choices=choices).value_to_html(value) == result
+    json_value = vs.DropdownChoice(choices=choices).value_to_json(value)
+    assert vs.DropdownChoice(choices=choices).value_from_json(json_value) == value
 
 
 @pytest.mark.parametrize(
@@ -176,7 +182,7 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
 )
 def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is_valid_datatype):
     dropdown_choice = vs.DropdownChoice(
-        choices,
+        choices=choices,
         deprecated_choices=deprecated_choices,
     )
     if is_valid_datatype:
@@ -224,6 +230,19 @@ def test_timerange_value_to_json_conversion(request_context):
             assert vs.Timerange().value_to_html(choice_value) == title
             json_value = vs.Timerange().value_to_json(choice_value)
             assert vs.Timerange().value_from_json(json_value) == choice_value
+
+
+@pytest.mark.parametrize(
+    "elements,value,expected",
+    [
+        ([], {}, {}),
+        ([], {"a": 1}, {}),
+        ([("a", vs.Integer())], {"a": 1}, {"a": 1}),
+        ([("a", vs.Tuple(elements=[]))], {"a": tuple()}, {"a": []}),
+    ],
+)
+def test_dictionary_value_to_json(elements, value, expected):
+    assert vs.Dictionary(elements=elements).value_to_json(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -283,7 +302,7 @@ def test_transform_value_no_transform_vs():
 
 def test_transform_value_with_transform_vs():
     valuespec = vs.Transform(
-        vs.TextInput(),
+        valuespec=vs.TextInput(),
         forth=lambda x: x if x == "lala" else x.upper(),
         back=lambda x: x + "aaa",
     )
@@ -307,7 +326,7 @@ def test_transform_value_in_dict():
             (
                 "a",
                 vs.Transform(
-                    vs.TextInput(),
+                    valuespec=vs.TextInput(),
                     forth=lambda x: x if x == "lala" else x.upper(),
                     back=lambda x: x + "aaa",
                 ),
@@ -323,12 +342,12 @@ def test_transform_value_in_tuple():
     valuespec = vs.Tuple(
         elements=[
             vs.Transform(
-                vs.TextInput(),
+                valuespec=vs.TextInput(),
                 forth=lambda x: x if x == "lala" else x.upper(),
                 back=lambda x: x + "aaa",
             ),
             vs.Transform(
-                vs.TextInput(),
+                valuespec=vs.TextInput(),
                 forth=lambda x: x if x == "lala" else x.upper(),
                 back=lambda x: x + "aaa",
             ),
@@ -346,7 +365,7 @@ def test_transform_value_in_cascading_dropdown():
                 "b",
                 "Title b",
                 vs.Transform(
-                    vs.TextInput(),
+                    valuespec=vs.TextInput(),
                     forth=lambda x: x if x == "lala" else x.upper(),
                     back=lambda x: x + "aaa",
                 ),
@@ -363,7 +382,7 @@ def test_transform_value_and_json():
     # before all keys where upper case, then we decided to move to lower case,
     # but want to keep compatibility with old values saved in the config
     valuespec = vs.Transform(
-        vs.Dictionary(
+        valuespec=vs.Dictionary(
             elements=[
                 ("key1", vs.TextInput()),
             ]
@@ -376,9 +395,27 @@ def test_transform_value_and_json():
     assert valuespec.value_from_json({"key1": "value1"}) == {"key1": "value1"}
 
 
+class TestOptional:
+    def test_transform_value(self) -> None:
+        opt_vs = vs.Optional(
+            valuespec=vs.Transform(
+                valuespec=vs.Dictionary(
+                    elements=[
+                        ("a", vs.TextInput()),
+                        ("b", vs.Age()),
+                    ]
+                ),
+                forth=lambda p: {k: v + 10 if k == "b" else v for k, v in p.items()},
+            ),
+            none_value="NONE_VALUE",
+        )
+        assert opt_vs.transform_value("NONE_VALUE") == "NONE_VALUE"
+        assert opt_vs.transform_value({"a": "text", "b": 10}) == {"a": "text", "b": 20}
+
+
 @pytest.fixture()
 def fixture_auth_secret():
-    secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
     secret_path.parent.mkdir(parents=True, exist_ok=True)
     with secret_path.open("wb") as f:
         f.write(b"auth-secret")
@@ -410,7 +447,7 @@ def test_password_from_html_vars_initial_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_unchanged_pw(request_context):
-    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     html.request.set_var("pw", "")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "abc"
@@ -421,29 +458,10 @@ def test_password_from_html_vars_unchanged_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(request_context):
-    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     html.request.set_var("pw", "xyz")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "xyz"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_encrypt():
-    encrypted = vs.ValueEncrypter.encrypt("abc")
-    assert isinstance(encrypted, str)
-    assert encrypted != "abc"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_transparent():
-    enc = vs.ValueEncrypter
-    assert enc.decrypt(enc.encrypt("abc")) == "abc"
 
 
 class ValueType(Enum):
@@ -506,3 +524,65 @@ def test_host_address_validate_value(
             allow_ipv6_address=allow_ipv6_address,
             allow_empty=False,
         ).validate_value(value, "varprefix")
+
+
+@pytest.mark.parametrize(
+    "choices,default_value,expected_default",
+    [
+        (
+            [("single_age", "Age", vs.Age(default_value=30))],
+            None,
+            ("single_age", 30),
+        ),
+        (
+            [("age_1", "Age", vs.Age()), ("age_2", "Age", vs.Age())],
+            "age_1",
+            ("age_1", 0),
+        ),
+        (
+            [("list_choice", "ListChoice", vs.ListChoice())],
+            None,
+            ("list_choice", []),
+        ),
+        ([("value", "Title")], None, "value"),
+        ([("value", "Title", None)], None, "value"),
+        ([], None, None),
+    ],
+)
+def test_default_value_in_cascading_dropdown(
+    choices,
+    default_value,
+    expected_default,
+):
+    assert vs.CascadingDropdown(choices=choices).default_value() == expected_default
+
+
+@pytest.mark.parametrize(
+    "choices,default_value,expected_canonical",
+    [
+        (
+            [("single_age", "Age", vs.Age(default_value=30))],
+            None,
+            ("single_age", 0),
+        ),
+        (
+            [("age_1", "Age", vs.Age()), ("age_2", "Age", vs.Age())],
+            "age_1",
+            ("age_1", 0),
+        ),
+        (
+            [("list_choice", "ListChoice", vs.ListChoice())],
+            None,
+            ("list_choice", []),
+        ),
+        ([], None, None),
+        ([("value", "Title")], None, "value"),
+        ([("value", "Title", None)], None, "value"),
+    ],
+)
+def test_canonical_value_in_cascading_dropdown(
+    choices,
+    default_value,
+    expected_canonical,
+):
+    assert vs.CascadingDropdown(choices=choices).canonical_value() == expected_canonical

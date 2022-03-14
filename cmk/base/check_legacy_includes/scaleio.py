@@ -23,7 +23,7 @@ def parse_scaleio(info, section):
 # This converts data into MB for our df.include
 def convert_scaleio_space(unit, value):
     if unit == "Bytes":
-        return value / 1024.0 ** 2
+        return value / 1024.0**2
     elif unit == "KB":
         return value / 1024.0
     elif unit == "MB":

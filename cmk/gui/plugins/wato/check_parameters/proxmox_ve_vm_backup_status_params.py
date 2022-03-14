@@ -39,7 +39,7 @@ def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
                                 ),
                             ],
                         ),
-                        FixedValue(None, title=_("No Conditions"), totext=""),
+                        FixedValue(value=None, title=_("No Conditions"), totext=""),
                     ],
                 ),
             )

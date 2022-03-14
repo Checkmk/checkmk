@@ -98,12 +98,6 @@ body {
       background-image: url("");
     }
 
-    /* TODO: Reproduce this div.main element */
-    div.main {
-      padding-left: 10px;
-      border-left: 1px solid rgb(255, 0, 0);
-    }
-
     /* The content page header containing the title, user, date */
     table.header {
       width: 100%;
@@ -204,7 +198,6 @@ body {
   }
 }
 
-/* TODO: Reproduce all these pause styles */
 #reload_pause {
   position: fixed;
   top: 80px;
@@ -216,7 +209,7 @@ body {
   padding: 10px;
   text-align: center;
   text-decoration: none;
-  background-color: rgb(17, 17, 17);
+  background-color: $black;
   border-radius: 5px;
   opacity: 0.8;
   filter: alpha(opacity=80); /* For IE8 and earlier */
@@ -363,12 +356,6 @@ table.data {
     }
   }
 
-  /* Two-lined header, for example in WATO: ChangeLog->Site Status */
-  /* TODO: Reproduce this html element */
-  tr.dualheader th {
-    border-bottom: 1px solid rgb(204, 204, 204);
-  }
-
   tr.data {
     overflow: hidden;
     box-sizing: border-box;
@@ -386,6 +373,10 @@ table.data {
         height: 26px;
         padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
+      }
+
+      ul {
+        padding-left: $spacing;
       }
     }
 
@@ -546,7 +537,7 @@ tr.data.grouped_row_header {
 }
 
 tr.data.group_end {
-  border-bottom: 2px solid rgb(204, 204, 204);
+  border-bottom: 2px solid $color-table-border;
 }
 
 tr.groupheader td {
@@ -697,7 +688,7 @@ input[type="password"] {
 }
 
 input[type="password"] {
-  box-shadow: 0.1px 1.2px 1.8px 0 rgb(136, 0, 0) inset;
+  box-shadow: 0.1px 1.2px 1.8px 0 $color-state-2-background inset;
 }
 
 select {
@@ -774,14 +765,6 @@ td.content hr {
   height: 1px;
   background-color: rgba($white, 0.2);
   border-style: none;
-}
-
-/* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
- *       elemenets in _logwatch.scss)
- */
-input.tab#results,
-input.tabactive#results {
-  background-color: rgb(255, 238, 102);
 }
 
 input.date,
@@ -1035,9 +1018,10 @@ table.nform {
   .vs_floating_text {
     display: inline-block;
     height: $input-field-height;
-    box-sizing: border-box;
     margin: $input-field-margin;
     line-height: $input-field-height;
+    vertical-align: bottom;
+    box-sizing: border-box;
   }
 }
 
@@ -1138,25 +1122,12 @@ body.main .popup_menu {
     padding: 5px 8px;
   }
 
-  /* TODO: Reproduce these .resizable html elements */
-  &.resizable {
-    div.resizer {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      width: 15px;
-      height: 15px;
-      pointer-events: none;
-      cursor: se-resize;
-      background-color: rgb(80, 138, 161);
-    }
-
-    div.content {
-      min-width: 312px;
-      min-height: 150px;
-      overflow: auto;
-      resize: both;
-    }
+  // Resizable popup menus built in JS
+  &.resizable div.content {
+    min-width: 312px;
+    min-height: 150px;
+    overflow: auto;
+    resize: both;
   }
 
   img {
@@ -1225,15 +1196,13 @@ body.main .popup_menu {
       line-height: 21px;
 
       &:hover {
-        color: $font-color-white;
         text-decoration: none;
-        background-color: rgb(98, 155, 177);
+        background-color: $line-color;
       }
     }
 
     &.active a {
-      color: $font-color;
-      border-bottom: 1px solid rgb(80, 138, 161);
+      border-bottom: 1px solid $icons-popup-active-color;
     }
   }
 
@@ -1350,32 +1319,23 @@ a.element_dragger {
 | html.debug_vars() outputs the variables in the current URL.              |
 '-------------------------------------------------------------------------*/
 
-/* TODO: Reproduce this table.debug_vars */
 table.debug_vars {
   border-collapse: collapse;
 
-  th {
-    font-weight: bold;
-    background-color: rgb(136, 204, 136);
-    border: 1px solid rgb(0, 136, 0);
+  th,
+  td {
+    padding: 0.5 * $spacing $spacing;
+    text-align: left;
+    border: 1px solid $color-table-border;
   }
 
-  td {
-    padding: 2px 6px;
+  th,
+  td.left {
+    font-weight: bold;
+  }
+
+  td.right {
     font-family: $font-family-courier;
-    border: 1px solid rgb(0, 85, 0);
-
-    &.left {
-      font-weight: bold;
-      color: $font-color-white;
-      background-color: rgb(51, 153, 85);
-    }
-
-    &.right {
-      font-weight: bold;
-      color: $font-color-black;
-      background-color: rgb(136, 255, 204);
-    }
   }
 }
 
@@ -1501,6 +1461,7 @@ table.data.job_table td {
 
     > div {
       position: relative;
+      line-height: 1.1;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
       color: $font-color;

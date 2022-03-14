@@ -53,7 +53,7 @@ def test_update_basic_site_config():
     assert "haha" in all_sites
 
     # url_prefix is updated
-    assert all_sites["haha"]["url_prefix"] == "/haha/"
+    assert all_sites[SiteId("haha")]["url_prefix"] == "/haha/"
 
 
 def test_update_remote_site_status_host_config():
@@ -112,10 +112,10 @@ def test_update_remote_site_status_host_config():
     assert "dingdong" in all_sites
 
     # URLs have been updated
-    assert all_sites["dingdong"]["url_prefix"] == "/dingdong/"
+    assert all_sites[SiteId("dingdong")]["url_prefix"] == "/dingdong/"
 
     # Remote site URLs have not been modified
     # Remote site status host was updated
-    assert all_sites["remote"]["url_prefix"] == "/remote/"
-    assert all_sites["remote"]["multisiteurl"] == "http://localhost/remote/check_mk/"
-    assert all_sites["remote"]["status_host"] == ("dingdong", "af")
+    assert all_sites[SiteId("remote")]["url_prefix"] == "/remote/"
+    assert all_sites[SiteId("remote")]["multisiteurl"] == "http://localhost/remote/check_mk/"
+    assert all_sites[SiteId("remote")]["status_host"] == ("dingdong", "af")

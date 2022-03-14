@@ -63,12 +63,15 @@ def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> Che
 
 def cluster_check_pulse_secure_users(
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckOutput:
 
     n_users_total = 0
 
     for node_name, section_node in section.items():
+        if section_node is None:
+            continue
+
         n_users_total += section_node["n_users"]
         yield from clusterize.make_node_notice_results(
             node_name,

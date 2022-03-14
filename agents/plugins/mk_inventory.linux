@@ -9,22 +9,21 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
-# Run and *send* only once every __ seconds
-. $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true
+# shellcheck source=../cfg_examples/mk_inventory.cfg
+. "${MK_CONFDIR}/mk_inventory.cfg" 2>/dev/null || true
 
 # Default to four hours
 INTERVAL=${INVENTORY_INTERVAL:-14400}
 
 FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-LAST_RUN=$(stat -c %Y $FLAGFILE)
-NOW=$(date +%s)
+LAST_RUN="$(stat -c %Y "${FLAGFILE}")"
+NOW="$(date +%s)"
 UNTIL=$((NOW + INTERVAL + 600))
 
-if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
-then
-    touch $FLAGFILE
+if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
+    touch "${FLAGFILE}"
 
     # List of DEB packages
     if type dpkg-query >/dev/null; then
@@ -41,32 +40,33 @@ then
     # List Gentoo packages
     if type equery >/dev/null; then
         echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
-        equery -C list --format '$category/$name|$fullversion|$mask2|ebuild|Repository $repo|installed' \* | head -n -1
+        equery -C list --format "\$category/\$name|\$fullversion|\$mask2|ebuild|Repository \$repo|installed" \* | head -n -1
     fi
 
     # Information about distribution
     echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
-    for f in {/etc/{oracle-release,debian_version,gentoo-release,lsb-release,redhat-release,SuSE-release,os-release},/usr/share/cma/version} ; do
-        if [ -e $f ] ; then
+    for f in {/etc/{oracle-release,debian_version,gentoo-release,lsb-release,redhat-release,SuSE-release,os-release},/usr/share/cma/version}; do
+        if [ -e $f ]; then
             echo "[[[$f]]]"
-            tr \\n \| < $f | sed 's/|$//' ; echo
+            tr \\n \| <$f | sed 's/|$//'
+            echo
         fi
     done
 
     # CPU Information. We need just the first one
-    if [ -e /proc/cpuinfo ] ; then
+    if [ -e /proc/cpuinfo ]; then
         echo "<<<lnx_cpuinfo:sep(58):persist($UNTIL)>>>"
-        sed 's/[[:space:]]*:[[:space:]]*/:/' < /proc/cpuinfo
+        sed 's/[[:space:]]*:[[:space:]]*/:/' </proc/cpuinfo
     fi
 
     # Information about main board, memory, etc.
-    if type dmidecode >/dev/null ; then
+    if type dmidecode >/dev/null; then
         echo "<<<dmidecode:sep(58):persist($UNTIL)>>>"
         dmidecode -q | sed 's/\t/:/g'
     fi
 
     # Information about kernel architecture
-    if type uname >/dev/null ; then
+    if type uname >/dev/null; then
         echo "<<<lnx_uname:persist($UNTIL)>>>"
         uname -m
         uname -r
@@ -74,20 +74,20 @@ then
 
     # Collect VGAs if they are present
     vgas="$(lspci | grep VGA | cut -d" " -f 1)"
-    if [ -n "$vgas" ] ; then
+    if [ -n "$vgas" ]; then
         echo "<<<lnx_video:sep(58):persist($UNTIL)>>>"
         lspci -v -s "$vgas"
     fi
 
     # Some networking information
-    if type ip > /dev/null ; then
+    if type ip >/dev/null; then
         echo "<<<lnx_ip_r:persist($UNTIL)>>>"
         ip r
         ip -6 r
     fi
 
     # Kernel configuration
-    if type sysctl > /dev/null ; then
+    if type sysctl >/dev/null; then
         echo "<<<lnx_sysctl:persist($UNTIL)>>>"
         sysctl -ae
     fi
@@ -98,8 +98,8 @@ then
         echo "<<<lnx_block_devices:sep(0):persist($UNTIL)>>>"
         DEVTYPE_CHECK="DEVTYPE=disk"
         DATA_ITEMS=(
-            size                # must be multiplied with block size (512byte)
-            uuid                #
+            size # must be multiplied with block size (512byte)
+            uuid #
             # dev                 #
             # wwid                # world wide ID
             # nguid
@@ -119,8 +119,8 @@ then
 
             # busybox compatible way to say
             #   if DEVTYPE_CHECK not in <device>/uevent or "devices/virtual/" in DEVICE_DIR: continue`
-            case "$(cat "${UEVENT_FILE}")" in *"${DEVTYPE_CHECK}"*) ;; *) continue; esac
-            case "${UEVENT_FILE}" in *"devices/virtual/"*) continue;; esac
+            case "$(cat "${UEVENT_FILE}")" in *"${DEVTYPE_CHECK}"*) ;; *) continue ;; esac
+            case "${UEVENT_FILE}" in *"devices/virtual/"*) continue ;; esac
 
             # use pipe as delimiter - also to mark begin of lines for consitency check
             echo "|device|${DEVICE_DIR}|"
@@ -135,4 +135,3 @@ then
         done 2>/dev/null
     )
 fi
-

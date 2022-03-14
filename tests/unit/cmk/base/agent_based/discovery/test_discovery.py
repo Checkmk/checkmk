@@ -12,7 +12,6 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
-from tests.testlib.debug_utils import cmk_debug_enabled
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
@@ -24,11 +23,11 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
     HostName,
-    LegacyCheckParameters,
     SectionName,
     SourceType,
 )
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -42,58 +41,9 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
-from cmk.base.check_utils import AutocheckService, Service
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources.agent import AgentHostSections
-from cmk.base.sources.snmp import SNMPHostSections
-
-
-def test_discovered_service_init() -> None:
-    ser = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    assert ser.check_plugin_name == CheckPluginName("abc")
-    assert ser.item == "Item"
-    assert ser.description == "ABC Item"
-    assert ser.parameters is None
-    assert ser.service_labels == {}
-
-    ser = discovery.Service(
-        CheckPluginName("abc"),
-        "Item",
-        "ABC Item",
-        None,
-        {"läbel": ServiceLabel("läbel", "lübel")},
-    )
-
-    assert ser.service_labels == {"läbel": ServiceLabel("läbel", "lübel")}
-
-    with pytest.raises(AttributeError):
-        ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
-
-
-def test_discovered_service_eq() -> None:
-    ser1: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser2: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser3: Service[LegacyCheckParameters] = Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
-    ser4: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
-    ser5: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", [""])
-
-    assert ser1 == ser1  # pylint: disable=comparison-with-itself
-    assert ser1 == ser2
-    assert ser1 != ser3
-    assert ser1 != ser4
-    assert ser1 == ser5
-
-    assert ser1 in [ser1]
-    assert ser1 in [ser2]
-    assert ser1 not in [ser3]
-    assert ser1 not in [ser4]
-    assert ser1 in [ser5]
-
-    assert ser1 in {ser1}
-    assert ser1 in {ser2}
-    assert ser1 not in {ser3}
-    assert ser1 not in {ser4}
-    assert ser1 in {ser5}
+from cmk.base.discovered_labels import HostLabel
+from cmk.base.sources.agent import AgentRawDataSection
+from cmk.base.sources.snmp import SNMPRawDataSection
 
 
 @pytest.fixture
@@ -101,7 +51,7 @@ def service_table() -> discovery.ServicesTable:
     return {
         (CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
@@ -111,7 +61,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
@@ -121,7 +71,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
@@ -131,7 +81,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
@@ -147,7 +97,7 @@ def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
                     "Test Description New Item 1",
@@ -156,7 +106,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 [],
             ),
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
                     "Test Description New Item 2",
@@ -167,7 +117,7 @@ def grouped_services() -> discovery.ServicesByTransition:
         ],
         "vanished": [
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
                     "Test Description Vanished Item 1",
@@ -176,7 +126,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 [],
             ),
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
                     "Test Description Vanished Item 2",
@@ -737,7 +687,7 @@ def test__find_candidates() -> None:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         {
                             SectionName("kernel"): [],  # host only
                             SectionName("uptime"): [["123"]],  # host & mgmt
@@ -754,7 +704,7 @@ def test__find_candidates() -> None:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=SNMPHostSections(
+                    host_sections=HostSections[SNMPRawDataSection](
                         {
                             # host & mgmt:
                             SectionName("uptime"): [["123"]],  # type: ignore[dict-item]
@@ -824,7 +774,7 @@ _expected_services: Dict = {
     (CheckPluginName("apache_status"), "127.0.0.1:5008"): {},
     (CheckPluginName("apache_status"), "127.0.0.1:5009"): {},
     (CheckPluginName("apache_status"), "::1:80"): {},
-    (CheckPluginName("check_mk_agent_update"), None): {},
+    (CheckPluginName("checkmk_agent"), None): {},
     (CheckPluginName("cpu_loads"), None): {},
     (CheckPluginName("cpu_threads"), None): {},
     (CheckPluginName("df"), "/"): {},
@@ -894,20 +844,20 @@ _expected_host_labels = {
 @pytest.mark.usefixtures("fix_register")
 def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     testhost = HostName("test-host")
-    ts = Scenario().add_host(testhost, ipaddress="127.0.0.1")
+    ts = Scenario()
+    ts.add_host(testhost, ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output(testhost)
     ts.apply(monkeypatch)
 
-    with cmk_debug_enabled():
-        discovery.commandline_discovery(
-            arg_hostnames={testhost},
-            selected_sections=NO_SELECTION,
-            run_plugin_names=EVERYTHING,
-            arg_only_new=False,
-        )
+    discovery.commandline_discovery(
+        arg_hostnames={testhost},
+        selected_sections=NO_SELECTION,
+        run_plugin_names=EVERYTHING,
+        arg_only_new=False,
+    )
 
     entries = autochecks.AutochecksStore(testhost).read()
-    found = {(e.check_plugin_name, e.item): e.service_labels for e in entries}
+    found = {e.id(): e.service_labels for e in entries}
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)
@@ -919,12 +869,21 @@ class RealHostScenario(NamedTuple):
     ipaddress: str
     parsed_sections_broker: ParsedSectionsBroker
 
+    @property
+    def host_key(self) -> HostKey:
+        return HostKey(self.hostname, self.ipaddress, SourceType.HOST)
+
+    @property
+    def host_key_mgmt(self) -> HostKey:
+        return HostKey(self.hostname, None, SourceType.MANAGEMENT)
+
 
 @pytest.fixture(name="realhost_scenario")
 def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
     ipaddress = HostAddress("1.2.3.4")
-    ts = Scenario().add_host(hostname, ipaddress=ipaddress)
+    ts = Scenario()
+    ts.add_host(hostname, ipaddress=ipaddress)
     ts.set_ruleset(
         "inventory_df_rules",
         [
@@ -967,7 +926,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1075,7 +1034,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1114,7 +1073,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1499,24 +1458,23 @@ def test__discover_host_labels_and_services_on_realhost(
 
     # we're depending on the changed host labels:
     _ = discovery.analyse_node_labels(
-        host_name=scenario.hostname,
-        ipaddress=scenario.ipaddress,
+        host_key=scenario.host_key,
+        host_key_mgmt=scenario.host_key_mgmt,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
         on_error=OnError.RAISE,
     )
 
-    with cmk_debug_enabled():
-        discovered_services = discovery._discovered_services._discover_services(
-            host_name=scenario.hostname,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            on_error=OnError.RAISE,
-            run_plugin_names=EVERYTHING,
-        )
+    discovered_services = discovery._discovered_services._discover_services(
+        host_key=scenario.host_key,
+        host_key_mgmt=scenario.host_key_mgmt,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        on_error=OnError.RAISE,
+        run_plugin_names=EVERYTHING,
+    )
 
-    services = {(s.check_plugin_name, s.item) for s in discovered_services}
+    services = {s.id() for s in discovered_services}
 
     assert services == discovery_test_case.expected_services
 
@@ -1528,15 +1486,14 @@ def test__perform_host_label_discovery_on_realhost(
 ) -> None:
     scenario = realhost_scenario
 
-    with cmk_debug_enabled():
-        host_label_result = discovery.analyse_node_labels(
-            host_name=scenario.hostname,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            load_labels=discovery_test_case.load_labels,
-            save_labels=discovery_test_case.save_labels,
-            on_error=OnError.RAISE,
-        )
+    host_label_result = discovery.analyse_node_labels(
+        host_key=scenario.host_key,
+        host_key_mgmt=scenario.host_key_mgmt,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        load_labels=discovery_test_case.load_labels,
+        save_labels=discovery_test_case.save_labels,
+        on_error=OnError.RAISE,
+    )
 
     assert (
         host_label_result.vanished == discovery_test_case.on_realhost.expected_vanished_host_labels
@@ -1565,20 +1522,18 @@ def test__discover_services_on_cluster(
     # we need the sideeffects of this call. TODO: guess what.
     _ = discovery._host_labels.analyse_cluster_labels(
         host_config=scenario.host_config,
-        ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
         on_error=OnError.RAISE,
     )
 
-    with cmk_debug_enabled():
-        discovered_services = discovery._get_cluster_services(
-            scenario.host_config,
-            scenario.ipaddress,
-            scenario.parsed_sections_broker,
-            OnError.RAISE,
-        )
+    discovered_services = discovery._get_cluster_services(
+        scenario.host_config,
+        scenario.ipaddress,
+        scenario.parsed_sections_broker,
+        OnError.RAISE,
+    )
 
     services = set(discovered_services)
 
@@ -1592,15 +1547,13 @@ def test__perform_host_label_discovery_on_cluster(
 ) -> None:
     scenario = cluster_scenario
 
-    with cmk_debug_enabled():
-        host_label_result = discovery._host_labels.analyse_cluster_labels(
-            host_config=scenario.host_config,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            load_labels=discovery_test_case.load_labels,
-            save_labels=discovery_test_case.save_labels,
-            on_error=OnError.RAISE,
-        )
+    host_label_result = discovery._host_labels.analyse_cluster_labels(
+        host_config=scenario.host_config,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        load_labels=discovery_test_case.load_labels,
+        save_labels=discovery_test_case.save_labels,
+        on_error=OnError.RAISE,
+    )
 
     assert (
         host_label_result.vanished == discovery_test_case.on_cluster.expected_vanished_host_labels
@@ -1626,11 +1579,11 @@ def test__perform_host_label_discovery_on_cluster(
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
 
-    services: Mapping[str, Service[LegacyCheckParameters]] = {
-        discovery_status: Service(
+    entries: Mapping[str, autochecks.AutocheckEntry] = {
+        discovery_status: autochecks.AutocheckEntry(
             CheckPluginName(f"plugin_{discovery_status}"),
             None,
-            "description",
+            {},
             {},
         )
         for discovery_status in (
@@ -1644,8 +1597,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         autochecks.AutochecksStore,
         "read",
         lambda *args, **kwargs: [
-            services["old"],
-            services["vanished"],
+            entries["old"],
+            entries["vanished"],
         ],
     )
 
@@ -1653,24 +1606,24 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         _discovered_services,
         "_discover_services",
         lambda *args, **kwargs: [
-            services["old"],
-            services["new"],
+            entries["old"],
+            entries["new"],
         ],
     )
 
     assert discovery._get_node_services(
-        HostName("horst"),
-        None,
+        HostKey(HostName("horst"), None, SourceType.HOST),
+        HostKey(HostName("horst"), None, SourceType.MANAGEMENT),
         ParsedSectionsBroker({}),
         OnError.RAISE,
         lambda hn, _svcdescr: hn,
     ) == {
-        (service.check_plugin_name, None): (
+        entry.id(): (
             discovery_status,
-            service,
+            entry,
             [HostName("horst")],
         )
-        for discovery_status, service in services.items()
+        for discovery_status, entry in entries.items()
     }
 
 

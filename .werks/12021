@@ -6,7 +6,7 @@ Date: 1612441069
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Windows agent plugin <tt>mk_mysql</tt> for monitoring MySQL databases
 now supports MariaDB. If you want to use this feature, you have to update

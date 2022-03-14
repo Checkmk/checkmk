@@ -19,7 +19,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tupl
 
 def _parameter_valuespec_ibm_svc_mdiskgrp():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=filesystem_elements
             + [
                 (

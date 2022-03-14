@@ -17,7 +17,7 @@ from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
 def _parameter_valuespec_mem_cluster():
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             elements=[
                 Integer(title=_("Equal or more than"), unit=_("nodes")),
                 Tuple(

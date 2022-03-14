@@ -65,7 +65,7 @@ void replaceYamlSeq(std::string_view Group, std::string_view SeqName,
 
     Yaml[Group][SeqName].reset();
 
-    for (auto& str : Vec) {
+    for (auto &str : Vec) {
         Yaml[Group][SeqName].push_back(str);
     }
 }
@@ -112,7 +112,7 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     auto mrpe_yaml_optional = cfg::GetGroup(yaml, cfg::groups::kMrpe);
     ASSERT_TRUE(mrpe_yaml_optional.has_value());
     {
-        auto& mrpe_cfg = mrpe_yaml_optional.value();
+        auto &mrpe_cfg = mrpe_yaml_optional.value();
 
         ASSERT_TRUE(cfg::GetVal(mrpe_cfg, cfg::vars::kEnabled, false));
         auto entries =
@@ -280,7 +280,7 @@ TEST(SectionProviderMrpe, Run) {
     auto mrpe_yaml_optional = GetGroup(yaml, groups::kMrpe);
     ASSERT_TRUE(mrpe_yaml_optional.has_value());
     {
-        auto& mrpe_cfg = mrpe_yaml_optional.value();
+        auto &mrpe_cfg = mrpe_yaml_optional.value();
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);

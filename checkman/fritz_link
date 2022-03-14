@@ -1,7 +1,7 @@
 title: AVM Fritz!Box: Network Link
 agents: fritzbox
 catalog: hw/network/avm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check is always OK, it outputs information about the network link

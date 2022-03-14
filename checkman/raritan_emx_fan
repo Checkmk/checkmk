@@ -1,7 +1,7 @@
 title: Raritan EMX Devices: Fan State and Speed
 agents: snmp
 catalog: hw/environment/raritan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Shows Sensor information for Fan state and speed
@@ -13,4 +13,3 @@ item:
 
 discovery:
  One service is created for each sensor.
-

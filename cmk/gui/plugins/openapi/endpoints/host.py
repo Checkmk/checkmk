@@ -43,9 +43,12 @@ To search for hosts with specific tags set on them:
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts
 
-from cmk.gui import fields, sites
+from cmk.gui import fields as gui_fields
+from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+
+from cmk import fields
 
 
 class HostParameters(BaseSchema):
@@ -63,12 +66,12 @@ class HostParameters(BaseSchema):
     """
 
     sites = fields.List(
-        fields.SiteField(),
+        gui_fields.SiteField(),
         description="Restrict the query to this particular site.",
-        missing=[],
+        load_default=[],
     )
-    query = fields.query_field(Hosts, required=False)
-    columns = fields.column_field(Hosts, mandatory=[Hosts.name])
+    query = gui_fields.query_field(Hosts, required=False)
+    columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name])
 
 
 @Endpoint(

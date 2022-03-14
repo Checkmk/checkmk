@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this werk it was not possible to add a "Temperature Zone N" graph to a
 graph collection. There was no error message visible, it was simply not added

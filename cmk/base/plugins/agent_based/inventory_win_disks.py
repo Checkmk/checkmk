@@ -110,7 +110,7 @@ register.agent_section(
 
 def inventory_win_disks(section: Section) -> InventoryResult:
     path = ["hardware", "storage", "disks"]
-    for disk in sorted(section, key=lambda d: d.get("fsnode", "")):
+    for disk in section:
         if "fsnode" in disk:
             yield TableRow(
                 path=path,
@@ -118,14 +118,14 @@ def inventory_win_disks(section: Section) -> InventoryResult:
                     "fsnode": disk["fsnode"],
                 },
                 inventory_columns={
+                    "signature": disk.get("signature"),
                     "vendor": disk.get("vendor"),
+                    "local": disk.get("local"),
                     "bus": disk.get("bus"),
                     "product": disk.get("product"),
                     "serial": disk.get("serial"),
                     "size": disk.get("size"),
                     "type": disk.get("type"),
-                    "signature": disk.get("signature"),
-                    "local": disk.get("local"),
                 },
                 status_columns={},
             )

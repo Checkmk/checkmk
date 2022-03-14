@@ -22,7 +22,7 @@ from cmk.gui.valuespec import Alternative, Checkbox, Dictionary, FixedValue, Tex
 
 def _parameter_valuespec_netapp_luns():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Configure levels for used space"),
             elements=[
                 (
@@ -46,7 +46,7 @@ def _parameter_valuespec_netapp_luns():
                         elements=[
                             get_free_used_dynamic_valuespec("used", "LUN"),
                             Transform(
-                                get_free_used_dynamic_valuespec(
+                                valuespec=get_free_used_dynamic_valuespec(
                                     "free", "LUN", default_value=(20.0, 10.0)
                                 ),
                                 forth=transform_filesystem_free,

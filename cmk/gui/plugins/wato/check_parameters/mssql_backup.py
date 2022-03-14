@@ -39,8 +39,8 @@ def _vs_mssql_backup_age(title: str) -> Alternative:
             Tuple(
                 title=_("No levels"),
                 elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
                 ],
             ),
         ],
@@ -77,7 +77,7 @@ rulespec_registry.register(
 
 def _parameter_valuespec_mssql_backup():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This rule allows you to set limits on the age of backups for "
                 "different backup types. If your agent does not support "

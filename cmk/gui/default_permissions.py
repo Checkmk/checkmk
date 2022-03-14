@@ -231,6 +231,18 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionGeneral,
+        name="manage_2fa",
+        title=_l("Edit the user two-factor authentication"),
+        description=_l(
+            "Permits the user to edit two-factor authentication (Webauthn credentials)."
+        ),
+        defaults=["admin", "user"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
         name="logout",
         title=_l("Logout"),
         description=_l("Permits the user to logout."),

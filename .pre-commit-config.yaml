@@ -24,18 +24,19 @@ repos:
             types: [file]
           - id: check-yaml
           - id: end-of-file-fixer
-            exclude: .werks/*
-    - repo: https://github.com/pycqa/isort
-      rev: 5.9.3
-      hooks:
-          - id: isort
-            name: isort (python)
-    - repo: https://github.com/psf/black
-      rev: 21.8b0
-      hooks:
-          - id: black
+            exclude: .werks/.*
     - repo: local
       hooks:
+          - id: isort
+            name: Run isort
+            entry: scripts/run-isort
+            language: script
+            types: [file, python]
+          - id: black
+            name: Run black
+            entry: scripts/run-black
+            language: script
+            types: [file, python]
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules
@@ -71,6 +72,12 @@ repos:
           - id: flake8
             name: Check flake8
             entry: scripts/check-flake8
+            language: script
+            types: [file, python]
+            verbose: true
+          - id: unittest
+            name: unittests
+            entry: scripts/run-unittests
             language: script
             types: [file, python]
             verbose: true

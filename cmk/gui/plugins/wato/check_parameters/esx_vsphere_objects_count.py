@@ -20,7 +20,7 @@ def _parameter_valuespec_esx_vsphere_objects_count():
             (
                 "distribution",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         optional_keys=False,
                         elements=[
                             ("vm_names", ListOfStrings(title=_("VMs"))),

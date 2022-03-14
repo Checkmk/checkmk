@@ -6,7 +6,7 @@ Date: 1622637653
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With this option you can enable the logging of logon failures. If enabled, the
 username and client the request is comming from is logged to ~/var/log/web.log.

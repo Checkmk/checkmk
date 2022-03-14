@@ -12,7 +12,7 @@ class Table;
 
 namespace mk::test {
 
-std::string query(Table& table, const std::list<std::string>& q);
+std::string query(Table &table, const std::list<std::string> &q);
 
 }  // namespace mk::test
 

@@ -42,13 +42,13 @@ def _item_help_logwatch_rules():
 
 def _valuespec_logwatch_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Logfile patterns"),
             elements=[
                 (
                     "reclassify_patterns",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             help=_("This defines one logfile pattern rule"),
                             show_titles=True,
                             orientation="horizontal",
@@ -184,13 +184,13 @@ rulespec_registry.register(
 
 def _valuespec_logwatch_groups():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Logfile Grouping"),
             elements=[
                 (
                     "grouping_patterns",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             help=_("This defines one logfile grouping pattern"),
                             show_titles=True,
                             orientation="horizontal",
@@ -249,7 +249,7 @@ def _parameter_valuespec_logwatch_ec():
         ),
         elements=[
             FixedValue(
-                "",
+                value="",
                 totext=_("Messages are handled by logwatch."),
                 title=_("No forwarding"),
             ),
@@ -260,11 +260,11 @@ def _parameter_valuespec_logwatch_ec():
                         "method",
                         Transform(
                             # TODO: Clean this up to some CascadingDropdown()
-                            Alternative(
+                            valuespec=Alternative(
                                 title=_("Forwarding Method"),
                                 elements=[
                                     FixedValue(
-                                        "",
+                                        value="",
                                         title=_(
                                             "Local: Send events to local Event Console in same OMD site"
                                         ),
@@ -277,14 +277,14 @@ def _parameter_valuespec_logwatch_ec():
                                         allow_empty=False,
                                     ),
                                     FixedValue(
-                                        "spool:",
+                                        value="spool:",
                                         title=_(
                                             "Local: Spooling - Send events to local event console in same OMD site"
                                         ),
                                         totext=_("Spool to Event Console"),
                                     ),
                                     Transform(
-                                        TextInput(
+                                        valuespec=TextInput(
                                             allow_empty=False,
                                         ),
                                         title=_(
@@ -448,7 +448,7 @@ def _parameter_valuespec_logwatch_ec():
                     (
                         "expected_logfiles",
                         ListOf(
-                            TextInput(),
+                            valuespec=TextInput(),
                             title=_("List of expected logfiles"),
                             help=_(
                                 "When the monitoring of forwarded logfiles is enabled, the check verifies that "

@@ -222,7 +222,7 @@ def transform_legacy_cpu_utilization_os(params):
 
 def _parameter_valuespec_cpu_utilization_os():
     return Transform(
-        _cpu_util_common_elements(),
+        valuespec=_cpu_util_common_elements(),
         forth=transform_legacy_cpu_utilization_os,
     )
 
@@ -246,7 +246,7 @@ def transform_cpu_iowait(params):
 
 def _parameter_valuespec_cpu_iowait():
     return Transform(
-        _cpu_util_common_elements(),
+        valuespec=_cpu_util_common_elements(),
         forth=transform_cpu_iowait,
     )
 
@@ -272,7 +272,7 @@ def _transform_cpu_utilization(params):
 
 def _parameter_valuespec_cpu_utilization():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "util",

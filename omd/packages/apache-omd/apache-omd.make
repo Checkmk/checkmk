@@ -10,48 +10,33 @@ ifeq ($(shell uname -m),x86_64)
   APACHE_OMD_MODULE_DIR=$(APACHE_MODULE_DIR_64)
 endif
 
-ifeq ($(APACHE_VERSION),)
-APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
-endif
-APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
-APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
-APACHE_24_OR_NEWER  = $(shell [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ] && echo 1 || echo 0)
-
-ifeq ($(APACHE_24_OR_NEWER), 1)
-    APACHE_MODULES := \
-	mod_mpm_prefork.so \
-	mod_access_compat.so \
-	mod_authn_core.so \
-	mod_authz_core.so \
-	mod_filter.so \
-	mod_unixd.so
-else
-    APACHE_MODULES := \
-	mod_authn_default.so \
-	mod_authz_default.so
-endif
-
-APACHE_MODULES += \
-	mod_log_config.so \
-	mod_auth_basic.so \
-	mod_authn_file.so \
-	mod_authz_host.so \
-	mod_authz_user.so \
-	mod_autoindex.so \
-	mod_env.so \
-	mod_expires.so \
-	mod_deflate.so \
-	mod_headers.so \
-	mod_setenvif.so \
-	mod_mime_magic.so \
-	mod_mime.so \
-	mod_negotiation.so \
-	mod_dir.so \
-	mod_alias.so \
-	mod_rewrite.so \
-	mod_cgi.so \
-	mod_status.so \
-	mod_version.so
+APACHE_MODULES := \
+    mod_access_compat.so \
+    mod_alias.so \
+    mod_auth_basic.so \
+    mod_authn_core.so \
+    mod_authn_file.so \
+    mod_authz_core.so \
+    mod_authz_host.so \
+    mod_authz_user.so \
+    mod_autoindex.so \
+    mod_cgi.so \
+    mod_deflate.so \
+    mod_dir.so \
+    mod_env.so \
+    mod_expires.so \
+    mod_filter.so \
+    mod_headers.so \
+    mod_log_config.so \
+    mod_mime.so \
+    mod_mime_magic.so \
+    mod_mpm_prefork.so \
+    mod_negotiation.so \
+    mod_rewrite.so \
+    mod_setenvif.so \
+    mod_status.so \
+    mod_unixd.so \
+    mod_version.so
 
 CENTOS_WORKAROUND := 0
 

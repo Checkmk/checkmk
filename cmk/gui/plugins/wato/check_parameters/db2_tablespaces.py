@@ -54,7 +54,7 @@ def db_levels_common():
                         ],
                     ),
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             orientation="horizontal",
                             elements=[
                                 Filesize(title=_("Tablespace larger than")),

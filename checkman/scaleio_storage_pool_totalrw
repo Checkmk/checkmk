@@ -1,7 +1,7 @@
 title: EMC ScaleIO: Storage Pool Total Read/Write
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the total r/w of a Storage Pool (SP). The ruleset

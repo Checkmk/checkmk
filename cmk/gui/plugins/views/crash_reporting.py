@@ -64,10 +64,15 @@ class CrashReportsRowTable(RowTable):
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         rows = []
         for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
-            if raw_row["crash_info"] is None:
+            crash_info = raw_row.get("crash_info")
+            if crash_info is None:
                 continue  # skip broken crash reports
 
-            crash_info_raw = json.loads(raw_row["crash_info"])
+            try:
+                crash_info_raw = json.loads(crash_info)
+            except json.JSONDecodeError:
+                continue  # skip broken crash infos like b'' or b'\n'
+
             rows.append(
                 {
                     "site": raw_row["site"],

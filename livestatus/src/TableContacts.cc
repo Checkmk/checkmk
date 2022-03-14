@@ -19,10 +19,10 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "TimeperiodsCache.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -115,11 +115,11 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "custom_variable_names",
-        "A list of all custom variables of the contact", offsets,
+        "A list of the names of the custom variables", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "custom_variable_values",
-        "A list of the values of all custom variables of the contact", offsets,
+        "A list of the values of the custom variables", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
@@ -127,33 +127,32 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
 
     table->addColumn(std::make_unique<ListColumn<contact>>(
-        prefix + "tag_names", "A list of all tags of the contact", offsets,
+        prefix + "tag_names", "A list of the names of the tags", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::tags}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
-        prefix + "tag_values",
-        "A list of the values of all tags of the contact", offsets,
+        prefix + "tag_values", "A list of the values of the tags", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::tags}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{table->core(), AttributeKind::tags}));
 
     table->addColumn(std::make_unique<ListColumn<contact>>(
-        prefix + "label_names", "A list of all labels of the contact", offsets,
+        prefix + "label_names", "A list of the names of the labels", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::labels}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
-        prefix + "label_values",
-        "A list of the values of all labels of the contact", offsets,
+        prefix + "label_values", "A list of the values of the labels", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::labels}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{table->core(), AttributeKind::labels}));
 
     table->addColumn(std::make_unique<ListColumn<contact>>(
-        prefix + "label_source_names", "A list of all sources of the contact",
-        offsets, CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
+        prefix + "label_source_names",
+        "A list of the names of the label sources", offsets,
+        CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "label_source_values",
-        "A list of the values of all sources of the contact", offsets,
+        "A list of the values of the label sources", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,

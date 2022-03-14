@@ -1,7 +1,7 @@
 title: MSSQL Database: Mirroring
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Mirroring is the practice of having two or more instances of the same database

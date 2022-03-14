@@ -12,9 +12,7 @@ data structures to version independent data structured defined in schemata.api
 from __future__ import annotations
 
 import datetime
-import time
-from collections import defaultdict
-from typing import Dict, List, Mapping, Optional, Sequence, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -41,17 +39,17 @@ def parse_frac_prefix(value: str) -> float:
 
 def parse_memory(value: str) -> float:
     if value.endswith("Ki"):
-        return 1024 ** 1 * float(value[:-2])
+        return 1024**1 * float(value[:-2])
     if value.endswith("Mi"):
-        return 1024 ** 2 * float(value[:-2])
+        return 1024**2 * float(value[:-2])
     if value.endswith("Gi"):
-        return 1024 ** 3 * float(value[:-2])
+        return 1024**3 * float(value[:-2])
     if value.endswith("Ti"):
-        return 1024 ** 4 * float(value[:-2])
+        return 1024**4 * float(value[:-2])
     if value.endswith("Pi"):
-        return 1024 ** 5 * float(value[:-2])
+        return 1024**5 * float(value[:-2])
     if value.endswith("Ei"):
-        return 1024 ** 6 * float(value[:-2])
+        return 1024**6 * float(value[:-2])
 
     if value.endswith("K") or value.endswith("k"):
         return 1e3 * float(value[:-1])
@@ -77,14 +75,19 @@ def parse_memory(value: str) -> float:
 # TODO: change to Timestamp type
 def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
     if isinstance(k8s_date_time, str):
-        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
+        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=datetime.timezone.utc
+        )
     elif isinstance(k8s_date_time, datetime.datetime):
         date_time = k8s_date_time
+        if date_time.tzinfo is None:
+            raise ValueError(f"Can not convert to timestamp: '{k8s_date_time}' is missing tzinfo")
     else:
         raise TypeError(
             f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
         )
-    return time.mktime(date_time.timetuple())
+
+    return date_time.timestamp()
 
 
 def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label]]:
@@ -93,8 +96,10 @@ def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
 
-def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
-    return api.MetaData(
+def parse_metadata(
+    metadata: client.V1ObjectMeta, model: Type[api.MetaData] = api.MetaData
+) -> api.MetaData:
+    return model(
         name=metadata.name,
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
@@ -102,18 +107,52 @@ def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
     )
 
 
-def pod_spec(pod: client.V1Pod) -> api.PodSpec:
-    info = {}
-    if pod.spec:
-        info.update(
-            {
-                "node": pod.spec.node_name,
-                "host_network": pod.spec.host_network,
-                "dns_policy": pod.spec.dns_policy,
-                "restart_policy": pod.spec.restart_policy,
-            }
+def container_resources(container: client.V1Container) -> api.ContainerResources:
+    parsed_limits = api.ResourcesRequirements()
+    parsed_requests = api.ResourcesRequirements()
+    if container.resources is not None:
+        if limits := container.resources.limits:
+            parsed_limits = api.ResourcesRequirements(
+                memory=parse_memory(limits["memory"]) if "memory" in limits else None,
+                cpu=parse_frac_prefix(limits["cpu"]) if "cpu" in limits else None,
+            )
+        if requests := container.resources.requests:
+            parsed_requests = api.ResourcesRequirements(
+                memory=parse_memory(requests["memory"]) if "memory" in requests else None,
+                cpu=parse_frac_prefix(requests["cpu"]) if "cpu" in requests else None,
+            )
+
+    return api.ContainerResources(
+        limits=parsed_limits,
+        requests=parsed_requests,
+    )
+
+
+def containers_spec(containers: Sequence[client.V1Container]) -> Sequence[api.ContainerSpec]:
+    return [
+        api.ContainerSpec(
+            name=container.name,
+            resources=container_resources(container),
+            image_pull_policy=container.image_pull_policy,
         )
-    return api.PodSpec(**info)
+        for container in containers
+    ]
+
+
+def pod_spec(pod: client.V1Pod) -> api.PodSpec:
+    if not pod.spec:
+        return api.PodSpec()
+
+    return api.PodSpec(
+        node=pod.spec.node_name,
+        host_network=pod.spec.host_network,
+        dns_policy=pod.spec.dns_policy,
+        restart_policy=pod.spec.restart_policy,
+        containers=containers_spec(pod.spec.containers),
+        init_containers=containers_spec(
+            pod.spec.init_containers if pod.spec.init_containers is not None else []
+        ),
+    )
 
 
 def pod_status(pod: client.V1Pod) -> api.PodStatus:
@@ -133,34 +172,12 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
     )
 
 
-def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
-    memory: Dict[str, float] = defaultdict(float)
-    cpu: Dict[str, float] = defaultdict(float)
-
-    for container in pod.spec.containers:
-        resources = container.resources
-        if not resources:
-            continue
-
-        if resources.limits:
-            memory["limit"] += parse_memory(resources.limits.get("memory", "inf"))
-            cpu["limit"] += parse_frac_prefix(resources.limits.get("cpu", "inf"))
-        else:
-            memory["limit"] += float("inf")
-            cpu["limit"] += float("inf")
-
-        if resources.requests:
-            cpu["requests"] += parse_frac_prefix(resources.requests.get("cpu", "0.0"))
-            memory["requests"] += parse_memory(resources.requests.get("memory", "0.0"))
-
-    return api.PodUsageResources(cpu=api.Resources(**cpu), memory=api.Resources(**memory))
-
-
-def pod_containers(pod: client.V1Pod) -> Dict[str, api.ContainerInfo]:
-    container_statuses: List[client.V1ContainerStatus] = (
-        [] if pod.status.container_statuses is None else pod.status.container_statuses
-    )
-    result: Dict[str, api.ContainerInfo] = {}
+def pod_containers(
+    container_statuses: Optional[Sequence[client.V1ContainerStatus]],
+) -> Dict[str, api.ContainerStatus]:
+    result: Dict[str, api.ContainerStatus] = {}
+    if container_statuses is None:
+        return {}
     for status in container_statuses:
         state: Union[
             api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
@@ -188,8 +205,9 @@ def pod_containers(pod: client.V1Pod) -> Dict[str, api.ContainerInfo]:
         else:
             raise AssertionError(f"Unknown container state {status.state}")
 
-        result[status.name] = api.ContainerInfo(
-            id=status.container_id,
+        result[status.name] = api.ContainerStatus(
+            container_id=status.container_id,
+            image_id=status.image_id,
             name=status.name,
             image=status.image,
             ready=status.ready,
@@ -233,13 +251,20 @@ def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
     )
 
 
-def node_conditions(node: client.V1Node) -> Optional[api.NodeConditions]:
-    if not node.status:
-        return None
-    conditions = node.status.conditions
+def node_conditions(status: client.V1Status) -> Optional[Sequence[api.NodeCondition]]:
+    conditions = status.conditions
     if not conditions:
         return None
-    return api.NodeConditions(**{c.type: bool(c.status) for c in conditions})
+    return [
+        api.NodeCondition(
+            status=c.status,
+            type_=c.type,
+            reason=c.reason,
+            detail=c.message,
+            last_transition_time=int(convert_to_timestamp(c.last_transition_time)),
+        )
+        for c in conditions
+    ]
 
 
 def node_info(node: client.V1Node) -> api.NodeInfo:
@@ -247,6 +272,8 @@ def node_info(node: client.V1Node) -> api.NodeInfo:
         architecture=node.status.node_info.architecture,
         kernel_version=node.status.node_info.kernel_version,
         os_image=node.status.node_info.os_image,
+        operating_system=node.status.node_info.operating_system,
+        container_runtime_version=node.status.node_info.container_runtime_version,
     )
 
 
@@ -284,31 +311,35 @@ def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
     return resources
 
 
-def deployment_replicas(status: client.V1DeploymentStatus) -> api.DeploymentReplicas:
-    def replica_count(count: Optional[int]) -> int:
-        if count is None:
-            return 0
-        return count
-
-    return api.DeploymentReplicas(
-        available=replica_count(status.available_replicas),
-        unavailable=replica_count(status.unavailable_replicas),
-        updated=replica_count(status.updated_replicas),
-        ready=replica_count(status.ready_replicas),
+def deployment_replicas(
+    status: client.V1DeploymentStatus, spec: client.V1DeploymentSpec
+) -> api.Replicas:
+    # A deployment always has at least 1 replica. It is not possible to deploy
+    # a deployment that has 0 replicas. On the other hand, it is possible to have
+    # 0 available/unavailable/updated/ready replicas. This is shown as 'null'
+    # (i.e. None) in the source data, but the interpretation is that the number
+    # of the replicas in this case is 0.
+    # Under certain conditions, the status.replicas can report a 'null' value, therefore
+    # the spec.replicas is taken as base value since this reflects the desired value
+    return api.Replicas(
+        replicas=spec.replicas,
+        available=status.available_replicas or 0,
+        unavailable=status.unavailable_replicas or 0,
+        updated=status.updated_replicas or 0,
+        ready=status.ready_replicas or 0,
     )
 
 
-def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.DeploymentCondition]:
-    conditions = []
+def deployment_conditions(
+    status: client.V1DeploymentStatus,
+) -> Mapping[str, api.DeploymentCondition]:
+    conditions = {}
     for condition in status.conditions:
-        conditions.append(
-            api.DeploymentCondition(
-                type_=condition.type,
-                status=condition.status,
-                last_transition_time=convert_to_timestamp(condition.last_transition_time),
-                reason=condition.reason,
-                message=condition.message,
-            )
+        conditions[condition.type.lower()] = api.DeploymentCondition(
+            status=condition.status,
+            last_transition_time=convert_to_timestamp(condition.last_transition_time),
+            reason=condition.reason,
+            message=condition.message,
         )
     return conditions
 
@@ -316,30 +347,70 @@ def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.Dep
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
-        metadata=parse_metadata(pod.metadata),
+        metadata=parse_metadata(pod.metadata, model=api.PodMetaData),
         status=pod_status(pod),
         spec=pod_spec(pod),
-        resources=pod_resources(pod),
-        containers=pod_containers(pod),
+        containers=pod_containers(pod.status.container_statuses),
+        init_containers=pod_containers(pod.status.init_container_statuses),
     )
 
 
+def node_addresses_from_client(
+    node_addresses: Optional[Sequence[client.V1NodeAdresses]],
+) -> api.NodeAddresses:
+    if not node_addresses:
+        return []
+    return [
+        api.NodeAddress(
+            address=address.address,
+            type_=address.type,
+        )
+        for address in node_addresses
+    ]
+
+
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
-    metadata = parse_metadata(node.metadata)
+    metadata = parse_metadata(node.metadata, model=api.NodeMetaData)
     return api.Node(
         metadata=metadata,
-        conditions=node_conditions(node),
         status=api.NodeStatus(
-            conditions=node_conditions(node),
+            conditions=node_conditions(node.status),
             node_info=node_info(node),
+            addresses=node_addresses_from_client(node.status.addresses),
         ),
         resources=parse_node_resources(node),
         control_plane=is_control_plane(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,
+            proxy_version=node.status.node_info.kube_proxy_version,
             health=kubelet_health,
         ),
     )
+
+
+def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
+    match_expressions = selector.match_expressions or []
+    return api.Selector(
+        match_labels=selector.match_labels or {},
+        match_expressions=[expression.to_dict() for expression in match_expressions],
+    )
+
+
+def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
+    if deployment_spec.strategy.type == "Recreate":
+        return api.DeploymentSpec(
+            strategy=api.Recreate(),
+            selector=parse_selector(deployment_spec.selector),
+        )
+    if deployment_spec.strategy.type == "RollingUpdate":
+        return api.DeploymentSpec(
+            strategy=api.RollingUpdate(
+                max_surge=deployment_spec.strategy.rolling_update.max_surge,
+                max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
+            ),
+            selector=parse_selector(deployment_spec.selector),
+        )
+    raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
 
 
 def deployment_from_client(
@@ -347,9 +418,64 @@ def deployment_from_client(
 ) -> api.Deployment:
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
+        spec=parse_deployment_spec(deployment.spec),
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
-            replicas=deployment_replicas(deployment.status),
+            replicas=deployment_replicas(deployment.status, deployment.spec),
         ),
+        pods=pod_uids,
+    )
+
+
+def parse_cron_job_spec(spec: client.V1CronJobSpec) -> api.CronJobSpec:
+    return api.CronJobSpec(
+        concurrency_policy=api.ConcurrencyPolicy(spec.concurrency_policy), schedule=spec.schedule
+    )
+
+
+def cron_job_from_client(
+    cron_job: client.V1CronJob,
+    pod_uids: Sequence[api.PodUID],
+) -> api.CronJob:
+    return api.CronJob(
+        uid=api.CronJobUID(cron_job.metadata.uid),
+        metadata=parse_metadata(cron_job.metadata),
+        spec=parse_cron_job_spec(cron_job.spec),
+        pod_uids=pod_uids,
+    )
+
+
+def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
+    if daemonset_spec.update_strategy.type == "OnDelete":
+        return api.DaemonSetSpec(
+            strategy=api.OnDelete(),
+            selector=parse_selector(daemonset_spec.selector),
+        )
+    if daemonset_spec.update_strategy.type == "RollingUpdate":
+        return api.DaemonSetSpec(
+            strategy=api.RollingUpdate(
+                max_surge=daemonset_spec.update_strategy.rolling_update.max_surge,
+                max_unavailable=daemonset_spec.update_strategy.rolling_update.max_unavailable,
+            ),
+            selector=parse_selector(daemonset_spec.selector),
+        )
+    raise ValueError(f"Unknown strategy type: {daemonset_spec.update_strategy.type}")
+
+
+def daemonset_from_client(
+    daemonset: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
+) -> api.DaemonSet:
+    return api.DaemonSet(
+        metadata=parse_metadata(daemonset.metadata),
+        spec=parse_daemonset_spec(daemonset.spec),
+        pods=pod_uids,
+    )
+
+
+def statefulset_from_client(
+    statefulset: client.V1StatefulSet, pod_uids=Sequence[api.PodUID]
+) -> api.StatefulSet:
+    return api.StatefulSet(
+        metadata=parse_metadata(statefulset.metadata),
         pods=pod_uids,
     )

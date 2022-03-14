@@ -14,17 +14,11 @@ from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import (
-    __version__,
-    edition_title,
-    get_age_trial,
-    is_expired_trial,
-    is_free_edition,
-)
+from cmk.utils.version import __version__, edition, get_age_trial, is_expired_trial, is_free_edition
 
-from cmk.gui.globals import user
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.urls import manual_reference_url
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -88,7 +82,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="beginners_guide",
                     title=_("Beginner's guide"),
-                    url=user.get_docs_base_url() + "/intro_welcome.html",
+                    url=manual_reference_url("intro_welcome"),
                     target="_blank",
                     sort_index=10,
                     icon="learning_beginner",
@@ -96,7 +90,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="user_manual",
                     title=_("User manual"),
-                    url=user.get_docs_base_url(),
+                    url=manual_reference_url(),
                     target="_blank",
                     sort_index=20,
                     icon="learning_guide",
@@ -127,7 +121,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="plugin_api_introduction",
                     title=_("Check plugin API introduction"),
-                    url=user.get_docs_base_url() + "/devel_check_plugins.html",
+                    url=manual_reference_url("devel_check_plugins"),
                     target="_blank",
                     sort_index=10,
                     icon={
@@ -149,7 +143,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="rest_api_introduction",
                     title=_("REST API introduction"),
-                    url=user.get_docs_base_url() + "/rest_api.html",
+                    url=manual_reference_url("rest_api"),
                     target="_blank",
                     sort_index=30,
                     icon={
@@ -187,16 +181,16 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
             icon="about_checkmk",
             items=[
                 TopicMenuItem(
-                    name="release_notes",
-                    title=_("Release notes"),
-                    url="version.py?major=1",
+                    name="info",
+                    title=_("Info"),
+                    url="info.py",
                     sort_index=10,
                     icon="tribe29",
                 ),
                 TopicMenuItem(
                     name="change_log",
                     title=_("Change log (Werks)"),
-                    url="version.py",
+                    url="change_log.py",
                     sort_index=20,
                     icon="tribe29",
                 ),
@@ -212,7 +206,7 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{edition_title()} {__version__}{free_edition_status()}",
+        info_line=lambda: f"{edition().title} {__version__}{free_edition_status()}",
     )
 )
 

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
 
@@ -28,13 +28,13 @@ resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-function set_osenv () {
+function set_osenv() {
     ostype=$(uname -s)
-    if [ "$ostype" = 'Linux' ] ; then
+    if [ "$ostype" = 'Linux' ]; then
         ocrcfgfile=/etc/oracle/ocr.loc
         olrcfgfile=/etc/oracle/olr.loc
-        GREP=$(which grep)
-    elif [ "$ostype" = 'SunOS' ] ; then
+        GREP="grep"
+    elif [ "$ostype" = 'SunOS' ]; then
         ocrcfgfile=/var/opt/oracle/ocr.loc
         olrcfgfile=/var/opt/oracle/olr.loc
         GREP=/usr/xpg4/bin/grep
@@ -44,19 +44,19 @@ function set_osenv () {
     fi
 }
 
-function set_has_env(){
+function set_has_env() {
     test -f ${ocrcfgfile} || exit 0
     local_has_type=$($GREP "^local_only=" "$ocrcfgfile" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
     local_has_type=${local_has_type:-"FALSE"}
 
-    if [ -f ${olrcfgfile} ] ; then
+    if [ -f ${olrcfgfile} ]; then
         has_ORACLE_HOME=$($GREP "^crs_home=" "$olrcfgfile" | cut -d"=" -f2)
     else
         # There is no olr.cfg in 10.2 and 11.1
         # we try to get the ORA_CRS_HOME from /etc/init.d/init.cssd
         local_has_type=FALSE
         INITCSSD=/etc/init.d/init.cssd
-        if [ ! -f ${INITCSSD} ] ; then
+        if [ ! -f ${INITCSSD} ]; then
             exit 0
         else
             has_ORACLE_HOME=$($GREP "^ORA_CRS_HOME=" ${INITCSSD} | cut -d"=" -f2-)
@@ -69,7 +69,7 @@ function set_has_env(){
 }
 
 function printhasdata() {
-    ps -ef | $GREP -v grep | $GREP cssd.bin > /dev/null || exit 0
+    ps -ef | $GREP -v grep | $GREP cssd.bin >/dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     $CRSCTL query has releaseversion
@@ -81,7 +81,7 @@ function printhasdata() {
 }
 
 function printcrsdata() {
-    ps -ef | $GREP -v grep | $GREP -e ohasd.bin -e crsd.bin > /dev/null || exit 0
+    ps -ef | $GREP -v grep | $GREP -e ohasd.bin -e crsd.bin >/dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     crs_version=$($CRSCTL query crs releaseversion)
@@ -90,17 +90,16 @@ function printcrsdata() {
     echo "<<<oracle_crs_voting>>>"
     $CRSCTL query css votedisk | $GREP "^ [0-9]"
 
-    ps -ef | $GREP -v grep | $GREP crsd.bin > /dev/null || exit 0
+    ps -ef | $GREP -v grep | $GREP crsd.bin >/dev/null || exit 0
     echo "<<<oracle_crs_res:sep(124)>>>"
     OLS_NODENAME=$($OLSNODES -l)
 
     echo "nodename|$OLS_NODENAME"
 
     crs_version_short=$(echo "$crs_version" | cut -d"[" -f2- | cut -d"." -f-2 | sed 's/\.//')
-    if [ "$crs_version_short" -ge 112 ] ; then
+    if [ "$crs_version_short" -ge 112 ]; then
         $CRSCTL stat res -v -n "$OLS_NODENAME" -init | $GREP -E "$resourcefilter" | sed "s/^/csslocal\|/"
-        for nodelist in $($OLSNODES)
-        do
+        for nodelist in $($OLSNODES); do
             $CRSCTL stat res -v -n "$nodelist" | $GREP -E "$resourcefilter" | sed "s/^/$nodelist\|/"
         done
     else
@@ -125,7 +124,7 @@ set_has_env
 echo "<<<oracle_crs_res>>>"
 echo "<<<oracle_crs_version>>>"
 echo "<<<oracle_crs_votedisk>>>"
-if [ $local_has_type = 'FALSE' ] ; then
+if [ $local_has_type = 'FALSE' ]; then
     printcrsdata
 else
     printhasdata

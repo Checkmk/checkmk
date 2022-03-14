@@ -1,0 +1,10 @@
+Title: Remove support for IE 11
+Level: 1
+Component: multisite
+Compatible: incomp
+Edition: cre
+Version: 2.1.0b1
+Date: 1643882750
+Class: feature
+
+

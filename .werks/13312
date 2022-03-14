@@ -6,7 +6,7 @@ Date: 1634723178
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Users which execute 'omd mv' or 'omd cp' expect Checkmk to not only rename the
 site, but also migrate the Checkmk configuration in a way that they can

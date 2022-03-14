@@ -25,7 +25,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import is_daily_build_of_master, major_version_parts, parse_check_mk_version
+from cmk.utils.version import base_version_parts, is_daily_build_of_master, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -92,51 +92,58 @@ def check_mk_local_automation_serialized(
     if command in ["restart", "reload"]:
         call_hook_pre_activate_changes()
 
+    # This debug output makes problems when doing bulk inventory, because
+    # it garbles the non-HTML response output
+    # if config.debug:
+    #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
+    auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
+    auto_logger.info("STDIN: %r" % stdin_data)
+
     try:
-        # This debug output makes problems when doing bulk inventory, because
-        # it garbles the non-HTML response output
-        # if config.debug:
-        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
+        completed_process = subprocess.run(
             cmd,
-            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            input=stdin_data,
+            check=False,
         )
     except Exception as e:
         raise local_automation_failure(command=command, cmdline=cmd, exc=e)
 
-    assert p.stdin is not None
-    assert p.stdout is not None
-    assert p.stderr is not None
+    auto_logger.info("FINISHED: %d" % completed_process.returncode)
+    auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
 
-    auto_logger.info("STDIN: %r" % stdin_data)
-    p.stdin.write(stdin_data)
-    p.stdin.close()
-
-    outdata = p.stdout.read()
-    exitcode = p.wait()
-    auto_logger.info("FINISHED: %d" % exitcode)
-    auto_logger.debug("OUTPUT: %r" % outdata)
-    errdata = p.stderr.read()
-    if errdata:
-        auto_logger.warning("'%s' returned '%s'" % (" ".join(cmd), errdata))
-    if exitcode != 0:
+    if completed_process.stderr:
+        auto_logger.warning(
+            "'%s' returned '%s'"
+            % (
+                " ".join(cmd),
+                completed_process.stderr,
+            )
+        )
+    if completed_process.returncode:
         auto_logger.error(
-            "Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode)
+            "Error running %r (exit code %d)"
+            % (
+                subprocess.list2cmdline(cmd),
+                completed_process.returncode,
+            )
         )
         raise local_automation_failure(
-            command=command, cmdline=cmd, code=exitcode, out=outdata, err=errdata
+            command=command,
+            cmdline=cmd,
+            code=completed_process.returncode,
+            out=completed_process.stdout,
+            err=completed_process.stderr,
         )
 
     # On successful "restart" command execute the activate changes hook
     if command in ["restart", "reload"]:
         call_hook_activate_changes()
 
-    return cmd, SerializedResult(outdata)
+    return cmd, SerializedResult(completed_process.stdout)
 
 
 def local_automation_failure(
@@ -344,7 +351,7 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
         timeout=timeout,
         headers={
             "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition_short(),
+            "x-checkmk-edition": cmk_version.edition().short,
         },
     )
 
@@ -377,7 +384,7 @@ def _verify_compatibility(response: requests.Response) -> None:
     Since 2.0.0p13 the remote site answers with x-checkmk-version, x-checkmk-edition headers.
     """
     central_version = cmk_version.__version__
-    central_edition_short = cmk_version.edition_short()
+    central_edition_short = cmk_version.edition().short
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
@@ -427,7 +434,7 @@ def do_site_login(site_id: SiteId, name: UserId, password: str) -> str:
         "_username": name,
         "_password": password,
         "_origtarget": "automation_login.py?_version=%s&_edition_short=%s"
-        % (cmk_version.__version__, cmk_version.edition_short()),
+        % (cmk_version.__version__, cmk_version.edition().short),
         "_plain_error": "1",
     }
     response = get_url(
@@ -743,8 +750,8 @@ def compatible_with_central_site(
     if is_daily_build_of_master(central_version) or is_daily_build_of_master(remote_version):
         return True
 
-    central_parts = major_version_parts(central_version)
-    remote_parts = major_version_parts(remote_version)
+    central_parts = base_version_parts(central_version)
+    remote_parts = base_version_parts(remote_version)
 
     # Same major version is allowed
     if central_parts == remote_parts:

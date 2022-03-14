@@ -272,11 +272,6 @@ def link(
     html.write_html(render_link(text, url, target=target, onclick=onclick))
 
 
-def simplelink(text: Union[str, HTML], url: str, target: str = "main") -> None:
-    link(text, url, target)
-    html.br()
-
-
 def bulletlink(text: str, url: str, target: str = "main", onclick: Optional[str] = None) -> None:
     html.open_li(class_="sidebar")
     link(text, url, target, onclick)
@@ -319,7 +314,7 @@ def footnotelinks(links: List[Tuple[str, str]]) -> None:
     end_footnote_links()
 
 
-def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
+def snapin_site_choice(ident: str, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
     sites = user.load_file("sidebar_sites", {})
     available_site_choices = filter_available_site_choices(choices)
     site = sites.get(ident, "")

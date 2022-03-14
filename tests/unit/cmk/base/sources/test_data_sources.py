@@ -19,7 +19,8 @@ from cmk.base.sources.tcp import TCPSource
 
 
 def make_scenario(hostname, tags):
-    ts = Scenario().add_host(hostname, tags=tags)
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
     ts.set_ruleset(
         "datasource_programs",
         [

@@ -10,9 +10,12 @@ import ast
 import json
 import os
 import tarfile
+from dataclasses import asdict
 from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
+
+from livestatus import SiteId
 
 import cmk.utils.render as render
 
@@ -38,9 +41,9 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.watolib.utils import DomainRequests
+from cmk.gui.plugins.watolib.utils import DomainRequest, DomainRequests
 from cmk.gui.sites import activation_sites
-from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
@@ -235,7 +238,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
-        cmk.gui.watolib.snapshots.extract_snapshot(tarfile.open(filename, "r"), elements)
+        with tarfile.open(filename, "r") as opened_file:
+            cmk.gui.watolib.snapshots.extract_snapshot(opened_file, elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
@@ -260,30 +264,26 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._activation_msg()
         self._activation_form()
 
-        html.h3(_("Activation status"))
         self._activation_status()
 
         if self.has_changes():
-            html.open_h3(class_="pending_changes_header")
-            html.write_text(_("Pending changes"))
-            html.div("", id_="row_info")
-            html.close_h3()
             self._change_table()
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")
-        html.show_message(self._get_initial_message())
+        if message := self._get_initial_message():
+            html.show_message(message)
         html.close_div()
 
-    def _get_initial_message(self) -> str:
-        changes = sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
-        if changes == 0:
-            if request.has_var("_finished"):
-                return _("Activation has finished.")
-            return _("Currently there are no changes to activate.")
-        if changes == 1:
-            return _("Currently there is one change to activate.")
-        return _("Currently there are %d changes to activate.") % changes
+    def _get_amount_changes(self) -> int:
+        return sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
+
+    def _get_initial_message(self) -> Optional[str]:
+        if self._get_amount_changes() != 0:
+            return None
+        if not request.has_var("_finished"):
+            return None
+        return _("Activation has finished.")
 
     def _activation_form(self):
         if not user.may("wato.activate"):
@@ -340,11 +340,13 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def _change_table(self):
         with table_element(
             "changes",
+            title=_("Pending changes (%s)") % self._get_amount_changes(),
             sortable=False,
             searchable=False,
             css="changes",
             limit=None,
             empty_text=_("Currently there are no changes to activate."),
+            foldable=Foldable.FOLDABLE_STATELESS,
         ) as table:
             for _change_id, change in reversed(self._changes):
                 css = []
@@ -379,7 +381,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _activation_status(self):
         with table_element(
-            "site-status", searchable=False, sortable=False, css="activation"
+            "site-status",
+            title=_("Activation status"),
+            searchable=False,
+            sortable=False,
+            css="activation",
+            foldable=Foldable.FOLDABLE_STATELESS,
         ) as table:
 
             for site_id, site in sort_sites(activation_sites()):
@@ -644,7 +651,7 @@ class ModeAjaxStartActivation(AjaxPage):
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
-            affected_sites = affected_sites_request.split(",")
+            affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
 
         comment: Optional[str] = api_request.get("comment", "").strip()
 
@@ -694,7 +701,7 @@ class ModeAjaxActivationState(AjaxPage):
 
 
 class ActivateChangesRequest(NamedTuple):
-    site_id: str
+    site_id: SiteId
     domains: DomainRequests
 
 
@@ -704,13 +711,17 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return "activate-changes"
 
     def get_request(self):
-        site_id = request.get_ascii_input_mandatory("site_id")
+        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
         activate_changes.verify_remote_site_config(site_id)
 
         try:
             serialized_domain_requests = ast.literal_eval(
                 request.get_ascii_input_mandatory("domains")
             )
+            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
+                serialized_domain_requests = [
+                    asdict(DomainRequest(x)) for x in serialized_domain_requests
+                ]
         except SyntaxError:
             raise watolib.MKAutomationException(
                 _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")

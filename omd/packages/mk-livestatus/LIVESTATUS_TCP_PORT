@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Alias: TCP port number for MK Livestatus
 # Menu: Distributed Monitoring
@@ -15,12 +15,9 @@ case "$1" in
     ;;
     set)
         sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
-        # ed(1) does not change the inode, we need that for the hard links.
-        printf '%s\n' ',s|^ListenStream=.*|ListenStream='"$2"'|1' w q |\
-          ed -s "$OMD_ROOT/etc/mk-livestatus/livestatus.socket"
     ;;
     depends)
-        [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]
+        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
     ;;
 esac
 

@@ -6,7 +6,7 @@ Date: 1639854933
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk only affects users who have implemented their own plugins for active checks or special agents (the ones commonly named <tt>checks/check_*</tt> and <tt>checks/agent_*</tt>).
 

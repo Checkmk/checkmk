@@ -36,7 +36,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Checkbox(
-            title=_("Visibility of Hosts/Services"),
+            title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
             help=_(
                 "When this option is checked, then the status GUI will only "
@@ -60,8 +60,8 @@ class DisableNotificationsUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Transform(
-            Dictionary(
-                title=_("Disable Notifications"),
+            valuespec=Dictionary(
+                title=_("Disable notifications"),
                 help=_(
                     "When this option is active you will not get <b>any</b> "
                     "alerts or other notifications via email, SMS or similar. "
@@ -73,7 +73,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     (
                         "disable",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Temporarily disable <b>all</b> notifications!"),
                             totext="",
                         ),
@@ -120,12 +120,12 @@ class StartURLUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Transform(
-            Alternative(
+            valuespec=Alternative(
                 title=_("Start URL to display in main frame"),
                 orientation="horizontal",
                 elements=[
                     FixedValue(
-                        None,
+                        value=None,
                         title=_("Use the default start URL"),
                         totext="",
                     ),
@@ -165,7 +165,7 @@ class UIThemeUserAttribute(UserAttribute):
             orientation="horizontal",
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Use the default theme"),
                     totext="",
                 ),
@@ -192,8 +192,8 @@ class UISidebarPosition(UserAttribute):
     def valuespec(self):
         return DropdownChoice(
             title=_("Sidebar position"),
+            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
             choices=[(None, _("Right")), ("left", _("Left"))],
-            no_preselect_value=False,
         )
 
     def domain(self):
@@ -217,8 +217,8 @@ class UIIconTitle(UserAttribute):
                 "bar should show a title or not. This gives you the possibility "
                 "to save some space in the UI."
             ),
+            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["hide"]]?
             choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
-            no_preselect_value=False,
         )
 
 
@@ -240,8 +240,8 @@ class UIIconPlacement(UserAttribute):
                 "for lean design. Or have a colored icon for every entry so that "
                 "over time you can zoom in more quickly to a specific entry."
             ),
+            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["entry"]]?
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
-            no_preselect_value=False,
         )
 
     def domain(self):
@@ -271,7 +271,7 @@ class UIBasicAdvancedToggle(UserAttribute):
             ),
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Use the default show mode"),
                     totext="",
                 ),

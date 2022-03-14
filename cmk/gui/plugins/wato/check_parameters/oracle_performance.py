@@ -60,7 +60,7 @@ def _valuespec_discovery_oracle_performance():
             (
                 "dbtime",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create separate Service for DB-Time"),
                     totext=_("Extracts DB-Time performance data into a separate service"),
                 ),
@@ -68,7 +68,7 @@ def _valuespec_discovery_oracle_performance():
             (
                 "memory",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create separate Service for memory information"),
                     totext=_(
                         "Extracts SGA performance data into a separate service and additionally displays PGA performance data"
@@ -78,7 +78,7 @@ def _valuespec_discovery_oracle_performance():
             (
                 "iostat_bytes",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create additional Service for IO Stats Bytes"),
                     totext=_(
                         "Creates a new service that displays information about disk I/O of database files. "
@@ -89,7 +89,7 @@ def _valuespec_discovery_oracle_performance():
             (
                 "iostat_ios",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create additional Service for IO Stats Requests"),
                     totext=_(
                         "Creates a new service that displays information about disk I/O of database files. "
@@ -100,7 +100,7 @@ def _valuespec_discovery_oracle_performance():
             (
                 "waitclasses",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create additional Service for System Wait"),
                     totext=_(
                         "Display the time an oracle instance spents inside of the different wait classes."
@@ -186,7 +186,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "dbtime",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=[
@@ -201,7 +201,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "memory",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=memory_choices,
@@ -212,7 +212,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "iostat_bytes",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=iostat_bytes_choices,
@@ -223,7 +223,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "iostat_ios",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=iostat_ios_choices,
@@ -234,7 +234,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "waitclasses",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=waitclasses_choices,

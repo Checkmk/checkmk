@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
-import collections.abc
+import ast
 import json
-import re
 import typing
 from datetime import datetime
-from typing import Any, Optional, Protocol, Tuple
+from typing import Any, Optional
 
 import pytz
 from cryptography.x509 import load_pem_x509_csr
@@ -34,438 +33,62 @@ from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import GroupName, GroupType, load_group_information
-from cmk.gui.plugins.webapi.utils import validate_host_attributes
 from cmk.gui.sites import allsites
+from cmk.gui.watolib.host_attributes import validate_host_attributes
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+
+from cmk.fields import base, DateTime
 
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-class String(_fields.String):
-    """"A string field which validates OpenAPI keys.
+class PythonString(base.String):
+    """Represent a Python value expression.
 
-    Examples:
+    Any native Python datastructures like tuple, dict, set, etc. can be used.
 
-        It supports Enums:
+        Examples:
 
-            >>> String(enum=["World"]).deserialize("Hello")
+            >>> expr = PythonString()
+            >>> expr.deserialize("{}")
+            {}
+
+            >>> expr.deserialize("{'a': (5.5, None)}")
+            {'a': (5.5, None)}
+
+            >>> expr.deserialize("...")  # doctest: +ELLIPSIS
+            Ellipsis
+
+        Borked syntax leads to an ValidationError
+
+            >>> expr.deserialize("{'a': (5.5,")  # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
-            marshmallow.exceptions.ValidationError: 'Hello' is not one of the enum values: ['World']
+            marshmallow.exceptions.ValidationError: ...
 
-        It supports patterns:
-
-            >>> String(pattern="World|Bob").deserialize("Bob")
-            'Bob'
-
-            >>> String(pattern="World|Bob").deserialize("orl")
+            >>> expr.deserialize("globals")  # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
-            marshmallow.exceptions.ValidationError: 'orl' does not match pattern 'World|Bob'.
+            marshmallow.exceptions.ValidationError: ...
 
-            >>> String(pattern="World|Bob").deserialize("World!")
+            >>> expr.deserialize('{"foo": "bar"}["foo"]')  # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
-            marshmallow.exceptions.ValidationError: 'World!' does not match pattern 'World|Bob'.
-
-        It's safe to submit any UTF-8 character, be it encoded or not.
-
-            >>> String().deserialize("Ümläut")
-            'Ümläut'
-
-            >>> String().deserialize("Ümläut".encode('utf-8'))
-            'Ümläut'
-
-        minLength and maxLength:
-
-            >>> length = String(minLength=2, maxLength=3)
-            >>> length.deserialize('A')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: string 'A' is too short. \
-The minimum length is 2.
-
-            >>> length.deserialize('AB')
-            'AB'
-            >>> length.deserialize('ABC')
-            'ABC'
-
-            >>> length.deserialize('ABCD')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: string 'ABCD' is too long. \
-The maximum length is 3.
-
-        minimum and maximum are also supported (though not very useful for Strings):
-
-            >>> minmax = String(minimum="F", maximum="G")
-            >>> minmax.deserialize('E')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'E' is smaller than the minimum (F).
-
-            >>> minmax.deserialize('F')
-            'F'
-            >>> minmax.deserialize('G')
-            'G'
-
-            >>> minmax.deserialize('H')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'H' is bigger than the maximum (G).
-
-    """
-
-    default_error_messages = {
-        "enum": "{value!r} is not one of the enum values: {enum!r}",
-        "pattern": "{value!r} does not match pattern {pattern!r}.",
-        "maxLength": "string {value!r} is too long. The maximum length is {maxLength}.",
-        "minLength": "string {value!r} is too short. The minimum length is {minLength}.",
-        "maximum": "{value!r} is bigger than the maximum ({maximum}).",
-        "minimum": "{value!r} is smaller than the minimum ({minimum}).",
-    }
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data)
-        enum = self.metadata.get("enum")
-        if enum and value not in enum:
-            raise self.make_error("enum", value=value, enum=enum)
-
-        pattern = self.metadata.get("pattern")
-        if pattern is not None and not re.match("^(:?" + pattern + ")$", value):
-            raise self.make_error("pattern", value=value, pattern=pattern)
-
-        max_length = self.metadata.get("maxLength")
-        if max_length is not None and len(value) > max_length:
-            raise self.make_error("maxLength", value=value, maxLength=max_length)
-
-        min_length = self.metadata.get("minLength")
-        if min_length is not None and len(value) < min_length:
-            raise self.make_error("minLength", value=value, minLength=min_length)
-
-        maximum = self.metadata.get("maximum")
-        if maximum is not None and value > maximum:
-            raise self.make_error("maximum", value=value, maximum=maximum)
-
-        minimum = self.metadata.get("minimum")
-        if minimum is not None and value < minimum:
-            raise self.make_error("minimum", value=value, minimum=minimum)
-
-        return value
-
-
-class Integer(_fields.Integer):
-    """An integer field which validates OpenAPI keys.
-
-    Examples:
-
-        Minimum:
-
-            >>> Integer(minimum=3).deserialize(3)
-            3
-
-            >>> Integer(minimum=3).deserialize(2)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 2 is smaller than the minimum (3).
-
-        Maximum:
-
-            >>> Integer(maximum=3).deserialize(3)
-            3
-
-            >>> Integer(maximum=3).deserialize(4)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 4 is bigger than the maximum (3).
-
-        Exclusive Minimum:
-
-            >>> Integer(exclusiveMinimum=3).deserialize(3)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 3 is smaller or equal than the minimum (3).
-
-        Exclusive Maximum:
-
-            >>> Integer(exclusiveMaximum=3).deserialize(3)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 3 is bigger or equal than the maximum (3).
-
-        Multiple Of:
-
-            >>> Integer(multipleOf=2).deserialize(4)
-            4
-
-            >>> Integer(multipleOf=2).deserialize(5)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 5 is not a multiple of 2.
-
-    """
-
-    default_error_messages = {
-        "enum": "{value!r} is not one of the enum values: {enum!r}",
-        "maximum": "{value!r} is bigger than the maximum ({maximum}).",
-        "minimum": "{value!r} is smaller than the minimum ({minimum}).",
-        "exclusiveMaximum": "{value!r} is bigger or equal than the maximum ({exclusiveMaximum}).",
-        "exclusiveMinimum": "{value!r} is smaller or equal than the minimum ({exclusiveMinimum}).",
-        "multipleOf": "{value!r} is not a multiple of {multipleOf!r}.",
-    }
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data)
-
-        enum = self.metadata.get("enum")
-        if enum and value not in enum:
-            raise self.make_error("enum", value=value, enum=enum)
-
-        maximum = self.metadata.get("maximum")
-        if maximum is not None and value > maximum:
-            raise self.make_error("maximum", value=value, maximum=maximum)
-
-        minimum = self.metadata.get("minimum")
-        if minimum is not None and value < minimum:
-            raise self.make_error("minimum", value=value, minimum=minimum)
-
-        exclusive_maximum = self.metadata.get("exclusiveMaximum")
-        if exclusive_maximum is not None and value >= exclusive_maximum:
-            raise self.make_error(
-                "exclusiveMaximum", value=value, exclusiveMaximum=exclusive_maximum
-            )
-
-        exclusive_minimum = self.metadata.get("exclusiveMinimum")
-        if exclusive_minimum is not None and value <= exclusive_minimum:
-            raise self.make_error(
-                "exclusiveMinimum", value=value, exclusiveMinimum=exclusive_minimum
-            )
-
-        multiple_of = self.metadata.get("multipleOf")
-        if multiple_of is not None and value % multiple_of != 0:
-            raise self.make_error("multipleOf", value=value, multipleOf=multiple_of)
-
-        return value
-
-
-def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
-    """Freeze all the things, so we can put them in a set.
-
-    Examples:
-
-        Note the different ordering of the keys. Even if Python3's dictionary order is based on
-        insert time, this still works.
-
-        >>> _freeze({'c': 'd', 'a': ['b']}) == _freeze({'a': ['b'], 'c': 'd'})
-        True
-
-        >>> _freeze({'c': 'd', 'a': ['b']}, partial=('a',)) == _freeze({'a': ['b'], 'c': 'd'})
-        False
-
-    Args:
-        obj:
-
-    Returns:
-
-    """
-    if isinstance(obj, collections.abc.Mapping):
-        return frozenset(
-            (_freeze(key), _freeze(value))
-            for key, value in obj.items()
-            if not partial or key in partial
-        )
-
-    if isinstance(obj, list):
-        return tuple(_freeze(entry) for entry in obj)
-
-    return obj
-
-
-class HasMakeError(Protocol):
-    def make_error(self, key: str, **kwargs: Any) -> ValidationError:
-        ...
-
-
-class UniqueFields:
-    """Mixin for collection fields to ensure uniqueness of containing elements
-
-    Currently supported Fields are `List` and `Nested(..., many=True, ...)`
-
-    """
-
-    default_error_messages = {
-        "duplicate": "Duplicate entry found at entry #{idx}: {entry!r}",
-        "duplicate_vary": (
-            "Duplicate entry found at entry #{idx}: {entry!r} " "(optional fields {optional!r})"
-        ),
-    }
-
-    def _verify_unique_schema_entries(self: HasMakeError, value, fields):
-        required_fields = tuple(name for name, field in fields.items() if field.required)
-        seen = set()
-        for idx, entry in enumerate(value, start=1):
-            # If some fields are required, we only freeze the required fields. This has the effect
-            # that duplications of required fields are detected, essentially like primary-keys.
-            # If this behaviour is somehow not desired in some circumstance (not known at the time
-            # of implementation) then this needs to be refactored to support changing this
-            # behaviour. Right now I don't see why we would need this though.
-            entry_hash = hash(_freeze(entry, partial=(required_fields or None)))
-            if entry_hash in seen:
-                has_optional_fields = len(entry) > len(required_fields)
-                if required_fields and has_optional_fields:
-                    optional_values = {}
-                    required_values = {}
-                    for key, _value in sorted(entry.items()):
-                        if key in required_fields:
-                            required_values[key] = _value
-                        else:
-                            optional_values[key] = _value
-
-                    raise self.make_error(
-                        "duplicate_vary", idx=idx, optional=optional_values, entry=required_values
-                    )
-                raise self.make_error("duplicate", idx=idx, entry=dict(sorted(entry.items())))
-
-            seen.add(entry_hash)
-
-    def _verify_unique_scalar_entries(self: HasMakeError, value):
-        # FIXME: Pretty sure that List(List(List(...))) will break this.
-        #        I have yet to see this use-case though.
-        seen = set()
-        for idx, entry in enumerate(value, start=1):
-            if entry in seen:
-                raise self.make_error("duplicate", idx=idx, entry=entry)
-
-            seen.add(entry)
-
-
-class List(_fields.List, UniqueFields):
-    """A list field, composed with another `Field` class or instance.
-
-    Honors the OpenAPI key `uniqueItems`.
-
-    Examples:
-
-        With scalar values:
-
-            >>> from marshmallow import Schema
-            >>> class Foo(Schema):
-            ...      id = String()
-            ...      lists = List(String(), uniqueItems=True)
-
-            >>> import pytest
-            >>> from marshmallow import ValidationError
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Foo().load({'lists': ['2', '2']})
-            >>> exc.value.messages
-            {'lists': ["Duplicate entry found at entry #2: '2'"]}
-
-        With nested schemas:
-
-            >>> class Bar(Schema):
-            ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
-
-        Some more examples:
-
-            >>> class Service(Schema):
-            ...      host = String(required=True)
-            ...      description = String(required=True)
-            ...      recur = String()
-
-            >>> class Bulk(Schema):
-            ...      entries = List(Nested(Service), uniqueItems=True)
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bulk().load({"entries": [
-            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...         {'host': 'host', 'description': 'CPU load'}
-            ...     ]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: \
-{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
+            marshmallow.exceptions.ValidationError: ...
 
     """
 
     def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data)
-        if self.metadata.get("uniqueItems"):
-            if isinstance(self.inner, Nested):
-                self._verify_unique_schema_entries(value, self.inner.schema.fields)
-            else:
-                self._verify_unique_scalar_entries(value)
-
-        return value
-
-
-class Nested(_fields.Nested, UniqueFields):
-    """Allows you to nest a marshmallow Schema inside a field.
-
-    Honors the OpenAPI key `uniqueItems`.
-
-    Examples:
-
-        >>> from marshmallow import Schema
-        >>> class Service(Schema):
-        ...      host = String(required=True)
-        ...      description = String(required=True)
-        ...      recur = String()
-
-        Setting the `many` param will turn this into a list:
-
-            >>> import pytest
-            >>> from marshmallow import ValidationError
-
-            >>> class Bulk(Schema):
-            ...      entries = Nested(Service,
-            ...                       many=True, uniqueItems=True,
-            ...                       required=False, missing=lambda: [])
-
-            >>> entries = [
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...     {'host': 'host', 'description': 'CPU load'}
-            ... ]
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bulk().load({'entries': entries})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: \
-{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
-
-            >>> schema = Bulk()
-            >>> assert schema.fields['entries'].missing is not _fields.missing_
-            >>> schema.load({})
-            {'entries': []}
-
-    """
-
-    # NOTE:
-    # Sometimes, when using `missing` fields, a broken OpenAPI spec may be the result.
-    # In this situation, it should be sufficient to replace the `missing` parameter with
-    # a `lambda` which returns the same object, as callables are ignored by apispec.
-
-    def _deserialize(self, value, attr, data, partial=None, **kwargs):
-        self._validate_missing(value)
-        if value is _fields.missing_:
-            _miss = self.missing
-            value = _miss() if callable(_miss) else _miss
-        value = super()._deserialize(value, attr, data)
-        if self.many and self.metadata.get("uniqueItems"):
-            self._verify_unique_schema_entries(value, self.schema.fields)
-
-        return value
+        if not isinstance(value, str):
+            raise ValidationError("Unsupported type. Field must be string.")
+        try:
+            return ast.literal_eval(value)
+        except SyntaxError as exc:
+            msg = str(exc).replace(" (<unknown>, line 1)", "")
+            raise ValidationError(f"Syntax Error: {msg} in {value!r}") from exc
+        except ValueError as exc:
+            raise ValidationError(f"Not a Python data structure: {value!r}") from exc
 
 
 # NOTE
@@ -473,7 +96,7 @@ class Nested(_fields.Nested, UniqueFields):
 FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+)|[0-9a-fA-F]{32})"
 
 
-class FolderField(String):
+class FolderField(base.String):
     """This field represents a WATO Folder.
 
     It will return a Folder instance, ready to use.
@@ -562,6 +185,15 @@ class FolderField(String):
             if value:
                 raise self.make_error("not_found", folder_id=value)
 
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        if isinstance(value, str):
+            return value
+
+        if isinstance(value, watolib.CREFolder):
+            return "/" + value.path()
+
+        raise ValueError(f"Unknown type: {value!r}")
+
 
 class BinaryExprSchema(BaseSchema):
     """
@@ -572,11 +204,11 @@ class BinaryExprSchema(BaseSchema):
 
     """
 
-    op = String(description="The operator.")
-    left = String(
+    op = base.String(description="The operator.")
+    left = base.String(
         description="The LiveStatus column name.", pattern=r"([a-z]+\.)?[_a-z]+", example="name"
     )
-    right = String(
+    right = base.String(
         description="The value to compare the column to."
     )  # should be AnyOf(all openapi types)
 
@@ -594,8 +226,8 @@ class NotExprSchema(BaseSchema):
 
     """
 
-    op = String(description="The operator. In this case `not`.")
-    expr = Nested(
+    op = base.String(description="The operator. In this case `not`.")
+    expr = base.Nested(
         lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
         description="The query expression to negate.",
     )
@@ -604,10 +236,10 @@ class NotExprSchema(BaseSchema):
 class LogicalExprSchema(BaseSchema):
     """Expression combining multiple other query expressions."""
 
-    op = String(description="The operator.")
+    op = base.String(description="The operator.")
     # many=True does not work here for some reason.
-    expr = List(
-        Nested(
+    expr = base.List(
+        base.Nested(
             lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
             description="A list of query expressions to combine.",
         )
@@ -695,13 +327,13 @@ class ExprSchema(OneOfSchema):
         return super().load(data, many=many, partial=partial, unknown=unknown, **kwargs)
 
 
-class _ExprNested(Nested):
+class _ExprNested(base.Nested):
     def _load(self, value, data, partial=None):
         _data = super()._load(value, data, partial=partial)
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(table: typing.Type[Table], required: bool = False, example=None) -> Nested:
+def query_field(table: typing.Type[Table], required: bool = False, example=None) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
     Args:
@@ -763,13 +395,13 @@ def column_field(
         table=table,
         required=required,
         mandatory=column_names,
-        missing=[getattr(table, col) for col in column_names],
+        load_default=[getattr(table, col) for col in column_names],
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
     )
 
 
-class _ListOfColumns(List):
+class _ListOfColumns(base.List):
     """Manages a list of Livestatus columns and returns Column instances
 
     Examples:
@@ -805,10 +437,17 @@ class _ListOfColumns(List):
         "unknown_column": "Unknown default column: {table_name}.{column_name}",
     }
 
-    def __init__(self, cls_or_instance: typing.Union[_fields.Field, type], **kwargs):
+    def __init__(
+        self,
+        cls_or_instance: typing.Union[_fields.Field, type],
+        table: typing.Type[Table],
+        mandatory: Optional[typing.List[str]] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(cls_or_instance, **kwargs)
-        table = self.metadata["table"]
-        for column in self.metadata.get("mandatory", []):
+        self.table = table
+        self.mandatory = mandatory if mandatory is not None else []
+        for column in self.mandatory:
             if column not in table.__columns__():
                 raise ValueError(
                     f"Column {column!r} in parameter 'mandatory' is not a column "
@@ -817,18 +456,17 @@ class _ListOfColumns(List):
 
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
-        table = self.metadata["table"]
-        for column in reversed(self.metadata.get("mandatory", [])):
+        for column in reversed(self.mandatory):
             if isinstance(column, Column):
                 column_name = column.name
             else:
                 column_name = column
             if column_name not in value:
                 value.insert(0, column_name)
-        return [getattr(table, col) for col in value]
+        return [getattr(self.table, col) for col in value]
 
 
-class _LiveStatusColumn(String):
+class _LiveStatusColumn(base.String):
     """Represents a LiveStatus column.
 
     Examples:
@@ -861,7 +499,7 @@ class _LiveStatusColumn(String):
 HOST_NAME_REGEXP = "[-0-9a-zA-Z_.]+"
 
 
-class HostField(String):
+class HostField(base.String):
     """A field representing a hostname."""
 
     default_error_messages = {
@@ -949,7 +587,9 @@ def host_is_monitored(host_name: str) -> bool:
 
 
 class CustomHostAttributes(ValueTypedDictSchema):
-    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+    value_type = ValueTypedDictSchema.field(
+        base.String(description="Each tag is a mapping of string to string")
+    )
 
     @post_load
     def _valid(self, data, **kwargs):
@@ -960,7 +600,9 @@ class CustomHostAttributes(ValueTypedDictSchema):
 
 
 class CustomFolderAttributes(ValueTypedDictSchema):
-    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+    value_type = ValueTypedDictSchema.field(
+        base.String(description="Each tag is a mapping of string to string")
+    )
 
     @post_load
     def _valid(self, data, **kwargs):
@@ -976,7 +618,7 @@ def attributes_field(
     description: Optional[str] = None,
     example: Optional[Any] = None,
     required: bool = False,
-    missing: Any = utils.missing,
+    load_default: Any = utils.missing,
     many: bool = False,
     names_only: bool = False,
 ) -> _fields.Field:
@@ -998,7 +640,7 @@ def attributes_field(
         required:
             Whether the field must be sent by the client or is option.
 
-        missing:
+        load_default:
         many:
 
         names_only:
@@ -1023,11 +665,11 @@ def attributes_field(
                 attr_openapi_schema(object_type, object_context),
                 custom_schema[object_type],
             ],
-            context={"object_context": object_context},
+            metadata={"context": {"object_context": object_context}},
             description=description,
             example=example,
             many=many,
-            missing=dict if missing is utils.missing else utils.missing,
+            load_default=dict if load_default is utils.missing else utils.missing,
             required=required,
         )
 
@@ -1037,16 +679,16 @@ def attributes_field(
         if value not in attrs:
             raise ValidationError(f"Unknown attribute: {value!r}")
 
-    return List(
-        String(validate=validate),
+    return base.List(
+        base.String(validate=validate),
         description=description,
         example=example,
-        missing=missing,
+        load_default=load_default,
         required=required,
     )
 
 
-class SiteField(_fields.String):
+class SiteField(base.String):
     """A field representing a site name."""
 
     default_error_messages = {"unknown_site": "Unknown site {site!r}"}
@@ -1062,7 +704,7 @@ def customer_field(**kw):
     return None
 
 
-class _CustomerField(_fields.String):
+class _CustomerField(base.String):
     """A field representing a customer"""
 
     default_error_messages = {
@@ -1116,7 +758,7 @@ def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
     return name in specific_existing_groups
 
 
-class GroupField(String):
+class GroupField(base.String):
     """A field representing a group."""
 
     default_error_messages = {
@@ -1170,7 +812,7 @@ class GroupField(String):
                 raise self.make_error("should_not_be_monitored", host_name=value)
 
 
-class PasswordIdent(String):
+class PasswordIdent(base.String):
     """A field representing a password identifier"""
 
     default_error_messages = {
@@ -1205,7 +847,7 @@ class PasswordIdent(String):
             raise self.make_error("should_not_exist", name=value)
 
 
-class PasswordOwner(String):
+class PasswordOwner(base.String):
     """A field representing a password owner group"""
 
     default_error_messages = {
@@ -1241,7 +883,7 @@ class PasswordOwner(String):
             raise self.make_error("invalid", name=value)
 
 
-class PasswordShare(String):
+class PasswordShare(base.String):
     """A field representing a password share group"""
 
     default_error_messages = {
@@ -1278,7 +920,7 @@ def to_timestamp(value: datetime) -> float:
     return float(datetime.timestamp(value))
 
 
-class Timestamp(_fields.DateTime):
+class Timestamp(DateTime):
     """A timestamp field for Checkmk timestamp
 
     Examples:
@@ -1328,7 +970,7 @@ class Timestamp(_fields.DateTime):
         return datetime.timestamp(val)
 
 
-class X509ReqPEMField(_fields.String):
+class X509ReqPEMField(base.String):
     default_error_messages = {
         "malformed": "Malformed CSR",
         "invalid": "Invalid CSR (signature and public key do not match)",
@@ -1358,21 +1000,19 @@ __all__ = [
     "attributes_field",
     "column_field",
     "customer_field",
+    "DateTime",
     "ExprSchema",
     "FolderField",
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",
-    "Integer",
-    "List",
     "MultiNested",
-    "Nested",
     "PasswordIdent",
     "PasswordOwner",
     "PasswordShare",
+    "PythonString",
     "query_field",
     "SiteField",
-    "String",
     "Timestamp",
     "X509ReqPEMField",
 ]

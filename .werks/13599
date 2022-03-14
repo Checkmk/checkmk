@@ -1,0 +1,23 @@
+Title: Windows event log: Add filtering of sequential duplicate messages
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1642527726
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Only identical consecutive messages will be filtered. 
+As soon as a different message comes in between, the filter will be reset.
+
+Example:
+Without filtering
+W Dec 14 14:32:56 0.10016 SOURCE Message_Itself 
+W Dec 14 14:33:57 0.10016 SOURCE Message_Itself
+W Dec 14 14:34:58 0.10016 SOURCE Message_Itself
+W Dec 14 14:35:59 0.10016 SOURCE Message_Again
+With filtering
+W Dec 14 14:32:56 0.10016 SOURCE Message_Itself 
+[the above message was repeated 2 times]
+W Dec 14 14:35:59 0.10016 SOURCE Message_Again

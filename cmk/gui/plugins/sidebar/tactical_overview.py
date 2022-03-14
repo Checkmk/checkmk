@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Collection, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 import livestatus
 
@@ -82,7 +82,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             (
                 "rows",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "title",
@@ -498,7 +498,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _create_status_box(
         self,
-        site_ids: List[str],
+        site_ids: Collection[livestatus.SiteId],
         css_class: str,
         site_status: str,
     ):

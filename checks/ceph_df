@@ -291,11 +291,11 @@ def parse_ceph_df(info) -> FSBlocks:
         value_str = value_str.rstrip("iB")
 
         if value_str.endswith("E"):
-            return float(value_str[:-1]) * 1024 ** 4
+            return float(value_str[:-1]) * 1024**4
         elif value_str.endswith("P"):
-            return float(value_str[:-1]) * 1024 ** 3
+            return float(value_str[:-1]) * 1024**3
         elif value_str.endswith("T"):
-            return float(value_str[:-1]) * 1024 ** 2
+            return float(value_str[:-1]) * 1024**2
         elif value_str.endswith("G"):
             return float(value_str[:-1]) * 1024
         elif value_str.endswith("M"):
@@ -304,7 +304,7 @@ def parse_ceph_df(info) -> FSBlocks:
             return float(value_str[:-1]) / 1024
         elif value_str == "N/A":
             return 0.0
-        return float(value_str) / (1024 ** 2)
+        return float(value_str) / (1024**2)
 
     mps = []
     for mp, data in parsed.items():

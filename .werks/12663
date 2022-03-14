@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The <tt>Host statistics</tt> and <tt>Service statistics</tt> dashlets had an increasing number of AJAX requests the
 longer the dashboard stayed open. Over time, this flooded the Apache Web Server, increasing the CPU load.

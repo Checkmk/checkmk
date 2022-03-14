@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based.oracle_dataguard_stats import (
     parse_oracle_dataguard_stats,
 )
 
+from .utils_inventory import sort_inventory_result
+
 _AGENT_OUTPUT = [
     [
         "TESTDB",
@@ -126,7 +128,6 @@ def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected
     ],
 )
 def test_inventory_oracle_dataguard_stats(string_table, expected_result):
-    assert (
-        list(inventory_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table)))
-        == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table))
+    ) == sort_inventory_result(expected_result)

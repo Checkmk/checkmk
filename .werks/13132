@@ -6,7 +6,7 @@ Date: 1639564463
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It's now possible to bake agents with agent rule
 "Count, size and age of files - mk_filestat (Linux)" while selecting

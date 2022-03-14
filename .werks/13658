@@ -1,0 +1,17 @@
+Title: Fix validation of ID while creating or cloning visuals and pagetypes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1642778948
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you cloned an existing visual, e.g. reports or bookmarks, it was
+possible to save the new visual with an already existing ID, overwriting the
+already existing visual.
+
+Pagetypes like topics could be created with an existing ID, while cloning was
+not possible with an existing ID.

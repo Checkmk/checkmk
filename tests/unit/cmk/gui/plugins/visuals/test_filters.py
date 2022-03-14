@@ -143,7 +143,7 @@ filter_tests = [
     FilterTest(
         ident="check_command",
         request_vars=[("check_command", "blabla")],
-        expected_filters="Filter: service_check_command ~ ^blabla(!.*)?$\n",
+        expected_filters="Filter: service_check_command ~ ^blabla(!.*)?\n",
     ),
     # Testing base class FilterText
     FilterTest(
@@ -184,7 +184,7 @@ filter_tests = [
     ),
     FilterTest(
         ident="event_count",
-        request_vars=[("event_count_from", "1"), ("event_count_to", "123")],
+        request_vars=[("event_count_from", "1"), ("event_count_until", "123")],
         expected_filters=("Filter: event_count >= 1\n" "Filter: event_count <= 123\n"),
     ),
     # Testing base class EventFilterDropdown
@@ -244,7 +244,7 @@ filter_tests = [
         request_vars=[("host", "blubber"), ("neg_host", "on")],
         expected_filters="Filter: host_name != blubber\n",
     ),
-    # Testing base class FilterIPAddress
+    # Testing base class IPAddressFilter
     FilterTest(
         ident="host_address",
         request_vars=[("host_address", "abc"), ("host_address_prefix", "yes")],
@@ -473,7 +473,6 @@ filter_tests = [
     FilterTest(
         ident="log_state",
         request_vars=[
-            ("log_state_filled", "1"),
             ("logst_h0", "on"),
             ("logst_h1", "on"),
             ("logst_s0", "on"),
@@ -862,7 +861,7 @@ filter_table_tests = [
         ident="inv_hardware_cpu_bus_speed",
         request_vars=[
             ("inv_hardware_cpu_bus_speed_from", "10"),
-            ("inv_hardware_cpu_bus_speed_to", "20"),
+            ("inv_hardware_cpu_bus_speed_until", "20"),
         ],
         rows=[
             # Not real inventory structures, just input for our monkeypatched function
@@ -893,7 +892,7 @@ filter_table_tests = [
         ident="invswpac_package_version",
         request_vars=[
             ("invswpac_package_version_from", "1.0"),
-            ("invswpac_package_version_to", "3.0"),
+            ("invswpac_package_version_until", "3.0"),
         ],
         rows=[
             {"invswpac_package_version": "0.5"},
@@ -912,7 +911,7 @@ filter_table_tests = [
         ident="invinterface_index",
         request_vars=[
             ("invinterface_index_from", "3"),
-            ("invinterface_index_to", "10"),
+            ("invinterface_index_until", "10"),
         ],
         rows=[
             {"invinterface_index": 1},
@@ -1037,7 +1036,7 @@ filter_table_tests = [
         ident="invinterface_last_change",
         request_vars=[
             ("invinterface_last_change_from_days", "1"),
-            ("invinterface_last_change_to_days", "5"),
+            ("invinterface_last_change_until_days", "5"),
         ],
         rows=[
             {"invinterface_last_change": 1523811000},
@@ -1123,6 +1122,3 @@ def _set_expected_queries(filt_ident, live):
         if filt_ident == "contactgroups":
             live.expect_query("GET contactgroups\nCache: reload\nColumns: name alias\n")
         return
-
-    if filt_ident in ["host_check_command", "check_command"]:
-        live.expect_query("GET commands\nCache: reload\nColumns: name\nColumnHeaders: off")

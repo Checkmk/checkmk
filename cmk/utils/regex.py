@@ -27,8 +27,15 @@ REGEX_ID = r"^[^\d\W][-\w]*$"
 _URL_UNRESERVED_CHARS = re.escape("-.~")
 _URL_GEN_DELIMS = re.escape(":/?#[]@")
 _URL_SUB_DELIMS = re.escape("!$&()*+,;=")  # Leaving out "'"
-URL_CHAR_REGEX_CHARS = r"\w%" + _URL_UNRESERVED_CHARS + _URL_GEN_DELIMS + _URL_SUB_DELIMS
+# The space character should be encoded but it often isn't, so we allow it
+URL_CHAR_REGEX_CHARS = r" \w%" + _URL_UNRESERVED_CHARS + _URL_GEN_DELIMS + _URL_SUB_DELIMS
 URL_CHAR_REGEX = r"^[%s]+$" % URL_CHAR_REGEX_CHARS
+
+# A Watofolder has a foldername when storing it on disk, with only some valid
+# chars. In the UI nearly everything is allowed. So these Regex(es) are only
+# for the names on disk
+WATO_FOLDER_PATH_NAME_CHARS = r"-\w"
+WATO_FOLDER_PATH_NAME_REGEX = r"^[%s]*$" % WATO_FOLDER_PATH_NAME_CHARS
 
 
 def regex(pattern: str, flags: int = 0) -> Pattern[str]:

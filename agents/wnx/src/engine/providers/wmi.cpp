@@ -25,8 +25,8 @@ namespace cma::provider {
 // use cache if body is empty(typical for new client, which returns empty on
 // timeout) post process result
 // update cache if data ok(not empty)
-std::string WmiCachedDataHelper(std::string& cache_data,
-                                const std::string& wmi_data, char separator) {
+std::string WmiCachedDataHelper(std::string &cache_data,
+                                const std::string &wmi_data, char separator) {
     // for very old servers
     if (!g_add_wmi_status_column) return wmi_data;
 
@@ -151,10 +151,10 @@ bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 
 void Wmi::setupByName() {
     try {
-        auto& x = g_section_objects[uniq_name_];
+        auto &x = g_section_objects[uniq_name_];
         name_space_ = x.first;
         object_ = x.second;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         // section not described in data
         XLOG::l.crit(
             "Invalid Name of the section provider '{}'. Exception: '{}'",
@@ -169,20 +169,20 @@ void Wmi::setupByName() {
     }
 
     try {
-        auto& x = g_section_columns[uniq_name_];
+        auto &x = g_section_columns[uniq_name_];
         columns_ = x;
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         // ignoring this exception fully:
         // we do not care when object not found in the map
     }
 
     try {
-        auto& subs = g_section_subs[uniq_name_];
+        auto &subs = g_section_subs[uniq_name_];
         auto type = GetSubSectionType(uniq_name_);
-        for (auto& sub : subs) {
+        for (auto &sub : subs) {
             sub_objects_.emplace_back(SubSection(sub, type));
         }
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         // ignoring this exception fully:
         // we do not care when object not found in the map
     }
@@ -197,8 +197,8 @@ void Wmi::setupByName() {
 // #TODO Estimate optimization: do we really need to reconnect to wrapper every
 // time?
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
-    const std::wstring& wmi_namespace, const std::wstring& wmi_object,
-    const std::vector<std::wstring>& columns_table,
+    const std::wstring &wmi_namespace, const std::wstring &wmi_object,
+    const std::vector<std::wstring> &columns_table,
     std::wstring_view separator) {
     using wtools::WmiStatus;
 
@@ -251,7 +251,7 @@ std::string Wmi::makeBody() {
     if (object_.empty()) {
         // special case for aggregating subs section into one
         std::string subs_out;
-        for (auto& sub : sub_objects_) {
+        for (auto &sub : sub_objects_) {
             XLOG::t("Sub section '{}'", sub.getUniqName());
             subs_out += sub.generateContent(subsection_mode_);
         }
@@ -295,7 +295,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
     auto allowed = cfg::groups::global.allowedSection(name);
     if (!allowed) {
-        XLOG::l.t("'{}' is skipped by config", name);
+        XLOG::t("'{}' is skipped by config", name);
         return false;
     }
 
@@ -307,7 +307,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
     // 2. with sub_section, check situation when parent
     // is allowed, but all sub  DISABLED DIRECTLY
-    for (const auto& sub : sub_objects_) {
+    for (const auto &sub : sub_objects_) {
         auto sub_name = sub.getUniqName();
 
         if (!cfg::groups::global.isSectionDisabled(sub_name)) {
@@ -315,7 +315,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
         }
     }
 
-    XLOG::l.t("'{}' and subs are skipped by config", name);
+    XLOG::d.t("'{}' and subs are skipped by config", name);
     return false;
 }
 
@@ -325,10 +325,10 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
 void SubSection::setupByName() {
     try {
-        auto& x = g_section_objects[uniq_name_];
+        auto &x = g_section_objects[uniq_name_];
         name_space_ = x.first;
         object_ = x.second;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit("Invalid Name of the sub section '{}'. Exception: '{}'",
                      uniq_name_, e.what());
         object_ = L"";
@@ -381,7 +381,7 @@ std::string SubSection::generateContent(Mode mode) {
             case Type::sub:
                 return section::MakeSubSectionHeader(uniq_name_) + section_body;
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit(XLOG_FUNC + " Exception '{}' in '{}'", e.what(),
                      uniq_name_);
     } catch (...) {

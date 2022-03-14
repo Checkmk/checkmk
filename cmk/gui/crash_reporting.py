@@ -159,8 +159,8 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
     def __init__(self):
         super().__init__()
-        self._crash_id = request.get_unicode_input_mandatory("crash_id")
-        self._site_id = request.get_unicode_input_mandatory("site")
+        self._crash_id = request.get_str_input_mandatory("crash_id")
+        self._site_id = request.get_str_input_mandatory("site")
 
     def _get_crash_info(self, row) -> CrashInfo:
         return json.loads(row["crash_info"])
@@ -414,13 +414,13 @@ class PageCrash(ABCCrashReportPage):
                     files.append(filepath)
 
             if files:
-                warn_text = escaping.escape_html(
+                warn_text = escaping.escape_to_html(
                     _(
                         "The following files located in the local hierarchy of your site are involved in this exception:"
                     )
                 )
                 warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
-                warn_text += escaping.escape_html(
+                warn_text += escaping.escape_to_html(
                     _(
                         "Maybe these files are not compatible with your current Checkmk "
                         "version. Please verify and only report this crash when you think "
@@ -479,9 +479,7 @@ class PageCrash(ABCCrashReportPage):
         _crash_row(_("Core"), info.get("core", ""), True)
         _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
 
-        joined_paths = html.render_br().join(
-            [escaping.escape_html(p) for p in info.get("python_paths", [_("Unknown")])]
-        )
+        joined_paths = html.render_br().join(info.get("python_paths", [_("Unknown")]))
         _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 
         html.close_table()
@@ -665,6 +663,7 @@ class ReportRendererCheck(ABCReportRenderer):
     def _show_agent_output(self, row):
         agent_output = row.get("agent_output")
         if agent_output:
+            assert isinstance(agent_output, bytes)
             _show_output_box(_("Agent output"), agent_output)
 
 
@@ -729,11 +728,15 @@ def format_params(params):
     return pprint.pformat(params)
 
 
-def _show_output_box(title, content):
+def _show_output_box(title: str, content: bytes) -> None:
     html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write_html(
-        HTML(escaping.escape_attribute(content).replace("\n", "<br>").replace(" ", "&nbsp;"))
+        HTML(
+            escaping.escape_attribute(content.decode(errors="surrogateescape"))
+            .replace("\n", "<br>")
+            .replace(" ", "&nbsp;")
+        )
     )
     html.close_div()
 

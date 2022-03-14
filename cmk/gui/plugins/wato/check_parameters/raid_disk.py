@@ -25,7 +25,7 @@ def _item_spec_raid_disk():
 
 def _parameter_valuespec_raid_disk():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "expected_state",

@@ -64,7 +64,7 @@ class TestModeAutomation:
     @pytest.fixture(name="patch_version")
     def patch_version_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(cmk_version, "__version__", "2.1.0i1")
-        monkeypatch.setattr(cmk_version, "edition_short", lambda: "cee")
+        monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
 
     @pytest.fixture(name="setup_request")
     def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -119,6 +119,7 @@ class TestModeAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
+        "patch_version",
     )
     def test_execute_cmk_automation_pre_pre_major(
         self, incomp_version: str, monkeypatch: pytest.MonkeyPatch

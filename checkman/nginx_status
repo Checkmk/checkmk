@@ -1,7 +1,7 @@
 title: NGINX: Performance Indicators
 agents: linux
 catalog: app/nginx
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check parses the information provided by the NGINX stub status module.
@@ -50,4 +50,3 @@ discovery:
 
 item:
  The servername and the port seperated by a colon, e.g. {127.0.0.1:80}.
-

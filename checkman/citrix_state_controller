@@ -1,7 +1,7 @@
 title: Citrix: VM Controller
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks displays the controller to which a VM is currently associated.
@@ -13,4 +13,3 @@ description:
 
 discovery:
  One service is created for each controller.
-

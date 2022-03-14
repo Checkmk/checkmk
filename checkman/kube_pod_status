@@ -1,17 +1,21 @@
 title: Kubernetes: Pod Status
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check provides the Pod status. The status of a Pod consist of a single word summarizing the
- individual statuses of containers as well as the Pod phase. Specifically, if a container is faulty,
+ This check provides the pod status. The status of a pod consist of a single word summarizing the
+ individual statuses of containers as well as the pod phase. Specifically, if a container is faulty,
  then the status corresponds to the reason given by the container. If there is no such container,
- then the status corresponds to the Pod phase. If multiple containers meet the criterion, only one
+ then the status corresponds to the pod phase. If multiple containers meet the criterion, only one
  container is selected for the status message.
  A container is considered faulty, if it is waiting for a reason other than ContainerCreating or
- if it has terminated with non-zero exit code. The service is {OK}.
+ if it has terminated with a non-zero exit code.
+
+ If a pod does not achieve the status Running or Succeeced for longer than 5/10 minutes the service
+ goes {WARN}/{CRIT}. This can be configured via the rule Kubernetes pod status. Note, the timer
+ begins with the first time a status is seen by checkmk, not on data provided by the Kubernetes API.
 
  The check requires that the special agent kube is configured.
 discovery:
- One service is created for each Pod.
+ One service is created for each pod.

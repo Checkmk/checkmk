@@ -8,6 +8,8 @@ import time
 from contextlib import nullcontext
 from typing import ContextManager, Dict, List, Tuple
 
+from livestatus import SiteId
+
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.htmllib import foldable_container
@@ -173,7 +175,7 @@ class MasterControlSnapin(SidebarSnapin):
         if not transactions.check_transaction():
             return
 
-        site = request.get_ascii_input_mandatory("site")
+        site = SiteId(request.get_ascii_input_mandatory("site"))
         column = request.get_ascii_input_mandatory("switch")
         state = request.get_integer_input_mandatory("state")
         commands = {

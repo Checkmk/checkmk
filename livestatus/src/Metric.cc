@@ -17,8 +17,8 @@ const std::regex label_regex{
     std::regex_constants::ECMAScript | std::regex_constants::icase};
 }  // namespace
 
-Metric::Names scan_rrd(const std::filesystem::path& basedir,
-                       const std::string& desc, Logger* logger) {
+Metric::Names scan_rrd(const std::filesystem::path &basedir,
+                       const std::string &desc, Logger *logger) {
     Informational(logger) << "scanning for metrics of " << desc << " in "
                           << basedir;
     Metric::Names names;

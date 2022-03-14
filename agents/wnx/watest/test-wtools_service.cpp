@@ -36,14 +36,14 @@ TEST(WtoolsService, Ctor) {
 }
 
 namespace {
-void CheckThe(const SERVICE_FAILURE_ACTIONS* x,
-              const std::vector<int>& values) {
+void CheckThe(const SERVICE_FAILURE_ACTIONS *x,
+              const std::vector<int> &values) {
     ASSERT_EQ(x->cActions, 3);
     EXPECT_EQ(x->lpCommand, nullptr);
     EXPECT_EQ(x->lpRebootMsg, nullptr);
     EXPECT_TRUE(x->dwResetPeriod > 0);
     for (unsigned i = 0; i < x->cActions; ++i) {
-        auto& a = x->lpsaActions[i];
+        auto &a = x->lpsaActions[i];
         EXPECT_TRUE(a.Delay > 0);
         EXPECT_TRUE(std::any_of(std::begin(values), std::end(values),
                                 // predicate:

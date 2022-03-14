@@ -80,11 +80,11 @@ class BackgroundProcessInterface:
         sys.stdout.write(message + "\n")
 
     def send_result_message(self, info: str) -> None:
-        """The result message is written to stdout because of log output clarity
-        as well as into a distinct file, to separate this info from the rest of the context information"""
+        """The result message is written to a distinct file to separate this info from the rest of
+        the context information. This message should contain a short result message and/or some kind
+        of resulting data, e.g. a link to a report or an agent output. As it may contain HTML code
+        it is not written to stdout."""
         encoded_info = "%s\n" % info
-        sys.stdout.write(encoded_info)
-
         result_message_path = (
             Path(self.get_work_dir()) / BackgroundJobDefines.result_message_filename
         )

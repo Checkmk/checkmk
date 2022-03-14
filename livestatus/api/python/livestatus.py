@@ -18,14 +18,10 @@ from enum import Enum
 from io import BytesIO
 from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
 
-# TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
-# (https://github.com/PyCQA/pylint/issues/2296)
-UserId = str  # NewType("UserId", str)
-SiteId = str  # NewType("SiteId", str)
-SiteConfiguration = Dict[str, Any]  # NewType("SiteConfiguration", Dict[str, Any])
-SiteConfigurations = Dict[
-    SiteId, SiteConfiguration
-]  # NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
+UserId = NewType("UserId", str)
+SiteId = NewType("SiteId", str)
+SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
+SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
@@ -379,7 +375,7 @@ class SingleSiteConnection(Helpers):
     def __init__(
         self,
         socketurl: str,
-        site_name: Optional[str] = None,
+        site_name: Optional[SiteId] = None,
         persist: bool = False,
         allow_cache: bool = False,
         tls: bool = False,
@@ -400,7 +396,6 @@ class SingleSiteConnection(Helpers):
         self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket: Optional[socket.socket] = None
-        self._socket_poller: select.poll = select.poll()
         self.timeout: Optional[int] = None
         self.successful_persistence = False
         self._output_format = LivestatusOutputFormat.PYTHON
@@ -441,7 +436,6 @@ class SingleSiteConnection(Helpers):
             if self.persist:
                 persistent_connections[self.socketurl] = site_socket
         self.socket = site_socket
-        self._socket_poller.register(self.socket, select.POLLIN)
 
     def _create_new_socket_connection(self) -> socket.socket:
         self.successful_persistence = False
@@ -522,9 +516,6 @@ class SingleSiteConnection(Helpers):
 
             self.socket = None
 
-        # Setup a new poller, instead of unregistering previous fd(s)
-        self._socket_poller = select.poll()
-
         if self.persist:
             self.successful_persistence = False
             try:
@@ -540,8 +531,7 @@ class SingleSiteConnection(Helpers):
         self.socket.settimeout(timeout)
         receive_start = time.time()
         while size > 0:
-            readylist = self._socket_poller.poll(1000)
-            if readylist or (isinstance(self.socket, ssl.SSLSocket) and self.socket.pending()):
+            if is_socket_readable(self.socket, 0.1):
                 packet = self.socket.recv(size)
                 if not packet:
                     raise MKLivestatusSocketClosed(
@@ -784,7 +774,7 @@ class MultiSiteConnection(Helpers):
         self, sites: SiteConfigurations, disabled_sites: Optional[SiteConfigurations] = None
     ) -> None:
         if disabled_sites is None:
-            disabled_sites = {}
+            disabled_sites = SiteConfigurations({})
 
         self.sites = sites
         self.connections: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]] = []
@@ -1151,7 +1141,7 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context."
             )
-        super().__init__("unix:" + omd_root + "/tmp/run/live", "local", *args, **kwargs)
+        super().__init__("unix:" + omd_root + "/tmp/run/live", SiteId("local"), *args, **kwargs)
 
 
 def _combine_query(query: str, headers: Union[str, List[str]]):
@@ -1209,3 +1199,13 @@ def _combine_query(query: str, headers: Union[str, List[str]]):
         return query
 
     return query + "\n" + headers
+
+
+def is_socket_readable(sock: socket.socket, select_timeout: float = 1.0) -> bool:
+    # SSL sockets may not return any fileno in the select, since the data lingers around in pending
+    # https://stackoverflow.com/questions/3187565/select-and-ssl-in-python
+    # https://stackoverflow.com/questions/40346619/behavior-of-pythons-select-with-partial-recv-on-ssl-socket/40347469#40347469
+    if isinstance(sock, ssl.SSLSocket) and sock.pending():
+        return True
+    fd_sets = select.select([sock], [], [], select_timeout)
+    return sock in fd_sets[0]

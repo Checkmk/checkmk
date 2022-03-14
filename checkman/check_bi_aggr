@@ -1,7 +1,7 @@
 title: Checkmk: State of BI Aggregation (deprecated)
 agents: active
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:

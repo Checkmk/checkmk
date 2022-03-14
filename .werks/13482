@@ -1,0 +1,15 @@
+Title: Systemd unit 'check_mk_agent-async' waits for network.target
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1641973406
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Sometimes after a reboot the asynchronous Checkmk agent systemd service
+will immediately try to contact the server in order to download (or look
+for) an agent update.
+To avoid spamming the system log, we wait for the network target to be up.

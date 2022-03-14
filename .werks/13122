@@ -6,7 +6,7 @@ Date: 1629464036
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agent bakery ruleset "Execute MRPE checks" allows for configuring the
 remote execution of Nagios plugins. Previously, the service description

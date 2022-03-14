@@ -2,7 +2,7 @@ title: Sansymphony: Virtualdiskstatus
 agents: windows
 catalog: app/sansymphony
 distribution: check_mk
-license: GPL
+license: GPLv2
 description:
 
  This check measures the state of the virtualdiskstatus reported by the sansymphony management.

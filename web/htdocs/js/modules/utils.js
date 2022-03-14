@@ -109,6 +109,11 @@ export function remove_class(o, cn) {
     o.className = new_parts.join(" ");
 }
 
+export function remove_classes_by_prefix(o, prefix) {
+    const classes = o.className.split(" ").filter(c => !c.startsWith(prefix));
+    o.className = classes.join(" ").trim();
+}
+
 export function add_class(o, cn) {
     if (!has_class(o, cn)) o.className += " " + cn;
 }
@@ -452,11 +457,12 @@ export function schedule_reload(url, remaining_ms) {
 function update_page_state_reload_indicator(remaining_ms) {
     const icon = document.getElementById("page_state_icon");
     if (!icon) return; // Not present, no update needed
+    const div = icon.closest(".page_state.reload");
+    if (!div) return; // Not a reload page state, no update
 
     let perc = (remaining_ms / (g_reload_interval * 1000)) * 100;
 
     icon.style.clipPath = get_clip_path_polygon(perc);
-    const div = icon.closest(".page_state.default");
     if (div) {
         div.title = div.title.replace(/\d+/, remaining_ms / 1000);
     }
@@ -637,32 +643,6 @@ export function wheel_event_name() {
     else return "mousewheel";
 }
 
-var g_tag_groups = {
-    host: {},
-    service: {},
-};
-
-export function set_tag_groups(object_type, grouped) {
-    g_tag_groups[object_type] = grouped;
-}
-
-export function tag_update_value(object_type, prefix, grp) {
-    var value_select = document.getElementById(prefix + "_val");
-
-    // Remove all options
-    value_select.options.length = 0;
-
-    if (grp === "") return; // skip over when empty group selected
-
-    var opt = null;
-    for (var i = 0, len = g_tag_groups[object_type][grp].length; i < len; i++) {
-        opt = document.createElement("option");
-        opt.value = g_tag_groups[object_type][grp][i][0];
-        opt.text = g_tag_groups[object_type][grp][i][1];
-        value_select.appendChild(opt);
-    }
-}
-
 export function toggle_more(trigger, toggle_id, dom_levels_up) {
     event.stopPropagation();
     let container = trigger;
@@ -753,4 +733,26 @@ export function update_pending_changes(changes_info) {
 
 export function get_computed_style(object, property) {
     return object ? window.getComputedStyle(object).getPropertyValue(property) : null;
+}
+
+export function copy_to_clipboard(node_id, success_msg_id = "") {
+    const node = document.getElementById(node_id);
+    if (!node) {
+        console.warn("Copy to clipboard failed as no DOM element was given.");
+        return;
+    }
+    if (typeof navigator.clipboard.writeText === "undefined") {
+        console.warn(
+            "Copy to clipboard failed due to an unsupported browser. " +
+                "Could not select text in DOM element:",
+            node
+        );
+        return;
+    }
+
+    navigator.clipboard.writeText(node.innerHTML);
+    if (success_msg_id) {
+        const success_msg_node = document.getElementById(success_msg_id);
+        remove_class(success_msg_node, "hidden");
+    }
 }

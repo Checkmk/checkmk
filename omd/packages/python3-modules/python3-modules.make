@@ -5,8 +5,13 @@ PYTHON3_MODULES := python3-modules
 # Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
 PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
+
+PYTHON3_MODULES_DEPS := $(REPO_PATH)/Pipfile.lock \
+	$(wildcard $(REPO_PATH)/agent-receiver/*.py) \
+	$(wildcard $(REPO_PATH)/agent-receiver/agent_receiver/*.py)
+
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := 6-$(shell md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
+PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,15,$(PYTHON3_MODULES_DEPS))
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -52,7 +57,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH)" ; \
-	    export LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
+	    `: -Wl,--strip-debug - Shrink the built libraries` \
+	    export LDFLAGS="-Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
@@ -72,8 +78,16 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # These files break the integration tests on the CI server. Don't know exactly
 # why this happens only there, but should be a working fix.
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/snmpsim
+# Cleanup unneeded test files of numpy
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/numpy/*/tests
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
+# pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
+# build the shebang of the scripts installed to bin. When executed via our CI
+# containers, the shebang exceeds the max_shebang_length of 127 bytes. For this
+# case, it adds a #!/bin/sh wrapper in front of the python code o_O to make it
+# fit into the shebang. Let's also cleanup this case.
+	$(SED) -i -z "s|^#\!/bin/sh\n'''exec.*python3 \"\$$0\" \"\$$@\"\n' '''|#\!/usr/bin/env python3|" $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_PATCHING): $(PYTHON3_MODULES_UNPACK)
@@ -95,12 +109,12 @@ $(PYTHON3_MODULES_CACHE_PKG_PROCESS): $(PYTHON3_MODULES_CACHE_PKG_PATH)
 	$(call upload_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
 # Ensure that the rpath of the python binary and dynamic libs always points to the current version path
 	set -e ; for F in $$(find $(PYTHON3_MODULES_INSTALL_DIR) -name \*.so); do \
-	    chrpath -r "$(OMD_ROOT)/lib" $$F; \
+	    patchelf --set-rpath "$(OMD_ROOT)/lib" $$F; \
 	    echo -n "Test rpath of $$F..." ; \
-		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		if patchelf --print-rpath "$$F" | grep "$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
 		    echo OK ; \
 		else \
-		    echo "ERROR ($$(chrpath $$F))"; \
+		    echo "ERROR ($$(patchelf --print-rpath $$F))"; \
 		    exit 1 ; \
 		fi \
 	done

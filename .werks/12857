@@ -6,6 +6,6 @@ Date: 1619775632
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The option "HTTP proxy" was added for notification method "Slack or Mattermost".

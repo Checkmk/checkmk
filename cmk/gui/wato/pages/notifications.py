@@ -17,7 +17,6 @@ import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
-import cmk.gui.wato.user_profile
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
@@ -71,6 +70,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
+from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
@@ -183,15 +184,17 @@ class ABCNotificationsMode(ABCEventsMode):
                         "and also gives you access to special event fields."
                     ),
                     elements=[
-                        FixedValue(False, title=_("Do not match Event Console alerts"), totext=""),
+                        FixedValue(
+                            value=False, title=_("Do not match Event Console alerts"), totext=""
+                        ),
                         Dictionary(
                             title=_("Match only Event Console alerts"),
                             elements=[
                                 (
                                     "match_rule_id",
                                     Transform(
-                                        ListOf(
-                                            ID(
+                                        valuespec=ListOf(
+                                            valuespec=ID(
                                                 title=_("Match event rule"),
                                                 label=_("Rule ID:"),
                                                 size=12,
@@ -343,9 +346,10 @@ class ABCNotificationsMode(ABCEventsMode):
                 if not infos:
                     html.i(_("(no one)"))
                 else:
+                    html.open_ul()
                     for line in infos:
-                        html.write_text("&bullet; %s" % line)
-                        html.br()
+                        html.li(line)
+                    html.close_ul()
 
                 table.cell(_("Conditions"), css="rule_conditions")
                 num_conditions = len([key for key in rule if key.startswith("match_")])
@@ -946,7 +950,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
     def page(self):
         if self._start_async_repl:
-            cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
+            user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
@@ -960,7 +964,9 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
 
 def _get_notification_sync_sites():
-    return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))  #
+    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    # pylint: disable=not-an-iterable
+    return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))
 
 
 @mode_registry.register
@@ -996,7 +1002,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return self.mode_url(user=self._user_id())
 
     def _user_id(self):
-        return request.get_unicode_input("user")
+        return request.get_str_input("user")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -1092,7 +1098,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                         )
                     ],
                 ),
-                cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
+                page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -1222,7 +1228,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_users",
                     ListOf(
-                        userdb.UserSelection(only_contacts=False),
+                        valuespec=userdb.UserSelection(only_contacts=False),
                         title=_("The following users"),
                         help=_(
                             "Enter a list of user IDs to be notified here. These users need to be members "
@@ -1235,7 +1241,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_groups",
                     ListOf(
-                        ContactGroupSelection(),
+                        valuespec=ContactGroupSelection(),
                         title=_("Members of contact groups"),
                         movable=False,
                     ),
@@ -1251,7 +1257,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_macros",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 TextInput(
                                     title=_("Name of the macro"),
@@ -1282,7 +1288,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_groups",
                     ListOf(
-                        ContactGroupSelection(),
+                        valuespec=ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
                             "Here you can <i>restrict</i> the list of contacts that has been "
@@ -1469,7 +1475,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "bulk",
                     Transform(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             title="Notification Bulking",
                             orientation="vertical",
                             choices=[
@@ -1574,7 +1580,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 elements=[
                     vs,
                     FixedValue(
-                        None,
+                        value=None,
                         totext=_("previous notifications of this type are cancelled"),
                         title=_("Cancel previous notifications"),
                     ),
@@ -1637,7 +1643,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     def page(self):
         if self._start_async_repl:
-            cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
+            user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
@@ -1735,7 +1741,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return ModeUserNotifications
 
     def _user_id(self):
-        return request.get_unicode_input_mandatory("user")
+        return request.get_str_input_mandatory("user")
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("user_notifications", user=self._user_id()))

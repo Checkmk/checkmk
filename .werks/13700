@@ -1,0 +1,22 @@
+Title: Move configuration options for some undesired agent properties
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646345291
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The following configuration options have been moved from
+"<i>Status of the Checkmk services</i>" to
+"<i>Checkmk Agent installation auditing</i>".
+
+<ul>
+<li>State in case of wrong agent version</li>
+<li>State in case of restricted address missmatch</li>
+<li>State in case of available but not enabled TLS</li>
+</ul>
+
+Existing rules are migrated during cmk-update-config.

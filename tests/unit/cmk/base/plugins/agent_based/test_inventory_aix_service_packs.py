@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_aix_service_packs import (
     parse_aix_service_packs,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "raw_section, expected_result",
@@ -46,6 +48,6 @@ from cmk.base.plugins.agent_based.inventory_aix_service_packs import (
     ],
 )
 def test_inv_aix_baselevel(raw_section, expected_result):
-    assert (
-        list(inventory_aix_service_packs(parse_aix_service_packs(raw_section))) == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_aix_service_packs(parse_aix_service_packs(raw_section))
+    ) == sort_inventory_result(expected_result)

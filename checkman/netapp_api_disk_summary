@@ -1,7 +1,7 @@
 title: NetApp Filer: Disk Summary
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check counts the number of disks which are owned by a NetApp Filer.

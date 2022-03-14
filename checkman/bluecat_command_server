@@ -1,7 +1,7 @@
 title: Bluecat Adonis: Command Server State
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the OperState of the Command Server Service on bluecat adonis devices.
@@ -10,4 +10,3 @@ description:
 
 discovery:
  One service is created
-

@@ -35,10 +35,8 @@ SLES 15 SP2
 SLES 15 SP3
 Ubuntu 16.04 (LTS)
 Ubuntu 18.04 (LTS)
-Ubuntu 19.10
 Ubuntu 20.04 (LTS)
-Ubuntu 20.10
-Ubuntu 21.04
+Ubuntu 21.10
 
 
 3. Builds availability locally and in CI

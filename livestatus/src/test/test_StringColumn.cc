@@ -25,7 +25,7 @@ TEST(StringColumn, GetValueLambda) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
     const auto col = StringColumn<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
@@ -37,7 +37,7 @@ TEST(StringColumn, GetValueDefault) {
 
     const auto row = DummyRow{nullptr};
     const auto col = StringColumn<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 

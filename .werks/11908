@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The options "Default to show less" and "Default to show more" in the user
 interface settings "Show more/Show less" had the same effect, e.g. on ruleset

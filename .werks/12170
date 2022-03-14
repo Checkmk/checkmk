@@ -6,7 +6,7 @@ Date: 1618822242
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The event console can parse quite a few esoteric non-sylog messages, but it
 has to make sure that every event has host/application/pid properties.  The

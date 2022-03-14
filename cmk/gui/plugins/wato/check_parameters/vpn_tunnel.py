@@ -19,7 +19,7 @@ def _parameter_valuespec_vpn_tunnel():
             (
                 "tunnels",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         title=("VPN Tunnel Endpoints"),
                         elements=[
                             IPv4Address(

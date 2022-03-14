@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previous 2.0.0 versions could break the Checkmk configuration on remote sites
 when two users tried to activate changes for a single remote site at the same

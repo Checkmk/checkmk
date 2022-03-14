@@ -1,0 +1,6 @@
+# Do not suggest pgrep, we want to be compatible with systems without (as AIX)
+disable=SC2009
+
+# Allow to find sourced files relative to the checked file
+source-path=SCRIPTDIR
+

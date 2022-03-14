@@ -11,6 +11,7 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # provide common functions
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 DEFAULT_TOOLCHAIN="stable-x86_64-unknown-linux-gnu"
@@ -23,19 +24,19 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=3
+BUILD_ID=4
 
 build_package() {
     WORK_DIR=$(mktemp -d)
     echo "TMP:" "$WORK_DIR"
 
     if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
-      echo "Could not create temp dir"
-      exit 1
+        echo "Could not create temp dir"
+        exit 1
     fi
 
     function cleanup {
-      rm -rf "$WORK_DIR"
+        rm -rf "$WORK_DIR"
     }
     trap cleanup EXIT
 
@@ -44,6 +45,7 @@ build_package() {
     mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
+    ${CARGO_HOME}/bin/rustup target add x86_64-unknown-linux-musl
     # saves space
     rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }

@@ -53,6 +53,7 @@ check_mk.user.yml                 Example agent configuration file
 check_mk_agent.cc                 (hide)
 python-3.cab                      Windows Agent Python module
 python-3.4.cab                    Windows Agent Python module for older OS
+cmk-agent-ctl.cab                 Windows Agent Push Plugin
 check_mk_agent.msi                (hide)
 config.h.in                       (hide)
 configure.ac                      (hide)

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import CheckResult
@@ -42,13 +42,13 @@ def check_ps(
 def cluster_check_ps(
     item: str,
     params: Mapping[str, Any],
-    section_ps: Dict[str, Optional[ps.Section]],
-    section_mem: Dict[str, Optional[memory.SectionMem]],
-    section_mem_used: Dict[str, Optional[memory.SectionMem]],
-    section_cpu: Dict[str, Optional[cpu.Section]],  # unused
+    section_ps: Mapping[str, Optional[ps.Section]],
+    section_mem: Mapping[str, Optional[memory.SectionMem]],
+    section_mem_used: Mapping[str, Optional[memory.SectionMem]],
+    section_cpu: Mapping[str, Optional[cpu.Section]],  # unused
 ) -> CheckResult:
     # introduce node name
-    process_lines: List[Tuple[Optional[str], ps.PsInfo, List[str]]] = [
+    process_lines = [
         (node_name, ps_info, cmd_line)
         for node_name, node_section in section_ps.items()
         for (ps_info, cmd_line) in (node_section[1] if node_section else ())

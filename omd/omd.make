@@ -130,8 +130,19 @@ define upload_pkg_archive
 	fi
 endef
 
+# $1: Build ID that may be changed manually to enforce a cache invalidation
+# $2: List of file paths to have a look at for file changes
+define cache_pkg_build_id
+$(shell echo -n "$(1)" ; \
+    if [ -n "$(2)" ]; then \
+	echo -n "-" ; \
+	md5sum $(2) | cut -d' ' -f1 | md5sum | cut -d' ' -f1 ; \
+    fi \
+)
+endef
+
 ifeq (0,$(shell gcc -Xlinker --help | grep -e "-plugin" > /dev/null; echo $$?))
-PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
+PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations --with-lto
 else
 PYTHON_ENABLE_OPTIMIZATIONS ?=
 endif

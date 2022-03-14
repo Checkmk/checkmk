@@ -1,0 +1,11 @@
+Title: Predictive levels preview plot on incomplete data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1641900441
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The predictive levels preview would crash upon encountering incomplete data.

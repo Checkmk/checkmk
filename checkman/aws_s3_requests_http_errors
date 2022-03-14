@@ -1,7 +1,7 @@
 title: AWS S3: HTTP Errors
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the rate of all HTTP requests and the rates
@@ -24,4 +24,3 @@ item:
 discovery:
  One service is created for each bucket if all required metrics
  (AllRequests, 4xxErrors, 5xxErrors) are given.
-

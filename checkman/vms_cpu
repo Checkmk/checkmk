@@ -1,7 +1,7 @@
 title: OpenVMS: CPU Utilization and IO-Wait
 agents: openvms
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Check CPU utilization (user, system, idle) and IO-Wait on an
@@ -12,4 +12,3 @@ description:
 
 discovery:
  One service is created for each OpenVMS host.
-

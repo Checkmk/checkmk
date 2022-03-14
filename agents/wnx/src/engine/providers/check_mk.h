@@ -8,6 +8,7 @@
 #define check_mk_h__
 
 #include <string>
+#include <string_view>
 
 #include "providers/internal.h"
 #include "section_header.h"
@@ -25,7 +26,7 @@ std::string AddressToCheckMkString(std::string_view entry);
 class CheckMk : public Synchronous {
 public:
     explicit CheckMk() : Synchronous(section::kCheckMk) {}
-    CheckMk(const std::string& name, char separator)
+    CheckMk(const std::string &name, char separator)
         : Synchronous(name, separator) {}
 
 private:

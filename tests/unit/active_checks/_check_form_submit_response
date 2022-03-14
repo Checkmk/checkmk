@@ -232,7 +232,7 @@ interactions:
         class="subtitle">Store and share passwords for later use in checks.</div></a><a
         onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=alert_handlers"><img
         src="themes/facelift/images/icon_alert_handlers.png" align="absmiddle" title="Alert
-        Handlers" class="icon" /><div class="title">Alert Handlers</div><div class="subtitle">Rules
+        handlers" class="icon" /><div class="title">Alert handlers</div><div class="subtitle">Rules
         for automatic execution of scripts upon alerts</div></a><a onfocus="if (this.blur)
         this.blur();" href="wato.py?folder=&amp;mode=analyze_config"><img src="themes/facelift/images/icon_analyze_config.png"
         align="absmiddle" title="Analyze configuration" class="icon" /><div class="title">Analyze

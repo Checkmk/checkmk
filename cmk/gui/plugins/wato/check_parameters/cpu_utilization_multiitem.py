@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Transf
 
 def _parameter_valuespec():
     return Transform(
-        _real_parameter_valuespec(),
+        valuespec=_real_parameter_valuespec(),
         forth=_transform,
     )
 

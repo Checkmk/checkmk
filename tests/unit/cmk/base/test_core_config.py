@@ -11,18 +11,19 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils import password_store
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
-
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import ConfiguredService
 from cmk.base.core_factory import create_core
 
 
@@ -67,16 +68,8 @@ def test_active_check_arguments_basics():
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
-def test_active_check_arguments_password_store(monkeypatch, pw):
-    monkeypatch.setattr(
-        config,
-        "stored_passwords",
-        {
-            "pw-id": {
-                "password": pw,
-            }
-        },
-    )
+def test_active_check_arguments_password_store(pw):
+    password_store.save({"pw-id": pw})
     assert core_config.active_check_arguments(
         HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
     ) == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
@@ -135,7 +128,8 @@ def test_active_check_arguments_list_with_invalid_type():
 
 
 def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
-    ts = Scenario().add_host("test-host", tags={"agent": "no-agent"})
+    ts = Scenario()
+    ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.set_option(
         "host_labels",
         {
@@ -190,7 +184,8 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     ],
 )
 def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
-    ts = Scenario().add_host("localhost")
+    ts = Scenario()
+    ts.add_host("localhost")
     ts.add_host("blub")
     ts.set_option(
         "extra_service_conf",
@@ -208,7 +203,14 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
     host_config = config_cache.get_host_config(hostname)
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
-    service = Service(CheckPluginName("cpu_loads"), None, "CPU load", {"": ""})
+    service = ConfiguredService(
+        check_plugin_name=CheckPluginName("cpu_loads"),
+        item=None,
+        description="CPU load",
+        parameters=TimespecificParameters(),
+        discovered_parameters={},
+        service_labels={},
+    )
     service_spec = core_config.get_cmk_passive_service_attributes(
         config_cache, host_config, service, check_mk_attrs
     )

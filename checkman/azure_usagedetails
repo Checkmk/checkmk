@@ -1,7 +1,7 @@
 title: Microsoft Azure: Usage Details (costs)
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the daily costs of the Azure subscription,
@@ -21,4 +21,3 @@ discovery:
  One service is created for each Azure service type plus an additional summary
  service is on both the host running the agent and every
  host corresponding to a monitored resource group.
-

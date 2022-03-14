@@ -1,0 +1,11 @@
+Title: ipmi_discrete: Fix evaluating "Drive Fault" as CRIT
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645435434
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

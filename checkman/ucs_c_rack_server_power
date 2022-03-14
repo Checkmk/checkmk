@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: Motherboard Power Statistics
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about the consumed power, input current and input voltage of the

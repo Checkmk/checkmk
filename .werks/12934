@@ -6,7 +6,7 @@ Date: 1631720270
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Until now, usage of SAP HANA plugin wasn't possible with SSL.
 CheckMK wouldn't be able to discover most of the services in that case.

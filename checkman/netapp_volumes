@@ -1,7 +1,7 @@
 title: NetApp Filer: Health and State of Volumes
 agents: snmp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check verifies the state and health of volumes defined in NetAPP systems.
@@ -15,5 +15,3 @@ item:
 
 discovery:
  One service is created for each {local} volumes.
-
-

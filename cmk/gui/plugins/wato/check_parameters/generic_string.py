@@ -20,7 +20,7 @@ def _parameter_valuespec_generic_string():
             (
                 "match_strings",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             TextInput(title=_("Search string")),
                             MonitoringState(),

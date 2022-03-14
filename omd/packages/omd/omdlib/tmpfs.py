@@ -48,13 +48,14 @@ def tmpfs_mounted(sitename: str) -> bool:
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
     path_suffix = "sites/%s/tmp" % sitename
-    for line in open("/proc/mounts"):
-        try:
-            _device, mp, fstype, _options, _dump, _fsck = line.split()
-            if mp.endswith(path_suffix) and fstype == "tmpfs":
-                return True
-        except Exception:
-            continue
+    with Path("/proc/mounts").open() as mounts:
+        for line in mounts:
+            try:
+                _device, mp, fstype, _options, _dump, _fsck = line.split()
+                if mp.endswith(path_suffix) and fstype == "tmpfs":
+                    return True
+            except Exception:
+                continue
     return False
 
 
@@ -83,23 +84,20 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
         os.mkdir(site.tmp_dir)
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
-    p = subprocess.Popen(
+    completed_process = subprocess.run(
         ["mount"] + mount_options + [site.tmp_dir],
         shell=False,
-        stdin=open(os.devnull),
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding="utf-8",
+        check=False,
     )
-    exit_code = p.wait()
-    if exit_code == 0:
+    if completed_process.returncode == 0:
         ok()
         return  # Fine: Mounted
 
-    if p.stdout is None:
-        raise Exception("stdout needs to be set")
-
-    sys.stdout.write(p.stdout.read())
+    sys.stdout.write(completed_process.stdout)
     if is_dockerized():
         sys.stdout.write(
             tty.warn + ": "
@@ -181,8 +179,8 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
 
 
 # Extracted to separate function to be able to monkeypatch the path for tests
-def fstab_path() -> str:
-    return "/etc/fstab"
+def fstab_path() -> Path:
+    return Path("/etc/fstab")
 
 
 def _unmount(site: SiteContext) -> bool:
@@ -201,17 +199,17 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
         return False
 
     return subprocess.call(
-        ["umount", site.tmp_dir], stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT
+        ["umount", site.tmp_dir], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
     ) in [1, 32]
 
 
 def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
-    if not os.path.exists(fstab_path()):
+    if not (path_fstab := fstab_path()).exists():
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = site.real_tmp_dir
-    sys.stdout.write("Adding %s to %s.\n" % (mountpoint, fstab_path()))
+    sys.stdout.write("Adding %s to %s.\n" % (mountpoint, path_fstab))
 
     # No size option: using up to 50% of the RAM
     sizespec = ""
@@ -219,10 +217,10 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
         sizespec = ",size=%s" % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = open(fstab_path()).read()
+    previous_fstab = path_fstab.read_text()
     complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
-    with open(fstab_path(), "a+") as fstab:
+    with path_fstab.open(mode="a+") as fstab:
         if complete_last_line:
             fstab.write("\n")
 
@@ -233,17 +231,20 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
 
 
 def remove_from_fstab(site: SiteContext) -> None:
-    if not os.path.exists("/etc/fstab"):
+    if not (path_fstab := fstab_path()).exists():
         return  # Don't do anything in case there is no fstab
 
     mountpoint = site.tmp_dir
-    sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = open("/etc/fstab.new", "w")
-    for line in open("/etc/fstab"):
-        if "uid=%s," % site.name in line and mountpoint in line:
-            continue
-        newtab.write(line)
-    os.rename("/etc/fstab.new", "/etc/fstab")
+    sys.stdout.write(f"Removing {mountpoint} from {path_fstab}...")
+
+    with (path_new_fstab := Path(str(path_fstab) + ".new")).open(
+        mode="w"
+    ) as newtab, path_fstab.open() as current_fstab:
+        for line in current_fstab:
+            if "uid=%s," % site.name in line and mountpoint in line:
+                continue
+            newtab.write(line)
+    path_new_fstab.rename(path_fstab)
     ok()
 
 
@@ -276,7 +277,8 @@ def restore_tmpfs_dump(site):
     Silently skipping over in case there is no dump available."""
     if not _tmpfs_dump_path(site).exists():
         return
-    tarfile.TarFile(_tmpfs_dump_path(site)).extractall(site.tmp_dir)
+    with tarfile.TarFile(_tmpfs_dump_path(site)) as tar:
+        tar.extractall(site.tmp_dir)
 
 
 def _tmpfs_dump_path(site):

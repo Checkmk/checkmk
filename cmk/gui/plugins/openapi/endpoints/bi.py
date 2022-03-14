@@ -23,11 +23,12 @@ from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_schema import Schema
 
-from cmk.gui import fields
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.utils import ProblemException
+
+from cmk import fields
 
 BI_RULE_ID = {
     "rule_id": fields.String(
@@ -65,7 +66,7 @@ def _bailout_with_message(message):
 
 class BIRuleEndpointSchema(BIRuleSchema):
     pack_id = ReqString(
-        default="",
+        dump_default="",
         example="pack1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
@@ -181,7 +182,7 @@ def delete_bi_rule(params):
 
 class BIAggregationEndpointSchema(BIAggregationSchema):
     pack_id = ReqString(
-        default="",
+        dump_default="",
         example="pack1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
@@ -310,10 +311,8 @@ def get_bi_packs(params):
     packs = [
         constructors.collection_item(
             domain_type="bi_pack",
-            obj={
-                "id": pack.id,
-                "title": pack.title,
-            },
+            identifier=pack.id,
+            title=pack.title,
         )
         for pack in bi_packs.packs.values()
     ]
@@ -414,18 +413,18 @@ def delete_bi_pack(params):
 
 class BIPackEndpointSchema(Schema):
     title = ReqString(
-        default="",
+        dump_default="",
         example="BI Title",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
     contact_groups = ReqList(
         fields.String(),
-        default=[],
+        dump_default=[],
         example=["contact", "contactgroup_b"],
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
     public = ReqBoolean(
-        default=False,
+        dump_default=False,
         example="false",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )

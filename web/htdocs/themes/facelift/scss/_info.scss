@@ -1,0 +1,65 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+#info_title {
+  display: flex;
+
+  h1 {
+    flex-grow: 1;
+    font-size: 42px;
+  }
+
+  img {
+    width: 165px;
+    height: 52px;
+    margin-right: 4 * $spacing;
+  }
+}
+
+#info_underline {
+  width: 50px;
+  height: 4px;
+  margin: 20px 0 0 5px;
+  background-color: $success;
+}
+
+#info_intro_text {
+  margin: 2 * $spacing 0.5 * $spacing;
+  font-size: $font-size-page-title;
+
+  span {
+    display: block;
+  }
+}
+
+#info_image {
+  padding: 3 * $spacing 0;
+  margin: 0 auto 6 * $spacing;
+  text-align: center;
+
+  img {
+    width: 60%;
+    min-width: 900px;
+  }
+}
+
+#info_footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding-bottom: 60px;
+  text-align: right;
+
+  a,
+  span {
+    margin-right: 24px;
+  }
+
+  a {
+    font-weight: $font-weight-bold;
+    text-decoration: none;
+  }
+}

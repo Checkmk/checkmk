@@ -8,13 +8,11 @@ from __future__ import annotations
 
 import abc
 import copy
-from typing import Final, Generic, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypeVar
+from typing import Final, Generic, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.core_helpers.cache import TRawDataSection
-
-THostSections = TypeVar("THostSections", bound="HostSections")
 
 
 class HostSections(Generic[TRawDataSection], abc.ABC):

@@ -59,10 +59,10 @@ class ACTestPersistentConnections(ACTest):
             "Persistent connections may be a configuration to improve the performance of the GUI, "
             "but be aware that you really need to tune your system to make it work properly. "
             "When you have enabled persistent connections, the single GUI pages may use already "
-            "established connections of the apache process. This saves the time that is needed "
+            "established connections of the Apache process. This saves the time that is needed "
             "for establishing the Livestatus connections. But you need to be aware that each "
-            "apache process that is running is keeping a persistent connection to each configured "
-            "site via Livestatus open. This means you need to balance the maximum apache "
+            "Apache process that is running is keeping a persistent connection to each configured "
+            "site via Livestatus open. This means you need to balance the maximum Apache "
             "processes with the maximum parallel livestatus connections. Otherwise livestatus "
             "requests will be blocked by existing and possibly idle connections."
         )
@@ -95,7 +95,7 @@ class ACTestPersistentConnections(ACTest):
             yield ACResultWARN(
                 _(
                     "Either disable persistent connections or "
-                    "carefully review maximum number of apache processes and "
+                    "carefully review maximum number of Apache processes and "
                     "possible livestatus connections."
                 )
             )
@@ -160,11 +160,11 @@ class ACTestLivestatusUsage(ACTest):
             "<p>Livestatus is used by several components, for example the GUI, to gather "
             "information about the monitored objects from the monitoring core. It is "
             "very important for the overall performance of the monitoring system that "
-            "livestatus is a reliable and performant.</p>"
+            "livestatus is reliable and performant.</p>"
             "<p>There should always be enough free livestatus slots to serve new "
             "incoming queries.</p>"
             "<p>You should never reach a livestatus usage of 100% for a longer time. "
-            "Consider increasing number of parallel livestatus connections or track down "
+            "Consider increasing the number of parallel livestatus connections or track down "
             "the clients to check whether or not you can reduce the usage somehow.</p>"
         )
 
@@ -200,7 +200,7 @@ class ACTestLivestatusUsage(ACTest):
 
         # Only available with Microcore
         if overflows_rate is not None:
-            yield cls(_("You have a connection overflow rate of %.2f/s") % overflows_rate)
+            yield cls(_("you have a connection overflow rate of %.2f/s") % overflows_rate)
 
 
 @ac_test_registry.register
@@ -378,7 +378,7 @@ class ACTestHTTPSecured(ACTest):
             + " "
             + _(
                 'Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "https"</tt> in '
-                "your system apache configuration to tell the Checkmk GUI about the SSL setup."
+                "your system Apache configuration to tell the Checkmk GUI about the SSL setup."
             )
         )
 
@@ -414,7 +414,7 @@ class ACTestOldDefaultCredentials(ACTest):
     def execute(self) -> Iterator[ACResult]:
         if (
             cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
-                "omdadmin", "omd"
+                UserId("omdadmin"), "omd"
             )
             == "omdadmin"
         ):
@@ -550,9 +550,9 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "you want to display the HTML output produced by a specific check plugin."
             "Disabling the escaping also allows the plugin to execute not only HTML, but "
             "also Javascript code in the context of your browser. This makes it possible to "
-            "execute arbritary Javascript, even for injection attacks.<br>"
+            "execute arbitrary Javascript, even for injection attacks.<br>"
             "For this reason, you should only disable this for a small, very specific number of "
-            "services, to be sure that not every random check plugin can make produce code "
+            "services, to be sure that not every random check plugin is able to produce code "
             "which your browser interprets."
         )
 
@@ -622,19 +622,19 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
     def help(self) -> str:
         return _(
-            "<p>The apache has a number maximum processes it can start in case of high "
-            "load situations. These apache processes may use a decent amount of memory, so "
-            "you need to configure them in a way that you system can handle them without "
+            "<p>The Apache has a number of maximum processes it may start in case of high "
+            "load situations. These Apache processes may use a decent amount of memory, so "
+            "you need to configure them in a way that your system can handle them without "
             "reaching out of memory situations.</p>"
             "<p>Please note that this value is only a rough estimation, because the memory "
-            "usage of the apache processes may vary with the requests being processed.</p>"
+            "usage of the Apache processes may vary with the requests being processed.</p>"
             "<p>Possible actions:<ul>"
-            '<li>Change the <a href="wato.py?mode=edit_configvar&varname=apache_process_tuning">number of apache processes</a></li>'
+            '<li>Change the <a href="wato.py?mode=edit_configvar&varname=apache_process_tuning">number of Apache processes</a></li>'
             "</ul>"
             "</p>"
             "<p>Once you have verified your settings, you can acknowledge this test. The "
             "test will not automatically turn to OK, because it can not exactly estimate "
-            "the required memory needed by the apache processes."
+            "the required memory needed by the Apache processes."
             "</p>"
         )
 
@@ -649,8 +649,8 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
         yield ACResultWARN(
             _(
-                "The apache may start up to %d processes while the current "
-                "average process size is %s. With this numbers the apache may "
+                "The Apache may start up to %d processes while the current "
+                "average process size is %s. With these process limits the Apache may "
                 "use up to %s RAM. Please ensure that your system is able to "
                 "handle this."
             )
@@ -663,11 +663,11 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
     def _get_average_process_size(self):
         try:
-            pid_file = Path(cmk.utils.paths.omd_root).joinpath("tmp/apache/run/apache.pid")
+            pid_file = cmk.utils.paths.omd_root / "tmp/apache/run/apache.pid"
             with pid_file.open(encoding="utf-8") as f:
                 ppid = int(f.read())
         except (IOError, ValueError):
-            raise MKGeneralException(_("Failed to read the apache process ID"))
+            raise MKGeneralException(_("Failed to read the Apache process ID"))
 
         sizes = []
         for pid in subprocess.check_output(
@@ -676,7 +676,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             sizes.append(self._get_process_size(pid))
 
         if not sizes:
-            raise MKGeneralException(_("Failed to estimate the apache process size"))
+            raise MKGeneralException(_("Failed to estimate the Apache process size"))
 
         return sum(sizes) / float(len(sizes))
 
@@ -713,7 +713,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
     def help(self) -> str:
         return _(
-            "The apache has a number maximum processes it can start in case of high "
+            "The Apache has a number maximum processes it can start in case of high "
             "load situations. The usage of these processes should not be too high "
             "in normal situations. Otherwise, if all processes are in use, the "
             "users of the GUI might have to wait too long for a free process, which "
@@ -740,7 +740,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
         yield cls(
             _(
-                "%d of %d the configured maximum of processes are started. This is a usage of %0.2f %%."
+                "%d of the configured maximum of %d processes have been started. This is a usage of %0.2f %%."
             )
             % (used_slots, total_slots, usage)
         )
@@ -946,8 +946,8 @@ class ACTestCheckMKCheckerUsage(ACTest):
 
         yield cls(
             _(
-                "The current checker usage is %.2f%%,"
-                " The checks have an average check latency of %.3fs."
+                "The current checker usage is %.2f%%. "
+                "The checks have an average check latency of %.3fs."
             )
             % (checker_usage_perc, fetcher_latency)
         )
@@ -1192,22 +1192,6 @@ def _site_is_using_livestatus_proxy(site_id):
 
 
 @ac_test_registry.register
-class ACTestConnectivity(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.connectivity
-
-    def title(self) -> str:
-        return _("Site connectivity")
-
-    def help(self) -> str:
-        return _("This check returns CRIT if the connection to the remote site failed.")
-
-    def is_relevant(self) -> bool:
-        # This test is always irrelevant :)
-        return False
-
-
-@ac_test_registry.register
 class ACTestUnexpectedAllowedIPRanges(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -1270,7 +1254,7 @@ class ACTestCheckMKCheckerNumber(ACTest):
             "The Checkmk Microcore uses Checkmk checker processes to process the results "
             "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
             "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
-            "the number of available CPUs has a negative effect, because it increases the "
+            "the number of available CPUs has a negative effect, because it increases "
             "the amount of context switches."
         )
 

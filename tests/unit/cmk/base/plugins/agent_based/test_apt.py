@@ -36,6 +36,31 @@ _SECTION_SEC_UPDATES = [
         "Inst bind9-host [1:9.10.3.dfsg.P4-8ubuntu1.19] (1:9.10.3.dfsg.P4-8ubuntu1.19+esm1 UbuntuESM:16.04/xenial-infra-security [amd64]) []"
     ],
 ]
+_SECTION_KERNEL_UPDATES = [
+    ["Inst linux-image-4.19.0-19-amd64 (4.19.232-1 Debian-Security:10/oldstable [amd64])"],
+    [
+        "Inst linux-image-amd64 [4.19+105+deb10u13] (4.19+105+deb10u14 Debian-Security:10/oldstable [amd64])"
+    ],
+]
+_SECTION_NO_ESM_SUPPORT = [
+    ["Enable UA Infra: ESM to receive additional future security updates."],
+    ["See https://ubuntu.com/16-04 or run: sudo ua status"],
+    ["Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by"],
+    ["applicable law."],
+    [
+        "Inst ubuntu-advantage-tools [27.4.1~16.04.1] (27.4.2~16.04.1 Ubuntu:16.04/xenial-updates [amd64])"
+    ],
+]
+_SECTION_ESM_SUPPORT = [
+    ["*The following packages could receive security updates with UA Infra: ESM service enabled:"],
+    ["libglib2.0-data libglib2.0-0"],
+    ["Learn more about UA Infra: ESM service for Ubuntu 16.04 at https://ubuntu.com/16-04"],
+    ["Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by"],
+    ["applicable law."],
+    [
+        "Inst ubuntu-advantage-tools [27.4.1~16.04.1] (27.4.2~16.04.1 Ubuntu:16.04/xenial-updates [amd64])"
+    ],
+]
 
 
 @pytest.mark.parametrize(
@@ -60,6 +85,10 @@ _SECTION_SEC_UPDATES = [
             _SECTION_SEC_UPDATES,
             True,
             id="security_upates_line",
+        ),
+        pytest.param(
+            _SECTION_KERNEL_UPDATES,
+            True,
         ),
     ],
 )
@@ -100,6 +129,25 @@ def test_data_is_valid(
                 ["libapt-pkg5.0", "libexpat1", "tzdata", "bind9-host"],
             ),
             id="security_upates_line",
+        ),
+        pytest.param(
+            _SECTION_NO_ESM_SUPPORT,
+            Section([], [], [], no_esm_support=True),
+            id="no_esm_support",
+        ),
+        pytest.param(
+            _SECTION_ESM_SUPPORT,
+            Section(["ubuntu-advantage-tools"], [], []),
+            id="esm_support",
+        ),
+        pytest.param(
+            _SECTION_KERNEL_UPDATES,
+            Section(
+                updates=[],
+                removals=[],
+                sec_updates=["linux-image-4.19.0-19-amd64", "linux-image-amd64"],
+            ),
+            id="security_kernel_debian_line",
         ),
     ],
 )

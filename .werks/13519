@@ -6,7 +6,7 @@ Date: 1637836515
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Depending on the configuration, the active check <tt>check_icmp</tt> (ICMP
 Echo Requests) crashed with

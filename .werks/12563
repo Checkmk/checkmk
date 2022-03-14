@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The dynamic configuration can be configured to work in distributed setups. In
 this scenario, the dcd on the remote site gathers the raw host information

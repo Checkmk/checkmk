@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous Checkmk versions agent bakery rules that were using host label
 conditions could not be used correctly in distributed setups.

@@ -1,7 +1,7 @@
 title: Cisco Wireless LAN Controller (WLC): Connected WLAN Accesspoints
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -19,4 +19,3 @@ discovery:
 cluster:
   On a cluster the check will be evaluated on the first node found to have the
   information about a given accesspoint.
-

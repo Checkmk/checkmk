@@ -1,0 +1,12 @@
+Title: Fix crash during parsing of enviromux section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645623820
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+

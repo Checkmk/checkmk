@@ -6,7 +6,7 @@ Date: 1638275625
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Windows Oracle Agent didn't use the paths documented (https://docs.checkmk.com/latest/en/monitoring_oracle.html#_windows_4) like the Oracle Linux Agent.
 With the change it uses MK_CONFDIR, if Oracle config files exist.

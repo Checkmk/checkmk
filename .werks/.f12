@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo mkdir -p $ROOT/share/check_mk/werks/
+sudo mkdir -p "$ROOT"/share/check_mk/werks/
 make -C .. .werks/werks
-sudo install -m 644 -g $SITE -o $SITE werks $ROOT/share/check_mk/werks/werks
+sudo install -m 644 -g "$SITE" -o "$SITE" werks "$ROOT"/share/check_mk/werks/werks
 
-if [ -z $ONLY_COPY ]; then
-    sudo omd restart $SITE apache
+if [ -z "$ONLY_COPY" ]; then
+    sudo omd restart "$SITE" apache
 fi

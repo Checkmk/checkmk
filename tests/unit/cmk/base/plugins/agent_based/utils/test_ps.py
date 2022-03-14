@@ -289,3 +289,55 @@ def test_memory_perc_check_cluster():
     assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
         Result(state=State.OK, summary="Percentage of total RAM: 21.00%")
     ]
+
+
+@pytest.mark.parametrize(
+    "process_lines, params, expected_processes",
+    [
+        pytest.param(
+            [
+                (
+                    None,
+                    ps.PsInfo(
+                        user="root",
+                        virtual=12856,
+                        physical=16160,
+                        cputime="0.0",
+                        process_id=None,
+                        pagefile=None,
+                        usermode_time=None,
+                        kernelmode_time=None,
+                        handles=None,
+                        threads=None,
+                        uptime=None,
+                        cgroup=None,
+                    ),
+                    [
+                        "/usr/lib/firefox/firefox",
+                        "-contentproc",
+                        "-childID",
+                        "31",
+                        "-isForBrowser",
+                        "-prefsLen",
+                        "9681",
+                    ],
+                )
+            ],
+            {"process_info_arguments": 15},
+            [
+                [
+                    ("name", ("/usr/lib/firefox/firefox", "")),
+                    ("user", ("root", "")),
+                    ("virtual size", (12856, "kB")),
+                    ("resident size", (16160, "kB")),
+                    ("cpu usage", (0.0, "%")),
+                    ("args", ("-contentproc -c", "")),
+                ]
+            ],
+            id="process_info_args",
+        )
+    ],
+)
+def test_process_capture(process_lines, params, expected_processes):
+    process_aggregator = ps.process_capture(process_lines, params, 1, {})
+    assert process_aggregator.processes == expected_processes

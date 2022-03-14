@@ -32,9 +32,9 @@ InstallMode GetInstallMode();
 class ExecuteUpdate {
 public:
     ExecuteUpdate() { determineFilePaths(); }
-    void prepare(const std::filesystem::path& exe,
-                 const std::filesystem::path& msi,
-                 const std::filesystem::path& recover_msi,
+    void prepare(const std::filesystem::path &exe,
+                 const std::filesystem::path &msi,
+                 const std::filesystem::path &recover_msi,
                  bool validate_script_exists);
 
     bool copyScriptToTemp() const;
@@ -56,15 +56,11 @@ private:
     std::filesystem::path temp_script_file_;
 };
 
-constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
+constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
+constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
+constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.1"};
 
-constexpr const std::string_view kMsiLogFileName = "agent_msi.log";
-
-constexpr const std::wstring_view kAgentProductName{L"Check MK Agent 2.0"};
-
-namespace registry
-
-{
+namespace registry {
 // Names are from WIX Msi, please, check that they are in sync
 const std::wstring kMsiInfoPath64 = L"SOFTWARE\\WOW6432Node\\checkmkservice";
 const std::wstring kMsiInfoPath32 = L"SOFTWARE\\checkmkservice";
@@ -109,19 +105,19 @@ std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
 // Diagnostic is cma::install!
 
 // noexcept remove file
-bool RmFile(const std::filesystem::path& file_name) noexcept;
+bool RmFile(const std::filesystem::path &file_name) noexcept;
 
 // noexcept move file
-bool MvFile(const std::filesystem::path& source_file,
-            const std::filesystem::path& destination_file) noexcept;
+bool MvFile(const std::filesystem::path &source_file,
+            const std::filesystem::path &destination_file) noexcept;
 
 // noexcept backup file(if possible)
-void BackupFile(const std::filesystem::path& file_name,
-                const std::filesystem::path& backup_dir) noexcept;
+void BackupFile(const std::filesystem::path &file_name,
+                const std::filesystem::path &backup_dir) noexcept;
 
 // noexcept check whether incoming file is newer
-bool NeedInstall(const std::filesystem::path& incoming_file,
-                 const std::filesystem::path& backup_dir) noexcept;
+bool NeedInstall(const std::filesystem::path &incoming_file,
+                 const std::filesystem::path &backup_dir) noexcept;
 // ****************************************
 
 bool IsPostInstallRequired();

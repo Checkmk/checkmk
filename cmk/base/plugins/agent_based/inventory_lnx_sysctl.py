@@ -54,13 +54,13 @@ def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) 
     exclude_patterns: Sequence[str] = params.get("exclude_patterns", [])
 
     path = ["software", "kernel_config"]
-    for name, values in sorted(section.items()):
+    for name, values in section.items():
         if _include_parameter(
             name,
             include_patterns,
             exclude_patterns,
         ):
-            for value in sorted(values):
+            for value in values:
                 yield TableRow(
                     path=path,
                     key_columns={

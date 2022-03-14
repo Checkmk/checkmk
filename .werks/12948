@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In 2.0.0p6, the viewing of a host through the REST API might fail
 due to missing "modification time" information on the host. This led

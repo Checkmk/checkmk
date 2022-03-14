@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -132,7 +132,7 @@ class ModeBulkImport(WatoMode):
 
     def _file_path(self, file_id: Optional[str] = None) -> Path:
         if file_id is None:
-            file_id = request.get_unicode_input_mandatory("file_id")
+            file_id = request.get_str_input_mandatory("file_id")
         if not file_id.isalnum():
             raise MKUserError("file_id", _("The file_id has to be alphanumeric."))
         return self._upload_tmp_path / ("%s.csv" % file_id)
@@ -359,6 +359,7 @@ class ModeBulkImport(WatoMode):
                 (
                     "file",
                     UploadOrPasteTextFile(
+                        elements=[],
                         title=_("Import Hosts"),
                         file_title=_("CSV File"),
                     ),
@@ -437,7 +438,7 @@ class ModeBulkImport(WatoMode):
             table.row()
             for col_num in range(num_columns):
                 header = headers[col_num] if len(headers) > col_num else None
-                table.cell(escape_html_permissive(header))
+                table.cell(escape_to_html(header))
                 attribute_varname = "attribute_%d" % col_num
                 if request.var(attribute_varname):
                     attribute_method = request.get_ascii_input_mandatory(attribute_varname)
@@ -480,7 +481,7 @@ class ModeBulkImport(WatoMode):
                 (
                     "has_title_line",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Has title line"),
                         totext=_("The first line in the file contains titles."),
                     ),

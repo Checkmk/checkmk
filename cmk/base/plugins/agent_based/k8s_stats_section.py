@@ -11,6 +11,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 from .agent_based_api.v1 import register
 from .utils.k8s import Filesystem, Interface, Section, to_filesystem, to_interface
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def parse_k8s(string_table: StringTable) -> Section:
     """Basically we return the JSON parsed input -

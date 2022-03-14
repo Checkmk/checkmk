@@ -11,6 +11,7 @@ import enum
 import errno
 import os
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import (
@@ -18,6 +19,7 @@ from typing import (
     Dict,
     Generic,
     Iterable,
+    Iterator,
     List,
     NamedTuple,
     Optional,
@@ -307,12 +309,6 @@ def add_change(
 
     search.update_index_background(action_name)
 
-    # On each change to the Checkmk configuration mark the agents to be rebuild
-    # TODO: Really? Why?
-    # if has_agent_bakery():
-    #    import cmk.gui.cee.agent_bakery as agent_bakery
-    #    agent_bakery.mark_need_to_bake_agents()
-
     ActivateChangesWriter().add_change(
         action_name,
         text,
@@ -327,6 +323,17 @@ def add_change(
 
 
 class ActivateChangesWriter:
+    _enabled = True
+
+    @classmethod
+    @contextmanager
+    def disable(cls) -> Iterator[None]:
+        try:
+            cls._enabled = False
+            yield
+        finally:
+            cls._enabled = True
+
     def add_change(
         self,
         action_name: str,
@@ -339,6 +346,9 @@ class ActivateChangesWriter:
         sites: Optional[Iterable[SiteId]],
         domain_settings: Optional[DomainSettings],
     ) -> None:
+        if not ActivateChangesWriter._enabled:
+            return
+
         # Default to a core only change
         if domains is None:
             domains = [config_domain_registry["check_mk"]]

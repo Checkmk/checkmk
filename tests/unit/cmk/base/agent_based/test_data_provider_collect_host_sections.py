@@ -15,6 +15,8 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import AgentRawData, HostKey, HostName, result, SectionName, SourceType
 
+from cmk.snmplib.type_defs import SNMPRawData
+
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
     FetcherType,
@@ -31,7 +33,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import _collect_host_sections
 from cmk.base.sources import make_cluster_sources, Source
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import ProgramSource
 from cmk.base.sources.snmp import SNMPSource
@@ -44,7 +46,8 @@ def mode_fixture(request):
 
 
 def make_scenario(hostname, tags):
-    ts = Scenario().add_host(hostname, tags=tags)
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
     ts.set_ruleset(
         "datasource_programs",
         [
@@ -119,7 +122,8 @@ class TestMakeHostSectionsHosts:
 
     @pytest.fixture
     def config_cache(self, hostname, ipaddress, monkeypatch):
-        ts = Scenario().add_host(hostname)
+        ts = Scenario()
+        ts.add_host(hostname)
         return ts.apply(monkeypatch)
 
     def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
@@ -132,6 +136,7 @@ class TestMakeHostSectionsHosts:
         assert not host_sections
 
     def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
+        raw_data: SNMPRawData = {}
         host_sections = _collect_host_sections(
             sources=[
                 SNMPSource.snmp(
@@ -145,7 +150,7 @@ class TestMakeHostSectionsHosts:
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
-                    result.OK({}),
+                    result.OK(raw_data),
                     Snapshot.null(),
                     FetcherType.SNMP,
                 ),
@@ -334,7 +339,8 @@ class TestMakeHostSectionsClusters:
 
     @pytest.fixture
     def config_cache(self, cluster, nodes, monkeypatch):
-        ts = Scenario().add_cluster(cluster, nodes=nodes.keys())
+        ts = Scenario()
+        ts.add_cluster(cluster, nodes=nodes.keys())
         return ts.apply(monkeypatch)
 
     @pytest.mark.usefixtures("config_cache")
@@ -392,7 +398,9 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         return hosts[host_config.hostname]
 
     def check(_, *args, **kwargs):
-        return result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
+        return result.OK(
+            HostSections[AgentRawDataSection](sections={section_name: [[str(section_name)]]})
+        )
 
     monkeypatch.setattr(
         config,

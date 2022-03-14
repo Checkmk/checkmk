@@ -111,17 +111,17 @@ def _transform_userdb_automatic_sync(val):
 
 
 def new_user_template(connection_id: str) -> UserSpec:
-    new_user = {
-        "serial": 0,
-        "connector": connection_id,
-    }
+    new_user = UserSpec(
+        serial=0,
+        connector=connection_id,
+    )
 
     # Apply the default user profile
     new_user.update(config.default_user_profile)
     return new_user
 
 
-def add_internal_attributes(usr: UserSpec) -> UserSpec:
+def add_internal_attributes(usr: UserSpec) -> int:
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
 
 
@@ -315,8 +315,7 @@ def _get_builtin_roles() -> Roles:
 
 
 class UserConnector(abc.ABC):
-    def __init__(self, cfg):
-        super().__init__()
+    def __init__(self, cfg) -> None:
         self._config = cfg
 
     @classmethod

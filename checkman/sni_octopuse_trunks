@@ -1,7 +1,7 @@
 title: Siemens Octopus E: Trunk Ports
 agents: snmp
 catalog: hw/phone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check queries the status of trunk ports on local PBX

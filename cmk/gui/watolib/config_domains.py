@@ -7,17 +7,18 @@
 import errno
 import logging
 import os
-import re
 import signal
 import subprocess
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.process import pid_from_file, send_signal
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
@@ -37,6 +38,7 @@ from cmk.gui.plugins.watolib.utils import (
     DomainRequest,
     SerializedSettings,
 )
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.changes import log_audit
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
@@ -88,21 +90,23 @@ class ConfigDomainCore(ABCConfigDomain):
         return get_configuration(*self._get_global_config_var_names()).result
 
     @classmethod
-    def generate_hosts_to_update_settings(cls, hostnames: Sequence[HostName]) -> SerializedSettings:
+    def generate_hosts_to_update_settings(cls, hostnames: Iterable[HostName]) -> SerializedSettings:
         return {"hosts_to_update": hostnames}
+
+    @classmethod
+    def generate_domain_settings(cls, hostnames: Iterable[HostName]) -> SerializedSettings:
+        return {cls.ident(): cls.generate_hosts_to_update_settings(hostnames)}
 
     @classmethod
     def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
         # The incremental activate only works, if all changes use the hosts_to_update option
-        if not any(map(lambda x: len(x.get("hosts_to_update", [])) == 0, settings)):
-            return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings([]))
+        hosts_to_update: Set[HostName] = set()
+        for setting in settings:
+            if len(setting.get("hosts_to_update", [])) == 0:
+                return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings([]))
+            hosts_to_update.update(setting["hosts_to_update"])
 
-        return DomainRequest(
-            cls.ident(),
-            cls.generate_hosts_to_update_settings(
-                list({x.get("hosts_to_update", []) for x in settings})
-            ),
-        )
+        return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings(hosts_to_update))
 
 
 @config_domain_registry.register
@@ -250,10 +254,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
-    _PEM_RE = re.compile(
-        "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
-    )
-
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return "ca-certificates"
@@ -288,7 +288,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
-            return self._update_trusted_cas(config.trusted_certificate_authorities)
+            warnings = self._update_trusted_cas(config.trusted_certificate_authorities)
+            stunnel_pid = pid_from_file(
+                cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
+            )
+            if stunnel_pid:
+                send_signal(stunnel_pid, signal.SIGHUP)
+            return warnings
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
@@ -306,7 +312,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         trusted_cas += current_config["trusted_cas"]
 
-        store.save_text_to_file(self.trusted_cas_file, "\n".join(trusted_cas))
+        store.save_text_to_file(
+            self.trusted_cas_file,
+            # we sort to have a deterministic output, s.t. for example liveproxyd can reliably check
+            # if the file changed
+            "\n".join(sorted(trusted_cas)),
+        )
         return errors
 
     def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[str], List[str]]:
@@ -324,7 +335,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     if entry.suffix not in [".pem", ".crt"]:
                         continue
 
-                    trusted_cas.update(self._get_certificates_from_file(cert_file_path))
+                    trusted_cas.update(raw_certificates_from_file(cert_file_path))
                 except (IOError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -348,24 +359,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         return list(trusted_cas), errors
 
-    def _get_certificates_from_file(self, path: Path) -> List[str]:
-        try:
-            # Some users use comments in certificate files e.g. to write the content of the
-            # certificate outside of encapsulation boundaries. We only want to extract the
-            # certificates between the encapsulation boundaries which have to be 7-bit ASCII
-            # characters.
-            with path.open("r", encoding="ascii", errors="surrogateescape") as f:
-                return [
-                    content
-                    for match in self._PEM_RE.finditer(f.read())
-                    if (content := match.group(0)).isascii()
-                ]
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                # Silently ignore e.g. dangling symlinks
-                return []
-            raise
-
     def default_globals(self):
         return {
             "trusted_certificate_authorities": {
@@ -383,7 +376,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     def __init__(self):
         super().__init__()
-        self._logger = logger.getChild("config.omd")
+        self._logger: logging.Logger = logger.getChild("config.omd")
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -402,7 +395,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         settings.update(self._to_omd_config(self.load()))
         settings.update(self._to_omd_config(self.load_site_globals()))
 
-        config_change_commands = []
+        config_change_commands: List[str] = []
         self._logger.debug("Set omd config: %r" % settings)
 
         for key, val in settings.items():
@@ -421,12 +414,20 @@ class ConfigDomainOMD(ABCConfigDomain):
         self._logger.debug('Executing "omd config change"')
         self._logger.debug("  Commands: %r" % config_change_commands)
 
-        job = OMDConfigChangeBackgroundJob()
-        if job.is_active():
-            raise MKUserError(None, _("Another omd config change job is already running."))
+        # We need a background job on remote sites to wait for the restart, so
+        # that the central site can gather the result of the activation.
+        # On a central site, the waiting for the end of the restart is already
+        # taken into account by the activate changes background job within
+        # async_progress.js. Just execute the omd config change command
+        if is_wato_slave_site():
+            job = OMDConfigChangeBackgroundJob()
+            if job.is_active():
+                raise MKUserError(None, _("Another omd config change job is already running."))
 
-        job.set_function(job.do_execute, config_change_commands)
-        job.start()
+            job.set_function(job.do_execute, config_change_commands)
+            job.start()
+        else:
+            _do_config_change(config_change_commands, self._logger)
 
         return []
 
@@ -587,27 +588,33 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
             stoppable=False,
         )
 
-    def do_execute(self, config_change_commands, job_interface):
-        self._do_config_change(config_change_commands)
+    def do_execute(self, config_change_commands: List[str], job_interface):
+        _do_config_change(config_change_commands, self._logger)
         job_interface.send_result_message(_("OMD config changes have been applied."))
 
-    def _do_config_change(self, config_change_commands) -> None:
-        p = subprocess.Popen(
-            ["omd", "config", "change"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-        )
-        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
-        self._logger.debug("  Exit code: %d" % p.returncode)
-        self._logger.debug("  Output: %r" % stdout)
-        if p.returncode != 0:
-            raise MKGeneralException(
-                _(
-                    "Failed to activate changed site "
-                    "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
-                )
-                % (p.returncode, config_change_commands, stdout)
+
+def _do_config_change(config_change_commands: List[str], omd_logger: logging.Logger) -> None:
+    completed_process = subprocess.run(
+        ["omd", "config", "change"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        encoding="utf-8",
+        input="\n".join(config_change_commands),
+        check=False,
+    )
+
+    omd_logger.debug("  Exit code: %d" % completed_process.returncode)
+    omd_logger.debug("  Output: %r" % completed_process.stdout)
+    if completed_process.returncode:
+        raise MKGeneralException(
+            _(
+                "Failed to activate changed site "
+                "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
             )
+            % (
+                completed_process.returncode,
+                config_change_commands,
+                completed_process.stdout,
+            )
+        )

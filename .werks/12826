@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The on page search could be used to trigger a reflected XSS attack.  It was
 possible to execute arbitrary javascript code in the context of the user

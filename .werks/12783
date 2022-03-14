@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this fix the inventory was 'OK' but showed:
 WARNING: k8s_endpoint_info: failed: Unable to convert legacy results. Please migrate plugin to new API

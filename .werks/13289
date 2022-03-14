@@ -1,0 +1,13 @@
+Title: Fixed slow livestatus connections with TLS encryption
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1643098885
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The web interface was slow when contacting a remote site over TLS and without an intermediary liveproxyd.
+This could be seen especially with the CRE, which does not include liveproxyd.

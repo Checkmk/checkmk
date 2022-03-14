@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -14,7 +13,7 @@ from cmk.gui.i18n import _
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
 from cmk.gui.page_menu import PageMenu, search_form  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.page_state import PageState
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 # TODO: Refactor to context handler or similar?
 _html_head_open = False
@@ -60,6 +59,7 @@ def wato_html_footer(show_body_end: bool = True) -> None:
 
 def _make_wato_page_state() -> PageState:
     changes_info = get_pending_changes_info()
+    tooltip = get_pending_changes_tooltip()
     changelog_url = "wato.py?mode=changelog"
     span_id = "pending_changes"
     if changes_info:
@@ -67,29 +67,11 @@ def _make_wato_page_state() -> PageState:
             text=html.render_span(changes_info, id_=span_id),
             icon_name="pending_changes",
             url=changelog_url,
-            tooltip_text=(
-                _tooltip_changes_info(changes_info)
-                + "\n"
-                + _("Click here to go to pending changes.")
-            ),
+            tooltip_text=tooltip,
         )
     return PageState(
         text=html.render_span(_("No pending changes"), id_=span_id),
+        icon_name="no_pending_changes",
         url=changelog_url,
-        tooltip_text=_("Click here to see the activation status per site."),
-    )
-
-
-def _tooltip_changes_info(info: str) -> str:
-    """
-    >>> _tooltip_changes_info('1 change')
-    'Currently there is one change to activate.'
-    >>> _tooltip_changes_info('4 changes')
-    'Currently there are 4 changes to activate.'
-    """
-    n_changes = int(re.findall(r"\d+", info)[0])
-    return (
-        _("Currently there is one change to activate.")
-        if n_changes == 1
-        else _("Currently there are %s to activate.") % info
+        tooltip_text=tooltip,
     )

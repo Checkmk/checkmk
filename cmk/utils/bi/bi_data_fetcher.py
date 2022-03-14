@@ -8,7 +8,7 @@ import marshal
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Mapping, Optional, Set, Tuple
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
@@ -135,11 +135,23 @@ class BIStructureFetcher:
 
             # This data will be serialized to disc
             # Named tuples/dicts will be used later on when the data gets processed
+
+            # Remove hosts.mk suffix
+            cleaned_host_filename = (
+                host_filename[:-8] if host_filename.endswith("/hosts.mk") else host_filename
+            )
+            # Remove /wato prefix
+            cleaned_host_filename = (
+                cleaned_host_filename[6:]
+                if cleaned_host_filename.startswith("/wato")
+                else cleaned_host_filename
+            )
+
             site_data[site][host_name] = (
                 site,
                 set(host_tags.items()),
                 host_labels,
-                str(Path(host_filename).parent),  # remove /hosts{.mk|.cfg}
+                cleaned_host_filename,
                 services,
                 tuple(host_childs),
                 tuple(host_parents),
@@ -216,7 +228,7 @@ class BIStructureFetcher:
 
         self._have_sites.add(site_id)
 
-    def cleanup_orphaned_files(self, known_sites: Dict[str, int]) -> None:
+    def cleanup_orphaned_files(self, known_sites: Mapping[SiteId, int]) -> None:
         for path_object, (site_id, timestamp) in self._get_site_data_files():
             try:
                 if known_sites.get(site_id) == timestamp:
@@ -245,7 +257,7 @@ class BIStructureFetcher:
                 path_object.unlink(missing_ok=True)
                 continue
 
-            data_files.append((path_object, (site_id, int(timestamp))))
+            data_files.append((path_object, (SiteId(site_id), int(timestamp))))
         return data_files
 
     def _marshal_save_data(self, filepath, data) -> None:

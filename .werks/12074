@@ -6,7 +6,7 @@ Date: 1613675183
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The command "Archive events of hosts" is bound to the rule "Check event state
 in Event Console" to archive events of one host. To make this clearly visible

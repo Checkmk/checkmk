@@ -24,7 +24,7 @@ TEST(IntColumn, GetValueLambda) {
     const DummyRow row{&val};
     for (const auto v : {-42, 0, 1337}) {
         const IntColumn<DummyRow> col{
-            "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 
@@ -36,7 +36,7 @@ TEST(IntColumn, GetValueDefault) {
     const DummyRow row{nullptr};
     for (const auto v : {-42, 0, 1337}) {
         const IntColumn<DummyRow, 123> col{
-            "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 

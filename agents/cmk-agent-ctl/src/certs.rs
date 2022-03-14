@@ -1,4 +1,9 @@
-use anyhow::{Context, Result as AnyhowResult};
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+use super::types;
+use anyhow::{anyhow, Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -7,6 +12,8 @@ use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{X509Name, X509Req};
 use reqwest::blocking::{Client, ClientBuilder};
 use reqwest::Certificate;
+use rustls::{Certificate as RustlsCertificate, PrivateKey as RustlsPrivateKey};
+use rustls_pemfile::Item;
 use std::net::TcpStream;
 
 pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
@@ -44,8 +51,8 @@ pub fn client(root_cert: Option<&str>) -> AnyhowResult<Client> {
         .build()?)
 }
 
-pub fn fetch_server_cert_pem(address: &str) -> AnyhowResult<String> {
-    let tcp_stream = TcpStream::connect(address)?;
+pub fn fetch_server_cert_pem(server: &str, port: &types::Port) -> AnyhowResult<String> {
+    let tcp_stream = TcpStream::connect(format!("{}:{}", server, port))?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
     let mut ssl_stream = ssl_connector_builder.build().connect("dummy", tcp_stream)?;
@@ -77,4 +84,25 @@ pub fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
         .map(|cn| cn.as_str().unwrap_or("[unknown]"))
         .collect::<Vec<&str>>()
         .join(", ")
+}
+
+pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<RustlsPrivateKey> {
+    if let Item::PKCS8Key(it) = rustls_pemfile::read_one(&mut key_pem.to_owned().as_bytes())?
+        .context("Could not load private key")?
+    {
+        Ok(RustlsPrivateKey(it))
+    } else {
+        Err(anyhow!("Could not process private key"))
+    }
+}
+
+pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<RustlsCertificate> {
+    if let Item::X509Certificate(it) =
+        rustls_pemfile::read_one(&mut cert_pem.to_owned().as_bytes())?
+            .context("Could not load certificate")?
+    {
+        Ok(RustlsCertificate(it))
+    } else {
+        Err(anyhow!("Could not process certificate"))
+    }
 }

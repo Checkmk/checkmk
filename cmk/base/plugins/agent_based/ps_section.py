@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -166,7 +166,7 @@ def _consolidate_lines(string_table: StringTable) -> StringTable:
     consolidated_lines: List[List[str]] = []
 
     for line in iter_string_table:
-        if line[0].replace("'", "").strip().startswith("-"):
+        if line[0].replace("'", "").replace('"', "").strip().startswith("-"):
             # For some reason, some of the Windows process descriptions can contain a newline.
             # This leads to an extra line in string_table which is in fact a continuation
             # of the previus line. This seems to be the case when executables are called with
@@ -202,22 +202,32 @@ register.agent_section(
 )
 
 
+def _handle_deleted_cgroup(attrs: Iterable[str], line: Sequence[str]) -> Sequence[str]:
+    """
+    >>> _handle_deleted_cgroup(
+    ...     ('cgroup', 'user', 'vsz', 'rss', 'time', 'elapsed', 'pid'),
+    ...     ['some_cgroup', '(deleted)', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    ... )
+    ['some_cgroup (deleted)', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    >>> _handle_deleted_cgroup(
+    ...     ('cgroup', 'user', 'vsz', 'rss', 'time', 'elapsed', 'pid'),
+    ...     ['some_cgroup', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    ... )
+    ['some_cgroup', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    """
+    for idx, attr in enumerate(attrs):
+        if attr == "cgroup" and len(line) > (next_idx := idx + 1) and line[next_idx] == "(deleted)":
+            return [
+                *line[:idx],
+                line[idx] + " (deleted)",
+                *line[next_idx + 1 :],
+            ]
+    return line
+
+
 def parse_ps_lnx(
     string_table: StringTable,
 ) -> Optional[ps.Section]:
-    """
-    >>> cpu_cores, lines = parse_ps_lnx([
-    ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
-    ...     ["1:name=systemd:/init.scope,", "root", "226036", "9736", "00:00:09", "05:14:30",
-    ...      "1", "/sbin/init", "--ladida"],
-    ... ])
-    >>> print(cpu_cores)
-    1
-    >>> print(lines[0][0])
-    PsInfo(user='root', virtual=226036, physical=9736, cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
-    >>> print(lines[0][1])
-    ['/sbin/init', '--ladida']
-    """
     data = []
     # info[0]: $Node [header] user ... pid command
     # we rely on the command being the last one!
@@ -229,7 +239,7 @@ def parse_ps_lnx(
 
     cmd_idx = len(attrs)
 
-    for line in string_table[1:]:
+    for line in (_handle_deleted_cgroup(attrs, l) for l in string_table[1:]):
         # read all but 'command' into dict
         ps_raw = dict(zip(attrs, line))
         ps_info_obj = ps.PsInfo(

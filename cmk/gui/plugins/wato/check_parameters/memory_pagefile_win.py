@@ -38,7 +38,7 @@ def _parameter_valuespec_memory_pagefile_win():
                             ],
                         ),
                         Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 title=_("Absolute free memory"),
                                 elements=[
                                     Filesize(title=_("Warning if less than")),
@@ -68,7 +68,7 @@ def _parameter_valuespec_memory_pagefile_win():
                             ],
                         ),
                         Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 title=_("Absolute commitable memory"),
                                 elements=[
                                     Filesize(title=_("Warning if less than")),

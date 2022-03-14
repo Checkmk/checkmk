@@ -20,7 +20,6 @@ from typing import Any, Dict
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
 import cmk.gui.watolib as watolib
-from cmk.gui import fields
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -42,6 +41,8 @@ from cmk.gui.watolib.tags import (
     TagCleanupMode,
     update_tag_config,
 )
+
+from cmk import fields
 
 
 class HostTagGroupName(fields.String):
@@ -114,7 +115,8 @@ def list_host_tag_groups(params):
         "value": [
             constructors.collection_item(
                 domain_type="host_tag_group",
-                obj={"title": tag_group_obj.title, "id": tag_group_obj.id},
+                title=tag_group_obj.title,
+                identifier=tag_group_obj.id,
             )
             for tag_group_obj in tag_config.get_tag_groups()
         ],

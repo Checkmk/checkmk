@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check systemd_units_services_summary shows the time period a systemd
 service has been activating and reloading. The time period was not reset after

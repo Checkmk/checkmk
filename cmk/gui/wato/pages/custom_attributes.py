@@ -133,7 +133,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         if not transactions.check_transaction():
             return None
 
-        title = request.get_unicode_input_mandatory("title").strip()
+        title = request.get_str_input_mandatory("title").strip()
         if not title:
             raise MKUserError("title", _("Please specify a title."))
 
@@ -144,8 +144,8 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
                     _("This alias is already used by the attribute %s.") % this_attr["name"],
                 )
 
-        topic = request.get_unicode_input_mandatory("topic", "").strip()
-        help_txt = request.get_unicode_input_mandatory("help", "").strip()
+        topic = request.get_str_input_mandatory("topic", "").strip()
+        help_txt = request.get_str_input_mandatory("help", "").strip()
         show_in_table = html.get_checkbox("show_in_table")
         add_custom_macro = html.get_checkbox("add_custom_macro")
 

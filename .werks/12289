@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When adding or editing backup jobs with a "manual schedule" configuration this
 lead to an exception "TypeError (argument of type 'NoneType' is not iterable)"

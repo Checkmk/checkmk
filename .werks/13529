@@ -1,0 +1,11 @@
+Title: lvm_vgs: Fix graph for filesystem units
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643356981
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

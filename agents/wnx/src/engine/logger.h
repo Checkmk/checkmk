@@ -56,8 +56,8 @@ void WriteToWindowsEventLog(unsigned short type, int code,
 
 // main engine to write something in the Windows Event Log
 template <typename... Args>
-void LogWindowsEventAlways(EventLevel Level, int Code, const char* Format,
-                           Args&&... args) {
+void LogWindowsEventAlways(EventLevel Level, int Code, const char *Format,
+                           Args &&...args) {
     auto type = LoggerEventLevelToWindowsEventType(Level);
     std::string x;
     try {
@@ -70,8 +70,8 @@ void LogWindowsEventAlways(EventLevel Level, int Code, const char* Format,
 }
 
 template <typename... Args>
-void LogWindowsEvent(EventLevel Level, int Code, const char* Format,
-                     Args&&... args) {
+void LogWindowsEvent(EventLevel Level, int Code, const char *Format,
+                     Args &&...args) {
     auto allowed_level = cma::cfg::GetCurrentEventLevel();
     if (Level > allowed_level) return;
 
@@ -79,31 +79,31 @@ void LogWindowsEvent(EventLevel Level, int Code, const char* Format,
 }
 
 template <typename... Args>
-void LogWindowsEventCritical(int Code, const char* Format, Args&&... args) {
+void LogWindowsEventCritical(int Code, const char *Format, Args &&...args) {
     LogWindowsEvent(EventLevel::critical, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventError(int Code, const char* Format, Args&&... args) {
+void LogWindowsEventError(int Code, const char *Format, Args &&...args) {
     LogWindowsEvent(EventLevel::error, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventSuccess(int Code, const char* Format, Args&&... args) {
+void LogWindowsEventSuccess(int Code, const char *Format, Args &&...args) {
     LogWindowsEvent(EventLevel::success, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventWarn(int Code, const char* Format, Args&&... args) {
+void LogWindowsEventWarn(int Code, const char *Format, Args &&...args) {
     LogWindowsEvent(EventLevel::warning, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventInfo(int Code, const char* Format, Args&&... args) {
+void LogWindowsEventInfo(int Code, const char *Format, Args &&...args) {
     LogWindowsEvent(EventLevel::information, Code, Format,
                     std::forward<Args>(args)...);
 }
@@ -114,11 +114,11 @@ void LogWindowsEventInfo(int Code, const char* Format, Args&&... args) {
 #if defined(FMT_FORMAT_H_)
 namespace xlog {
 
-inline void AddCr(std::string& s) noexcept {
+inline void AddCr(std::string &s) noexcept {
     if (s.empty() || s.back() != '\n') s.push_back('\n');
 }
 
-inline void RmCr(std::string& s) noexcept {
+inline void RmCr(std::string &s) noexcept {
     if (!s.empty() && s.back() == '\n') s.pop_back();
 }
 
@@ -126,8 +126,8 @@ inline bool IsNoCrFlag(int Flag) noexcept { return (Flag & kNoCr) != 0; }
 inline bool IsAddCrFlag(int Flag) noexcept { return (Flag & kAddCr) != 0; }
 
 // Public Engine to print all
-inline std::string formatString(int Fl, const char* Prefix,
-                                const char* String) {
+inline std::string formatString(int Fl, const char *Prefix,
+                                const char *String) {
     std::string s;
     auto length = String != nullptr ? strlen(String) : 0;
     auto prefix = Fl & Flags::kNoPrefix ? nullptr : Prefix;
@@ -138,7 +138,7 @@ inline std::string formatString(int Fl, const char* Prefix,
         s.reserve(length);
         if (prefix != nullptr) s = prefix;
         if (String != nullptr) s += String;
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         return {};
     }
 
@@ -208,11 +208,11 @@ constexpr uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
 }
 }  // namespace internal
 
-inline void sendStringToDebugger(const char* String) {
+inline void sendStringToDebugger(const char *String) {
     internal_PrintStringDebugger(String);
 }
 
-inline void sendStringToStdio(const char* String,
+inline void sendStringToStdio(const char *String,
                               internal::Colors Color = internal::Colors::dflt) {
     if (!XLOG::details::IsColoredOnStdio()) {
         internal_PrintStringStdio(String);
@@ -344,7 +344,7 @@ public:
         constructed_ = kConstructedValue;
     }
 
-    Emitter operator=(const Emitter& Rhs) = delete;
+    Emitter operator=(const Emitter &Rhs) = delete;
 
     ~Emitter() {
         if (copy_) {
@@ -355,12 +355,12 @@ public:
     // *****************************
     // STREAM OUTPUT
     template <typename T>
-    std::ostream& operator<<(const T& value) {
+    std::ostream &operator<<(const T &value) {
         return (os_ << value);
     }
 
     template <>
-    std::ostream& operator<<(const std::wstring& value) {
+    std::ostream &operator<<(const std::wstring &value) {
         auto s = wtools::ToUtf8(value);
         if (!constructed()) {
             xlog::l("Attempt to log too early '%s'", s.c_str());
@@ -371,7 +371,7 @@ public:
         return (os_ << s);
     }
 
-    std::ostream& operator<<(const wchar_t* value) {
+    std::ostream &operator<<(const wchar_t *value) {
         auto s = wtools::ToUtf8(value);
         if (!constructed()) {
             xlog::l("Attempt to log too early '%s'", s.c_str());
@@ -383,7 +383,7 @@ public:
     // **********************************
 
     inline std::string SafePrintToDebuggerAndEventLog(
-        const std::string& text) noexcept {
+        const std::string &text) noexcept {
         try {
             return fmt::format(
                 "[ERROR] [CRITICAL] Invalid parameters for log string \"{}\"\n",
@@ -398,7 +398,7 @@ public:
     // **********************************
     // STREAM OUTPUT
     template <typename... Args>
-    auto operator()(const std::string& format, Args&&... args) noexcept {
+    auto operator()(const std::string &format, Args &&...args) noexcept {
         try {
             auto s = fmt::format(format, std::forward<Args>(args)...);
             if (!constructed()) {
@@ -416,8 +416,8 @@ public:
 
     // #TODO make more versatile
     template <typename... Args>
-    auto operator()(int flags, const std::string& format,
-                    Args&&... args) noexcept {
+    auto operator()(int flags, const std::string &format,
+                    Args &&...args) noexcept {
         try {
             auto s = fmt::format(format, std::forward<Args>(args)...);
             if (!constructed()) {
@@ -459,8 +459,8 @@ public:
     // XLOG::d(XLOG::kTrace)(...);
 
     template <typename... Args>
-    auto exec(int modifications, const std::string& format,
-              Args&&... args) noexcept {
+    auto exec(int modifications, const std::string &format,
+              Args &&...args) noexcept {
         try {
             auto s = fmt::format(format, std::forward<Args>(args)...);
             // check construction
@@ -480,47 +480,47 @@ public:
 #pragma warning(disable : 26444)
     // [Trace]
     template <typename... Args>
-    [[maybe_unused]] auto t(const std::string& format,
-                            Args&&... args) noexcept {
+    [[maybe_unused]] auto t(const std::string &format,
+                            Args &&...args) noexcept {
         return exec(XLOG::kTrace, format, std::forward<Args>(args)...);
     }
 
     // no prefix, just informational
     template <typename... Args>
-    [[maybe_unused]] auto i(const std::string& format,
-                            Args&&... args) noexcept {
+    [[maybe_unused]] auto i(const std::string &format,
+                            Args &&...args) noexcept {
         return exec(XLOG::kInfo, format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    [[maybe_unused]] auto i(int Mods, const std::string& format,
-                            Args&&... args) noexcept {
+    [[maybe_unused]] auto i(int Mods, const std::string &format,
+                            Args &&...args) noexcept {
         return exec(XLOG::kInfo | Mods, format, std::forward<Args>(args)...);
     }
 
     // [Err  ]
     template <typename... Args>
-    [[maybe_unused]] auto e(const std::string& format,
-                            Args&&... args) noexcept {
+    [[maybe_unused]] auto e(const std::string &format,
+                            Args &&...args) noexcept {
         return exec(XLOG::kError, format, std::forward<Args>(args)...);
     }
 
     // [Warn ]
     template <typename... Args>
-    [[maybe_unused]] auto w(const std::string& format,
-                            Args&&... args) noexcept {
+    [[maybe_unused]] auto w(const std::string &format,
+                            Args &&...args) noexcept {
         return exec(XLOG::kWarning, format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    [[maybe_unused]] auto crit(const std::string& format,
-                               Args&&... args) noexcept {
+    [[maybe_unused]] auto crit(const std::string &format,
+                               Args &&...args) noexcept {
         return exec(XLOG::kCritError, format, std::forward<Args>(args)...);
     }
     // [ERROR:CRITICAL] +  breakpoint
     template <typename... Args>
-    [[maybe_unused]] auto bp(const std::string& format,
-                             Args&&... args) noexcept {
+    [[maybe_unused]] auto bp(const std::string &format,
+                             Args &&...args) noexcept {
         return exec(XLOG::kCritError | XLOG::kBp, format,
                     std::forward<Args>(args)...);
     }
@@ -564,7 +564,7 @@ public:
     }
 #pragma warning(pop)
     // set filename to log
-    void configFile(const std::string& log_file) {
+    void configFile(const std::string &log_file) {
         if (log_file.empty()) {
             log_param_.setFileName(nullptr);
         } else {
@@ -572,7 +572,7 @@ public:
         }
     }
 
-    void configPrefix(const std::wstring& prefix) {
+    void configPrefix(const std::wstring &prefix) {
         if (prefix.empty()) {
             log_param_.initPrefix(nullptr);
         } else {
@@ -612,7 +612,7 @@ public:
         return (log_param_.directions_ | xlog::Directions::kFilePrint) != 0;
     }
 
-    const xlog::LogParam& getLogParam() const noexcept { return log_param_; }
+    const xlog::LogParam &getLogParam() const noexcept { return log_param_; }
 
     bool constructed() const noexcept {
         return constructed_ == kConstructedValue;
@@ -625,7 +625,7 @@ public:
 private:
     uint32_t constructed_;  // filled during construction
     // private, can be called only from operator ()
-    Emitter(const Emitter& rhs) {
+    Emitter(const Emitter &rhs) {
         {
             std::lock_guard lk(rhs.lock_);
             log_param_ = rhs.log_param_;
@@ -646,7 +646,7 @@ private:
         }
     }
 
-    void postProcessAndPrint(const std::string& text);
+    void postProcessAndPrint(const std::string &text);
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
@@ -682,7 +682,7 @@ namespace setup {
 // YOU DO NOT NEED ANYTHING EXCEPT THIS CALL
 void ReConfigure();
 
-void Configure(const std::string& log_file_name, int debug_level, bool windbg,
+void Configure(const std::string &log_file_name, int debug_level, bool windbg,
                bool event_log);
 
 /// \brief switch d to send output into the file
@@ -692,7 +692,7 @@ void EnableDebugLog(bool enable);
 void EnableTraceLog(bool enable);
 
 /// \brief change file name for all loggers
-void ChangeLogFileName(const std::string& log_file_name);
+void ChangeLogFileName(const std::string &log_file_name);
 
 /// \brief change debug level
 void ChangeDebugLogLevel(int level);
@@ -707,7 +707,7 @@ bool IsEventLogEnabled();
 
 namespace internal {
 int Type2Marker(xlog::Type log_type) noexcept;
-uint32_t Mods2Directions(const xlog::LogParam& lp, uint32_t mods) noexcept;
+uint32_t Mods2Directions(const xlog::LogParam &lp, uint32_t mods) noexcept;
 }  // namespace internal
 
 }  // namespace XLOG
@@ -722,7 +722,7 @@ namespace cma::tools {
 class TimeLog {
 public:
     // time is set at the moment of creation
-    explicit TimeLog(const std::string& object_name);
+    explicit TimeLog(const std::string &object_name);
     // duration is measured here
     void writeLog(size_t processed_bytes) const noexcept;
 

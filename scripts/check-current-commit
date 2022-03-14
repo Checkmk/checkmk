@@ -33,7 +33,7 @@ run_pipenv() {
         PIPENV_NO_INHERIT=true \
         PIPENV_PIPFILE="$REPO_PATH/Pipfile" \
         PIPENV_IGNORE_VIRTUALENVS=1 \
-        $PIPENV $*
+        $PIPENV "$@"
 }
 
 # This has the effect that the virtual-envs are kept up-to-date before pre-commit starts.
@@ -41,4 +41,5 @@ run_pipenv() {
 # it's python binary is currently being executed. This would lead to a "Text file busy" OSError.
 run_pipenv run true
 
+# shellcheck disable=SC2046  # No, don't quote this
 pre-commit run --files $(git diff-tree --no-commit-id --name-only -r $HEAD)

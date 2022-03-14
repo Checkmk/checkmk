@@ -41,13 +41,12 @@ def test_backup_site_to_tarfile(site, tmp_path):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
-        sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
-        assert sitename == "unit"
-        assert version == "1.3.3i7.cee"
-
-        names = [tarinfo.name for tarinfo in tar]
-        assert "unit/test123" in names
+        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
+            sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
+            names = [tarinfo.name for tarinfo in tar]
+    assert sitename == "unit"
+    assert version == "1.3.3i7.cee"
+    assert "unit/test123" in names
 
 
 def test_backup_site_to_tarfile_broken_link(site, tmp_path):
@@ -58,10 +57,10 @@ def test_backup_site_to_tarfile_broken_link(site, tmp_path):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
-        _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
+            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
 
-        link = tar.getmember("unit/link")
+            link = tar.getmember("unit/link")
         assert link.linkname == "agag"
 
 
@@ -92,5 +91,5 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
-        _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
+            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)

@@ -1,0 +1,20 @@
+Title: Renew old site certificates during update
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1645276002
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Older certificates that do not include the server name
+extension need to be updated in order to support the new
+agents TLS encryption.
+
+The old certificate is moved to <tt>[my_site].pem.bak</tt>,
+and a new one is created.
+The existing site local root CA, which signed the previous
+certificate, is used to sign the new certficate.
+Since the trust between distributed sites is established
+with the local root CA, no additional action is needed.

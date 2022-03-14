@@ -22,9 +22,6 @@ import cmk.gui.globals as gui_globals
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log
 
-# Loads all GUI modules
-import cmk.gui.modules
-
 
 @pytest.fixture(autouse=True)
 def debug_logging():
@@ -58,6 +55,7 @@ def test_registered_background_jobs():
     if not cmk_version.is_raw_edition():
         expected_jobs += [
             "HostRegistrationBackgroundJob",
+            "DiscoverRegisteredHostsBackgroundJob",
             "BakeAgentsBackgroundJob",
             "SignAgentsBackgroundJob",
             "ReportingBackgroundJob",

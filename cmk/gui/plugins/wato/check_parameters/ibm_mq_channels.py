@@ -19,7 +19,7 @@ def _parameter_valuespec_ibm_mq_channels():
             (
                 "mapped_states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(

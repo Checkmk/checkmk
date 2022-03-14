@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Age, Dictionary, Transform, Tuple
 
 def _parameter_valuespec_systemtime():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title="Time offset",
             elements=[
                 (

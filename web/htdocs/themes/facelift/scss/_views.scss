@@ -622,16 +622,12 @@ table.data.matrix {
     }
   }
 
-  tr.even0 {
-    td.left.minority {
-      background-color: rgb(187, 221, 221);
-    }
+  tr.even0 td.minority {
+    background-color: lighten($table-highlight-color, 5%);
   }
 
-  tr.odd0 {
-    td.left.minority {
-      background-color: rgb(204, 238, 238);
-    }
+  tr.odd0 td.minority {
+    background-color: $table-highlight-color;
   }
 
   tr.even0,
@@ -650,14 +646,6 @@ table.data.matrix {
       padding: 0;
     }
   }
-}
-
-.even0 .minority {
-  background-color: rgb(204, 255, 255);
-}
-
-.odd0 .minority {
-  background-color: rgb(221, 255, 255);
 }
 
 /*-------------------------------------------------------------------------.
@@ -679,63 +667,6 @@ input#try {
   float: left;
 }
 
-/*-------------------------------------------------------------------------.
-|       _     _     _            __         _                              |
-|      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
-|      | |   | / __| __|  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|           |
-|      | |___| \__ \ |_  | (_) |  _|  \ V /| |  __/\ V  V /\__ \           |
-|      |_____|_|___/\__|  \___/|_|     \_/ |_|\___| \_/\_/ |___/           |
-|                                                                          |
-+--------------------------------------------------------------------------+
-| The table with the list of all views                                     |
-'-------------------------------------------------------------------------*/
-/* TODO: Check whether this list of views is deprecated
- * page_edit_views() in cmk.gui.views is never called
- */
-
-table.views {
-  margin-bottom: 1ex;
-  border-collapse: collapse;
-  empty-cells: show;
-
-  td,
-  th {
-    padding: 2px 1ex;
-    color: $font-color-white;
-    border: 1px solid $grey-3;
-  }
-
-  td {
-    height: 25px;
-    padding-top: 3px;
-
-    &.legend {
-      color: $font-color-white;
-      background-color: rgb(142, 174, 184);
-    }
-
-    &.content {
-      color: $font-color-white;
-      background-color: rgb(158, 190, 200);
-    }
-
-    &.edit {
-      text-align: center;
-      background-color: rgb(102, 170, 187);
-    }
-
-    &.buttons {
-      padding: 3px;
-      vertical-align: middle;
-      background-color: rgb(142, 174, 184);
-    }
-  }
-
-  th {
-    background-color: rgb(112, 154, 165);
-  }
-}
-
 /* Availability */
 table.data.availability {
   td.number {
@@ -755,28 +686,28 @@ table.data.availability {
   }
 }
 
-table.data td.flapping span,
+table.data td.flapping,
 table.timeline td.flapping,
-div.avlegend.timeline div.state.flapping span {
-  background-color: rgb(255, 0, 255);
+div.avlegend.timeline div.state.flapping {
+  background-color: $flapping;
 }
 
 table.data td.downtime,
 table.timeline td.downtime,
-div.avlegend.timeline div.state.downtime span {
-  background-color: rgb(0, 170, 255);
+div.avlegend.timeline div.state.downtime {
+  background-color: $downtime;
 }
 
 table.data tr.data > td.hostdown,
 table.timeline td.hostdown,
-div.avlegend.timeline div.state.hostdown span {
+div.avlegend.timeline div.state.hostdown {
   color: $font-color-white;
-  background-color: $hostdown-bg-color;
+  background-color: $hostdown;
 }
 
 table.data tr.data td.unmonitored span,
 table.timeline td.unmonitored,
-div.avlegend.timeline div.state.unmonitored span {
+div.avlegend.timeline div.state.unmonitored {
   color: $font-color-black;
   background-color: $color-state-4-background;
 }
@@ -787,16 +718,22 @@ table.data.availability tr td {
   }
 
   &.hostdown {
-    background-color: $hostdown-bg-color;
+    background-color: $hostdown;
   }
 }
 
 table.timeline td.ooservice,
-div.avlegend.timeline div.state.ooservice span {
+div.avlegend.timeline div.state.ooservice {
   color: $font-color-black;
-  background-color: rgb(202, 202, 202);
+  background-color: $middarkgrey;
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
+}
+
+table.timeline td.chaos,
+div.avlegend.timeline div.state.chaos {
+  color: $font-color-white;
+  background-color: $chaos;
 }
 
 /* #TODO: Reproduce this html element */
@@ -828,8 +765,6 @@ table.timeline {
 
   &.inline {
     width: 500px;
-    border-style: none;
-    box-shadow: 0 0 1px rgb(85, 85, 85) inset;
   }
 
   td {
@@ -841,10 +776,6 @@ table.timeline {
       padding: 0;
       border: $timeline-hilite-border;
       filter: brightness(80%);
-    }
-
-    &.chaos {
-      background-color: rgb(136, 68, 255);
     }
   }
 }
@@ -870,7 +801,7 @@ div.timelinerange {
       top: 0;
       width: 5px;
       height: 30px;
-      border-color: rgb(102, 102, 102);
+      border-color: $color-table-border-dark;
       border-style: none none none solid;
       border-width: 0 0 0 1px;
     }
@@ -1130,10 +1061,6 @@ table.data.headerleft.sla {
       opacity: 0.5;
     }
   }
-}
-
-div.sla_details {
-  background-color: rgb(115, 161, 180);
 }
 
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {

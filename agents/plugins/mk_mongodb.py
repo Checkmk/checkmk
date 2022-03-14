@@ -24,7 +24,7 @@ version of pymongo (at least 2.8).
 
 """
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 import argparse
 import configparser
@@ -691,11 +691,8 @@ def get_timestamp(text):
 
 def read_statefile(state_file):
     try:
-        state_fd = open(state_file)
-        try:
+        with open(state_file) as state_fd:
             last_timestamp = int(state_fd.read())
-        finally:
-            state_fd.close()
     except (IOError, ValueError):
         return None, True
 
@@ -716,11 +713,8 @@ def update_statefile(state_file, startup_warnings):
         return
     timestamp = get_timestamp(lines[-1])
     try:
-        state_fd = open(state_file, "w")
-        try:
+        with open(state_file, "w") as state_fd:
             state_fd.write("%d" % timestamp)
-        finally:
-            state_fd.close()
     except (IOError, TypeError):
         # TypeError: timestamp was None, but at least ctime is updated.
         pass

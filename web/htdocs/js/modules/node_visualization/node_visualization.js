@@ -102,12 +102,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     update_browser_url() {
-        let current_url = new URL(window.location);
-
-        this._topology_settings.overlays_config =
-            this.viewport.current_viewport.get_overlay_configs();
-        current_url.searchParams.set("topology_settings", JSON.stringify(this._topology_settings));
-        window.history.replaceState({}, "", current_url.toString());
+        return;
     }
 
     show_topology(topology_settings) {
@@ -127,15 +122,10 @@ export class TopologyVisualization extends NodeVisualization {
             );
         }
 
-        this.add_depth_slider();
-        this.add_max_nodes_slider();
-        this.update_sliders();
         topo_ds.fetch_hosts(topology_settings);
     }
 
     _show_topology() {
-        this.update_sliders();
-
         let topo_ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
@@ -156,103 +146,6 @@ export class TopologyVisualization extends NodeVisualization {
 
     _show_topology_errors(errors) {
         d3.select("label#max_nodes_error_text").text(errors);
-    }
-
-    add_depth_slider() {
-        let slider = d3
-            .select("div#toolbar_controls div#custom")
-            .selectAll("div.mesh_depth_slider")
-            .data([null]);
-        let slider_enter = slider.enter().append("div").classed("topology_slider", true);
-
-        slider_enter
-            .append("label")
-            .style("padding-left", "12px")
-            .text("Number of hops")
-            .classed("noselect", true);
-        slider_enter
-            .append("input")
-            .classed("mesh_depth_slider", true)
-            .style("pointer-events", "all")
-            .attr("type", "range")
-            .attr("step", 1)
-            .attr("min", d => 0)
-            .attr("max", d => 20)
-            .on("input", () => {
-                this._topology_settings.mesh_depth = parseInt(
-                    d3.select("input.mesh_depth_slider").property("value")
-                );
-                this.update_sliders();
-                this.update_data();
-            })
-            .property("value", this._mesh_depth);
-        slider_enter.append("label").attr("id", "mesh_depth_text");
-
-        d3.select("form#form_filter input[name=topology_mesh_depth]").remove();
-        d3.select("form#form_filter")
-            .append("input")
-            .attr("name", "topology_mesh_depth")
-            .attr("type", "hidden")
-            .property("value", this._mesh_depth);
-    }
-
-    add_max_nodes_slider() {
-        let slider = d3
-            .select("div#toolbar_controls div#custom")
-            .selectAll("div.max_nodes_slider")
-            .data([null]);
-        let slider_enter = slider.enter().append("div").classed("topology_slider", true);
-
-        slider_enter
-            .append("label")
-            .style("padding-left", "12px")
-            .text("Maximum number of nodes")
-            .classed("noselect", true);
-        slider_enter
-            .append("input")
-            .classed("max_nodes_slider", true)
-            .style("pointer-events", "all")
-            .attr("type", "range")
-            .attr("step", 10)
-            .attr("min", 20)
-            .attr("max", 2000)
-            .on("input", () => {
-                this._topology_settings.max_nodes = parseInt(
-                    d3.select("input.max_nodes_slider").property("value")
-                );
-                this.update_sliders();
-                this.update_data();
-            });
-        slider_enter.append("label").attr("id", "max_nodes_text").text(this._max_nodes);
-        slider_enter
-            .append("label")
-            .attr("id", "max_nodes_error_text")
-            .style("color", "red")
-            .style("display", "block")
-            .style("margin-left", "12px")
-            .style("margin-top", "-5px");
-
-        d3.select("form#form_filter input[name=topology_max_nodes]").remove();
-        d3.select("form#form_filter")
-            .append("input")
-            .attr("name", "topology_max_nodes")
-            .attr("type", "hidden");
-    }
-
-    update_sliders() {
-        d3.select("input.max_nodes_slider").property("value", this._topology_settings.max_nodes);
-        d3.select("#max_nodes_text").text(this._topology_settings.max_nodes);
-        d3.select("form#form_filter input[name=topology_max_nodes]").property(
-            "value",
-            this._topology_settings.max_nodes
-        );
-
-        d3.select("input.mesh_depth_slider").property("value", this._topology_settings.mesh_depth);
-        d3.select("#mesh_depth_text").text(this._topology_settings.mesh_depth);
-        d3.select("form#form_filter input[name=topology_mesh_depth]").property(
-            "value",
-            this._topology_settings.mesh_depth
-        );
     }
 
     update_data() {

@@ -30,7 +30,7 @@ def _parameter_valuespec_multipath_count():
         title=_("Match type"),
         elements=[
             FixedValue(
-                None,
+                value=None,
                 title=_("OK if standby count is zero or equals active paths."),
                 totext="",
             ),
@@ -40,7 +40,7 @@ def _parameter_valuespec_multipath_count():
                     (
                         element,
                         Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 title=description,
                                 elements=[
                                     Integer(title=_("Critical if less than")),

@@ -11,6 +11,8 @@ from tests.testlib import set_timezone
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
 
+from .utils_inventory import sort_inventory_result
+
 section = OrderedDict(
     (
         ("hardware.biosInfo.biosVersion", ["-[ABIOSVERSION-1.0]-"]),
@@ -45,40 +47,42 @@ def test_inventory():
     # Setting the timezone is needed, otherwise test results will differ between jenkins and local
     # runs
     with set_timezone("UTC"):
-        actual = list(inv_esx_vsphere_hostsystem(section))
-    assert actual == [
-        Attributes(
-            path=["hardware", "cpu"],
-            inventory_attributes={
-                "max_speed": 2933437096.0,
-                "cpus": "2",
-                "cores": "12",
-                "threads": "24",
-                "model": "Intel(R) Xeon(R) CPU X5670 @ 2.93GHz",
-                "vendor": "intel",
-                "bus_speed": 133338039.0,
-                "cores_per_cpu": 6.0,
-                "threads_per_cpu": 12.0,
-            },
-            status_attributes={},
-        ),
-        Attributes(
-            path=["software", "bios"],
-            inventory_attributes={"version": "-[ABIOSVERSION-1.0]-", "date": "2000-01-26"},
-            status_attributes={},
-        ),
-        Attributes(
-            path=["hardware", "system"],
-            inventory_attributes={
-                "product": "System x1 M3 -[123456]-",
-                "vendor": "IBM",
-                "uuid": "bar-foo",
-            },
-            status_attributes={},
-        ),
-        Attributes(
-            path=["hardware", "memory"],
-            inventory_attributes={"total_ram_usable": 146016378880.0},
-            status_attributes={},
-        ),
-    ]
+        actual = sort_inventory_result(inv_esx_vsphere_hostsystem(section))
+    assert actual == sort_inventory_result(
+        [
+            Attributes(
+                path=["hardware", "cpu"],
+                inventory_attributes={
+                    "max_speed": 2933437096.0,
+                    "cpus": "2",
+                    "cores": "12",
+                    "threads": "24",
+                    "model": "Intel(R) Xeon(R) CPU X5670 @ 2.93GHz",
+                    "vendor": "intel",
+                    "bus_speed": 133338039.0,
+                    "cores_per_cpu": 6.0,
+                    "threads_per_cpu": 12.0,
+                },
+                status_attributes={},
+            ),
+            Attributes(
+                path=["software", "bios"],
+                inventory_attributes={"version": "-[ABIOSVERSION-1.0]-", "date": "2000-01-26"},
+                status_attributes={},
+            ),
+            Attributes(
+                path=["hardware", "system"],
+                inventory_attributes={
+                    "product": "System x1 M3 -[123456]-",
+                    "vendor": "IBM",
+                    "uuid": "bar-foo",
+                },
+                status_attributes={},
+            ),
+            Attributes(
+                path=["hardware", "memory"],
+                inventory_attributes={"total_ram_usable": 146016378880.0},
+                status_attributes={},
+            ),
+        ]
+    )

@@ -1,0 +1,14 @@
+Title: Reenable ntopng flows page
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1643814112
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This is a regression after introducing the vlan awareness: the ntopng flows were not displayed anymore.
+This is fixed now.
+

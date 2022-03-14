@@ -400,20 +400,17 @@ def test_convert_esx_counters_if():
 
 
 def test_discovery_counters_diskio():
-    assert (
-        list(
-            esx_vsphere_counters.discover_esx_vsphere_counters_diskio(
-                {
-                    "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
-                    "disk.numberReadAveraged": {"": [(["110", "140", "150"], "number")]},
-                    "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
-                    "disk.numberWriteAveraged": {"": [(["11", "102", "5"], "number")]},
-                    "disk.deviceLatency": {"": [(["700", "900", "23"], "millisecond")]},
-                }
-            )
+    assert list(
+        esx_vsphere_counters.discover_esx_vsphere_counters_diskio(
+            {
+                "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
+                "disk.numberReadAveraged": {"": [(["110", "140", "150"], "number")]},
+                "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
+                "disk.numberWriteAveraged": {"": [(["11", "102", "5"], "number")]},
+                "disk.deviceLatency": {"": [(["700", "900", "23"], "millisecond")]},
+            }
         )
-        == [Service(item="SUMMARY")]
-    )
+    ) == [Service(item="SUMMARY")]
 
 
 def test_check_counters_diskio():

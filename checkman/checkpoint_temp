@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: Temperature
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -17,4 +17,3 @@ description:
 
 discovery:
  One service is created for each temperature sensor.
-

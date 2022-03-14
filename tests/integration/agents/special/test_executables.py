@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -22,7 +21,10 @@ def test_no_exeption(site: Site):
     for special_agent_path in special_agent_dir.glob("agent_*"):
         command = [str(special_agent_path)]
         p = site.execute(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull)
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
         )
         stderr = p.communicate()[1]
         assert "Traceback (most recent call last):" not in stderr

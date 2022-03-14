@@ -90,13 +90,15 @@ TEST(WinPerf, ValidateFabricConfig) {
     };
 
     int found_count = 0;
-    for (const auto& counter : counters) {
+    for (const auto &counter : counters) {
         std::pair<std::string, std::string> counter_low(counter.first,
                                                         counter.second);
         tools::StringLower(counter_low.first);
         tools::StringLower(counter_low.second);
-        auto found = cma::tools::find(base_counters, counter_low);
-        if (found) found_count++;
+        if (std::ranges::find(base_counters, counter_low) !=
+            base_counters.end()) {
+            found_count++;
+        }
     }
 
     EXPECT_EQ(found_count, 3) << "not correct counter list in the yml";
@@ -238,8 +240,8 @@ TEST(WinPerf, TsCounter) {
     }
 
     {
-        constexpr const wchar_t* name = L"ts_sessions";
-        constexpr const wchar_t* index = L"Terminal Services";
+        constexpr const wchar_t *name = L"ts_sessions";
+        constexpr const wchar_t *index = L"Terminal Services";
         auto x = BuildWinPerfSection(L"winperf", name, index);
         ASSERT_TRUE(!x.empty());
 

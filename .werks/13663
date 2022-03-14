@@ -1,0 +1,15 @@
+Title: Fix JSONDecodeError on crash reports view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1643466741
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a crash report was created but the crash info key was missing inside the
+file within ~/var/check_mk/crashes/CRASH_ID/crash.info, the crash report view
+showed an error like "json.decoder.JSONDecodeError: Expecting value: line 1
+column 1 (char 0)".

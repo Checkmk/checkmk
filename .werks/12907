@@ -6,7 +6,7 @@ Date: 1627329909
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When deploying the checkmk agent on systemd based systems, users
 often encountered problems when hitting the limit of 3 connections

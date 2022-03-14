@@ -81,11 +81,11 @@ class VisualInfoHostgroup(VisualInfo):
 
     @property
     def title(self):
-        return _("Host Group")
+        return _("Host group")
 
     @property
     def title_plural(self):
-        return _("Host Groups")
+        return _("Host groups")
 
     @property
     def single_spec(self) -> List[Tuple[str, ValueSpec]]:
@@ -93,7 +93,7 @@ class VisualInfoHostgroup(VisualInfo):
             (
                 "hostgroup",
                 TextInput(
-                    title=_("Host Group Name"),
+                    title=_("Host group name"),
                 ),
             )
         ]
@@ -115,11 +115,11 @@ class VisualInfoServicegroup(VisualInfo):
 
     @property
     def title(self):
-        return _("Service Group")
+        return _("Service group")
 
     @property
     def title_plural(self):
-        return _("Service Groups")
+        return _("Service groups")
 
     @property
     def single_spec(self) -> List[Tuple[str, ValueSpec]]:
@@ -127,7 +127,7 @@ class VisualInfoServicegroup(VisualInfo):
             (
                 "servicegroup",
                 TextInput(
-                    title=_("Service Group Name"),
+                    title=_("Service group name"),
                 ),
             ),
         ]

@@ -14,7 +14,8 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
 
-from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, NoCache
+from .agent import AgentFetcher, AgentRawDataSection, AgentSummarizer, NoCache
+from .host_sections import HostSections
 from .type_defs import Mode
 
 
@@ -135,7 +136,7 @@ class PiggybackSummarizer(AgentSummarizer):
 
     def summarize_success(
         self,
-        host_sections: AgentHostSections,
+        host_sections: HostSections[AgentRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:

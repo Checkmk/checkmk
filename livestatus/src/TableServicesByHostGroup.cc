@@ -7,7 +7,6 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"

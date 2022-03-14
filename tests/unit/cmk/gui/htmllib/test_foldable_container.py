@@ -41,12 +41,19 @@ def test_foldable_container_img_id() -> None:
 def test_foldable_container_onclick_without_url() -> None:
     assert (
         foldable_container_onclick("name", "id", None)
-        == 'cmk.foldable_container.toggle("name", "id", "")'
+        == 'cmk.foldable_container.toggle("name", "id", "", true)'
+    )
+
+
+def test_foldable_container_onclick_no_save() -> None:
+    assert (
+        foldable_container_onclick("name", "id", None, False)
+        == 'cmk.foldable_container.toggle("name", "id", "", false)'
     )
 
 
 def test_foldable_container_onclick_with_url() -> None:
     assert (
         foldable_container_onclick("name", "id", "http://bla")
-        == 'cmk.foldable_container.toggle("name", "id", "http:\\/\\/bla")'
+        == 'cmk.foldable_container.toggle("name", "id", "http:\\/\\/bla", true)'
     )

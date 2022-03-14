@@ -27,8 +27,8 @@ def _parameter_valuespec_mongodb_mem():
                         "In dedicated database servers this number tends to approach the total amount of system memory."
                     ),
                     elements=[
-                        Filesize(title=_("Warning at"), default_value=1 * 1024 ** 3),
-                        Filesize(title=_("Critical at"), default_value=2 * 1024 ** 3),
+                        Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+                        Filesize(title=_("Critical at"), default_value=2 * 1024**3),
                     ],
                 ),
             ),
@@ -42,8 +42,8 @@ def _parameter_valuespec_mongodb_mem():
                         "roughly equivalent to the total size of your database or databases."
                     ),
                     elements=[
-                        Filesize(title=_("Warning at"), default_value=1 * 1024 ** 3),
-                        Filesize(title=_("Critical at"), default_value=2 * 1024 ** 3),
+                        Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+                        Filesize(title=_("Critical at"), default_value=2 * 1024**3),
                     ],
                 ),
             ),
@@ -55,8 +55,8 @@ def _parameter_valuespec_mongodb_mem():
                         "Virtual displays the quantity of virtual memory used by the mongod process. "
                     ),
                     elements=[
-                        Filesize(title=_("Warning at"), default_value=2 * 1024 ** 3),
-                        Filesize(title=_("Critical at"), default_value=4 * 1024 ** 3),
+                        Filesize(title=_("Warning at"), default_value=2 * 1024**3),
+                        Filesize(title=_("Critical at"), default_value=4 * 1024**3),
                     ],
                 ),
             ),

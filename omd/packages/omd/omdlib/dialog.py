@@ -101,13 +101,14 @@ def _run_dialog(args: List[str]) -> DialogResult:
         # TODO: Why de_DE?
         "LANG": "de_DE.UTF-8",
     }
-    p = subprocess.Popen(
-        ["dialog", "--shadow"] + args, env=dialog_env, stderr=subprocess.PIPE, encoding="utf-8"
+    completed_process = subprocess.run(
+        ["dialog", "--shadow"] + args,
+        env=dialog_env,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
+        check=False,
     )
-    if p.stderr is None:
-        raise Exception()
-    response = p.stderr.read()
-    return os.waitpid(p.pid, 0)[1] == 0, response
+    return completed_process.returncode == 0, completed_process.stderr
 
 
 def user_confirms(
@@ -144,7 +145,7 @@ def user_confirms(
         if choice == "shell":
             thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            subprocess.Popen(["bash", "-i"], cwd=thedir).wait()
+            subprocess.run(["bash", "-i"], cwd=thedir, check=False)
         else:
             return choice == yes_choice
 

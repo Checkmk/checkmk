@@ -61,7 +61,7 @@ from typing import Any, Dict, List
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 from cmk.special_agents.utils import vcrtrace
 
@@ -89,7 +89,8 @@ except ImportError:
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(
+# TODO: Couldn't we use create_urllib3_context() instead of this access violation?
+urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(  # type: ignore[attr-defined]
     [
         "DH+3DES",
         "DH+HIGH",

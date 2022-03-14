@@ -9,7 +9,6 @@ import logging
 from types import TracebackType
 from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
-import cmk.utils
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
@@ -25,7 +24,7 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, result
 from cmk.snmplib.type_defs import TRawData
 
 from .cache import FileCache
-from .host_sections import THostSections
+from .host_sections import HostSections, TRawDataSection
 from .type_defs import Mode, SectionNameCollection
 
 __all__ = ["Fetcher", "verify_ipaddress"]
@@ -73,8 +72,6 @@ class Fetcher(Generic[TRawData], abc.ABC):
         except MKFetcherError:
             raise
         except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
             raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
         return self
 
@@ -106,8 +103,6 @@ class Fetcher(Generic[TRawData], abc.ABC):
         try:
             return result.OK(self._fetch(mode))
         except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
@@ -132,15 +127,18 @@ class Fetcher(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
 
-class Parser(Generic[TRawData, THostSections], abc.ABC):
+class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
     """Parse raw data into host sections."""
 
     @abc.abstractmethod
-    def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
+    def parse(
+        self, raw_data: TRawData, *, selection: SectionNameCollection
+    ) -> HostSections[TRawDataSection]:
         raise NotImplementedError
 
 
-class Summarizer(Generic[THostSections], abc.ABC):
+# TODO: the last remaining use of host_sections in summarize_success is gone; this can be simplified
+class Summarizer(Generic[TRawDataSection], abc.ABC):
     """Class to summarize parsed data into a ServiceCheckResult.
 
     Note:
@@ -156,7 +154,7 @@ class Summarizer(Generic[THostSections], abc.ABC):
     @abc.abstractmethod
     def summarize_success(
         self,
-        host_sections: THostSections,
+        host_sections: HostSections[TRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:

@@ -60,7 +60,7 @@ TEST_F(ZipFixture, UnCabIntegration) {
     ASSERT_FALSE(Extract(target, target));
     //
     ASSERT_TRUE(Extract(work_file, target));
-    for (auto& entry : {"systemd", "mtr.cfg", "systemd/check_mk.socket"}) {
+    for (auto &entry : {"systemd", "mtr.cfg", "systemd/check_mk.socket"}) {
         EXPECT_TRUE(fs::exists(target / entry));
     }
 }

@@ -26,6 +26,7 @@
 import abc
 import os
 import sys
+from pathlib import Path
 from typing import cast, Optional
 
 import omdlib
@@ -170,19 +171,19 @@ class SiteContext(AbstractSiteContext):
     def read_site_config(self) -> Config:
         """Read and parse the file site.conf of a site into a dictionary and returns it"""
         config: Config = {}
-        confpath = "%s/etc/omd/site.conf" % (self.dir)
-        if not os.path.exists(confpath):
+        if not (confpath := Path(self.dir, "etc/omd/site.conf")).exists():
             return {}
 
-        for line in open(confpath):
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue
-            var, value = line.split("=", 1)
-            if not var.startswith("CONFIG_"):
-                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
-            else:
-                config[var[7:].strip()] = value.strip().strip("'")
+        with confpath.open() as conf_file:
+            for line in conf_file:
+                line = line.strip()
+                if line == "" or line[0] == "#":
+                    continue
+                var, value = line.split("=", 1)
+                if not var.startswith("CONFIG_"):
+                    sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+                else:
+                    config[var[7:].strip()] = value.strip().strip("'")
 
         return config
 

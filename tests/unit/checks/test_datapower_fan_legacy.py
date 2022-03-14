@@ -7,13 +7,13 @@
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.datapower_fan import Fan
-
-from tests.unit.conftest import FixRegister
 
 _SECTION = {
     "Tray 1 Fan 1": Fan(
@@ -79,13 +79,10 @@ def test_check_datapower_fan(
     item: str,
     expected_result: Result,
 ) -> None:
-    assert (
-        list(
-            datapower_fan_plugin.check_function(
-                item=item,
-                params={},
-                section=_SECTION,
-            )
+    assert list(
+        datapower_fan_plugin.check_function(
+            item=item,
+            params={},
+            section=_SECTION,
         )
-        == [expected_result]
-    )
+    ) == [expected_result]

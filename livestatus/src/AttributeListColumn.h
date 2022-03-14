@@ -26,18 +26,18 @@ struct AttributeBit {
     std::size_t index;
     bool value;
 };
-inline bool operator==(const AttributeBit& x, const AttributeBit& y) {
+inline bool operator==(const AttributeBit &x, const AttributeBit &y) {
     return x.index == y.index && x.value == y.value;
 }
-std::string refValueFor(const std::string& value, Logger* logger);
-unsigned long decode(const std::vector<AttributeBit>& mask);
+std::string refValueFor(const std::string &value, Logger *logger);
+unsigned long decode(const std::vector<AttributeBit> &mask);
 std::vector<AttributeBit> encode(unsigned long mask);
-std::vector<AttributeBit> encode(const std::vector<std::string>& strs);
+std::vector<AttributeBit> encode(const std::vector<std::string> &strs);
 }  // namespace column::attribute_list
 
 namespace column::detail {
 template <>
-std::string serialize(const column::attribute_list::AttributeBit& bit);
+std::string serialize(const column::attribute_list::AttributeBit &bit);
 }  // namespace column::detail
 
 template <class T, class U>
@@ -46,7 +46,7 @@ public:
     using ListColumn<T, U>::ListColumn;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
+        const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, this->name(),
             [this](Row row) {

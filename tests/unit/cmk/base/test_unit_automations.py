@@ -54,7 +54,8 @@ def test_registered_automations():
 def test_analyse_host(monkeypatch):
     automation = automations.AutomationAnalyseHost()
 
-    ts = Scenario().add_host("test-host")
+    ts = Scenario()
+    ts.add_host("test-host")
     ts.set_option(
         "host_labels",
         {

@@ -1,5 +1,5 @@
 NET_SNMP := net-snmp
-NET_SNMP_VERS := 0b32548
+NET_SNMP_VERS := 5.9.1
 NET_SNMP_DIR := $(NET_SNMP)-$(NET_SNMP_VERS)
 # Increase this to enforce a recreation of the build cache
 NET_SNMP_BUILD_ID := 2

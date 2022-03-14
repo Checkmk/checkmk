@@ -10,11 +10,13 @@ withFolderProperties{
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, free, enterprise or managed' ),
+    string(name: 'EDITION', defaultValue: 'free', description: 'We currently build AMI only with the free edition.' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
 ])
+
+if (EDITION != 'free')  {error "The AMI build is currently only using the free edition."}
 
 // TODO: Change to versioning.get_branch and versioning.get_cmk_version! Then
 // the copy&paste below can be removed. First we'll have to clean up the
@@ -94,13 +96,28 @@ node (NODE) {
                                     // HINT workaround 2): HOME=$WORKSPACE_TMP must be set before running the ansible playbook otherwise the following error occurs, because ansible scripts
                                     // access the environment variable HOME directly:
                                     // Unable to create local directories /home/$HOME/.ansible/cp
-                                    sh """
+                                    try {
+                                        sh """
                                         set &&
                                         cd ./aws/ &&
                                         export DEFAULT_LOCAL_TMP=$WORKSPACE_TMP &&
                                         export ANSIBLE_HOST_KEY_CHECKING=False &&
                                         HOME=$WORKSPACE_TMP AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY EC2_KEY=$EC2_KEY ANSIBLE_SSH_PRIVATE_KEY_FILE=$ANSIBLE_SSH_PRIVATE_KEY_FILE CMKADMIN_PASS=$CMKADMIN_PASS PACKAGE_DIR=/download EDITION=$EDITION CMK_VERS=$CMK_VERS ./build_ami.yml -vv
                                     """
+                                    }
+                                    catch (e) {
+                                        currentBuild.result = "FAILED"
+                                        throw e
+                                    }
+                                    finally {
+                                      sh """
+                                        set &&
+                                        cd ./aws/ &&
+                                        export DEFAULT_LOCAL_TMP=$WORKSPACE_TMP &&
+                                        export ANSIBLE_HOST_KEY_CHECKING=False &&
+                                        HOME=$WORKSPACE_TMP AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY EC2_KEY=$EC2_KEY ANSIBLE_SSH_PRIVATE_KEY_FILE=$ANSIBLE_SSH_PRIVATE_KEY_FILE CMKADMIN_PASS=$CMKADMIN_PASS PACKAGE_DIR=/download EDITION=$EDITION CMK_VERS=$CMK_VERS ./terminate_checkmk_ec2_instances.yml -vv
+                                    """
+                                    }
                             }
                         }
                     }

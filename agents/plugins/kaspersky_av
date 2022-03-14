@@ -9,24 +9,24 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 KAV4FS="kav4fs"
 KESL="kesl"
 
-run () {
+run() {
     suite="$1"
     control="/opt/kaspersky/$suite/bin/$suite-control"
 
-    [ -x "$(command -v $control)" ] || return
+    [ -x "$(command -v "$control")" ] || return
 
     if [ "$suite" = "$KAV4FS" ]; then
         echo "<<<kaspersky_av_updates:sep(58)>>>"
         $control --get-stat Update
-	else
-		echo "<<<kaspersky_av_kesl_updates:sep(124)>>>"
-		$control --app-info | sed -r 's/:\s+/|/1'
-	fi
+    else
+        echo "<<<kaspersky_av_kesl_updates:sep(124)>>>"
+        $control --app-info | sed -r 's/:\s+/|/1'
+    fi
 
     if [ "$suite" = "$KAV4FS" ]; then
         echo "<<<kaspersky_av_quarantine:sep(58)>>>"
@@ -37,7 +37,7 @@ run () {
     $control --get-task-list
 }
 
-main () {
+main() {
     # Debian will refuse to install both at the same time on the same machine.
     run $KAV4FS
     run $KESL

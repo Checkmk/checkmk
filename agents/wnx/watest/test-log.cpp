@@ -80,8 +80,8 @@ TEST(LogTest, RotationFileCfgParam) {
     }
 }
 
-static bool FindString(const std::string& name, unsigned int index,
-                       const std::string& Text) {
+static bool FindString(const std::string &name, unsigned int index,
+                       const std::string &Text) {
     auto filename = details::MakeBackupLogName(name, index);
     auto data = tst::ReadFileAsTable(filename);
     if (data.size() != 1) return false;
@@ -184,7 +184,7 @@ TEST(LogTest, All) {
 
     // Check Defaults settings on start
     {
-        auto& xlogd = XLOG::d;
+        auto &xlogd = XLOG::d;
 
         auto debug_log_level = cma::cfg::groups::global.debugLogLevel();
         if (debug_log_level < 1)
@@ -199,7 +199,7 @@ TEST(LogTest, All) {
     }
 
     {
-        auto& xlogl = XLOG::l;
+        auto &xlogl = XLOG::l;
         EXPECT_TRUE(
             xlogl.log_param_.directions_ ==
             (xlog::Directions::kDebuggerPrint | xlog::Directions::kFilePrint));
@@ -207,14 +207,14 @@ TEST(LogTest, All) {
     }
 
     {
-        auto& xlogt = XLOG::t;
+        auto &xlogt = XLOG::t;
         EXPECT_TRUE(xlogt.log_param_.directions_ ==
                     (xlog::Directions::kDebuggerPrint));
         EXPECT_TRUE(xlogt.type_ == XLOG::LogType::trace);
     }
 
     {
-        auto& xlogstdio = XLOG::stdio;
+        auto &xlogstdio = XLOG::stdio;
         EXPECT_TRUE(xlogstdio.log_param_.directions_ ==
                     xlog::Directions::kStdioPrint);
         EXPECT_TRUE(xlogstdio.type_ == XLOG::LogType::stdio);
@@ -223,7 +223,7 @@ TEST(LogTest, All) {
     // DEFAULT
     auto prefix = GetDefaultPrefixName();
     auto prefix_ascii = wtools::ToUtf8(prefix);
-    auto& lp = l.log_param_;
+    auto &lp = l.log_param_;
 
     EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);
     EXPECT_TRUE(lp.filename()[0] != 0);
@@ -231,7 +231,7 @@ TEST(LogTest, All) {
     // Check API
     {
         XLOG::Emitter l(XLOG::LogType::log);
-        auto& lp = l.log_param_;
+        auto &lp = l.log_param_;
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
         l.configFile(GetCurrentLogFileName());
         EXPECT_TRUE(GetCurrentLogFileName() == lp.filename());
@@ -242,13 +242,13 @@ TEST(LogTest, All) {
 
     {
         XLOG::Emitter d(XLOG::LogType::debug);
-        auto& lp = t.log_param_;
+        auto &lp = t.log_param_;
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
     {
         XLOG::Emitter t(XLOG::LogType::trace);
-        auto& lp = t.log_param_;
+        auto &lp = t.log_param_;
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
 
         t.enableFileLog(true);
@@ -263,7 +263,7 @@ TEST(LogTest, All) {
     // CLEAN FILE
     {
         XLOG::Emitter l(XLOG::LogType::log);
-        auto& lp = l.log_param_;
+        auto &lp = l.log_param_;
         l.configFile("");
         EXPECT_TRUE(lp.filename()[0] == 0) << "File not changed";
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint)

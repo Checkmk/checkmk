@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.x509 import Certificate, CertificateSigningRequest
 from cryptography.x509.oid import NameOID
 
-from cmk.utils.certs import rsa_public_key_from_cert_or_csr
+from cmk.utils.certs import _rsa_public_key_from_cert_or_csr
 
 
 def check_certificate_against_private_key(
@@ -22,7 +22,7 @@ def check_certificate_against_private_key(
     # Check if the public key of certificate matches the public key corresponding to the given
     # private one
     assert (
-        rsa_public_key_from_cert_or_csr(cert).public_numbers()
+        _rsa_public_key_from_cert_or_csr(cert).public_numbers()
         == private_key.public_key().public_numbers()
     )
 

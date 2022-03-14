@@ -1,7 +1,7 @@
 title: Ewon Industrial VPN Router: Relayed Data
 agents: snmp
 catalog: hw/network/ewon
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the data relayed by the eWON router. This means that
@@ -23,4 +23,3 @@ description:
 item:
  One service is created for the state of the router.
  One service is created for each connected device called {{"oxyreduct"}}.
-

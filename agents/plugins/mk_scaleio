@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Plugin for EMCs ScaleIO software. This plugins needs to be installed
 # on all MDM servers as the information is provdided only by an active
@@ -24,22 +24,21 @@ CMK_VERSION="2.1.0i1"
 # SIO_USER=myUser
 # SIO_PASSWORD=myPassword
 
-
 if [ ! "$MK_CONFDIR" ]; then
     echo "MK_CONFDIR not set!" >&2
     exit 1
 fi
 
-. $MK_CONFDIR/mk_scaleio.cfg || exit 1
+# shellcheck source=agents/cfg_examples/mk_scaleio.cfg
+. "$MK_CONFDIR/mk_scaleio.cfg" || exit 1
 
-if [ -z "$SIO_USER" -o -z "$SIO_PASSWORD" ]; then
+if [ -z "${SIO_USER}" ] || [ -z "${SIO_PASSWORD}" ]; then
     echo "Please set SIO_USER and SIO_PASSWORD in $MK_CONFDIR/mk_scalio.cfg" >&2
     exit 1
 fi
 
-if type scli > /dev/null
-then
-    scli --login --username $SIO_USER --password $SIO_PASSWORD >/dev/null 2>&1
+if type scli >/dev/null; then
+    scli --login --username "$SIO_USER" --password "$SIO_PASSWORD" >/dev/null 2>&1
 
     if [ $? == 1 ]; then
         # Login fails if MDM server is not master. In this case we do

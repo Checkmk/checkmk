@@ -383,19 +383,19 @@ class BIAggregationPacks:
 
 
 class BIAggregationPackSchema(Schema):
-    id = ReqString(default="", example="bi_pack1")
-    title = ReqString(default="", example="BI Title")
+    id = ReqString(dump_default="", example="bi_pack1")
+    title = ReqString(dump_default="", example="BI Title")
     comment = String(
         description="An optional comment that may be used to explain the purpose of this object.",
         allow_none=True,
         example="Rule comment",
     )
     contact_groups = ReqList(
-        fields.String(), default=[], example=["contactgroup_a", "contactgroup_b"]
+        fields.String(), dump_default=[], example=["contactgroup_a", "contactgroup_b"]
     )
-    public = ReqBoolean(default=False)
-    rules = ReqList(fields.Nested(BIRuleSchema()), default=[])
-    aggregations = ReqList(fields.Nested(BIAggregationSchema()), default=[])
+    public = ReqBoolean(dump_default=False)
+    rules = ReqList(fields.Nested(BIRuleSchema()), dump_default=[])
+    aggregations = ReqList(fields.Nested(BIAggregationSchema()), dump_default=[])
 
     @pre_dump
     def pre_dumper(self, obj: BIAggregationPack, many=False) -> Dict:

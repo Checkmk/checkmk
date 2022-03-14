@@ -7,34 +7,7 @@
 import functools
 import wsgiref.util
 
-import cmk.utils.store
-
-from cmk.gui import config, hooks, http, sites
-from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import AppContext, RequestContext
-from cmk.gui.utils.logged_in import LoggedInNobody
-from cmk.gui.utils.output_funnel import OutputFunnel
-
-
-def with_context_middleware(app):
-    """Middleware which constructs the right context on each request."""
-
-    @functools.wraps(app)
-    def with_context(environ, start_response):
-        req = http.Request(environ)
-        resp = http.Response()
-        with AppContext(app), RequestContext(
-            req=req,
-            resp=resp,
-            funnel=OutputFunnel(resp),
-            config_obj=config.make_config_object(config.get_default_config()),
-            user=LoggedInNobody(),
-            display_options=DisplayOptions(),
-        ), cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
-            config.initialize()
-            return app(environ, start_response)
-
-    return with_context
+from cmk.gui import hooks
 
 
 class CallHooks:

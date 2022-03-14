@@ -1,0 +1,18 @@
+Title: RESTAPI: allow downloading vanilla and generic agents
+Class: fix
+Compatible: compat
+Component: core
+Date: 1644394766
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+After this werk it's possible to download the "vanilla" and "generic" agents via RESTAPI.
+
+To download the "generic" agent you can use the following url:
+
+/api/1.0/domain-types/agent/actions/download_by_host/invoke?agent_type=generic&os_type=linux_tgz
+
+The url for downloading the agent by host name continue to work as is.

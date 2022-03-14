@@ -19,7 +19,7 @@ import sys
 from types import GeneratorType
 from typing import Any, Callable, List, Optional, Sequence
 
-from requests.packages import urllib3
+import urllib3
 
 import cmk.utils.password_store
 
@@ -130,17 +130,26 @@ def _special_agent_main_core(
     )
 
     logging.debug("args: %r", args.__dict__)
+
     try:
         main_fn(args)
-    except Exception as exc:
+    except Exception:
         if args.debug:
             raise
-        sys.stderr.write("Unhandled exception: %r\n" % exc)
+        exctype, value, tb = sys.exc_info()
+        assert exctype is not None and tb is not None
+        print(
+            f"Caught unhandled {exctype.__name__}({value})"
+            f" in {tb.tb_frame.f_code.co_filename}:{tb.tb_lineno}",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
 
 def special_agent_main(
     parse_arguments: Callable[[Optional[Sequence[str]]], argparse.Namespace],
     main_fn: Callable[[argparse.Namespace], None],
+    argv: Optional[Sequence[str]] = None,
 ) -> None:
     """
     Because it modifies sys.argv and part of the functionality is terminating the process with
@@ -149,4 +158,4 @@ def special_agent_main(
     they are not meant to modify the system environment or terminate the process.
     """
     cmk.utils.password_store.replace_passwords()  # type: ignore[no-untyped-call]
-    _special_agent_main_core(parse_arguments, main_fn, sys.argv[1:])
+    _special_agent_main_core(parse_arguments, main_fn, argv or sys.argv[1:])

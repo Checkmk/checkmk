@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The page menu link "Availability" was also shown if required context
 information were missing in a view. This lead to an error message on the

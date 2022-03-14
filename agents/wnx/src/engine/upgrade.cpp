@@ -29,7 +29,7 @@ enum class ServiceStartType {
 
 // returns false if folder cannot be created
 [[nodiscard]] bool CreateFolderSmart(
-    const std::filesystem::path& tgt) noexcept {
+    const std::filesystem::path &tgt) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
     if (cma::tools::IsValidRegularFile(tgt)) fs::remove(tgt, ec);
@@ -43,7 +43,7 @@ enum class ServiceStartType {
     return false;
 }
 
-bool IsPathProgramData(const std::filesystem::path& program_data) {
+bool IsPathProgramData(const std::filesystem::path &program_data) {
     std::filesystem::path mask = kAppDataCompanyName;
     mask /= kAppDataAppName;
     std::wstring mask_str = mask.wstring();
@@ -56,7 +56,7 @@ bool IsPathProgramData(const std::filesystem::path& program_data) {
 }
 
 [[nodiscard]] bool IsFileNonCompatible(
-    const std::filesystem::path& fname) noexcept {
+    const std::filesystem::path &fname) noexcept {
     constexpr std::string_view forbidden_files[] = {"cmk-update-agent.exe"};
 
     auto name = fname.filename();
@@ -71,8 +71,8 @@ bool IsPathProgramData(const std::filesystem::path& program_data) {
     );
 }
 
-int CopyAllFolders(const std::filesystem::path& legacy_root,
-                   const std::filesystem::path& program_data,
+int CopyAllFolders(const std::filesystem::path &legacy_root,
+                   const std::filesystem::path &program_data,
                    CopyFolderMode copy_mode) {
     namespace fs = std::filesystem;
     if (!IsPathProgramData(program_data)) {
@@ -121,7 +121,7 @@ constexpr const std::string_view ignored_names[] = {
 };
 
 // single point entry to determine that file is ignored
-bool IsIgnoredFile(const std::filesystem::path& filename) {
+bool IsIgnoredFile(const std::filesystem::path &filename) {
     using namespace cma::tools;
 
     // check extension
@@ -149,16 +149,16 @@ bool IsIgnoredFile(const std::filesystem::path& filename) {
 
 // copies all files from root, exception is ini and exe
 // returns count of files copied
-int CopyRootFolder(const std::filesystem::path& LegacyRoot,
-                   const std::filesystem::path& ProgramData) {
+int CopyRootFolder(const std::filesystem::path &LegacyRoot,
+                   const std::filesystem::path &ProgramData) {
     namespace fs = std::filesystem;
     using namespace cma::tools;
     using namespace cma::cfg;
 
     auto count = 0;
     std::error_code ec;
-    for (const auto& dir_entry : fs::directory_iterator(LegacyRoot, ec)) {
-        const auto& p = dir_entry.path();
+    for (const auto &dir_entry : fs::directory_iterator(LegacyRoot, ec)) {
+        const auto &p = dir_entry.path();
         if (fs::is_directory(p, ec)) continue;
 
         if (details::IsIgnoredFile(p)) {
@@ -185,18 +185,18 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
 // Recursively copies those files and folders from src to target which matches
 // predicate, and overwrites existing files in target.
 int CopyFolderRecursive(
-    const std::filesystem::path& source, const std::filesystem::path& target,
+    const std::filesystem::path &source, const std::filesystem::path &target,
     std::filesystem::copy_options copy_mode,
-    const std::function<bool(std::filesystem::path)>& predicate) noexcept {
+    const std::function<bool(std::filesystem::path)> &predicate) noexcept {
     namespace fs = std::filesystem;
     int count = 0;
     XLOG::l.t("Copy from '{}' to '{}'", source, target);
 
     try {
         std::error_code ec;
-        for (const auto& dir_entry :
+        for (const auto &dir_entry :
              fs::recursive_directory_iterator(source, ec)) {
-            const auto& p = dir_entry.path();
+            const auto &p = dir_entry.path();
             if (predicate(p)) {
                 // Create path in target, if not existing.
                 const auto relative_src = fs::relative(p, source);
@@ -226,7 +226,7 @@ int CopyFolderRecursive(
                 }
             }
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         XLOG::l("Exception during copy file {}", e.what());
     }
 
@@ -303,7 +303,7 @@ std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
     return {manager_handle, handle, 0};
 }
 
-int GetServiceStatusByName(const std::wstring& Name) {
+int GetServiceStatusByName(const std::wstring &Name) {
     auto [manager_handle, handle, err] = OpenServiceForControl(Name);
 
     ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
@@ -330,7 +330,7 @@ static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
 
 // internal function based om MS logic from the MSDN, and the logic is not a
 // so good as for 2019
-static bool TryStopService(SC_HANDLE handle, const std::string& name_to_log,
+static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
                            DWORD current_status) noexcept {
     auto status = current_status;
     auto delay = CalcDelay(handle);
@@ -408,7 +408,7 @@ bool StopWindowsService(std::wstring_view service_name) {
     return TryStopService(handle, name_to_log, status);
 }
 
-static void LogStartStatus(const std::wstring& service_name,
+static void LogStartStatus(const std::wstring &service_name,
                            DWORD last_error_code) {
     auto name = wtools::ToUtf8(service_name);
     if (last_error_code == 0) {
@@ -423,7 +423,7 @@ static void LogStartStatus(const std::wstring& service_name,
     XLOG::l("Service '{}' start failed [{}]", name, last_error_code);
 }
 
-bool StartWindowsService(const std::wstring& service_name) {
+bool StartWindowsService(const std::wstring &service_name) {
     // Get a handle to the SCM database.
     auto [manager_handle, handle, error] = OpenServiceForControl(service_name);
     ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
@@ -459,37 +459,38 @@ bool StartWindowsService(const std::wstring& service_name) {
     return true;
 }
 
-bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
-    auto manager_handle = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
-    if (nullptr == manager_handle) {
+bool WinServiceChangeStartType(const std::wstring &name,
+                               ServiceStartType start_type) {
+    auto manager_handle = ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (manager_handle == nullptr) {
         XLOG::l.crit("Cannot open SC MAnager {}", GetLastError());
         return false;
     }
-    ON_OUT_OF_SCOPE(CloseServiceHandle(manager_handle));
+    ON_OUT_OF_SCOPE(::CloseServiceHandle(manager_handle));
 
     auto handle =
-        OpenService(manager_handle, Name.c_str(), SERVICE_CHANGE_CONFIG);
-    if (nullptr == handle) {
+        ::OpenService(manager_handle, name.c_str(), SERVICE_CHANGE_CONFIG);
+    if (handle == nullptr) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ToUtf8(Name), GetLastError());
+                     wtools::ToUtf8(name), GetLastError());
         return false;
     }
-    ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
+    ON_OUT_OF_SCOPE(::CloseServiceHandle(handle));
 
-    auto result =
-        ChangeServiceConfig(handle,             // handle of service
-                            SERVICE_NO_CHANGE,  // service type: no change
-                            static_cast<DWORD>(Type),  // service start type
-                            SERVICE_NO_CHANGE,  // error control: no change
-                            nullptr,            // binary path: no change
-                            nullptr,            // load order group: no change
-                            nullptr,            // tag ID: no change
-                            nullptr,            // dependencies: no change
-                            nullptr,            // account name: no change
-                            nullptr,            // password: no change
-                            nullptr);           // display name: no change
-    if (0 == result) {
-        XLOG::l("ChangeServiceConfig '{}' failed [{}]", wtools::ToUtf8(Name),
+    auto result = ::ChangeServiceConfig(
+        handle,                          // handle of service
+        SERVICE_NO_CHANGE,               // service type: no change
+        static_cast<DWORD>(start_type),  // service start type
+        SERVICE_NO_CHANGE,               // error control: no change
+        nullptr,                         // binary path: no change
+        nullptr,                         // load order group: no change
+        nullptr,                         // tag ID: no change
+        nullptr,                         // dependencies: no change
+        nullptr,                         // account name: no change
+        nullptr,                         // password: no change
+        nullptr);                        // display name: no change
+    if (result == 0) {
+        XLOG::l("ChangeServiceConfig '{}' failed [{}]", wtools::ToUtf8(name),
                 GetLastError());
         return false;
     }
@@ -500,7 +501,7 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
 // testing block
 // used only during unit testing
 std::filesystem::path G_LegacyAgentPresetPath;
-void SetLegacyAgentPath(const std::filesystem::path& path) {
+void SetLegacyAgentPath(const std::filesystem::path &path) {
     G_LegacyAgentPresetPath = path;
 }
 
@@ -557,7 +558,7 @@ bool DeactivateLegacyAgent() {
                                      ServiceStartType::disable);
 }
 
-int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
+int WaitForStatus(std::function<int(const std::wstring &)> StatusChecker,
                   std::wstring_view ServiceName, int ExpectedStatus, int Time) {
     int status = -1;
     while (true) {
@@ -660,7 +661,7 @@ bool FindStopDeactivateLegacyAgent() {
     return false;
 }
 
-static bool RunOhm(const std::filesystem::path& lwa_path) noexcept {
+static bool RunOhm(const std::filesystem::path &lwa_path) noexcept {
     namespace fs = std::filesystem;
     fs::path ohm = lwa_path;
     ohm /= "bin";
@@ -723,7 +724,7 @@ bool FindActivateStartLegacyAgent(AddAction action) {
     return true;
 }
 
-bool RunDetachedProcess(const std::wstring& Name) {
+bool RunDetachedProcess(const std::wstring &Name) {
     // start process
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -756,14 +757,14 @@ bool RunDetachedProcess(const std::wstring& Name) {
 }
 
 std::filesystem::path ConstructProtocolFileName(
-    const std::filesystem::path& dir) noexcept {
+    const std::filesystem::path &dir) noexcept {
     namespace fs = std::filesystem;
     fs::path protocol_file = dir;
     protocol_file /= cma::cfg::files::kUpgradeProtocol;
     return protocol_file;
 }
 
-bool CreateProtocolFile(const std::filesystem::path& dir,
+bool CreateProtocolFile(const std::filesystem::path &dir,
                         std::string_view OptionalContent) {
     try {
         auto protocol_file = ConstructProtocolFileName(dir);
@@ -777,14 +778,14 @@ bool CreateProtocolFile(const std::filesystem::path& dir,
                 ofs << "\n";
             }
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit("Exception during creatin protocol file {}", e.what());
         return false;
     }
     return true;
 }
 
-bool IsProtocolFileExists(const std::filesystem::path& root_folder) {
+bool IsProtocolFileExists(const std::filesystem::path &root_folder) {
     namespace fs = std::filesystem;
     auto protocol_file = ConstructProtocolFileName(root_folder);
     std::error_code ec;
@@ -1074,8 +1075,8 @@ std::optional<YAML::Node> LoadIni(std::filesystem::path File) {
     return p.emitYaml();
 }
 
-bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
-                         const std::filesystem::path& ProgramData) {
+bool ConvertLocalIniFile(const std::filesystem::path &LegacyRoot,
+                         const std::filesystem::path &ProgramData) {
     namespace fs = std::filesystem;
     const std::string local_ini = "check_mk_local.ini";
     auto local_ini_file = LegacyRoot / local_ini;
@@ -1101,8 +1102,8 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
 }
 
 bool ConvertUserIniFile(
-    const std::filesystem::path& legacy_root,
-    const std::filesystem::path& pdata,  // programdata/checkmk/agent
+    const std::filesystem::path &legacy_root,
+    const std::filesystem::path &pdata,  // programdata/checkmk/agent
     bool local_ini_exists) {
     namespace fs = std::filesystem;
 
@@ -1150,8 +1151,8 @@ bool ConvertUserIniFile(
 }
 
 // intermediate API, used indirectly
-bool ConvertIniFiles(const std::filesystem::path& legacy_root,
-                     const std::filesystem::path& program_data) {
+bool ConvertIniFiles(const std::filesystem::path &legacy_root,
+                     const std::filesystem::path &program_data) {
     namespace fs = std::filesystem;
     using namespace cma::cfg;
 
@@ -1195,7 +1196,7 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
 }
 
 // read first line and check for a marker
-bool IsBakeryIni(const std::filesystem::path& Path) noexcept {
+bool IsBakeryIni(const std::filesystem::path &Path) noexcept {
     if (!cma::tools::IsValidRegularFile(Path)) return false;
 
     try {
@@ -1207,13 +1208,13 @@ bool IsBakeryIni(const std::filesystem::path& Path) noexcept {
         if (!ifs) return false;
         return 0 == memcmp(buffer, kBakeryMarker.data(), sizeof(buffer));
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " Exception {}", e.what());
         return false;
     }
 }
 
-std::string MakeComments(const std::filesystem::path& source_file_path,
+std::string MakeComments(const std::filesystem::path &source_file_path,
                          bool file_from_bakery) noexcept {
     return fmt::format(
         "# Converted to YML from the file '{}'\n"
@@ -1223,8 +1224,8 @@ std::string MakeComments(const std::filesystem::path& source_file_path,
                          : "# original INI file was managed by user\n");
 }
 
-bool StoreYaml(const std::filesystem::path& filename, YAML::Node yaml_node,
-               const std::string& comment) noexcept {
+bool StoreYaml(const std::filesystem::path &filename, YAML::Node yaml_node,
+               const std::string &comment) noexcept {
     std::ofstream ofs(
         filename);  // text mode, required to have normal carriage return
     if (ofs) {
@@ -1236,9 +1237,9 @@ bool StoreYaml(const std::filesystem::path& filename, YAML::Node yaml_node,
 }
 
 std::filesystem::path CreateUserYamlFromIni(
-    const std::filesystem::path& ini_file,      // ini file to use
-    const std::filesystem::path& program_data,  // directory to send
-    const std::string& yaml_name                // name to be used in output
+    const std::filesystem::path &ini_file,      // ini file to use
+    const std::filesystem::path &program_data,  // directory to send
+    const std::string &yaml_name                // name to be used in output
     ) noexcept {
     namespace fs = std::filesystem;
 
@@ -1268,9 +1269,9 @@ std::filesystem::path CreateUserYamlFromIni(
 }
 
 std::filesystem::path CreateBakeryYamlFromIni(
-    const std::filesystem::path& ini_file,      // ini file to use
-    const std::filesystem::path& program_data,  // directory to send
-    const std::string& yaml_name) noexcept {    // name to be used in output
+    const std::filesystem::path &ini_file,      // ini file to use
+    const std::filesystem::path &program_data,  // directory to send
+    const std::string &yaml_name) noexcept {    // name to be used in output
 
     namespace fs = std::filesystem;
 
@@ -1328,7 +1329,7 @@ std::filesystem::path FindOldState() {
     return path / dirs::kAuStateLocation / files::kAuStateFile;
 }
 
-std::string GetNewHash(const std::filesystem::path& dat) noexcept {
+std::string GetNewHash(const std::filesystem::path &dat) noexcept {
     try {
         auto yml = YAML::LoadFile(dat.u8string());
         auto hash = GetVal(yml, kHashName.data(), std::string());
@@ -1339,14 +1340,14 @@ std::string GetNewHash(const std::filesystem::path& dat) noexcept {
 
         return hash;
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("can't load '{}', hash not known, exception '{}'",
                 dat.u8string(), e.what());
         return {};
     }
 }
 
-std::string ReadHash(std::fstream& ifs) noexcept {
+std::string ReadHash(std::fstream &ifs) noexcept {
     try {
         char old_hash[17];
         ifs.read(old_hash, sizeof(old_hash) - 1);
@@ -1356,13 +1357,13 @@ std::string ReadHash(std::fstream& ifs) noexcept {
             return {};
         }
         return old_hash;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Exception'{}' when reading hash", e.what());
     }
     return {};
 }
 
-std::string GetOldHashFromFile(const std::filesystem::path& ini,
+std::string GetOldHashFromFile(const std::filesystem::path &ini,
                                std::string_view marker) noexcept {
     try {
         std::fstream ifs;
@@ -1379,22 +1380,22 @@ std::string GetOldHashFromFile(const std::filesystem::path& ini,
         ifs.seekp(pos + marker.size());
 
         return ReadHash(ifs);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("IO failed during reading hash from '{}', exception '{}' ",
                 ini.u8string(), e.what());
         return {};
     }
 }
 
-std::string GetOldHashFromIni(const std::filesystem::path& ini) noexcept {
+std::string GetOldHashFromIni(const std::filesystem::path &ini) noexcept {
     return GetOldHashFromFile(ini, kIniHashMarker);
 }
 
-std::string GetOldHashFromState(const std::filesystem::path& state) noexcept {
+std::string GetOldHashFromState(const std::filesystem::path &state) noexcept {
     return GetOldHashFromFile(state, kStateHashMarker);
 }
 
-bool PatchHashInFile(const std::filesystem::path& ini, const std::string& hash,
+bool PatchHashInFile(const std::filesystem::path &ini, const std::string &hash,
                      std::string_view marker) noexcept {
     try {
         std::fstream ifs;
@@ -1416,20 +1417,20 @@ bool PatchHashInFile(const std::filesystem::path& ini, const std::string& hash,
         ifs.seekp(pos + marker.size());
         ifs.write(hash.c_str(), 16);
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("IO failed during patching ini '{}' hash, exception '{}' ",
                 e.what());
         return false;
     }
 }
 
-bool PatchIniHash(const std::filesystem::path& ini,
-                  const std::string& hash) noexcept {
+bool PatchIniHash(const std::filesystem::path &ini,
+                  const std::string &hash) noexcept {
     return PatchHashInFile(ini, hash, kIniHashMarker);
 }
 
-bool PatchStateHash(const std::filesystem::path& ini,
-                    const std::string& hash) noexcept {
+bool PatchStateHash(const std::filesystem::path &ini,
+                    const std::string &hash) noexcept {
     return PatchHashInFile(ini, hash, kStateHashMarker);
 }
 

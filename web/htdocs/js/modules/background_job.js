@@ -31,9 +31,9 @@ function update(handler_data, response) {
 
     // Restore the previous scrolling state
     const new_log = document.getElementById("progress_log");
-    if (log && is_scrolled_down) {
+    if (new_log && is_scrolled_down) {
         new_log.scrollTop = new_log.scrollHeight - new_log.clientHeight;
-    } else if (log) {
+    } else if (old_log) {
         new_log.scrollTop = scroll_pos;
     }
 }

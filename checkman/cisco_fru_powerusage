@@ -1,7 +1,7 @@
 title: Cisco Core Switches: Power Usage
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the voltage, current and power usage

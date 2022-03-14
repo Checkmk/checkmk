@@ -25,7 +25,7 @@ def _item_spec_esx_vsphere_datastores():
 
 def _parameter_valuespec_esx_vsphere_datastores():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=filesystem_elements
             + [
                 (

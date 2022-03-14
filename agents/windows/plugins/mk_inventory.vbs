@@ -4,7 +4,7 @@ If UCase(Right(Wscript.FullName, 11)) = "WSCRIPT.EXE" Then
     Wscript.Quit
 End If
 
-Const CMK_VERSION = "2.1.0i1"
+Const CMK_VERSION = "2.2.0i1"
 CONST HKLM = &H80000002
 
 Dim delay

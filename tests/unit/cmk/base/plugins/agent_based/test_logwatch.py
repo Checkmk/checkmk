@@ -4,15 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+import pathlib
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based import logwatch
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-
-pytestmark = pytest.mark.checks
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 
 @pytest.mark.parametrize(
@@ -115,19 +113,19 @@ def test_check_single(monkeypatch):
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
     assert list(logwatch.check_logwatch_node("empty.log", SECTION1)) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="No error messages",
         ),
     ]
     assert list(logwatch.check_logwatch_node("my_other_log", SECTION1)) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary='1 WARN messages (Last worst: "watch your step!")',
         ),
     ]
     assert list(logwatch.check_logwatch_node("mylog", SECTION1)) == [
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary='1 CRIT messages (Last worst: "whoha! Someone mooped!")',
         ),
     ]
@@ -211,3 +209,104 @@ def test_logwatch_discover_groups(monkeypatch):
             },
         ),
     ]
+
+
+@pytest.fixture(name="logmsg_file_path")
+def fixture_logmsg_file_path(
+    mocker: MockerFixture,
+    tmp_path: pathlib.Path,
+) -> None:
+    mocker.patch.object(
+        logwatch,
+        "_logmsg_file_path",
+        lambda item: tmp_path / item.replace("/", "\\"),
+    )
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_no_messages() -> None:
+    item = "/tmp/app.log"
+    assert list(
+        logwatch.check_logwatch_generic(
+            item=item,
+            patterns={},
+            loglines=[],
+            found=True,
+            max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+        )
+    ) == [
+        Result(state=State.OK, summary="No error messages"),
+    ]
+    assert not logwatch._logmsg_file_path(item).exists()
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_no_reclassify() -> None:
+    item = "/tmp/enterprise.log"
+    lines = [
+        ". klingons are attacking",
+        "C red alert",
+        ". more context",
+    ]
+
+    assert list(
+        logwatch.check_logwatch_generic(
+            item=item,
+            patterns={},
+            loglines=lines,
+            found=True,
+            max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+        )
+    ) == [
+        Result(state=State.CRIT, summary='1 CRIT messages (Last worst: "red alert")'),
+    ]
+    assert logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == lines
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_with_reclassification() -> None:
+    item = "/tmp/enterprise.log"
+    lines = [
+        ". klingons are attacking",
+        "C red alert",
+        ". more context",
+    ]
+
+    assert list(
+        logwatch.check_logwatch_generic(
+            item=item,
+            patterns={
+                "reclassify_patterns": [
+                    ("C", ".*klingon.*", "galatic conflict"),
+                    ("I", "123", ""),
+                ],
+            },
+            loglines=lines,
+            found=True,
+            max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+        )
+    ) == [
+        Result(state=State.CRIT, summary='2 CRIT messages (Last worst: "red alert")'),
+    ]
+    assert logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == [
+        "C klingons are attacking",
+        "C red alert",
+        ". more context",
+    ]
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_missing() -> None:
+    item = "item"
+    assert list(
+        logwatch.check_logwatch_generic(
+            item=item,
+            patterns={},
+            loglines=[],
+            found=False,
+            max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+        )
+    ) == [
+        Result(state=State.UNKNOWN, summary="log not present anymore"),
+    ]
+    assert not logwatch._logmsg_file_path(item).exists()

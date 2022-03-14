@@ -299,10 +299,10 @@ def check_levels(
     Args:
 
         value:        The currently measured value
-        levels_upper: A pair of upper thresholds. If value is larger than these, the
-                      service goes to **WARN** or **CRIT**, respecively.
-        levels_lower: A pair of lower thresholds. If value is smaller than these, the
-                      service goes to **WARN** or **CRIT**, respecively.
+        levels_upper: A pair of upper thresholds, ie. warn and crit. If value is larger than these,
+                      the service goes to **WARN** or **CRIT**, respecively.
+        levels_lower: A pair of lower thresholds, ie. warn and crit. If value is smaller than these,
+                      the service goes to **WARN** or **CRIT**, respecively.
         metric_name:  The name of the datasource in the RRD that corresponds to this value
                       or None in order not to generate a metric.
         render_func:  A single argument function to convert the value from float into a
@@ -453,24 +453,29 @@ def get_rate(
 
     Args:
 
-        value_store:     The Mapping that holds the last value.
+        value_store:     The mapping that holds the last value.
                          Usually this will be the value store provided by the APIs
                          :func:`get_value_store`.
-        key:             Unique ID for storing this average until the next check
+        key:             Unique ID for storing the time/value pair until the next check
         time:            Timestamp of new value
         value:           The new value
         raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
 
-    This function returns the rate of a measurement rₙ as the quotient of the
-    current value and time (xₙ, tₙ) and the last recorded value and time (xₙ₋₁, tₙ₋₁):
+    This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
+    provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
+    previous function call (xₙ₋₁, tₙ₋₁):
 
         rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    Note that the function simply computes the quotient of the values and times given,
+    regardless of any unit. You might as well pass something different than the time.
+    However, this function is written with the use case of passing timestamps in mind.
 
     A :class:`GetRateError` will be raised if one of the following happens:
 
         * the function is called for the first time
         * the time has not changed
-        * the rate is negative and `raise_overflow` is set to True (usefull
+        * the rate is negative and `raise_overflow` is set to True (useful
           for instance when dealing with counters)
 
     In general there is no need to catch a :class:`.GetRateError`, as it
@@ -479,8 +484,16 @@ def get_rate(
     Example:
 
         >>> # in practice: my_store = get_value_store()
-        >>> my_store = {"cookies": (1600000000, 23)}
-        >>> get_rate(my_store, "cookies", 1600000060, 56)
+        >>> my_store = {}
+        >>> try:
+        ...     rate = get_rate(my_store, 'my_rate', 10, 23)
+        ... except GetRateError:
+        ...     pass  # this fails the first time, because my_store is empty.
+        >>> my_store  # now remembers the last time/value
+        {'my_rate': (10, 23)}
+        >>> # Assume in the next check cycle (60 seconds later) the value has increased to 56.
+        >>> # get_rate uses the new and old values to compute (56 - 23) / (70 - 10)
+        >>> get_rate(my_store, 'my_rate', 70, 56)
         0.55
 
     Returns:

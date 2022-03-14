@@ -39,7 +39,7 @@ def check_fortigate_memory_base(_item, params, parsed):
         warn, crit = params.get("levels", fortigate_memory_base_default_levels["levels"])
         mode = get_levels_mode_from_value(warn)
         # Rule 'memory' uses MiB for absolute values:
-        scale = 1.0 if mode.startswith("perc") else 2 ** 20
+        scale = 1.0 if mode.startswith("perc") else 2**20
         levels = (mode, (abs(warn) * scale, abs(crit) * scale))
 
     if not parsed:

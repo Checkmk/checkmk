@@ -147,8 +147,11 @@ def main() -> int:
 
     teams_list: List[Optional[Dict[str, str]]] = []
     if context.get("PARAMETER_TEAMSS"):
-        for team in context["PARAMETER_TEAMSS"].split(" "):
-            teams_list.append({"name": str(team), "type": "team"})
+        teams_list = [
+            {"name": str(context[k]), "type": "team"}
+            for k in context
+            if k.startswith("PARAMETER_TEAMS_")
+        ]
 
     if context["WHAT"] == "HOST":
         tmpl_host_msg: str = "Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$"

@@ -11,9 +11,7 @@
 from contextlib import contextmanager
 from typing import Optional
 
-from cmk.utils.type_defs import HostName
-
-from cmk.base.check_utils import Service
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName
 
 # Is set before check/discovery function execution
 # Host currently being checked
@@ -41,7 +39,7 @@ def current_host(host_name_: HostName):
 
 
 @contextmanager
-def current_service(service: Service):
+def current_service(plugin_name: CheckPluginName, description: ServiceName):
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -53,8 +51,8 @@ def current_service(service: Service):
     previous_service_description = _service_description
 
     try:
-        _check_type = str(service.check_plugin_name)
-        _service_description = service.description
+        _check_type = str(plugin_name)
+        _service_description = str(description)
         yield
     finally:
         _check_type = previous_check_type

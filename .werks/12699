@@ -6,7 +6,7 @@ Date: 1635237623
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Livestatus socket can be configured to be reachable over the
 network (details can be found under

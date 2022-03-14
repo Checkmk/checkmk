@@ -35,6 +35,7 @@ from cmk.gui.permissions import (
 from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri
+from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 
 
@@ -69,7 +70,7 @@ class PermissionSectionNotificationPlugins(PermissionSection):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     declare_dynamic_permissions(declare_notification_plugin_permissions)
 
 
@@ -206,12 +207,7 @@ class ClearFailedNotificationPage(Page):
 
                 for message in get_flashed_messages():
                     html.show_message(message)
-                # This local import is needed for the moment
-                import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
-
-                cmk.gui.wato.user_profile.user_profile_async_replication_page(
-                    back_url="clear_failed_notifications.py"
-                )
+                user_profile_async_replication_page(back_url="clear_failed_notifications.py")
                 return
 
         failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())

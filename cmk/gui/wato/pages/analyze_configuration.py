@@ -35,19 +35,36 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.sites import activation_sites, get_site_config, site_is_local
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
+    ac_test_registry,
     ACResult,
     ACResultCRIT,
     ACResultOK,
+    ACTest,
     ACTestCategories,
     AutomationCheckAnalyzeConfig,
 )
+
+
+@ac_test_registry.register
+class ACTestConnectivity(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.connectivity
+
+    def title(self) -> str:
+        return _("Site connectivity")
+
+    def help(self) -> str:
+        return _("This check returns CRIT if the connection to the remote site failed.")
+
+    def is_relevant(self) -> bool:
+        # This test is always irrelevant :)
+        return False
 
 
 @mode_registry.register

@@ -41,7 +41,7 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-std::vector<char> to_value(const std::string& s) {
+std::vector<char> to_value(const std::string &s) {
     return {std::begin(s), std::end(s)};
 }
 
@@ -54,7 +54,7 @@ TEST_F(FileFixture, BlobColumnReadFile) {
         {},
         BlobFileReader<DummyRow>{
             [this]() { return basepath; },
-            [this](const DummyRow& /*row*/) { return filename; },
+            [this](const DummyRow & /*row*/) { return filename; },
         }};
 
     ASSERT_NE(nullptr, col.getValue(row));

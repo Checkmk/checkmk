@@ -65,7 +65,8 @@ def query_redis(
         if update_lock.owned():
             if integrity_callback() == IntegrityCheckResponse.USE:
                 return query_callback()
-            query_lock.release()
+            if query_lock.owned():
+                query_lock.release()
             pipeline = client.pipeline()
             update_callback(pipeline)
             query_lock.acquire()

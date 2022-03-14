@@ -1,7 +1,7 @@
 title: APC InRow Cooling Devices: Temperature
 agents: snmp
 catalog: hw/environment/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The current temperature of all sensors in an InRow Cooling device.

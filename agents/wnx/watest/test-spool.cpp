@@ -76,10 +76,10 @@ TEST(SectionProviderSpool, FullIntegration) {
     ASSERT_TRUE(!ex.empty());
     auto table = cma::tools::SplitString(ex, "\r\n");
     EXPECT_EQ(table.size(), 4);
-    EXPECT_TRUE(cma::tools::find(table, std::string("aaaa")));
-    EXPECT_TRUE(cma::tools::find(table, std::string("bbbb")));
-    EXPECT_TRUE(cma::tools::find(table, std::string("123456")));
-    EXPECT_TRUE(cma::tools::find(table, std::string("9999")));
+    EXPECT_TRUE(std::ranges::find(table, std::string("aaaa")) != table.end());
+    EXPECT_TRUE(std::ranges::find(table, std::string("bbbb")) != table.end());
+    EXPECT_TRUE(std::ranges::find(table, std::string("123456")) != table.end());
+    EXPECT_TRUE(std::ranges::find(table, std::string("9999")) != table.end());
 }
 
 }  // namespace cma::provider

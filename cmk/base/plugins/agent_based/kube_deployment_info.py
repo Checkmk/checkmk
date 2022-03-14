@@ -6,13 +6,7 @@
 
 import json
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    HostLabel,
-    register,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -20,10 +14,23 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo
+from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
 def parse(string_table: StringTable) -> DeploymentInfo:
-    """Parses `string_table` into a DeploymentInfo instance"""
+    """Parses `string_table` into a DeploymentInfo instance
+    >>> parse([[
+    ... '{"name": "oh-lord",'
+    ... '"namespace": "have-mercy",'
+    ... '"labels": {},'
+    ... '"selector": {"match_labels": {}, "match_expressions": [{"key": "app", "operator": "In", "values": ["sleep"]}]},'
+    ... '"creation_timestamp": 1638798546.0,'
+    ... '"images": ["i/name:0.5"],'
+    ... '"containers": ["name"],'
+    ... '"cluster": "cluster"}'
+    ... ]])
+    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, selector=Selector(match_labels={}, match_expressions=[{'key': 'app', 'operator': 'In', 'values': ['sleep']}]), creation_timestamp=1638798546.0, images=['i/name:0.5'], containers=['name'], cluster='cluster')
+    """
     return DeploymentInfo(**json.loads(string_table[0][0]))
 
 
@@ -31,6 +38,12 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/kubernetes/object:
+            This label is set to the Kubernetes object type.
+
+        cmk/kubernetes/cluster:
+            This label is set to the given Kubernetes cluster name.
+
         cmk/kubernetes/namespace:
             This label is set to the namespace of the deployment.
 
@@ -48,6 +61,8 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
     if not section:
         return
 
+    yield HostLabel("cmk/kubernetes/object", "deployment")
+    yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
     yield HostLabel("cmk/kubernetes/deployment", section.name)
 
@@ -70,14 +85,19 @@ def discovery(section: DeploymentInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check(section: DeploymentInfo) -> CheckResult:
-    # TODO: complete check implementation
-    yield Result(state=State.OK, summary=f"Name: {section.name}")
+def check_kube_deployment_info(section: DeploymentInfo) -> CheckResult:
+    yield from check_info(
+        {
+            "name": section.name,
+            "namespace": section.namespace,
+            "creation_timestamp": section.creation_timestamp,
+        }
+    )
 
 
 register.check_plugin(
     name="kube_deployment_info",
     service_name="Info",
     discovery_function=discovery,
-    check_function=check,
+    check_function=check_kube_deployment_info,
 )

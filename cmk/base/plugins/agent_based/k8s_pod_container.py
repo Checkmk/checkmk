@@ -12,6 +12,11 @@ from .utils import docker, k8s
 
 Section = Mapping[str, Mapping[str, Any]]
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def host_labels(section: Section) -> HostLabelGenerator:
     if section:
@@ -27,7 +32,7 @@ register.agent_section(
 
 
 def inventory_k8s_pod_container(section: Section) -> InventoryResult:
-    for container_name, container_data in sorted(section.items()):
+    for container_name, container_data in section.items():
         yield TableRow(
             path=["software", "applications", "kubernetes", "pod_container"],
             key_columns={

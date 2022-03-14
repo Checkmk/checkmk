@@ -1,7 +1,7 @@
 title: Alertmanager: Summary
 agents: alertmanager
 catalog: app/alertmanager
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows a summary of all alert rules that are not ignored.
@@ -16,4 +16,3 @@ description:
 
 discovery:
  One summary service is created
-

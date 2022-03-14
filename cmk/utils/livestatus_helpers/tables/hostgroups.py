@@ -14,9 +14,9 @@ class Hostgroups(Table):
     action_url = Column(
         'action_url',
         col_type='string',
-        description='An optional URL to custom notes or actions on the host group, not supported by Check_MK Micro Core',
+        description='An optional URL to custom notes or actions on the host group',
     )
-    """An optional URL to custom notes or actions on the host group, not supported by Check_MK Micro Core"""
+    """An optional URL to custom notes or actions on the host group"""
 
     alias = Column(
         'alias',
@@ -49,16 +49,16 @@ class Hostgroups(Table):
     notes = Column(
         'notes',
         col_type='string',
-        description='Optional additional notes about the host group, not supported by Check_MK Micro Core',
+        description='Optional additional notes about the host group',
     )
-    """Optional additional notes about the host group, not supported by Check_MK Micro Core"""
+    """Optional additional notes about the host group"""
 
     notes_url = Column(
         'notes_url',
         col_type='string',
-        description='An optional URL to further notes on the host group, not supported by Check_MK Micro Core',
+        description='An optional URL to further notes on the host group',
     )
-    """An optional URL to further notes on the host group, not supported by Check_MK Micro Core"""
+    """An optional URL to further notes on the host group"""
 
     num_hosts = Column(
         'num_hosts',

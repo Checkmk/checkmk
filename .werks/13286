@@ -1,0 +1,50 @@
+Title: WATO WebAPI: Added additional user permission checks for various calls
+Class: security
+Compatible: compat
+Component: wato
+Date: 1641982759
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Stricter permissions checking has been introduced for the following calls
+<ul>
+<li>get_folder</li>
+<li>add_folder</li>
+<li>edit_folder</li>
+<li>delete_folder</li>
+<li>get_all_folders</li>
+<li></li>
+<li>add_host</li>
+<li>add_hosts</li>
+<li>edit_host</li>
+<li>edit_hosts</li>
+<li>get_hosts</li>
+<li>delete_host</li>
+<li>delete_hosts</li>
+<li>get_all_hosts</li>
+<li></li>
+<li>get_all_contactgroups</li>
+<li>delete_contactgroup</li>
+<li>add_contactgroup</li>
+<li>edit_contactgroup</li>
+<li>get_all_hostgroups</li>
+<li>delete_hostgroup</li>
+<li>add_hostgroup</li>
+<li>edit_hostgroup</li>
+<li>get_all_servicegroups</li>
+<li>delete_servicegroup</li>
+<li>add_servicegroup</li>
+<li>edit_servicegroup</li>
+<li></li>
+<li>get_all_users</li>
+<li>delete_users</li>
+<li>add_users</li>
+<li>edit_users</li>
+<li></li>
+<li>activate_changes</li>
+</ul>
+
+If your WebAPI automation user is lacking a specific permission, it will be shown in the response message.

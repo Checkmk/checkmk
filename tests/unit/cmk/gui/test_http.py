@@ -197,42 +197,6 @@ def test_get_ascii_input_mandatory_default() -> None:
         html.request.get_ascii_input_mandatory("zzz")
 
 
-@pytest.mark.usefixtures("set_vars")
-def test_get_unicode_input_type() -> None:
-    assert html.request.get_unicode_input("xyz") == "x"
-    assert isinstance(html.request.get_unicode_input("xyz"), str)
-
-
-@pytest.mark.usefixtures("set_vars")
-def test_get_unicode_input_non_ascii() -> None:
-    assert html.request.get_unicode_input("abc") == "äbc"
-
-
-@pytest.mark.usefixtures("set_vars")
-def test_get_unicode_input_default() -> None:
-    assert html.request.get_unicode_input("get_default", "xyz") == "xyz"
-    assert html.request.get_unicode_input("zzz") is None
-
-
-@pytest.mark.usefixtures("set_vars")
-def test_get_unicode_input_mandatory_input_type() -> None:
-    assert html.request.get_unicode_input_mandatory("xyz") == "x"
-    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), str)
-
-
-@pytest.mark.usefixtures("set_vars")
-def test_get_unicode_input_mandatory_non_ascii() -> None:
-    assert html.request.get_unicode_input_mandatory("abc") == "äbc"
-
-
-@pytest.mark.usefixtures("set_vars")
-def test_get_unicode_input_mandatory_default() -> None:
-    assert html.request.get_unicode_input_mandatory("get_default", "xyz") == "xyz"
-
-    with pytest.raises(MKUserError, match="is missing"):
-        html.request.get_unicode_input_mandatory("zzz")
-
-
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_default() -> None:
     assert html.request.get_integer_input("not_existing") is None
@@ -304,7 +268,7 @@ def test_request_processing(request_context: RequestContextFixture) -> None:
     global_request.set_var("varname", "1a")
     global_request.set_var("varname2", "1")
 
-    global_request.get_unicode_input("varname", deflt="lol")
+    global_request.get_str_input("varname", deflt="lol")
     global_request.get_integer_input_mandatory("varname2")
     global_request.get_request(exclude_vars=["varname2"])
     # TODO: Make a test which works:

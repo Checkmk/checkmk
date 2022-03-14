@@ -1,10 +1,7 @@
 #!/bin/bash
 set -e
 
-# immediately require sodo rights (because I will go get a coffee)
-test "$USER" == "sp" || sudo --validate  # some people don't like that ;-)
-
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -17,20 +14,22 @@ make -C ../.. protobuf-files
 echo "TARGET: $ROOT/share/check_mk/checks"
 # NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
 # would screw up our include caching mechanism!
-sudo rsync -rlpgoD --delete-after ../../checks/ $ROOT/share/check_mk/checks/
+sudo rsync -rlpgoD --delete-after ../../checks/ "$ROOT/share/check_mk/checks/"
 
 echo "TARGET: $ROOT/share/check_mk/inventory"
-sudo rsync -ar --delete-after ../../inventory/ $ROOT/share/check_mk/inventory/
+sudo rsync -ar --delete-after ../../inventory/ "$ROOT/share/check_mk/inventory/"
 
-
-(cd .. ; bash .f12)
+(
+    cd ..
+    bash .f12
+)
 
 # Also deploy all other directories of same type
-if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
-        if [ -e ../../$WHAT/cmk/base/.f12 ]; then
+if [ "${ALL_EDITIONS:-1}" != 0 ]; then
+    for WHAT in enterprise managed plus; do
+        if [ -e "../../$WHAT/cmk/base/.f12" ]; then
             (
-                cd ../../$WHAT/cmk/base
+                cd "../../$WHAT/cmk/base"
                 ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
             )
         fi

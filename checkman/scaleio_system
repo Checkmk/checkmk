@@ -1,7 +1,7 @@
 title: EMC ScaleIO: System Capacity
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

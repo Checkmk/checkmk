@@ -20,7 +20,7 @@ def _valuespec_discovery_rules_vnx_quotas():
             (
                 "dms_names",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             TextInput(title=_("Exact RWVDMS name or regex")),
                             TextInput(title=_("Substitution")),
@@ -38,7 +38,7 @@ def _valuespec_discovery_rules_vnx_quotas():
             (
                 "mp_names",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             TextInput(title=_("Exact mount point name or regex")),
                             TextInput(title=_("Substitution")),

@@ -38,14 +38,10 @@ div#top_heading {
   div.page_state {
     position: absolute;
     top: 14px;
-    right: 17px;
+    right: $spacing;
     display: flex;
     align-items: center;
     height: inherit;
-
-    &.default {
-      top: 6px;
-    }
 
     > a {
       display: inherit;
@@ -59,6 +55,7 @@ div#top_heading {
 
     div.text_container span {
       display: table;
+      font-size: $font-size-large;
     }
 
     div.icon_container {
@@ -67,8 +64,8 @@ div#top_heading {
 
       img.icon {
         display: block;
-        width: 14px;
-        height: 14px;
+        width: 2 * $spacing;
+        height: 2 * $spacing;
 
         &:hover {
           /* disable hover effect */
@@ -78,10 +75,12 @@ div#top_heading {
     }
 
     &.default {
-      div.text_container {
+      top: 6px;
+
+      div.text_container span {
         position: absolute;
-        right: 5.5px;
-        bottom: 21px;
+        right: 6px;
+        bottom: 22px;
         font-size: $font-size-small;
         line-height: $font-size-small;
       }
@@ -177,7 +176,7 @@ div#top_heading {
       }
 
       &.icon_container {
-        padding-right: 3px;
+        padding-right: $spacing;
         background-color: $page-menu-bg-color;
         border-right: 1px solid $headline-color;
 
@@ -230,7 +229,7 @@ div#top_heading {
         }
 
         &:focus {
-          border: 10px solid #fff;
+          border: 10px solid $white;
           outline: none;
         }
 

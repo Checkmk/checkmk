@@ -3,25 +3,17 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from marshmallow.fields import (
-    Bool,
-    Boolean,
-    Constant,
-    Date,
-    DateTime,
-    Decimal,
-    Dict,
-    Field,
-    Function,
-    Int,
-    IPv4,
-    IPv4Interface,
-    IPv6,
-    IPv6Interface,
-    Str,
-    Time,
-    UUID,
-)
+
+# import warnings
+# from marshmallow.warnings import RemovedInMarshmallow4Warning
+# NOTE
+# This warning is not permanently an error, so that no new warnings will be introduced by
+# unsuspecting developers.
+# This could be moved to the test setup, so it won't make trouble for our users.
+# warnings.simplefilter("error", RemovedInMarshmallow4Warning)
+
+
+from marshmallow.fields import Field, missing_
 
 from cmk.gui.fields.attributes import (
     HostAttributeManagementBoardField,
@@ -41,55 +33,32 @@ from cmk.gui.fields.definitions import (
     FolderField,
     GroupField,
     HostField,
-    Integer,
-    List,
-    Nested,
     PasswordIdent,
     PasswordOwner,
     PasswordShare,
+    PythonString,
     query_field,
     SiteField,
-    String,
     Timestamp,
     X509ReqPEMField,
 )
-from cmk.gui.fields.validators import (
-    ValidateAnyOfValidators,
-    ValidateIPv4,
-    ValidateIPv4Network,
-    ValidateIPv6,
-)
+from cmk.gui.fields.validators import ValidateHostName
 
 __all__ = [
     "attributes_field",
-    "Bool",
-    "Boolean",
     "column_field",
-    "Constant",
     "customer_field",
-    "Date",
-    "DateTime",
-    "Decimal",
-    "Dict",
     "ExprSchema",
     "Field",
     "FolderField",
     "FOLDER_PATTERN",
-    "Function",
     "GroupField",
     "HostAttributeManagementBoardField",
     "HostContactGroup",
     "HostField",
-    "Int",
-    "Integer",
     "IPMIParameters",
-    "IPv4",
-    "IPv4Interface",
-    "IPv6",
-    "IPv6Interface",
-    "List",
     "MetaData",
-    "Nested",
+    "missing_",
     "NetworkScan",
     "NetworkScanResult",
     "PasswordIdent",
@@ -98,14 +67,7 @@ __all__ = [
     "query_field",
     "SiteField",
     "SNMPCredentials",
-    "Str",
-    "String",
-    "Time",
     "Timestamp",
-    "UUID",
-    "ValidateAnyOfValidators",
-    "ValidateIPv4",
-    "ValidateIPv4Network",
-    "ValidateIPv6",
     "X509ReqPEMField",
+    "ValidateHostName",
 ]

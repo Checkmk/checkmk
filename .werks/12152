@@ -6,7 +6,7 @@ Date: 1615543724
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When deploying the agent plugin <tt>mk_jolokia</tt> via agent bakery, the
 execution of the plugin will fail, if the field "Name of the instance in the

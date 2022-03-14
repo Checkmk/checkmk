@@ -188,7 +188,7 @@ input.button.hot {
   &,
   &:active {
     color: $font-color-light-bg;
-    background-color: rgb(17, 189, 123);
+    background-color: $success-dimmed;
   }
 
   &:hover {
@@ -446,13 +446,11 @@ div.really {
 }
 
 div.success {
-  color: $font-color;
   background-color: $headline-color;
 }
 
 div.message {
-  color: $font-color-light-bg;
-  background-color: rgb(157, 190, 205);
+  background-color: $input-background-color;
 }
 
 div.error {
@@ -571,9 +569,6 @@ td.dictleft div.dictelement {
   margin-bottom: 10px;
   margin-left: 0;
 
-  * {
-  }
-
   &:empty {
     margin: 0;
   }
@@ -642,33 +637,6 @@ table.vs_date {
 
 table.valuespec_listof {
   width: 100%;
-
-  &.regular {
-    > tbody > tr > td {
-      padding: 3px 0 5px;
-      border-bottom: 1px solid rgb(153, 187, 204);
-
-      &:first-child {
-        padding-bottom: 5px;
-      }
-    }
-
-    > tbody > tr:last-child > td {
-      padding-top: 3px;
-      border-bottom-style: none;
-    }
-
-    td.vlof_buttons {
-      width: 1px;
-      margin-right: 5px;
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-  }
-
-  option[selected] {
-    font-weight: bold;
-  }
 
   .unused {
     display: none;
@@ -741,22 +709,6 @@ table.nform
   > tr
   > td {
   border-bottom: none;
-}
-
-table.valuespec_listof.regular > tbody > tr {
-  &:last-child > td {
-    padding-top: 3px;
-    border-bottom-style: none;
-  }
-
-  > td {
-    padding: 3px 0 5px;
-    border-bottom: 1px solid rgb(153, 187, 204);
-
-    &:first-child {
-      padding-bottom: 5px;
-    }
-  }
 }
 
 table.vs_duallist {
@@ -837,27 +789,6 @@ table.alternative {
 
 div.popup_container {
   position: relative;
-}
-
-div.popup {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 200;
-  width: -moz-max-content;
-  width: intrinsic;
-  padding: 10px;
-  color: $font-color-white;
-  background-color: rgb(69, 130, 157);
-  border: 1px solid $white;
-  border-radius: 5px;
-  -webkit-border-radius: 5px;
-
-  span {
-    display: block;
-    margin-bottom: 5px;
-    color: $font-color-white;
-  }
 }
 
 div#hover_menu {
@@ -1087,7 +1018,7 @@ td.nowiki {
 
     &.file {
       color: $font-color-light-bg;
-      background-color: rgb(255, 240, 181);
+      background-color: $info-light;
     }
   }
 
@@ -1096,7 +1027,7 @@ td.nowiki {
     margin-bottom: -12px;
     font-weight: bold;
     color: $font-color-light-bg;
-    background-color: rgb(230, 216, 163);
+    background-color: $info;
   }
 }
 
@@ -1249,62 +1180,6 @@ div.content {
 
 table td {
   vertical-align: middle;
-}
-
-/* Graphs */
-div.graph_with_timeranges {
-  margin-bottom: 32px;
-
-  div.graph {
-    border: 1px solid $color-table-border;
-    box-shadow: none;
-
-    div.title {
-      display: block;
-    }
-
-    canvas {
-      margin-bottom: 8px;
-    }
-
-    &.preview canvas {
-      margin-bottom: 0;
-    }
-
-    &.preview .title {
-      top: 12px;
-      width: calc(100% - 16px);
-      padding: 8px 0;
-      font-weight: $font-weight-default;
-      color: $font-color;
-      text-shadow: none;
-      box-sizing: border-box;
-    }
-
-    table.legend {
-      margin-top: 32px;
-
-      th.scalar {
-        text-align: right;
-      }
-
-      td {
-        background: transparent;
-      }
-    }
-  }
-
-  table.timeranges > tbody > tr > td {
-    padding: 0 8px 4px;
-  }
-}
-
-table.data td > div:first-child div.graph_with_timeranges {
-  margin-top: 8px;
-}
-
-table.data td > div:last-child div.graph_with_timeranges {
-  margin-bottom: 8px;
 }
 
 div.metricchoice select,

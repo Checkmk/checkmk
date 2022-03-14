@@ -19,8 +19,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp4 sles12sp4 \
     krb5-devel \
     libmysqlclient-devel \
     make \
-    nodejs10 \
-    npm10 \
     openldap2-devel \
     python \
     python-devel \
@@ -64,6 +62,7 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
+    libxslt-devel \
     make \
     mysql \
     openldap2-devel \
@@ -81,10 +80,8 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
-    valgrind \
     wget \
     which \
-    chrpath \
     joe \
     iputils \
     vim \
@@ -111,16 +108,15 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-valgrind.sh
 RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
-RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
-RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
-RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
+RUN /opt/install-patchelf.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
 # using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can

@@ -6,7 +6,7 @@ Date: 1627562198
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 ESX vsphere may return multipath devices without LUN ID (e.g. "local marvel processor").
 This led to mixed-up service items for esx_vsphere_hostsystem.multipath as the parsing continued without an Exception.

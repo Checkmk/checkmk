@@ -8,6 +8,7 @@ import ast
 import base64
 import pprint
 import re
+from pathlib import Path
 from typing import Any, Callable, List, Tuple, TypedDict, Union
 
 import cmk.utils.paths
@@ -21,7 +22,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import SiteStatus
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 
 # TODO: Clean up all call sites in the GUI and only use them in WATO config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
@@ -29,21 +30,21 @@ ALL_SERVICES = cmk.utils.rulesets.tuple_rulesets.ALL_SERVICES
 NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
 
 
-def wato_root_dir():
+def wato_root_dir() -> str:
     return cmk.utils.paths.check_mk_config_dir + "/wato/"
 
 
-def multisite_dir():
+def multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
 # TODO: Move this to CEE specific code again
-def liveproxyd_config_dir():
+def liveproxyd_config_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
 
 
 # TODO: Find a better place later
-def rename_host_in_list(thelist, oldname, newname):
+def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
     did_rename = False
     for nr, element in enumerate(thelist):
         if element == oldname:
@@ -119,12 +120,10 @@ def mk_eval(s: Union[bytes, str]) -> Any:
     try:
         return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:
-        raise MKGeneralException(
-            _("Unable to parse provided data: %s") % escape_html_permissive(repr(s))
-        )
+        raise MKGeneralException(_("Unable to parse provided data: %s") % escape_to_html(repr(s)))
 
 
-def has_agent_bakery():
+def has_agent_bakery() -> bool:
     return not cmk_version.is_raw_edition()
 
 
@@ -138,7 +137,8 @@ def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
             pass
 
 
-def site_neutral_path(path):
+def site_neutral_path(path: Union[str, Path]) -> str:
+    path = str(path)
     if path.startswith("/omd"):
         parts = path.split("/")
         parts[3] = "[SITE_ID]"

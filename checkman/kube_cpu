@@ -1,0 +1,25 @@
+title: Kubernetes: CPU
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the CPU usage of a Kubernetes object, its requests utilization and its limits
+ utilization.
+
+ Requests utilization is the CPU usage divided by the sum of all configured container CPU
+ requests. Limits utilization is computed in the same manner. The utilization percentage values are
+ omitted if any of the associated request/limit value are not configured. Moreover, limits
+ utilization is omitted if any container has a limit of zero. The reason for omission is displayed
+ in the check's details.
+
+ The service includes metrics for the CPU usage, the requests utilization, the limits utilization,
+ the CPU requests and CPU limits of the Kubernetes object.
+
+ There are no default thresholds for this service. However, thresholds can be configured via the
+ "Kubernetes CPU resource utilization" ruleset.
+
+ The check requires that the special agent kube is configured.
+
+discovery:
+ One service is created per Kubernetes object.

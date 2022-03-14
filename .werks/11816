@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The shipped python module "kerberos" was broken for all SLES distributions.
 This could be observerd when using the active check "check_bi_aggr", which failed with:

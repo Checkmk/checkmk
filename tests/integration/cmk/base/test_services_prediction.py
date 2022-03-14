@@ -8,6 +8,7 @@ import json
 import time
 from dataclasses import asdict
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -23,9 +24,7 @@ from cmk.base import prediction
 
 
 @pytest.fixture(name="cfg_setup", scope="module")
-def cfg_setup_fixture(
-    request, web, site: Site
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def cfg_setup_fixture(request, web, site: Site):
     hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core
@@ -33,12 +32,16 @@ def cfg_setup_fixture(
     site.makedirs("var/check_mk/rrd/test-prediction")
     with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
         f.write(
-            open("%s/tests/integration/cmk/base/test-files/CPU_load.rrd" % repo_path(), "rb").read()
+            Path(
+                repo_path(), "tests", "integration", "cmk", "base", "test-files", "CPU_load.rrd"
+            ).read_bytes()
         )
 
     site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
-        open("%s/tests/integration/cmk/base/test-files/CPU_load.info" % repo_path()).read(),
+        Path(
+            repo_path(), "tests", "integration", "cmk", "base", "test-files", "CPU_load.info"
+        ).read_text(),
     )
 
     site.restart_core()

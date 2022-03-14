@@ -20,6 +20,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
@@ -28,7 +29,6 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsResolver,
     SectionsParser,
 )
-from cmk.base.sources.agent import AgentHostSections
 
 
 def _test_section(
@@ -87,17 +87,17 @@ NODE_2: Sequence[AgentRawDataSection] = [
 @pytest.mark.parametrize(
     "node_sections,expected_result",
     [
-        (AgentHostSections(sections={}), None),
+        (HostSections[AgentRawDataSection](sections={}), None),
         (
-            AgentHostSections(sections={SectionName("one"): NODE_1}),
+            HostSections[AgentRawDataSection](sections={SectionName("one"): NODE_1}),
             {"parsed_by": "one", "node": "node1"},
         ),
         (
-            AgentHostSections(sections={SectionName("two"): NODE_1}),
+            HostSections[AgentRawDataSection](sections={SectionName("two"): NODE_1}),
             {"parsed_by": "two", "node": "node1"},
         ),
         (
-            AgentHostSections(
+            HostSections[AgentRawDataSection](
                 sections={
                     SectionName("one"): NODE_1,
                     SectionName("two"): NODE_1,
@@ -110,7 +110,9 @@ NODE_2: Sequence[AgentRawDataSection] = [
         ),
     ],
 )
-def test_get_parsed_section(node_sections: AgentHostSections, expected_result: Mapping) -> None:
+def test_get_parsed_section(
+    node_sections: HostSections[AgentRawDataSection], expected_result: Mapping
+) -> None:
 
     parsed_sections_broker = ParsedSectionsBroker(
         {
@@ -133,7 +135,7 @@ def test_get_parsed_section(node_sections: AgentHostSections, expected_result: M
 
 def _get_parser() -> SectionsParser:
     return SectionsParser(
-        AgentHostSections(
+        HostSections[AgentRawDataSection](
             sections={
                 SectionName("one"): NODE_1,
                 SectionName("four"): NODE_1,

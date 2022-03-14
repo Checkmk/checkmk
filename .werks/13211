@@ -6,7 +6,7 @@ Date: 1630739315
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The <i>Check_MK</i> service did not report the <i>only-from</i>
 configuration if the used super server was <tt>systemd</tt> and

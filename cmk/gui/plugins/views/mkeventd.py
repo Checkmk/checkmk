@@ -181,7 +181,7 @@ class DataSourceECEvents(ABCDataSource):
 
     @property
     def title(self):
-        return _("Event Console: Current Events")
+        return _("Event Console: Current events")
 
     @property
     def table(self):
@@ -216,7 +216,7 @@ class DataSourceECEventHistory(ABCDataSource):
 
     @property
     def title(self):
-        return _("Event Console: Event History")
+        return _("Event Console: Event history")
 
     @property
     def table(self):
@@ -321,7 +321,7 @@ class PainterEventMatchGroups(Painter):
         return "event_match_groups"
 
     def title(self, cell):
-        return _("Match Groups")
+        return _("Match groups")
 
     def short_title(self, cell):
         return _("Match")
@@ -415,7 +415,7 @@ class PainterEventSl(Painter):
         return "event_sl"
 
     def title(self, cell):
-        return _("Service-Level")
+        return _("Service-level")
 
     def short_title(self, cell):
         return _("Level")
@@ -458,7 +458,7 @@ class PainterEventIpaddress(Painter):
         return "event_ipaddress"
 
     def title(self, cell):
-        return _("Original IP-Address")
+        return _("Original IP address")
 
     def short_title(self, cell):
         return _("Orig. IP")
@@ -501,7 +501,7 @@ class PainterEventOwner(Painter):
         return _("Owner of event")
 
     def short_title(self, cell):
-        return _("owner")
+        return _("Owner")
 
     @property
     def columns(self):
@@ -518,7 +518,7 @@ class PainterEventContact(Painter):
         return "event_contact"
 
     def title(self, cell):
-        return _("Contact Person")
+        return _("Contact person")
 
     def short_title(self, cell):
         return _("Contact")
@@ -763,7 +763,7 @@ class PainterEventIcons(Painter):
         return "event_icons"
 
     def title(self, cell):
-        return _("Event Icons")
+        return _("Event icons")
 
     def short_title(self, cell):
         return _("Icons")
@@ -787,7 +787,7 @@ class PainterEventHistoryIcons(Painter):
         return "event_history_icons"
 
     def title(self, cell):
-        return _("Event Icons")
+        return _("Event history icons")
 
     def short_title(self, cell):
         return _("Icons")
@@ -836,7 +836,7 @@ class PainterEventEffectiveContactGroups(Painter):
         return "event_effective_contact_groups"
 
     def title(self, cell):
-        return _("Contact groups effective (Host or rule contact groups)")
+        return _("Contact groups effective (host or rule contact groups)")
 
     def short_title(self, cell):
         return _("Contact groups")
@@ -974,7 +974,7 @@ class PainterHistoryAddinfo(Painter):
         return "history_addinfo"
 
     def title(self, cell):
-        return _("Additional Information")
+        return _("Additional information")
 
     def short_title(self, cell):
         return _("Info")
@@ -1050,7 +1050,7 @@ class CommandECUpdateEvent(ECCommand):
 
     @property
     def title(self):
-        return _("Update & Acknowledge")
+        return _("Update & acknowledge")
 
     @property
     def permission(self):
@@ -1093,17 +1093,13 @@ class CommandECUpdateEvent(ECCommand):
         if request.var("_mkeventd_update"):
             if user.may("mkeventd.update_comment"):
                 comment = (
-                    request.get_unicode_input_mandatory("_mkeventd_comment")
-                    .strip()
-                    .replace(";", ",")
+                    request.get_str_input_mandatory("_mkeventd_comment").strip().replace(";", ",")
                 )
             else:
                 comment = ""
             if user.may("mkeventd.update_contact"):
                 contact = (
-                    request.get_unicode_input_mandatory("_mkeventd_contact")
-                    .strip()
-                    .replace(":", ",")
+                    request.get_str_input_mandatory("_mkeventd_contact").strip().replace(":", ",")
                 )
             else:
                 contact = ""
@@ -1144,7 +1140,7 @@ class CommandECChangeState(ECCommand):
 
     @property
     def title(self):
-        return _("Change State")
+        return _("Change state")
 
     @property
     def permission(self):
@@ -1192,7 +1188,7 @@ class CommandECCustomAction(ECCommand):
 
     @property
     def title(self):
-        return _("Custom Action")
+        return _("Custom action")
 
     @property
     def permission(self):
@@ -1238,7 +1234,7 @@ class CommandECArchiveEvent(ECCommand):
 
     @property
     def title(self):
-        return _("Archive Event")
+        return _("Archive event")
 
     @property
     def permission(self):
@@ -1457,12 +1453,13 @@ multisite_builtin_views["ec_events"] = mkeventd_view(
             ("event_phase_delayed", ""),
         ],
         "sorters": [("event_last", False)],
+        "is_show_more": True,
     }
 )
 
 multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
     {
-        "title": _("Events of Monitored Host"),
+        "title": _("Events of monitored host"),
         "description": _("Currently open events of a host that is monitored"),
         "datasource": "mkeventd_events",
         "layout": "table",
@@ -1505,7 +1502,7 @@ multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
 )
 multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
     {
-        "title": _("Events of Host"),
+        "title": _("Events of host"),
         "description": _("Currently open events of one specific host"),
         "datasource": "mkeventd_events",
         "layout": "table",
@@ -1549,7 +1546,7 @@ multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
 
 multisite_builtin_views["ec_event"] = mkeventd_view(
     {
-        "title": _("Event Details"),
+        "title": _("Event details"),
         "description": _("Details about one event"),
         "datasource": "mkeventd_events",
         "layout": "dataset",
@@ -1592,7 +1589,7 @@ multisite_builtin_views["ec_event"] = mkeventd_view(
 multisite_builtin_views["ec_history_recent"] = mkeventd_view(
     {
         "sort_index": 20,
-        "title": _("Recent Event History"),
+        "title": _("Recent event history"),
         "description": _(
             "Information about events and actions on events during the recent 24 hours."
         ),
@@ -1649,12 +1646,13 @@ multisite_builtin_views["ec_history_recent"] = mkeventd_view(
             ("history_time", True),
             ("history_line", True),
         ],
+        "is_show_more": True,
     }
 )
 
 multisite_builtin_views["ec_historyentry"] = mkeventd_view(
     {
-        "title": _("Event History Entry"),
+        "title": _("Event history entry"),
         "description": _("Details about a historical event history entry"),
         "datasource": "mkeventd_history",
         "layout": "dataset",
@@ -1733,7 +1731,7 @@ multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
 
 multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
     {
-        "title": _("Event History of Host"),
+        "title": _("Event history of host"),
         "description": _("History entries of one specific host"),
         "datasource": "mkeventd_history",
         "layout": "table",
@@ -1832,7 +1830,7 @@ multisite_builtin_views["ec_event_mobile"] = {
     "public": True,
     "single_infos": ["event"],
     "sorters": [],
-    "title": "Event Details",
+    "title": "Event details",
     "topic": "events",
     "user_sortable": True,
 }

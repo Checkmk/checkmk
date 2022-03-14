@@ -19,7 +19,7 @@ def plugin_path(site: Site) -> Iterator[str]:
         path,
         """
 from cmk.gui.plugins.wato.utils import rulespec_registry, HostRulespec
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupHostsMonitoringRules
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupHostsMonitoringRulesVarious
 from cmk.gui.valuespec import Dictionary
 
 def _valuespec_host_groups():
@@ -28,7 +28,7 @@ def _valuespec_host_groups():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupHostsMonitoringRules,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="dict",
         name="test",
         valuespec=_valuespec_host_groups,
@@ -46,8 +46,8 @@ def fixture_test_script(site: Site) -> Iterator[str]:
     site.write_text_file(
         path,
         """
-import cmk.gui.modules
-cmk.gui.modules.load_plugins()
+from cmk.gui import main_modules
+main_modules.load_plugins()
 from cmk.gui.plugins.wato.utils import rulespec_registry
 print("test" in rulespec_registry)
     """,
@@ -71,7 +71,7 @@ def legacy_plugin_path(site: Site) -> Iterator[str]:
         path,
         """
 from cmk.gui.plugins.wato import rulespec_registry, HostRulespec
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupHostsMonitoringRules
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupHostsMonitoringRulesVarious
 from cmk.gui.valuespec import Dictionary
 
 def _valuespec_host_groups():
@@ -80,7 +80,7 @@ def _valuespec_host_groups():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupHostsMonitoringRules,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="dict",
         name="test",
         valuespec=_valuespec_host_groups,

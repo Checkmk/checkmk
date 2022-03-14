@@ -1699,7 +1699,7 @@ def _output_packet_rates(
 def cluster_check(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> type_defs.CheckResult:
 
     ifaces = [
@@ -1710,7 +1710,7 @@ def cluster_check(
             }
         )
         for node, node_ifaces in section.items()
-        for iface in node_ifaces
+        for iface in node_ifaces or ()
     ]
 
     yield from check_multiple_interfaces(

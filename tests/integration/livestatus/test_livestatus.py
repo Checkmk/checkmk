@@ -7,49 +7,28 @@
 import json as _json
 import time as _time
 import uuid as _uuid
-from typing import Dict, List, NamedTuple
+from typing import Dict, List
 
 import pytest
 
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
-from cmk.utils import version as cmk_version
 
-
-class DefaultConfig(NamedTuple):
-    core: str
-
-
-@pytest.fixture(
-    name="default_cfg",
-    scope="module",
-    params=[
-        "nagios",
-        pytest.param(
-            "cmc",
-            marks=pytest.mark.skipif(
-                cmk_version.is_raw_edition(), reason="raw edition only supports nagios core."
-            ),
-        ),
-    ],
-)
-def default_cfg_fixture(request, site, web):
+@pytest.fixture(name="default_cfg", scope="module")
+def default_cfg_fixture(request, site: Site, web) -> None:
     site.ensure_running()
-    config = DefaultConfig(core=request.param)
-    site.set_config("CORE", config.core, with_restart=True)
-
-    print("Applying default config (%s)" % config.core)
+    print("Applying default config")
     create_linux_test_host(request, site, "livestatus-test-host")
     create_linux_test_host(request, site, "livestatus-test-host.domain")
     web.discover_services("livestatus-test-host")  # Replace with RestAPI call, see CMK-9249
     site.activate_changes_and_wait_for_core_reload()
-    return config
 
 
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
-def test_tables(default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_tables(site: Site) -> None:
     columns_per_table: Dict[str, List[str]] = {}
     for row in site.live.query_table_assoc("GET columns\n"):
         columns_per_table.setdefault(row["table"], []).append(row["name"])
@@ -58,20 +37,22 @@ def test_tables(default_cfg, site: Site):
     for table, _columns in columns_per_table.items():
         print("Test table: %s" % table)
 
-        if default_cfg.core == "nagios" and table == "statehist":
+        if site.core_name() == "nagios" and table == "statehist":
             continue  # the statehist table in nagios can not be fetched without time filter
 
         result = site.live.query("GET %s\n" % table)
         assert isinstance(result, list)
 
 
-def test_host_table(default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_host_table(site: Site) -> None:
     rows = site.live.query("GET hosts")
     assert isinstance(rows, list)
     assert len(rows) >= 2  # header + min 1 host
 
 
-def test_host_custom_variables(default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_host_custom_variables(site: Site) -> None:
     rows = site.live.query(
         "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n"
     )
@@ -100,7 +81,8 @@ def test_host_custom_variables(default_cfg, site: Site):
     }
 
 
-def test_host_table_host_equal_filter(default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_host_table_host_equal_filter(site: Site) -> None:
     queries = {
         "nagios": "GET hosts\n"
         "Columns: host_name\n"
@@ -120,11 +102,12 @@ def test_host_table_host_equal_filter(default_cfg, site: Site):
         ],
     }
 
-    rows = site.live.query_table_assoc(queries[default_cfg.core])
-    assert rows == results[default_cfg.core]
+    rows = site.live.query_table_assoc(queries[site.core_name()])
+    assert rows == results[site.core_name()]
 
 
-def test_service_table(default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_service_table(site: Site) -> None:
     rows = site.live.query(
         "GET services\nFilter: host_name = livestatus-test-host\n" "Columns: description\n"
     )
@@ -139,7 +122,8 @@ def test_service_table(default_cfg, site: Site):
     assert "Memory" in descriptions
 
 
-def test_usage_counters(default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_usage_counters(site: Site) -> None:
     rows = site.live.query(
         "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n"
     )
@@ -150,9 +134,7 @@ def test_usage_counters(default_cfg, site: Site):
 
 
 @pytest.fixture(name="configure_service_tags")
-def configure_service_tags_fixture(
-    site, web, default_cfg
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def configure_service_tags_fixture(site, web, default_cfg):
     web.set_ruleset(  # Replace with RestAPI, see CMK-9251
         "service_tag_rules",
         {
@@ -186,7 +168,8 @@ def configure_service_tags_fixture(
     site.activate_changes_and_wait_for_core_reload()
 
 
-def test_service_custom_variables(configure_service_tags, default_cfg, site: Site):
+@pytest.mark.usefixtures("default_cfg")
+def test_service_custom_variables(configure_service_tags, site: Site) -> None:
     rows = site.live.query(
         "GET services\n"
         "Columns: custom_variables tags\n"

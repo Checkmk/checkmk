@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence
+from typing import List, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -17,14 +17,14 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     HostName,
     RuleConditionsSpec,
+    RuleSpec,
     RuleValue,
     ServiceName,
     TagCondition,
     TaggroupID,
 )
 
-from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import ServiceLabel
+from cmk.base.autochecks import AutocheckEntry
 
 
 def test_ruleset_match_object_no_conditions() -> None:
@@ -62,8 +62,9 @@ def test_ruleset_match_object_service_cache_id_no_labels() -> None:
     assert obj.service_cache_id == ("svc", hash(None))
 
 
-ruleset = [
+ruleset: List[RuleSpec] = [
     {
+        "id": "1",
         "value": "BLA",
         "condition": {
             "host_name": ["host1"],
@@ -71,11 +72,13 @@ ruleset = [
         "options": {},
     },
     {
+        "id": "2",
         "value": "BLUB",
         "condition": {"host_name": ["host1", "host2"]},
         "options": {},
     },
     {
+        "id": "3",
         "value": "BLA",
         "condition": {
             "host_name": ["xyz"],
@@ -85,14 +88,17 @@ ruleset = [
         },
     },
     {
+        "id": "4",
         "value": "LEVEL1",
         "condition": {"host_folder": "/lvl1/"},
     },
     {
+        "id": "5",
         "value": "LEVEL2",
         "condition": {"host_folder": "/lvl1/lvl2/"},
     },
     {
+        "id": "6",
         "value": "XYZ",
         "condition": {
             "host_name": [],
@@ -195,26 +201,20 @@ def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
         )
         == []
     )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("host1"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("host1"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["BLA", "BLUB"]
-    )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("host2"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    ) == ["BLA", "BLUB"]
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("host2"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["BLUB"]
-    )
+    ) == ["BLUB"]
 
 
 def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> None:
@@ -237,26 +237,20 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
         )
         == []
     )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("lvl1"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("lvl1"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["LEVEL1"]
-    )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("lvl2"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    ) == ["LEVEL1"]
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("lvl2"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["LEVEL1", "LEVEL2"]
-    )
+    ) == ["LEVEL1", "LEVEL2"]
     assert (
         list(
             matcher.get_host_ruleset_values(
@@ -269,8 +263,9 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
     )
 
 
-dict_ruleset = [
+dict_ruleset: List[RuleSpec] = [
     {
+        "id": "1",
         "value": {"hu": "BLA"},
         "condition": {
             "host_name": ["host1"],
@@ -278,6 +273,7 @@ dict_ruleset = [
         "options": {},
     },
     {
+        "id": "2",
         "value": {"ho": "BLA"},
         "condition": {
             "host_name": ["host1", "host2"],
@@ -285,6 +281,7 @@ dict_ruleset = [
         "options": {},
     },
     {
+        "id": "3",
         "value": {
             "hu": "BLUB",
             "he": "BLUB",
@@ -295,6 +292,7 @@ dict_ruleset = [
         "options": {},
     },
     {
+        "id": "4",
         "value": {"hu": "BLA"},
         "condition": {
             "host_name": ["xyz"],
@@ -348,8 +346,9 @@ def test_basic_host_ruleset_get_merged_dict_values(monkeypatch: MonkeyPatch) -> 
     }
 
 
-binary_ruleset = [
+binary_ruleset: List[RuleSpec] = [
     {
+        "id": "1",
         "value": True,
         "condition": {
             "host_name": ["host1"],
@@ -357,11 +356,13 @@ binary_ruleset = [
         "options": {},
     },
     {
+        "id": "2",
         "value": False,
         "condition": {"host_name": ["host1", "host2"]},
         "options": {},
     },
     {
+        "id": "3",
         "value": True,
         "condition": {
             "host_name": ["host1", "host2"],
@@ -369,6 +370,7 @@ binary_ruleset = [
         "options": {},
     },
     {
+        "id": "4",
         "value": True,
         "condition": {
             "host_name": ["xyz"],
@@ -669,8 +671,10 @@ service_label_ruleset = [
 @pytest.mark.parametrize(
     "hostname,service_description,expected_result",
     [
-        (HostName("host1"), "CPU load", ["os_linux", "abc", "BLA"]),
-        (HostName("host2"), "CPU load", ["hu", "BLA"]),
+        # Funny service description because the plugin isn't loaded.
+        # We could patch config.service_description, but this is easier:
+        (HostName("host1"), "Unimplemented check cpu_load", ["os_linux", "abc", "BLA"]),
+        (HostName("host2"), "Unimplemented check cpu_load", ["hu", "BLA"]),
     ],
 )
 def test_ruleset_matcher_get_service_ruleset_values_labels(
@@ -685,15 +689,14 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
     ts.set_autochecks(
         HostName("host1"),
         [
-            Service(
+            AutocheckEntry(
                 CheckPluginName("cpu_load"),
                 None,
-                "CPU load",
-                "{}",
-                service_labels={
-                    "os": ServiceLabel("os", "linux"),
-                    "abc": ServiceLabel("abc", "xä"),
-                    "hu": ServiceLabel("hu", "ha"),
+                {},
+                {
+                    "os": "linux",
+                    "abc": "xä",
+                    "hu": "ha",
                 },
             )
         ],
@@ -703,12 +706,11 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
     ts.set_autochecks(
         HostName("host2"),
         [
-            Service(
+            AutocheckEntry(
                 CheckPluginName("cpu_load"),
                 None,
-                "CPU load",
-                "{}",
-                service_labels={},
+                {},
+                {},
             ),
         ],
     )

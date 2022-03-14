@@ -118,15 +118,14 @@ include \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/lasso/lasso.make \
+    packages/xinetd/xinetd.make \
     packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
-    packages/check_mysql_health/check_mysql_health.make \
-    packages/check_oracle_health/check_oracle_health.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \
-    packages/jmx4perl/jmx4perl.make \
+    packages/cpp-libs/cpp-libs.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
@@ -151,7 +150,6 @@ include \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
-    packages/Webinject/Webinject.make \
     packages/appliance/appliance.make
 
 ifeq ($(EDITION),enterprise)
@@ -161,6 +159,12 @@ ifeq ($(EDITION),free)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
 ifeq ($(EDITION),managed)
-include $(REPO_PATH)/enterprise/enterprise.make \
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/managed/managed.make
+endif
+ifeq ($(EDITION),plus)
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/plus/plus.make
 endif

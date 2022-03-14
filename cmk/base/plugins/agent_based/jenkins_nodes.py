@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, Sequence, Tuple, Union
+from typing import Any, Dict, Final, List, Mapping, Sequence
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -160,67 +160,46 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) 
 
         yield Result(state=state, summary=f"Offline: {_MAP_NODE_STATES[offline_state]}")
 
-        for key, column, value, info, ds_key, hr_func in [
-            (
-                "monitorData",
-                "hudson.node_monitors.ResponseTimeMonitor",
-                "average",
-                "Average response time",
-                "avg_response_time",
-                render.timespan,
-            ),
-            (
-                "monitorData",
-                "hudson.node_monitors.ClockMonitor",
-                "diff",
-                "Clock difference",
-                "jenkins_clock",
-                render.timespan,
-            ),
-            (
-                "monitorData",
-                "hudson.node_monitors.TemporarySpaceMonitor",
-                "size",
-                "Free temp space",
-                "jenkins_temp",
-                render.bytes,
-            ),
-        ]:
+        if not (mon_data := node.get("monitorData", {})):
+            return
 
-            levels_upper, levels_lower = _get_levels(params.get(ds_key), lower=value == "size")
-
-            try:
-                node_data = node[key][column][value]
-            except (AttributeError, KeyError, TypeError):
-                continue
-
-            if value in ["average", "diff"]:
-                # ms to s
-                node_data = node_data / 1000.0
-
+        if (
+            response_time := mon_data.get("hudson.node_monitors.ResponseTimeMonitor", {}).get(
+                "average"
+            )
+        ) is not None:
             yield from check_levels(
-                node_data,
-                metric_name=ds_key,
-                levels_upper=levels_upper,
-                levels_lower=levels_lower,
-                render_func=hr_func,
-                label=info,
+                response_time / 1000.0,
+                metric_name="avg_response_time",
+                levels_upper=params.get("avg_response_time"),
+                label="Average response time",
+                render_func=render.timespan,
             )
 
+        if (diff := mon_data.get("hudson.node_monitors.ClockMonitor", {}).get("diff")) is not None:
+            yield from check_levels(
+                abs(diff) / 1000.0,
+                metric_name="jenkins_clock",
+                levels_upper=params.get("jenkins_clock"),
+                label="Clock difference",
+                render_func=render.timespan,
+            )
 
-_Levels = Union[None, Tuple[float, float]]
-
-
-def _get_levels(levels: Union[None, Tuple[float, ...]], *, lower: bool) -> Tuple[_Levels, _Levels]:
-    if levels is None:
-        return None, None
-    if lower:
-        return None, (
-            levels[0] * 1024 * 1024,
-            levels[1] * 1024 * 1024,
-        )
-    # presumably we have only len 4 or 2, but be safe.
-    return (levels[0], levels[1]), (levels[2], levels[3]) if len(levels) >= 4 else None
+        if (
+            size := mon_data.get("hudson.node_monitors.TemporarySpaceMonitor", {}).get("size")
+        ) is not None:
+            levels_lower = (
+                None
+                if (levels := params.get("jenkins_temp")) is None
+                else (levels[0] * 1024**2, levels[1] * 1024**2)
+            )
+            yield from check_levels(
+                size,
+                metric_name="jenkins_temp",
+                levels_lower=levels_lower,
+                label="Free temp space",
+                render_func=render.bytes,
+            )
 
 
 register.check_plugin(

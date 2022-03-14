@@ -6,7 +6,7 @@ Date: 1615883858
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, automatic update of the Windows agent with Python module installed 
 has lead to long delays in the monitoring - up to few minutes, because the 

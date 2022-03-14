@@ -34,6 +34,8 @@ def _edition_short_from_pkg_path(package_path):
         return "cme"
     if file_name.startswith("check-mk-free-"):
         return "cfe"
+    if file_name.startswith("check-mk-plus-"):
+        return "cpe"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -41,7 +43,7 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
     omd_version = _get_omd_version(cmk_version, package_path)
 
     if package_path.endswith(".rpm"):
-        rpm2cpio = subprocess.Popen(["rpm2cpio", package_path], stdout=subprocess.PIPE)
+        rpm2cpio = subprocess.run(["rpm2cpio", package_path], stdout=subprocess.PIPE, check=False)
         return subprocess.check_output(
             [
                 "cpio",
@@ -50,14 +52,15 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
                 "--to-stdout",
                 "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path),
             ],
-            stdin=rpm2cpio.stdout,
+            input=rpm2cpio.stdout,
         )
 
     if package_path.endswith(".deb"):
-        dpkg = subprocess.Popen(["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE)
         return subprocess.check_output(
             ["tar", "xOf", "-", "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)],
-            stdin=dpkg.stdout,
+            input=subprocess.run(
+                ["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE, check=False
+            ).stdout,
         )
 
     if package_path.endswith(".cma"):
@@ -138,15 +141,15 @@ def test_files_not_in_version_path(package_path, cmk_version):
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/README.md$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/copyright$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|free|enterprise|managed)-.*$",
+            "/etc/init.d/check-mk-(raw|free|enterprise|managed|plus)-.*$",
         ] + version_allowed_patterns
 
         paths = []
@@ -228,6 +231,7 @@ def test_src_not_contains_enterprise_sources(package_path):
     prefix = os.path.basename(package_path).replace(".tar.gz", "")
     enterprise_files = []
     managed_files = []
+    plus_files = []
 
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
@@ -237,9 +241,12 @@ def test_src_not_contains_enterprise_sources(package_path):
             enterprise_files.append(path)
         if path != "%s/managed/" % prefix and path.startswith("%s/managed/" % prefix):
             managed_files.append(path)
+        if path != "%s/plus/" % prefix and path.startswith("%s/plus/" % prefix):
+            plus_files.append(path)
 
     assert enterprise_files == []
     assert managed_files == []
+    assert plus_files == []
 
 
 def test_demo_modifications(package_path, cmk_version):

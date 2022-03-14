@@ -41,24 +41,32 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def parse_cmciii_lcp_water(info):
     units = {}
+    unit_lines = None
     for line in info:
         if line[0].endswith(" Unit"):
             unit_name = line[0].split(" ")[0]
             unit_lines = []
             units[unit_name] = unit_lines
         else:
-            unit_lines.append(line[0])
+            if unit_lines is not None:
+                unit_lines.append(line[0])
 
     if "Water" in units:
         return units["Water"]
 
+    return []
+
 
 def inventory_cmciii_lcp_water(parsed):
-    return []
+    if parsed:
+        yield (None, {})
 
 
 def check_cmciii_lcp_water(item, params, parsed):
     # New check: This sensor is handled by cmciii.temp
+    if not parsed:
+        return
+
     def parse_status(status_name):
         if status_name.lower() == "ok":
             return 0

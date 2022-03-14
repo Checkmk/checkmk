@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you have "Cisco IP SLA X" services you need to rediscover the
 affected services, so that the new stable service discriptions will

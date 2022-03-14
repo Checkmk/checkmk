@@ -126,9 +126,9 @@ class Downtimes(Table):
     host_check_flapping_recovery_notification = Column(
         'host_check_flapping_recovery_notification',
         col_type='int',
-        description='Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC',
+        description='Whether to check to send a recovery notification when flapping stops (0/1)',
     )
-    """Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC"""
+    """Whether to check to send a recovery notification when flapping stops (0/1)"""
 
     host_check_freshness = Column(
         'host_check_freshness',
@@ -147,9 +147,9 @@ class Downtimes(Table):
     host_check_options = Column(
         'host_check_options',
         col_type='int',
-        description='The current check option, forced, normal, freshness (0-2), not supported by CMC',
+        description='The current check option, forced, normal, freshness (0-2)',
     )
-    """The current check option, forced, normal, freshness (0-2), not supported by CMC"""
+    """The current check option, forced, normal, freshness (0-2)"""
 
     host_check_period = Column(
         'host_check_period',
@@ -252,9 +252,9 @@ class Downtimes(Table):
     host_display_name = Column(
         'host_display_name',
         col_type='string',
-        description='Optional display name of the host - not used by Nagios\' web interface',
+        description='Optional display name',
     )
-    """Optional display name of the host - not used by Nagios' web interface"""
+    """Optional display name"""
 
     host_downtimes = Column(
         'host_downtimes',
@@ -280,9 +280,9 @@ class Downtimes(Table):
     host_event_handler = Column(
         'host_event_handler',
         col_type='string',
-        description='Event handler (always empty, not supported by CMC)',
+        description='Command used as event handler',
     )
-    """Event handler (always empty, not supported by CMC)"""
+    """Command used as event handler"""
 
     host_event_handler_enabled = Column(
         'host_event_handler_enabled',
@@ -336,9 +336,9 @@ class Downtimes(Table):
     host_hard_state = Column(
         'host_hard_state',
         col_type='int',
-        description='The effective hard state of the host (eliminates a problem in hard_state)',
+        description='The effective hard state of this object',
     )
-    """The effective hard state of the host (eliminates a problem in hard_state)"""
+    """The effective hard state of this object"""
 
     host_has_been_checked = Column(
         'host_has_been_checked',
@@ -350,9 +350,9 @@ class Downtimes(Table):
     host_high_flap_threshold = Column(
         'host_high_flap_threshold',
         col_type='float',
-        description='High threshold of flap detection, not supported by CMC',
+        description='High threshold of flap detection',
     )
-    """High threshold of flap detection, not supported by CMC"""
+    """High threshold of flap detection"""
 
     host_icon_image = Column(
         'host_icon_image',
@@ -539,9 +539,9 @@ class Downtimes(Table):
     host_low_flap_threshold = Column(
         'host_low_flap_threshold',
         col_type='float',
-        description='Low threshold of flap detection, not supported by CMC',
+        description='Low threshold of flap detection',
     )
-    """Low threshold of flap detection, not supported by CMC"""
+    """Low threshold of flap detection"""
 
     host_max_check_attempts = Column(
         'host_max_check_attempts',
@@ -573,7 +573,7 @@ class Downtimes(Table):
 
     host_mk_inventory_last = Column(
         'host_mk_inventory_last',
-        col_type='int',
+        col_type='time',
         description='The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present',
     )
     """The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present"""
@@ -623,9 +623,9 @@ class Downtimes(Table):
     host_no_more_notifications = Column(
         'host_no_more_notifications',
         col_type='int',
-        description='Whether to stop sending notifications (0/1), not supported by CMC',
+        description='Whether to stop sending notifications (0/1)',
     )
-    """Whether to stop sending notifications (0/1), not supported by CMC"""
+    """Whether to stop sending notifications (0/1)"""
 
     host_notes = Column(
         'host_notes',
@@ -770,9 +770,9 @@ class Downtimes(Table):
     host_obsess_over_host = Column(
         'host_obsess_over_host',
         col_type='int',
-        description='The current obsess_over_host setting (0/1), not supported by CMC',
+        description='The current obsess_over_host setting (0/1)',
     )
-    """The current obsess_over_host setting (0/1), not supported by CMC"""
+    """The current obsess_over_host setting (0/1)"""
 
     host_parents = Column(
         'host_parents',
@@ -791,9 +791,9 @@ class Downtimes(Table):
     host_percent_state_change = Column(
         'host_percent_state_change',
         col_type='float',
-        description='Percent state change, not supported by CMC',
+        description='Percent state change',
     )
-    """Percent state change, not supported by CMC"""
+    """Percent state change"""
 
     host_perf_data = Column(
         'host_perf_data',
@@ -812,9 +812,9 @@ class Downtimes(Table):
     host_pnpgraph_present = Column(
         'host_pnpgraph_present',
         col_type='int',
-        description='Whether there is a PNP4Nagios graph present for this host (0/1)',
+        description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
-    """Whether there is a PNP4Nagios graph present for this host (0/1)"""
+    """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
 
     host_previous_hard_state = Column(
         'host_previous_hard_state',
@@ -965,21 +965,21 @@ class Downtimes(Table):
 
     host_x_3d = Column(
         'host_x_3d',
-        col_type='string',
+        col_type='float',
         description='3D-Coordinates: X',
     )
     """3D-Coordinates: X"""
 
     host_y_3d = Column(
         'host_y_3d',
-        col_type='string',
+        col_type='float',
         description='3D-Coordinates: Y',
     )
     """3D-Coordinates: Y"""
 
     host_z_3d = Column(
         'host_z_3d',
-        col_type='string',
+        col_type='float',
         description='3D-Coordinates: Z',
     )
     """3D-Coordinates: Z"""
@@ -1092,9 +1092,9 @@ class Downtimes(Table):
     service_check_flapping_recovery_notification = Column(
         'service_check_flapping_recovery_notification',
         col_type='int',
-        description='Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC',
+        description='Whether to check to send a recovery notification when flapping stops (0/1)',
     )
-    """Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC"""
+    """Whether to check to send a recovery notification when flapping stops (0/1)"""
 
     service_check_freshness = Column(
         'service_check_freshness',
@@ -1113,9 +1113,9 @@ class Downtimes(Table):
     service_check_options = Column(
         'service_check_options',
         col_type='int',
-        description='The current check option, forced, normal, freshness (0-2), not supported by CMC',
+        description='The current check option, forced, normal, freshness (0-2)',
     )
-    """The current check option, forced, normal, freshness (0-2), not supported by CMC"""
+    """The current check option, forced, normal, freshness (0-2)"""
 
     service_check_period = Column(
         'service_check_period',
@@ -1218,9 +1218,9 @@ class Downtimes(Table):
     service_display_name = Column(
         'service_display_name',
         col_type='string',
-        description='Optional display name of the host - not used by Nagios\' web interface',
+        description='Optional display name',
     )
-    """Optional display name of the host - not used by Nagios' web interface"""
+    """Optional display name"""
 
     service_downtimes = Column(
         'service_downtimes',
@@ -1246,9 +1246,9 @@ class Downtimes(Table):
     service_event_handler = Column(
         'service_event_handler',
         col_type='string',
-        description='Event handler (always empty, not supported by CMC)',
+        description='Command used as event handler',
     )
-    """Event handler (always empty, not supported by CMC)"""
+    """Command used as event handler"""
 
     service_event_handler_enabled = Column(
         'service_event_handler_enabled',
@@ -1295,9 +1295,9 @@ class Downtimes(Table):
     service_hard_state = Column(
         'service_hard_state',
         col_type='int',
-        description='The effective hard state of the service (eliminates a problem in hard_state)',
+        description='The effective hard state of this object',
     )
-    """The effective hard state of the service (eliminates a problem in hard_state)"""
+    """The effective hard state of this object"""
 
     service_has_been_checked = Column(
         'service_has_been_checked',
@@ -1309,9 +1309,9 @@ class Downtimes(Table):
     service_high_flap_threshold = Column(
         'service_high_flap_threshold',
         col_type='float',
-        description='High threshold of flap detection, not supported by CMC',
+        description='High threshold of flap detection',
     )
-    """High threshold of flap detection, not supported by CMC"""
+    """High threshold of flap detection"""
 
     service_icon_image = Column(
         'service_icon_image',
@@ -1512,9 +1512,9 @@ class Downtimes(Table):
     service_low_flap_threshold = Column(
         'service_low_flap_threshold',
         col_type='float',
-        description='Low threshold of flap detection, not supported by CMC',
+        description='Low threshold of flap detection',
     )
-    """Low threshold of flap detection, not supported by CMC"""
+    """Low threshold of flap detection"""
 
     service_max_check_attempts = Column(
         'service_max_check_attempts',
@@ -1561,9 +1561,9 @@ class Downtimes(Table):
     service_no_more_notifications = Column(
         'service_no_more_notifications',
         col_type='int',
-        description='Whether to stop sending notifications (0/1), not supported by CMC',
+        description='Whether to stop sending notifications (0/1)',
     )
-    """Whether to stop sending notifications (0/1), not supported by CMC"""
+    """Whether to stop sending notifications (0/1)"""
 
     service_notes = Column(
         'service_notes',
@@ -1624,9 +1624,9 @@ class Downtimes(Table):
     service_obsess_over_service = Column(
         'service_obsess_over_service',
         col_type='int',
-        description='The current obsess_over_service setting (0/1), not supported by CMC',
+        description='The current obsess_over_service setting (0/1)',
     )
-    """The current obsess_over_service setting (0/1), not supported by CMC"""
+    """The current obsess_over_service setting (0/1)"""
 
     service_passive_check_period = Column(
         'service_passive_check_period',
@@ -1645,9 +1645,9 @@ class Downtimes(Table):
     service_percent_state_change = Column(
         'service_percent_state_change',
         col_type='float',
-        description='Percent state change, not supported by CMC',
+        description='Percent state change',
     )
-    """Percent state change, not supported by CMC"""
+    """Percent state change"""
 
     service_perf_data = Column(
         'service_perf_data',
@@ -1666,9 +1666,9 @@ class Downtimes(Table):
     service_pnpgraph_present = Column(
         'service_pnpgraph_present',
         col_type='int',
-        description='Whether there is a PNP4Nagios graph present for this service (0/1)',
+        description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
-    """Whether there is a PNP4Nagios graph present for this service (0/1)"""
+    """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
 
     service_previous_hard_state = Column(
         'service_previous_hard_state',
@@ -1690,6 +1690,34 @@ class Downtimes(Table):
         description='Number of basic interval lengths between checks when retrying after a soft error',
     )
     """Number of basic interval lengths between checks when retrying after a soft error"""
+
+    service_robotmk_last_error_log = Column(
+        'service_robotmk_last_error_log',
+        col_type='blob',
+        description='The file content of the Robotmk error log',
+    )
+    """The file content of the Robotmk error log"""
+
+    service_robotmk_last_error_log_gz = Column(
+        'service_robotmk_last_error_log_gz',
+        col_type='blob',
+        description='The gzipped file content of the Robotmk error log',
+    )
+    """The gzipped file content of the Robotmk error log"""
+
+    service_robotmk_last_log = Column(
+        'service_robotmk_last_log',
+        col_type='blob',
+        description='The file content of the Robotmk log',
+    )
+    """The file content of the Robotmk log"""
+
+    service_robotmk_last_log_gz = Column(
+        'service_robotmk_last_log_gz',
+        col_type='blob',
+        description='The gzipped file content of the Robotmk log',
+    )
+    """The gzipped file content of the Robotmk log"""
 
     service_scheduled_downtime_depth = Column(
         'service_scheduled_downtime_depth',

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a "Recent notification (for analysis)" in Setup -> Events -> Notifications
 was replayed an error message was shown in the User interface. Furthermore,

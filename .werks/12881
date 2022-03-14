@@ -6,7 +6,7 @@ Date: 1621332211
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces a new special agent which enables the monitoring
 of Datadog monitors and Datadog events in Checkmk. To collects its

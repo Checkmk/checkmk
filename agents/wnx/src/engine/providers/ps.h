@@ -20,13 +20,13 @@ namespace ps {
 constexpr std::wstring_view kSepString = L",";
 }
 
-time_t ConvertWmiTimeToHumanTime(const std::string& creation_date);
+time_t ConvertWmiTimeToHumanTime(const std::string &creation_date);
 
 class Ps : public Asynchronous {
 public:
     Ps() : Asynchronous(cma::section::kPsName, '\t') {}
 
-    Ps(const std::string& name, char separator)
+    Ps(const std::string &name, char separator)
         : Asynchronous(name, separator) {}
 
     void loadConfig() override;

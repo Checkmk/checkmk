@@ -29,23 +29,23 @@ class RowRenderer;
 template <class T>
 class StringColumn : public Column {
 public:
-    StringColumn(const std::string& name, const std::string& description,
-                 const ColumnOffsets& offsets,
-                 const std::function<std::string(const T&)>& f)
+    StringColumn(const std::string &name, const std::string &description,
+                 const ColumnOffsets &offsets,
+                 const std::function<std::string(const T &)> &f)
         : Column{name, description, offsets}, f_{f} {}
 
     [[nodiscard]] ColumnType type() const override {
         return ColumnType::string;
     }
 
-    void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         r.output(row.isNull() ? "" : getValue(row));
     }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
+        const std::string &value) const override {
         return std::make_unique<StringFilter>(
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value);
@@ -59,12 +59,12 @@ public:
 
     [[nodiscard]] std::string getValue(Row row) const {
         using namespace std::string_literals;
-        const T* data = columnData<T>(row);
+        const T *data = columnData<T>(row);
         return data == nullptr ? ""s : f_(*data);
     }
 
 private:
-    const std::function<std::string(const T&)> f_;
+    const std::function<std::string(const T &)> f_;
 };
 
 template <class T>

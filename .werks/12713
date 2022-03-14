@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 check_ps was not configured to use data from <<<statgrab_mem>>> section which made the total RAM
 unavailable on systems providing <<<statgrab_mem>>> rather than <<<mem>>>, rendering "Process"

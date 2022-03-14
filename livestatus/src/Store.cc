@@ -5,9 +5,7 @@
 
 #include "Store.h"
 
-#ifndef CMC
 #include <chrono>
-#endif
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -279,14 +277,7 @@ void Store::answerCommandEventConsole(const ExternalCommand &command) {
 
 void Store::answerCommandNagios(const ExternalCommand &command) {
     std::lock_guard<std::mutex> lg(_command_mutex);
-    auto command_str = command.str();
-    // The Nagios headers are (once again) not const-correct...
-    auto *cmd = const_cast<char *>(command_str.c_str());
-#ifdef NAGIOS4
-    process_external_command1(cmd);
-#else
-    submit_external_command(cmd, nullptr);
-#endif
+    nagios_compat_submit_external_command(command.str().c_str());
 }
 
 bool Store::answerGetRequest(const std::list<std::string> &lines,

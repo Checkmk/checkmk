@@ -5,3 +5,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 NOTHING_PENDING_FOR_INSTALLATION = "No updates pending for installation"
+ESM_NOT_ENABLED = "Enable UA Infra"
+ESM_ENABLED = "ESM service enabled"

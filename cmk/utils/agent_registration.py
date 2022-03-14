@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Iterator, Mapping, NamedTuple, Optional
+from typing import Any, Iterator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from uuid import UUID
 
 import cmk.utils.paths
@@ -14,6 +16,13 @@ from cmk.utils.type_defs import HostName
 
 def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:
     return folder.joinpath(f"{uuid}.json")
+
+
+def get_uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+    )
 
 
 class UUIDLink(NamedTuple):
@@ -113,3 +122,20 @@ class UUIDLinkManager:
             get_r4r_filepath(folder, uuid).exists()
             for folder in [cmk.utils.paths.r4r_ready_dir, cmk.utils.paths.r4r_discoverable_dir]
         )
+
+    def rename(
+        self, successful_renamings: Sequence[Tuple[HostName, HostName]]
+    ) -> Sequence[Tuple[HostName, HostName]]:
+        from_old_to_new = dict(successful_renamings)
+        renamed: List[Tuple[HostName, HostName]] = []
+        for link in self:
+            old_name = link.hostname
+            if (new_name := from_old_to_new.get(old_name)) is not None:
+                create_target_dir = (self._data_source_dir / old_name).exists()
+
+                link.unlink_source()
+                self.create_link(new_name, link.uuid, create_target_dir=create_target_dir)
+
+                renamed.append((old_name, new_name))
+
+        return sorted(renamed)

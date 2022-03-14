@@ -1,7 +1,7 @@
 title: Cisco Modular Access Router: Digital Optical Monitoring
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the transmit and receive power status and levels of
@@ -27,4 +27,3 @@ discovery:
  for every sensor withadmin state 'up'.
  Optionally it is possible to configure specific administration states ({up}, {down},
  {testing}) that should be discovered in the WATO discovery rule {Cisco DOM Discovery}.
-

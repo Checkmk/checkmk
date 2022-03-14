@@ -15,9 +15,10 @@ from cmk.gui.valuespec import Age, Dictionary, Filesize, TextInput, Tuple
 
 def _item_spec_filestats():
     return TextInput(
-        title=_("File Name"),
+        title=_("File name"),
         help=_("This name corresponds to the single file name to be monitored."),
         allow_empty=True,
+        try_max_width=True,
     )
 
 

@@ -1,7 +1,7 @@
 title: Microsoft Azure Webserver: State
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the state of monitored azure sites (i.e. web servers).
@@ -13,4 +13,3 @@ item:
 
 discovery:
  One service is created for each site.
-

@@ -1,17 +1,19 @@
 title: Kubernetes: Pod Info
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check provides an informational overview of a Kubernetes Pod
+ This check provides an informational overview of a Kubernetes pod
  by displaying
 
  - Node, if present
 
  - Namespace
 
- - Age, base on the creationTimestamp
+ - Age, based on the creationTimestamp
+
+ - Controlled by
 
  - QoS class
 
@@ -19,9 +21,9 @@ description:
 
  - Restart policy
 
- This is provided by the API server. The service is {OK}.
+ This is provided by the API server. The service is always {OK}.
 
  It requires that the special agent kube is configured.
 
 discovery:
- One service is created for each Pod.
+ One service is created for each pod.

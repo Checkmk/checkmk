@@ -6,6 +6,7 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 PROTOBUF_VERSION=3.18.1
@@ -23,8 +24,7 @@ VERIFY_INSTALL=1
 
 # option parsing ###############################################################
 
-OPTIONS=$(getopt -o us --long user,system -- "$@")
-if [[ $? -ne 0 ]]; then
+if ! OPTIONS=$(getopt -o us --long user,system -- "$@"); then
     echo "error parsing options"
     exit 1
 fi
@@ -32,24 +32,24 @@ eval set -- "$OPTIONS"
 unset OPTIONS
 while true; do
     case "$1" in
-    '-u' | '--user')
-        INSTALL_PREFIX="${HOME}/.local"
-        TARGET_DIR=${INSTALL_PREFIX}${TARGET_DIR}
-        USE_BUILD_CACHE=
-        break
-        ;;
-    '-s' | '--system')
-        USE_BUILD_CACHE=
-        break
-        ;;
-    '--')
-        shift
-        break
-        ;;
-    *)
-        echo "internal error"
-        exit 1
-        ;;
+        '-u' | '--user')
+            INSTALL_PREFIX="${HOME}/.local"
+            TARGET_DIR=${INSTALL_PREFIX}${TARGET_DIR}
+            USE_BUILD_CACHE=
+            break
+            ;;
+        '-s' | '--system')
+            USE_BUILD_CACHE=
+            break
+            ;;
+        '--')
+            shift
+            break
+            ;;
+        *)
+            echo "internal error"
+            exit 1
+            ;;
     esac
 done
 
@@ -87,7 +87,7 @@ install() {
     fi
 
     mkdir -p "${INSTALL_PREFIX}/usr/include"
-    cp -prl ${TARGET_DIR}/${DIR_NAME}/include/* "${INSTALL_PREFIX}/usr/include"
+    cp -prl "${TARGET_DIR}/${DIR_NAME}/include/"* "${INSTALL_PREFIX}/usr/include"
 
     if [ -d "${INSTALL_PREFIX}/usr/lib64/pkgconfig" ]; then
         PKGCONFIG_DIR=${INSTALL_PREFIX}/usr/lib64/pkgconfig
@@ -96,7 +96,7 @@ install() {
     fi
 
     mkdir -p "${PKGCONFIG_DIR}"
-    cp -prl ${TARGET_DIR}/${DIR_NAME}/lib/pkgconfig/*.pc "${PKGCONFIG_DIR}"
+    cp -prl "${TARGET_DIR}/${DIR_NAME}/lib/pkgconfig/"*.pc "${PKGCONFIG_DIR}"
 }
 
 verify_install() {

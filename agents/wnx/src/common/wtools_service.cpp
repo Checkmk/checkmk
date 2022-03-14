@@ -25,7 +25,7 @@ std::string WinService::pathToRegistry(std::wstring_view service) {
 }
 
 WinService::WinService(std::wstring_view name) {
-    auto* manager_handle =
+    auto *manager_handle =
         ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (nullptr == manager_handle) {
         XLOG::l.crit("Cannot open SC Manager {}", ::GetLastError());
@@ -42,7 +42,7 @@ WinService::WinService(std::wstring_view name) {
 }
 
 LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
-    SERVICE_FAILURE_ACTIONS* actions = nullptr;
+    SERVICE_FAILURE_ACTIONS *actions = nullptr;
 
     std::lock_guard lk(lock_);
     if (!IsGoodHandle(handle_)) return nullptr;
@@ -63,11 +63,11 @@ LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
 
     // allocation
     auto new_buf_size = bytes_needed;
-    actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS*>(
+    actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
         ::LocalAlloc(LMEM_FIXED, new_buf_size));
 
     if (::QueryServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,
-                              reinterpret_cast<BYTE*>(actions), new_buf_size,
+                              reinterpret_cast<BYTE *>(actions), new_buf_size,
                               &bytes_needed) == TRUE)
         return LocalResource<SERVICE_FAILURE_ACTIONS>(actions);
 

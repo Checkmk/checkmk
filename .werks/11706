@@ -6,7 +6,7 @@ Date: 1612534761
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The CEPH versions Nautilus and Octopus are now supported.
 Previous versions of checkmk did not discover the service "ceph_df" in Octopus.

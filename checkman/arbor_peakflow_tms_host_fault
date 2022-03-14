@@ -1,7 +1,7 @@
 title: Arbor Peakflow: TMS Host Faults
 agents: snmp
 catalog: hw/network/arbor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports host fault as reported by the device.

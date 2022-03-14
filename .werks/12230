@@ -6,7 +6,7 @@ Date: 1615474651
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If users had user specific notification rules, the LDAP synchronization could
 lead to an error "TypeError: '<' not supported between instances of 'dict' and

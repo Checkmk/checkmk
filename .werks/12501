@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The services of the check plugins <tt>apc_inrow_system_events</tt>,
 <tt>liebert_system_events</tt> and <tt>printer_alerts</tt> could not

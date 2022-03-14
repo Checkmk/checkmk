@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: General Status of Filtering Module
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check verifies the filtering module is installed and displays the

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously every HTTP status code (except the successful ones) was
 listed in the automatically generated ReDoc documentation as "default".

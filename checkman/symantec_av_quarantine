@@ -1,7 +1,7 @@
 title: Symantec Antivirus: Quarantine
 agents: linux
 catalog: app/symantec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks for file in quarantine reportet from Symantec Antivirus.

@@ -21,7 +21,7 @@ def _item_spec_db2_backup():
 
 def _parameter_valuespec_db2_backup():
     return Optional(
-        Tuple(
+        valuespec=Tuple(
             elements=[
                 Age(
                     title=_("Warning at"),

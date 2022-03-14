@@ -1,7 +1,7 @@
 title: Skype for Business: Edge Authentication
 agents: windows
 catalog: app/skype
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors bad authentication requests per second on a skype
@@ -11,4 +11,3 @@ description:
 
 discovery:
  One service is created.
-

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 After editing a view containing the filter "Discovery state", subsequent edits
 of the view created the crash report: "TypeError (Only str and unicode values

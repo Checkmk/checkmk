@@ -1,0 +1,13 @@
+Title: Drop experimental PySNMP backend
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1646978673
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The experimental PySNMP is dropped because it did not perform
+as expected.  The classic backend will be selected instead for
+people who have set PySNMP previously.

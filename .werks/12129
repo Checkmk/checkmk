@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The discovered host labels of hosts that have a dot in their name were not
 stored correctly. Instead of "abc.tld.mk" the labels were stored in a file

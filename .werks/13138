@@ -6,7 +6,7 @@ Date: 1629451553
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The old check would crash when host time and server time
 ran out of sync.

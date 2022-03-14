@@ -1,7 +1,7 @@
 title: Citrix: Licenses
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -14,4 +14,3 @@ description:
 
 discovery:
  One service is created for each license type.
-

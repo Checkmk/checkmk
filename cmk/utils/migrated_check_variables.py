@@ -32,6 +32,8 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
 
+ruckus_spot_ap_default_levels: dict = {}
+
 fortigate_memory_base_default_levels = {
     "levels": (70.0, 80.0),
 }
@@ -112,3 +114,15 @@ MAP_BUILD_STATES = {
     "null": 1,  # module was not built
     "none": 0,  # running
 }
+
+# ucd_cpu_load, hpux_cpu, statgrab_load
+cpuload_default_levels = (5.0, 10.0)
+
+# blade_bx_load
+blade_bx_cpuload_default_levels = (5, 20)
+
+# mcafee_emailgateway_cpuload
+mcafee_emailgateway_cpuload_default_levels = (5.0, 10.0)
+
+# arbor_peakflow_sp, arbor_peakflow_tms, arbor_pravail
+arbor_cpuload_default_levels = (5.0, 10.0)

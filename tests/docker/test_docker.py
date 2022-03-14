@@ -59,7 +59,7 @@ def _package_name(version: testlib.CMKVersion) -> str:
 
 
 def _prepare_build():
-    assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
+    assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
 
 
 def _prepare_package(version: testlib.CMKVersion):
@@ -75,12 +75,24 @@ def _prepare_package(version: testlib.CMKVersion):
 
     logger.info("Executed on CI: Preparing package %s", test_package_path)
 
-    if test_package_path.exists():
+    if (
+        test_package_path.exists()
+        and test_package_path.stat().st_mtime >= source_package_path.stat().st_mtime
+    ):
         logger.info("File already exists - Fine")
         return
 
+    _cleanup_old_packages()
+
     logger.info("Copying from %s", source_package_path)
     test_package_path.write_bytes(source_package_path.read_bytes())
+
+
+def _cleanup_old_packages() -> None:
+    """Cleanup files created by _prepare_package during previous job executions"""
+    for p in Path(build_path).glob("*.deb"):
+        logger.info("Cleaning up old package %s", p)
+        p.unlink()
 
 
 def resolve_image_alias(alias):
@@ -436,48 +448,57 @@ def test_redirects_work_with_standard_port(request, client):
     c = _start(request, client)
 
     # Use no explicit port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(
-        c,
-        [
-            "curl",
-            "-D",
-            "-",
-            "-s",
-            "--connect-to",
-            "127.0.0.1:80:127.0.0.1:5000",
-            "http://127.0.0.1",
-        ],
-    )[-1]
+    assert (
+        "Location: http://127.0.0.1/cmk/\r\n"
+        in _exec_run(
+            c,
+            [
+                "curl",
+                "-D",
+                "-",
+                "-s",
+                "--connect-to",
+                "127.0.0.1:80:127.0.0.1:5000",
+                "http://127.0.0.1",
+            ],
+        )[-1]
+    )
 
     # Use explicit standard port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(
-        c,
-        [
-            "curl",
-            "-D",
-            "-",
-            "-s",
-            "--connect-to",
-            "127.0.0.1:80:127.0.0.1:5000",
-            "http://127.0.0.1:80",
-        ],
-    )[-1]
+    assert (
+        "Location: http://127.0.0.1/cmk/\r\n"
+        in _exec_run(
+            c,
+            [
+                "curl",
+                "-D",
+                "-",
+                "-s",
+                "--connect-to",
+                "127.0.0.1:80:127.0.0.1:5000",
+                "http://127.0.0.1:80",
+            ],
+        )[-1]
+    )
 
     # Use explicit host header with standard port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(
-        c,
-        [
-            "curl",
-            "-D",
-            "-",
-            "-s",
-            "-H",
-            "Host: 127.0.0.1:80",
-            "--connect-to",
-            "127.0.0.1:80:127.0.0.1:5000",
-            "http://127.0.0.1",
-        ],
-    )[-1]
+    assert (
+        "Location: http://127.0.0.1/cmk/\r\n"
+        in _exec_run(
+            c,
+            [
+                "curl",
+                "-D",
+                "-",
+                "-s",
+                "-H",
+                "Host: 127.0.0.1:80",
+                "--connect-to",
+                "127.0.0.1:80:127.0.0.1:5000",
+                "http://127.0.0.1",
+            ],
+        )[-1]
+    )
 
 
 def test_redirects_work_with_custom_port(request, client):
@@ -526,14 +547,20 @@ def test_redirects_work_with_custom_port(request, client):
 def test_http_access_login_screen(request, client):
     c = _start(request, client)
 
-    assert "Location: \r\n" not in _exec_run(
-        c,
-        ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
-    )[-1]
-    assert 'name="_login"' in _exec_run(
-        c,
-        ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
-    )[-1]
+    assert (
+        "Location: \r\n"
+        not in _exec_run(
+            c,
+            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
+        )[-1]
+    )
+    assert (
+        'name="_login"'
+        in _exec_run(
+            c,
+            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
+        )[-1]
+    )
 
 
 def test_container_agent(request, client):

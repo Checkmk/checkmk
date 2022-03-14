@@ -6,7 +6,7 @@ Date: 1619768611
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If ServiceNow notifications are used in distributed environments the host and
 service problem ID might not be unique, because every site core creates own

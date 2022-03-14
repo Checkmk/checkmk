@@ -4,10 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import signal
 import subprocess
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
@@ -48,22 +46,23 @@ class ClassicSNMPBackend(SNMPBackend):
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        snmp_process = subprocess.Popen(
+        with subprocess.Popen(
             command,
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
-        )
-        exitstatus = snmp_process.wait()
-        if snmp_process.stderr is None or snmp_process.stdout is None:
-            raise TypeError()
-        if exitstatus:
+        ) as snmp_process:
+            assert snmp_process.stdout
+            assert snmp_process.stderr
+            line = snmp_process.stdout.readline().strip()
+            error = snmp_process.stderr.read()
+
+        if snmp_process.returncode:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-            console.verbose(snmp_process.stderr.read() + "\n")
+            console.verbose(error + "\n")
             return None
 
-        line = snmp_process.stdout.readline().strip()
         if not line:
             console.verbose("Error in response to snmpget.\n")
             return None
@@ -106,54 +105,39 @@ class ClassicSNMPBackend(SNMPBackend):
         command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        snmp_process = None
-        exitstatus = None
         rowinfo: SNMPRowInfo = []
-        try:
-            snmp_process = subprocess.Popen(
-                command,
-                close_fds=True,
-                stdin=open(os.devnull),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                encoding="utf-8",
-            )
+        with subprocess.Popen(
+            command,
+            close_fds=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        ) as snmp_process:
+            assert snmp_process.stdout
+            assert snmp_process.stderr
+            try:
+                rowinfo = self._get_rowinfo_from_walk_output(snmp_process.stdout)
+                error = snmp_process.stderr.read()
+            except MKTimeout:
+                snmp_process.kill()
+                raise
 
-            rowinfo = self._get_rowinfo_from_snmp_process(snmp_process)
-
-        except MKTimeout:
-            # On timeout exception try to stop the process to prevent child process "leakage"
-            if snmp_process:
-                os.kill(snmp_process.pid, signal.SIGTERM)
-                snmp_process.wait()
-            raise
-
-        finally:
-            # The stdout and stderr pipe are not closed correctly on a MKTimeout
-            # Normally these pipes getting closed after p.communicate finishes
-            # Closing them a second time in a OK scenario won't hurt neither..
-            if snmp_process:
-                exitstatus = snmp_process.wait()
-                if snmp_process.stderr:
-                    error = snmp_process.stderr.read()
-                    snmp_process.stderr.close()
-                if snmp_process.stdout:
-                    snmp_process.stdout.close()
-
-        if exitstatus:
+        if snmp_process.returncode:
             console.verbose(
                 tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip()
             )
             raise MKSNMPError(
-                "SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus)
+                "SNMP Error on %s: %s (Exit-Code: %d)"
+                % (
+                    ipaddress,
+                    error.strip(),
+                    snmp_process.returncode,
+                )
             )
         return rowinfo
 
-    def _get_rowinfo_from_snmp_process(self, snmp_process: subprocess.Popen) -> SNMPRowInfo:
-        if snmp_process.stdout is None:
-            raise TypeError()
-
-        line_iter = snmp_process.stdout
+    def _get_rowinfo_from_walk_output(self, lines: Iterable[str]) -> SNMPRowInfo:
         # Ugly(1): in some cases snmpwalk inserts line feed within one
         # dataset. This happens for example on hexdump outputs longer
         # than a few bytes. Those dumps are enclosed in double quotes.
@@ -161,6 +145,7 @@ class ClassicSNMPBackend(SNMPBackend):
         # does not end with a double quote, we take the next line(s) as
         # a continuation line.
         rowinfo = []
+        line_iter = iter(lines)
         while True:
             try:
                 line = next(line_iter).strip()

@@ -1,7 +1,7 @@
 title: Bluecat Adonis: DHCP State
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the OperState of the DHCP Service on bluecat adonis devices.

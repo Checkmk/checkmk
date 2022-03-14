@@ -12,6 +12,11 @@ from .utils.k8s import parse_json
 
 Section = Mapping[str, Mapping]
 
+########################################################################
+# NOTE: This inv plugin (and associated special agent) is deprecated and
+#       will be removed in Checkmk version 2.2.
+########################################################################
+
 
 register.agent_section(
     name="k8s_assigned_pods",
@@ -21,7 +26,7 @@ register.agent_section(
 
 def inventory_k8s_assigned_pods(section: Section) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "assigned_pods"]
-    for pod_name in sorted(section.get("names", [])):
+    for pod_name in section.get("names", []):
         # ONLY status data::little trick: key_columns and *_columns should not have common keys.
         # key_columns are used to identify a row.
         yield TableRow(

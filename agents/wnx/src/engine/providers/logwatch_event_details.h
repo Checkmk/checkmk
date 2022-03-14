@@ -19,8 +19,8 @@
 #include "section_header.h"
 
 namespace cma::provider::details {
-State ParseStateLine(const std::string& line);
-StateVector LoadEventlogOffsets(const PathVector& state_files,
+State ParseStateLine(const std::string &line);
+StateVector LoadEventlogOffsets(const PathVector &state_files,
                                 bool reset_pos_to_null);
 }  // namespace cma::provider::details
 

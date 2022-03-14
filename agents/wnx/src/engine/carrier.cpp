@@ -3,6 +3,7 @@
 #include "carrier.h"
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <ranges>
 
@@ -26,11 +27,11 @@ static const std::vector<std::string> g_unsupported_carriers = {
     kCarrierAsioName,  // future use
 };
 
-static auto ParseInternalPort(const std::string& internal_port) {
+static auto ParseInternalPort(const std::string &internal_port) {
     return cma::tools::ParseKeyValue(internal_port, kCarrierNameDelimiter);
 }
 
-bool CoreCarrier::establishCommunication(const std::string& internal_port) {
+bool CoreCarrier::establishCommunication(const std::string &internal_port) {
     std::lock_guard lk(lock_);
     if (!carrier_name_.empty()) {
         XLOG::l("Empty name of InternalPort is not allowed");
@@ -77,8 +78,8 @@ bool CoreCarrier::establishCommunication(const std::string& internal_port) {
     return false;
 }
 
-bool CoreCarrier::sendData(const std::string& peer_name, uint64_t answer_id,
-                           const void* data, size_t length) {
+bool CoreCarrier::sendData(const std::string &peer_name, uint64_t answer_id,
+                           const void *data, size_t length) {
     std::lock_guard lk(lock_);
     XLOG::d.t("Sending data '{}' id is [{}] length [{}]", peer_name, answer_id,
               length);
@@ -86,7 +87,7 @@ bool CoreCarrier::sendData(const std::string& peer_name, uint64_t answer_id,
                               length);
 }
 
-bool CoreCarrier::sendLog(const std::string& peer_name, const void* data,
+bool CoreCarrier::sendLog(const std::string &peer_name, const void *data,
                           size_t length) {
     std::lock_guard lk(lock_);
     return sendDataDispatcher(DataType::kLog, peer_name, 0, data, length);
@@ -116,8 +117,8 @@ void CoreCarrier::shutdownCommunication() {
 // data may be nullptr
 // peer_name is name of plugin
 bool CoreCarrier::sendDataDispatcher(DataType data_type,
-                                     const std::string& peer_name,
-                                     uint64_t answer_id, const void* data,
+                                     const std::string &peer_name,
+                                     uint64_t answer_id, const void *data,
                                      size_t length) {
     if (data_sender_) {
         return data_sender_(this, data_type, peer_name, answer_id, data,
@@ -126,8 +127,8 @@ bool CoreCarrier::sendDataDispatcher(DataType data_type,
     return false;
 }
 
-bool CoreCarrier::mailSlotSend(DataType data_type, const std::string& peer_name,
-                               uint64_t answer_id, const void* data,
+bool CoreCarrier::mailSlotSend(DataType data_type, const std::string &peer_name,
+                               uint64_t answer_id, const void *data,
                                size_t length) {
     cma::MailSlot postman(carrier_address_.c_str());
     auto cdh = CarrierDataHeader::createPtr(peer_name.c_str(), answer_id,
@@ -145,13 +146,13 @@ bool CoreCarrier::mailSlotSend(DataType data_type, const std::string& peer_name,
 }
 
 bool CoreCarrier::dumpSlotSend(DataType data_type,
-                               const std::string& /*peer_name*/,
-                               uint64_t /*answer_id*/, const void* data,
+                               const std::string & /*peer_name*/,
+                               uint64_t /*answer_id*/, const void *data,
                                size_t /*length*/)
 
 {
     if (data != nullptr) {
-        std::cout << static_cast<const char*>(data);
+        std::cout << static_cast<const char *>(data);
         if (data_type != kSegment) {
             std::cerr << '\n';
         }
@@ -159,8 +160,8 @@ bool CoreCarrier::dumpSlotSend(DataType data_type,
     return true;
 }
 
-bool CoreCarrier::fileSlotSend(DataType data_type, const std::string& peer_name,
-                               uint64_t /*answer_id*/, const void* data,
+bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
+                               uint64_t /*answer_id*/, const void *data,
                                size_t length) {
     try {
         std::ofstream f;
@@ -175,7 +176,7 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string& peer_name,
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
             case kCommand: {
-                std::string cmd(static_cast<const char*>(data), length);
+                std::string cmd(static_cast<const char *>(data), length);
                 auto rcp = cma::commander::ObtainRunCommandProcessor();
                 if (rcp != nullptr) {
                     rcp(peer_name, cmd);
@@ -189,13 +190,13 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string& peer_name,
         }
 
         if (data != nullptr) {
-            f.write(static_cast<const char*>(data), length);
+            f.write(static_cast<const char *>(data), length);
             if (data_type == kLog) {
                 char c = '\n';
                 f.write(&c, 1);
             }
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         xlog::l(XLOG_FLINE + " Bad exception %s", e.what());
     }
 
@@ -204,16 +205,16 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string& peer_name,
 
 // nothing
 bool CoreCarrier::nullSlotSend(DataType /*data_type*/,
-                               const std::string& /*peer_name*/,
-                               uint64_t /*answer_id*/, const void* /*data*/,
+                               const std::string & /*peer_name*/,
+                               uint64_t /*answer_id*/, const void * /*data*/,
                                size_t /*length*/) {
     return true;
 }
 
 // nothing
 bool CoreCarrier::asioSlotSend(DataType /*data_type*/,
-                               const std::string& /*peer_name*/,
-                               uint64_t /*answer_id*/, const void* /*data*/,
+                               const std::string & /*peer_name*/,
+                               uint64_t /*answer_id*/, const void * /*data*/,
                                size_t /*length*/) {
     return false;
 }

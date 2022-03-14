@@ -140,14 +140,14 @@ def page_graph():
 
 
 vranges = [
-    ("n", 1024.0 ** -3),
-    ("u", 1024.0 ** -2),
-    ("m", 1024.0 ** -1),
-    ("", 1024.0 ** 0),
-    ("K", 1024.0 ** 1),
-    ("M", 1024.0 ** 2),
-    ("G", 1024.0 ** 3),
-    ("T", 1024.0 ** 4),
+    ("n", 1024.0**-3),
+    ("u", 1024.0**-2),
+    ("m", 1024.0**-1),
+    ("", 1024.0**0),
+    ("K", 1024.0**1),
+    ("M", 1024.0**2),
+    ("G", 1024.0**3),
+    ("T", 1024.0**4),
 ]
 
 
@@ -158,7 +158,7 @@ def compute_vertical_scala(low, high):
             break
     else:
         letter = "P"
-        factor = 1024.0 ** 5
+        factor = 1024.0**5
 
     v = 0.0
     vert_scala: List[List[Any]] = []
@@ -243,8 +243,8 @@ def stack(apoints, bpoints, scale):
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
     for points in swapped.values():
-        mmax = max(mmax, max(points)) or 0.0  # convert None into 0.0
-        mmin = min(mmin, min(points)) or 0.0
+        mmax = max(mmax, max(filter(None, points), default=0.0))
+        mmin = min(mmin, min(filter(None, points), default=0.0))
     return mmin, mmax
 
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Dict, Iterator, List, Optional, Tuple, Type
+from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Type
 
 import cmk.utils.paths
 
@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     ListChoice,
-    ListChoiceChoicePairs,
+    ListChoiceChoice,
     ListOf,
     ListOfStrings,
 )
@@ -233,7 +233,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 
-        alias = request.get_unicode_input_mandatory("alias").strip()
+        alias = request.get_str_input_mandatory("alias").strip()
         self.group = {"alias": alias}
 
         self._determine_additional_group_data()
@@ -256,7 +256,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         )
 
     def page(self) -> None:
-        html.begin_form("group")
+        html.begin_form("group", method="POST")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
@@ -547,7 +547,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
                     "paths",
                     _("Allowed to see parts of the tree"),
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             elements=[
                                 vs_element_inventory_visible_raw_path(),
                                 ("attributes", vs_choices(_("Restrict single values"))),
@@ -574,7 +574,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             toggle_all=True,
         )
 
-    def _get_nagvis_maps(self) -> ListChoiceChoicePairs:
+    def _get_nagvis_maps(self) -> Sequence[ListChoiceChoice]:
         # Find all NagVis maps in the local installation to register permissions
         # for each map. When no maps can be found skip this problem silently.
         # This only works in OMD environments.

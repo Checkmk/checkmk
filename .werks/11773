@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The docker_container_mem section plugin crashed upon output from a container that was running,
 but did not provide any memory statistics. This may happen if the memory cgroup is not enabled

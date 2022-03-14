@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When trying to copy a view to a dashboard without selecting a view name, this
 lead to an exception in the resulting dialog. The form is now preventing an

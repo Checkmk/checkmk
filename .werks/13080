@@ -6,7 +6,7 @@ Date: 1636119390
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When having a read-only site attached to the master site, previously
 it wasn't possible to set downtimes from there, even though it should

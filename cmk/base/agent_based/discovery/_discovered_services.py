@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Container, Iterator, List, MutableMapping, Optional, Sequence, Set
+from typing import Container, Iterator, List, MutableMapping, Sequence, Set
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -13,15 +13,7 @@ import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    EVERYTHING,
-    HostAddress,
-    HostKey,
-    HostName,
-    ParsedSectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import CheckPluginName, HostKey, ParsedSectionName, SourceType
 
 import cmk.core_helpers.cache
 
@@ -40,8 +32,8 @@ from .utils import QualifiedDiscovery
 
 def analyse_discovered_services(
     *,
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    host_key: HostKey,
+    host_key_mgmt: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
@@ -50,10 +42,10 @@ def analyse_discovered_services(
 ) -> QualifiedDiscovery[AutocheckEntry]:
 
     return _analyse_discovered_services(
-        existing_services=AutochecksStore(host_name).read(),
+        existing_services=AutochecksStore(host_key.hostname).read(),
         discovered_services=_discover_services(
-            host_name=host_name,
-            ipaddress=ipaddress,
+            host_key=host_key,
+            host_key_mgmt=host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
@@ -85,7 +77,7 @@ def _analyse_discovered_services(
             run_plugin_names=run_plugin_names,
             keep_vanished=keep_vanished,
         ),
-        key=lambda s: (s.check_plugin_name, s.item),
+        key=lambda s: s.id(),
     )
 
 
@@ -126,35 +118,13 @@ def _drop_plugins_services(
     services: Sequence[AutocheckEntry],
     plugin_names: Container[CheckPluginName],
 ) -> List[AutocheckEntry]:
-    return (
-        []
-        if plugin_names is EVERYTHING
-        else [s for s in services if s.check_plugin_name not in plugin_names]
-    )
+    return [s for s in services if s.check_plugin_name not in plugin_names]
 
 
-# Create a table of autodiscovered services of a host. Do not save
-# this table anywhere. Do not read any previously discovered
-# services. The table has the following columns:
-# 1. Check type
-# 2. Item
-# 3. Parameter string (not evaluated)
-#
-# This function does not handle:
-# - clusters
-# - disabled services
-#
-# This function *does* handle:
-# - disabled check typess
-#
-# on_error is one of:
-# "ignore" -> silently ignore any exception
-# "warn"   -> output a warning on stderr
-# "raise"  -> let the exception come through
 def _discover_services(
     *,
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    host_key: HostKey,
+    host_key_mgmt: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     on_error: OnError,
@@ -168,16 +138,19 @@ def _discover_services(
 
     service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
     try:
-        with plugin_contexts.current_host(host_name):
+        with plugin_contexts.current_host(host_key.hostname):
             for check_plugin_name in plugin_candidates:
                 try:
                     service_table.update(
                         {
-                            (entry.check_plugin_name, entry.item): entry
+                            entry.id(): entry
                             for entry in _discover_plugins_services(
                                 check_plugin_name=check_plugin_name,
-                                host_name=host_name,
-                                ipaddress=ipaddress,
+                                host_key=(
+                                    host_key_mgmt
+                                    if check_plugin_name.is_management_name()
+                                    else host_key
+                                ),
                                 parsed_sections_broker=parsed_sections_broker,
                                 on_error=on_error,
                             )
@@ -216,12 +189,9 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    if run_plugin_names is EVERYTHING:
-        preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
-    else:
-        preliminary_candidates = [
-            p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
-        ]
+    preliminary_candidates = [
+        p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
+    ]
 
     parsed_sections_of_interest = {
         parsed_section_name
@@ -276,13 +246,12 @@ def _find_mgmt_candidates(
 def _discover_plugins_services(
     *,
     check_plugin_name: CheckPluginName,
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    host_key: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> Iterator[AutocheckEntry]:
     # Skip this check type if is ignored for that host
-    if config.service_ignored(host_name, check_plugin_name, None):
+    if config.service_ignored(host_key.hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 
@@ -290,12 +259,6 @@ def _discover_plugins_services(
     if check_plugin is None:
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
-
-    host_key = HostKey(
-        host_name,
-        ipaddress,
-        SourceType.MANAGEMENT if check_plugin.name.is_management_name() else SourceType.HOST,
-    )
 
     try:
         kwargs = get_section_kwargs(parsed_sections_broker, host_key, check_plugin.sections)
@@ -309,7 +272,7 @@ def _discover_plugins_services(
     if not kwargs:
         return
 
-    disco_params = config.get_discovery_parameters(host_name, check_plugin)
+    disco_params = config.get_discovery_parameters(host_key.hostname, check_plugin)
     if disco_params is not None:
         kwargs = {**kwargs, "params": disco_params}
 

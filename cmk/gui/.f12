@@ -1,14 +1,19 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-ROOT=/omd/sites/$SITE
 
-(cd ../ ; bash .f12)
+(
+    cd ../
+    bash .f12
+)
 
-if [ -z $ONLY_COPY ]; then
+if [ -z "$ONLY_COPY" ]; then
     if [ "$SITE" != - ]; then
-        sudo omd reload $SITE apache
+        sudo omd reload "$SITE" apache
     fi
 fi

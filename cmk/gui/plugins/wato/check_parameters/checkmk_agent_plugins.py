@@ -52,6 +52,8 @@ def _parameter_valuespec_checkmk_agent_plugins():
                 ),
             ),
         ],
+        help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
+        % _("Checkmk Agent installation auditing"),
     )
 
 
@@ -61,6 +63,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_checkmk_agent_plugins,
-        title=lambda: _("Checkmk agent plugins"),
+        title=lambda: _("Checkmk agent plugins") + " - " + _("Deprecated"),
+        # only present during 2.1.0b1. remove in 2.2!
+        is_deprecated=True,
     )
 )

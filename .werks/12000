@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Checkmk 2.0.0i1 to 2.0.0b5 most FJDARY check plugins crashed with the
 exception "check_migration_wrapper() missing 1 required positional argument: 'item'".

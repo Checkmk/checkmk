@@ -120,7 +120,7 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
 
 
 # TODO: this too does not really belong here...
-def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> str:
+def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> SiteId:
     query = (
         "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
     )
@@ -137,7 +137,7 @@ def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> str:
             )
             if config.debug:
                 raise
-            return host_name
+            return SiteId(host_name)
 
 
 # .
@@ -172,7 +172,7 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
         user = global_user
 
     if force_authuser is None:
-        request_force_authuser = request.get_unicode_input("force_authuser")
+        request_force_authuser = request.get_str_input("force_authuser")
         force_authuser = UserId(request_force_authuser) if request_force_authuser else None
 
     logger.debug(
@@ -193,6 +193,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     _set_initial_site_states(enabled_sites, disabled_sites)
 
     if is_managed_edition():
+        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
         g.live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
@@ -246,12 +247,13 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 def _get_enabled_and_disabled_sites(
     user: LoggedInUser,
 ) -> Tuple[SiteConfigurations, SiteConfigurations]:
-    enabled_sites: SiteConfigurations = {}
-    disabled_sites: SiteConfigurations = {}
+    enabled_sites: SiteConfigurations = SiteConfigurations({})
+    disabled_sites: SiteConfigurations = SiteConfigurations({})
 
     for site_id, site_spec in user.authorized_sites().items():
         site_spec = _site_config_for_livestatus(site_id, site_spec)
-
+        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+        # pylint: disable=unsupported-assignment-operation
         if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site_spec
         else:
@@ -268,15 +270,15 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
     a) Tell livestatus not to strip away the cache header
     b) Connect in plain text to the sites local proxy unix socket
     """
-    copied_site: SiteConfiguration = site_spec.copy()
+    copied_site: SiteConfiguration = SiteConfiguration(site_spec.copy())
 
+    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    # pylint: disable=unsupported-assignment-operation
     if copied_site["proxy"] is not None:
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
-
     else:
         if copied_site["socket"][0] in ["tcp", "tcp6"]:
             copied_site["tls"] = site_spec["socket"][1]["tls"]
-
     copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
     return copied_site
@@ -487,15 +489,17 @@ def sitenames() -> List[SiteId]:
 # to disable the sites at all?
 # TODO: Rename this!
 def allsites() -> SiteConfigurations:
-    return {
-        name: get_site_config(name)  #
-        for name in sitenames()
-        if not get_site_config(name).get("disabled", False)
-    }
+    return SiteConfigurations(
+        {
+            name: get_site_config(name)  #
+            for name in sitenames()
+            if not get_site_config(name).get("disabled", False)
+        }
+    )
 
 
 def configured_sites() -> SiteConfigurations:
-    return {site_id: get_site_config(site_id) for site_id in sitenames()}
+    return SiteConfigurations({site_id: get_site_config(site_id) for site_id in sitenames()})
 
 
 def has_wato_slave_sites() -> bool:
@@ -530,7 +534,9 @@ def get_login_slave_sites() -> List[SiteId]:
 
 
 def wato_slave_sites() -> SiteConfigurations:
-    return {site_id: s for site_id, s in config.sites.items() if s.get("replication")}  #
+    return SiteConfigurations(
+        {site_id: s for site_id, s in config.sites.items() if s.get("replication")}
+    )
 
 
 def sorted_sites() -> List[Tuple[SiteId, str]]:
@@ -541,14 +547,15 @@ def sorted_sites() -> List[Tuple[SiteId, str]]:
 
 
 def get_site_config(site_id: SiteId) -> SiteConfiguration:
-    s = dict(config.sites.get(site_id, {}))
+    s: SiteConfiguration = SiteConfiguration(dict(config.sites.get(site_id, {})))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
     s.setdefault("socket", ("local", None))
     s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
-    s["id"] = site_id
-    return s
+    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    s["id"] = site_id  # pylint: disable=unsupported-assignment-operation
+    return SiteConfiguration(s)
 
 
 def site_is_local(site_id: SiteId) -> bool:
@@ -604,13 +611,15 @@ def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
 
 def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
     return site_choices(
-        {
-            site_id: site
-            for site_id, site in global_user.authorized_sites(
-                unfiltered_sites=configured_sites()
-            ).items()
-            if site_is_local(site_id) or site.get("replicate_ec", False)
-        }
+        SiteConfigurations(
+            {
+                site_id: site
+                for site_id, site in global_user.authorized_sites(
+                    unfiltered_sites=configured_sites()
+                ).items()
+                if site_is_local(site_id) or site.get("replicate_ec", False)
+            }
+        )
     )
 
 
@@ -623,10 +632,12 @@ def activation_sites() -> SiteConfigurations:
 
     These sites are shown on activation page and get change entries
     added during WATO changes."""
-    return {
-        site_id: site
-        for site_id, site in global_user.authorized_sites(
-            unfiltered_sites=configured_sites()
-        ).items()
-        if site_is_local(site_id) or site.get("replication")
-    }
+    return SiteConfigurations(
+        {
+            site_id: site
+            for site_id, site in global_user.authorized_sites(
+                unfiltered_sites=configured_sites()
+            ).items()
+            if site_is_local(site_id) or site.get("replication")
+        }
+    )

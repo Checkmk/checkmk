@@ -7,8 +7,8 @@
 
 #include "Renderer.h"
 
-void CommentRenderer::output(ListRenderer& l,
-                             const CommentData& comment) const {
+void CommentRenderer::output(ListRenderer &l,
+                             const CommentData &comment) const {
     switch (verbosity_) {
         case verbosity::none:
             l.output(comment._id);

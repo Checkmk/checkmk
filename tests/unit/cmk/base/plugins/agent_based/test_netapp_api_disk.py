@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based.netapp_api_disk import (
     parse_netapp_api_disk,
 )
 
+from .utils_inventory import sort_inventory_result
+
 _AGENT_OUTPUT = [
     [
         "disk 123:456",
@@ -136,4 +138,6 @@ def test_check_netapp_api_disk(fix_register, string_table, expected_result):
     ],
 )
 def test_inventory_netapp_api_disk(string_table, expected_result):
-    assert list(inventory_netapp_api_disk(parse_netapp_api_disk(string_table))) == expected_result
+    assert sort_inventory_result(
+        inventory_netapp_api_disk(parse_netapp_api_disk(string_table))
+    ) == sort_inventory_result(expected_result)

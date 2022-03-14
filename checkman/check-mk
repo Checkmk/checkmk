@@ -1,7 +1,7 @@
 title: Checkmk: Retrieval of Information
 agents: linux, openvms, aix, netbsd, macosx, freebsd, openwrt, openbsd, hpux, solaris
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   This check is responsible for retrieving the status information needed

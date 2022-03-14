@@ -106,6 +106,7 @@ import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.wato.mkeventd
 import cmk.gui.wato.pages.fetch_agent_output
+import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
@@ -330,7 +331,7 @@ modes = {}
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.
@@ -424,11 +425,11 @@ def _register_pre_21_plugin_api() -> None:
         "MainModuleTopic",
         "MainModuleTopicAgents",
         "MainModuleTopicBI",
-        "MainModuleTopicCustom",
         "MainModuleTopicEvents",
         "MainModuleTopicGeneral",
         "MainModuleTopicHosts",
         "MainModuleTopicMaintenance",
+        "MainModuleTopicMisc",
         "MainModuleTopicServices",
         "MainModuleTopicUsers",
         "make_action_link",

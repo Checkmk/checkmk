@@ -27,8 +27,8 @@ execute_test() {
     # outputs the compilation commands needed, which we massage a bit with grep and
     # sed to finally find out which C/C++ we need to check. Brilliant!  :-D  ;-)
     FILES_TO_CHECK=$(make --dry-run \
-        $(git diff-tree --no-commit-id --name-only -r --relative "${PATCHSET_REVISION}" |
-            sed 's/\(.*\)/--what-if=\1/') \
+        "$(git diff-tree --no-commit-id --name-only -r --relative "${PATCHSET_REVISION}" |
+            sed 's/\(.*\)/--what-if=\1/')" \
         all-am |
         grep -e '-MD -MP -MF' |
         sed 's/ &&\\$//' |
@@ -45,7 +45,7 @@ execute_test() {
     echo "${FILES_TO_CHECK}"
 
     echo "==================== ${TARGET}"
-    make "${TARGET}" FILES_TO_CHECK="$(echo $FILES_TO_CHECK)"
+    make "${TARGET}" FILES_TO_CHECK="$FILES_TO_CHECK"
 }
 
 if [ "$PWD" != "$REPO_DIR/livestatus/src" ] && [ "$PWD" != "$REPO_DIR/enterprise/core/src" ]; then

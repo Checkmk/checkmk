@@ -28,7 +28,7 @@ TEST(ListColumn, GetValueLambda) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
     const auto col = ListColumn<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
@@ -41,7 +41,7 @@ TEST(ListColumn, GetValueDefault) {
 
     const auto row = DummyRow{nullptr};
     const auto col = ListColumn<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 

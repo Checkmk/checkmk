@@ -51,7 +51,7 @@ Policy::Policy() {
                          __uuidof(INetFwPolicy2), (void **)&policy_);
 
     if (FAILED(hr)) {
-        XLOG::l.i("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
+        XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
         policy_ = nullptr;
     }
 
@@ -380,7 +380,7 @@ INetFwPolicy2 *WFCOMInitialize() {
                          __uuidof(INetFwPolicy2), (void **)&net_fw_policy2);
 
     if (FAILED(hr)) {
-        XLOG::l.i("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
+        XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
         return nullptr;
     }
 

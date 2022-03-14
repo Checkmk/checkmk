@@ -288,7 +288,7 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
             alias=line_dict["NetConnectionID"],
             # Some interfaces report several exabyte as bandwidth when down ...
             speed=speed
-            if "Speed" in line_dict and (speed := saveint(line_dict["Speed"])) <= 1024 ** 5
+            if "Speed" in line_dict and (speed := saveint(line_dict["Speed"])) <= 1024**5
             else 0,
             oper_status=oper_status,
             oper_status_name=oper_status_name,
@@ -570,12 +570,13 @@ def _check_deprecated_plugins(
         yield Result(
             state=State.CRIT,
             summary="Detected deprecated version of plugin 'windows_if.ps1' or 'wmic_if.bat' "
-            "(bakery ruleset 'Network interfaces on Windows'). Please update agent.",
+            "(bakery ruleset 'Network interfaces on Windows'). Please update the agent plugin.",
         )
     if mk_dhcp_enabled:
         yield Result(
             state=State.CRIT,
-            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update agent.",
+            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update "
+            "the agent plugin.",
         )
 
 

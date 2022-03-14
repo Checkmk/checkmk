@@ -1,0 +1,32 @@
+Title: FIX node and cluster data source consistency validation
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1643365850
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+While creating a cluster the configured data sources are checked against each
+node. If they are not the same the cluster cannot be saved.
+
+Previously only the tags IDs {{agent}} or {{snmp}} were checked. If for example a
+node has the data source {{Checkmk agent}} then the cluster must have the same
+datasource. Otherwise the error
+{{The node NODENAME has datasources and 'agent' while the cluster has datasources and 'no-agent'.}}
+was display.
+
+Now auxilary tags are also involved which may be set through other tags or tag
+groups, eg. the tag {{cmk-agent}} implicilty sets the auxilary tag {{tcp}}.
+This auxilary tag may also be set through custom tags or tag groups.
+
+Details:
+The tags {{cmk-agent}}, {{all-agents}} and {{special-agents}} contain the
+auxilary tag {{tcp}} and belong to the default tag group {{agent}}. During
+validation the exact values {{all-agents}} and {{special-agents}} are checked
+and after these {{tcp}} is taken into account. This behaviour is equivalent to
+the decision which data sources are added to a host.
+
+Regarding the tag group {{snmp_ds}} the validation checks the tag values
+{{snmp-v1}}, {{snmp-v2}} and the auxilary tag {{snmp}}.

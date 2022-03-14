@@ -1,7 +1,7 @@
 title: Total Number of Current Processes and Threads
 agents: linux, aix, freebsd, macosx, netbsd, openbsd, solaris
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitor the number of processes and threads. If too many processes
@@ -13,4 +13,3 @@ discovery:
  The check parameter is set to {threads_default_levels}.
  If you need individual levels for your hosts,
  please define this explicitely in {checks}.
-

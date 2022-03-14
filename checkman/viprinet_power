@@ -1,7 +1,7 @@
 title: Viprinet: Power Supplies
 agents: snmp
 catalog: hw/network/viprinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Information about the PSU. Possible Values are: 0 = no failure 1 = a single PSU is out of order
@@ -10,4 +10,3 @@ description:
 
 discovery:
  One service is created.
-

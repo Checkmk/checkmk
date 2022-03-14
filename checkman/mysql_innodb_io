@@ -1,7 +1,7 @@
 title: MySQL: IO Statistics of InnoDB Engine
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check tracks the IO rate of the InnoDB database
@@ -22,4 +22,3 @@ item:
 discovery:
  One service is created for each instance
  representing the InnoDB writers for a MySQL Daemon.
-

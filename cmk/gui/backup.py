@@ -289,20 +289,18 @@ class MKBackupJob:
         )
 
     def start(self, env=None):
-        p = subprocess.Popen(
+        completed_process = subprocess.run(
             self._start_command(),
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            stdin=open(os.devnull),
+            stdin=subprocess.DEVNULL,
             encoding="utf-8",
             env=env,
+            check=False,
         )
-        if p.stdout is None:
-            raise Exception("cannot happen")
-        output = p.stdout.read()
-        if p.wait() != 0:
-            raise MKGeneralException(_("Failed to start the job: %s") % output)
+        if completed_process.returncode != 0:
+            raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
     def _start_command(self):
         raise NotImplementedError()
@@ -749,7 +747,7 @@ class PageEditBackupJob:
             title=_("Schedule"),
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Execute manually"),
                     totext=_("Only execute manually"),
                 ),
@@ -767,7 +765,7 @@ class PageEditBackupJob:
                         (
                             "timeofday",
                             ListOf(
-                                Timeofday(
+                                valuespec=Timeofday(
                                     default_value=(0, 0),
                                     allow_empty=False,
                                 ),
@@ -806,7 +804,7 @@ class PageEditBackupJob:
             ident_attr = [
                 (
                     "ident",
-                    FixedValue(self._ident, title=_("Unique ID")),
+                    FixedValue(value=self._ident, title=_("Unique ID")),
                 )
             ]
 
@@ -855,7 +853,7 @@ class PageEditBackupJob:
                         ),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 title=_("Do not encrypt the backup"),
                                 totext="",
                             ),
@@ -1328,7 +1326,7 @@ class PageEditBackupTarget:
                 (
                     "ident",
                     FixedValue(
-                        self._ident,
+                        value=self._ident,
                         title=_("Unique ID"),
                     ),
                 ),

@@ -10,9 +10,11 @@ import socket
 import time
 import traceback
 from multiprocessing import JoinableQueue, Process
-from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, overload
+from typing import Collection, Dict, Iterable, Iterator, Mapping, NamedTuple, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
+
+from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -108,8 +110,10 @@ class ModeEditSite(WatoMode):
         super().__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
-        self._site_id = request.get_ascii_input("site")
-        self._clone_id = request.get_ascii_input("clone")
+        _site_id_return = request.get_ascii_input("site")
+        self._site_id = None if _site_id_return is None else SiteId(_site_id_return)
+        _clone_id_return = request.get_ascii_input("clone")
+        self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
         if cmk_version.is_expired_trial() and (self._new or self._site_id != omd_site()):
@@ -124,26 +128,28 @@ class ModeEditSite(WatoMode):
                 raise MKUserError(None, _("The requested site does not exist"))
 
         elif self._new:
-            self._site = {
-                "replicate_mkps": True,
-                "replicate_ec": True,
-                "socket": (
-                    "tcp",
-                    {
-                        "address": ("", 6557),
-                        "tls": (
-                            "encrypted",
-                            {
-                                "verify": True,
-                            },
-                        ),
-                    },
-                ),
-                "timeout": 5,
-                "disable_wato": True,
-                "user_login": True,
-                "replication": None,
-            }
+            self._site = SiteConfiguration(
+                {
+                    "replicate_mkps": True,
+                    "replicate_ec": True,
+                    "socket": (
+                        "tcp",
+                        {
+                            "address": ("", 6557),
+                            "tls": (
+                                "encrypted",
+                                {
+                                    "verify": True,
+                                },
+                            ),
+                        },
+                    ),
+                    "timeout": 5,
+                    "disable_wato": True,
+                    "user_login": True,
+                    "replication": None,
+                }
+            )
 
             if watolib.ConfigDomainLiveproxy.enabled():
                 self._site.update(
@@ -272,7 +278,7 @@ class ModeEditSite(WatoMode):
             )
         else:
             vs_site_id = FixedValue(
-                self._site_id,
+                value=self._site_id,
                 title=_("Site ID"),
             )
 
@@ -372,7 +378,7 @@ class ModeEditSite(WatoMode):
                 Alternative(
                     title=_("Status host"),
                     elements=[
-                        FixedValue(None, title=_("No status host"), totext=""),
+                        FixedValue(value=None, title=_("No status host"), totext=""),
                         Tuple(
                             title=_("Use the following status host"),
                             orientation="horizontal",
@@ -562,11 +568,11 @@ class ModeDistributedMonitoring(WatoMode):
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
-            return self._action_logout(logout_id)
+            return self._action_logout(SiteId(logout_id))
 
         login_id = request.get_ascii_input("_login")
         if login_id:
-            return self._action_login(login_id)
+            return self._action_login(SiteId(login_id))
         return None
 
     # Mypy wants the explicit return, pylint does not like it.
@@ -612,7 +618,7 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt.delete_site(delete_id)
         return redirect(mode_url("sites"))
 
-    def _action_logout(self, logout_id: str) -> ActionResult:
+    def _action_logout(self, logout_id: SiteId) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
         if "secret" in site:
@@ -627,7 +633,7 @@ class ModeDistributedMonitoring(WatoMode):
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
 
-    def _action_login(self, login_id: str) -> ActionResult:
+    def _action_login(self, login_id: SiteId) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         if request.get_ascii_input("_abort"):
             return redirect(mode_url("sites"))
@@ -639,7 +645,7 @@ class ModeDistributedMonitoring(WatoMode):
         error = None
         # Fetch name/password of admin account
         if request.has_var("_name"):
-            name = UserId(request.get_unicode_input_mandatory("_name", "").strip())
+            name = UserId(request.get_str_input_mandatory("_name", "").strip())
             passwd = request.get_ascii_input_mandatory("_passwd", "").strip()
             try:
                 if not html.get_checkbox("_confirm"):
@@ -923,7 +929,7 @@ class PingResult(NamedTuple):
 
 
 class ReplicationStatus(NamedTuple):
-    site_id: str
+    site_id: SiteId
     success: bool
     response: Union[PingResult, Exception]
 
@@ -935,9 +941,11 @@ class ReplicationStatusFetcher:
         super().__init__()
         self._logger = logger.getChild("replication-status")
 
-    def fetch(self, sites: List[_Tuple[str, Dict]]) -> Dict[str, ReplicationStatus]:
+    def fetch(
+        self, sites: Collection[_Tuple[SiteId, SiteConfiguration]]
+    ) -> Mapping[SiteId, ReplicationStatus]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
-        results_by_site: Dict[str, ReplicationStatus] = {}
+        results_by_site: Dict[SiteId, ReplicationStatus] = {}
 
         # Results are fetched simultaneously from the remote sites
         result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
@@ -1039,7 +1047,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     def __init__(self):
         super().__init__()
-        self._site_id = request.get_ascii_input_mandatory("site")
+        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
@@ -1164,7 +1172,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _from_vars(self):
         super()._from_vars()
-        self._site_id = request.get_ascii_input_mandatory("site")
+        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site_id:
             self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
             try:
@@ -1210,7 +1218,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def __init__(self):
         super().__init__()
-        self._site_id = request.get_ascii_input_mandatory("site")
+        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 To make packaging of special agents easier we now support the special agents
 python modules to be located at <tt>local/lib/python3/cmk/special_agents</tt>.

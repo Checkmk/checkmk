@@ -17,6 +17,8 @@
 
 import datetime
 
+from cmk.base.plugins.agent_based.oracle_instance import GeneralError, Instance, InvalidData
+
 factory_settings["oracle_instance_defaults"] = {
     "logins": 2,
     "noforcelogging": 1,
@@ -33,8 +35,10 @@ def _transform_oracle_instance_params(p):
     return p
 
 
-@get_parsed_item_data
-def check_oracle_instance(item, params, item_data):
+def check_oracle_instance(item, params, section):
+    if not (item_data := section.get(item)):
+        return 2, "Database or necessary processes not running or login failed"
+
     params = _transform_oracle_instance_params(params)
 
     def state_marker(state, infotext, param, column, data):
@@ -47,38 +51,44 @@ def check_oracle_instance(item, params, item_data):
                 infotext += "(!!)"
         return state, infotext
 
-    if item_data["general_error"]:
-        return 2, item_data["general_error"]
+    if isinstance(
+        item_data,
+        GeneralError,
+    ):
+        return 2, item_data.err
 
-    if item_data["invalid_data"]:
+    if isinstance(
+        item_data,
+        InvalidData,
+    ):
         return 2, "Database not running, login failed or unvalid data from agent"
 
     state = 0
 
     # Handle old oracle agent plugin output
-    if item_data["old_agent"]:
+    if item_data.old_agent:
         infotext = "Status %s, Version %s, Logins %s" % (
-            item_data["openmode"],
-            item_data["version"],
-            item_data["logins"].lower(),
+            item_data.openmode,
+            item_data.version,
+            item_data.logins.lower(),
         )
-        state, infotext = state_marker(state, infotext, "logins", item_data["logins"], "RESTRICTED")
+        state, infotext = state_marker(state, infotext, "logins", item_data.logins, "RESTRICTED")
         return state, infotext
 
-    if item_data["pdb"]:
+    if item_data.pdb:
         infotext = "PDB Name %s.%s, Status %s" % (
-            item_data["name"],
-            item_data["pname"],
-            item_data["popenmode"],
+            item_data.name,
+            item_data.pname,
+            item_data.popenmode,
         )
     else:
-        if item_data["pluggable"].lower() == "true":
-            infotext = "CDB Name %s, Status %s" % (item_data["name"], item_data["openmode"])
+        if item_data.pluggable.lower() == "true":
+            infotext = "CDB Name %s, Status %s" % (item_data.name, item_data.openmode)
         else:
-            infotext = "Database Name %s, Status %s" % (item_data["name"], item_data["openmode"])
+            infotext = "Database Name %s, Status %s" % (item_data.name, item_data.openmode)
 
     # Check state for PRIMARY Database. Normaly there are always OPEN
-    if item_data["database_role"] == "PRIMARY" and item_data["openmode"] not in (
+    if item_data.database_role == "PRIMARY" and item_data.openmode not in (
         "OPEN",
         "READ ONLY",
         "READ WRITE",
@@ -91,53 +101,49 @@ def check_oracle_instance(item, params, item_data):
         elif state == 0:
             infotext += " (allowed by rule)"
 
-    if not item_data["pdb"]:
-        infotext += ", Role %s, Version %s" % (item_data["database_role"], item_data["version"])
+    if not item_data.pdb:
+        infotext += ", Role %s, Version %s" % (item_data.database_role, item_data.version)
 
     # ASM has no login and archivelog check
-    if item_data["database_role"] != "ASM":
+    if item_data.database_role != "ASM":
 
         # logins are only possible when the database is open
-        if item_data["openmode"] == "OPEN":
-            infotext += ", Logins %s" % (item_data["logins"].lower())
+        if item_data.openmode == "OPEN":
+            infotext += ", Logins %s" % (item_data.logins.lower())
             state, infotext = state_marker(
-                state, infotext, "logins", item_data["logins"], "RESTRICTED"
+                state, infotext, "logins", item_data.logins, "RESTRICTED"
             )
 
         # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
-        if (
-            item_data["name"] != "_MGMTDB"
-            and item_data["sid"] != "-MGMTDB"
-            and not item_data["pdb"]
-        ):
-            infotext += ", Log Mode %s" % (item_data["log_mode"].lower())
+        if item_data.name != "_MGMTDB" and item_data.sid != "-MGMTDB" and not item_data.pdb:
+            infotext += ", Log Mode %s" % (item_data.log_mode.lower())
             state, infotext = state_marker(
-                state, infotext, "archivelog", item_data["log_mode"], "ARCHIVELOG"
+                state, infotext, "archivelog", item_data.log_mode, "ARCHIVELOG"
             )
             state, infotext = state_marker(
-                state, infotext, "noarchivelog", item_data["log_mode"], "NOARCHIVELOG"
+                state, infotext, "noarchivelog", item_data.log_mode, "NOARCHIVELOG"
             )
 
             # archivelog is only valid in non pdb
             # force logging is only usable when archivelog is enabled
-            if item_data["log_mode"] == "ARCHIVELOG":
-                if item_data["archiver"] != "STARTED":
-                    infotext += ". Archiver %s(!!)" % (item_data["archiver"].lower())
+            if item_data.log_mode == "ARCHIVELOG":
+                if item_data.archiver != "STARTED":
+                    infotext += ". Archiver %s(!!)" % (item_data.archiver.lower())
                     state = 2
 
-                infotext += ", Force Logging %s" % (item_data["force_logging"].lower())
+                infotext += ", Force Logging %s" % (item_data.force_logging.lower())
                 state, infotext = state_marker(
-                    state, infotext, "forcelogging", item_data["force_logging"], "YES"
+                    state, infotext, "forcelogging", item_data.force_logging, "YES"
                 )
                 state, infotext = state_marker(
-                    state, infotext, "noforcelogging", item_data["force_logging"], "NO"
+                    state, infotext, "noforcelogging", item_data.force_logging, "NO"
                 )
 
     perfdata = []
 
-    if item_data["pdb"]:
-        infotext += ", PDB Size %s" % get_bytes_human_readable(int(item_data["ptotal_size"]))
-        perfdata.append(("fs_size", int(item_data["ptotal_size"])))
+    if item_data.pdb:
+        infotext += ", PDB Size %s" % get_bytes_human_readable(int(item_data.ptotal_size))
+        perfdata.append(("fs_size", int(item_data.ptotal_size)))
 
     return state, infotext, perfdata
 
@@ -154,22 +160,29 @@ check_info["oracle_instance"] = {
 
 
 def discover_oracle_instance_uptime(parsed):
-    for item, item_data in parsed.items():
-        if item_data["general_error"] or item_data["invalid_data"]:
-            continue
-        yield item, {}
+    yield from (
+        (
+            item,
+            {},
+        )
+        for item, data in parsed.items()
+        if isinstance(
+            data,
+            Instance,
+        )
+    )
 
 
 def check_oracle_instance_uptime(item, params, parsed):
     item_data = parsed.get(item)
-    if item_data is None:
-        raise MKCounterWrapped("Login into database failed")
-
-    if item_data["general_error"] or item_data["invalid_data"]:
+    if item_data is None or not isinstance(
+        item_data,
+        Instance,
+    ):
         # Error is already shown in main check
         raise MKCounterWrapped("Login into database failed")
 
-    up_seconds = max(0, int(item_data["up_seconds"]))
+    up_seconds = max(0, int(item_data.up_seconds))
 
     params = params.get("max", (None, None)) + params.get("min", (None, None))
     return check_levels(

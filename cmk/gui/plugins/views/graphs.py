@@ -183,7 +183,7 @@ def cmk_time_graph_params():
     ]
 
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=elements,
             optional_keys=[],
         ),

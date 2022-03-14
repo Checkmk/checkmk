@@ -1,7 +1,7 @@
 title: Age and Size of Files
 agents: windows, linux, freebsd, macosx, solaris, aix
 catalog: os/files
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the size and age of specific files
@@ -22,14 +22,14 @@ description:
  the section {[fileinfo]}. Put one or more entries of the
  format {path = C:\Some Dir\*.log} into this
  section. The agent will send all files that match
- the pattern. Wildcards are only allowed in the
- filename part, not in the directory path.
+ the pattern.
 
  For Linux, FREEBSD, MACOSX and Solaris the configuration
  is done via {fileinfo.cfg} located in the {$MK_CONFDIR}
  (usually {/etc/check_mk/fileinfo.cfg}). To add files to
  the check, simply add one path pattern {/tmp/*.log} per line.
- Wildcards or patterns can be used as usual on the console.
+
+ Globbing patterns are used to filter the files, e.g. {/var/*/*}.
 
 item:
  The complete path name of the file is sent by
@@ -47,4 +47,3 @@ item:
 
 discovery:
  One service is created for each file that the agent sends.
-

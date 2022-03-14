@@ -1,7 +1,7 @@
 title: Coubase Nodes: CPU Utilization
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the nodes cpu utilization.

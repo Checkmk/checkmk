@@ -1,7 +1,7 @@
 title: Windows: CPU Utilization
 agents: windows
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization on a Windows system using the
@@ -16,4 +16,3 @@ description:
 
 discovery:
  One service is created for each Windows host.
-

@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Memory Usage (deprecated)
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -24,5 +24,3 @@ item:
 
 discovery:
  One service is created for each Jolokia instance sent by the agent.
-
-

@@ -55,7 +55,7 @@ def _parameter_valuespec_systemd_services():
             (
                 "ignored",
                 ListOf(
-                    RegExp(
+                    valuespec=RegExp(
                         title=_("Pattern (Regex)"),
                         size=40,
                         mode=RegExp.infix,

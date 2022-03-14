@@ -10,6 +10,7 @@ import socket
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
+from zlib import compress
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -30,13 +31,16 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import Fetcher, FetcherType, snmp
+from cmk.core_helpers import Fetcher, FetcherType
+from cmk.core_helpers import (
+    PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
+)
+from cmk.core_helpers import snmp
 from cmk.core_helpers.agent import DefaultAgentFileCache, NoCache
 from cmk.core_helpers.cache import FileCache, MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.push_agent import PushAgentFetcher, PushAgentFileCache
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
@@ -45,6 +49,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStoreItem,
 )
 from cmk.core_helpers.tcp import TCPFetcher
+from cmk.core_helpers.tcp_agent_ctl import CompressionType, HeaderV1, Version
 from cmk.core_helpers.type_defs import Mode
 
 
@@ -518,35 +523,6 @@ class ABCTestSNMPFetcher(ABC):
             ),
         )
 
-    @pytest.fixture
-    def fetcher_pysnmp(self, file_cache: SNMPFileCache) -> SNMPFetcher:
-        return SNMPFetcher(
-            file_cache,
-            sections={},
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
-            do_status_data_inventory=False,
-            section_store_path="/tmp/db",
-            snmp_config=SNMPHostConfig(
-                is_ipv6_primary=False,
-                hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
-                credentials="public",
-                port=42,
-                is_bulkwalk_host=False,
-                is_snmpv2or3_without_bulkwalk_host=False,
-                bulk_walk_size_of=0,
-                timing={},
-                oid_range_limits={},
-                snmpv3_contexts=[],
-                character_encoding=None,
-                is_usewalk_host=False,
-                snmp_backend=SNMPBackendEnum.PYSNMP
-                if not cmk_version.is_raw_edition()
-                else SNMPBackendEnum.CLASSIC,
-            ),
-        )
-
 
 class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     @pytest.fixture
@@ -564,12 +540,6 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
         assert other.snmp_config.snmp_backend == (
             SNMPBackendEnum.INLINE if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC
-        )
-
-    def test_fetcher_pysnmp_backend_deserialization(self, fetcher_pysnmp: SNMPFetcher) -> None:
-        other = type(fetcher_pysnmp).from_json(json_identity(fetcher_pysnmp.to_json()))
-        assert other.snmp_config.snmp_backend == (
-            SNMPBackendEnum.PYSNMP if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC
         )
 
     def test_repr(self, fetcher: SNMPFetcher) -> None:
@@ -791,32 +761,6 @@ class TestSNMPSectionMeta:
         assert SectionMeta.deserialize(meta.serialize()) == meta
 
 
-class TestPushAgentFetcher:
-    @pytest.fixture
-    def file_cache(self) -> PushAgentFileCache:
-        return PushAgentFileCache(
-            HostName("hostname"),
-            base_path=Path(os.devnull),
-            max_age=MaxAge.none(),
-            disabled=True,
-            use_outdated=True,
-            simulation=True,
-        )
-
-    @pytest.fixture
-    def fetcher(self, file_cache: PushAgentFileCache) -> PushAgentFetcher:
-        return PushAgentFetcher(file_cache, allowed_age=10, use_only_cache=False)
-
-    def test_repr(self, fetcher: PushAgentFetcher) -> None:
-        assert isinstance(repr(fetcher), str)
-
-    def test_fetcher_deserialization(self, fetcher: PushAgentFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, type(fetcher))
-        assert other.allowed_age == fetcher.allowed_age
-        assert other.use_only_cache == fetcher.use_only_cache
-
-
 class _MockSock:
     def __init__(self, data: bytes) -> None:
         self.data = data
@@ -957,20 +901,32 @@ class TestTCPFetcher:
         assert protocol == TransportProtocol.PLAIN
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
-        mock_sock = _MockSock(b"16<<<section:sep(0)>>>\nbody\n")
+        mock_data = b"<<<section:sep(0)>>>\nbody\n"
+        mock_sock = _MockSock(
+            b"16%b%b%b"
+            % (
+                bytes(Version.V1),
+                bytes(HeaderV1(CompressionType.ZLIB)),
+                compress(mock_data),
+            )
+        )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
         monkeypatch.setattr(fetcher, "_wrap_tls", lambda: mock_sock)
 
         agent_data, protocol = fetcher._get_agent_data()
-        assert agent_data == mock_sock.data[4:]
+        assert agent_data == mock_data[2:]
         assert protocol == TransportProtocol.PLAIN
 
     def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
-        assert fetcher._detect_transport_protocol(b"02") == TransportProtocol.SHA256
+        assert fetcher._detect_transport_protocol(b"02", "Unused") == TransportProtocol.SHA256
 
     def test_detect_transport_protocol_error(self, fetcher: TCPFetcher) -> None:
         with pytest.raises(MKFetcherError, match="Unknown transport protocol: b'abc'"):
-            fetcher._detect_transport_protocol(b"abc")
+            fetcher._detect_transport_protocol(b"abc", "unused")
+
+    def test_detect_transport_protocol_empty_error(self, fetcher: TCPFetcher) -> None:
+        with pytest.raises(MKFetcherError, match="Passed error message"):
+            fetcher._detect_transport_protocol(b"", "Passed error message")
 
 
 class TestFetcherCaching:
@@ -1028,7 +984,7 @@ _FACTORIES_CLASSES = (
     (FetcherType.PROGRAM, ProgramFetcher),
     (FetcherType.SNMP, SNMPFetcher),
     (FetcherType.TCP, TCPFetcher),
-    (FetcherType.PUSH_AGENT, PushAgentFetcher),
+    (FetcherType.PUSH_AGENT, FallbackPushAgentFetcher),
 )
 
 

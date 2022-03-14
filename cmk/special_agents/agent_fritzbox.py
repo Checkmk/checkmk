@@ -25,201 +25,199 @@
 #
 # http://fritz.box:49000/igddslSCPD.xml
 # get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
+"""Checkmk special agent Fritz!Box"""
 
-import getopt
+import argparse
+import json
+import logging
 import pprint
 import re
-import socket
 import sys
-import traceback
-import urllib.error
-import urllib.request
+from typing import Final, Iterator, Mapping, Tuple
 
-from cmk.utils.exceptions import MKException
+import requests
 
+from cmk.special_agents.utils import vcrtrace
 
-def usage():
-    sys.stderr.write(
-        """Check_MK Fritz!Box Agent
+UPNPInfo = Tuple[Mapping[str, str], str, str]
 
-USAGE: agent_fritzbox [OPTIONS] HOST
-       agent_fritzbox -h
+_QUERIES: Final = (
+    ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
+    (
+        "WANIPConn1",
+        "urn:schemas-upnp-org:service:WANIPConnection:1",
+        "GetExternalIPAddress",
+    ),
+    (
+        "WANCommonIFC1",
+        "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
+        "GetAddonInfos",
+    ),
+    (
+        "WANCommonIFC1",
+        "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
+        "GetCommonLinkProperties",
+    ),
+    ("WANDSLLinkC1", "urn:schemas-upnp-org:service:WANDSLLinkConfig:1", "GetDSLLinkInfo"),
+)
 
-ARGUMENTS:
-  HOST                          Host name or IP address of your Fritz!Box
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -t, --timeout SEC             Set the network timeout to <SEC> seconds.
-                                Default is 10 seconds. Note: the timeout is not
-                                applied to the whole check, instead it is used for
-                                each API query.
-  --debug                       Debug mode: let Python exceptions come through
+_SOAP_TEMPLATE = """
+<?xml version='1.0' encoding='utf-8'?>
+  <s:Envelope
+   s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'
+   xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
+    <s:Body>
+        <u:%s xmlns:u="%s" />
+    </s:Body>
+  </s:Envelope>
 """
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="debug mode: let Python exceptions come through",
+    )
+    parser.add_argument("--vcrtrace", action=vcrtrace())
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        metavar="SEC",
+        type=int,
+        default=10,
+        help="set the timeout for each query to <SEC> seconds (default: 10)",
+    )
+    parser.add_argument(
+        "host_address",
+        metavar="HOST",
+        help="host name or IP address of your Fritz!Box",
+    )
+
+    return parser.parse_args(argv)
+
+
+def setup_logging(verbose: bool) -> None:
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.ERROR,
+        format="%(levelname)s: %(message)s",
     )
 
 
-class RequestError(MKException):
-    pass
+class FritzConnection:
+    def __init__(self, host_address: str, timeout: int) -> None:
+        # Fritz!Box with firmware >= 6.0 use a new url.
+        # Try the newer one first and switch if needed
+        self._urlidx = 0
+        self._urls: Final = (
+            f"http://{host_address}:49000/upnp",
+            f"http://{host_address}:49000/igdupnp",
+        )
+        self._timeout = timeout
+        self._session = requests.Session()
+        self._session.headers.update(
+            {
+                "User-agent": "Check_MK agent_fritzbox",
+                "Content-Type": "text/xml",
+            }
+        )
+
+    def post(self, url: str, data: str, headers: Mapping[str, str]) -> requests.Response:
+        return self._session.post(
+            f"{self._urls[self._urlidx]}{url}", data=data, headers=headers, timeout=self._timeout
+        )
+
+    def toggle_base_url(self) -> None:
+        self._urlidx = 1 - self._urlidx
 
 
-def get_upnp_info(control, namespace, action, base_urls, opt_debug):
-    headers = {
-        "User-agent": "Check_MK agent_fritzbox",
-        "Content-Type": "text/xml",
-        "SoapAction": namespace + "#" + action,
-    }
+def _get_response(
+    control: str, namespace: str, action: str, connection: FritzConnection
+) -> requests.Response:
 
-    data = """<?xml version='1.0' encoding='utf-8'?>
-    <s:Envelope s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/' xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
-        <s:Body>
-            <u:%s xmlns:u="%s" />
-        </s:Body>
-    </s:Envelope>""" % (
-        action,
-        namespace,
-    )
+    data = _SOAP_TEMPLATE % (action, namespace)
+    post_args = (f"/control/{control}", data, {"SoapAction": namespace + "#" + action})
 
-    # Fritz!Box with firmware >= 6.0 use a new url. We try the newer one first and
-    # try the other one, when the first one did not succeed.
-    for base_url in base_urls[:]:
-        url = base_url + "/control/" + control
-        try:
-            if opt_debug:
-                sys.stdout.write("============================\n")
-                sys.stdout.write("URL: %s\n" % url)
-                sys.stdout.write("SoapAction: %s\n" % headers["SoapAction"])
-            req = urllib.request.Request(url, data.encode("utf-8"), headers)
-            handle = urllib.request.urlopen(req)
-            break  # got a good response
-        except urllib.error.HTTPError as e:
-            if e.code == 500:
-                # Is the result when the old URL can not be found, continue in this
-                # case and revert the order of base urls in the hope that the other
-                # url gets a successful result to have only one try on future requests
-                # during an agent execution
-                base_urls.reverse()
-                continue
-        except Exception:
-            if opt_debug:
-                sys.stdout.write("----------------------------\n")
-                sys.stdout.write(traceback.format_exc())
-                sys.stdout.write("============================\n")
-            raise RequestError("Error during UPNP call")
+    try:
+        response = connection.post(*post_args)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.HTTPError:
+        if response.status_code != 500:
+            raise
 
-    infos = handle.info()
-    contents = handle.read().decode("utf-8")
+    # old URL can not be found, select other base url in the hope that the other
+    # url gets a successful result to have only one try on future requests
+    connection.toggle_base_url()
+    response = connection.post(*post_args)
+    response.raise_for_status()
+    return response
 
-    parts = infos["SERVER"].split("UPnP/1.0 ")[1].split(" ")
-    g_device = " ".join(parts[:-1])
-    g_version = parts[-1]
 
-    if opt_debug:
-        sys.stdout.write("----------------------------\n")
-        sys.stdout.write("Server: %s\n" % infos["SERVER"])
-        sys.stdout.write("----------------------------\n")
-        sys.stdout.write(contents + "\n")
-        sys.stdout.write("============================\n")
+def get_upnp_info(
+    control: str, namespace: str, action: str, connection: FritzConnection
+) -> UPNPInfo:
+
+    response = _get_response(control, namespace, action, connection)
+    device, version = response.headers["SERVER"].split("UPnP/1.0 ")[1].rsplit(" ", 1)
 
     # parse the response body
-    match = re.search(
-        "<u:%sResponse[^>]+>(.*)</u:%sResponse>" % (action, action), contents, re.M | re.S
-    )
-    if not match:
-        raise Exception("Response is not parsable")
-    response = match.group(1)
-    matches = re.findall("<([^>]+)>([^<]+)<[^>]+>", response, re.M | re.S)
+    if (
+        match := re.search(
+            "<u:%sResponse[^>]+>(.*)</u:%sResponse>" % (action, action), response.text, re.M | re.S
+        )
+    ) is None:
+        raise ValueError("Response not parsable")
 
-    attrs = {}
-    for key, val in matches:
-        attrs[key] = val
+    attrs = dict(re.findall("<([^>]+)>([^<]+)<[^>]+>", match.group(1), re.M | re.S))
 
-    if opt_debug:
-        sys.stdout.write("Parsed: %s\n" % pprint.pformat(attrs))
+    logging.debug("Parsed:\n%s", pprint.pformat(attrs))
 
-    return attrs, g_device, g_version
+    return attrs, device, version
+
+
+def _get_query_responses(connection: FritzConnection, debug: bool) -> Iterator[UPNPInfo]:
+    for query in _QUERIES:
+        try:
+            yield get_upnp_info(*query, connection)
+        except requests.exceptions.ConnectionError as exc:
+            sys.stderr.write(f"{exc}\n")
+            raise
+        except (ValueError, requests.exceptions.HTTPError):
+            if debug:
+                raise
+            continue
 
 
 def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = "h:t:d"
-    long_options = ["help", "timeout=", "debug"]
+    args = parse_arguments(sys_argv)
+    setup_logging(args.verbose)
 
-    host_address = None
-    opt_debug = False
-    opt_timeout = 10
+    connection = FritzConnection(args.host_address, args.timeout)
 
-    try:
-        opts, args = getopt.getopt(sys_argv, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
+    upnp_infos = list(_get_query_responses(connection, args.debug))
 
-    for o, a in opts:
-        if o in ["--debug"]:
-            opt_debug = True
-        elif o in ["-t", "--timeout"]:
-            opt_timeout = int(a)
-        elif o in ["-h", "--help"]:
-            usage()
-            sys.exit(0)
+    version = next((v for _, _, v in upnp_infos if v), "")
+    device = next((d for _, d, _ in upnp_infos if d), "")
 
-    if len(args) == 1:
-        host_address = args[0]
-    elif not args:
-        sys.stderr.write("ERROR: No host given.\n")
-        return 1
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        return 1
+    sys.stdout.write("<<<fritz>>>\n")
+    sys.stdout.write(f"VersionOS {version}\n")
+    sys.stdout.write(f"VersionDevice {device}\n")
 
-    socket.setdefaulttimeout(opt_timeout)
-    base_urls = ["http://%s:49000/upnp" % host_address, "http://%s:49000/igdupnp" % host_address]
-    g_device, g_version = "", ""
+    for attrs, _, _ in upnp_infos:
+        for key, value in attrs.items():
+            sys.stdout.write(f"{key} {value}\n")
 
-    try:
-        status = {}
-        for _control, _namespace, _action in [
-            ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
-            (
-                "WANIPConn1",
-                "urn:schemas-upnp-org:service:WANIPConnection:1",
-                "GetExternalIPAddress",
-            ),
-            (
-                "WANCommonIFC1",
-                "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
-                "GetAddonInfos",
-            ),
-            (
-                "WANCommonIFC1",
-                "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
-                "GetCommonLinkProperties",
-            ),
-            ("WANDSLLinkC1", "urn:schemas-upnp-org:service:WANDSLLinkConfig:1", "GetDSLLinkInfo"),
-        ]:
-            try:
-                attrs, g_device, g_version = get_upnp_info(
-                    _control, _namespace, _action, base_urls, opt_debug
-                )
-            except Exception:
-                if opt_debug:
-                    raise
-            else:
-                status.update(attrs)
+    labels = {"cmk/os_family": "Fritz!OS"}
+    sys.stdout.write("<<<labels:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps(labels)}\n")
 
-        sys.stdout.write("<<<fritz>>>\n")
-        sys.stdout.write("VersionOS %s\n" % g_version)
-        sys.stdout.write("VersionDevice %s\n" % g_device)
-        for pair in status.items():
-            sys.stdout.write("%s %s\n" % pair)
 
-    except Exception:
-        if opt_debug:
-            raise
-        sys.stderr.write("Unhandled error: %s" % traceback.format_exc())
-
-    sys.stdout.write("<<<check_mk>>>\n")
-    sys.stdout.write("AgentOS: FRITZ!OS\n")
+if __name__ == "__main__":
+    main()

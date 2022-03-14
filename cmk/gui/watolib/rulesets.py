@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import pprint
 import re
@@ -22,6 +23,7 @@ from cmk.utils.type_defs import (
     RuleOptions,
     RulesetName,
     RuleSpec,
+    RuleValue,
     TagConditionNE,
     TaggroupIDToTagCondition,
     TagID,
@@ -39,11 +41,18 @@ from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    Folder,
+    get_wato_redis_client,
+    Host,
+    may_use_redis,
+)
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE
+from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
@@ -138,8 +147,14 @@ class RuleConditions:
         if self.service_description is None:
             return False
 
-        return all(
-            not isinstance(i, dict) or i["$regex"].endswith("$") for i in self.service_description
+        service_name_conditions = (
+            self.service_description.get("$nor", [])
+            if isinstance(self.service_description, dict)
+            else self.service_description
+        )
+
+        return bool(service_name_conditions) and all(
+            not isinstance(i, dict) or i["$regex"].endswith("$") for i in service_name_conditions
         )
 
     # Compatibility code for pre 1.6 WATO code
@@ -188,6 +203,30 @@ class RuleConditions:
                 pattern_list.append(entry)
 
         return pattern_list, negate
+
+    def clone(self) -> RuleConditions:
+        return RuleConditions(
+            host_folder=self.host_folder,
+            host_tags={**self.host_tags},
+            host_labels={**self.host_labels},
+            host_name=self.host_name.copy()
+            if isinstance(
+                self.host_name,
+                dict,
+            )
+            else [*self.host_name]
+            if self.host_name is not None
+            else None,
+            service_description=self.service_description.copy()
+            if isinstance(
+                self.service_description,
+                dict,
+            )
+            else [*self.service_description]
+            if self.service_description is not None
+            else None,
+            service_labels={**self.service_labels},
+        )
 
 
 class RulesetCollection:
@@ -241,9 +280,11 @@ class RulesetCollection:
         self, folder: CREFolder, rulesets_config, only_varname: Optional[RulesetName] = None
     ) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
+        config_varname: str
+        subkey: Optional[str]
         for varname in varnames:
             if ":" in varname:
-                config_varname, subkey = varname.split(":", 1)  # type: Tuple[str, Optional[str]]
+                config_varname, subkey = varname.split(":", 1)
                 rulegroup_config = rulesets_config.get(config_varname, {})
                 if subkey not in rulegroup_config:
                     continue  # Nothing configured: nothing left to do
@@ -280,18 +321,22 @@ class RulesetCollection:
             content += ruleset.to_config(folder)
 
         rules_file_path = folder.rules_file_path()
-        # Remove rules files if it has no content. This prevents needless reads
-        if not has_content:
-            if os.path.exists(rules_file_path):
-                os.unlink(rules_file_path)  # Do not keep empty rules.mk files
-            return
+        try:
+            # Remove rules files if it has no content. This prevents needless reads
+            if not has_content:
+                if os.path.exists(rules_file_path):
+                    os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+                return
 
-        # Adding this instead of the full path makes it easy to move config
-        # files around. The real FOLDER_PATH will be added dynamically while
-        # loading the file in cmk.base.config
-        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
+            # Adding this instead of the full path makes it easy to move config
+            # files around. The real FOLDER_PATH will be added dynamically while
+            # loading the file in cmk.base.config
+            content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
-        store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+            store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+        finally:
+            if may_use_redis():
+                get_wato_redis_client().folder_updated(folder.filesystem_path())
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
@@ -337,10 +382,36 @@ class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(
         self, folder: CREFolder, only_varname: Optional[RulesetName] = None
     ) -> None:
+
+        if may_use_redis():
+            self._load_rulesets_via_redis(folder, only_varname)
+            return
+
         for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
+
+    def _load_rulesets_via_redis(
+        self, folder: CREFolder, only_varname: Optional[RulesetName] = None
+    ) -> None:
+        # Search relevant folders with rules.mk files
+        # Note: The sort order of the folders does not matter here
+        #       self._load_folder_rulesets ultimately puts each folder into a dict
+        #       and groups/sorts them later on with a different mechanism
+        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+            f"{folder.path()}/".lstrip("/")
+        )
+
+        root_dir = wato_root_dir()[:-1]
+        relevant_folders = []
+        for folder_path in all_folders:
+            if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):
+                relevant_folders.append(folder_path)
+
+        for folder_path_with_slash in relevant_folders:
+            stripped_folder = folder_path_with_slash.strip("/")
+            self._load_folder_rulesets(Folder.folder(stripped_folder), only_varname)
 
     def load(self) -> None:
         """Load all rules of all folders"""
@@ -535,8 +606,7 @@ class Ruleset:
         )
 
         for rule_config in rules_config:
-            rule = Rule(folder, self)
-            rule.from_config(rule_config)
+            rule = Rule.from_config(folder, self, rule_config)
             self._rules[folder.path()].append(rule)
             self._rules_by_id[rule.id] = rule
 
@@ -718,7 +788,7 @@ class Ruleset:
     def item_help(self) -> Union[None, str, HTML]:
         return self.rulespec.item_help
 
-    def item_enum(self) -> Optional[List[Tuple[str, str]]]:
+    def item_enum(self) -> Optional[DropdownChoiceEntries]:
         return self.rulespec.item_enum
 
     def match_type(self) -> str:
@@ -806,59 +876,82 @@ class Ruleset:
 
 class Rule:
     @classmethod
-    def create(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
-        rule = Rule(folder, ruleset)
-        rule.id = utils.gen_id()
-        rule.value = rule.ruleset.valuespec().default_value()
-        return rule
+    def from_ruleset_defaults(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
+        return Rule(
+            utils.gen_id(),
+            folder,
+            ruleset,
+            RuleConditions(folder.path()),
+            RuleOptions(
+                disabled=False,
+                description="",
+                comment="",
+                docu_url="",
+                predefined_condition_id=None,
+            ),
+            ruleset.valuespec().default_value(),
+        )
 
-    def __init__(self, folder: CREFolder, ruleset: Ruleset) -> None:
-        super().__init__()
-        self.ruleset = ruleset
-        self.folder = folder
-
-        # Content of the rule itself
-        self._initialize()
+    def __init__(
+        self,
+        id_: str,
+        folder: CREFolder,
+        ruleset: Ruleset,
+        conditions: RuleConditions,
+        options: RuleOptions,
+        value: RuleValue,
+    ) -> None:
+        self.ruleset: Ruleset = ruleset
+        self.folder: CREFolder = folder
+        self.conditions: RuleConditions = conditions
+        self.id: str = id_
+        self.rule_options: RuleOptions = options
+        self.value: RuleValue = value
 
     def clone(self, preserve_id: bool = False) -> Rule:
-        cloned = Rule(self.folder, self.ruleset)
-        cloned.from_config(self.to_config())
-        if not preserve_id:
-            cloned.id = utils.gen_id()
-        return cloned
+        return Rule(
+            self.id if preserve_id else utils.gen_id(),
+            self.folder,
+            self.ruleset,
+            self.conditions.clone(),
+            dataclasses.replace(self.rule_options),
+            self.value,
+        )
 
-    def _initialize(self) -> None:
-        self.conditions = RuleConditions(self.folder.path())
-        self.rule_options: RuleOptions = {}
-        # TODO: refine type
-        self.value: Any = True if self.ruleset.rulespec.is_binary_ruleset else None
-        self.id = ""  # Will be populated later
-
-    def from_config(self, rule_config: Any) -> None:
+    @classmethod
+    def from_config(
+        cls,
+        folder: CREFolder,
+        ruleset: Ruleset,
+        rule_config: Any,
+    ) -> Rule:
         try:
-            self._initialize()
-            self._parse_rule(rule_config)
+            if isinstance(rule_config, dict):
+                return cls._parse_dict_rule(
+                    folder,
+                    ruleset,
+                    rule_config,
+                )
+            raise NotImplementedError()
         except Exception:
             logger.exception("error parsing rule")
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
-    def _parse_rule(self, rule_config: Any) -> None:
-        if isinstance(rule_config, dict):
-            self._parse_dict_rule(rule_config)
-        else:
-            raise NotImplementedError()
-
-    def _parse_dict_rule(self, rule_config: Dict[Any, Any]) -> None:
+    @classmethod
+    def _parse_dict_rule(
+        cls,
+        folder: CREFolder,
+        ruleset: Ruleset,
+        rule_config: Dict[Any, Any],
+    ) -> Rule:
         # cmk-update-config uses this to load rules from the config file for rewriting them To make
         # this possible, we need to accept missing "id" fields here. During runtime this is not
         # needed anymore, since cmk-update-config has updated all rules from the user configuration.
-        self.id = rule_config["id"] if "id" in rule_config else utils.gen_id()
-        assert isinstance(self.id, str)
+        id_ = rule_config["id"] if "id" in rule_config else utils.gen_id()
+        assert isinstance(id_, str)
 
-        self.rule_options = rule_config.get("options", {})
-        assert all(isinstance(k, str) for k in self.rule_options)
-
-        self.value = rule_config["value"]
+        rule_options = rule_config.get("options", {})
+        assert all(isinstance(k, str) for k in rule_options)
 
         conditions = rule_config["condition"].copy()
 
@@ -867,8 +960,17 @@ class Rule:
         # for writing it back
         conditions.pop("host_folder", None)
 
-        self.conditions = RuleConditions(self.folder.path())
-        self.conditions.from_config(conditions)
+        rule_conditions = RuleConditions(folder.path())
+        rule_conditions.from_config(conditions)
+
+        return cls(
+            id_,
+            folder,
+            ruleset,
+            rule_conditions,
+            RuleOptions.from_config(rule_options),
+            rule_config["value"],
+        )
 
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
@@ -892,35 +994,14 @@ class Rule:
     def _to_config(
         self, conditions: RuleConditionsSpec, value_func: Callable[[Any], Any] = lambda x: x
     ) -> RuleSpec:
-        result: RuleSpec = {
+        rule_spec: RuleSpec = {
             "id": self.id,
             "value": value_func(self.value),
             "condition": conditions,
         }
-
-        rule_options = self._rule_options_to_config()
-        if rule_options:
-            result["options"] = rule_options
-
-        return result
-
-    def _rule_options_to_config(self) -> RuleOptions:
-        ro = {}
-        if self.rule_options.get("disabled"):
-            ro["disabled"] = True
-        if self.rule_options.get("description"):
-            ro["description"] = self.rule_options["description"]
-        if self.rule_options.get("comment"):
-            ro["comment"] = self.rule_options["comment"]
-        if self.rule_options.get("docu_url"):
-            ro["docu_url"] = self.rule_options["docu_url"]
-
-        # Preserve other keys that we do not know of
-        for k, v in self.rule_options.items():
-            if k not in ["disabled", "description", "comment", "docu_url"]:
-                ro[k] = v
-
-        return ro
+        if options := self.rule_options.to_config():
+            rule_spec["options"] = options
+        return rule_spec
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(
@@ -1134,13 +1215,14 @@ class Rule:
         return self.ruleset.get_folder_rules(self.folder).index(self)
 
     def is_disabled(self) -> bool:
-        return self.rule_options.get("disabled", False)
+        # TODO consolidate with cmk.utils.rulesets.ruleset_matcher.py::_is_disabled
+        return bool(self.rule_options.disabled)
 
     def description(self) -> str:
-        return self.rule_options.get("description", "")
+        return self.rule_options.description
 
     def comment(self) -> str:
-        return self.rule_options.get("comment", "")
+        return self.rule_options.comment
 
     def predefined_condition_id(self) -> Optional[str]:
         """When a rule refers to a predefined condition return the ID
@@ -1150,7 +1232,7 @@ class Rule:
         in the rule options for the moment.
         """
         # TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
-        return self.rule_options.get("predefined_condition_id")
+        return self.rule_options.predefined_condition_id
 
     def update_conditions(self, conditions: RuleConditions) -> None:
         self.conditions = conditions
@@ -1170,6 +1252,8 @@ class Rule:
         return bool(
             self.conditions.host_name
             and len(self.conditions.host_name) == 1
+            and isinstance(self.conditions.host_name, list)
+            and isinstance(self.conditions.host_name[0], str)
             and self.conditions.host_tags == {}
             and self.conditions.has_only_explicit_service_conditions()
         )

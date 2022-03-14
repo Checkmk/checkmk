@@ -6,7 +6,7 @@ Date: 1607067840
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the mk_jolokia agent plugin was used the HW-/SW Inventory would
 fail. Therefore the agent plugin could not be used for Windows.

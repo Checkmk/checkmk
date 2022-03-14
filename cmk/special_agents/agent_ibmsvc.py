@@ -9,9 +9,9 @@
 
 import cProfile
 import getopt
-import os
 import subprocess
 import sys
+from pathlib import Path
 
 
 def usage():
@@ -85,7 +85,6 @@ def main(sys_argv=None):
     opt_any_hostkey = ""
 
     g_profile = None
-    g_profile_path = "ibmsvc_profile.out"
 
     host_address = None
     user = None
@@ -220,25 +219,24 @@ def main(sys_argv=None):
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
-    result = subprocess.Popen(  # nosec
+    result = subprocess.run(  # nosec
         cmd,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=None,
         encoding="utf-8",
+        check=False,
     )
-    stdout, stderr = result.communicate()
-    exit_code = result.wait()
 
-    if exit_code not in [0, 1]:
-        sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
+    if result.returncode not in [0, 1]:
+        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
         sys.exit(2)
 
-    lines = stdout.split("\n")
+    lines = result.stdout.split("\n")
 
     if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-        sys.stderr.write(stdout)
+        sys.stderr.write(result.stdout)
         sys.exit(2)
 
     # Quite strange.. Why not simply print stdout?
@@ -246,14 +244,16 @@ def main(sys_argv=None):
         print(line)
 
     if g_profile:
+        g_profile_path = Path("ibmsvc_profile.out")
         g_profile.dump_stats(g_profile_path)
-        show_profile = os.path.join(os.path.dirname(g_profile_path), "show_profile.py")
-        open(show_profile, "w").write(
+
+        show_profile = g_profile_path / "show_profile.py"
+        show_profile.write_text(
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats('%s')\n"
             "stats.sort_stats('cumtime').print_stats()\n" % g_profile_path
         )
-        os.chmod(show_profile, 0o755)
+        show_profile.chmod(0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))

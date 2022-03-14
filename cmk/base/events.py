@@ -178,6 +178,8 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
 def raw_context_from_string(data: str) -> EventContext:
     # Context is line-by-line in g_notify_readahead_buffer
     context: EventContext = {}
+    if not data:
+        return context
     try:
         for line in data.split("\n"):
             varname, value = line.strip().split("=", 1)
@@ -283,7 +285,7 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
-        raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
+        raw_context.setdefault("OMD_ROOT", str(cmk.utils.paths.omd_root))
         raw_context.setdefault("OMD_SITE", omd_site())
 
         # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
@@ -563,8 +565,6 @@ def _event_match_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    if config.define_servicegroups is None:
-                        continue
                     match_value = (
                         config.define_servicegroups[sg] if match_type == "match_alias" else sg
                     )
@@ -575,8 +575,6 @@ def _event_match_servicegroups(
 
         if is_regex:
             if match_type == "match_alias":
-                if config.define_servicegroups is None:
-                    return "No service groups defined."
                 return (
                     "The service is only in the groups %s. None of these patterns match: %s"
                     % (
@@ -637,8 +635,6 @@ def _event_match_exclude_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    if config.define_servicegroups is None:
-                        continue
                     match_value = (
                         config.define_servicegroups[sg] if match_type == "match_alias" else sg
                     )

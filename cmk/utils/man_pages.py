@@ -84,6 +84,7 @@ catalog_titles = {
     "cbl": "Communication by light (CBL)",
     "checkpoint": "Checkpoint",
     "cisco": "Cisco Systems (also IronPort)",
+    "ciena": "Ciena Corporation",
     "decru": "Decru",
     "dell": "DELL",
     "docsis": "DOCSIS",
@@ -253,6 +254,8 @@ catalog_titles = {
     "unsorted": "Uncategorized",
     "zertificon": "Zertificon",
     "mqtt": "MQTT",
+    "smb_share": "SMB Share",
+    "gcp": "Google Cloud Platform",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?
@@ -456,12 +459,13 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
 
 
 def _run_dialog(args):
-    env = {"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
-    p = subprocess.Popen(["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE)
-    if p.stderr is None:
-        raise Exception()
-    response = p.stderr.read()
-    return os.waitpid(p.pid, 0)[1] == 0, response
+    completed_process = subprocess.run(
+        ["dialog", "--shadow"] + args,
+        env={"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"},
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    return completed_process.returncode == 0, completed_process.stderr
 
 
 def _create_fallback_man_page(name, path, error_message):

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A tab character in a service description caused services of the affected host
 to go stale, including the Check_MK service. This was first observed when

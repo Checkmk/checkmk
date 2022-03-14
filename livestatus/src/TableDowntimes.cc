@@ -23,7 +23,7 @@
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "auth.h"
-#include "nagios.h"
+#include "nagios.h"  // IWYU pragma: keep
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
@@ -49,7 +49,6 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Downtime &r) { return r._is_service; }));
-
     addColumn(std::make_unique<TimeColumn<Downtime>>(
         "start_time", "The start time of the downtime as UNIX timestamp",
         offsets, [](const Downtime &r) { return r._start_time; }));
@@ -59,6 +58,14 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<BoolColumn<Downtime>>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", offsets,
         [](const Downtime &r) { return r._fixed; }));
+    addColumn(std::make_unique<BoolColumn<Downtime>>(
+        "origin",
+        "A 0 if the downtime has been set by a command, a 1 if it has been configured by a rule",
+        offsets, [](const Downtime & /*r*/) { return false; }));
+    addColumn(std::make_unique<IntColumn<Downtime>>(
+        "recurring",
+        "For recurring downtimes: 1: hourly, 2: daily, 3: weekly, 4: two-weekly, 5: four-weekly. Otherwise 0",
+        offsets, [](const Downtime & /*r*/) { return 0; }));
     addColumn(std::make_unique<IntColumn<Downtime>>(
         "duration", "The duration of the downtime in seconds", offsets,
         [](const Downtime &r) {
@@ -68,7 +75,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         offsets, [](const Downtime &r) { return r._triggered_by; }));
-
+    addColumn(std::make_unique<IntColumn<Downtime>>(
+        "is_pending",
+        "1 if the downtime is currently pending (not active), 0 if it is active",
+        offsets, [](const Downtime &r) { return r._is_active ? 0 : 1; }));
     TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
         return r.rawData<Downtime>()->_host;
     }));

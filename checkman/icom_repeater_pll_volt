@@ -1,7 +1,7 @@
 title: ICOM Repeater: PLL Lock Voltage
 agents: snmp
 catalog: hw/network/icom
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the RX and TX PLL lock voltage
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created for each PLL.
-

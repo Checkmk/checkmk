@@ -1,7 +1,7 @@
 title: F5 Big-IP: Cluster State, Up to Firmware Version 10
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) to identify
@@ -18,4 +18,3 @@ description:
 discovery:
   One service is created for the cluster status
   unless the load balancer config sync is in a status of "unconfigured".
-

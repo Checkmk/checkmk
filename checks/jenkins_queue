@@ -123,22 +123,21 @@ def check_jenkins_queue(no_item, params, parsed):
 
     max_state = max([state for state, _infotext in long_output])
 
-    if stuck_tasks or blocked_tasks or pending_tasks:
-        for key, value, infotext in [
-            (stuck_tasks, "stuck_tasks", "Stuck"),
-            (blocked_tasks, "blocked_tasks", "Blocked"),
-            (pending_tasks, "pending_tasks", "Pending"),
-        ]:
+    for key, value, infotext in [
+        (stuck_tasks, "stuck_tasks", "Stuck"),
+        (blocked_tasks, "blocked_tasks", "Blocked"),
+        (pending_tasks, "pending_tasks", "Pending"),
+    ]:
 
-            jenkins_value = "jenkins_%s" % value
+        jenkins_value = "jenkins_%s" % value
 
-            yield check_levels(
-                key,
-                jenkins_value,
-                params.get(jenkins_value),
-                human_readable_func=int,
-                infoname=infotext,
-            )
+        yield check_levels(
+            key,
+            jenkins_value,
+            params.get(jenkins_value),
+            human_readable_func=int,
+            infoname=infotext,
+        )
 
     if long_output:
         yield max_state, "See long output for further information"

@@ -1,7 +1,7 @@
 title: Cisco ACE Server: Status of Real Server
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -23,4 +23,3 @@ item:
 
 discovery:
  One service is created for each real server.
-

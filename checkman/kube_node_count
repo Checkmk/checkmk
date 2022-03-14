@@ -1,13 +1,16 @@
 title: Kubernetes: Node Count
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of worker and control plane nodes in a
  kubernetes cluster.
  Upper and lower levels for worker nodes and control plane nodes are
  configurable via WATO.
+ By default, no levels are set. Thus, the check is always OK.
+
+ The check requires that the special agent kube is configured.
 
 discovery:
  One service is created.

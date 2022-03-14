@@ -90,7 +90,7 @@ def _valuespec_inventory_ipmi_rules_single() -> Dictionary:
 
 def _valuespec_inventory_ipmi_rules() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("IPMI sensor discovery"),
             elements=[
                 (
@@ -102,7 +102,7 @@ def _valuespec_inventory_ipmi_rules() -> Transform:
                             (
                                 "summarize",
                                 _("Summary of all sensors"),
-                                FixedValue({}, totext=""),
+                                FixedValue(value={}, totext=""),
                             ),
                             (
                                 "single",
@@ -135,7 +135,7 @@ def _parameter_valuespec_ipmi():
             (
                 "sensor_states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[TextInput(), MonitoringState()],
                     ),
                     title=_("Set states of IPMI sensor status texts"),
@@ -173,7 +173,7 @@ def _parameter_valuespec_ipmi():
             (
                 "numerical_sensor_levels",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             TextInput(
                                 title=_("Sensor name"),

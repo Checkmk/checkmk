@@ -29,7 +29,7 @@ powershell Remove-NetFirewallRule -DisplayName "AllowIntegration"
 cd %cur_dir%
 if "%failed%" == "1" (
 powershell Write-Host "Integration Test Failed" -Foreground Red 
-exit /b 0
+exit /b 1
 )
 powershell Write-Host "Integration Test Success" -Foreground Green
 exit /b 0

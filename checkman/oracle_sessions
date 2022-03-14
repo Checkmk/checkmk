@@ -1,7 +1,7 @@
 title: Oracle Database: Number of Active Sessions
 agents: linux, hpux, solaris
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of active sessions in an
@@ -17,4 +17,3 @@ item:
 
 discovery:
  One service is created for each running database.
-

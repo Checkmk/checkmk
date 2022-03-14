@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since 1.6 there is the information "valid until version" available in MKPs.
 Since 2.0.0 Checkmk is now automatically disabling the packages during the site

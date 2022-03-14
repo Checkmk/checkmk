@@ -21,6 +21,8 @@ pytest.register_assert_rewrite(
     "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
 )
 
+pytest_plugins = ("tests.testlib.playwright.plugin",)
+
 import tests.testlib as testlib
 
 # TODO Hack: Exclude cee tests in cre repo
@@ -53,6 +55,7 @@ test_types = collections.OrderedDict(
         ("agent-plugin-unit", ExecutionType.VirtualEnv),
         ("integration", ExecutionType.Site),
         ("gui_crawl", ExecutionType.VirtualEnv),
+        ("gui_e2e", ExecutionType.VirtualEnv),
         ("packaging", ExecutionType.VirtualEnv),
         ("composition", ExecutionType.VirtualEnv),
     ]

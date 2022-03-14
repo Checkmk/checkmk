@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agent plugin <i>mk_sap.py</i> ("SAP R/3 monitoring plugin") is not
 compatible with python 3, because the used third party library

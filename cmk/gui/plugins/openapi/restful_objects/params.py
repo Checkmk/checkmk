@@ -8,7 +8,7 @@ import re
 from collections import abc
 from typing import Dict, ItemsView, List, Optional, Sequence, Type, Union
 
-from marshmallow import fields, Schema
+from marshmallow import Schema
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
@@ -18,6 +18,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     translate_to_openapi_keys,
 )
+
+from cmk import fields
 
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 

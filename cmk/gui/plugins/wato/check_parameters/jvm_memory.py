@@ -46,7 +46,7 @@ def _transform_legacy_parameters_jvm_memory(
         float: "perc",
     }
     type_to_transform: Mapping[Type, Callable[[float], float]] = {
-        int: lambda v: v * 1024 ** 2,
+        int: lambda v: v * 1024**2,
         float: lambda v: v,
     }
 
@@ -112,7 +112,7 @@ def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:
 
 def _parameter_valuespec_jvm_memory() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=(
                 _(
                     "This rule allows to set the warn and crit levels of the heap / "

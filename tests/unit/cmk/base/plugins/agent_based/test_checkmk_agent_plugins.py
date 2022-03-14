@@ -6,6 +6,8 @@
 
 from cmk.base.plugins.agent_based import checkmk_agent_plugins as cap
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, TableRow
+from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent
+from cmk.base.plugins.agent_based.utils import checkmk
 
 _OUTPUT = [
     ["pluginsdir /usr/lib/check_mk_agent/plugins"],
@@ -16,13 +18,13 @@ _OUTPUT = [
 ]
 
 
-_SECTION = cap.Section(
+_SECTION = checkmk.PluginSection(
     plugins=[
-        cap.Plugin("mk_filestats.py", "2.1.0i1", 2010010100, None),
-        cap.Plugin("zorp", "2.1.0i1", 2010010100, 123),
+        checkmk.Plugin("mk_filestats.py", "2.1.0i1", 2010010100, None),
+        checkmk.Plugin("zorp", "2.1.0i1", 2010010100, 123),
     ],
     local_checks=[
-        cap.Plugin("sync_local_check.sh", "3.14.15", 3141550000, None),
+        checkmk.Plugin("sync_local_check.sh", "3.14.15", 3141550000, None),
     ],
 )
 
@@ -31,22 +33,16 @@ def test_parse_ok():
     assert cap.parse_checkmk_agent_plugins_lnx(_OUTPUT) == _SECTION
 
 
-def test_discover_positive() -> None:
-    assert list(cap.discover_checkmk_agent_plugins(_SECTION))
-
-
-def test_discover_negative() -> None:
-    assert not list(cap.discover_checkmk_agent_plugins(cap.Section((), ())))
-
-
 def test_check():
     assert list(
-        cap.check_checkmk_agent_plugins(
+        check_checkmk_agent(
             {
                 "min_versions": ("2.3.0", "1.2.0"),
                 "exclude_pattern": "file",
             },
+            None,
             _SECTION,
+            None,
         )
     ) == [
         Result(state=State.OK, summary="Agent plugins: 2"),
@@ -56,7 +52,7 @@ def test_check():
             state=State.WARN,
             summary="Agent plugin 'zorp': 2.1.0i1 (warn/crit below 2.3.0/1.2.0)",
         ),
-        # sync_local_check is OK
+        Result(state=State.OK, notice="Local check 'sync_local_check.sh': 3.14.15"),
     ]
 
 

@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
 from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.watolib.rulespec_groups import RulespecGroupEnforcedServices
 from cmk.gui.watolib.rulespecs import (
     CheckTypeGroupSelection,
     HostRulespec,
@@ -25,7 +26,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
-    RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
     RulespecRegistry,
     RulespecSubGroup,
@@ -168,6 +168,7 @@ def test_grouped_rulespecs():
         "agents/windows_agent": [
             "agent_config:logging",
             "agent_config:firewall",
+            "agent_config:win_controller",
             "agent_config:win_clean_uninstall",
             "agent_config:win_exe_suffixes",
             "agent_config:win_agent_sections",
@@ -1493,7 +1494,7 @@ def test_rulespec_get_host_groups():
             "agents/windows_modules",
         ]
 
-    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
+    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names(True)
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
@@ -1758,7 +1759,7 @@ def test_rulespecs_get_by_group():
     assert len(result) == 0
 
     registry.register(
-        HostRulespec(name="dummy_name", group=DummyGroup, valuespec=lambda: FixedValue(None))
+        HostRulespec(name="dummy_name", group=DummyGroup, valuespec=lambda: FixedValue(value=None))
     )
     result = registry.get_by_group("group")
     assert len(result) == 1

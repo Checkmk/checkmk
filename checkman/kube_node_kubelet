@@ -1,17 +1,17 @@
 title: Kubernetes: Kubelet
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check monitors the health as provided by the kubelet on the
+ This check monitors the health of the kubelet running on the
  corresponding node. If the healthz endpoint returns a status code
  other than 200, the service is {CRIT} and the verbose output of
  said endpoint is shown in details. Otherwise, the service is {OK}.
 
- This check works for the nodes of a kubernetes cluster.
+ This check works for the nodes of a Kubernetes cluster.
 
- It requires that the special agent kube is configured.
+ The check requires that the special agent kube is configured.
 
 discovery:
- One service is created.
+ One service is created per node.

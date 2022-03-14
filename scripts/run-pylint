@@ -5,7 +5,7 @@
 
 set -e
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 
 # There is some confusion regarding where and how pylint should be run from an
 # editor plugin, see e.g. https://github.com/flycheck/flycheck/issues/1758.

@@ -6,7 +6,7 @@ Date: 1617800717
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Event rates were displayed with at most a presision of 2 decimals on the
 graphs, and was generally a good format. Yet, there are some cases when

@@ -42,6 +42,6 @@ check_info["fast_lta_silent_cubes.capacity"] = {
     "snmp_info": (".1.3.6.1.4.1.27417.3", [2, 3]),  # scTotalCapacity  # scTotalUsedCapacity
     "snmp_scan_function": lambda oid: (
         oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10")
-        and oid(".1.3.6.1.4.1.27417.3.2")
+        and (oid(".1.3.6.1.4.1.27417.3.2") or oid(".1.3.6.1.4.1.27417.3.2.0"))
     ),
 }

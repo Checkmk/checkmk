@@ -29,7 +29,7 @@ def _parameter_valuespec_ibm_svc_enclosure():
                     title="Lower levels for online canisters",
                     elements=[
                         FixedValue(
-                            False,
+                            value=False,
                             title=_("All must be online"),
                             totext="",
                         ),

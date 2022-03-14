@@ -6,7 +6,7 @@ Date: 1631721207
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Embedded Statistics Server was moved to the IndexServer process from
 version 1.0 SPS 09 so there is no need to monitor it separately.

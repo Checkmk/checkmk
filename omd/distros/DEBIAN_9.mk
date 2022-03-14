@@ -9,7 +9,6 @@ OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Checkmk parent scan
 OS_PACKAGES      += curl
 OS_PACKAGES      += dialog
-OS_PACKAGES      += ed
 OS_PACKAGES      += dnsutils
 OS_PACKAGES      += graphviz
 OS_PACKAGES      += apache2

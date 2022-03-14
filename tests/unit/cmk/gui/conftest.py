@@ -7,11 +7,12 @@
 # pylint: disable=redefined-outer-name
 from __future__ import annotations
 
+import contextlib
 import json
 import threading
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
-from typing import Any, Dict, Iterator, Literal, NamedTuple, Optional
+from typing import Any, Callable, ContextManager, Dict, Iterator, Literal, NamedTuple, Optional
 
 import pytest
 import webtest  # type: ignore[import]
@@ -33,6 +34,7 @@ from cmk.gui import main_modules, watolib
 from cmk.gui.globals import config
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
+from cmk.gui.utils.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
 
@@ -349,3 +351,49 @@ def with_host(
 @pytest.fixture(autouse=True)
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
+
+
+@pytest.fixture
+def run_as_user() -> Callable[[UserId], ContextManager[None]]:
+    """Fixture to run parts of test-code as another user
+
+    Examples:
+
+        def test_function(run_as_user):
+            print("Run as Nobody")
+            with run_as_user(UserID("egon")):
+                 print("Run as 'egon'")
+            print("Run again as Nobody")
+
+    """
+
+    @contextlib.contextmanager
+    def _run_as_user(user_id: UserId) -> Iterator[None]:
+        cmk.gui.config.load_config()
+        with UserContext(user_id):
+            yield None
+
+    return _run_as_user
+
+
+@pytest.fixture
+def run_as_superuser() -> Callable[[], ContextManager[None]]:
+    """Fixture to run parts of test-code as the superuser
+
+    Examples:
+
+        def test_function(run_as_superuser):
+            print("Run as Nobody")
+            with run_as_superuser():
+                 print("Run as Superuser")
+            print("Run again as Nobody")
+
+    """
+
+    @contextlib.contextmanager
+    def _run_as_superuser() -> Iterator[None]:
+        cmk.gui.config.load_config()
+        with SuperUserContext():
+            yield None
+
+    return _run_as_superuser

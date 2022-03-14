@@ -1,0 +1,15 @@
+Title: Only query fallback user in case of missing config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647254774
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+The agent plugin mk_postgres.py always first queried a default
+user by using a sys call.
+However this would not be needed if a valid config is available.
+

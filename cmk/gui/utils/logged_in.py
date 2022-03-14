@@ -461,10 +461,30 @@ class LoggedInNobody(LoggedInUser):
 
 
 def UserContext(user_id: UserId) -> ContextManager[None]:
+    """Execute a block of code as another user
+
+    After the block exits, the previous user will be replaced again.
+
+    Args:
+        user_id:
+            The user-id of the user.
+
+    Returns:
+        The context manager.
+
+    """
     return _UserContext(LoggedInUser(user_id))
 
 
 def SuperUserContext() -> ContextManager[None]:
+    """Execute a block code as the superuser
+
+    After the block exits, the previous user will be replaced again.
+
+    Returns:
+        The context manager.
+
+    """
     return _UserContext(LoggedInSuperUser())
 
 

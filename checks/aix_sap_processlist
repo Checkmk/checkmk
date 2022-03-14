@@ -37,7 +37,7 @@ def parse_aix_sap_processlist(info):
     instance, description = None, None
     parsed = {}
     for line in info:
-        if line[0].startswith('['):
+        if line[0].startswith("["):
             instance = line[0][1:-1]
 
         elif instance and line[0].startswith("FAIL:"):
@@ -82,8 +82,9 @@ def check_aix_sap_processlist(item, _no_params, parsed):
             start = time.strftime("%c", start_time)
             elapsed = time.time() - time.mktime(start_time)
             perfdata = [("runtime", elapsed)]
-            infotexts.append("Start Time: %s, Elapsed Time: %s" %
-                             (start, get_age_human_readable(elapsed)))
+            infotexts.append(
+                "Start Time: %s, Elapsed Time: %s" % (start, get_age_human_readable(elapsed))
+            )
 
         if status == "GREEN":
             state = 0
@@ -95,9 +96,9 @@ def check_aix_sap_processlist(item, _no_params, parsed):
 
 
 check_info["aix_sap_processlist"] = {
-    'parse_function': parse_aix_sap_processlist,
-    'inventory_function': inventory_aix_sap_processlist,
-    'check_function': check_aix_sap_processlist,
-    'service_description': 'SAP Process %s',
-    'has_perfdata': True,
+    "parse_function": parse_aix_sap_processlist,
+    "inventory_function": inventory_aix_sap_processlist,
+    "check_function": check_aix_sap_processlist,
+    "service_description": "SAP Process %s",
+    "has_perfdata": True,
 }

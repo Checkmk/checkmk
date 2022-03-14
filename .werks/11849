@@ -6,16 +6,16 @@ Date: 1614089825
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
-Since this release it's possible to choose the legacy Python environment, i.e. Python 3.4, thus 
-enabling full support for obsolete(EOL) Windows OS's. For example, Windows Server 2008, Windows 
+Since this release it's possible to choose the legacy Python environment, i.e. Python 3.4, thus
+enabling full support for obsolete(EOL) Windows OS's. For example, Windows Server 2008, Windows
 Server 2008R2, Windows Vista and Windows 7 require legacy Python environment.
 
-To enable Python support for obsolete Windows OS's you should choose in the Bakery the ruleset 
-<tt>Install Python runtime environment</tt> and set value of the drop list <tt>Python environment</tt> 
-to the <tt>Deploy legacy environment(Python 3.4 + standard sets of modules)</tt> . 
+To enable Python support for obsolete Windows OS's you should choose in the Bakery the ruleset
+<tt>Install Python runtime environment</tt> and set value of the drop list <tt>Python environment</tt>
+to the <tt>Deploy legacy environment(Python 3.4 + standard sets of modules)</tt>.
 
-Despite the legacy python environemnt is fully compatible with any current Windows OS's, for 
-security and performance reasons it is highly recommended, if possible, to use only standard python 
+Despite the legacy python environment is fully compatible with any current Windows OS's, for
+security and performance reasons it is highly recommended, if possible, to use only standard python
 environment.

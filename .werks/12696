@@ -1,0 +1,23 @@
+Title: Let the core helpers time out
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1631802557
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+With Checkmk 2.0 we have splitted the Microcore Checkmk helper
+processes into Fetcher and Checker helpers.  Since this split,
+the service check timeout of the "Check_MK" and "Check_MK
+Discovery" services (as configured via setup) was not applied
+to the whole check execution pipeline.
+
+The timeout was applied to the fetcher execution before, which
+is normally taking most of the time.  But there are also cases
+where the execution of the checker takes too long, reaching the
+configured timeout.
+
+With this change we now apply the service check timeout to the
+whole pipeline, including the processing in the checker helpers._

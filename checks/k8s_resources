@@ -9,16 +9,23 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['k8s_resources_default_levels'] = {
-    'cpu': (90.0, 95.0),
-    'memory': (90.0, 95.0),
-    'pods': (90.0, 95.0),
+
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
+
+factory_settings["k8s_resources_default_levels"] = {
+    "cpu": (90.0, 95.0),
+    "memory": (90.0, 95.0),
+    "pods": (90.0, 95.0),
 }
 
 
 def get_k8s_resources_inventory_function(name):
     def inventory_function(parsed):
-        if parsed.get('requests', {}).get(name) is not None:
+        if parsed.get("requests", {}).get(name) is not None:
             return [(None, {})]
 
     return inventory_function
@@ -26,32 +33,33 @@ def get_k8s_resources_inventory_function(name):
 
 def get_k8s_resources_check_function(name, default, readable):
     def check_resources(_no_item, params, parsed):
-        request = parsed.get('requests', {}).get(name, default)
-        yield 0, 'Request: %s' % readable(request), [('k8s_%s_request' % name, request)]
+        request = parsed.get("requests", {}).get(name, default)
+        yield 0, "Request: %s" % readable(request), [("k8s_%s_request" % name, request)]
 
-        limit = parsed.get('limits', {}).get(name)
+        limit = parsed.get("limits", {}).get(name)
         if limit:
             if math.isinf(limit):
-                yield 0, 'Limit: n.a.'
+                yield 0, "Limit: n.a."
             elif limit:
-                yield 0, 'Limit: %s' % readable(limit), [('k8s_%s_limit' % name, limit)]
+                yield 0, "Limit: %s" % readable(limit), [("k8s_%s_limit" % name, limit)]
 
-        allocatable = parsed.get('allocatable', {}).get(name, default)
+        allocatable = parsed.get("allocatable", {}).get(name, default)
         if allocatable:
-            yield 0, 'Allocatable: %s' % readable(allocatable), [('k8s_%s_allocatable' % name,
-                                                                  allocatable)]
+            yield 0, "Allocatable: %s" % readable(allocatable), [
+                ("k8s_%s_allocatable" % name, allocatable)
+            ]
 
-        capacity = parsed.get('capacity', {}).get(name, default)
+        capacity = parsed.get("capacity", {}).get(name, default)
         if capacity:
-            yield 0, 'Capacity: %s' % readable(capacity), [('k8s_%s_capacity' % name, capacity)]
+            yield 0, "Capacity: %s" % readable(capacity), [("k8s_%s_capacity" % name, capacity)]
 
         if allocatable:
             usage = 100.0 * request / allocatable
             yield check_levels(
                 usage,
-                'k8s_%s_usage' % name,
+                "k8s_%s_usage" % name,
                 params.get(name),
-                infoname='Usage',
+                infoname="Usage",
                 human_readable_func=get_percent_human_readable,
                 boundaries=(0, None),
             )
@@ -59,33 +67,33 @@ def get_k8s_resources_check_function(name, default, readable):
     return check_resources
 
 
-check_info['k8s_resources'] = {
-    'parse_function': parse_k8s,
+check_info["k8s_resources"] = {
+    "parse_function": parse_k8s,
 }
 
-check_info['k8s_resources.pods'] = {
-    'inventory_function': get_k8s_resources_inventory_function('pods'),
-    'check_function': get_k8s_resources_check_function('pods', 0, str),
-    'service_description': 'Pod resources',
-    'has_perfdata': True,
-    'group': 'k8s_resources',
-    'default_levels_variable': 'k8s_resources_default_levels',
+check_info["k8s_resources.pods"] = {
+    "inventory_function": get_k8s_resources_inventory_function("pods"),
+    "check_function": get_k8s_resources_check_function("pods", 0, str),
+    "service_description": "Pod resources",
+    "has_perfdata": True,
+    "group": "k8s_resources",
+    "default_levels_variable": "k8s_resources_default_levels",
 }
 
-check_info['k8s_resources.cpu'] = {
-    'inventory_function': get_k8s_resources_inventory_function('cpu'),
-    'check_function': get_k8s_resources_check_function('cpu', 0.0, lambda x: '%.3f' % x),
-    'service_description': 'CPU resources',
-    'has_perfdata': True,
-    'group': 'k8s_resources',
-    'default_levels_variable': 'k8s_resources_default_levels',
+check_info["k8s_resources.cpu"] = {
+    "inventory_function": get_k8s_resources_inventory_function("cpu"),
+    "check_function": get_k8s_resources_check_function("cpu", 0.0, lambda x: "%.3f" % x),
+    "service_description": "CPU resources",
+    "has_perfdata": True,
+    "group": "k8s_resources",
+    "default_levels_variable": "k8s_resources_default_levels",
 }
 
-check_info['k8s_resources.memory'] = {
-    'inventory_function': get_k8s_resources_inventory_function('memory'),
-    'check_function': get_k8s_resources_check_function('memory', 0.0, get_bytes_human_readable),
-    'service_description': 'Memory resources',
-    'has_perfdata': True,
-    'group': 'k8s_resources',
-    'default_levels_variable': 'k8s_resources_default_levels',
+check_info["k8s_resources.memory"] = {
+    "inventory_function": get_k8s_resources_inventory_function("memory"),
+    "check_function": get_k8s_resources_check_function("memory", 0.0, get_bytes_human_readable),
+    "service_description": "Memory resources",
+    "has_perfdata": True,
+    "group": "k8s_resources",
+    "default_levels_variable": "k8s_resources_default_levels",
 }

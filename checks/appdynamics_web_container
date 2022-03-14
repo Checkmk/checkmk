@@ -11,23 +11,23 @@
 
 def inventory_appdynamics_web_container(info):
     for line in info:
-        yield ' '.join(line[0:2]), {}
+        yield " ".join(line[0:2]), {}
 
 
 def check_appdynamics_web_container(item, params, info):
     for line in info:
-        if item == ' '.join(line[0:2]):
+        if item == " ".join(line[0:2]):
             values = {}
             for metric in line[2:]:
-                name, value = metric.split(':')
+                name, value = metric.split(":")
                 values[name] = int(value)
 
-            error_count = values.get('Error Count', None)
-            request_count = values.get('Request Count', None)
+            error_count = values.get("Error Count", None)
+            request_count = values.get("Request Count", None)
 
-            current_threads = values.get('Current Threads In Pool', None)
-            busy_threads = values.get('Busy Threads', None)
-            max_threads = values.get('Maximum Threads', None)
+            current_threads = values.get("Current Threads In Pool", None)
+            busy_threads = values.get("Busy Threads", None)
+            max_threads = values.get("Maximum Threads", None)
 
             if isinstance(params, tuple):
                 warn, crit = params
@@ -41,43 +41,46 @@ def check_appdynamics_web_container(item, params, info):
                 elif warn and current_threads >= warn:
                     state = 1
 
-                thread_levels_label = ''
+                thread_levels_label = ""
                 if state > 0:
-                    thread_levels_label = ' (warn/crit at %d/%d)' % (warn, crit)
+                    thread_levels_label = " (warn/crit at %d/%d)" % (warn, crit)
 
                 if max_threads is not None:
-                    perfdata = [('current_threads', current_threads, warn, crit, 0, max_threads)]
-                    threads_percent = (100.0 * current_threads / max(1, max_threads))
-                    max_info = ' of %d (%.2f%%)' % (max_threads, threads_percent)
+                    perfdata = [("current_threads", current_threads, warn, crit, 0, max_threads)]
+                    threads_percent = 100.0 * current_threads / max(1, max_threads)
+                    max_info = " of %d (%.2f%%)" % (max_threads, threads_percent)
                 else:
-                    perfdata = [('current_threads', current_threads, warn, crit)]
-                    max_info = ''
-                yield state, 'Current threads: %d%s%s' % (current_threads, max_info,
-                                                          thread_levels_label), perfdata
+                    perfdata = [("current_threads", current_threads, warn, crit)]
+                    max_info = ""
+                yield state, "Current threads: %d%s%s" % (
+                    current_threads,
+                    max_info,
+                    thread_levels_label,
+                ), perfdata
 
                 if busy_threads is not None:
-                    perfdata = [('busy_threads', busy_threads)]
-                    yield 0, 'Busy threads: %d' % busy_threads, perfdata
+                    perfdata = [("busy_threads", busy_threads)]
+                    yield 0, "Busy threads: %d" % busy_threads, perfdata
 
             now = time.time()
 
             if error_count is not None:
-                rate_id = 'appdynamics_web_container.%s.error' % (item.lower().replace(' ', '_'))
+                rate_id = "appdynamics_web_container.%s.error" % (item.lower().replace(" ", "_"))
                 error_rate = get_rate(rate_id, now, error_count)
-                perfdata = [('error_rate', error_rate)]
-                yield 0, 'Errors: %.2f/sec' % error_rate, perfdata
+                perfdata = [("error_rate", error_rate)]
+                yield 0, "Errors: %.2f/sec" % error_rate, perfdata
 
             if request_count is not None:
-                rate_id = 'appdynamics_web_container.%s.request' % (item.lower().replace(' ', '_'))
+                rate_id = "appdynamics_web_container.%s.request" % (item.lower().replace(" ", "_"))
                 request_rate = get_rate(rate_id, now, request_count)
-                perfdata = [('request_rate', request_rate)]
-                yield 0, 'Requests: %.2f/sec' % request_rate, perfdata
+                perfdata = [("request_rate", request_rate)]
+                yield 0, "Requests: %.2f/sec" % request_rate, perfdata
 
 
-check_info['appdynamics_web_container'] = {
-    'inventory_function': inventory_appdynamics_web_container,
-    'check_function': check_appdynamics_web_container,
-    'service_description': 'AppDynamics Web Container %s',
-    'has_perfdata': True,
-    'group': 'jvm_threads',
+check_info["appdynamics_web_container"] = {
+    "inventory_function": inventory_appdynamics_web_container,
+    "check_function": check_appdynamics_web_container,
+    "service_description": "AppDynamics Web Container %s",
+    "has_perfdata": True,
+    "group": "jvm_threads",
 }

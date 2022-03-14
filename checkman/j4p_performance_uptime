@@ -1,7 +1,7 @@
 title: Java Application Server: Uptime (deprecated)
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Do not use this plugin. It will be removed soon. Use jolokia_metrics instead.
@@ -17,5 +17,5 @@ item:
  The instance name as configured in {j4p.conf} with the variable
  {instance}.
 
-inventory:
+discovery:
  One service is created for each JMX instance sent by the agent.

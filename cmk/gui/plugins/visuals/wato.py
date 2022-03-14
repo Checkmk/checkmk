@@ -5,22 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Tuple, Iterator, Set
+from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 from cmk.utils.prediction import lq_logic
-import cmk.gui.watolib as watolib
+
 import cmk.gui.sites as sites
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.type_defs import Choices
-
-from cmk.gui.valuespec import ListOf, DropdownChoice
-
-from cmk.gui.plugins.visuals import (
-    filter_registry,
-    Filter,
-)
+import cmk.gui.watolib as watolib
+from cmk.gui.globals import config, html
+from cmk.gui.i18n import _l
+from cmk.gui.plugins.visuals.utils import Filter, filter_registry
+from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
+from cmk.gui.valuespec import DualListChoice
 
 
 def _wato_folders_to_lq_regex(path: str) -> str:
@@ -51,7 +46,7 @@ class FilterWatoFolder(Filter):
 
     def load_wato_data(self):
         self.tree = watolib.Folder.root_folder()
-        self.path_to_tree = {}  # will be filled by self.folder_selection
+        self.path_to_tree: Dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
 
@@ -69,7 +64,8 @@ class FilterWatoFolder(Filter):
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
         result = sites.live().query(
-            "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
+            "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n"
+        )
         allowed_folders = {""}  # The root(Main directory)
         for path, _host_count in result:
             # convert '/wato/server/hosts.mk' to 'server'
@@ -84,13 +80,12 @@ class FilterWatoFolder(Filter):
                 allowed_folders.add(subfolder)
         return allowed_folders
 
-    def display(self):
-        html.dropdown(self.ident, self.choices())
+    def display(self, value: FilterHTTPVariables) -> None:
+        html.dropdown(self.ident, self.choices(), deflt=value.get(self.htmlvars[0], ""))
 
-    def filter(self, infoname):
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
-        folder = html.request.get_str_input_mandatory(self.ident, "")
-        if folder:
+        if folder := value.get(self.ident):
             return "Filter: host_filename %s\n" % _wato_folders_to_lq_regex(folder)
         return ""
 
@@ -109,7 +104,7 @@ class FilterWatoFolder(Filter):
         for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
             yield from self.folder_selection(subfolder, depth + 1)
 
-    def heading_info(self):
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         # FIXME: There is a problem with caching data and changing titles of WATO files
         # Everything is changed correctly but the filter object is stored in the
         # global multisite_filters var and self.path_to_tree is not refreshed when
@@ -118,41 +113,73 @@ class FilterWatoFolder(Filter):
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
         self.check_wato_data_update()
-        current = html.request.var(self.ident)
+        current = value.get(self.ident)
         if current and current != "/":
             return self.path_to_tree.get(current)
+        return None
 
 
 filter_registry.register(
-    FilterWatoFolder(ident="wato_folder",
-                     title=_("WATO Folder"),
-                     sort_index=10,
-                     info="host",
-                     htmlvars=["wato_folder"],
-                     link_columns=[]),)
+    FilterWatoFolder(
+        ident="wato_folder",
+        title=_l("Folder"),
+        sort_index=10,
+        info="host",
+        htmlvars=["wato_folder"],
+        link_columns=[],
+    ),
+)
 
 
 class FilterMultipleWatoFolder(FilterWatoFolder):
+    # Once filters are managed by a valuespec and we get more complex
+    # datastuctures beyond FilterHTTPVariable there must be a back&forth
+    # for data
     def valuespec(self):
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
-        choices = [entry for entry in self.choices() if entry[0]]
-        return ListOf(DropdownChoice(title=_("folders"), choices=choices))
+        choices = [(name, folder) for name, folder in self.choices() if name]
+        return DualListChoice(choices=choices, rows=4, enlarge_active=True)
 
-    def display(self):
-        self.valuespec().render_input(self.ident, [])
+    def _to_list(self, value: FilterHTTPVariables) -> List[str]:
+        if folders := value.get(self.htmlvars[0], ""):
+            return folders.split("|")
+        return []
 
-    def filter(self, infoname):
+    def display(self, value: FilterHTTPVariables):
+        self.valuespec().render_input(self.ident, self._to_list(value))
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
-        folders = self.valuespec().from_html_vars(self.ident)
-        regex_values = list(map(_wato_folders_to_lq_regex, folders))
+        regex_values = list(map(_wato_folders_to_lq_regex, self._to_list(value)))
         return lq_logic("Filter: host_filename", regex_values, "Or")
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the HTML
+        var context. This can be used to persist the filter settings."""
+        return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
+
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        self.check_wato_data_update()
+        return ", ".join(
+            filter(
+                None,
+                (
+                    self.path_to_tree.get(folder)
+                    for folder in self._to_list(value)
+                    if folder and folder != "/"
+                ),
+            )
+        )
 
 
 filter_registry.register(
-    FilterMultipleWatoFolder(ident="wato_folders",
-                             title=_("Multiple WATO Folders"),
-                             sort_index=20,
-                             info="host",
-                             htmlvars=["wato_folders"],
-                             link_columns=[]),)
+    FilterMultipleWatoFolder(
+        ident="wato_folders",
+        title=_l("Multiple WATO Folders"),
+        sort_index=20,
+        info="host",
+        htmlvars=["wato_folders"],
+        link_columns=[],
+    ),
+)

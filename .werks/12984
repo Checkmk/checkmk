@@ -1,0 +1,16 @@
+Title: Oracle RMAN Backup Monitoring in Dataguard Environments with Archivelog on Standby Side
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625551224
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In Oracle Dataguard environments where the archivelog only activated
+on the standby side, the services of the check plugin <tt>oracle_rman</tt>,
+which monitors the status of RMAN backups, were never discovered because
+the corresponding data was missing from the output of the Oracle agent plugin.
+This has been fixed on Linux, Solaris and AIX for Oracle 12.2+. Note that
+you need to re-deploy the Oracle agent plugin on affected hosts.

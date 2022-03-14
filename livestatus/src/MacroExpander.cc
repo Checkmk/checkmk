@@ -7,12 +7,13 @@
 
 #include <cstdlib>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "RegExp.h"
 #include "StringUtils.h"
+#include "nagios.h"
 
 // static
 std::optional<std::string> MacroExpander::from_ptr(const char *str) {
@@ -125,11 +126,7 @@ std::optional<std::string> HostMacroExpander::expand(
         return from_ptr(_hst->perf_data);
     }
     if (str == "HOSTCHECKCOMMAND") {
-#ifndef NAGIOS4
-        return from_ptr(_hst->host_check_command);
-#else
-        return from_ptr(_hst->check_command);
-#endif  // NAGIOS4
+        return from_ptr(nagios_compat_host_check_command(*_hst));
     }
     return _cve.expand(str);
 }
@@ -166,11 +163,7 @@ std::optional<std::string> ServiceMacroExpander::expand(
         return from_ptr(_svc->perf_data);
     }
     if (str == "SERVICECHECKCOMMAND") {
-#ifndef NAGIOS4
-        return from_ptr(_svc->service_check_command);
-#else
-        return from_ptr(_svc->check_command);
-#endif  // NAGIOS4
+        return from_ptr(nagios_compat_service_check_command(*_svc));
     }
     return _cve.expand(str);
 }

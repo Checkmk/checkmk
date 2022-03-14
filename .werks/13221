@@ -1,0 +1,15 @@
+Title: OMD apache status metrics have different titles now
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632379761
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The mettrics of the <i>OMD apache status</i> services did
+not include the unit of the measurement, leading to three
+metrics with the same name each. This is fixed by adding
+the units <i>"Requests"</i>, <i>"Bytes"</i> and <i>"Secs"</i>
+to each metric title.

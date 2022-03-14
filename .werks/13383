@@ -1,0 +1,15 @@
+Title: Add note that '*' is replaced by '.*' in monitoring search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1635514529
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The monitoring search and quicksearch fields replace '*' with '.* for simplicity.
+
+This is the long time behaviour that is now described in the tooltip of the
+monitoring search field.

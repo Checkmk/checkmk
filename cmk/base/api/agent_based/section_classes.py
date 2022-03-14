@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for section plugins
 """
-from typing import List, Sequence, Union
 import string
+from typing import List, Sequence, Union
 
 from cmk.utils.type_defs import SNMPDetectBaseType
+
 from cmk.base.api.agent_based.type_defs import OIDSpecTuple, SNMPTreeTuple
 
 
@@ -18,6 +19,7 @@ class SNMPDetectSpecification(SNMPDetectBaseType):
     Note that the structure of this object is not part of the API,
     and may change at any time.
     """
+
     # This class is only part of the check *API*, in the sense that it hides
     # the SNMPDetectBaseType from the user (and from the auto generated doc!).
     # Use it for type annotations API frontend objects
@@ -34,7 +36,8 @@ class OIDBytes(OIDSpecTuple):
         >>> _ = OIDBytes("2.1")
 
     """
-    def __new__(cls, value: str) -> 'OIDBytes':
+
+    def __new__(cls, value: str) -> "OIDBytes":
         return super().__new__(cls, value, "binary", False)
 
     def __repr__(self) -> str:
@@ -52,7 +55,8 @@ class OIDCached(OIDSpecTuple):
         >>> _ = OIDCached("2.1")
 
     """
-    def __new__(cls, value: str) -> 'OIDCached':
+
+    def __new__(cls, value: str) -> "OIDCached":
         return super().__new__(cls, value, "string", True)
 
     def __repr__(self) -> str:
@@ -67,7 +71,8 @@ class OIDEnd(OIDSpecTuple):
     instead, the parse function will be given the tailing portion of the
     OID (the part that you not already know).
     """
-    def __new__(cls) -> 'OIDEnd':
+
+    def __new__(cls) -> "OIDEnd":
         return super().__new__(cls, 0, "string", False)
 
     def __repr__(self) -> str:
@@ -101,9 +106,9 @@ class SNMPTree(SNMPTreeTuple):
         ...     ],
         ... )
     """
-    VALID_CHARACTERS = set(('.', *string.digits))
+    VALID_CHARACTERS = set((".", *string.digits))
 
-    def __new__(cls, base: str, oids: Sequence[Union[str, OIDSpecTuple]]) -> 'SNMPTree':
+    def __new__(cls, base: str, oids: Sequence[Union[str, OIDSpecTuple]]) -> "SNMPTree":
         # TODO: we must validate list property before iterating over oids
         # (otherwise '123' will become ['1', '2', '3']).
         if not isinstance(oids, list):
@@ -128,14 +133,14 @@ class SNMPTree(SNMPTreeTuple):
         if not value:
             raise ValueError(f"expected a non-empty string: {value!r}")
         if not cls.VALID_CHARACTERS.issuperset(value):
-            invalid_chars = ''.join(sorted(set(value).difference(cls.VALID_CHARACTERS)))
+            invalid_chars = "".join(sorted(set(value).difference(cls.VALID_CHARACTERS)))
             raise ValueError(f"invalid characters in OID descriptor: {invalid_chars!r}")
-        if value.endswith('.'):
+        if value.endswith("."):
             raise ValueError(f"{value} should not end with '.'")
 
     def _validate_base(self, base: str) -> None:
         self.validate_oid_string(base)
-        if not base.startswith('.'):
+        if not base.startswith("."):
             raise ValueError(f"{base!r} must start with '.'")
 
     def _validate_oids(self, oid_list: Sequence[OIDSpecTuple]) -> None:
@@ -160,10 +165,10 @@ class SNMPTree(SNMPTreeTuple):
 
             self.validate_oid_string(column)
 
-            if column.startswith('.'):
+            if column.startswith("."):
                 raise ValueError(f"{column!r} must not start with '.'")
 
-            heads.append(column.split('.', 1)[0])
+            heads.append(column.split(".", 1)[0])
 
         # make sure the base is as long as possible
         if len(heads) > 1 and len(set(heads)) == 1:

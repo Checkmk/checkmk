@@ -5,24 +5,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Percentage,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Percentage, Tuple
 
 
 def _parameter_valuespec_innovaphone_mem():
     return Tuple(
         title=_("Specify levels in percentage of total RAM"),
         elements=[
-            Percentage(title=_("Warning at a usage of"), unit=_("% of RAM")),
-            Percentage(title=_("Critical at a usage of"), unit=_("% of RAM")),
+            Percentage(
+                title=_("Warning at a usage of"),
+                # xgettext: no-python-format
+                unit=_("% of RAM"),
+            ),
+            Percentage(
+                title=_("Critical at a usage of"),
+                # xgettext: no-python-format
+                unit=_("% of RAM"),
+            ),
         ],
     )
 
@@ -33,4 +37,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_innovaphone_mem,
         title=lambda: _("Innovaphone Memory Usage"),
-    ))
+    )
+)

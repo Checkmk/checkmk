@@ -10,6 +10,6 @@ from cmk.utils.redis import get_redis_client
 class TestCheckmkRedisClient:
     def test_initialization_decode_activated(self):
         assert get_redis_client().connection_pool.connection_kwargs.get(
-            'decode_responses',
+            "decode_responses",
             False,
         )

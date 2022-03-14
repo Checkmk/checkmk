@@ -5,30 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _parameter_valuespec_esx_hostystem_maintenance():
-    return Dictionary(elements=[
-        ("target_state",
-         DropdownChoice(
-             title=_("Target State"),
-             help=_("Configure the target mode for the system."),
-             choices=[
-                 ('true', "System should be in Maintenance Mode"),
-                 ('false', "System not should be in Maintenance Mode"),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "target_state",
+                DropdownChoice(
+                    title=_("Target State"),
+                    help=_("Configure the target mode for the system."),
+                    choices=[
+                        ("true", "System should be in Maintenance Mode"),
+                        ("false", "System not should be in Maintenance Mode"),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_hostystem_maintenance,
         title=lambda: _("ESX Hostsystem Maintenance Mode"),
-    ))
+    )
+)

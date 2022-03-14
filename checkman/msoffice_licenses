@@ -1,7 +1,7 @@
 title: MS Office 365: Licenses
 agents: windows
 catalog: app/msoffice
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the total amount of licenses, the amount of currently
@@ -12,5 +12,5 @@ description:
 item:
  Name of the license
 
-inventory:
+discovery:
  One service is created for each license.

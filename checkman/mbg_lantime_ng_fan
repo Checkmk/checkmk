@@ -1,7 +1,7 @@
 title: Meinberg LANTIME Devices: Fans (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the fans of Meinberg LANTIME clocks supporting the
@@ -11,7 +11,7 @@ description:
  reported state and error flag of the fans. Fans which are not operating
  or having an error flag set, are reported as being {CRITICAL}.
 
-inventory:
+discovery:
  One service is created for each fan.
 
 item:

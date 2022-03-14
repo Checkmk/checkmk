@@ -16,9 +16,9 @@ def check_icmp_arguments(params):
     loss = 80, 100
     for key, value in params.items():
         if key == "timeout":
-            args += ["-t", value]
+            args += ["-t", str(value)]
         elif key == "packets":
-            args += ["-n", value]
+            args += ["-n", str(value)]
         elif key == "rta":
             rta = value
         elif key == "loss":
@@ -28,38 +28,43 @@ def check_icmp_arguments(params):
 
     target = params.get("address", "address")
 
+    # Note: The following macros have to work with both Nagios and the CMC
     if target == "address":
         if is_ipv6_primary(host_name()):
-            args.append('-6')
+            args.append("-6")
         args.append("$HOSTADDRESS$")
 
     elif target == "alias":
         if is_ipv6_primary(host_name()):
-            args.append('-6')
+            args.append("-6")
         args.append("$HOSTALIAS$")
 
     elif target == "all_ipv4addresses":
-        args += ["$HOST_ADDRESSES_4$", "$HOST_ADDRESS_4$"]
+        args += ["$_HOSTADDRESSES_4$", "$_HOSTADDRESS_4$"]
 
     elif target == "all_ipv6addresses":
-        args += ["-6", "$HOST_ADDRESSES_6$", "$HOST_ADDRESS_6$"]
+        args += ["-6", "$_HOSTADDRESSES_6$", "$_HOSTADDRESS_6$"]
 
     elif target == "additional_ipv4addresses":
-        args.append("$HOST_ADDRESSES_4$")
+        args.append("$_HOSTADDRESSES_4$")
 
     elif target == "additional_ipv6addresses":
-        args += ["-6", "$HOST_ADDRESSES_6$"]
+        args += ["-6", "$_HOSTADDRESSES_6$"]
 
     elif target[0] == "indexed_ipv4address":
-        args.append("$HOST_ADDRESS_4_%s$" % target[1])
+        args.append("$_HOSTADDRESS_4_%s$" % target[1])
 
     elif target[0] == "indexed_ipv6address":
-        args.append("$HOST_ADDRESS_6_%s$" % target[1])
+        args.append("$_HOSTADDRESS_6_%s$" % target[1])
 
     else:  # custom
-        args.append(target[1])
+        args.append(str(target[1]))
 
-    return args
+    # Unfortunately, we must return a single string here.
+    # Otherwise shell quoting will be applied to every element
+    # of the list, which will interfere with macro replacements like
+    # "$_HOSTADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
+    return " ".join(args)
 
 
 def check_icmp_description(params):
@@ -67,16 +72,17 @@ def check_icmp_description(params):
         return params["description"]
 
     description = "PING"
-    target = params.get("address", "address")
-    if target[0] == "indexed_ipv4address":
-        description += " IPv4/%s" % target[1]
-    elif target[0] == "indexed_ipv6address":
-        description += " IPv6/%s" % target[1]
+    if target := params.get("address"):
+        for v in ("4", "6"):
+            if target == f"all_ipv{v}addresses":
+                description += f" all IPv{v} Addresses"
+            if target[0] == f"indexed_ipv{v}address":
+                description += f" IPv{v}/{target[1]}"
     return description
 
 
-active_check_info['icmp'] = {
-    "command_line": 'check_icmp $ARG1$',
+active_check_info["icmp"] = {
+    "command_line": "check_icmp_wrapper $ARG1$",
     "argument_function": check_icmp_arguments,
     "service_description": check_icmp_description,
     "has_perfdata": True,

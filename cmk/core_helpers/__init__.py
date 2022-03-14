@@ -37,7 +37,9 @@ Todo:
 """
 
 import enum
-from typing import Any, Dict, Type
+from typing import Any, Mapping, Type, Union
+
+from cmk.utils import version
 
 from . import cache
 from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress
@@ -48,7 +50,20 @@ from .program import ProgramFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 
+if version.is_plus_edition():
+    # pylint: disable=no-name-in-module,import-error
+    from cmk.core_helpers.cpe.push_agent_fetcher import PushAgentFetcher  # type: ignore[import]
+else:
+
+    class PushAgentFetcher:  # type: ignore[no-redef]
+        def from_json(self, _serialized):
+            raise NotImplementedError(
+                f"Push agent fetcher not available ({version.edition().short})"
+            )
+
+
 __all__ = [
+    "PushAgentFetcher",
     "Fetcher",
     "FileCache",
     "IPMIFetcher",
@@ -68,7 +83,9 @@ class FetcherType(enum.Enum):
     The enum works as a fetcher factory.
 
     """
+
     NONE = enum.auto()
+    PUSH_AGENT = enum.auto()
     IPMI = enum.auto()
     PIGGYBACK = enum.auto()
     PROGRAM = enum.auto()
@@ -80,12 +97,25 @@ class FetcherType(enum.Enum):
         # This typing error is a false positive.  There are tests to demonstrate that.
         return {  # type: ignore[return-value]
             FetcherType.IPMI: IPMIFetcher,
+            FetcherType.PUSH_AGENT: PushAgentFetcher,
             FetcherType.PIGGYBACK: PiggybackFetcher,
             FetcherType.PROGRAM: ProgramFetcher,
             FetcherType.SNMP: SNMPFetcher,
             FetcherType.TCP: TCPFetcher,
         }[self]
 
-    def from_json(self, serialized: Dict[str, Any]) -> Fetcher:
+    @staticmethod
+    def from_fetcher(fetcher: Union[Fetcher, Type[Fetcher]]) -> "FetcherType":
+        cls = type(fetcher) if isinstance(fetcher, Fetcher) else fetcher
+        return {
+            IPMIFetcher: FetcherType.IPMI,
+            PushAgentFetcher: FetcherType.PUSH_AGENT,
+            PiggybackFetcher: FetcherType.PIGGYBACK,
+            ProgramFetcher: FetcherType.PROGRAM,
+            SNMPFetcher: FetcherType.SNMP,
+            TCPFetcher: FetcherType.TCP,
+        }[cls]
+
+    def from_json(self, serialized: Mapping[str, Any]) -> Fetcher:
         """Instantiate the fetcher from serialized data."""
         return self.make().from_json(serialized)

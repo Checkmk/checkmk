@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#<<<citrix_sessions>>>
-#sessions 1
-#active_sessions 1
-#inactive_sessions 0
+# <<<citrix_sessions>>>
+# sessions 1
+# active_sessions 1
+# inactive_sessions 0
 
 citrix_sessions_default_levels = {
     "total": (60, 65),
@@ -30,8 +30,11 @@ def check_citrix_sessions(_no_item, params, info):
         yield 3, "Could not collect session information. Please check the agent configuration."
         return
 
-    for key, what in [('sessions', 'total'), ('active_sessions', 'active'),
-                      ('inactive_sessions', 'inactive')]:
+    for key, what in [
+        ("sessions", "total"),
+        ("active_sessions", "active"),
+        ("inactive_sessions", "inactive"),
+    ]:
         if session.get(key) is None:
             continue
         state = 0

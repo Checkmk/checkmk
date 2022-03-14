@@ -1,0 +1,12 @@
+Title: Fixed missing sync of MKP and local directories to remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1619014112
+Edition: cme
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+

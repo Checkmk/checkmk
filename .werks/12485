@@ -1,0 +1,17 @@
+Title: Apply limits in Alert Statistics views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1618229042
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Alert Statistics views and reports had an unconstrained query limit to
+accurately calculate results. Yet after resulting rows have been aggregated
+it is still desirable to present only a limited amount of results.
+
+This Werk enforces the Alert Statistics views to only display results
+within the query limits.

@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#TODO refactoring: use parse-function
+
+# TODO refactoring: use parse-function
 
 brocade_mlx_states = {
     0: (1, "Slot is empty"),
@@ -23,15 +24,15 @@ brocade_mlx_states = {
 }
 
 brocade_mlx_info = [
-    ('.1.3.6.1.4.1.1991.1.1.2.2.1.1', [1, 2, 12, 24, 25]),
+    (".1.3.6.1.4.1.1991.1.1.2.2.1.1", [1, 2, 12, 24, 25]),
     # id, descr, overall status, MemoryTotal, MemoryAvailable
-    ('.1.3.6.1.4.1.1991.1.1.2.11.1.1.5', [OID_END, ""]),
+    (".1.3.6.1.4.1.1991.1.1.2.11.1.1.5", [OID_END, ""]),
     # Rest of OId starting with module ID, CpuUtilPercent
 ]
 
 
 def brocade_mlx_get_state(state):
-    return brocade_mlx_states.get(state, (3, 'Unhandled state - %d' % state))
+    return brocade_mlx_states.get(state, (3, "Unhandled state - %d" % state))
 
 
 def brocade_mlx_scan(oid):
@@ -79,7 +80,7 @@ check_info["brocade_mlx.module_status"] = {
     "snmp_scan_function": brocade_mlx_scan,
 }
 
-#.
+# .
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
@@ -99,12 +100,15 @@ def parse_brocade_mlx_module_mem(info):
         try:
             _, state_readable = brocade_mlx_get_state(int(module_state))
         except ValueError:
-            state_readable = 'Device did not return any state'
+            state_readable = "Device did not return any state"
 
-        parsed.setdefault(item, {
-            "state_readable": state_readable,
-            "descr": module_descr,
-        })
+        parsed.setdefault(
+            item,
+            {
+                "state_readable": state_readable,
+                "descr": module_descr,
+            },
+        )
 
         try:
             parsed[item]["mem_total"] = int(mem_total)
@@ -126,8 +130,9 @@ def inventory_brocade_mlx_module_mem(info):
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         descr = v["descr"]
-        if v['state_readable'] not in ["Slot is empty", "Blocked for full height card"] \
-           and (descr.startswith("NI-MLX") or descr.startswith("BR-MLX")):
+        if v["state_readable"] not in ["Slot is empty", "Blocked for full height card"] and (
+            descr.startswith("NI-MLX") or descr.startswith("BR-MLX")
+        ):
             inventory.append((k, "brocade_mlx_mem_default_levels"))
     return inventory
 
@@ -138,7 +143,7 @@ def check_brocade_mlx_module_mem(item, params, info):
     if data is None:
         return
 
-    state_readable = data['state_readable']
+    state_readable = data["state_readable"]
     if state_readable.lower() != "running":
         return 3, "Module is not running (Current State: %s)" % state_readable
 
@@ -166,7 +171,7 @@ check_info["brocade_mlx.module_mem"] = {
     "group": "memory_multiitem",
 }
 
-#.
+# .
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |
@@ -184,11 +189,17 @@ def inventory_brocade_mlx_module_cpu(info):
     for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
-        if module_state != "0" and module_state != "11" and (module_descr.startswith("NI-MLX") or
-                                                             module_descr.startswith("BR-MLX")):
+        if (
+            module_state != "0"
+            and module_state != "11"
+            and (module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX"))
+        ):
             inventory.append(
-                (brocade_mlx_combine_item(module_id,
-                                          module_descr), "brocade_mlx_cpu_default_levels"))
+                (
+                    brocade_mlx_combine_item(module_id, module_descr),
+                    "brocade_mlx_cpu_default_levels",
+                )
+            )
     return inventory
 
 
@@ -217,10 +228,10 @@ def check_brocade_mlx_module_cpu(item, params, info):
                 return 3, "did not find all cpu utilization values in snmp output"
 
             perfdata = [
-                ('cpu_util1', str(cpu_util1) + '%', '', '', 0, 100),
-                ('cpu_util5', str(cpu_util5) + '%', '', '', 0, 100),
-                ('cpu_util60', str(cpu_util60) + '%', warn, crit, 0, 100),
-                ('cpu_util300', str(cpu_util300) + '%', '', '', 0, 100),
+                ("cpu_util1", str(cpu_util1) + "%", "", "", 0, 100),
+                ("cpu_util5", str(cpu_util5) + "%", "", "", 0, 100),
+                ("cpu_util60", str(cpu_util60) + "%", warn, crit, 0, 100),
+                ("cpu_util300", str(cpu_util300) + "%", "", "", 0, 100),
             ]
 
             status = 0
@@ -232,8 +243,12 @@ def check_brocade_mlx_module_cpu(item, params, info):
                 status = 2
                 errorstring = "(!!)"
 
-            return status, "CPU utilization was %s/%s/%s%s/%s%% for the last 1/5/60/300 sec" % \
-                (cpu_util1, cpu_util5, cpu_util60, errorstring, cpu_util300), perfdata
+            return (
+                status,
+                "CPU utilization was %s/%s/%s%s/%s%% for the last 1/5/60/300 sec"
+                % (cpu_util1, cpu_util5, cpu_util60, errorstring, cpu_util300),
+                perfdata,
+            )
 
     return 3, "Module not found"
 

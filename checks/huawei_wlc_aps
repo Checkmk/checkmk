@@ -4,17 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import collections
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-state_template = collections.namedtuple('state', 'label value')
-radio_unknown = state_template('not available', 3)
+state_template = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "state", "label value"
+)
+radio_unknown = state_template("not available", 3)
 radio_state_map = {"1": state_template("up", 0), "2": state_template("down", 2)}
 
-ap_unknown = state_template('not available', 3)
+ap_unknown = state_template("not available", 3)
 ap_state_map = {
     "1": state_template("Idle", 2),
     "2": state_template("Auto find", 1),
@@ -81,34 +84,36 @@ def parse_huawei_wlc_aps(info):
                 "radio_readable_state": radio_state_map.get(radio_state_5GHz, radio_unknown).label,
                 "ch_usage": float(ch_usage_5GHz),
                 "users_online": int(users_online_5GHz),
-            }
+            },
         }
 
     return parsed
 
 
-check_info['huawei_wlc_aps'] = {
-    'parse_function': parse_huawei_wlc_aps,
-    'snmp_info': [
+check_info["huawei_wlc_aps"] = {
+    "parse_function": parse_huawei_wlc_aps,
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.2011.6.139.13.3.3.1',
+            ".1.3.6.1.4.1.2011.6.139.13.3.3.1",
             [
                 "6",  # AP-Status
                 "40",  # AP Memory Usage in %
                 "41",  # AP CPU Usage in %
                 "43",  # AP Temperature
                 "44",  # AP Connected Users
-            ]),
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.2011.6.139.16.1.2.1',
+            ".1.3.6.1.4.1.2011.6.139.16.1.2.1",
             [
                 "3",  # AP-ID
                 "6",  # Radio State
                 "25",  # Channel Usage
                 "40",  # Online users pro AP
-            ]),
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.2011.2.240.17" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2011.2.240.17" in oid(".1.3.6.1.2.1.1.2.0"),
 }
 
 
@@ -133,10 +138,13 @@ def check_huawei_wlc_aps_status(item, params, data):
 
         # Number of users online
         users_online = data[metric]["users_online"]
-        yield check_levels(users_online,
-                           "%s_clients" % metric, (None, None),
-                           human_readable_func=lambda x: "%d" % x,
-                           infoname="Users online [%s]" % band)
+        yield check_levels(
+            users_online,
+            "%s_clients" % metric,
+            (None, None),
+            human_readable_func=lambda x: "%d" % x,
+            infoname="Users online [%s]" % band,
+        )
 
         # Radio state
         radio_state = data[metric]["radio_cmk_state"]
@@ -146,20 +154,22 @@ def check_huawei_wlc_aps_status(item, params, data):
         # Channel usage
         ch_usage = data[metric]["ch_usage"]
         ch_usage_lev = params["levels"]
-        yield check_levels(ch_usage,
-                           "channel_utilization_%s" % metric,
-                           ch_usage_lev,
-                           human_readable_func=get_percent_human_readable,
-                           infoname="Channel usage [%s]" % band)
+        yield check_levels(
+            ch_usage,
+            "channel_utilization_%s" % metric,
+            ch_usage_lev,
+            human_readable_func=get_percent_human_readable,
+            infoname="Channel usage [%s]" % band,
+        )
 
 
-check_info['huawei_wlc_aps.status'] = {
-    'parse_function': parse_huawei_wlc_aps,
-    'inventory_function': discovery_huawei_wlc_aps_status,
-    'check_function': check_huawei_wlc_aps_status,
-    'service_description': 'AP %s Status',
-    'default_levels_variable': "huawei_channel_default",
-    'has_perfdata': True
+check_info["huawei_wlc_aps.status"] = {
+    "parse_function": parse_huawei_wlc_aps,
+    "inventory_function": discovery_huawei_wlc_aps_status,
+    "check_function": check_huawei_wlc_aps_status,
+    "service_description": "AP %s Status",
+    "default_levels_variable": "huawei_channel_default",
+    "has_perfdata": True,
 }
 
 
@@ -175,20 +185,18 @@ def check_huawei_wlc_aps_cpu(item, params, data):
 
     lev = params["levels"]
     val = data["cpu_percent"]
-    yield check_levels(val,
-                       "cpu_percent",
-                       lev,
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Usage")
+    yield check_levels(
+        val, "cpu_percent", lev, human_readable_func=get_percent_human_readable, infoname="Usage"
+    )
 
 
-check_info['huawei_wlc_aps.cpu'] = {
-    'parse_function': parse_huawei_wlc_aps,
-    'check_function': check_huawei_wlc_aps_cpu,
-    'inventory_function': discovery_huawei_wlc_aps_cpu,
-    'service_description': 'AP %s CPU',
-    'default_levels_variable': "huawei_cpu_default",
-    'has_perfdata': True
+check_info["huawei_wlc_aps.cpu"] = {
+    "parse_function": parse_huawei_wlc_aps,
+    "check_function": check_huawei_wlc_aps_cpu,
+    "inventory_function": discovery_huawei_wlc_aps_cpu,
+    "service_description": "AP %s CPU",
+    "default_levels_variable": "huawei_cpu_default",
+    "has_perfdata": True,
 }
 
 
@@ -204,20 +212,22 @@ def check_huawei_wlc_aps_mem(item, params, data):
 
     lev = params["levels"]
     val = data["mem_used_percent"]
-    yield check_levels(val,
-                       "mem_used_percent",
-                       lev,
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Used")
+    yield check_levels(
+        val,
+        "mem_used_percent",
+        lev,
+        human_readable_func=get_percent_human_readable,
+        infoname="Used",
+    )
 
 
-check_info['huawei_wlc_aps.mem'] = {
-    'parse_function': parse_huawei_wlc_aps,
-    'check_function': check_huawei_wlc_aps_mem,
-    'inventory_function': discovery_huawei_wlc_aps_mem,
-    'service_description': 'AP %s Memory',
-    'default_levels_variable': "huawei_mem_default",
-    'has_perfdata': True
+check_info["huawei_wlc_aps.mem"] = {
+    "parse_function": parse_huawei_wlc_aps,
+    "check_function": check_huawei_wlc_aps_mem,
+    "inventory_function": discovery_huawei_wlc_aps_mem,
+    "service_description": "AP %s Memory",
+    "default_levels_variable": "huawei_mem_default",
+    "has_perfdata": True,
 }
 
 
@@ -240,10 +250,10 @@ def check_huawei_wlc_aps_temp(item, params, data):
         yield 0, "%s" % temp
 
 
-check_info['huawei_wlc_aps.temp'] = {
-    'parse_function': parse_huawei_wlc_aps,
-    'check_function': check_huawei_wlc_aps_temp,
-    'inventory_function': discovery_huawei_wlc_aps_temp,
-    'service_description': 'AP %s Temperature',
-    'has_perfdata': True
+check_info["huawei_wlc_aps.temp"] = {
+    "parse_function": parse_huawei_wlc_aps,
+    "check_function": check_huawei_wlc_aps_temp,
+    "inventory_function": discovery_huawei_wlc_aps_temp,
+    "service_description": "AP %s Temperature",
+    "has_perfdata": True,
 }

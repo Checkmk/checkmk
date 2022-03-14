@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
-    rulespec_registry,
+from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
 
 rulespec_registry.register(
@@ -18,7 +18,9 @@ rulespec_registry.register(
             "Enabling this option will result in an additional service for every RMON-capable "
             "switch port. This service will provide detailed information on the distribution of "
             "packet sizes transferred over the port. Note: currently, this additional RMON check "
-            "does not honor the inventory settings for switch ports."),
+            "does not honor the inventory settings for switch ports."
+        ),
         name="rmon_discovery",
         title=lambda: _("RMON statistics"),
-    ))
+    )
+)

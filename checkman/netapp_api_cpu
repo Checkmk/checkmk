@@ -1,7 +1,7 @@
 title: NetApp Filer: Cluster-Mode CPU Utilization
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the global CPU utilization (in percent) of a NetApp running in Cluster-Mode.
@@ -15,6 +15,5 @@ description:
 item:
  The name of the cluster node
 
-inventory:
+discovery:
  One service is created.
-

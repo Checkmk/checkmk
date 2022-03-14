@@ -1,0 +1,16 @@
+Title: Invalid rulesets for multiple choice service conditions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1620384241
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Service rules with a predefined set of service conditions (as
+opposed to a free text form) could not be edited (Checkmk 1.6)
+or not even saved (up to and including Checkmk 2.0p3).
+
+In particular this incuded the rule <i>"Lotus Domino Mail Queues"</i>.

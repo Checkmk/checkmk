@@ -4,19 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import socket
-from hashlib import md5, sha256
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple
-
-from Cryptodome.Cipher import AES
+import ssl
+from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
+from cmk.utils import paths
+from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
+from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
 
@@ -28,6 +31,7 @@ class TCPFetcher(AgentFetcher):
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
         timeout: float,
+        host_name: HostName,
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
@@ -36,25 +40,52 @@ class TCPFetcher(AgentFetcher):
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
         self.timeout: Final = timeout
+        self.host_name: Final = host_name
         self.encryption_settings: Final = encryption_settings
         self.use_only_cache: Final = use_only_cache
-        self._socket: Optional[socket.socket] = None
+        self._opt_socket: Optional[socket.socket] = None
 
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
-        address: Tuple[Optional[HostAddress], int] = serialized.pop("address")
-        return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            address=address,
-            **serialized,
+    @property
+    def _socket(self) -> socket.socket:
+        if self._opt_socket is None:
+            raise MKFetcherError("Not connected")
+        return self._opt_socket
+
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"family={self.family!r}",
+                    f"timeout={self.timeout!r}",
+                    f"host_name={self.host_name!r}",
+                    f"encryption_settings={self.encryption_settings!r}",
+                    f"use_only_cache={self.use_only_cache!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
+        host_name = HostName(serialized_.pop("host_name"))
+        return cls(
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            address=address,
+            host_name=host_name,
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "family": self.family,
             "address": self.address,
             "timeout": self.timeout,
+            "host_name": str(self.host_name),
             "encryption_settings": self.encryption_settings,
             "use_only_cache": self.use_only_cache,
         }
@@ -67,14 +98,14 @@ class TCPFetcher(AgentFetcher):
             self.address[1],
             self.timeout,
         )
-        self._socket = socket.socket(self.family, socket.SOCK_STREAM)
+        self._opt_socket = socket.socket(self.family, socket.SOCK_STREAM)
         try:
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
             self._socket.settimeout(None)
         except socket.error as e:
             self._socket.close()
-            self._socket = None
+            self._opt_socket = None
 
             if cmk.utils.debug.enabled():
                 raise
@@ -84,105 +115,124 @@ class TCPFetcher(AgentFetcher):
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
         if self._socket is not None:
             self._socket.close()
-        self._socket = None
-
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
+        self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
-            raise MKFetcherError("Got no data: No usable cache file present at %s" %
-                                 self.file_cache.path)
-        if self._socket is None:
-            raise MKFetcherError("Not connected")
+            raise MKFetcherError(
+                "Got no data: No usable cache file present at %s" % self.file_cache.base_path
+            )
 
-        return self._validate_decrypted_data(self._decrypt(self._raw_data()))
+        agent_data, protocol = self._get_agent_data()
+        return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 
-    def _raw_data(self) -> AgentRawData:
+    def _get_agent_data(self) -> Tuple[AgentRawData, TransportProtocol]:
+        try:
+            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+        except socket.error as e:
+            raise MKFetcherError(f"Communication failed: {e}") from e
+
+        protocol = self._detect_transport_protocol(
+            raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
+        )
+
+        self._validate_protocol(protocol)
+
+        if protocol is TransportProtocol.TLS:
+            with self._wrap_tls() as ssock:
+                raw_agent_data = self._recvall(ssock)
+            try:
+                agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
+            except ValueError as e:
+                raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
+            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(
+                agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
+            )
+
+        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
+
+    def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
+        try:
+            protocol = TransportProtocol(raw_protocol)
+            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
+            return protocol
+        except ValueError:
+            if raw_protocol:
+                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+            raise MKFetcherError(empty_msg)
+
+    def _validate_protocol(self, protocol: TransportProtocol) -> None:
+        if protocol is TransportProtocol.TLS:
+            return
+
+        enc_setting = self.encryption_settings["use_regular"]
+        if enc_setting == "tls":
+            raise MKFetcherError("Refused: TLS not supported by agent")
+
+        if protocol is TransportProtocol.PLAIN:
+            if enc_setting in ("disable", "allow"):
+                return
+            raise MKFetcherError(
+                "Agent output is plaintext but encryption is enforced by configuration"
+            )
+
+        if enc_setting == "disable":
+            raise MKFetcherError(
+                "Agent output is encrypted but encryption is disabled by configuration"
+            )
+
+    def _wrap_tls(self) -> ssl.SSLSocket:
+        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
+
+        if controller_uuid is None:
+            raise MKFetcherError("Agent controller not registered")
+
+        self._logger.debug("Reading data from agent via TLS socket")
+        try:
+            ctx = ssl.create_default_context(cafile=str(paths.root_cert_file))
+            ctx.load_cert_chain(certfile=paths.site_cert_file)
+            return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
+        except ssl.SSLError as e:
+            raise MKFetcherError("Error establishing TLS connection") from e
+
+    def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
         self._logger.debug("Reading data from agent")
-        if not self._socket:
-            return AgentRawData(b"")
-
-        def recvall(sock: socket.socket) -> bytes:
-            buffer: List[bytes] = []
+        buffer: List[bytes] = []
+        try:
             while True:
-                data = sock.recv(4096, socket.MSG_WAITALL)
+                data = sock.recv(4096, flags)
                 if not data:
                     break
                 buffer.append(data)
-            return b"".join(buffer)
-
-        try:
-            return AgentRawData(recvall(self._socket))
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
             raise MKFetcherError("Communication failed: %s" % e)
 
-    def _decrypt(self, output: AgentRawData) -> AgentRawData:
+        return b"".join(buffer)
+
+    def _decrypt(self, protocol: TransportProtocol, output: AgentRawData) -> AgentRawData:
         if not output:
             return output  # nothing to to, validation will fail
 
-        if output.startswith(b"<<<"):
-            self._logger.debug("Output is not encrypted")
-            if self.encryption_settings["use_regular"] == "enforce":
-                raise MKFetcherError(
-                    "Agent output is plaintext but encryption is enforced by configuration")
-            return output
+        if protocol is TransportProtocol.PLAIN:
+            return protocol.value + output  # bring back stolen bytes
 
-        self._logger.debug("Output is encrypted or invalid")
-        if self.encryption_settings["use_regular"] == "disable":
-            raise MKFetcherError(
-                "Agent output is either invalid or encrypted but encryption is disabled by configuration"
-            )
-
+        self._logger.debug("Try to decrypt output")
         try:
-            self._logger.debug("Try to decrypt output")
-            output = self._real_decrypt(output)
-        except MKFetcherError:
-            raise
+            return AgentRawData(
+                decrypt_by_agent_protocol(
+                    self.encryption_settings["passphrase"],
+                    protocol,
+                    output,
+                )
+            )
         except Exception as e:
-            if self.encryption_settings["use_regular"] == "enforce":
-                raise MKFetcherError("Failed to decrypt agent output: %s" % e)
-
-        # of course the package might indeed have been encrypted but
-        # in an incorrect format, but how would we find that out?
-        # In this case processing the output will fail
-        return output
+            raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
     def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
-        if not output:  # may be caused by xinetd not allowing our address
-            raise MKFetcherError("Empty output from agent at %s:%d" % self.address)
         if len(output) < 16:
-            raise MKFetcherError("Too short output from agent: %r" % output)
+            raise MKFetcherError(
+                f"Too short payload from agent at {self.address[0]}:{self.address[1]}: {output!r}"
+            )
         return output
-
-    # TODO: Sync with real_type_checks._decrypt_rtc_package
-    def _real_decrypt(self, output: AgentRawData) -> AgentRawData:
-        try:
-            # simply check if the protocol is an actual number
-            protocol = int(output[:2])
-        except ValueError:
-            raise MKFetcherError("Unsupported protocol version: %r" % output[:2])
-        encrypted_pkg = output[2:]
-        encryption_key = self.encryption_settings["passphrase"]
-
-        encrypt_digest = sha256 if protocol == 2 else md5
-
-        # Adapt OpenSSL handling of key and iv
-        def derive_key_and_iv(password: bytes, key_length: int,
-                              iv_length: int) -> Tuple[bytes, bytes]:
-            d = d_i = b''
-            while len(d) < key_length + iv_length:
-                d_i = encrypt_digest(d_i + password).digest()
-                d += d_i
-            return d[:key_length], d[key_length:key_length + iv_length]
-
-        key, iv = derive_key_and_iv(encryption_key.encode("utf-8"), 32, AES.block_size)
-        decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-        decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
-        # Strip of fill bytes of openssl
-        return AgentRawData(decrypted_pkg[0:-decrypted_pkg[-1]])

@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Number of Sessions
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows to monitor the number of current connections to
@@ -17,8 +17,6 @@ item:
  The name of the application server instance as configured by the agent
  followed by the name of the application. I.e. tomcat7 /examples
 
-inventory:
+discovery:
  One service is created for each application running inside an Jolokia
  instance sent by the agent.
-
-

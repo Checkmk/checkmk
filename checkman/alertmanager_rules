@@ -1,0 +1,40 @@
+title: Alertmanager: Rules
+agents: alertmanager
+catalog: app/alertmanager
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the status of the alert rule depending on your configuration.
+ It shows either the remapped status or the default status configuration:
+
+  - "inactive": {OK}
+
+  - "pending": {OK}
+
+  - "firing": {CRIT}
+
+  - "none": {UNKNOWN}
+
+  - "n/a": {UNKNOWN}
+
+ Certain alert rules are ignored these alert rules will not be accounted into
+ summary services aswell. The options can be found in special agent configuration.
+
+ You can ignore:
+
+  - All services with no status ("n/a")
+
+  - A provided list of alert rules
+
+  - A list of alert rules groups (ignores all alert rules within this group)
+
+ The check also shows information about the severity and the alert rule group
+ of the alert rule in summary.
+ If the service is not {OK} you can see the message of the alert rule in details
+ which provides further information about the alert rule.
+
+discovery:
+ One service is created for every non ignored alert rule.
+ You can choose beetween creating alert rule group services and individual alert
+ rule services. If alert rule group services is selected the group service replaces
+ all alert rule services within the group.

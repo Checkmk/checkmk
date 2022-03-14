@@ -1,0 +1,13 @@
+Title: mkevents: Fix link to events of host
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1619188387
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you used the rule "Check event state in Event Console" in previous 2.0
+versions, the link to events of the host in the related service was not built
+correctly.

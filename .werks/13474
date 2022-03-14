@@ -1,0 +1,17 @@
+Title: Monitor and inventorize Checkmk agent plugins and local checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1638516462
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk adds the feature of inventorizing and monitoring the plugins and local checks that are deployed on the monitored host.
+
+The check plugin <tt>checkkmk_agent_plugins</tt> displays a summary (count) of the deployed plugins.
+Levels can be imposed on the versions of the plugins (for details refer to the plugins man page).
+
+Inventorized are the plugin names, their versions, and their caching interval.
+

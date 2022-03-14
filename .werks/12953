@@ -1,0 +1,18 @@
+Title: response conversion of all endpoints of REST API
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1626186374
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In a previous Werk (12951) some endpoints have been switched over to be
+in line with the OpenAPI specification. This Werk switches all other endpoints
+over. As for incompatibilities: only the password GET endpoints had deviations
+from the specification.
+
+If you use an automatically generated API-client, you may need to regenerate
+your API client if you experience errors on these endpoints.

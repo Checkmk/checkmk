@@ -14,21 +14,18 @@ def check_ibm_storage_ts(_no_item, _no_params, info):
     return 0, "%s %s, Version %s" % (vendor, product, version)
 
 
-check_info['ibm_storage_ts'] = {
-    'check_function': check_ibm_storage_ts,
-    'inventory_function': inventory_ibm_storage_ts,
-    'service_description': 'Info',
-    'snmp_info': [
+check_info["ibm_storage_ts"] = {
+    "check_function": check_ibm_storage_ts,
+    "inventory_function": inventory_ibm_storage_ts,
+    "service_description": "Info",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.2.6.210.1',
-            [
-                1,  # ibm3100IdDisplayName
-                3,  # ibm3100AgentVendor
-                4
-            ]),  # ibm3100IdAgentVersion
-        ('.1.3.6.1.4.1.2.6.210.2', [1]),  # ibm3100Status
+            ".1.3.6.1.4.1.2.6.210.1",
+            [1, 3, 4],  # ibm3100IdDisplayName  # ibm3100AgentVendor
+        ),  # ibm3100IdAgentVersion
+        (".1.3.6.1.4.1.2.6.210.2", [1]),  # ibm3100Status
         (
-            '.1.3.6.1.4.1.2.6.210.3.1.1',
+            ".1.3.6.1.4.1.2.6.210.3.1.1",
             [
                 1,  # libraryEntryId
                 2,  # libraryState
@@ -36,20 +33,22 @@ check_info['ibm_storage_ts'] = {
                 11,  # libraryDrvCnt
                 22,  # libraryFaultFSC
                 23,  # libraryFaultSev
-                24
-            ]),  # libraryFaultDescr
+                24,
+            ],
+        ),  # libraryFaultDescr
         (
-            '.1.3.6.1.4.1.2.6.210.3.2.1',
+            ".1.3.6.1.4.1.2.6.210.3.2.1",
             [
                 1,  # driveEntryId
                 10,  # driveSerNum
                 15,  # driveSoftWrtErrors
                 16,  # driveHardWrtErrors
                 17,  # driveSoftReadErrors
-                18
-            ]),  # driveHardReadErrors
+                18,
+            ],
+        ),  # driveHardReadErrors
     ],
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.2.6.210"
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2.6.210",
 }
 
 
@@ -63,7 +62,7 @@ ibm_storage_ts_status_name_map = {
     "3": "Ok",
     "4": "non-critical",
     "5": "critical",
-    "6": "non-Recoverable"
+    "6": "non-Recoverable",
 }
 
 ibm_storage_ts_status_nagios_map = {"1": 1, "2": 1, "3": 0, "4": 1, "5": 2, "6": 2}
@@ -78,16 +77,18 @@ ibm_storage_ts_fault_nagios_map = {
 
 
 def check_ibm_storage_ts_status(_no_item, _no_params, info):
-    status, = info[1][0]
+    (status,) = info[1][0]
 
-    return ibm_storage_ts_status_nagios_map[status],\
-        "Device Status: %s" % ibm_storage_ts_status_name_map[status]
+    return (
+        ibm_storage_ts_status_nagios_map[status],
+        "Device Status: %s" % ibm_storage_ts_status_name_map[status],
+    )
 
 
-check_info['ibm_storage_ts.status'] = {
-    'check_function': check_ibm_storage_ts_status,
-    'inventory_function': inventory_ibm_storage_ts_status,
-    'service_description': 'Status',
+check_info["ibm_storage_ts.status"] = {
+    "check_function": check_ibm_storage_ts_status,
+    "inventory_function": inventory_ibm_storage_ts_status,
+    "service_description": "Status",
 }
 
 
@@ -107,17 +108,20 @@ def check_ibm_storage_ts_library(item, _no_params, info):
             fault_status = ibm_storage_ts_fault_nagios_map[severity]
             # I have the suspicion that these status are dependent in the device anyway
             # but who knows?
-            infotext = "Device %s, Status: %s, Drives: %s" %\
-                (serial, ibm_storage_ts_status_name_map[status], count)
+            infotext = "Device %s, Status: %s, Drives: %s" % (
+                serial,
+                ibm_storage_ts_status_name_map[status],
+                count,
+            )
             if fault != "0":
                 infotext += ", Fault: %s (%s)" % (descr, fault)
             return worst_status(dev_status, fault_status), infotext
 
 
-check_info['ibm_storage_ts.library'] = {
-    'check_function': check_ibm_storage_ts_library,
-    'inventory_function': inventory_ibm_storage_ts_library,
-    'service_description': 'Library %s',
+check_info["ibm_storage_ts.library"] = {
+    "check_function": check_ibm_storage_ts_library,
+    "inventory_function": inventory_ibm_storage_ts_library,
+    "service_description": "Library %s",
 }
 
 
@@ -142,8 +146,8 @@ def check_ibm_storage_ts_drive(item, params, info):
                 yield 1, "%d recovered read errors" % read_warn
 
 
-check_info['ibm_storage_ts.drive'] = {
-    'check_function': check_ibm_storage_ts_drive,
-    'inventory_function': inventory_ibm_storage_ts_drive,
-    'service_description': 'Drive %s',
+check_info["ibm_storage_ts.drive"] = {
+    "check_function": check_ibm_storage_ts_drive,
+    "inventory_function": inventory_ibm_storage_ts_drive,
+    "service_description": "Drive %s",
 }

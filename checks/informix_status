@@ -53,9 +53,9 @@ def check_informix_status(item, params, parsed):
         return state, infotext
 
 
-check_info['informix_status'] = {
-    'parse_function': parse_informix_status,
-    'inventory_function': inventory_informix_status,
-    'check_function': check_informix_status,
-    'service_description': 'Informix Instance %s',
+check_info["informix_status"] = {
+    "parse_function": parse_informix_status,
+    "inventory_function": inventory_informix_status,
+    "check_function": check_informix_status,
+    "service_description": "Informix Instance %s",
 }

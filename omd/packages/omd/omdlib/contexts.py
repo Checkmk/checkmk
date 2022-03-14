@@ -26,23 +26,25 @@
 import abc
 import os
 import sys
+from pathlib import Path
 from typing import cast, Optional
-
-from cmk.utils.exceptions import MKTerminate
 
 import omdlib
 import omdlib.utils
-from omdlib.init_scripts import check_status
 from omdlib.config_hooks import call_hook, sort_hooks
-from omdlib.utils import is_dockerized
-from omdlib.type_defs import Config, Replacements
+from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
+from omdlib.type_defs import Config, Replacements
+from omdlib.utils import is_dockerized
+
+from cmk.utils.exceptions import MKTerminate
 
 
-class AbstractSiteContext(metaclass=abc.ABCMeta):
+class AbstractSiteContext(abc.ABC):
     """Object wrapping site specific information"""
+
     def __init__(self, sitename: Optional[str]) -> None:
-        super(AbstractSiteContext, self).__init__()
+        super().__init__()
         self._sitename = sitename
         self._config_loaded = False
         self._config: Config = {}
@@ -51,24 +53,29 @@ class AbstractSiteContext(metaclass=abc.ABCMeta):
     def name(self) -> Optional[str]:
         return self._sitename
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def version(self) -> Optional[str]:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def dir(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tmp_dir(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def real_dir(self):
         # type: () -> str
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def real_tmp_dir(self):
         # type: () -> str
         raise NotImplementedError()
@@ -155,7 +162,7 @@ class SiteContext(AbstractSiteContext):
         hook_dir = self.dir + "/lib/omd/hooks"
         if os.path.exists(hook_dir):
             for hook_name in sort_hooks(os.listdir(hook_dir)):
-                if hook_name[0] != '.' and hook_name not in self._config:
+                if hook_name[0] != "." and hook_name not in self._config:
                     content = call_hook(self, hook_name, ["default"])[1]
                     self._config[hook_name] = content
 
@@ -164,19 +171,19 @@ class SiteContext(AbstractSiteContext):
     def read_site_config(self) -> Config:
         """Read and parse the file site.conf of a site into a dictionary and returns it"""
         config: Config = {}
-        confpath = "%s/etc/omd/site.conf" % (self.dir)
-        if not os.path.exists(confpath):
+        if not (confpath := Path(self.dir, "etc/omd/site.conf")).exists():
             return {}
 
-        for line in open(confpath):
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue
-            var, value = line.split("=", 1)
-            if not var.startswith("CONFIG_"):
-                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
-            else:
-                config[var[7:].strip()] = value.strip().strip("'")
+        with confpath.open() as conf_file:
+            for line in conf_file:
+                line = line.strip()
+                if line == "" or line[0] == "#":
+                    continue
+                var, value = line.split("=", 1)
+                if not var.startswith("CONFIG_"):
+                    sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+                else:
+                    config[var[7:].strip()] = value.strip().strip("'")
 
         return config
 
@@ -197,13 +204,13 @@ class SiteContext(AbstractSiteContext):
 
     def is_empty(self) -> bool:
         for entry in os.listdir(self.dir):
-            if entry not in ['.', '..']:
+            if entry not in [".", ".."]:
                 return False
         return True
 
     def is_autostart(self) -> bool:
         """Determines whether a specific site is set to autostart."""
-        return self.conf.get('AUTOSTART', 'on') == 'on'
+        return self.conf.get("AUTOSTART", "on") == "on"
 
     def is_disabled(self) -> bool:
         """Whether or not this site has been disabled with 'omd disable'"""
@@ -254,7 +261,7 @@ class SiteContext(AbstractSiteContext):
 
 class RootContext(AbstractSiteContext):
     def __init__(self) -> None:
-        super(RootContext, self).__init__(sitename=None)
+        super().__init__(sitename=None)
 
     @property
     def dir(self) -> str:

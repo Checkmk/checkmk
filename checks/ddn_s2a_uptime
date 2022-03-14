@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -25,13 +26,14 @@ def inventory_ddn_s2a_uptime(parsed):
 
 
 def check_ddn_s2a_uptime(_no_item, params, parsed):
-    uptime_years = int(parsed[u"uptime_years"])
-    uptime_days = int(parsed[u"uptime_days"])
-    uptime_hours = int(parsed[u"uptime_hours"])
-    uptime_minutes = int(parsed[u"uptime_minutes"])
+    uptime_years = int(parsed["uptime_years"])
+    uptime_days = int(parsed["uptime_days"])
+    uptime_hours = int(parsed["uptime_hours"])
+    uptime_minutes = int(parsed["uptime_minutes"])
 
-    uptime_sec = 60 * (uptime_minutes + 60 * (uptime_hours + 24 *
-                                              (uptime_days + 365 * uptime_years)))
+    uptime_sec = 60 * (
+        uptime_minutes + 60 * (uptime_hours + 24 * (uptime_days + 365 * uptime_years))
+    )
     return check_uptime_seconds(params, uptime_sec)
 
 

@@ -4,14 +4,93 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from typing import List
+
+import pytest
 
 import cmk.gui.hooks as hooks
+from cmk.gui.pages import Page, page_registry
 
 
 @pytest.fixture(autouse=True)
 def reset_hooks():
-    hooks.hooks.clear()
+    try:
+        old_hooks = hooks.hooks
+        hooks.hooks = {}
+        yield
+    finally:
+        hooks.hooks = old_hooks
+
+
+def test_request_memoize():
+    @hooks.request_memoize()
+    def blah(a=[]):  # pylint: disable=dangerous-default-value
+        a.append(1)
+        return a
+
+    assert blah() == [1]
+    assert blah() == [1]
+
+    hooks.call("request-end")
+
+    assert blah() == [1, 1]
+
+
+def test_request_memoize_request_integration(logged_in_wsgi_app, mocker):
+    mock = mocker.MagicMock()
+
+    @hooks.request_memoize()
+    def memoized():
+        return mock()
+
+    @page_registry.register_page("my_page")
+    class PageClass(Page):  # pylint: disable=unused-variable
+        def page(self):
+            mock.return_value = 1
+            assert memoized() == 1
+
+            # Test that it gives the memoized value instead of the new mock value
+            mock.return_value = 2
+            assert memoized() == 1
+
+    # Try a first request. Memoization within this request is tested in page() above.
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+
+    # After the request has ended we get the new value
+    mock.return_value = 2
+    assert memoized() == 2
+    # But there is no reset triggered outside of the request. We do it manually here.
+    hooks.call("request-end")
+
+    # And now try a second request
+    mock.return_value = 1
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+
+    page_registry.unregister("my_page")
+
+
+def test_request_memoize_unregister():
+    # Make sure request-start hooks are still called, after plugin hooks are
+    # unregistered. In previous versions unregister_plugin_hooks also
+    # unregistered hooks used by memoize.
+
+    @hooks.request_memoize()
+    def blah(a: List[int] = []) -> List[int]:  # pylint: disable=dangerous-default-value
+        a.append(1)
+        return a
+
+    assert blah() == [1]
+    assert blah() == [1]
+
+    hooks.call("request-end")
+
+    assert blah() == [1, 1]
+
+    hooks.unregister_plugin_hooks()
+    hooks.call("request-end")
+
+    assert blah() == [1, 1, 1]
+    assert blah() == [1, 1, 1]
 
 
 def test_hook_registration():
@@ -50,7 +129,7 @@ def test_call(mocker):
     hook2_mock.assert_called_once()
 
 
-def test_call_exception_handling(mocker):
+def test_call_exception_handling(request_context, mocker):
     hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)
@@ -66,7 +145,7 @@ def test_builtin_vs_plugin_hooks():
     hooks.register_from_plugin("blub", lambda: True)
     assert hooks.registered("blub") is True
 
-    hooks.load_plugins(force=True)
+    hooks.load_plugins()
 
     assert hooks.registered("bla") is True
     assert hooks.registered("blub") is False

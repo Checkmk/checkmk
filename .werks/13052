@@ -1,0 +1,13 @@
+Title: iis_app_pool_state: New check to monitor IIS Application Pool States
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1626177414
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+New check to monitor each Application Pool State for an IIS.
+Discovers a service for each Application Pool.
+

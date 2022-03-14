@@ -1,7 +1,7 @@
 title: Cisco UCS: Memory Operation Status
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -16,5 +16,5 @@ description:
  "missing", "equippedNotPrimary", "equippedSlave" or "equippedDiscInProgress".
  When the presence state is "missing", all other data will be ignored.
 
-inventory:
+discovery:
  One service is created for each memory device.

@@ -5,40 +5,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    defines,
-    Dictionary,
-    ListOfTimeRanges,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import defines, Dictionary, ListOfTimeRanges, TextInput
 
 
 def _item_spec_motion():
-    return TextAscii(
+    return TextInput(
         title=_("Sensor name"),
         help=_("The identifier of the sensor."),
     )
 
 
 def _parameter_valuespec_motion():
-    return Dictionary(elements=[
-        ("time_periods",
-         Dictionary(
-             title=_("Time periods"),
-             help=_("Specifiy time ranges during which no motion is expected. "
-                    "Outside these times, the motion detector will always be in "
-                    "state OK"),
-             elements=[(day_id, ListOfTimeRanges(title=day_str))
-                       for day_id, day_str in defines.weekdays_by_name()],
-             optional_keys=[],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "time_periods",
+                Dictionary(
+                    title=_("Time periods"),
+                    help=_(
+                        "Specifiy time ranges during which no motion is expected. "
+                        "Outside these times, the motion detector will always be in "
+                        "state OK"
+                    ),
+                    elements=[
+                        (day_id, ListOfTimeRanges(title=day_str))
+                        for day_id, day_str in defines.weekdays_by_name()
+                    ],
+                    optional_keys=[],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -49,4 +51,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_motion,
         title=lambda: _("Motion Detectors"),
-    ))
+    )
+)

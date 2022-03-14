@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.100.4618 Ambient Air Temperature Sensor Issue
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.100.4618 Inactive Event
@@ -25,29 +26,37 @@ def parse_liebert_system_events(info):
     return {"events": parse_liebert_without_unit_wrapper(info, str)}
 
 
+def _is_active_event(event):
+    event_name, event_type = event
+
+    if not event_name or not event_type:
+        return False
+
+    return event_type.lower() != "inactive event"
+
+
 def check_liebert_system_events(_no_item, _no_params, parsed):
-    events = parsed.get("events", {})
-    if not events:
+    active_events = [e for e in parsed.get("events", {}).items() if _is_active_event(e)]
+
+    if not active_events:
         yield 0, "Normal"
         return
 
-    for key, value in events.items():
-        if not (value or key):
-            continue
-        if not value.lower() == "inactive event":
-            yield 2, "%s: %s" % (key, value)
+    yield from ((2, f"{k}: {v}") for k, v in active_events)
 
 
-check_info['liebert_system_events'] = {
-    'parse_function': parse_liebert_system_events,
-    'inventory_function': lambda _parsed: [(None, {})],
-    'check_function': check_liebert_system_events,
-    'service_description': 'System events',
-    'snmp_info': (
-        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+check_info["liebert_system_events"] = {
+    "parse_function": parse_liebert_system_events,
+    "inventory_function": lambda _parsed: [(None, {})],
+    "check_function": check_liebert_system_events,
+    "service_description": "System events",
+    "snmp_info": (
+        ".1.3.6.1.4.1.476.1.42.3.9.20.1",
         [
-            '10.1.2.100',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.100',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-        ]),
-    'snmp_scan_function': scan_liebert,
+            "10.1.2.100",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.100",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+        ],
+    ),
+    "snmp_scan_function": scan_liebert,
+    "handle_empty_info": True,
 }

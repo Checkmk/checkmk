@@ -1,0 +1,14 @@
+Title: RESTAPI: discovery: Service Item may be Null
+Class: fix
+Compatible: compat
+Component: core
+Date: 1635321087
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The schema of service_item was a string which could not be null, although
+services without a service item exist.
+Null for a service item is now valid.

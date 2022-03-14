@@ -1,0 +1,15 @@
+Title: mssql datafiles/transactionlogs: max size reflects available filesystem size
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1627970548
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Datafiles and transactionlogs services of MSSQL databases showed "unlimited" or
+the maximum configured log size as their maximum size, without taking into
+account how much free space there is on the filesystem on which they are kept.
+The maximum size is now capped at the available filesystem size in order to
+show a true reflection of the maximum size they can take.

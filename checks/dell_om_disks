@@ -16,53 +16,53 @@ def inventory_dell_om_disks(info):
 
 
 def check_dell_om_disks(item, _no_params, info):
-    #State definitions. Found in check_openmange from Trond H. Amundsen
+    # State definitions. Found in check_openmange from Trond H. Amundsen
     spare_state = {
-        1: 'VD member',  # disk is a member of a virtual disk
-        2: 'DG member',  # disk is a member of a disk group
-        3: 'Global HS',  # disk is a global hot spare
-        4: 'Dedicated HS',  # disk is a dedicated hot spare
-        5: 'no',  # not a spare
+        1: "VD member",  # disk is a member of a virtual disk
+        2: "DG member",  # disk is a member of a disk group
+        3: "Global HS",  # disk is a global hot spare
+        4: "Dedicated HS",  # disk is a dedicated hot spare
+        5: "no",  # not a spare
     }
 
     media_type = {
-        1: 'unknown',
-        2: 'HDD',
-        3: 'SSD',
+        1: "unknown",
+        2: "HDD",
+        3: "SSD",
     }
 
     bus_type = {
-        1: 'SCSI',
-        2: 'IDE',
-        3: 'Fibre Channel',
-        4: 'SSA',
-        6: 'USB',
-        7: 'SATA',
-        8: 'SAS',
+        1: "SCSI",
+        2: "IDE",
+        3: "Fibre Channel",
+        4: "SSA",
+        6: "USB",
+        7: "SATA",
+        8: "SAS",
     }
 
     pdisk_state = {
-        0: 'Unknown',
-        1: 'Ready',
-        2: 'Failed',
-        3: 'Online',
-        4: 'Offline',
-        6: 'Degraded',
-        7: 'Recovering',
-        11: 'Removed',
-        13: 'non-raid',
-        15: 'Resynching',
-        22: 'Replacing',  # FIXME: this one is not defined in the OMSA MIBs
-        24: 'Rebuilding',
-        25: 'No Media',
-        26: 'Formatting',
-        28: 'Diagnostics',
-        34: 'Predictive failure',
-        35: 'Initializing',
-        41: 'Unsupported',
-        53: 'Incompatible',
-        39: 'Foreign',
-        40: 'Clear',
+        0: "Unknown",
+        1: "Ready",
+        2: "Failed",
+        3: "Online",
+        4: "Offline",
+        6: "Degraded",
+        7: "Recovering",
+        11: "Removed",
+        13: "non-raid",
+        15: "Resynching",
+        22: "Replacing",  # FIXME: this one is not defined in the OMSA MIBs
+        24: "Rebuilding",
+        25: "No Media",
+        26: "Formatting",
+        28: "Diagnostics",
+        34: "Predictive failure",
+        35: "Initializing",
+        41: "Unsupported",
+        53: "Incompatible",
+        39: "Foreign",
+        40: "Clear",
     }
 
     for name, dstate, pid, eid, cid, tid, sizeMB, btype, sstate, smart, mt in info:
@@ -91,13 +91,13 @@ def check_dell_om_disks(item, _no_params, info):
                 state = 0
                 label = ""
 
-            msg.append("state %s%s" % (pdisk_state.get(dstate, 'ukn (%s)' % dstate), label))
-            msg.append("Bus Type: %s" % bus_type.get(btype, 'unk (%s)' % btype))
+            msg.append("state %s%s" % (pdisk_state.get(dstate, "ukn (%s)" % dstate), label))
+            msg.append("Bus Type: %s" % bus_type.get(btype, "unk (%s)" % btype))
 
             if sstate != 5:
-                msg.append("Spare State: %s" % spare_state.get(sstate, 'ukn (%s)' % sstate))
+                msg.append("Spare State: %s" % spare_state.get(sstate, "ukn (%s)" % sstate))
             if mt != 0:
-                msg.append("Media Type: %s" % media_type.get(mt, 'ukn (%s)' % mt))
+                msg.append("Media Type: %s" % media_type.get(mt, "ukn (%s)" % mt))
 
             return state, ", ".join(msg)
     return 3, "Device not found in SNMP tree"
@@ -121,8 +121,9 @@ check_info["dell_om_disks"] = {
             11,  # arrayDiskLengthInMB
             21,  # arrayDiskBusType
             22,  # arrayDiskSpareState
-            #24, #arrayDiskComponentStatus
-            31,  #arrayDiskSmartAlertIndication
+            # 24, #arrayDiskComponentStatus
+            31,  # arrayDiskSmartAlertIndication
             35,  # arrayDiskMediaType
-        ]),
+        ],
+    ),
 }

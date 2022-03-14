@@ -1,7 +1,7 @@
 title: Nullmailer: Mailqueue Length
 agents: linux
 catalog: app/nullmailer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -20,5 +20,5 @@ description:
 item:
  Empty string
 
-inventory:
+discovery:
  One service is created on each system which provides the {nullmailer-send} command.

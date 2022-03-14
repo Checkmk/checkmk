@@ -8,32 +8,28 @@ import abc
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from six import ensure_str
-
 import cmk.gui.utils as utils
-import cmk.gui.config as config
-from cmk.gui.table import table_element, init_rowselect
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
-
-from cmk.gui.plugins.views import (
-    PainterOptions,
-    is_stale,
-    row_id,
-    layout_registry,
-    Layout,
-    group_value,
+from cmk.gui.globals import config, html, theme, user
+from cmk.gui.i18n import _
+from cmk.gui.plugins.views.utils import (
     EmptyCell,
+    group_value,
+    is_stale,
+    Layout,
+    layout_registry,
     output_csv_headers,
+    PainterOptions,
+    row_id,
 )
+from cmk.gui.table import init_rowselect, table_element
 
 
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.input(type_="checkbox", name=ensure_str(row_id(view, row)), value=(num_tds + 1))
-    html.label("", ensure_str(row_id(view, row)))
+    html.input(type_="checkbox", name=row_id(view, row), value=(num_tds + 1))
+    html.label("", row_id(view, row))
 
 
 def render_checkbox_td(view, row, num_tds):
@@ -44,11 +40,13 @@ def render_checkbox_td(view, row, num_tds):
 
 def render_group_checkbox_th():
     html.open_th()
-    html.input(type_="button",
-               class_="checkgroup",
-               name="_toggle_group",
-               onclick="cmk.selection.toggle_group_rows(this);",
-               value='X')
+    html.input(
+        type_="button",
+        class_="checkgroup",
+        name="_toggle_group",
+        onclick="cmk.selection.toggle_group_rows(this);",
+        value="X",
+    )
     html.close_th()
 
 
@@ -57,6 +55,7 @@ class LayoutSingleDataset(Layout):
     """Layout designed for showing one single dataset with the column
     headers left and the values on the right. It is able to handle
     more than on dataset however."""
+
     @property
     def ident(self):
         return "dataset"
@@ -78,23 +77,23 @@ class LayoutSingleDataset(Layout):
                 html.open_tr(class_="gap")
                 html.td("", class_="gap", colspan=(num_columns + 1))
                 html.close_tr()
-            thispart = rows[rownum:rownum + num_columns]
+            thispart = rows[rownum : rownum + num_columns]
             for cell in cells:
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 if view.get("column_headers") != "off":
-                    html.open_td(class_="left")
-                    html.write(cell.title(use_short=False))
-                    html.close_td()
+                    html.td(cell.title(use_short=False), class_="left")
 
                 for row in thispart:
                     cell.paint(row)
 
                 if len(thispart) < num_columns:
-                    html.td('',
-                            class_="gap",
-                            style="border-style: none;",
-                            colspan=(1 + num_columns - len(thispart)))
+                    html.td(
+                        "",
+                        class_="gap",
+                        style="border-style: none;",
+                        colspan=(1 + num_columns - len(thispart)),
+                    )
                 html.close_tr()
             rownum += num_columns
         html.close_table()
@@ -140,14 +139,16 @@ class GroupedBoxesLayout(Layout):
         for column in columns:
             html.open_td(class_="boxcolumn")
             for header, rows_with_ids in column:
-                self._render_group(rows_with_ids, header, view, group_cells, cells, num_columns,
-                                   show_checkboxes)
+                self._render_group(
+                    rows_with_ids, header, view, group_cells, cells, num_columns, show_checkboxes
+                )
             html.close_td()
         html.close_tr()
         html.close_table()
 
-    def _render_group(self, rows_with_ids, header, view, group_cells, cells, num_columns,
-                      show_checkboxes):
+    def _render_group(
+        self, rows_with_ids, header, view, group_cells, cells, num_columns, show_checkboxes
+    ):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
         if group_cells:
@@ -160,8 +161,9 @@ class GroupedBoxesLayout(Layout):
         if column_headers != "off":
             self._show_header_line(cells, show_checkboxes)
 
-        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids,
-                                                                    row_group_cells=None)
+        groups, rows_with_ids = calculate_view_grouping_of_services(
+            rows_with_ids, row_group_cells=None
+        )
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -184,8 +186,9 @@ class GroupedBoxesLayout(Layout):
 
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
-                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd,
-                                                 num_cells)
+                group_hidden = grouped_row_title(
+                    index, group_spec, num_grouped_rows, odd, num_cells
+                )
                 odd = "even" if odd == "odd" else "odd"
 
             css_classes = []
@@ -220,7 +223,7 @@ class GroupedBoxesLayout(Layout):
         # Don't make rows selectable when no commands can be fired
         # Ignore "C" display option here. Otherwise the rows will not be selectable
         # after view reload.
-        if not config.user.may("general.act"):
+        if not user.may("general.act"):
             return
 
         init_rowselect(_get_view_name(view))
@@ -264,17 +267,20 @@ class GroupedBoxesLayout(Layout):
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
-    is_open = config.user.get_tree_state("grouped_rows", index, False)
+    is_open = user.get_tree_state("grouped_rows", index, False)
     html.open_tr(
-        class_=["data", "grouped_row_header", "closed" if not is_open else '',
-                "%s0" % trclass])
-    html.open_td(colspan=num_cells,
-                 onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
-                 (index, num_rows))
+        class_=["data", "grouped_row_header", "closed" if not is_open else "", "%s0" % trclass]
+    )
+    html.open_td(
+        colspan=num_cells,
+        onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows),
+    )
 
-    html.img(html.theme_url("images/tree_closed.svg"),
-             align="absbottom",
-             class_=["treeangle", "nform", "open" if is_open else "closed"])
+    html.img(
+        theme.url("images/tree_closed.svg"),
+        align="absbottom",
+        class_=["treeangle", "nform", "open" if is_open else "closed"],
+    )
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))
 
     html.close_td()
@@ -349,8 +355,9 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
 
 def try_to_match_group(row):
     for group_spec in config.service_view_grouping:
-        if row.get('service_description') \
-           and re.match(group_spec["pattern"], row["service_description"]):
+        if row.get("service_description") and re.match(
+            group_spec["pattern"], row["service_description"]
+        ):
             return group_spec
 
     return None
@@ -360,6 +367,7 @@ def try_to_match_group(row):
 class LayoutBalancedBoxes(GroupedBoxesLayout):
     """The boxed layout is useful in views with a width > 1, boxes are
     stacked in columns and can have different sizes."""
+
     @property
     def ident(self):
         return "boxed"
@@ -379,6 +387,7 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
 @layout_registry.register
 class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
+
     @property
     def ident(self):
         return "boxed_graph"
@@ -398,6 +407,7 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
 @layout_registry.register
 class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
+
     @property
     def ident(self):
         return "tiled"
@@ -433,7 +443,7 @@ class LayoutTiled(Layout):
                     painted = False
                     for cell in group_cells:
                         if painted:
-                            html.td(',&nbsp;')
+                            html.td(",&nbsp;")
                         painted = cell.paint(row)
 
                     html.close_tr()
@@ -482,32 +492,32 @@ class LayoutTiled(Layout):
             html.open_td(class_=["tl", rendered[1][0]])
             if show_checkboxes:
                 render_checkbox(view, row, len(cells) - 1)
-            html.write("%s" % rendered[1][1])
+            html.write_text(rendered[1][1])
             html.close_td()
             html.open_td(class_=["tr", rendered[2][0]])
-            html.write("%s" % rendered[2][1])
+            html.write_text(rendered[2][1])
             html.close_td()
             html.close_tr()
 
             html.open_tr()
             html.open_td(colspan=2, class_=["center", rendered[0][0]])
-            html.write("%s" % rendered[0][1])
+            html.write_text(rendered[0][1])
             html.close_td()
             html.close_tr()
 
             for css, cont in rendered[5:]:
                 html.open_tr()
                 html.open_td(colspan=2, class_=["cont", css])
-                html.write("%s" % cont)
+                html.write_text(cont)
                 html.close_td()
                 html.close_tr()
 
             html.open_tr()
             html.open_td(class_=["bl", rendered[3][0]])
-            html.write("%s" % rendered[3][1])
+            html.write_text(rendered[3][1])
             html.close_td()
             html.open_td(class_=["br", rendered[4][0]])
-            html.write("%s" % rendered[4][1])
+            html.write_text(rendered[4][1])
             html.close_td()
             html.close_tr()
 
@@ -519,7 +529,7 @@ class LayoutTiled(Layout):
             html.close_tr()
 
         html.close_table()
-        if not config.user.may("general.act"):
+        if not user.may("general.act"):
             return
 
         init_rowselect(_get_view_name(view))
@@ -530,6 +540,7 @@ class LayoutTable(Layout):
     """Most common layout: render all datasets in one big table. Groups
     are shown in what seems to be separate tables but they share the
     width of the columns."""
+
     @property
     def ident(self):
         return "table"
@@ -545,7 +556,7 @@ class LayoutTable(Layout):
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
-        html.open_table(class_='data table')
+        html.open_table(class_="data table")
         last_group = None
         odd = "odd"
         column = 1
@@ -558,8 +569,9 @@ class LayoutTable(Layout):
             self._show_header_line(cells, num_columns, show_checkboxes)
 
         rows_with_ids = [(row_id(view, row), row) for row in rows]
-        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids,
-                                                                    row_group_cells=group_cells)
+        groups, rows_with_ids = calculate_view_grouping_of_services(
+            rows_with_ids, row_group_cells=group_cells
+        )
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -571,8 +583,8 @@ class LayoutTable(Layout):
                 if this_group != last_group:
                     if column != 1:  # not a the beginning of a new line
                         for _i in range(column - 1, num_columns):
-                            html.td('', class_="gap")
-                            html.td('', class_="fillup", colspan=num_cells)
+                            html.td("", class_="gap")
+                            html.td("", class_="fillup", colspan=num_cells)
                         html.close_tr()
                         column = 1
 
@@ -589,17 +601,18 @@ class LayoutTable(Layout):
 
                     if not header_is_empty:
                         html.open_tr(class_="groupheader")
-                        html.open_td(class_="groupheader",
-                                     colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
-                        html.open_table(class_="groupheader",
-                                        cellspacing="0",
-                                        cellpadding="0",
-                                        border="0")
+                        html.open_td(
+                            class_="groupheader",
+                            colspan=(num_cells * (num_columns + 2) + (num_columns - 1)),
+                        )
+                        html.open_table(
+                            class_="groupheader", cellspacing="0", cellpadding="0", border="0"
+                        )
                         html.open_tr()
                         painted = False
                         for cell in group_cells:
                             if painted:
-                                html.td(',&nbsp;')
+                                html.td(",&nbsp;")
                             painted = cell.paint(row)
 
                         html.close_tr()
@@ -629,7 +642,7 @@ class LayoutTable(Layout):
                 # or host - if available - to color the complete line
                 if num_columns == 1:
                     # render state, if available through whole tr
-                    if not row.get('service_description'):
+                    if not row.get("service_description"):
                         state = row.get("host_state", 0)
                         if state > 0:
                             state += 1  # 1 is critical for hosts
@@ -640,8 +653,9 @@ class LayoutTable(Layout):
 
                 if index in groups:
                     group_spec, num_grouped_rows = groups[index]
-                    group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd,
-                                                     num_cells)
+                    group_hidden = grouped_row_title(
+                        index, group_spec, num_grouped_rows, odd, num_cells
+                    )
                     odd = "even" if odd == "odd" else "odd"
 
                 css_classes = []
@@ -680,11 +694,11 @@ class LayoutTable(Layout):
 
         if group_open:
             for _i in range(column - 1, num_columns):
-                html.td('', class_="gap")
-                html.td('', class_="fillup", colspan=num_cells)
+                html.td("", class_="gap")
+                html.td("", class_="fillup", colspan=num_cells)
             html.close_tr()
         html.close_table()
-        if not config.user.may("general.act"):
+        if not user.may("general.act"):
             return
 
         init_rowselect(_get_view_name(view))
@@ -696,13 +710,13 @@ class LayoutTable(Layout):
                 if n == 1:
                     render_group_checkbox_th()
                 else:
-                    html.th('')
+                    html.th("")
 
             for cell in cells:
                 cell.paint_as_header()
 
             if n < num_columns:
-                html.td('', class_="gap")
+                html.td("", class_="gap")
 
         html.close_tr()
 
@@ -717,6 +731,7 @@ class LayoutMatrix(Layout):
     It create a matrix whose columns are single datasets and whole rows
     are entities with the same value in all those datasets. Typicall
     The columns are hosts and the rows are services."""
+
     @property
     def ident(self):
         return "matrix"
@@ -737,7 +752,8 @@ class LayoutMatrix(Layout):
         output_csv_headers(view)
 
         groups, unique_row_ids, matrix_cells = list(
-            create_matrices(rows, group_cells, cells, num_columns=None))[0]
+            create_matrices(rows, group_cells, cells, num_columns=None)
+        )[0]
         value_counts, _row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
@@ -772,15 +788,16 @@ class LayoutMatrix(Layout):
                             _tdclass, content = cell.render(cell_row)
                             if cell_nr:
                                 html.write_text(",")
-                            html.write(content)
+                            html.write_text(content)
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
-        for groups, unique_row_ids, matrix_cells in \
-                create_matrices(rows, group_cells, cells, num_columns):
+        for groups, unique_row_ids, matrix_cells in create_matrices(
+            rows, group_cells, cells, num_columns
+        ):
 
             # Paint the matrix. Begin with the group headers
             html.open_table(class_="data matrix")
@@ -789,7 +806,7 @@ class LayoutMatrix(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 html.open_td(class_="matrixhead")
-                html.write(cell.title(use_short=False))
+                html.write_text(cell.title(use_short=False))
                 html.close_td()
                 for _group, group_row in groups:
                     tdclass, content = cell.render(group_row)
@@ -799,7 +816,7 @@ class LayoutMatrix(Layout):
                         if majority_value is not None and majority_value != gv:
                             tdclass += " minority"
                     html.open_td(class_=["left", tdclass])
-                    html.write(content)
+                    html.write_text(content)
                     html.close_td()
                 html.close_tr()
 
@@ -819,7 +836,7 @@ class LayoutMatrix(Layout):
                 html.open_tr(class_="data %s0" % odd)
                 tdclass, content = cells[0].render(list(matrix_cells[rid].values())[0])
                 html.open_td(class_=["left", tdclass])
-                html.write(content)
+                html.write_text(content)
                 html.close_td()
 
                 # Now go through the groups and paint the rest of the
@@ -827,7 +844,7 @@ class LayoutMatrix(Layout):
                 for group_id, group_row in groups:
                     cell_row = matrix_cells[rid].get(group_id)
                     if cell_row is None:
-                        html.td('')
+                        html.td("")
                     else:
                         if len(cells) > 2:
                             html.open_td(class_="cell")
@@ -843,9 +860,7 @@ class LayoutMatrix(Layout):
 
                             if len(cells) > 2:
                                 html.open_tr()
-                            html.open_td(class_=tdclass)
-                            html.write(content)
-                            html.close_td()
+                            html.td(content, class_=tdclass)
                             if len(cells) > 2:
                                 html.close_tr()
 
@@ -905,11 +920,13 @@ def create_matrices(rows, group_cells, cells, num_columns):
     """Create list of matrices to render for the view layout and for reports"""
     if len(cells) < 2:
         raise MKGeneralException(
-            _("Cannot display this view in matrix layout. You need at least two columns!"))
+            _("Cannot display this view in matrix layout. You need at least two columns!")
+        )
 
     if not group_cells:
         raise MKGeneralException(
-            _("Cannot display this view in matrix layout. You need at least one group column!"))
+            _("Cannot display this view in matrix layout. You need at least one group column!")
+        )
 
     # First find the groups - all rows that have the same values for
     # all group columns. Usually these should correspond with the hosts

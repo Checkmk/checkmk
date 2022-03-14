@@ -1,12 +1,12 @@
 title: FAST LTA Storage Systems: Head Unit Status
 agents: snmp
 catalog: hw/storagehw/fastlta
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Head Unit Status of a FAST LTA Storage System.
  Returns {OK} on status {appReady} and {CRIT} on every other.
  On the slave node status {appReadOnly} is {OK} too.
 
-inventory:
+discovery:
  One service is created on every system (head unit).

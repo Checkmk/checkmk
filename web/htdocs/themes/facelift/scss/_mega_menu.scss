@@ -3,27 +3,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#side_footer {
-  height: auto;
-  padding: 0;
-  border-top: none;
-
-  div.copyright {
-    float: left;
-  }
-
-  div.copyright a {
-    font-weight: normal;
-    color: #808080;
-    text-transform: none;
-  }
-
-  div.username {
-    color: #808080;
-    text-align: right;
-  }
-}
-
 #main_menu {
   display: flex;
   flex-direction: column;
@@ -44,8 +23,8 @@
 
   #mk_side_search_monitoring,
   #mk_side_search_setup {
-    max-width: 250px;
-    padding: (2 * $spacing) $spacing;
+    width: 250px;
+    padding: (2 * $spacing) 0 (2 * $spacing) (2 * $spacing);
     box-sizing: border-box;
 
     form {
@@ -62,6 +41,7 @@
     }
 
     input[type="text"] {
+      width: 175px;
       padding: 6px 0 6px $spacing;
       background: transparent;
       box-shadow: none;
@@ -113,7 +93,7 @@
       background-color: $popup-trigger-active-bg-color;
 
       a.popup_trigger {
-        color: $success;
+        color: $font-color-green;
 
         img:not(.active) {
           display: none;
@@ -128,13 +108,13 @@
     /* NOTE: the actual height of the content has to be used here. Otherwise */
     /* artifacts will appear at the bottom of the menu. height: max-content */
     /* will not suffice, since we set the margin as well. */
-    @mixin small-menu($height) {
+    @mixin small-menu($height, $height_nav_bar) {
       top: inherit;
       bottom: 0;
       height: $height;
 
       div.navigation_bar {
-        height: 30px;
+        height: $height_nav_bar;
       }
 
       div.content.inner {
@@ -144,32 +124,37 @@
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(340px);
+      @include small-menu(412px, auto);
     }
 
     &.user > div.popup_menu {
-      @include small-menu(265px);
+      @include small-menu(265px, 30px);
     }
 
     #messages_link,
     #werks_link {
       flex-grow: 1;
-      margin: auto 0 auto 48px;
+      margin: auto 0 auto 5px;
 
       #werks_link_to,
       #messages_link_to {
         &:not(:empty) {
           padding: 2px 5px;
-          color: $white;
-          background-color: $danger;
+          color: $font-color-white;
+          white-space: nowrap;
+          background-color: $color-state-2-background;
           border-radius: $theme-border-radius;
         }
       }
     }
 
     .info_line {
+      width: 100%;
+      padding: $spacing 0;
       margin: auto $spacing auto 0;
-      color: rgba($font-color, 0.7);
+      line-height: 130%;
+      color: $font-color-dimmed;
+      text-align: right;
     }
 
     div.popup_menu {
@@ -178,6 +163,7 @@
       bottom: 0;
       left: 64px;
       z-index: 1000;
+      min-width: $single-column-mega-menu-width;
       padding-bottom: $megamenu-spacing-bottom;
       background-color: $base-color;
       border-right: $popup-border;
@@ -187,19 +173,9 @@
         left: 48px;
       }
 
-      &.single_column {
-        width: $single-column-mega-menu;
-      }
-
       a {
         text-decoration: none;
         cursor: pointer;
-      }
-
-      h1 {
-        padding: 10px 10px 9px;
-        margin: 0;
-        background-color: #383838;
       }
 
       &#popup_menu_user div.navigation_bar div.search_bar,
@@ -225,6 +201,10 @@
             a.more {
               float: right;
             }
+
+            &.hidden {
+              display: none;
+            }
           }
         }
       }
@@ -246,22 +226,29 @@
           margin: $spacing;
         }
 
+        &.search > div.topic {
+          width: $single-column-mega-menu-width;
+
+          li a {
+            @include ellipsis-text-overflow;
+          }
+        }
+
         div.topic {
-          flex-grow: 1;
           width: 250px;
           padding: (2 * $spacing) (2 * $spacing) 0;
           border-right: 1px solid $headline-color;
           box-sizing: border-box;
 
           &.single_column {
-            width: $single-column-mega-menu;
+            width: $single-column-mega-menu-width;
           }
 
           input[type="button"] {
             cursor: pointer;
 
             &:hover {
-              color: $success;
+              color: $font-color-green;
               text-decoration: none;
             }
 
@@ -271,15 +258,12 @@
           }
 
           h2 {
+            display: flex;
             padding-bottom: 4px;
             margin: 0;
             font-size: $font-size-large;
             font-weight: bold;
             color: $font-color;
-
-            span {
-              margin-left: 22px;
-            }
 
             span.emblem {
               margin: 0 4px 2px 0;
@@ -287,7 +271,8 @@
 
             img + span,
             span + span {
-              margin-left: 0; /* No spacing if icons per entry are used */
+              display: inline-block;
+              margin: 3px 0 0; /* No spacing if icons per entry are used */
             }
 
             a.show_all_topics,
@@ -311,7 +296,7 @@
           }
 
           ul a:hover {
-            color: $success;
+            color: $font-color-green;
             text-decoration: none;
           }
 
@@ -327,7 +312,7 @@
               }
 
               &.active {
-                color: $success;
+                color: $font-color-green;
               }
             }
 
@@ -338,7 +323,11 @@
             img.icon {
               width: 14px;
               height: 14px;
-              margin-right: 5px;
+              margin-right: 7px;
+            }
+
+            img.emblem {
+              margin-right: 2px;
             }
 
             input.button {
@@ -351,14 +340,13 @@
               font-size: $font-size-small;
               line-height: 12px;
               letter-spacing: 0;
-              color: $hot-font-color;
+              color: $font-color-light-bg;
               background-color: $color-state-success-background;
-              border-color: $color-state-success-border;
             }
 
             &.show_all_items {
               display: none;
-              margin-top: $spacing;
+              margin-top: 2px;
 
               a {
                 font-weight: 700;
@@ -371,11 +359,22 @@
           }
 
           &.extended {
-            width: 100%;
+            &:not(.single_column) {
+              width: auto;
+              max-width: 100%;
+            }
+
             padding-top: 0;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            //TODO: Replace this with simplebar
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            &::-webkit-scrollbar {
+              display: none;
+            }
 
             h2 {
-              position: fixed;
               z-index: 5;
               padding-top: 22px;
 
@@ -391,14 +390,14 @@
             ul {
               display: flex;
               flex-flow: column wrap;
-              max-height: calc(100vh - 132px);
-              padding-bottom: 24px;
-              margin-top: 52px;
-              overflow: auto;
+              max-height: calc(100vh - 165px);
+              padding-bottom: $menu-item-spacing;
+              box-sizing: border-box;
             }
 
             li {
-              width: 300px;
+              width: auto;
+              max-width: $single-column-mega-menu-width - 60px;
               padding-left: 0;
 
               &.show_all_items {
@@ -410,10 +409,10 @@
           &.extendable li.show_all_items {
             display: list-item;
           }
-        }
 
-        div.sentinel {
-          flex-grow: 1000;
+          &.grow {
+            flex-grow: 1;
+          }
         }
 
         input.button {
@@ -421,7 +420,7 @@
         }
       }
 
-      div.main_menu.extended_topic div.topic:not(.extended) {
+      div.extended_topic div.topic:not(.extended) {
         display: none;
       }
     }
@@ -452,16 +451,12 @@
     margin: 0;
     list-style: none;
 
-    &:nth-last-of-type(2) {
-      margin-top: auto; // place the help and user menu at the bottom
-    }
-
     a.popup_trigger {
       position: relative;
       display: block;
       padding: $spacing 4px $spacing 0;
       font-size: $font-size-small;
-      color: $font-color-sidebar;
+      color: $font-color;
       text-align: center;
       text-decoration: none;
       outline: none;
@@ -473,13 +468,17 @@
       span#messages_label,
       span#werks_label {
         position: absolute;
-        top: 2px;
+        top: 4px;
         right: 4px;
-        padding: 2px 4px 0;
-        color: $white;
-        background-color: $danger;
+        padding: 2px 5px 1px;
+        color: $font-color-white;
+        background-color: $color-state-2-background;
         border-radius: 8px;
       }
     }
+  }
+
+  > li:nth-last-of-type(2) {
+    margin-top: auto; // place the help and user menu at the bottom
   }
 }

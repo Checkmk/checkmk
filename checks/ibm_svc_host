@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<ibm_svc_host:sep(58)>>>
 # 0:h_esx01:2:4:degraded
@@ -19,15 +20,15 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 
 def parse_ibm_svc_host(info):
     dflt_header = [
-        u'id',
-        u'name',
-        u'port_count',
-        u'iogrp_count',
-        u'status',
-        u'site_id',
-        u'site_name',
-        u'host_cluster_id',
-        u'host_cluster_name',
+        "id",
+        "name",
+        "port_count",
+        "iogrp_count",
+        "status",
+        "site_id",
+        "site_name",
+        "host_cluster_id",
+        "host_cluster_name",
     ]
     return parse_ibm_svc_with_header(info, dflt_header)
 
@@ -36,7 +37,7 @@ def check_ibm_svc_host(item, params, parsed):
     if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of empty dictionary
-        params = {'always_ok': False}
+        params = {"always_ok": False}
 
     degraded = 0
     offline = 0
@@ -45,19 +46,19 @@ def check_ibm_svc_host(item, params, parsed):
     other = 0
     for rows in parsed.values():
         for data in rows:
-            status = data['status']
-            if status == 'degraded':
+            status = data["status"]
+            if status == "degraded":
                 degraded += 1
-            elif status == 'offline':
+            elif status == "offline":
                 offline += 1
-            elif status in ['active', 'online']:
+            elif status in ["active", "online"]:
                 active += 1
-            elif status == 'inactive':
+            elif status == "inactive":
                 inactive += 1
             else:
                 other += 1
 
-    if 'always_ok' in params:
+    if "always_ok" in params:
         # Old configuration rule
         # This was used with only one parameter always_ok until version 1.2.7
         perfdata = [
@@ -70,13 +71,13 @@ def check_ibm_svc_host(item, params, parsed):
         yield 0, "%s active, %s inactive" % (active, inactive), perfdata
 
         if degraded > 0:
-            yield (not params['always_ok'] and 1 or 0), "%s degraded" % degraded
+            yield (not params["always_ok"] and 1 or 0), "%s degraded" % degraded
         if offline > 0:
-            yield (not params['always_ok'] and 2 or 0), "%s offline" % offline
+            yield (not params["always_ok"] and 2 or 0), "%s offline" % offline
         if other > 0:
-            yield (not params['always_ok'] and 1 or 0), "%s in an unidentified state" % other
+            yield (not params["always_ok"] and 1 or 0), "%s in an unidentified state" % other
     else:
-        warn, crit = params.get('active_hosts', (None, None))
+        warn, crit = params.get("active_hosts", (None, None))
 
         if crit is not None and active <= crit:
             yield 2, "%s active" % active
@@ -86,12 +87,12 @@ def check_ibm_svc_host(item, params, parsed):
             yield 0, "%s active" % active
 
         for ident, value in [
-            ('inactive', inactive),
-            ('degraded', degraded),
-            ('offline', offline),
-            ('other', other),
+            ("inactive", inactive),
+            ("degraded", degraded),
+            ("offline", offline),
+            ("other", other),
         ]:
-            warn, crit = params.get(ident + '_hosts', (None, None))
+            warn, crit = params.get(ident + "_hosts", (None, None))
 
             if crit is not None and value >= crit:
                 state = 2

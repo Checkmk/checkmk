@@ -1,7 +1,7 @@
 title: Kaspersky Anti-Virus: Updates (KAV4FS)
 agents: linux
 catalog: app/kaspersky
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check will trigger a warning state if the antivirus updates are outdated. No confiuration
@@ -9,5 +9,5 @@ description:
 
  This check works with KAV4FS.
 
-inventory:
+discovery:
  One service is created for each system.

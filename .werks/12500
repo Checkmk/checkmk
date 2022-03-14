@@ -1,0 +1,37 @@
+Title: Call parse function even for empty data
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1617727582
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This change only affect users with own SNMP section plugins
+developed against the *new* API.
+
+Previously the parse function of an SNMP section (or SNMP
+check plugin) has only been called if at least *some* data
+could be fetched from the host (the SNMP device).
+
+In the old API (Checkmk version < 2.0) this behaviour
+could be changed by setting the 'handle_empty_info' key -
+only then would the parse function be called for empty
+data.
+
+The new API will *allways* call the parse function, if
+the sections raw data is present in the fetched data (even
+if it is empty). It is the programmers responsibility to
+deal with an potentially empty data set.
+
+This allows for a subtle distiction: If the parse function
+returns `None`, no further processing is done, it is
+regarded as 'not present'. An empty return value could
+represent some valid information, such as an empty list
+of error messages.
+
+Note that this behaviour is consistent with the TCP data
+sources' sections, where we also may encounter sections
+that are present, but empty.

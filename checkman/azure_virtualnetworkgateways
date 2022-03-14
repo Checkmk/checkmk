@@ -1,7 +1,7 @@
 title: Microsoft Azure Virtual Network Gateways: Connections
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors Microsoft Azures virtual network gateways.
@@ -13,6 +13,5 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each virtual network gateway.
-

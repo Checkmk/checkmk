@@ -1,0 +1,13 @@
+Title: f5_bigip_vserver: Crash when ip address invalid
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619767943
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Check f5_bigip_vserver crashed when invalid ip address was sent.
+Now, there is no crash and ip address is set as '-' (unknown).

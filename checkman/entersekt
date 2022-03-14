@@ -1,9 +1,9 @@
 title: Entersekt: General State
 agents: snmp
 catalog: app/entersekt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks verifies if Entersekt is running.
-inventory:
+discovery:
  One service is created for the Entersekt Status.

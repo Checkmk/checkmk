@@ -9,13 +9,14 @@
 
 import cProfile
 import getopt
-import os
 import subprocess
 import sys
+from pathlib import Path
 
 
 def usage():
-    sys.stderr.write("""Check_MK SVC / V7000 Agent
+    sys.stderr.write(
+        """Check_MK SVC / V7000 Agent
 
 USAGE: agent_ibmsvc [OPTIONS] HOST
        agent_ibmsvc -h
@@ -49,7 +50,8 @@ OPTIONS:
                                 You can define to use only view of them to optimize
                                 performance. The default is "all".
 
-""")
+"""
+    )
 
 
 #############################################################################
@@ -61,9 +63,15 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = 'hu:p:t:m:i:k'
+    short_options = "hu:p:t:m:i:k"
     long_options = [
-        'help', 'user=', 'debug', 'timeout=', 'profile', 'modules=', 'accept-any-hostkey'
+        "help",
+        "user=",
+        "debug",
+        "timeout=",
+        "profile",
+        "modules=",
+        "accept-any-hostkey",
     ]
 
     try:
@@ -77,105 +85,96 @@ def main(sys_argv=None):
     opt_any_hostkey = ""
 
     g_profile = None
-    g_profile_path = "ibmsvc_profile.out"
 
     host_address = None
     user = None
-    mortypes = ['all']
+    mortypes = ["all"]
 
     command_options = {
-        "lshost": {
-            "section_header": "ibm_svc_host",
-            "active": False,
-            "command": "lshost -delim :"
-        },
+        "lshost": {"section_header": "ibm_svc_host", "active": False, "command": "lshost -delim :"},
         "lslicense": {
             "section_header": "ibm_svc_license",
             "active": False,
-            "command": "lslicense -delim :"
+            "command": "lslicense -delim :",
         },
         "lsmdisk": {
             "section_header": "ibm_svc_mdisk",
             "active": False,
-            "command": "lsmdisk -delim :"
+            "command": "lsmdisk -delim :",
         },
         "lsmdiskgrp": {
             "section_header": "ibm_svc_mdiskgrp",
             "active": False,
-            "command": "lsmdiskgrp -delim :"
+            "command": "lsmdiskgrp -delim :",
         },
-        "lsnode": {
-            "section_header": "ibm_svc_node",
-            "active": False,
-            "command": "lsnode -delim :"
-        },
+        "lsnode": {"section_header": "ibm_svc_node", "active": False, "command": "lsnode -delim :"},
         "lsnodestats": {
             "section_header": "ibm_svc_nodestats",
             "active": False,
-            "command": "lsnodestats -delim :"
+            "command": "lsnodestats -delim :",
         },
         "lssystem": {
             "section_header": "ibm_svc_system",
             "active": False,
-            "command": "lssystem -delim :"
+            "command": "lssystem -delim :",
         },
         "lssystemstats": {
             "section_header": "ibm_svc_systemstats",
             "active": False,
-            "command": "lssystemstats -delim :"
+            "command": "lssystemstats -delim :",
         },
         "lseventlog": {
             "section_header": "ibm_svc_eventlog",
             "active": False,
-            "command": "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr"
+            "command": "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr",
         },
         "lsportfc": {
             "section_header": "ibm_svc_portfc",
             "active": False,
-            "command": "lsportfc -delim :"
+            "command": "lsportfc -delim :",
         },
         "lsenclosure": {
             "section_header": "ibm_svc_enclosure",
             "active": False,
-            "command": "lsenclosure -delim :"
+            "command": "lsenclosure -delim :",
         },
         "lsenclosurestats": {
             "section_header": "ibm_svc_enclosurestats",
             "active": False,
-            "command": "lsenclosurestats -delim :"
+            "command": "lsenclosurestats -delim :",
         },
         "lsarray": {
             "section_header": "ibm_svc_array",
             "active": False,
-            "command": "lsarray -delim :"
+            "command": "lsarray -delim :",
         },
         "lsportsas": {
             "section_header": "ibm_svc_portsas",
             "active": False,
-            "command": "lsportsas -delim :"
+            "command": "lsportsas -delim :",
         },
         "disks": {
             "section_header": "ibm_svc_disks",
             "active": False,
-            "command": "svcinfo lsdrive -delim :"
+            "command": "svcinfo lsdrive -delim :",
         },
     }
 
     for o, a in opts:
-        if o in ['--debug']:
+        if o in ["--debug"]:
             opt_debug = True
-        elif o in ['--profile']:
+        elif o in ["--profile"]:
             g_profile = cProfile.Profile()
             g_profile.enable()
-        elif o in ['-u', '--user']:
+        elif o in ["-u", "--user"]:
             user = a
-        elif o in ['-i', '--modules']:
-            mortypes = a.split(',')
-        elif o in ['-t', '--timeout']:
+        elif o in ["-i", "--modules"]:
+            mortypes = a.split(",")
+        elif o in ["-t", "--timeout"]:
             opt_timeout = int(a)
-        elif o in ['-k', '--accept-any-hostkey']:
+        elif o in ["-k", "--accept-any-hostkey"]:
             opt_any_hostkey = "-o StrictHostKeyChecking=no"
-        elif o in ['-h', '--help']:
+        elif o in ["-h", "--help"]:
             usage()
             sys.exit(0)
 
@@ -220,25 +219,24 @@ def main(sys_argv=None):
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
-    result = subprocess.Popen(  # nosec
+    result = subprocess.run(  # nosec
         cmd,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=None,
         encoding="utf-8",
+        check=False,
     )
-    stdout, stderr = result.communicate()
-    exit_code = result.wait()
 
-    if exit_code not in [0, 1]:
-        sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
+    if result.returncode not in [0, 1]:
+        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
         sys.exit(2)
 
-    lines = stdout.split('\n')
+    lines = result.stdout.split("\n")
 
     if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-        sys.stderr.write(stdout)
+        sys.stderr.write(result.stdout)
         sys.exit(2)
 
     # Quite strange.. Why not simply print stdout?
@@ -246,13 +244,16 @@ def main(sys_argv=None):
         print(line)
 
     if g_profile:
+        g_profile_path = Path("ibmsvc_profile.out")
         g_profile.dump_stats(g_profile_path)
-        show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
-        open(show_profile, "w")\
-            .write("#!/usr/bin/python\n"
-                   "import pstats\n"
-                   "stats = pstats.Stats('%s')\n"
-                   "stats.sort_stats('time').print_stats()\n" % g_profile_path)
-        os.chmod(show_profile, 0o755)
+
+        show_profile = g_profile_path / "show_profile.py"
+        show_profile.write_text(
+            "#!/usr/bin/python\n"
+            "import pstats\n"
+            "stats = pstats.Stats('%s')\n"
+            "stats.sort_stats('cumtime').print_stats()\n" % g_profile_path
+        )
+        show_profile.chmod(0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))

@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, fields
-from typing import Dict, Mapping, Optional, Sequence, Tuple, Union
+from typing import Dict, Generator, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.livestatus_status import LivestatusSection
 
 
@@ -35,8 +35,8 @@ CMKSiteStatisticsSection = Mapping[str, Tuple[HostStatistics, ServiceStatistics]
 
 def _timeout_and_delta_position(*lines_stats: Sequence[str]) -> Tuple[bool, int]:
     for delta_position, line_stats in enumerate(
-            lines_stats,
-            start=1,
+        lines_stats,
+        start=1,
     ):
         if len(line_stats) == 1:
             return True, delta_position
@@ -92,7 +92,7 @@ def discover_cmk_site_statistics(
         yield from (Service(item=site_name) for site_name in section_cmk_site_statistics)
 
 
-def _host_results(host_stats: HostStatistics) -> CheckResult:
+def _host_results(host_stats: HostStatistics) -> Iterable[Result]:
     n_hosts_not_up = host_stats.down + host_stats.unreachable + host_stats.in_downtime
     n_hosts_total = n_hosts_not_up + host_stats.up
     yield Result(
@@ -102,18 +102,25 @@ def _host_results(host_stats: HostStatistics) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Problem hosts: {n_hosts_not_up}",
-        details="\n".join((
-            f"Hosts in state UP: {host_stats.up}",
-            f"Hosts in state DOWN: {host_stats.down}",
-            f"Unreachable hosts: {host_stats.unreachable}",
-            f"Hosts in downtime: {host_stats.in_downtime}",
-        )),
+        details="\n".join(
+            (
+                f"Hosts in state UP: {host_stats.up}",
+                f"Hosts in state DOWN: {host_stats.down}",
+                f"Unreachable hosts: {host_stats.unreachable}",
+                f"Hosts in downtime: {host_stats.in_downtime}",
+            )
+        ),
     )
 
 
-def _service_results(service_stats: ServiceStatistics) -> CheckResult:
-    n_services_not_ok = (service_stats.in_downtime + service_stats.on_down_hosts +
-                         service_stats.warning + service_stats.unknown + service_stats.critical)
+def _service_results(service_stats: ServiceStatistics) -> Iterable[Result]:
+    n_services_not_ok = (
+        service_stats.in_downtime
+        + service_stats.on_down_hosts
+        + service_stats.warning
+        + service_stats.unknown
+        + service_stats.critical
+    )
     n_services_total = n_services_not_ok + service_stats.ok
     yield Result(
         state=State.OK,
@@ -122,21 +129,23 @@ def _service_results(service_stats: ServiceStatistics) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Problem services: {n_services_not_ok}",
-        details="\n".join((
-            f"Services in state OK: {service_stats.ok}",
-            f"Services in downtime: {service_stats.in_downtime}",
-            f"Services of down hosts: {service_stats.on_down_hosts}",
-            f"Services in state WARNING: {service_stats.warning}",
-            f"Services in state UNKNOWN: {service_stats.unknown}",
-            f"Services in state CRITICAL: {service_stats.critical}",
-        )),
+        details="\n".join(
+            (
+                f"Services in state OK: {service_stats.ok}",
+                f"Services in downtime: {service_stats.in_downtime}",
+                f"Services of down hosts: {service_stats.on_down_hosts}",
+                f"Services in state WARNING: {service_stats.warning}",
+                f"Services in state UNKNOWN: {service_stats.unknown}",
+                f"Services in state CRITICAL: {service_stats.critical}",
+            )
+        ),
     )
 
 
 def _metrics_from_stats(
     stats: Union[HostStatistics, ServiceStatistics],
     metrics_prefix: str,
-) -> CheckResult:
+) -> Iterable[Metric]:
     for field in fields(stats):
         yield Metric(
             f"{metrics_prefix}_{field.name}",
@@ -148,7 +157,7 @@ def check_cmk_site_statistics(
     item: str,
     section_cmk_site_statistics: Optional[CMKSiteStatisticsSection],
     section_livestatus_status: Optional[LivestatusSection],
-) -> CheckResult:
+) -> Generator[Union[Metric, Result], None, None]:
     if not section_cmk_site_statistics or item not in section_cmk_site_statistics:
         return
     host_stats, service_stats = section_cmk_site_statistics[item]
@@ -160,7 +169,11 @@ def check_cmk_site_statistics(
     # This part is needed for the timeseries graphs which show host and service problems in the
     # main dashboard (to as far as possible uniquely cross-match sites in this agent output with
     # sites to which are remotely connected)
-    if section_livestatus_status and item in section_livestatus_status:
+    if (
+        section_livestatus_status
+        and item in section_livestatus_status
+        and section_livestatus_status[item]
+    ):
         yield Result(
             state=State.OK,
             notice=f"Core PID: {section_livestatus_status[item]['core_pid']}",

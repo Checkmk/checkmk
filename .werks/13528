@@ -1,0 +1,12 @@
+Title: check_mail, check_mail_loop, check_mailboxes: Do not show passwords if the active check is executed on the commandline with option '--debug'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637845650
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

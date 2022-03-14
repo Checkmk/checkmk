@@ -8,10 +8,6 @@ chmod +x enterprise/agents/plugins/cmk-update-agent
 touch enterprise/agents/plugins/cmk-update-agent-32
 chmod +x enterprise/agents/plugins/cmk-update-agent-32
 
-touch agents/windows/check_mk_agent-64.exe
-chmod +x agents/windows/check_mk_agent-64.exe
-touch agents/windows/check_mk_agent.exe
-chmod +x agents/windows/check_mk_agent.exe
 touch agents/windows/check_mk_agent.msi
 chmod +x agents/windows/check_mk_agent.msi
 touch agents/windows/check_mk_agent_legacy-64.exe
@@ -22,7 +18,8 @@ touch agents/windows/check_mk_agent_legacy.msi
 chmod +x agents/windows/check_mk_agent_legacy.msi
 touch agents/windows/check_mk.example.ini
 touch agents/windows/check_mk.user.yml
-touch agents/windows/python-3.8.zip
+touch agents/windows/python-3.cab
+touch agents/windows/python-3.4.cab
 
 touch omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 chmod +x omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe

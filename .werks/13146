@@ -1,0 +1,18 @@
+Title: chrony: warn if synchronization is lost
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1628766435
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The plugin now detects if the synchronization to the reference source
+is lost. Before, the plugin returned OK in this case. Now, WARN/CRIT is
+returned if synchronization is lost for a longer timeperiod. The
+default values are 30 and 60 minutes and can be configured with the
+option "Phases without synchronization" in the ruleset "State of NTP
+time synchronization". Note that "NTP time" services are affected as
+well by this ruleset.

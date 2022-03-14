@@ -1,0 +1,14 @@
+Title: Fix missing context while saving customized visuals
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1629119902
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Using the button "Save & go to ..." while customizing visuals like views could
+lead to missing context on the next page. Instead a warning and a filter form
+was shown.

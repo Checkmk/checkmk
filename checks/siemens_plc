@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
 # PFT01 flag Testbit True
@@ -29,7 +30,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # RGB01 seconds Serviceintervall 700
 # RGB01 text Testtext HRL01-0001-0010-02-07
 
-#.
+# .
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |
 #   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -58,7 +59,7 @@ def check_siemens_plc_temp(item, params, info):
             return check_temperature(temp, params, "siemens_plc_%s" % item)
 
 
-check_info['siemens_plc.temp'] = {
+check_info["siemens_plc.temp"] = {
     "inventory_function": inventory_siemens_plc_temp,
     "check_function": check_siemens_plc_temp,
     "service_description": "Temperature %s",
@@ -67,7 +68,7 @@ check_info['siemens_plc.temp'] = {
     "default_levels_variable": "siemens_plc_temp_default_levels",
 }
 
-#.
+# .
 #   .--State flags---------------------------------------------------------.
 #   |           ____  _        _          __ _                             |
 #   |          / ___|| |_ __ _| |_ ___   / _| | __ _  __ _ ___             |
@@ -88,23 +89,23 @@ def check_siemens_plc_flag(item, params, info):
     expected_state = params
     for line in info:
         if line[1] == "flag" and line[0] + " " + line[2] == item:
-            flag_state = line[-1] == 'True'
+            flag_state = line[-1] == "True"
             if flag_state:
                 state = 0 if expected_state else 2
-                return state, 'On'
+                return state, "On"
 
             state = 2 if expected_state else 0
-            return state, 'Off'
+            return state, "Off"
 
 
-check_info['siemens_plc.flag'] = {
+check_info["siemens_plc.flag"] = {
     "inventory_function": inventory_siemens_plc_flag,
     "check_function": check_siemens_plc_flag,
     "service_description": "Flag %s",
     "group": "siemens_plc_flag",
 }
 
-#.
+# .
 #   .--Duration------------------------------------------------------------.
 #   |               ____                  _   _                            |
 #   |              |  _ \ _   _ _ __ __ _| |_(_) ___  _ __                 |
@@ -118,15 +119,18 @@ check_info['siemens_plc.flag'] = {
 
 
 def inventory_siemens_plc_duration(info):
-    return [(l[0] + " " + l[2], {})
-            for l in info
-            if l[1].startswith("hours") or l[1].startswith("seconds")]
+    return [
+        (l[0] + " " + l[2], {})
+        for l in info
+        if l[1].startswith("hours") or l[1].startswith("seconds")
+    ]
 
 
 def check_siemens_plc_duration(item, params, info):
     for line in info:
-        if (line[1].startswith("hours") or
-                line[1].startswith("seconds")) and line[0] + " " + line[2] == item:
+        if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0] + " " + line[
+            2
+        ] == item:
             if line[1].startswith("hours"):
                 seconds = int(line[-1]) * 3600
             else:
@@ -134,16 +138,20 @@ def check_siemens_plc_duration(item, params, info):
 
             perfdata = [(line[1], seconds)]
 
-            key = 'siemens_plc.duration.%s' % item
+            key = "siemens_plc.duration.%s" % item
             old_seconds = get_item_state(key, None)
             if old_seconds is not None and old_seconds > seconds:
-                return 2, 'Reduced from %s to %s' % (get_age_human_readable(old_seconds),
-                                                     get_age_human_readable(seconds)), perfdata
+                return (
+                    2,
+                    "Reduced from %s to %s"
+                    % (get_age_human_readable(old_seconds), get_age_human_readable(seconds)),
+                    perfdata,
+                )
 
             set_item_state(key, seconds)
 
             state = 0
-            warn, crit = params.get('duration', (None, None))
+            warn, crit = params.get("duration", (None, None))
             if crit is not None and seconds >= crit:
                 state = 2
             elif warn is not None and seconds >= warn:
@@ -152,7 +160,7 @@ def check_siemens_plc_duration(item, params, info):
             return state, get_age_human_readable(seconds), perfdata
 
 
-check_info['siemens_plc.duration'] = {
+check_info["siemens_plc.duration"] = {
     "inventory_function": inventory_siemens_plc_duration,
     "check_function": check_siemens_plc_duration,
     "service_description": "Duration %s",
@@ -160,7 +168,7 @@ check_info['siemens_plc.duration'] = {
     "group": "siemens_plc_duration",
 }
 
-#.
+# .
 #   .--Counter-------------------------------------------------------------.
 #   |                  ____                  _                             |
 #   |                 / ___|___  _   _ _ __ | |_ ___ _ __                  |
@@ -183,23 +191,23 @@ def check_siemens_plc_counter(item, params, info):
             value = int(line[-1])
             perfdata = [(line[1], value)]
 
-            key = 'siemens_plc.counter.%s' % item
+            key = "siemens_plc.counter.%s" % item
             old_value = get_item_state(key, None)
             if old_value is not None and old_value > value:
-                return 2, 'Reduced from %s to %s' % (old_value, value), perfdata
+                return 2, "Reduced from %s to %s" % (old_value, value), perfdata
             set_item_state(key, value)
 
             state = 0
-            warn, crit = params.get('levels', (None, None))
+            warn, crit = params.get("levels", (None, None))
             if crit is not None and value >= crit:
                 state = 2
             elif warn is not None and value >= warn:
                 state = 1
 
-            return state, '%d' % value, perfdata
+            return state, "%d" % value, perfdata
 
 
-check_info['siemens_plc.counter'] = {
+check_info["siemens_plc.counter"] = {
     "inventory_function": inventory_siemens_plc_counter,
     "check_function": check_siemens_plc_counter,
     "service_description": "Counter %s",
@@ -207,7 +215,7 @@ check_info['siemens_plc.counter'] = {
     "group": "siemens_plc_counter",
 }
 
-#.
+# .
 #   .--Info----------------------------------------------------------------.
 #   |                         ___        __                                |
 #   |                        |_ _|_ __  / _| ___                           |
@@ -230,13 +238,13 @@ def check_siemens_plc_info(item, _no_params, info):
             return 0, line[-1]
 
 
-check_info['siemens_plc.info'] = {
+check_info["siemens_plc.info"] = {
     "inventory_function": inventory_siemens_plc_info,
     "check_function": check_siemens_plc_info,
     "service_description": "Info %s",
 }
 
-#.
+# .
 #   .--CPU-State-----------------------------------------------------------.
 #   |             ____ ____  _   _      ____  _        _                   |
 #   |            / ___|  _ \| | | |    / ___|| |_ __ _| |_ ___             |
@@ -266,7 +274,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
     return 3, "CPU is in unknown state"
 
 
-check_info['siemens_plc_cpu_state'] = {
+check_info["siemens_plc_cpu_state"] = {
     "inventory_function": inventory_siemens_plc_cpu_state,
     "check_function": check_siemens_plc_cpu_state,
     "service_description": "CPU state",

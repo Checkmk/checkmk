@@ -1,0 +1,16 @@
+Title: host collection response in REST API
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1626950624
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+Up until Checkmk 2.0.0p8 the responses of all host_config collections, due to a bug,
+did not contain the attributes, members and links of the host_config objects.
+
+This werk fixes these responses, but changes the OpenAPI specification, so you may
+need to recompile your API client.

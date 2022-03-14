@@ -1,0 +1,17 @@
+Title: Views: hostname background color
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1624513654
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The hostname background color can be configured to reflect the hosts status.
+This only worked if the hostname column was configured to display a tooltip and
+a tooltip was actually displayed.
+
+Now the background color should be displayed with all possible tooltip
+variations.

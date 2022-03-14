@@ -1,0 +1,15 @@
+Title: REST API: host & folder config: fixed remove_attributes
+Class: fix
+Compatible: compat
+Component: core
+Date: 1629719555
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Removing a host or folder attribute via the REST API did not work before this
+werk. The return HTTP-Status code was 200, and the response reflected the
+change, but the change was not written to disk.
+Both the host_config endpoint and the bulk request were effected.

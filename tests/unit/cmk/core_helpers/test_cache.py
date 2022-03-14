@@ -5,10 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+import json
+import logging
+from typing import Sequence
 
-from cmk.utils.type_defs import AgentRawDataSection, SectionName
+from cmk.utils.type_defs import SectionName
 
-from cmk.core_helpers.cache import PersistedSections
+from cmk.core_helpers.cache import MaxAge, PersistedSections, SectionStore
+from cmk.core_helpers.type_defs import AgentRawDataSection, Mode
 
 
 class MockStore:
@@ -26,20 +30,49 @@ class MockStore:
 class TestPersistedSections:
     def test_from_sections(self):
         section_a = SectionName("section_a")
-        content_a = [["first", "line"], ["second", "line"]]
+        content_a: Sequence[AgentRawDataSection] = [["first", "line"], ["second", "line"]]
         section_b = SectionName("section_b")
-        content_b = [["third", "line"], ["forth", "line"]]
+        content_b: Sequence[AgentRawDataSection] = [["third", "line"], ["forth", "line"]]
         sections = {section_a: content_a, section_b: content_b}
         cached_at = 69
         fetch_interval = 42
-        interval_lookup = {section_a: fetch_interval, section_b: None}
+        persist_info = {section_a: (cached_at, cached_at + fetch_interval), section_b: None}
 
         persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
-            sections,
-            interval_lookup,
-            cached_at=cached_at,
+            sections=sections,
+            lookup_persist=persist_info.get,
         )
 
         assert persisted_sections == {  # type: ignore[comparison-overlap]
-            section_a: (cached_at, fetch_interval, content_a)
+            section_a: (cached_at, cached_at + fetch_interval, content_a)
         }
+
+
+class TestSectionStore:
+    def test_repr(self):
+        assert isinstance(
+            repr(
+                SectionStore(
+                    "/dev/null",
+                    logger=logging.getLogger("test"),
+                )
+            ),
+            str,
+        )
+
+
+class TestMaxAge:
+    def test_repr(self):
+        max_age = MaxAge(checking=42, discovery=69, inventory=1337)
+        assert isinstance(repr(max_age), str)
+
+    def test_serialize(self):
+        max_age = MaxAge(checking=42, discovery=69, inventory=1337)
+        assert MaxAge(*json.loads(json.dumps(max_age))) == max_age
+
+    def test_get(self):
+        max_age = MaxAge(checking=42, discovery=69, inventory=1337)
+        assert max_age.get(Mode.CHECKING) == 42
+        assert max_age.get(Mode.DISCOVERY) == 69
+        assert max_age.get(Mode.INVENTORY) == 1337
+        assert max_age.get(Mode.NONE) == 0

@@ -1,7 +1,7 @@
 title: Viprinet: Temperature Levels
 agents: snmp
 catalog: hw/network/viprinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check display the temperature of the CPU and System temperature sensors
@@ -9,6 +9,5 @@ description:
 item:
  One of the two statements: {{CPU}}, {{System}}
 
-inventory:
+discovery:
  Two service are created ("Temperature CPU" and "Temperature System").
-

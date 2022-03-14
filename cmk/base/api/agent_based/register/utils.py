@@ -5,36 +5,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import inspect
-import sys
 import pathlib
-
+import sys
 from typing import (
     Callable,
     Dict,
     get_args,
-    Iterable,
     List,
     Literal,
     Mapping,
+    NoReturn,
     Optional,
-    Set,
-    Tuple,
+    Sequence,
     Union,
 )
 
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    InventoryPluginName,
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-)
 from cmk.utils.paths import agent_based_plugins_dir
+from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, RuleSetName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
+
+TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE = "%s"
+
+_NONE_TYPE = type(None)
 
 
 def get_validated_plugin_module_name() -> Optional[str]:
@@ -53,34 +49,6 @@ def get_validated_plugin_module_name() -> Optional[str]:
     return path.stem
 
 
-def rank_sections_by_supersedes(
-    available_raw_section_definitions: Iterable[Tuple[SectionName, SectionPlugin]],
-    filter_parsed_sections: Optional[Set[ParsedSectionName]],
-) -> List[SectionPlugin]:
-    """Get the raw sections that will be parsed into the required section
-
-    Raw sections may get renamed once they are parsed, if they declare it. This function
-    deals with the task of determining which sections we need to parse, in order to end
-    up with the desired parsed section.
-
-    They are ranked according to their supersedings.
-    """
-    candidates = dict(available_raw_section_definitions) if filter_parsed_sections is None else {
-        name: section
-        for name, section in available_raw_section_definitions
-        if section.parsed_section_name in filter_parsed_sections
-    }
-
-    # Validation has enforced that we have no implizit (recursive) supersedings.
-    # This has the advantage, that we can just sort by number of relevant supersedings.
-    candidate_names = set(candidates)
-
-    def _count_relevant_supersedings(section: SectionPlugin):
-        return -len(section.supersedes & candidate_names), section.name
-
-    return sorted(candidates.values(), key=_count_relevant_supersedings)
-
-
 def create_subscribed_sections(
     sections: Optional[List[str]],
     plugin_name: Union[InventoryPluginName, CheckPluginName],
@@ -96,10 +64,10 @@ def create_subscribed_sections(
 
 def validate_function_arguments(
     *,
-    type_label: Literal["check", "cluster_check", "discovery", "host_label", "inventory"],
+    type_label: TypeLabel,
     function: Callable,
     has_item: bool,
-    default_params: Optional[Dict],
+    default_params: Optional[ParametersTypeAlias],
     sections: List[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
@@ -108,25 +76,41 @@ def validate_function_arguments(
 
     expected_params = []
     if has_item:
-        expected_params.append('item')
+        expected_params.append("item")
     if default_params is not None:
-        expected_params.append('params')
+        expected_params.append("params")
     if len(sections) == 1:
-        expected_params.append('section')
+        expected_params.append("section")
     else:
-        expected_params.extend('section_%s' % s for s in sections)
+        expected_params.extend("section_%s" % s for s in sections)
 
     parameters = inspect.signature(function).parameters
     present_params = list(parameters)
 
     if expected_params == present_params:
-        return (None if type_label == "cluster_check" else
-                _validate_optional_section_annotation(parameters))
+        return _validate_optional_section_annotation(
+            parameters=parameters,
+            type_label=type_label,
+        )
+    _raise_appropriate_type_error(
+        expected_params=expected_params,
+        present_params=present_params,
+        type_label=type_label,
+        has_item=has_item,
+    )
 
+
+def _raise_appropriate_type_error(
+    *,
+    expected_params: Sequence[str],
+    present_params: Sequence[str],
+    type_label: TypeLabel,
+    has_item: bool,
+) -> NoReturn:
     # We know we must raise. Dispatch for a better error message:
 
     if set(expected_params) == set(present_params):  # not len()!
-        exp_str = ', '.join(expected_params)
+        exp_str = ", ".join(expected_params)
         raise TypeError(f"{type_label}_function: wrong order of arguments. Expected: {exp_str}")
 
     symm_diff = set(expected_params).symmetric_difference(present_params)
@@ -136,29 +120,55 @@ def validate_function_arguments(
         raise TypeError(f"{type_label}_function: {missing_or_unexpected} 'item' argument")
 
     if "params" in symm_diff:
-        raise TypeError(f"{type_label}_function: 'params' argument expected if "
-                        "and only if default parameters are not None")
+        raise TypeError(
+            f"{type_label}_function: 'params' argument expected if "
+            "and only if default parameters are not None"
+        )
 
-    exp_str = ', '.join(expected_params)
-    act_str = ', '.join(present_params)
+    exp_str = ", ".join(expected_params)
+    act_str = ", ".join(present_params)
     raise TypeError(
-        f"{type_label}_function: expected arguments: '{exp_str}', actual arguments: '{act_str}'")
+        f"{type_label}_function: expected arguments: '{exp_str}', actual arguments: '{act_str}'"
+    )
 
 
-def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter]) -> None:
+def _validate_optional_section_annotation(
+    *,
+    parameters: Mapping[str, inspect.Parameter],
+    type_label: TypeLabel,
+) -> None:
     """Validate that the section annotation is correct, if present.
 
-    The thing is: if we have more than one section, all of them must be `Optional`.
+    We know almost nothing about the type of the section argument(s). Check the few things we know:
+
+        * If we have more than one section, all of them must be `Optional`.
+
     """
-    section_args = [p for n, p in params.items() if n.startswith("section_")]
-    if not section_args:
-        return  # we know nothing in this case
+    section_args = [p for n, p in parameters.items() if n.startswith("section")]
     if all(p.annotation == p.empty for p in section_args):
         return  # no typing used in plugin
-    none_type = type(None)
-    if all(none_type in get_args(p.annotation) for p in section_args):
-        return  # good, all sections are Optional.
-    raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
+
+    if type_label == "cluster_check":
+        desired = " cluster sections must be of type `Mapping[str, Optional[<NodeSection>]]`"
+        if not all(
+            str(p.annotation).startswith("typing.Mapping[str, ")
+            and _NONE_TYPE in get_args(get_args(p.annotation)[1])
+            for p in section_args
+        ):
+            raise TypeError(f"Wrong type annotation: {desired}")
+        return
+
+    if len(section_args) <= 1:
+        return  # we know nothing in this case
+
+    if any(_NONE_TYPE not in get_args(p.annotation) for p in section_args):
+        raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
+
+    return
+
+
+def _value_type(annotation: inspect.Parameter) -> bytes:
+    return get_args(annotation)[1]
 
 
 class RuleSetType(enum.Enum):
@@ -167,6 +177,7 @@ class RuleSetType(enum.Enum):
     Discovery and host label functions may either use all rules of a rule set matching
     the current host, or the merged rules.
     """
+
     MERGED = enum.auto()
     ALL = enum.auto()
 
@@ -180,18 +191,19 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 def validate_default_parameters(
     params_type: Literal["check", "discovery", "host_label", "inventory"],
     ruleset_name: Optional[str],
-    default_parameters: Optional[Dict],
+    default_parameters: Optional[ParametersTypeAlias],
 ) -> None:
     if default_parameters is None:
         if ruleset_name is None:
             return
-        raise TypeError("missing default %s parameters for ruleset %s" %
-                        (params_type, ruleset_name))
+        raise TypeError(
+            "missing default %s parameters for ruleset %s" % (params_type, ruleset_name)
+        )
 
     if not isinstance(default_parameters, dict):
         raise TypeError("default %s parameters must be dict" % (params_type,))
 
-    if ruleset_name is None and params_type != 'check':
+    if ruleset_name is None and params_type != "check":
         raise TypeError("missing ruleset name for default %s parameters" % (params_type))
 
 
@@ -224,4 +236,5 @@ def validate_check_ruleset_item_consistency(
         raise ValueError(
             f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
             "At least one of the checks in this group needs to be changed "
-            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins}).")
+            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins})."
+        )

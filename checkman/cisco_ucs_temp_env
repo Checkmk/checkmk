@@ -1,7 +1,7 @@
 title: Cisco UCS: Temperature Sensors
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks temperature sensors in Cisco UCS devices (Ambient, Front, IO-Hub, Rear)
@@ -9,5 +9,5 @@ description:
 item:
  The name of the sensor
 
-inventory:
+discovery:
  One service is created for each sensor.

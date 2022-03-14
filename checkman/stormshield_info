@@ -1,7 +1,7 @@
 title: Stormshield: General Information
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is similar to the SNMP info, which holds Stormshield specific
@@ -10,5 +10,5 @@ description:
 item:
  The fixed statement {{Stormshield Info}}
 
-inventory:
+discovery:
  One service is created.

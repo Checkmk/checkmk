@@ -1,0 +1,11 @@
+title: Proxmox VE: Snapshot Age
+agents: proxmox_ve
+catalog: os/misc
+license: GPLv2
+distribution: check_mk
+description:
+ This check checks the age of VM snapshots. The warn/crit age can be configured. If no snaphot was
+ found, the check is OK.
+
+inventory:
+ One service per system is created.

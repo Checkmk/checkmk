@@ -4,28 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.wato.active_checks import check_icmp_params
-
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Integer,
-    TextAscii,
-    RegExp,
-    Alternative,
-    Transform,
-    ListOf,
-    ListOfStrings,
-    FixedValue,
-    DualListChoice,
-    RegExpUnicode,
-)
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.active_checks import check_icmp_params
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
-    rulespec_registry,
-    HostRulespec,
+)
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    DualListChoice,
+    FixedValue,
+    Integer,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    TextInput,
+    Transform,
+    Tuple,
 )
 
 # TODO: Sort all rules and check parameters into the figlet header sections.
@@ -47,9 +45,11 @@ from cmk.gui.plugins.wato import (
 def _valuespec_ping_levels():
     return Dictionary(
         title=_("PING and host check parameters"),
-        help=_("This rule sets the parameters for the host checks (via <tt>check_icmp</tt>) "
-               "and also for PING checks on ping-only-hosts. For the host checks only the "
-               "critical state is relevant, the warning levels are ignored."),
+        help=_(
+            "This rule sets the parameters for the host checks (via <tt>check_icmp</tt>) "
+            "and also for PING checks on ping-only-hosts. For the host checks only the "
+            "critical state is relevant, the warning levels are ignored."
+        ),
         elements=check_icmp_params(),
     )
 
@@ -60,9 +60,10 @@ rulespec_registry.register(
         match_type="dict",
         name="ping_levels",
         valuespec=_valuespec_ping_levels,
-    ))
+    )
+)
 
-#.
+# .
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |
 #   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
@@ -75,50 +76,55 @@ rulespec_registry.register(
 
 def _valuespec_inventory_sap_values():
     return Dictionary(
-        title=_('SAP R/3 single value discovery'),
+        title=_("SAP R/3 single value discovery"),
         elements=[
             (
-                'match',
+                "match",
                 Alternative(
                     title=_("Node Path Matching"),
                     elements=[
-                        TextAscii(
+                        TextInput(
                             title=_("Exact path of the node"),
                             size=100,
                         ),
                         Transform(
-                            RegExp(
+                            valuespec=RegExp(
                                 size=100,
                                 mode=RegExp.prefix,
                             ),
                             title=_("Regular expression matching the path"),
-                            help=_("This regex must match the <i>beginning</i> of the complete "
-                                   "path of the node as reported by the agent"),
+                            help=_(
+                                "This regex must match the <i>beginning</i> of the complete "
+                                "path of the node as reported by the agent"
+                            ),
                             forth=lambda x: x[1:],  # remove ~
                             back=lambda x: "~" + x,  # prefix ~
                         ),
                         FixedValue(
-                            None,
+                            value=None,
                             totext="",
                             title=_("Match all nodes"),
-                        )
+                        ),
                     ],
-                    match=lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
-                    default_value=
-                    'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime')
+                    match=lambda x: (not x and 2) or (x[0] == "~" and 1 or 0),
+                    default_value="SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime",
+                ),
             ),
-            ('limit_item_levels',
-             Integer(
-                 title=_("Limit Path Levels for Service Names"),
-                 unit=_('path levels'),
-                 minvalue=1,
-                 help=
-                 _("The service descriptions of the inventorized services are named like the paths "
-                   "in SAP. You can use this option to let the inventory function only use the last "
-                   "x path levels for naming."),
-             ))
+            (
+                "limit_item_levels",
+                Integer(
+                    title=_("Limit Path Levels for Service Names"),
+                    unit=_("path levels"),
+                    minvalue=1,
+                    help=_(
+                        "The service descriptions of the inventorized services are named like the paths "
+                        "in SAP. You can use this option to let the inventory function only use the last "
+                        "x path levels for naming."
+                    ),
+                ),
+            ),
         ],
-        optional_keys=['limit_item_levels'],
+        optional_keys=["limit_item_levels"],
     )
 
 
@@ -128,39 +134,43 @@ rulespec_registry.register(
         match_type="all",
         name="inventory_sap_values",
         valuespec=_valuespec_inventory_sap_values,
-    ))
+    )
+)
 
 
 def _valuespec_sap_value_groups():
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             help=_("This defines one value grouping pattern"),
             show_titles=True,
             orientation="horizontal",
             elements=[
-                TextAscii(title=_("Name of group"),),
+                TextInput(
+                    title=_("Name of group"),
+                ),
                 Tuple(
                     show_titles=True,
                     orientation="vertical",
                     elements=[
-                        RegExpUnicode(
+                        RegExp(
                             title=_("Include Pattern"),
                             mode=RegExp.prefix,
                         ),
-                        RegExpUnicode(
+                        RegExp(
                             title=_("Exclude Pattern"),
                             mode=RegExp.prefix,
-                        )
+                        ),
                     ],
                 ),
             ],
         ),
         add_label=_("Add pattern group"),
-        title=_('SAP value discovery'),
+        title=_("SAP value discovery"),
         help=_(
-            'The check <tt>sap.value</tt> normally creates one service for each SAP value. '
-            'By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. '
-            'That check monitors a list of SAP values at once.'),
+            "The check <tt>sap.value</tt> normally creates one service for each SAP value. "
+            "By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. "
+            "That check monitors a list of SAP values at once."
+        ),
     )
 
 
@@ -170,7 +180,8 @@ rulespec_registry.register(
         match_type="all",
         name="sap_value_groups",
         valuespec=_valuespec_sap_value_groups,
-    ))
+    )
+)
 
 
 def _valuespec_inventory_fujitsu_ca_ports():
@@ -178,18 +189,20 @@ def _valuespec_inventory_fujitsu_ca_ports():
         title=_("Fujtsu storage CA port discovery"),
         elements=[
             ("indices", ListOfStrings(title=_("CA port indices"))),
-            ("modes",
-             DualListChoice(
-                 title=_("CA port modes"),
-                 choices=[
-                     ("CA", _("CA")),
-                     ("RA", _("RA")),
-                     ("CARA", _("CARA")),
-                     ("Initiator", _("Initiator")),
-                 ],
-                 rows=4,
-                 size=30,
-             )),
+            (
+                "modes",
+                DualListChoice(
+                    title=_("CA port modes"),
+                    choices=[
+                        ("CA", _("CA")),
+                        ("RA", _("RA")),
+                        ("CARA", _("CARA")),
+                        ("Initiator", _("Initiator")),
+                    ],
+                    rows=4,
+                    size=30,
+                ),
+            ),
         ],
     )
 
@@ -200,4 +213,5 @@ rulespec_registry.register(
         match_type="dict",
         name="inventory_fujitsu_ca_ports",
         valuespec=_valuespec_inventory_fujitsu_ca_ports,
-    ))
+    )
+)

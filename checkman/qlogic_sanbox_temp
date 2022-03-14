@@ -1,7 +1,7 @@
 title: QLogic SANbox Fibre Channel Switches: Temperatur Sensors
 agents: snmp
 catalog: hw/storagehw/qlogic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the temperature sensors in QLogic SANbox Fibre Channel Switches.
@@ -15,5 +15,5 @@ item:
  The ID of the sensor taken from SNMP. It contains 3 numbers separated by
  dots, e. g. 129.45.3
 
-inventory:
+discovery:
  One service is created for each temperature sensor found by SNMP.

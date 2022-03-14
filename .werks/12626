@@ -1,0 +1,14 @@
+Title: agent_kubernetes: additional option to filter for specific namespaces
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1616150988
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The special agent for Kubernetes monitors all namespaces by default. With this
+option, it is possible to only monitor specific namespaces by adding explicit
+namespaces or regular expressions to the "Filter namespaces" parameter in the
+configuration ruleset of the Kubernetes agent.

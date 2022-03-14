@@ -1,0 +1,14 @@
+Title: check_icmp: Failed to resolve multiple addresses
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1622116447
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In Checkmk versions 2.0.0i1 to 2.0.0p5 the active check "check_icmp"
+(a.k.a. <i>PING</i> service) failed when configured for a host
+with multiple IP addresses.

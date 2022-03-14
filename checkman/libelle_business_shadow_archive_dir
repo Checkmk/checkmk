@@ -1,7 +1,7 @@
 title: Libelle Business Shadow: Total / Used Space in Archive Dir
 agents: linux, aix, solaris, hpux
 catalog: app/libelle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the total / used capacity in the Archive Dir of Libelle Business
@@ -15,6 +15,5 @@ description:
 item:
  The fixed statement {{Archive Dir}}
 
-inventory:
+discovery:
  One service is created on every node.
-

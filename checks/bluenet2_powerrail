@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |
 #   |                    ___  _   _| |_ _ __  _   _| |_                    |
@@ -110,7 +113,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # .1.3.6.1.4.1.31770.2.2.8.4.1.5.0.4.0.0.255.255.0.7 16 --> BACHMANN-BLUENET2-MIB::blueNet2VariableDataValue.'........'
 # .1.3.6.1.4.1.31770.2.2.8.4.1.5.0.4.0.0.255.255.0.8 0 --> BACHMANN-BLUENET2-MIB::blueNet2VariableDataValue.'........'
 
-#.
+# .
 #   .--phases--------------------------------------------------------------.
 #   |                         _                                            |
 #   |                   _ __ | |__   __ _ ___  ___  ___                    |
@@ -201,7 +204,7 @@ def parse_bluenet2_powerrail(info):
     parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}}
     for oidend, ty, status, exponent_str, reading_str in info[3]:
         status_info = map_status[status]
-        reading = float(reading_str) * 10**int(exponent_str)
+        reading = float(reading_str) * 10 ** int(exponent_str)
         oid_info = oidend.split(".")
         identifier = oid_info[:-1]
 
@@ -235,32 +238,36 @@ def parse_bluenet2_powerrail(info):
 
 
 check_info["bluenet2_powerrail"] = {
-    'parse_function': parse_bluenet2_powerrail,
-    'inventory_function': lambda parsed: inventory_elphase(parsed["phases"]),
-    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["phases"]),
-    'service_description': 'Inlet %s',
+    "parse_function": parse_bluenet2_powerrail,
+    "inventory_function": lambda parsed: discover()(parsed["phases"]),
+    "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["phases"]),
+    "service_description": "Inlet %s",
     "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.31770.2.1"
-                                                                          ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.31770.2.1"
+    ),
     "snmp_info": [
         (
             ".1.3.6.1.4.1.31770.2.2.6.2.1",
             [
                 OID_END,
                 "4",  # blueNet2CircuitName
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.31770.2.2.6.3.1",
             [
                 OID_END,
                 "4",  # blueNet2PhaseGuid
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.31770.2.2.6.6.1",
             [
                 OID_END,
                 "7",  # blueNet2RcmGuid
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.31770.2.2.8",
             [
@@ -269,12 +276,13 @@ check_info["bluenet2_powerrail"] = {
                 "2.1.7",  # bluenet2VariableStatus
                 "2.1.9",  # bluenet2VariableScaling
                 "4.1.5",  # bluenet2VariableDataValue
-            ])
+            ],
+        ),
     ],
-    'group': 'el_inphase',
+    "group": "el_inphase",
 }
 
-#.
+# .
 #   .--RCM phases----------------------------------------------------------.
 #   |        ____   ____ __  __         _                                  |
 #   |       |  _ \ / ___|  \/  |  _ __ | |__   __ _ ___  ___  ___          |
@@ -291,16 +299,17 @@ factory_settings["bluenet2_powerrail_rcm_default_levels"] = {
 }
 
 check_info["bluenet2_powerrail.rcm"] = {
-    'inventory_function': lambda parsed: inventory_elphase(parsed["rcm_phases"]),
-    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["rcm_phases"]
-                                                                ),
+    "inventory_function": lambda parsed: discover()(parsed["rcm_phases"]),
+    "check_function": lambda item, params, parsed: check_elphase(
+        item, params, parsed["rcm_phases"]
+    ),
     "service_description": "Inlet %s",
     "has_perfdata": True,
     "default_levels_variable": "bluenet2_powerrail_rcm_default_levels",
-    'group': 'el_inphase',
+    "group": "el_inphase",
 }
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -324,11 +333,13 @@ def inventory_bluenet2_powerrail_temp(parsed):
 def check_bluenet2_powerrail_temp(item, params, parsed):
     if item in parsed["sensors"].get("temp", {}):
         reading, (state, state_readable) = parsed["sensors"]["temp"][item]
-        return check_temperature(reading,
-                                 params,
-                                 "bluenet2_powerrail_temp_%s" % item,
-                                 dev_status=state,
-                                 dev_status_name=state_readable)
+        return check_temperature(
+            reading,
+            params,
+            "bluenet2_powerrail_temp_%s" % item,
+            dev_status=state,
+            dev_status_name=state_readable,
+        )
 
 
 check_info["bluenet2_powerrail.temp"] = {
@@ -340,7 +351,7 @@ check_info["bluenet2_powerrail.temp"] = {
     "group": "temperature",
 }
 
-#.
+# .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
 #   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -369,7 +380,7 @@ def check_bluenet2_powerrail_humidity(item, params, parsed):
 check_info["bluenet2_powerrail.humidity"] = {
     "inventory_function": inventory_bluenet2_powerrail_humidity,
     "check_function": check_bluenet2_powerrail_humidity,
-    'service_description': 'Humidity %s',
+    "service_description": "Humidity %s",
     "has_perfdata": True,
     "group": "humidity",
 }

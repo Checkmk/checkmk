@@ -12,12 +12,12 @@ def parse_brocade_mlx_power(info):
         # .1.3.6.1.4.1.1991.1.1.1.2.2.1
         for power_id, power_desc, power_state in info[1]:
             if power_state != "1":
-                parsed[power_id] = {'desc': power_desc, 'state': power_state}
+                parsed[power_id] = {"desc": power_desc, "state": power_state}
     else:
         # .1.3.6.1.4.1.1991.1.1.1.2.1.1
         for power_id, power_desc, power_state in info[0]:
             if power_state != "1":
-                parsed[power_id] = {'desc': power_desc, 'state': power_state}
+                parsed[power_id] = {"desc": power_desc, "state": power_state}
     return parsed
 
 
@@ -35,14 +35,14 @@ def check_brocade_mlx_power(item, _no_params, parsed):
 
     for powersupply_id, powersupply_data in parsed.items():
         if powersupply_id == item:
-            if powersupply_data['state'] == "2":
+            if powersupply_data["state"] == "2":
                 yield 0, "Power supply reports state: normal"
-            elif powersupply_data['state'] == "3":
+            elif powersupply_data["state"] == "3":
                 yield 2, "Power supply reports state: failure"
-            elif powersupply_data['state'] == "1":
+            elif powersupply_data["state"] == "1":
                 yield 3, "Power supply reports state: other"
             else:
-                yield 3, "Power supply reports an unhandled state (%s)" % powersupply_data['state']
+                yield 3, "Power supply reports an unhandled state (%s)" % powersupply_data["state"]
 
 
 check_info["brocade_mlx_power"] = {
@@ -52,19 +52,21 @@ check_info["brocade_mlx_power"] = {
     "service_description": "Power supply %s",
     "snmp_info": [
         (
-            '.1.3.6.1.4.1.1991.1.1.1.2.1.1',
+            ".1.3.6.1.4.1.1991.1.1.1.2.1.1",
             [
                 1,  # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyIndex
                 2,  # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyDescription
                 3,  # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyOperStatus
-            ]),
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.1991.1.1.1.2.2.1',
+            ".1.3.6.1.4.1.1991.1.1.1.2.2.1",
             [
                 2,  # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2Index
                 3,  # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2Description
                 4,  # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2OperStatus
-            ])
+            ],
+        ),
     ],
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
 }

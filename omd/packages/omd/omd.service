@@ -1,6 +1,6 @@
 [Unit]
-Description=Check_MK Monitoring
-Documentation=https://mathias-kettner.com
+Description=Checkmk Monitoring
+Documentation=https://docs.checkmk.com/latest/en/
 Wants=network-online.target
 After=syslog.target time-sync.target network.target network-online.target
 

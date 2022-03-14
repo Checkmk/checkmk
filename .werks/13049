@@ -1,0 +1,27 @@
+Title: RESTAPI: require accept header
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1633442592
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+In previous version the accept header of the HTTP-request was completely
+ignored.
+
+With this werk the accept header is obligatory. If no or a wrong accept
+header is provided an error with a 406 status code will be returned.
+
+For most requests this means you have to provide the follwing header line:
+
+<tt>Accept: application/json</tt>
+
+For some other requests different accept headers may be required.
+All headers are documented in the official rest-api documentation.
+
+For example when downloading the agent binary the following header is
+required:
+
+<tt>Accept: application/octet-stream</tt>

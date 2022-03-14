@@ -77,7 +77,7 @@ public:
 };
 
 class SimpleFormatter : public Formatter {
-    friend class Handler;
+public:
     void format(std::ostream &os, const LogRecord &record) override;
 };
 
@@ -228,6 +228,12 @@ public:
 
 private:
     const ContextEmitter _context;
+};
+
+class ThreadNameLogger : public ContextLogger {
+public:
+    explicit ThreadNameLogger(Logger *logger);
+    explicit ThreadNameLogger(const std::string &name);
 };
 
 // -----------------------------------------------------------------------------

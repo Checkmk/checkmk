@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+REPO_DIR=$(git rev-parse --show-toplevel)
+
+# When executed via "make deb", e.g. during local builds, these are set and confuse cargo
+unset MAKEFLAGS DESTDIR
+
+if [ -e "/opt/rust/rustup" ]; then
+    RUSTUP_HOME="/opt/rust/rustup"
+    export RUSTUP_HOME
+    # make sure we don't use "$HOME/.cargo" accidentally (expands to /.cargo, if HOME is not set)
+    : "${CARGO_HOME:="${REPO_DIR}/.cargo"}"
+    export CARGO_HOME
+fi
+
+if [[ -f cargo_env ]]; then
+    source cargo_env
+fi
+cargo "$@"

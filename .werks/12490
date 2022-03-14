@@ -1,0 +1,11 @@
+Title: Service statistics dashlet recognizes configured filters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1619096415
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+

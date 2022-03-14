@@ -1,0 +1,140 @@
+Title: HW/SW Inventory: Change raw tree structure
+Class: feature
+Compatible: incomp
+Component: inv
+Date: 1625136734
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This only affects users which process raw trees from HW/SW Inventory system via
+<ul>
+<li>files {{var/check_mk/inventory/HOSTNAME}} or</li>
+<li>export hooks, similar to the ruleset {{Export List of Software packages as CSV file}} or</li>
+<li>(Web-)API, see also werk 3585.</li>
+</ul>
+
+Other functionalities like {{HW/SW Inventory History}} or using single values
+or tables from {{HW/SW Inventory}} trees in views are not affected.
+
+Old raw trees are migrated on-the-fly and the new structure is used.
+
+Summa summarum: If a user does not access raw trees from above topics then it
+seems that nothing has changed.
+
+Details:
+The previous raw tree structure of the {{HW/SW Inventory Tree}} had some
+disadvantages, ie. Python dicts or lists were used for two different entities:
+<ul>
+<li>single values or categories resp.</li>
+<li>tables or indexed categories</li>
+</ul>
+
+Example: A raw tree looked like:
+C:+
+{
+    "first-path-to": {
+        "specific-single_values": {
+            "single0": "Value 0",
+            "single1": "Value 1",
+            ...
+        },
+        "single0": "Value 0",
+        "single1": "Value 1",
+        ...
+        "table": [{"col0": "Value 0", "col1": "Value 1"}, ...],
+        "category0": {...},
+        "category1": {...},
+        ...
+    }
+    "second-path-to": [
+        {
+            "indexed0-specific-single_values": {
+                "single0": "Value 0",
+                "single1": "Value 1",
+                ...
+            },
+            "single0": "Value 0",
+            "single1": "Value 1",
+            ...
+            "indexed0-table": [{"col0": "Value 0", "col1": "Value 1"}, ...],
+            "indexed0-category0": {...},
+            "indexed0-category1": {...},
+        },
+        {
+            "indexed1-specific-single_values": {
+                "single0": "Value 0",
+                "single1": "Value 1",
+                ...
+            },
+            "single0": "Value 0",
+            "single1": "Value 1",
+            ...
+            "indexed1-table": [{"col0": "Value 0", "col1": "Value 1"}, ...],
+            "indexed1-category0": {...},
+            "indexed1-category1": {...},
+        },
+        ...
+    ],
+}
+C:-
+
+Moreover it was not clear and inflexible to which entity a path led:
+<ul>
+<li>path to single values or</li>
+<li>path to categories or</li>
+<li>path to tables or</li>
+<li>path to single values and categories or</li>
+<li>path to tables and categories or</li>
+<li>path to single values and tables or</li>
+<li>path to single values, tables and categories.</li>
+</ul>
+
+Example:
+It was impossible to have different entities below ["first-path-to", "table"].
+
+The indexed categories are also cleaned up: there is no advantage of these
+list-based categories.
+
+Now the raw tree structure has basically the following form:
+C:+
+{
+    "Attributes": {
+        "Pairs": {...},
+    },
+    "Table": {
+        "KeyColumns": [...],
+        "Rows": [...],
+    }
+    "Nodes": {
+        "path-to": {
+            "Attributes": {
+                "Pairs": {...},
+            },
+            "Table": {
+                "KeyColumns": [...],
+                "Rows": [...],
+            },
+            "Nodes": {
+                "category": {...},
+                ...
+            },
+        },
+        ...
+    },
+}
+C:-
+
+The main advantage of this new tree structure is that at every level each
+entity is encapsulated. Therefore single values ("Attributes"), a table
+("Table") or categories ("Nodes") can "live" side-by-side.
+Beside other improvements like easier understanding of the raw tree structure
+the de/serializing process is less error-prone. Also the role of paths is
+clearer than before.
+
+Example: On a Linux machine with installed {{mk_inventory}} and 16000 entries
+the raw tree file increases from 347977 bytes to 349904 bytes, ie. 1927 bytes.
+
+The file size of small raw trees strikingly increase but for medium or large
+raw trees the file size does not increase as much (see above example).

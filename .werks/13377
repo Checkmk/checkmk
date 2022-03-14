@@ -1,0 +1,16 @@
+Title: Fix missing date header in for ASCII and HTML Email
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1635245104
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The Date header is usually added by the local MTA and does not cause any problems.
+
+However, if direct delivery via SMTP smart host is set, the date header is no
+longer added and is then missing in the mail client, which shows the date of
+receipt.

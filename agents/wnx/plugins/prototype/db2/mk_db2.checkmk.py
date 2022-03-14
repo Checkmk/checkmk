@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import argparse
-import platform
 import os
+import platform
+import sys
 import time
-from subprocess import Popen, PIPE, DEVNULL
-
-from typing import List, Iterable, Dict, Optional
+from subprocess import DEVNULL, PIPE, Popen, run
+from typing import Dict, Iterable, List, Optional
 
 LISTER = "db2ilist.exe"
 
@@ -30,8 +29,8 @@ class Database:
         self.args = self._parse_arguments()
 
     def _parse_arguments(self) -> argparse.Namespace:
-        parser = argparse.ArgumentParser(description='DB2 information')
-        parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
+        parser = argparse.ArgumentParser(description="DB2 information")
+        parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
         return parser.parse_args()
 
     def is_verbose(self):
@@ -49,37 +48,41 @@ class Database:
 
     @staticmethod
     def cleanup_input(data: str) -> List[str]:
-        return [
-            _line.replace("\r", "")  #
-            for _line in data.split(sep="\n")
-            if len(_line)
-        ]
+        return [_line.replace("\r", "") for _line in data.split(sep="\n") if len(_line)]  #
 
     @staticmethod
     def run_db2(args: List[str], instance: str) -> Popen:
-        return Popen(args=["db2.exe"] + args,
-                     shell=False,
-                     stdout=PIPE,
-                     stdin=DEVNULL,
-                     stderr=DEVNULL,
-                     close_fds=True,
-                     encoding="utf-8",
-                     env=make_env(instance=instance))
+        return Popen(
+            args=["db2.exe"] + args,
+            shell=False,
+            stdout=PIPE,
+            stdin=DEVNULL,
+            stderr=DEVNULL,
+            close_fds=True,
+            encoding="utf-8",
+            env=make_env(instance=instance),
+        )
 
     def list_instances(self) -> List[str]:
         try:
-            process = Popen(args=LISTER,
-                            shell=False,
-                            stdout=PIPE,
-                            stdin=DEVNULL,
-                            stderr=DEVNULL,
-                            close_fds=True,
-                            encoding="utf-8")
-            stdout = process.communicate()[0]
-            return stdout.strip().split(sep="\n")
+            completed_process = run(
+                args=LISTER,
+                shell=False,
+                stdout=PIPE,
+                stdin=DEVNULL,
+                stderr=DEVNULL,
+                close_fds=True,
+                encoding="utf-8",
+                check=False,
+            )
+            return completed_process.stdout.strip().split(sep="\n")
         except (OSError, ValueError) as e:
             if self.is_verbose():
-                print(" database list error with Exception {}".format(e,))
+                print(
+                    " database list error with Exception {}".format(
+                        e,
+                    )
+                )
             return []
 
     def check_database(self, instance: str, name: str) -> List[str]:
@@ -88,7 +91,11 @@ class Database:
             stdout = process.communicate()[0]
             return Database.cleanup_input(stdout)
         except (OSError, ValueError) as e:
-            self.write_log(" database list error with Exception {}".format(e,))
+            self.write_log(
+                " database list error with Exception {}".format(
+                    e,
+                )
+            )
             return []
 
     def get_list_databases(self, instance: str) -> List[str]:
@@ -97,7 +104,11 @@ class Database:
             stdout = process.communicate()[0]
             return Database.cleanup_input(stdout)
         except (OSError, ValueError) as e:
-            self.write_log(" database list error with Exception {}".format(e,))
+            self.write_log(
+                " database list error with Exception {}".format(
+                    e,
+                )
+            )
             return []
 
     def snapshot_databases(self, instance: str) -> List[str]:
@@ -106,7 +117,11 @@ class Database:
             stdout = process.communicate()[0]
             return Database.cleanup_input(stdout)
         except (OSError, ValueError) as e:
-            self.write_log(" database list error with Exception {}".format(e,))
+            self.write_log(
+                " database list error with Exception {}".format(
+                    e,
+                )
+            )
             return []
 
     @staticmethod
@@ -123,18 +138,18 @@ class Database:
         return len(db_list) > 3
 
     def process_databases(self, database: str, port: int, now: int, instance: str) -> None:
-        #before = time.time()
-        #process = Database.run_db2(args=["connect", "to", database], instance=instance )
-        #stdout = process.communicate()[0]
-        #output = Database.cleanup_input(stdout)
+        # before = time.time()
+        # process = Database.run_db2(args=["connect", "to", database], instance=instance )
+        # stdout = process.communicate()[0]
+        # output = Database.cleanup_input(stdout)
 
         print("<<<db2_connections>>>")
         print("[[[{}:{}]]]".format(instance, database))
         print("{}".format(port))
         print("connections ")  # | tr -d '\n'
         # db2 -x "SELECT count(*)-1 FROM TABLE(mon_get_connection(CAST(NULL AS BIGINT), -2)) AS t"
-        #after = time.time()
-        #diff = round((after - before), ndigits=3)*1000
+        # after = time.time()
+        # diff = round((after - before), ndigits=3)*1000
 
         print("latency {}".format(123435))
 
@@ -146,17 +161,17 @@ class Database:
         print("<<<db2_counters>>>")
         print("TIMESTAMP {}".format(now))
         # echo "$INSTANCE:$DB deadlocks " | tr -d '\n'
-        #db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
-        #echo "$INSTANCE:$DB lockwaits " | tr -d '\n'
-        #db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' '
-        #echo "$INSTANCE:$DB sortoverflows " | tr -d '\n'
-        #db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
+        # db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
+        # echo "$INSTANCE:$DB lockwaits " | tr -d '\n'
+        # db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' '
+        # echo "$INSTANCE:$DB sortoverflows " | tr -d '\n'
+        # db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
         print("<<<db2_logsizes>>>")
         print("TIMESTAMP {}".format(now))
         print("[[[{}:{}]]]".format(instance, database))
-        #echo "usedspace " | tr -d '\n'
-        #db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
-        #db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print $1" "$2}'
+        # echo "usedspace " | tr -d '\n'
+        # db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
+        # db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print $1" "$2}'
 
         print("<<<db2_bp_hitratios>>>")
         print("[[[{}:{}]]]".format(instance, database))
@@ -164,22 +179,22 @@ class Database:
 
         print("<<<db2_sort_overflow>>>")
         print("[[[{}:{}]]]".format(instance, database))
-        #db2 -x "get snapshot for database on $DB" | grep -e "^Total sorts" -e "^Sort overflows" | tr -d '='
+        # db2 -x "get snapshot for database on $DB" | grep -e "^Total sorts" -e "^Sort overflows" | tr -d '='
 
         print("<<<db2_backup>>>")
         print("[[[{}:{}]]]".format(instance, database))
-        #if compare_version_greater_equal "$VERSION_NUMBER" 10.5; then
+        # if compare_version_greater_equal "$VERSION_NUMBER" 10.5; then
         #  # MON_GET_DATBASE(-2) gets information of all active members
         #  db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
-        #else
+        # else
         #  db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
-        #fi
+        # fi
 
         # disconnect from database
         # db2 connect reset > /dev/null
-        #process = Database.run_db2(args=["connect", "reset"], instance=instance )
-        #stdout = process.communicate()[0]
-        #pass
+        # process = Database.run_db2(args=["connect", "reset"], instance=instance )
+        # stdout = process.communicate()[0]
+        # pass
 
     @staticmethod
     def find_port(instance: str, database: str) -> str:
@@ -206,8 +221,10 @@ class Database:
                 db_name = line[1].strip()
                 continue
 
-            if line[0].strip().lower() == "directory entry type" and line[1].strip().lower(
-            ) in allowed_entry_types:
+            if (
+                line[0].strip().lower() == "directory entry type"
+                and line[1].strip().lower() in allowed_entry_types
+            ):
                 if len(db_name) > 0:
                     db_names.append(db_name)
 
@@ -227,16 +244,21 @@ class Database:
         # This situation may be changed in the future
         # Spaces are removed because the check 'db2_version' expects precisely two tokens
         # splitted by ' '.
-        print("{} {},{}".format(instance, product_name.replace(" ", ""),
-                                service_level.replace(" ", "")))
+        print(
+            "{} {},{}".format(
+                instance, product_name.replace(" ", ""), service_level.replace(" ", "")
+            )
+        )
 
         db_names = Database.find_database_names(db_list, ["home", "indirect"])
 
         for db_name in db_names:
-            db.process_databases(database=db_name,
-                                 port=int(Database.find_port(instance=instance, database=db_name)),
-                                 now=cur_time,
-                                 instance=instance)
+            db.process_databases(
+                database=db_name,
+                port=int(Database.find_port(instance=instance, database=db_name)),
+                now=cur_time,
+                instance=instance,
+            )
 
             # we need to do so
             # grep -e 'Product name' -e 'Service level' | awk -v FS='=' '{print $2}' | sed 'N;s/\n/,/g' | sed 's/ //g'
@@ -265,30 +287,31 @@ class Database:
     @staticmethod
     def shell_runner():
         if platform.system() == "Windows":
-            shell = Popen(["cmd.exe"],
-                          shell=False,
-                          stdin=PIPE,
-                          stdout=PIPE,
-                          stderr=PIPE,
-                          universal_newlines=True,
-                          close_fds=True,
-                          bufsize=0)
-            if shell.stdin is None or shell.stdout is None:
-                raise Exception("Huh? stdin or stdout vanished...")
-            shell.stdin.write("@set DB2CLP=DB20FADE\n")
-            shell.stdin.write("@db2 connect to SAMPLE\n")
-            shell.stdin.write('@db2 -x "SELECT deadlocks from sysibmadm.snapdb"\n')
-            shell.stdin.write("@db2 connect reset\n")
-            shell.stdin.write("@exit\n")
-            shell.stdin.close()
-            for line in shell.stdout:
-                print(line.strip())
+            with Popen(
+                ["cmd.exe"],
+                shell=False,
+                stdin=PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
+                universal_newlines=True,
+                close_fds=True,
+                bufsize=0,
+            ) as shell:
+                if shell.stdin is None or shell.stdout is None:
+                    raise Exception("Huh? stdin or stdout vanished...")
+                shell.stdin.write("@set DB2CLP=DB20FADE\n")
+                shell.stdin.write("@db2 connect to SAMPLE\n")
+                shell.stdin.write('@db2 -x "SELECT deadlocks from sysibmadm.snapdb"\n')
+                shell.stdin.write("@db2 connect reset\n")
+                shell.stdin.write("@exit\n")
+                for line in shell.stdout:
+                    print(line.strip())
         else:
             raise SystemExit("Unsupported Platform")
 
 
 # MAIN:
-if __name__ == '__main__':
+if __name__ == "__main__":
     db = Database()
     current_time = int(time.time())
     for i in db.list_instances():

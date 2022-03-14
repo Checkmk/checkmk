@@ -1,7 +1,7 @@
 title: EMC VNX Storage: RAID Group: List of Disks
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the List of Disks used in a RAID Group in an EMC VNX storage system.
@@ -14,5 +14,5 @@ description:
 item:
  The RAID Group ID.
 
-inventory:
+discovery:
  One service is created for each RAID Group listed in the agent output.

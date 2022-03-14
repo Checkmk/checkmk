@@ -5,21 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Type, List
+from typing import Callable, List, Type, Union
 
 from six import ensure_str
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.utils.speaklater import LazyString
 
-class PermissionSection(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+
+class PermissionSection(abc.ABC):
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """The identity of a permission section.
         One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Display name representing the section"""
         raise NotImplementedError()
@@ -47,11 +51,17 @@ class PermissionSectionRegistry(cmk.utils.plugin_registry.Registry[Type[Permissi
 permission_section_registry = PermissionSectionRegistry()
 
 
-class Permission(metaclass=abc.ABCMeta):
+class Permission(abc.ABC):
     _sort_index = 0
 
-    def __init__(self, section: Type[PermissionSection], name: str, title: str, description: str,
-                 defaults: List[str]) -> None:
+    def __init__(
+        self,
+        section: Type[PermissionSection],
+        name: str,
+        title: Union[str, LazyString],
+        description: Union[str, LazyString],
+        defaults: List[str],
+    ) -> None:
         self._section = section
         self._name = name
         self._title = title
@@ -72,12 +82,12 @@ class Permission(metaclass=abc.ABCMeta):
     @property
     def title(self) -> str:
         """Display name representing the permission"""
-        return self._title
+        return str(self._title)
 
     @property
     def description(self) -> str:
         """Text to explain the purpose of this permission"""
-        return self._description
+        return str(self._description)
 
     @property
     def defaults(self) -> List[str]:
@@ -101,7 +111,7 @@ class Permission(metaclass=abc.ABCMeta):
 
 class PermissionRegistry(cmk.utils.plugin_registry.Registry[Permission]):
     def __init__(self):
-        super(PermissionRegistry, self).__init__()
+        super().__init__()
         # TODO: Better make the sorting explicit in the future
         # used as auto incrementing counter to numerate the permissions in
         # the order they have been added.
@@ -128,20 +138,25 @@ permission_registry = PermissionRegistry()
 
 # Kept for compatibility with pre 1.6 GUI plugins
 def declare_permission_section(name, title, prio=50, do_sort=False):
-    cls = type("LegacyPermissionSection%s" % name.title(), (PermissionSection,), {
-        "name": name,
-        "title": title,
-        "sort_index": prio,
-        "do_sort": do_sort,
-    })
+    cls = type(
+        "LegacyPermissionSection%s" % name.title(),
+        (PermissionSection,),
+        {
+            "name": name,
+            "title": title,
+            "sort_index": prio,
+            "do_sort": do_sort,
+        },
+    )
     permission_section_registry.register(cls)
 
 
 # Kept for compatibility with pre 1.6 GUI plugins
 # Some dynamically registered permissions still use this
 def declare_permission(name, title, description, defaults):
+    # ? declare_permission seems to be used with the type of name argument being str
     if not isinstance(name, str):
-        name = ensure_str(name, encoding="ascii")
+        name = ensure_str(name, encoding="ascii")  # pylint: disable= six-ensure-str-bin-call
 
     section_name, permission_name = name.split(".", 1)
 
@@ -152,4 +167,25 @@ def declare_permission(name, title, description, defaults):
             title=title,
             description=description,
             defaults=defaults,
-        ))
+        )
+    )
+
+
+_permission_declaration_functions = []
+
+
+# Some module have a non-fixed list of permissions. For example for
+# each user defined view there is also a permission. This list is
+# not known at the time of the loading of the module - though. For
+# that purpose module can register functions. These functions should
+# just call declare_permission(). They are being called in the correct
+# situations.
+def declare_dynamic_permissions(func: Callable[[], None]) -> None:
+    _permission_declaration_functions.append(func)
+
+
+# This function needs to be called by all code that needs access
+# to possible dynamic permissions
+def load_dynamic_permissions() -> None:
+    for func in _permission_declaration_functions:
+        func()

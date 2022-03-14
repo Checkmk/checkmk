@@ -1,12 +1,12 @@
 title: McAfee Email Gateway: AV Authentium
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the AV authentium status, engine version and
  DAT version of McAfee Email gateways which support the MCAFEE-MEG MIB.
  The check is always CRIT if status is deactivated, otherwise OK.
 
-inventory:
+discovery:
  One service is created.

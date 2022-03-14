@@ -1,0 +1,17 @@
+Title: AWS Lambda: added check for monitoring AWS Lambda concurrency
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1625143236
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+A checkplugin was added which monitors the following AWS Lambda metrics:
+* concurrent executions
+* unreserved concurrent executions
+* provisioned concurrent executions
+* provisioned concurrency invocations
+* provisioned concurrency spillover invocations
+* provisioned concurrency utilization

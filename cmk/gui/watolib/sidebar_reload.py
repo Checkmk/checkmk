@@ -12,4 +12,4 @@ def need_sidebar_reload():
 
 
 def is_sidebar_reload_needed():
-    return 'need_sidebar_reload' in g and g.need_sidebar_reload
+    return "need_sidebar_reload" in g and g.need_sidebar_reload

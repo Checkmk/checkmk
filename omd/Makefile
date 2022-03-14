@@ -5,11 +5,11 @@
 include omd.make
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
-# You can build singele packages by calling macke <PACKAGENAME>
+# You can build single packages by calling make <PACKAGENAME>
 # e.g.: make nagios rrdtool
 #
 # You can select a subset of the packages by overriding this
-# variale, e.g. make PACKAGES='nagios rrdtool' pack
+# variable, e.g. make PACKAGES='nagios rrdtool' pack
 #
 # If you just want to test package building, you can reduce the
 # number of packages to just "omd" - to speed up your tests.
@@ -22,25 +22,23 @@ PACKAGES := \
     openssl \
     redis \
     libgsf \
-    postgresql \
+    cpp-libs \
     perl-modules \
-    Python3 \
+    Python \
     freetds \
     re2 \
+    protobuf \
     python3-modules \
     rrdtool \
     msitools \
     net-snmp \
     apache-omd \
     lasso \
+    xinetd \
     mod_auth_mellon \
     mod_fcgid \
-    python3-mod_wsgi \
+    mod_wsgi \
     check_mk \
-    check_mysql_health \
-    check_oracle_health \
-    Webinject \
-    jmx4perl \
     mk-livestatus \
     stunnel \
     nagios \
@@ -61,13 +59,23 @@ PACKAGES := \
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise
 endif
+ifeq ($(EDITION),free)
+PACKAGES += enterprise
+endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += managed
 endif
+ifeq ($(EDITION),plus)
+PACKAGES += enterprise
+PACKAGES += plus
+endif
 
+PIPENV := ../scripts/run-pipenv
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
+INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
+CACHE_PKG_PROCESS_TARGETS := $(foreach package,$(addsuffix _CACHE_PKG_PROCESS,$(BUILD_TARGET_VARS)),$($(package)))
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
@@ -84,24 +92,18 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'managed' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' || $$P == 'plus' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
-	  egrep -h "$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_BUILD\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_INSTALL\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_INTERMEDIATE_INSTALL\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_CACHE_PKG_PROCESS\s+:=\s+" $$inc_path >> $@ ; \
-	  if [ "$$P" == "rrdtool" ]; then \
-	    egrep -h "$${P_VAR}_BUILD_LIBRARY\s+:=\s+" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_INSTALL_LIBRARY\s+:=\s+" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_BUILD_BINDINGS\s+:=\s+" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_INSTALL_BINDINGS\s+:=\s+" $$inc_path >> $@ ; \
-	  fi \
-	done
+	  egrep -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_BUILD(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	done || true
 
 
 -include .config
@@ -115,14 +117,16 @@ RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 SKEL_PERMISSIONS := $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
-CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
+CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "buster" ]; then echo "-3" ; elif [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2"; fi )
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
+BOM := bill-of-materials.json
 
 .PHONY: install cma rpm deb clean setversion install-clean
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
+	$(PIPENV) run ./strip_binaries --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
@@ -131,9 +135,11 @@ install-clean:
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
 
-# Prepare clean install environment
-$(PRE_INSTALL):
+$(BUILD_HELPER_DIR):
 	$(MKDIR) $(BUILD_HELPER_DIR)
+
+# Prepare clean install environment
+$(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 # The default physical base for OMD is /opt/omd. This may be changed by
 # the user locally, but the logical path for OMD is always /omd. We use
@@ -147,11 +153,15 @@ $(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
+	$(call log_time,$@,done)
 	touch $@
 
-$(INSTALL_TARGETS): $(PRE_INSTALL)
+$(INSTALL_TARGETS) $(CACHE_PKG_PROCESS_TARGETS): $(PRE_INSTALL)
 
-$(INSTALL): $(INSTALL_TARGETS)
+$(INSTALL_LOG_TARGETS): %-log: %
+	$(call log_time,$@,done)
+
+$(INSTALL): $(INSTALL_LOG_TARGETS)
 # Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(TOUCH) $@
@@ -168,7 +178,7 @@ $(SKEL_PERMISSIONS): $(INSTALL)
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
-$(INSTALL_GLOBAL): $(SKEL_PERMISSIONS)
+$(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	# Create link to default version
 	ln -sf $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
@@ -198,10 +208,16 @@ $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS)
 	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
 	install -m 644 Licenses.README.txt $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.README.txt
 	install -m 644 License_texts.pdf $(DESTDIR)$(OMD_ROOT)/share/doc/License_texts.pdf
+	install -m 644 $(BOM) $(DESTDIR)$(OMD_ROOT)/share/doc/$(BOM)
 
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \
 	fi
+
+# This file is normally generated by our CI chain. In case it is not there, just
+# create an empty one instead of failing the build.
+$(BOM):
+	$(TOUCH) $@
 
 # Perform some validations
 	for SKEL_DIR in tmp var etc; do \
@@ -281,6 +297,7 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \
@@ -293,7 +310,7 @@ setversion:
 # NEW_VERSION should be set on the command line.  Replace all '/' since sed
 # tries to interpret them '/' might occur in custom branches filenames and sed
 # arguments should not contain '/'
-	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
+	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT) ; \
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
@@ -301,15 +318,19 @@ $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
-	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
-	    MIN_VERSION=1.4.0 ; \
+	@if [ "$(DISTRO_CODE)" = "buster" ]; then \
+	    MIN_VERSION=1.5.0 ; \
+	elif [ "$(DISTRO_CODE)" = "stretch" ]; then \
+	    MIN_VERSION=1.4.17 ; \
 	else \
-	    MIN_VERSION=1.1.2 ; \
+	    echo "ERROR: Unsupported CMA platform ($(DISTRO_CODE))" ; \
+	    exit 1 ; \
 	fi ; \
-	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	echo -e "MIN_VERSION=$$MIN_VERSION\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
-	@if [ -n "$(DEMO_SUFFIX)" ]; then \
+
+	@if [ "$(EDITION)" = "free" ]; then \
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
 

@@ -55,14 +55,16 @@ def check_jira_custom_svc(item, params, item_data):
         if computation == "avg":
             svc_value = float(svc_value)
 
-        upper_level = params.get('custom_svc_%s_upper' % computation, (None, None))
-        lower_level = params.get('custom_svc_%s_lower' % computation, (None, None))
+        upper_level = params.get("custom_svc_%s_upper" % computation, (None, None))
+        lower_level = params.get("custom_svc_%s_lower" % computation, (None, None))
 
-        yield check_levels(svc_value,
-                           "jira_%s" % computation,
-                           upper_level + lower_level,
-                           human_readable_func=hr_func,
-                           infoname=infotext)
+        yield check_levels(
+            svc_value,
+            "jira_%s" % computation,
+            upper_level + lower_level,
+            human_readable_func=hr_func,
+            infoname=infotext,
+        )
 
         if computation == "avg":
             avg_total = item_data.get("avg_total")
@@ -73,8 +75,8 @@ def check_jira_custom_svc(item, params, item_data):
         else:
             diff_key = "%s_diff" % computation
             timespan = params.get(diff_key, 604800)
-            diff_levels_upper = params.get('%s_upper' % diff_key, (None, None))
-            diff_levels_lower = params.get('%s_lower' % diff_key, (None, None))
+            diff_levels_upper = params.get("%s_upper" % diff_key, (None, None))
+            diff_levels_lower = params.get("%s_lower" % diff_key, (None, None))
 
             diff = _get_value_diff("jira_%s" % diff_key, svc_value, timespan)
 
@@ -99,9 +101,7 @@ def _get_value_diff(diff_name, svc_value, timespan):
 
     # Get previous value and time difference
     last_time, last_val = old_state
-    timedif = this_time - last_time
-    if timedif < 0:
-        timedif = 0
+    timedif = max(this_time - last_time, 0)
     if timedif < float(timespan):
         diff_val = svc_value - last_val
     else:
@@ -114,8 +114,8 @@ def _get_value_diff(diff_name, svc_value, timespan):
 check_info["jira_custom_svc"] = {
     "parse_function": parse_jira_custom_svc,
     "check_function": check_jira_custom_svc,
-    'inventory_function': discover(),
+    "inventory_function": discover(),
     "service_description": "Jira %s",
-    'has_perfdata': True,
+    "has_perfdata": True,
     "group": "jira_custom_svc",
 }

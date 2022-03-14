@@ -1,14 +1,13 @@
 title: Microsoft Azure: Agent Info
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the general state of the azure special agent.
  It reports the remaining API calls (which are limited by Microsoft),
  the monitored groups and encountered issues.
 
-inventory:
+discovery:
  One service is created for each monitored resource group and one for the
  host that the agent is assigned to.
-

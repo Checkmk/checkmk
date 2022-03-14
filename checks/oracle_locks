@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.oracle import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
 # newdb|25|15231|ol6131|sqlplus@ol6131 (TNS V1-V3)|13275|oracle|SYS|3782|VALID|1|407|1463|ol6131|sqlplus@ol6131 (TNS V1-V3)|13018|oracle|SYS
@@ -25,11 +26,11 @@ def inventory_oracle_locks(info):
 def check_oracle_locks(item, params, info):
     lockcount = 0
     state = -1
-    infotext = ''
+    infotext = ""
 
     for line in info:
         warn, crit = params["levels"]
-        if line[0] == item and line[1] != '':
+        if line[0] == item and line[1] != "":
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
@@ -39,17 +40,44 @@ def check_oracle_locks(item, params, info):
             if len(line) == 10:
 
                 # old format from locks_old in current plugin
-                _sid, sidnr, serial, machine, _program, process, osuser, ctime, \
-                object_owner, object_name = line
+                (
+                    _sid,
+                    sidnr,
+                    serial,
+                    machine,
+                    _program,
+                    process,
+                    osuser,
+                    ctime,
+                    object_owner,
+                    object_name,
+                ) = line
 
             elif len(line) == 18:
 
-                _sid, sidnr, serial, machine, _program, process, osuser, _dbusername, ctime, \
-                _block_status, _blk_inst_id, _blk_sid, _blk_serial, _blk_machine, _blk_program, \
-                _blk_process, _blk_osuser, _blk_dbusername = line
+                (
+                    _sid,
+                    sidnr,
+                    serial,
+                    machine,
+                    _program,
+                    process,
+                    osuser,
+                    _dbusername,
+                    ctime,
+                    _block_status,
+                    _blk_inst_id,
+                    _blk_sid,
+                    _blk_serial,
+                    _blk_machine,
+                    _blk_program,
+                    _blk_process,
+                    _blk_osuser,
+                    _blk_dbusername,
+                ) = line
 
-                object_owner = ''
-                object_name = ''
+                object_owner = ""
+                object_name = ""
 
             else:
 
@@ -60,22 +88,44 @@ def check_oracle_locks(item, params, info):
             if ctime >= crit:
                 state = 2
                 lockcount += 1
-                infotext += 'locktime %s (!!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; ' \
-                            % (get_age_human_readable(ctime), sidnr, serial, process, machine, osuser, object_owner, object_name)
+                infotext += (
+                    "locktime %s (!!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; "
+                    % (
+                        get_age_human_readable(ctime),
+                        sidnr,
+                        serial,
+                        process,
+                        machine,
+                        osuser,
+                        object_owner,
+                        object_name,
+                    )
+                )
 
             elif ctime >= warn:
                 state = max(1, state)
                 lockcount += 1
-                infotext += 'locktime %s (!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; ' \
-                            % (get_age_human_readable(ctime), sidnr, serial, process, machine, osuser, object_owner, object_name)
+                infotext += (
+                    "locktime %s (!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; "
+                    % (
+                        get_age_human_readable(ctime),
+                        sidnr,
+                        serial,
+                        process,
+                        machine,
+                        osuser,
+                        object_owner,
+                        object_name,
+                    )
+                )
 
-        if line[0] == item and line[1] == '':
+        if line[0] == item and line[1] == "":
             state = max(0, state)
 
-    if infotext == '':
-        infotext = 'No locks existing'
+    if infotext == "":
+        infotext = "No locks existing"
     elif lockcount > 10:
-        infotext = 'more then 10 locks existing!'
+        infotext = "more then 10 locks existing!"
 
     if state != -1:
         return (state, infotext)
@@ -87,9 +137,9 @@ def check_oracle_locks(item, params, info):
 
 
 check_info["oracle_locks"] = {
-    'check_function': check_oracle_locks,
-    'inventory_function': inventory_oracle_locks,
-    'service_description': 'ORA %s Locks',
+    "check_function": check_oracle_locks,
+    "inventory_function": inventory_oracle_locks,
+    "service_description": "ORA %s Locks",
     "default_levels_variable": "oracle_locks_defaults",
-    'group': 'oracle_locks',
+    "group": "oracle_locks",
 }

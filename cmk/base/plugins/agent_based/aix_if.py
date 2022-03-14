@@ -4,48 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 
 
 def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
-    r"""
-    >>> from pprint import pprint
-    >>> pprint(parse_aix_if([
-    ... ['[en0]'], ['Hardware', 'Address:', '00:00:00:00:00:00'],
-    ... ['Packets:', '201485224', 'Packets:', '252330366'],
-    ... ['Bytes:', '366285856218', 'Bytes:', '116117685059'],
-    ... ['General', 'Statistics:'],
-    ... ['-------------------'],
-    ... ['No', 'mbuf', 'Errors:', '0'],
-    ... ['Adapter', 'Reset', 'Count:', '0'],
-    ... ['Adapter', 'Data', 'Rate:', '20000'],
-    ... ['Driver', 'Flags:', 'Up', 'Broadcast', 'Debug'],
-    ... ['Running', 'Simplex', '64BitSupport'],
-    ... ['ChecksumOffload', 'DataRateSet'],
-    ... ['[en1]'],
-    ... ['Hardware', 'Address:', '01:02:03:04:05:06'],
-    ... ['Packets:', '451364492', 'Packets:', '606173007'],
-    ... ['Bytes:', '8701785086915', 'Bytes:', '70611010508'],
-    ... ['General', 'Statistics:'],
-    ... ['-------------------'],
-    ... ['No', 'mbuf', 'Errors:', '0'],
-    ... ['Adapter', 'Reset', 'Count:', '0'],
-    ... ['Adapter', 'Data', 'Rate:', '20000'],
-    ... ['Driver', 'Flags:', 'Up', 'Broadcast', 'Running'],
-    ... ['Simplex', '64BitSupport', 'ChecksumOffload'],
-    ... ['DataRateSet']]))
-    [Interface(index='1', descr='en0', alias='en0', type='6', speed=20000000000, oper_status='1', in_octets=116117685059, in_ucast=252330366, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=366285856218, out_ucast=201485224, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x00\x00\x00\x00\x00\x00', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=482403541277),
-     Interface(index='2', descr='en1', alias='en1', type='6', speed=20000000000, oper_status='1', in_octets=70611010508, in_ucast=606173007, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=8701785086915, out_ucast=451364492, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x01\x02\x03\x04\x05\x06', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8772396097423)]
-    """
     ifaces = {}
     flags = {}
     index = 0
     for line in string_table:
-        if line[0].startswith('['):
+        if line[0].startswith("["):
             nic = line[0][1:-1]
             index += 1
             ifaces[nic] = iface = interfaces.Interface(

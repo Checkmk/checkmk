@@ -1,7 +1,7 @@
 title: Netgear Switches: Power Supplies
 agents: snmp
 catalog: hw/network/netgear
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors power supplies of Netgear switches
@@ -12,5 +12,5 @@ description:
 item:
  The power supply identifier.
 
-inventory:
+discovery:
  One service is created for each power supply.

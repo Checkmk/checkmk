@@ -1,0 +1,14 @@
+Title: mssql_versions: Remove deprecated inventory plugin which is replaced by the new inventory plugin mssql_instance
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1635332141
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+As the deprecated mssql_versions check plugin (werk 3725) the related
+inventory plugin is also removed. Instead the new inventory plugin
+mssql_instance is added.
+You have to update the agent plugin mssql.vbs on the related hosts.

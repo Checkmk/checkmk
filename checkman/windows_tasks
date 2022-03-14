@@ -1,7 +1,7 @@
 title: Windows Task Scheduler: State
 agents: windows
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check plugin monitors the last return state of Windows tasks. The check plugin uses a default
@@ -22,5 +22,5 @@ description:
 item:
  Name of the task
 
-inventory:
+discovery:
  One service is created for each task which is not disabled.

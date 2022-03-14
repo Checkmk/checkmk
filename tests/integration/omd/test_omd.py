@@ -6,8 +6,10 @@
 
 import subprocess
 
+from tests.testlib.site import Site
 
-def test_run_omd(site):
+
+def test_run_omd(site: Site):
     p = site.execute(["omd"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 1
@@ -16,7 +18,7 @@ def test_run_omd(site):
     assert "omd COMMAND -h" in stdout
 
 
-def test_run_omd_help(site):
+def test_run_omd_help(site: Site):
     p = site.execute(["omd", "help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -25,7 +27,7 @@ def test_run_omd_help(site):
     assert "omd COMMAND -h" in stdout
 
 
-def test_run_omd_version(site):
+def test_run_omd_version(site: Site):
     p = site.execute(["omd", "version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -33,7 +35,7 @@ def test_run_omd_version(site):
     assert stdout.endswith("%s\n" % site.version.omd_version())
 
 
-def test_run_omd_version_bare(site):
+def test_run_omd_version_bare(site: Site):
     p = site.execute(["omd", "version", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -41,7 +43,7 @@ def test_run_omd_version_bare(site):
     assert stdout.rstrip("\n") == site.version.omd_version()
 
 
-def test_run_omd_versions(site):
+def test_run_omd_versions(site: Site):
     p = site.execute(["omd", "versions"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -51,7 +53,7 @@ def test_run_omd_versions(site):
     assert site.version.omd_version() in versions
 
 
-def test_run_omd_versions_bare(site):
+def test_run_omd_versions_bare(site: Site):
     p = site.execute(["omd", "versions", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -61,7 +63,7 @@ def test_run_omd_versions_bare(site):
     assert site.version.omd_version() in versions
 
 
-def test_run_omd_sites(site):
+def test_run_omd_sites(site: Site):
     p = site.execute(["omd", "sites"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -69,7 +71,7 @@ def test_run_omd_sites(site):
     assert site.id in stdout
 
 
-def test_run_omd_sites_bare(site):
+def test_run_omd_sites_bare(site: Site):
     p = site.execute(["omd", "sites", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -92,6 +94,6 @@ def test_run_omd_sites_bare(site):
 # omd backup     [SITE] [-|ARCHIVE_PATH] Create a backup tarball of a site, writing it to a file or stdout
 # omd restore    [SITE] [-|ARCHIVE_PATH] Restores the backup of a site to an existing site or creates a new site
 #
-#General Options:
+# General Options:
 # -V <version>                    set specific version, useful in combination with update/create
 # omd COMMAND -h, --help          show available options of COMMAND

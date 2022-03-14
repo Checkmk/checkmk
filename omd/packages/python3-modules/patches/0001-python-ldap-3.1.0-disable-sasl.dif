@@ -1,9 +1,0 @@
---- dest/python-ldap-3.3.1/setup.cfg.sav	2018-05-25 14:26:11.000000000 +0200
-+++ dest/python-ldap-3.3.1/setup.cfg	2018-07-17 08:43:13.228227356 +0200
-@@ -1,5 +1,5 @@
- [_ldap]
--defines = HAVE_SASL HAVE_TLS HAVE_LIBLDAP_R
-+defines = HAVE_TLS HAVE_LIBLDAP_R
- extra_compile_args = 
- extra_objects = 
- libs = ldap_r lber

@@ -1,14 +1,14 @@
 title: Coubase Nodes: Operations
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
  This service monitors the number of operations per second on a single node.
  Levels can be configured in the WATO rule "Couchbase Operations".
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

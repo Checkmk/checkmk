@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#TODO WATO
+# TODO WATO
 
-factory_settings['informix_sessions_default_levels'] = {'levels': (50, 60)}
+factory_settings["informix_sessions_default_levels"] = {"levels": (50, 60)}
 
 
 def parse_informix_sessions(info):
@@ -29,7 +29,7 @@ def inventory_informix_sessions(parsed):
 def check_informix_sessions(item, params, parsed):
     if item in parsed:
         sessions = int(parsed[item])
-        warn, crit = params['levels']
+        warn, crit = params["levels"]
         state = 0
         infotext = "%s sessions" % sessions
         if sessions >= crit:
@@ -38,14 +38,15 @@ def check_informix_sessions(item, params, parsed):
             state = 0
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)
-        return state, infotext, [('sessions', sessions)]
+        return state, infotext, [("sessions", sessions)]
 
 
-check_info['informix_sessions'] = {
-    'parse_function': parse_informix_sessions,
-    'inventory_function': inventory_informix_sessions,
-    'check_function': check_informix_sessions,
-    'has_perfdata': True,
-    'service_description': 'Informix Sessions %s',
-    'default_levels_variable': 'informix_sessions_default_levels',
+check_info["informix_sessions"] = {
+    "parse_function": parse_informix_sessions,
+    "inventory_function": inventory_informix_sessions,
+    "check_function": check_informix_sessions,
+    "has_perfdata": True,
+    "service_description": "Informix Sessions %s",
+    "group": "informix_sessions",
+    "default_levels_variable": "informix_sessions_default_levels",
 }

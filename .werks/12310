@@ -1,0 +1,13 @@
+Title: add cgroup v2 support for mk_docker.py
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1617025290
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The output of the docker api differs depending on the cgroup version used on
+the docker host. checkmk can now handle the output of mk_docker.py running on a
+cgroup v2 host.

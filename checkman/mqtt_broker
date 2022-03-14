@@ -1,0 +1,30 @@
+title: MQTT: Broker miscellaneous information
+agents: mqtt
+catalog: app/mqtt
+license: GPLv2
+distribution: check_mk
+description:
+ This check measures miscellaneous information of a MQTT broker instance. It
+ displays the total number of subscriptions active on the broker and the socket
+ connection rate.
+
+ To make this check work you have to configure the special agent {agent_mqtt}
+ which connects via MQTT to the broker to gather information from the {$SYS/}
+ topic.
+
+ This check has been developed with Mosquitto message broker but might also work
+ with other brokers. The available values vary from broker to broker and from
+ version to version.
+
+ Please note that this check may only be useful if you connect it directly to a
+ broker. In case you want to monitor a multi-tentant cluster, this check is
+ only useful if configure it for each node since the {$SYS/} topic is is node
+ specific. It is not useful to use this check through a load balancer.
+
+ The check is always {OK}.
+
+item:
+ The instance ID configured in the special agent.
+
+discovery:
+ One service is created for each instance.

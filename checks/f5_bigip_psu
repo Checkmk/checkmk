@@ -9,8 +9,9 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Agent / MIB output
-#SysChassisPowerSupplyEntry ::=
+# SysChassisPowerSupplyEntry ::=
 #        SEQUENCE {
 #                sysChassisPowerSupplyIndex                   INTEGER,
 #                sysChassisPowerSupplyStatus                  INTEGER
@@ -50,11 +51,10 @@ def check_f5_bigip_psu(item, _no_params, info):
 
 
 check_info["f5_bigip_psu"] = {
-    'check_function': check_f5_bigip_psu,
-    'inventory_function': inventory_f5_bigip_psu,
-    'service_description': 'PSU %s',
+    "check_function": check_f5_bigip_psu,
+    "inventory_function": inventory_f5_bigip_psu,
+    "service_description": "PSU %s",
     # Get ID and status from the SysChassisPowerSupplyTable
-    'snmp_info': ('.1.3.6.1.4.1.3375.2.1.3.2.2.2.1', [1, 2]),
-    'snmp_scan_function':  # Check using the vendor mib Id and verify it's a loadbalancer
-        scan_f5_bigip,
+    "snmp_info": (".1.3.6.1.4.1.3375.2.1.3.2.2.2.1", [1, 2]),
+    "snmp_scan_function": scan_f5_bigip,  # Check using the vendor mib Id and verify it's a loadbalancer
 }

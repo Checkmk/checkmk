@@ -1,12 +1,11 @@
 title: Innovaphone Gateway: Memory Usage
 agents: special
 catalog: hw/network/innovaphone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the current Memory usage in percent.
 
 
-inventory:
+discovery:
  One service is created.
-

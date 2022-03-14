@@ -3,35 +3,54 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+This special agent is deprecated. Please use agent_kube.
+"""
+
+####################################################################################
+# NOTE: This special agent is deprecated and will be removed in Checkmk version 2.2.
+#       It is replaced by agent_kube
+####################################################################################
+
+from typing import Any, Mapping, Optional, Sequence, Union
 
 
-def agent_kubernetes_arguments(params, hostname, ipaddress):
-    args = ['--token', passwordstore_get_cmdline("%s", params["token"])]
+def agent_kubernetes_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
+    args = ["--token", passwordstore_get_cmdline("%s", params["token"])]
 
-    args += ['--infos', ','.join(params.get('infos', ['nodes']))]
+    args += ["--infos", ",".join(params.get("infos", ["nodes"]))]
 
-    if params.get('no-cert-check'):
+    if params.get("no-cert-check"):
         args += ["--no-cert-check"]
 
-    if params.get('namespaces'):
+    if params.get("namespaces"):
         args += ["--prefix-namespace"]
 
-    args.append('--api-server-endpoint')
-    configured_endpoint_name, configured_endpoint = params['api-server-endpoint']
-    if configured_endpoint_name == 'url_custom':
+    for namespace in params.get("namespace_include_patterns", []):
+        args.append("--namespace-include-patterns")
+        args.append(namespace)
+
+    args.append("--api-server-endpoint")
+    configured_endpoint_name, configured_endpoint = params["api-server-endpoint"]
+    if configured_endpoint_name == "url_custom":
         args.append(configured_endpoint)
         return args
 
-    args.append('https://%s' % {
-        'hostname': hostname,
-        'ipaddress': ipaddress,
-    }[configured_endpoint_name])
+    args.append(
+        "https://%s"
+        % {
+            "hostname": hostname,
+            "ipaddress": ipaddress,
+        }[configured_endpoint_name]
+    )
 
     for arg_name, arg_value in configured_endpoint.items():
-        args.append(f'--{arg_name}')
+        args.append(f"--{arg_name}")
         args.append(str(arg_value))
 
     return args
 
 
-special_agent_info['kubernetes'] = agent_kubernetes_arguments
+special_agent_info["kubernetes"] = agent_kubernetes_arguments

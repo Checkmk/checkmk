@@ -1,0 +1,14 @@
+Title: REST API: title should be optional on update
+Class: fix
+Compatible: compat
+Component: core
+Date: 1629973934
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this werk a HTTP status 400 was returned when trying to update a folder
+config without providing a title, although the OpenAPI document indicated that
+the title field was optional.

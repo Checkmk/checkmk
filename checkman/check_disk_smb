@@ -1,7 +1,7 @@
 title: Access to a SMB Share / Free Space
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -13,4 +13,3 @@ description:
  for {WARN} and {CRIT}.
 
  This check can be configured by Wato.
-

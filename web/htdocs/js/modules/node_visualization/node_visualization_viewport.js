@@ -83,6 +83,7 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         this._selections_for_layer = {}; // Each layer gets a div and svg selection
         this._node_chunk_list = []; // Node data
         this._margin = {top: 10, right: 10, bottom: 10, left: 10};
+        this._overlay_configs = {};
 
         //////////////////////////////////
         // Infos usable by layers
@@ -192,37 +193,30 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         layer.set_enabled(!layer.is_toggleable());
     }
 
+    get_overlay_configs() {
+        return this._overlay_configs;
+    }
+
+    set_overlay_config(overlay_id, new_config) {
+        this._overlay_configs[overlay_id] = new_config;
+        this.update_active_overlays();
+    }
+
     update_active_overlays() {
-        let initial_overlays_config = this.main_instance.get_initial_overlays_config();
-
-        let overlay_config = this.layout_manager.get_overlay_config();
-        let active_overlays = {};
-
-        for (let idx in initial_overlays_config) {
-            let overlay = initial_overlays_config[idx];
-            if (overlay && overlay.active == true) active_overlays[idx] = true;
-        }
-
-        for (let idx in overlay_config) {
-            let overlay = overlay_config[idx];
-            if (overlay && overlay.active == true) active_overlays[idx] = true;
-        }
-
         // Enable/Disable overlays
         for (let idx in this._layers) {
             let layer = this._layers[idx];
             if (!layer.is_toggleable()) continue;
 
             let layer_id = layer.id();
-            if (active_overlays[layer_id]) {
-                if (layer.is_enabled()) continue;
-                this.enable_layer(layer_id);
-            } else {
-                if (!layer.is_enabled()) continue;
-                this.disable_layer(layer_id);
-            }
+            let layer_config = this.get_overlay_configs()[layer_id];
+            if (!layer_config) continue;
+
+            if (layer_config.active && !layer.is_enabled()) this.enable_layer(layer_id);
+            else if (!layer_config.active && layer.is_enabled()) this.disable_layer(layer_id);
         }
         this.update_overlay_toggleboxes();
+        this.main_instance.update_browser_url();
     }
 
     enable_layer(layer_id) {
@@ -248,34 +242,27 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             let layer = this._layers[idx];
             let layer_id = layer.id();
             if (layer.toggleable) {
-                let overlay_config = this.layout_manager.layout_applier.current_layout_group
-                    .overlay_config;
-                if (!overlay_config[layer_id]) continue;
-
-                if (overlay_config[layer_id].configurable != true) continue;
-
-                configurable_overlays.push({layer: layer, config: overlay_config[layer_id]});
+                if (!this._overlay_configs[layer_id]) continue;
+                if (this._overlay_configs[layer_id].configurable != true) continue;
+                configurable_overlays.push({layer: layer, config: this._overlay_configs[layer_id]});
             }
         }
 
         // Update toggleboxes
-        let togglebuttons = d3.select("div#togglebuttons");
-        let toggleboxes = togglebuttons
+        d3.select("div#togglebuttons")
             .selectAll("div.togglebox")
-            .data(configurable_overlays, d => d.layer.id());
-        toggleboxes.exit().remove();
-        toggleboxes = toggleboxes
-            .enter()
-            .append("div")
-            .text(d => d.layer.name())
-            .attr("layer_id", d => d.layer.id())
-            .classed("box", true)
-            .classed("noselect", true)
-            .classed("togglebox", true)
-            .style("pointer-events", "all")
-            .on("click", event => this.toggle_overlay_click(event))
-            .merge(toggleboxes);
-        toggleboxes.classed("enabled", d => d.config.active);
+            .data(configurable_overlays, d => d.layer.id())
+            .join(enter =>
+                enter
+                    .append("div")
+                    .text(d => d.layer.name())
+                    .attr("layer_id", d => d.layer.id())
+                    .classed("noselect", true)
+                    .classed("togglebox", true)
+                    .style("pointer-events", "all")
+                    .on("click", event => this.toggle_overlay_click(event))
+            )
+            .classed("enabled", d => d.config.active);
     }
 
     toggle_overlay_click(event) {
@@ -285,8 +272,11 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
 
         var new_state = !this._layers[layer_id].is_enabled();
         target.classed("enabled", new_state);
-        if (new_state == true) this.enable_layer(layer_id);
-        else this.disable_layer(layer_id);
+
+        let overlay_config = this.get_overlay_configs()[layer_id] || {};
+        overlay_config.active = !overlay_config.active;
+        this.set_overlay_config(layer_id, overlay_config);
+        this.update_active_overlays();
     }
 
     feed_data(data_to_show) {

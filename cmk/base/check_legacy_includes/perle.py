@@ -8,7 +8,7 @@
 
 
 def perle_scan_function(oid):
-    return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.1966.20')
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1966.20")
 
 
 def perle_check_alarms(alarms_str):
@@ -33,9 +33,19 @@ def perle_check_alarms(alarms_str):
 
 def inventory_perle_cm_modules(info):
     inventory = []
-    for _name, _led, index, \
-        _fiber_lprf, _fiber_link, _fiber_conn, _fiber_speed, \
-        _cooper_lprf, _copper_link, _copper_conn, _copper_speed in info:
+    for (
+        _name,
+        _led,
+        index,
+        _fiber_lprf,
+        _fiber_link,
+        _fiber_conn,
+        _fiber_speed,
+        _cooper_lprf,
+        _copper_link,
+        _copper_conn,
+        _copper_speed,
+    ) in info:
         inventory.append((index, None))
     return inventory
 
@@ -85,23 +95,34 @@ def check_perle_cm_modules(item, _no_params, info):
         },
     }
 
-    for _name, power_led, index, \
-        fiber_lprf, fiber_link, fiber_connector, fiber_speed, \
-        cooper_lprf, copper_link, copper_connector, copper_speed in info:
+    for (
+        _name,
+        power_led,
+        index,
+        fiber_lprf,
+        fiber_link,
+        fiber_connector,
+        fiber_speed,
+        cooper_lprf,
+        copper_link,
+        copper_connector,
+        copper_speed,
+    ) in info:
         if item == index:
             state, state_readable = mappings["power_led"][power_led]
             yield state, "Power status: %s" % state_readable
 
             for what, lprf, link, speed, connector in [
                 ("Fiber", fiber_lprf, fiber_link, fiber_speed, fiber_connector),
-                ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector)
+                ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector),
             ]:
 
                 yield 0, "%s Speed: %s" % (what, mappings["speed"][speed])
 
                 for what_state, what_key in [(lprf, "LPRF"), (link, "Link")]:
-                    state, state_readable = mappings["%s_%s" %
-                                                     (what.lower(), what_key.lower())][what_state]
+                    state, state_readable = mappings["%s_%s" % (what.lower(), what_key.lower())][
+                        what_state
+                    ]
                     yield state, "%s: %s" % (what_key, state_readable)
 
                 yield 0, "Connector: %s" % mappings["%s_connector" % what.lower()][connector]

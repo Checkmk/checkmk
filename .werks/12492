@@ -1,0 +1,12 @@
+Title: Fix add metric from service view to custom and forecast graphs
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1623771666
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

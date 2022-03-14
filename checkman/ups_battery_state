@@ -1,7 +1,7 @@
 title: Generic UPS Device: Battery state
 agents: snmp
 catalog: hw/power/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the following battery conditions, if available:
@@ -18,5 +18,5 @@ description:
  If one of them becomes active, the check will yield
  a critical state alongside the reason(s) as check summary.
 
-inventory:
+discovery:
  One service is created for each UPS.

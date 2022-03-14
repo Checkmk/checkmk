@@ -6,7 +6,7 @@
 
 from typing import NamedTuple, Optional, Tuple
 
-from cmk.utils.type_defs import ServiceCheckResult
+from cmk.utils.check_utils import ServiceCheckResult
 
 
 class AggregatedResult(NamedTuple):
@@ -14,10 +14,3 @@ class AggregatedResult(NamedTuple):
     data_received: bool
     result: ServiceCheckResult
     cache_info: Optional[Tuple[int, int]]
-
-
-ITEM_NOT_FOUND: ServiceCheckResult = (3, "Item not found in monitoring data", [])
-
-RECEIVED_NO_DATA: ServiceCheckResult = (3, "Check plugin received no monitoring data", [])
-
-CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', [])

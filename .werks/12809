@@ -1,0 +1,15 @@
+Title: mk-job.solaris: support for parameters containing spaces
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620219880
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+mk-job does now support paramaters that contain spaces. E.g. the following commands will now work:
+mk-job test ls
+mk-job test ls -v
+In order to apply this bugfix you need to redeploy the agent plugin.

@@ -4,33 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import logging
+import os
 import sys
 import tarfile
-from typing import AbstractSet, BinaryIO, cast, List
 from pathlib import Path
+from typing import AbstractSet, BinaryIO, cast, List
 
-from six import ensure_str
-
-from cmk.utils.log import VERBOSE
+import cmk.utils.debug
+import cmk.utils.packaging as packaging
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
-import cmk.utils.debug
-import cmk.utils.packaging as packaging
+from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
-    PackageException,
-    package_dir,
-    read_package_info,
-    write_package_info,
-    parse_package_info,
-    get_package_parts,
-    unpackaged_files,
-    unpackaged_files_in_dir,
     get_config_parts,
     get_initial_package_info,
+    get_package_parts,
+    package_dir,
     PACKAGE_EXTENSION,
+    PackageException,
+    parse_package_info,
+    read_package_info,
+    unpackaged_files,
+    unpackaged_files_in_dir,
+    write_package_info,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -39,7 +37,8 @@ PackageName = str
 
 
 def packaging_usage() -> None:
-    sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
+    sys.stdout.write(
+        """Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
    create NAME      ...  Collect unpackaged files into new package NAME
@@ -60,7 +59,9 @@ Available commands are:
    -v  enables verbose output
 
 Package files are located in %s.
-""" % package_dir())
+"""
+        % package_dir()
+    )
 
 
 def do_packaging(args: List[str]) -> None:
@@ -93,8 +94,9 @@ def do_packaging(args: List[str]) -> None:
     else:
         allc = sorted(commands)
         allc = [tty.bold + c + tty.normal for c in allc]
-        logger.error("Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]),
-                     allc[-1])
+        logger.error(
+            "Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]), allc[-1]
+        )
         sys.exit(1)
 
 
@@ -110,7 +112,9 @@ def package_list(args: List[str]) -> None:
                 if package is None:
                     table.append([pacname, "package info is missing or broken", "0"])
                 else:
-                    table.append([pacname, package["title"], str(package["num_files"])])
+                    table.append(
+                        [pacname, package["title"], str(packaging.package_num_files(package))]
+                    )
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
             for pacname in packaging.installed_names():
@@ -135,11 +139,11 @@ def show_package_info(name: PackageName) -> None:
 def show_package(name: PackageName, show_info: bool = False) -> None:
     try:
         if name.endswith(PACKAGE_EXTENSION):
-            tar = tarfile.open(name, "r:gz")
-            info = tar.extractfile("info")
+            with tarfile.open(name, "r:gz") as tar:
+                info = tar.extractfile("info")
             if info is None:
-                raise PackageException("Failed to extract \"info\"")
-            package = parse_package_info(ensure_str(info.read()))
+                raise PackageException('Failed to extract "info"')
+            package = parse_package_info(info.read().decode())
         else:
             this_package = read_package_info(name)
             if not this_package:
@@ -170,10 +174,9 @@ def show_package(name: PackageName, show_info: bool = False) -> None:
         if logger.isEnabledFor(VERBOSE):
             sys.stdout.write("Files in package %s:\n" % name)
             for part in get_package_parts():
-                files = package["files"].get(part.ident, [])
-                if len(files) > 0:
+                if part_files := package["files"].get(part.ident, []):
                     sys.stdout.write("  %s%s%s:\n" % (tty.bold, part.title, tty.normal))
-                    for f in files:
+                    for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
             for part in get_package_parts():
@@ -192,20 +195,28 @@ def package_create(args: List[str]) -> None:
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = get_initial_package_info(pacname)
     filelists = package["files"]
-    num_files = 0
     for part in get_package_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)
         filelists[part.ident] = files
-        num_files += len(files)
         if len(files) > 0:
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in files:
                 logger.log(VERBOSE, "    %s", f)
 
     write_package_info(package)
-    logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
-    logger.log(VERBOSE, "Please edit package details in %s%s%s", tty.bold,
-               package_dir() / pacname, tty.normal)
+    logger.log(
+        VERBOSE,
+        "New package %s created with %d files.",
+        pacname,
+        packaging.package_num_files(package),
+    )
+    logger.log(
+        VERBOSE,
+        "Please edit package details in %s%s%s",
+        tty.bold,
+        package_dir() / pacname,
+        tty.normal,
+    )
 
 
 def package_find(_no_args: List[str]) -> None:
@@ -216,9 +227,8 @@ def package_find(_no_args: List[str]) -> None:
                 logger.log(VERBOSE, "Unpackaged files:")
 
             found = frozenset(
-                Path(part.path) / f
-                for f in files
-                if (Path(part.path) / f).resolve() not in visited)
+                Path(part.path) / f for f in files if (Path(part.path) / f).resolve() not in visited
+            )
             if found:
                 logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for p in found:
@@ -245,13 +255,15 @@ def package_pack(args: List[str]) -> None:
 
     # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
-    for directory in [cmk.utils.paths.var_dir
-                     ] + [p.path for p in get_package_parts() + get_config_parts()]:
+    for directory in [cmk.utils.paths.var_dir] + [
+        p.path for p in get_package_parts() + get_config_parts()
+    ]:
         if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
             raise PackageException(
                 "You are in %s!\n"
                 "Please leave the directories of Check_MK before creating\n"
-                "a packet file. Foreign files lying around here will mix up things." % abs_curdir)
+                "a packet file. Foreign files lying around here will mix up things." % abs_curdir
+            )
 
     pacname = args[0]
     package = read_package_info(pacname)

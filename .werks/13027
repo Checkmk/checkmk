@@ -1,0 +1,24 @@
+Title: Bulk notification without WATO plugin crash
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1626443610
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When using a bulk notification without a WATO plugin the notification crashed with:
+
+<pre>
+2021-07-16 14:18:17,279 [40] [cmk.base.notify] Error sending bulk /omd/sites/cmk/var/check_mk/notify/bulk/cmkadmin/my_bulk/10,1000,host,localhost:
+Traceback (most recent call last):
+  File "/omd/sites/cmk200p7/lib/python3/cmk/base/notify.py", line 1889, in send_ripe_bulks
+    notify_bulk(bulk[0], bulk[-1])
+  File "/omd/sites/cmk200p7/lib/python3/cmk/base/notify.py", line 1937, in notify_bulk
+    assert isinstance(old_params, dict)
+AssertionError
+</pre>
+
+This is now fixed.

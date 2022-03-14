@@ -1,7 +1,7 @@
 title: Unitrends: Replication Status
 agents: linux
 catalog: app/unitrends
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Unitrends is an enterprise class backup solution.
@@ -15,5 +15,5 @@ description:
 item:
  Target of the replication
 
-inventory:
+discovery:
  One service is created for each replication target.

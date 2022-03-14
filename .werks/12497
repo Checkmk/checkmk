@@ -1,0 +1,21 @@
+Title: check_dns: Explicit option in WATO rule
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1616060737
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The active check <tt>check_dns</tt> of the <i>monitoring-plugins</i> package
+no longer supports a comma separated list of expected addresses.
+
+You must now specify exactly one address in each field of the WATO rule.
+Additionally, you can now choose wether to expect all of the given addresses,
+or any (i.e. at least one) of them.
+
+By default we assume you expect all of the specified addresses to be returned.
+Please revisit the WATO rule <i>"Check DNS service"</i>, to make sure it is
+correct.

@@ -1,0 +1,12 @@
+Title: Tag configuration: Fixed broken "Tag usage" page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1619508543
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The "Tag Usage" page failed with an exception if a tag group contained an empty tag.

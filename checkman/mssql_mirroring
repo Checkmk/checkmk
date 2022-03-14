@@ -1,0 +1,46 @@
+title: MSSQL Database: Mirroring
+agents: windows
+catalog: app/mssql
+license: GPLv2
+distribution: check_mk
+description:
+ Mirroring is the practice of having two or more instances of the same database
+ on different servers to enable failover.
+
+ This check monitors the mirroring status of MSSQL databases that have
+ mirroring configured. Databases that do not have mirroring configured are not
+ discovered.
+
+ Note: mirroring information is only shown as a service on the server that
+ hosts the principal database. It is NOT shown on any servers that host the
+ mirror databases. This is to avoid duplicate service states and alerts. We
+ therefore recommend to cluster these services.
+
+ Parameters:
+ This check is configurable via the "MSSQL Mirroring State" ruleset. The
+ following parameters can be configured:
+
+ "Mirroring state criticality":
+ Decide which criticality the service should have if the mirroring state is not
+ "SYNCHRONIZED".
+
+ "Mirroring witness state criticality":
+ Decide which criticality the service should have if the mirroring witness
+ state is not "CONNECTED".
+
+ This check needs the Checkmk mssql.vbs-plugin installed on the host. Please
+ refer to the online documentation for instructions on how to install this
+ plugin.
+
+item:
+ The database name.
+
+inventory:
+ A seperate service is created for each database.
+
+cluster:
+ In the event that MSSQL mirroring services are clustered (recommended), the
+ result is shown for each principle database instance. If there is more than one
+ principle database found on the clustered nodes, the check returns a CRIT state,
+ along with the information on which nodes the principle database was found. The
+ clustered service can be configured the same way as the non-clustered service.

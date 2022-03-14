@@ -20,7 +20,7 @@ protected:
             ::testing::UnitTest::GetInstance()->current_test_info()->name());
         user_dir_ = dirs_->in();
         target_ = dirs_->out();
-        zip_file_ = user_dir_ / tst::zip_to_test;
+        zip_file_ = user_dir_ / tst::install_cab_to_test;
         cab_file_ = user_dir_ / tst::cab_to_test;
     }
     std::unique_ptr<tst::TempDirPair> dirs_;
@@ -34,7 +34,8 @@ TEST_F(ZipFixture, UnZipIntegration) {
     auto target = target_ / "unzip";
     auto work_file = zip_file_;
 
-    fs::copy_file(tst::G_TestPath / tst::zip_to_test, work_file);
+    fs::copy_file(tst::GetUnitTestFilesRoot() / tst::install_cab_to_test,
+                  work_file);
 
     ASSERT_FALSE(Extract(work_file / "1", target_));
 
@@ -49,7 +50,7 @@ TEST_F(ZipFixture, UnCabIntegration) {
     auto target = target_ / "uncab";
     auto work_file = cab_file_;
 
-    fs::copy_file(tst::G_TestPath / tst::cab_to_test, work_file);
+    fs::copy_file(tst::GetUnitTestFilesRoot() / tst::cab_to_test, work_file);
     ASSERT_FALSE(Extract((work_file / "1"), target_));
 
     ASSERT_FALSE(Extract(work_file, target));
@@ -59,7 +60,7 @@ TEST_F(ZipFixture, UnCabIntegration) {
     ASSERT_FALSE(Extract(target, target));
     //
     ASSERT_TRUE(Extract(work_file, target));
-    for (auto& entry : {"systemd", "mtr.cfg", "systemd/check_mk.socket"}) {
+    for (auto &entry : {"systemd", "mtr.cfg", "systemd/check_mk.socket"}) {
         EXPECT_TRUE(fs::exists(target / entry));
     }
 }

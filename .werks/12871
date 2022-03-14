@@ -1,0 +1,14 @@
+Title: Fix accidentally showing of unpublished visuals
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1622557796
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Users with permission "Edit foreign views" could view unpublished views.
+The same problem occured for all visuals like bookmarks, topics, dashboards and
+so on.

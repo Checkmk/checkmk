@@ -4,32 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import marshal
 import os
 import time
-import marshal
-import cmk.utils.paths
-from typing import (
-    Dict,
-    Set,
-    Tuple,
-    List,
-    Optional,
-)
+from pathlib import Path
+from typing import Dict, List, Mapping, Optional, Set, Tuple
 
-from cmk.utils.type_defs import HostName
+from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
+
+import cmk.utils.paths
 from cmk.utils.bi.bi_lib import (
-    RequiredBIElement,
-    SitesCallback,
     ABCBIStatusFetcher,
-    BIStatusInfo,
     BIHostData,
-    BIServiceData,
-    BIServiceWithFullState,
     BIHostSpec,
     BIHostStatusInfoRow,
+    BIServiceData,
+    BIServiceWithFullState,
+    BIStatusInfo,
+    RequiredBIElement,
+    SitesCallback,
 )
-from livestatus import SiteId, LivestatusResponse, LivestatusColumn
-from pathlib import Path
+from cmk.utils.type_defs import HostName
 
 SiteProgramStart = Tuple[SiteId, int]
 
@@ -82,7 +77,7 @@ class BIStructureFetcher:
         self._hosts.clear()
 
     @property
-    def hosts(self) -> Dict[str, BIHostData]:
+    def hosts(self) -> Dict[HostName, BIHostData]:
         return self._hosts
 
     def get_cached_program_starts(self) -> Set[SiteProgramStart]:
@@ -107,17 +102,32 @@ class BIStructureFetcher:
         # Querying the service tables provides additional info like service_tags/service_labels
         # If something happens (reload config) between the host and service query, we simply ignore it
         host_query = "GET hosts\nColumns: %s\nCache: reload\n" % " ".join(
-            self._host_structure_columns())
-        host_rows = self._sites_callback.query(host_query, list(only_sites.keys()))
+            self._host_structure_columns()
+        )
+        host_rows = self._sites_callback.query(
+            host_query, list(only_sites.keys()), output_format=LivestatusOutputFormat.JSON
+        )
 
         service_query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(
-            self._service_structure_columns())
+            self._service_structure_columns()
+        )
         host_service_lookup: Dict[HostName, List] = {}
-        for row in self._sites_callback.query(service_query, list(only_sites.keys())):
+        for row in self._sites_callback.query(
+            service_query, list(only_sites.keys()), output_format=LivestatusOutputFormat.JSON
+        ):
             host_service_lookup.setdefault(row[1], []).append(row[2:])
 
-        site_data: Dict[str, Dict] = {}
-        for site, host_name, host_tags, host_labels, host_childs, host_parents, host_alias, host_filename in host_rows:
+        site_data: Dict[str, Dict] = {x: {} for x in only_sites.keys()}
+        for (
+            site,
+            host_name,
+            host_tags,
+            host_labels,
+            host_childs,
+            host_parents,
+            host_alias,
+            host_filename,
+        ) in host_rows:
             services = {
                 description: (set(tags), labels)
                 for description, tags, labels in host_service_lookup.get(host_name, [])
@@ -125,11 +135,23 @@ class BIStructureFetcher:
 
             # This data will be serialized to disc
             # Named tuples/dicts will be used later on when the data gets processed
-            site_data.setdefault(site, {})[host_name] = (
+
+            # Remove hosts.mk suffix
+            cleaned_host_filename = (
+                host_filename[:-8] if host_filename.endswith("/hosts.mk") else host_filename
+            )
+            # Remove /wato prefix
+            cleaned_host_filename = (
+                cleaned_host_filename[6:]
+                if cleaned_host_filename.startswith("/wato")
+                else cleaned_host_filename
+            )
+
+            site_data[site][host_name] = (
                 site,
-                set(host_tags.values()),
+                set(host_tags.items()),
                 host_labels,
-                host_filename.rstrip("/hosts.mk"),
+                cleaned_host_filename,
                 services,
                 tuple(host_childs),
                 tuple(host_parents),
@@ -140,7 +162,8 @@ class BIStructureFetcher:
         for site_id, hosts in site_data.items():
             self.add_site_data(site_id, hosts)
             path = self._path_site_structure_data.joinpath(
-                self._site_data_filename(site_id, only_sites[site_id]))
+                self._site_data_filename(site_id, only_sites[site_id])
+            )
             self._marshal_save_data(str(path), hosts)
 
     def _read_cached_data(self, required_program_starts: Set[SiteProgramStart]) -> None:
@@ -161,8 +184,13 @@ class BIStructureFetcher:
     @classmethod
     def _host_structure_columns(cls) -> List[str]:
         return [
-            "host_name", "host_tags", "host_labels", "host_childs", "host_parents", "host_alias",
-            "host_filename"
+            "host_name",
+            "host_tags",
+            "host_labels",
+            "host_childs",
+            "host_parents",
+            "host_alias",
+            "host_filename",
         ]
 
     @classmethod
@@ -174,15 +202,15 @@ class BIStructureFetcher:
 
     def add_site_data(self, site_id, hosts) -> None:
         # BIHostData
-        #("site_id", str),
-        #("tags", set),
-        #("labels", set),
-        #("folder", str),
-        #("services", Dict[str, BIServiceData]),
-        #("children", tuple),
-        #("parents", tuple),
-        #("alias", str),
-        #("name", str),
+        # ("site_id", str),
+        # ("tags", Set[Tuple[TaggroupID, TagID]]),
+        # ("labels", set),
+        # ("folder", str),
+        # ("services", Dict[str, BIServiceData]),
+        # ("children", tuple),
+        # ("parents", tuple),
+        # ("alias", str),
+        # ("name", str),
 
         for host_name, values in hosts.items():
             site_id, tags, labels, folder, services, children, parents, alias, name = values
@@ -200,7 +228,7 @@ class BIStructureFetcher:
 
         self._have_sites.add(site_id)
 
-    def cleanup_orphaned_files(self, known_sites: Dict[str, int]) -> None:
+    def cleanup_orphaned_files(self, known_sites: Mapping[SiteId, int]) -> None:
         for path_object, (site_id, timestamp) in self._get_site_data_files():
             try:
                 if known_sites.get(site_id) == timestamp:
@@ -229,7 +257,7 @@ class BIStructureFetcher:
                 path_object.unlink(missing_ok=True)
                 continue
 
-            data_files.append((path_object, (site_id, int(timestamp))))
+            data_files.append((path_object, (SiteId(site_id), int(timestamp))))
         return data_files
 
     def _marshal_save_data(self, filepath, data) -> None:
@@ -291,13 +319,18 @@ class BIStatusFetcher(ABCBIStatusFetcher):
             host_filter += "Or: %d\n" % len(req_hosts)
 
         query = "GET hosts\nColumns: %s\n" % " ".join(self.get_status_columns()) + host_filter
-        return self.create_bi_status_data(self._sites_callback.query(query, list(req_sites)))
+        return self.create_bi_status_data(
+            self._sites_callback.query(
+                query, list(req_sites), output_format=LivestatusOutputFormat.JSON
+            )
+        )
 
     # This variant of the function is configured not with a list of
     # hosts but with a livestatus filter header and a list of columns
     # that need to be fetched in any case
-    def _get_status_info_filtered(self, filter_header, only_sites, limit, host_columns, bygroup,
-                                  required_aggregations) -> BIStatusInfo:
+    def _get_status_info_filtered(
+        self, filter_header, only_sites, limit, host_columns, bygroup, required_aggregations
+    ) -> BIStatusInfo:
         columns = self.get_status_columns() + host_columns
         query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
         query += "Columns: " + (" ".join(columns)) + "\n"
@@ -341,9 +374,8 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
     @classmethod
     def create_bi_status_data(
-            cls,
-            rows: LivestatusResponse,
-            extra_columns: Optional[List[LivestatusColumn]] = None) -> BIStatusInfo:
+        cls, rows: LivestatusResponse, extra_columns: Optional[List[LivestatusColumn]] = None
+    ) -> BIStatusInfo:
         response = {}
         bi_data_end = len(cls.get_status_columns())
         idx_svc_full_state = cls.get_index_services_with_fullstate()
@@ -354,7 +386,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
             }
             remaining_row_keys = {}
             if extra_columns:
-                remaining_row_keys = dict(zip(extra_columns, row[-len(extra_columns):]))
+                remaining_row_keys = dict(zip(extra_columns, row[-len(extra_columns) :]))
 
             args = row[2:bi_data_end] + [services_with_fullstate] + [remaining_row_keys]
             response[BIHostSpec(row[0], row[1])] = BIHostStatusInfoRow(*args)
@@ -367,7 +399,13 @@ class BIStatusFetcher(ABCBIStatusFetcher):
     @classmethod
     def get_status_columns(cls) -> List[LivestatusColumn]:
         return [
-            "name", "state", "has_been_checked", "hard_state", "plugin_output",
-            "scheduled_downtime_depth", "in_service_period", "acknowledged",
-            "services_with_fullstate"
+            "name",
+            "state",
+            "has_been_checked",
+            "hard_state",
+            "plugin_output",
+            "scheduled_downtime_depth",
+            "in_service_period",
+            "acknowledged",
+            "services_with_fullstate",
         ]

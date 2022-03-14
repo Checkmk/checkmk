@@ -24,33 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    FixedValue,
-    TextAscii,
-    Integer,
-    Float,
-    ListOf,
-    CascadingDropdown,
-)
-
-from cmk.gui.plugins.wato import (
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersApplications,
-    CheckParameterRulespecWithItem,
-)
-
 from cmk.utils.oracle_constants import (
-    oracle_iofiles,
     oracle_io_sizes,
     oracle_io_types,
+    oracle_iofiles,
     oracle_pga_fields,
     oracle_sga_fields,
     oracle_waitclasses,
+)
+
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+)
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FixedValue,
+    Float,
+    Integer,
+    ListOf,
+    TextInput,
+    Tuple,
 )
 
 
@@ -59,53 +58,53 @@ def _valuespec_discovery_oracle_performance():
         title=_("Service discovery: "),
         elements=[
             (
-                'dbtime',
+                "dbtime",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create separate Service for DB-Time"),
-                    totext=_('Extracts DB-Time performance data into a separate service'),
+                    totext=_("Extracts DB-Time performance data into a separate service"),
                 ),
             ),
             (
-                'memory',
+                "memory",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create separate Service for memory information"),
-                    totext=
-                    _('Extracts SGA performance data into a separate service and additionally displays PGA performance data'
-                     ),
+                    totext=_(
+                        "Extracts SGA performance data into a separate service and additionally displays PGA performance data"
+                    ),
                 ),
             ),
             (
-                'iostat_bytes',
+                "iostat_bytes",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create additional Service for IO Stats Bytes"),
-                    totext=
-                    _('Creates a new service that displays information about disk I/O of database files. '
-                      'This service displays the number of bytes read and written to database files.'
-                     ),
+                    totext=_(
+                        "Creates a new service that displays information about disk I/O of database files. "
+                        "This service displays the number of bytes read and written to database files."
+                    ),
                 ),
             ),
             (
-                'iostat_ios',
+                "iostat_ios",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create additional Service for IO Stats Requests"),
-                    totext=
-                    _('Creates a new service that displays information about disk I/O of database files. '
-                      'This service displays the number of single block read and write requests that are being made to database files.'
-                     ),
+                    totext=_(
+                        "Creates a new service that displays information about disk I/O of database files. "
+                        "This service displays the number of single block read and write requests that are being made to database files."
+                    ),
                 ),
             ),
             (
-                'waitclasses',
+                "waitclasses",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Create additional Service for System Wait"),
-                    totext=
-                    _('Display the time an oracle instance spents inside of the different wait classes.'
-                     ),
+                    totext=_(
+                        "Display the time an oracle instance spents inside of the different wait classes."
+                    ),
                 ),
             ),
         ],
@@ -119,26 +118,31 @@ rulespec_registry.register(
         match_type="dict",
         valuespec=_valuespec_discovery_oracle_performance,
         title=lambda: _("Oracle performance discovery"),
-    ))
+    )
+)
 
 
 def _parameter_valuespec_oracle_performance():
     def levels_tuple(Type, unit):
-        return Tuple(orientation="float",
-                     show_titles=False,
-                     elements=[
-                         Type(label=_("Warning at"), unit=unit),
-                         Type(label=_("Critical at"), unit=unit),
-                     ])
+        return Tuple(
+            orientation="float",
+            show_titles=False,
+            elements=[
+                Type(label=_("Warning at"), unit=unit),
+                Type(label=_("Critical at"), unit=unit),
+            ],
+        )
 
     # memory
     memory_choices: list = []
     for ga in oracle_sga_fields + oracle_pga_fields:
-        memory_choices.append((
-            ga.metric,
-            ga.name,
-            levels_tuple(Integer, "bytes"),
-        ))
+        memory_choices.append(
+            (
+                ga.metric,
+                ga.name,
+                levels_tuple(Integer, "bytes"),
+            )
+        )
 
     # iostat_bytes + iostat_ios
     iostat_bytes_choices: list = []
@@ -147,11 +151,13 @@ def _parameter_valuespec_oracle_performance():
         for size_code, size_text in oracle_io_sizes:
             for io_code, io_text, io_unit in oracle_io_types:
                 target_array = iostat_bytes_choices if io_unit == "bytes/s" else iostat_ios_choices
-                target_array.append((
-                    "oracle_ios_f_%s_%s_%s" % (iofile_id, size_code, io_code),
-                    " %s %s %s" % (iofile_name, size_text, io_text),
-                    levels_tuple(Integer, io_unit),
-                ))
+                target_array.append(
+                    (
+                        "oracle_ios_f_%s_%s_%s" % (iofile_id, size_code, io_code),
+                        " %s %s %s" % (iofile_name, size_text, io_text),
+                        levels_tuple(Integer, io_unit),
+                    )
+                )
 
     # waitclasses
     waitclasses_choices: list = [
@@ -168,18 +174,19 @@ def _parameter_valuespec_oracle_performance():
     ]
     for waitclass in oracle_waitclasses:
         waitclasses_choices.append(
-            (waitclass.metric, "%s wait class" % waitclass.name, levels_tuple(Float, "1/s")))
+            (waitclass.metric, "%s wait class" % waitclass.name, levels_tuple(Float, "1/s"))
+        )
         waitclasses_choices.append(
-            (waitclass.metric_fg, "%s wait class (FG)" % waitclass.name, levels_tuple(Float,
-                                                                                      "1/s")))
+            (waitclass.metric_fg, "%s wait class (FG)" % waitclass.name, levels_tuple(Float, "1/s"))
+        )
 
     return Dictionary(
         help=_("Here you can set levels for the ORACLE Performance metrics."),
         elements=[
             (
-                'dbtime',
+                "dbtime",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=[
@@ -192,9 +199,9 @@ def _parameter_valuespec_oracle_performance():
                 ),
             ),
             (
-                'memory',
+                "memory",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=memory_choices,
@@ -203,9 +210,9 @@ def _parameter_valuespec_oracle_performance():
                 ),
             ),
             (
-                'iostat_bytes',
+                "iostat_bytes",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=iostat_bytes_choices,
@@ -214,9 +221,9 @@ def _parameter_valuespec_oracle_performance():
                 ),
             ),
             (
-                'iostat_ios',
+                "iostat_ios",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=iostat_ios_choices,
@@ -225,9 +232,9 @@ def _parameter_valuespec_oracle_performance():
                 ),
             ),
             (
-                'waitclasses',
+                "waitclasses",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=waitclasses_choices,
@@ -243,8 +250,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="oracle_performance",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_performance,
         title=lambda: _("Oracle Performance"),
-    ))
+    )
+)

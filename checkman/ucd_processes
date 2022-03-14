@@ -1,7 +1,7 @@
 title: UCD SNMP Daemon: Processes
 agents: snmp
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the processes via SNMP on systems running the UCD SNMP daemon.
@@ -13,5 +13,5 @@ description:
 item:
  The index and type of processes.
 
-inventory:
+discovery:
  One service is created for each process type.

@@ -1,0 +1,17 @@
+Title: Liveproxy Daemon: React to changes in CAs without manual restart
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1637248987
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When using encrypted connections, the CAs trusted by the Liveproxy Daemon
+(LPD) can be administrated via the global setting "Trusted certificate
+authorities for SSL". Depending on the current state of the LPD, a manual
+restart was necessary for the LPD to take changes in this setting into
+account. In particular, removing a CA of a remote side to which the LPD
+was currently connected to did not result in a loss of connection without
+a restart.

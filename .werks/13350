@@ -1,0 +1,14 @@
+Title: IPMI sensors via IPMItool: Add option to specify interface
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1634631056
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The special agent which collects data from IPMI sensors via IPMItool
+(ruleset "IPMI Sensors via Freeipmi or IPMItool") now has an
+additional configuration option to specify the IPMI interface to be
+used with ipmitool. This is necessary for some devices.

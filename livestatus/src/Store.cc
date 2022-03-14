@@ -5,7 +5,7 @@
 
 #include "Store.h"
 
-#include <ctime>
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -142,7 +142,7 @@ Store::ExternalCommand::ExternalCommand(const std::string &str) {
 
 Store::ExternalCommand Store::ExternalCommand::withName(
     const std::string &name) const {
-    return ExternalCommand(_prefix, name, _arguments);
+    return {_prefix, name, _arguments};
 }
 
 std::string Store::ExternalCommand::str() const {
@@ -192,7 +192,8 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     if (mk::starts_with(line, "LOGROTATE")) {
         logRequest(line, {});
         Informational(logger()) << "Forcing logfile rotation";
-        rotate_log_file(time(nullptr));
+        rotate_log_file(std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now()));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
                            0, 0,
                            reinterpret_cast<void *>(get_next_log_rotation_time),
@@ -276,14 +277,7 @@ void Store::answerCommandEventConsole(const ExternalCommand &command) {
 
 void Store::answerCommandNagios(const ExternalCommand &command) {
     std::lock_guard<std::mutex> lg(_command_mutex);
-    auto command_str = command.str();
-    // The Nagios headers are (once again) not const-correct...
-    auto *cmd = const_cast<char *>(command_str.c_str());
-#ifdef NAGIOS4
-    process_external_command1(cmd);
-#else
-    submit_external_command(cmd, nullptr);
-#endif
+    nagios_compat_submit_external_command(command.str().c_str());
 }
 
 bool Store::answerGetRequest(const std::list<std::string> &lines,
@@ -297,7 +291,5 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    std::lock_guard<std::mutex> lg(_log_cache._lock);
-    _log_cache.update();
     return _log_cache.numCachedLogMessages();
 }

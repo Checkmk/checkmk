@@ -1,0 +1,13 @@
+Title: hr_mem: raises KeyError() on invalid SNMP data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617001639
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+An empty value for hrStorageType component cannot be mapped to a known type and currently
+crashes with a KeyError(). This change will just ignore hr_mem-entries without given hrStorageType.

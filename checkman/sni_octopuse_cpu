@@ -1,13 +1,12 @@
 title: Siemens Octopus E: CPU Utilization
 agents: snmp
 catalog: hw/phone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization of a local PBXs supporting the SNI-OCTOPUS-E Mib.
  Most common example is the Siemens HiPath 3000 and 5000 series.
  A high CPU utilization is not known to cause issues, so the check does not have configurable levels.
 
-inventory:
+discovery:
  One service is created.
-

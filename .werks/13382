@@ -1,0 +1,18 @@
+Title: Avoid unnecessary warn messages in Redis server log
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1635505525
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The Redis server log ~/var/log/redis-server.log could contain warning messages
+for the number of maximum open files and the TCP backlog settings on startup.
+
+The configuration has now been adjusted, so you should not get this messages any more.
+
+Please note, that there could be still a overcommit_memory warning, especially
+on our appliances. We will not change this OS setting for now.

@@ -5,30 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Integer,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_entersekt_certexpiry():
-    return Dictionary(elements=[
-        (
-            "levels",
-            Tuple(title=_("Levels for number of days until expiration"),
-                  elements=[
-                      Integer(title=_("Warning if below"), default_value=20),
-                      Integer(title=_("Critical if below"), default_value=10),
-                  ]),
-        ),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels for number of days until expiration"),
+                    elements=[
+                        Integer(title=_("Warning if below"), default_value=20),
+                        Integer(title=_("Critical if below"), default_value=10),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_entersekt_certexpiry,
         title=lambda: _("Entersekt Certificate Expiration"),
-    ))
+    )
+)

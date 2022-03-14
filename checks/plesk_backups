@@ -17,19 +17,19 @@ def check_plesk_backups(item, params, info):
         if item != line[0]:
             continue
 
-        if len(line) != 5 or line[1] != '0':
-            if line[1] == '2':
-                return (3, 'Error in agent (%s)' % ' '.join(line[1:]))
+        if len(line) != 5 or line[1] != "0":
+            if line[1] == "2":
+                return (3, "Error in agent (%s)" % " ".join(line[1:]))
 
-            elif line[1] == '4':
-                state = params.get('no_backup_configured_state', 1)
-                return (state, 'No backup configured')
+            elif line[1] == "4":
+                state = params.get("no_backup_configured_state", 1)
+                return (state, "No backup configured")
 
-            elif line[1] == '5':
-                state = params.get('no_backup_found_state', 1)
-                return (state, 'No backup found')
+            elif line[1] == "5":
+                state = params.get("no_backup_found_state", 1)
+                return (state, "No backup found")
 
-            return (3, 'Unexpected line %r' % line)
+            return (3, "Unexpected line %r" % line)
 
         _domain, _rc, timestamp, size, total_size = line
         size = saveint(size)
@@ -41,12 +41,12 @@ def check_plesk_backups(item, params, info):
         perfdata = []
 
         # 1. check last backup size not 0 bytes
-        status_txt = ''
+        status_txt = ""
         if size == 0:
             status = 2
-            status_txt = ' (!!)'
-        output.append('Last Backup - Size: %s%s' % (get_bytes_human_readable(size), status_txt))
-        perfdata.append(('last_backup_size', size))
+            status_txt = " (!!)"
+        output.append("Last Backup - Size: %s%s" % (get_bytes_human_readable(size), status_txt))
+        perfdata.append(("last_backup_size", size))
 
         age_seconds = int(time.time()) - timestamp
         seconds = age_seconds % 60
@@ -56,45 +56,47 @@ def check_plesk_backups(item, params, info):
         days = int(rem / 1440)
 
         # 2. check age of last backup < 24h
-        status_txt = ''
+        status_txt = ""
         warn, crit = None, None
-        if 'backup_age' in params:
-            warn, crit = params['backup_age']
-            if age_seconds > params['backup_age'][1]:
+        if "backup_age" in params:
+            warn, crit = params["backup_age"]
+            if age_seconds > params["backup_age"][1]:
                 status = max(status, 2)
-                status_txt = ' (!!)'
-            elif age_seconds > params['backup_age'][0]:
+                status_txt = " (!!)"
+            elif age_seconds > params["backup_age"][0]:
                 status = max(status, 1)
-                status_txt = ' (!)'
+                status_txt = " (!)"
 
         backup_time = time.strftime("%c", time.localtime(timestamp))
-        output.append('Age: %s (%dd %02d:%02d:%02d)%s' %
-                      (backup_time, days, hours, minutes, seconds, status_txt))
-        perfdata.append(('last_backup_age', age_seconds, warn, crit))
+        output.append(
+            "Age: %s (%dd %02d:%02d:%02d)%s"
+            % (backup_time, days, hours, minutes, seconds, status_txt)
+        )
+        perfdata.append(("last_backup_age", age_seconds, warn, crit))
 
         # 3. check total size of directory above configured threshold
-        status_txt = ''
+        status_txt = ""
         warn, crit = None, None
-        if 'total_size' in params:
-            warn, crit = params['total_size']
-            if total_size > params['total_size'][1]:
+        if "total_size" in params:
+            warn, crit = params["total_size"]
+            if total_size > params["total_size"][1]:
                 status = max(status, 2)
-                status_txt = ' (!!)'
-            elif total_size > params['total_size'][0]:
+                status_txt = " (!!)"
+            elif total_size > params["total_size"][0]:
                 status = max(status, 1)
-                status_txt = ' (!)'
-        output.append('Total Size: %s%s' % (get_bytes_human_readable(total_size), status_txt))
-        perfdata.append(('total_size', total_size))
+                status_txt = " (!)"
+        output.append("Total Size: %s%s" % (get_bytes_human_readable(total_size), status_txt))
+        perfdata.append(("total_size", total_size))
 
-        return (status, ', '.join(output), perfdata)
+        return (status, ", ".join(output), perfdata)
 
-    return (3, 'Domain not found')
+    return (3, "Domain not found")
 
 
-check_info['plesk_backups'] = {
-    'check_function': check_plesk_backups,
-    'inventory_function': inventory_plesk_backups,
-    'service_description': "Plesk Backup %s",
-    'has_perfdata': True,
-    'group': 'plesk_backups',
+check_info["plesk_backups"] = {
+    "check_function": check_plesk_backups,
+    "inventory_function": inventory_plesk_backups,
+    "service_description": "Plesk Backup %s",
+    "has_perfdata": True,
+    "group": "plesk_backups",
 }

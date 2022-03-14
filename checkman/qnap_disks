@@ -1,18 +1,17 @@
 title: QNAP NAS: Harddisk Status
 agents: snmp
 catalog: hw/storagehw/qnap
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health and current Status of
  Hardisks attached to a QNAP NAS device.
- The check returns an {CRIT} in case of an error state reported
- by the device. The check also reports the model number, size and the
- temperature for each disk.
+ The check returns {CRIT} in case of an error state reported by the device.
+ If the SMART status is missing or not "GOOD", {WARN} will be returned.
+ The check also reports the model number, size and temperature for each disk.
 
 item:
  The name of the disk like reported in the MIB
 
-inventory:
+discovery:
  One service is created for each Disk.
-

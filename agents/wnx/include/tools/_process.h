@@ -3,13 +3,11 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// Assorted process management routines
 #pragma once
 
 #include <Windows.h>
 #include <shlobj.h>
 
-#include <fstream>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -18,8 +16,8 @@
 #include "tools/_xlog.h"
 
 namespace cma::tools {
-inline bool RunCommandAndWait(const std::wstring& command,
-                              const std::wstring& work_dir) {
+inline bool RunCommandAndWait(const std::wstring &command,
+                              const std::wstring &work_dir) {
     STARTUPINFOW si{0};
     ::memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
@@ -32,7 +30,7 @@ inline bool RunCommandAndWait(const std::wstring& command,
     auto working_folder = work_dir.empty() ? nullptr : work_dir.data();
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(command.c_str()),  // win32!
+                         const_cast<wchar_t *>(command.c_str()),  // win32!
                          nullptr,         // security attribute
                          nullptr,         // thread attribute
                          FALSE,           // no handle inheritance
@@ -48,12 +46,11 @@ inline bool RunCommandAndWait(const std::wstring& command,
     return false;
 }
 
-inline bool RunCommandAndWait(const std::wstring& command) {
-    std::wstring path{L""};
-    return RunCommandAndWait(command, path);
+inline bool RunCommandAndWait(const std::wstring &command) {
+    return RunCommandAndWait(command, L"");
 }
 
-inline bool RunDetachedCommand(const std::string& Command) {
+inline bool RunDetachedCommand(const std::string &command) {
     STARTUPINFOA si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
@@ -64,7 +61,7 @@ inline bool RunDetachedCommand(const std::string& Command) {
     // CREATE_NEW_CONSOLE
 
     if (::CreateProcessA(nullptr,  // stupid windows want null here
-                         const_cast<char*>(Command.c_str()),  // win32!
+                         const_cast<char *>(command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
                          FALSE,    // no handle inheritance
@@ -104,7 +101,7 @@ inline uint32_t RunStdCommand(
     memset(&pi, 0, sizeof(pi));
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(command.data()),  // win32!
+                         const_cast<wchar_t *>(command.data()),  // win32!
                          nullptr,         // security attribute
                          nullptr,         // thread attribute
                          inherit_handle,  // handle inheritance
@@ -125,20 +122,20 @@ inline uint32_t RunStdCommand(
 // #TODO make right API from this wrapper
 // returns [ProcId, JobHandle, ProcessHandle]
 inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
-    const std::wstring& Command,  // full command with arguments
-    BOOL InheritHandle = FALSE,   // not optimal, but default
-    HANDLE Stdio = 0,             // when we want to catch output
-    HANDLE Stderr = 0,            // same
-    DWORD CreationFlags = 0,      // never checked this
-    DWORD StartFlags = 0) noexcept {
+    const std::wstring &Command,  // full command with arguments
+    BOOL inherit_handle = FALSE,  // not optimal, but default
+    HANDLE stdio_handle = 0,      // when we want to catch output
+    HANDLE stderr_handle = 0,     // same
+    DWORD creation_flags = 0,     // never checked this
+    DWORD start_flags = 0) noexcept {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
-    si.dwFlags = StartFlags;
-    si.hStdOutput = Stdio;
-    si.hStdError = Stderr;
-    if (InheritHandle)
+    si.dwFlags = start_flags;
+    si.hStdOutput = stdio_handle;
+    si.hStdError = stderr_handle;
+    if (inherit_handle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
@@ -149,13 +146,13 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     if (!job_handle) return {0, nullptr, nullptr};
 
     if (!::CreateProcessW(NULL,  // stupid windows want null here
-                          const_cast<wchar_t*>(Command.c_str()),  // win32!
-                          nullptr,        // security attribute
-                          nullptr,        // thread attribute
-                          InheritHandle,  // handle inheritance
-                          CreationFlags,  // Creation Flags
-                          nullptr,        // environment
-                          nullptr,        // current directory
+                          const_cast<wchar_t *>(Command.c_str()),  // win32!
+                          nullptr,         // security attribute
+                          nullptr,         // thread attribute
+                          inherit_handle,  // handle inheritance
+                          creation_flags,  // Creation Flags
+                          nullptr,         // environment
+                          nullptr,         // current directory
                           &si, &pi)) {
         // #TODO diagnostic here!
         // clean out here. No process created
@@ -175,23 +172,22 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 
 namespace win {
 inline bool IsElevated() {
-    BOOL fRet = FALSE;
-    HANDLE hToken = NULL;
-    if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    HANDLE token = NULL;
+    if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token))
         return false;
-    ON_OUT_OF_SCOPE(if (hToken)::CloseHandle(hToken););
+    ON_OUT_OF_SCOPE(if (token)::CloseHandle(token););
 
-    TOKEN_ELEVATION Elevation;
-    DWORD cbSize = sizeof(TOKEN_ELEVATION);
-    if (::GetTokenInformation(hToken, TokenElevation, &Elevation,
-                              sizeof(Elevation), &cbSize)) {
-        return Elevation.TokenIsElevated == TRUE;
+    TOKEN_ELEVATION elevation;
+    DWORD size = sizeof(TOKEN_ELEVATION);
+    if (::GetTokenInformation(token, TokenElevation, &elevation,
+                              sizeof(elevation), &size)) {
+        return elevation.TokenIsElevated == TRUE;
     }
     return false;
 }
 
-inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) noexcept {
-    wchar_t* str = nullptr;
+inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID &rfid) noexcept {
+    wchar_t *str = nullptr;
     if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
         !str)  // probably impossible case when executed ok, but str is nullptr
         return {};
@@ -216,86 +212,5 @@ inline std::wstring GetTempFolder() {
 
 }  // namespace win
 
-inline bool IsFileExist(const std::wstring& File) noexcept {
-    try {
-        std::ifstream f(File.c_str(), std::ios::binary);
-
-        return f.good();
-    } catch (...) {
-    }
-    return false;
-}
 #endif
-inline bool IsFileExist(const std::string& File) noexcept {
-    try {
-        std::ifstream f(File.c_str(), std::ios::binary);
-
-        return f.good();
-    } catch (...) {
-    }
-    return false;
-}
-
-// check that update exists and exec it
-// returns true when update found and ready to exec
-inline bool RunExeAndForget(const std::wstring& Name,
-                            const std::wstring& CommandLine
-
-) {
-    /*
-        // check file existence
-        std::wstring msi_base = Path + L"\\" + Name;
-        if (!cma::tools::IsFileExist(msi_base)) return false;
-
-        switch (Update) {
-            case kMsiExec:
-            case kMsiExecQuiet:
-                break;
-            default:
-                xlog::l("Invalid Option %d", Update).print();
-                return false;
-        }
-
-        // Move file to temporary folder
-        auto msi_to_install = MakeTempFileNameInTempPath(Name);
-        if (msi_to_install.empty()) return false;
-
-        if (cma::tools::IsFileExist(msi_to_install)) {
-            auto ret = ::DeleteFile(msi_to_install.c_str());
-            if (!ret) {
-                xlog::l(
-                    "Updating is NOT possible, can't delete file %ls, error
-       %d\n", msi_to_install.c_str(), GetLastError()) .print(); return false;
-            }
-        }
-
-        // actual move
-        auto ret = ::MoveFile(msi_base.c_str(), msi_to_install.c_str());
-        if (!ret) {
-            xlog::l("Updating is NOT possible, can't move file, error %d\n",
-                    GetLastError())
-                .print();
-            return false;
-        }
-
-        // Prepare Command
-        std::wstring command = exe + L" ";
-        command = command + L" /i " + msi_to_install +
-                  L" REINSTALL=ALL REINSTALLMODE=amus ";
-
-        if (Update == kMsiExecQuiet)  // this is only normal method
-            command += L" /quiet";    // but MS doesn't care at all :)
-
-        xlog::l("File %ls exists\n Command is %ls", msi_to_install.c_str(),
-                command.c_str());
-
-        if (!StartUpdateProcess) {
-            xlog::l("Actual Updating is disabled").print();
-            return true;
-        }
-        return cma::tools::RunStdCommand(command, false, TRUE);
-    */
-    return true;
-}  // namespace srv
-
 }  // namespace cma::tools

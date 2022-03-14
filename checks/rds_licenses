@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
 # 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,20380119031407.000000-000
@@ -30,8 +31,8 @@ rds_licenses_product_versionid_map = {
     "4": "Windows Server 2012",
     "3": "Windows Server 2008 R2",
     "2": "Windows Server 2008"
-    #1    Not supported.
-    #0    Not supported.
+    # 1    Not supported.
+    # 0    Not supported.
 }
 
 
@@ -51,32 +52,24 @@ def parse_rds_licenses(info):
     return parsed
 
 
-def inventory_rds_licenses(parsed):
-    for key in parsed:
-        yield key, None
-
-
-def check_rds_licenses(item, params, parsed):
-    license_pack = parsed.get(item)
-    if not license_pack:
-        return
-
+@get_parsed_item_data
+def check_rds_licenses(item, params, data):
     total = 0
     used = 0
-    for pack in license_pack:
+    for pack in data:
         pack_total = int(pack.get("TotalLicenses"))
-        pack_avail = int(pack.get("AvailableLicenses"))
+        pack_issued = int(pack.get("IssuedLicenses"))
         total += pack_total
-        used += pack_total - pack_avail
+        used += pack_issued
 
     return license_check_levels(total, used, params)
 
 
-check_info['rds_licenses'] = {
-    'parse_function': parse_rds_licenses,
-    'inventory_function': inventory_rds_licenses,
-    'check_function': check_rds_licenses,
-    'service_description': "RDS Licenses %s",
-    'group': "rds_licenses",
-    'has_perfdata': True,
+check_info["rds_licenses"] = {
+    "parse_function": parse_rds_licenses,
+    "inventory_function": discover(),
+    "check_function": check_rds_licenses,
+    "service_description": "RDS Licenses %s",
+    "group": "rds_licenses",
+    "has_perfdata": True,
 }

@@ -13,7 +13,9 @@
 #  2  1 669941 89605   0   0   0   3   12   0  12  531 240  0  0 99  0  0.02   0.5
 #  0  1    2    3      4   5   6   7   8    9  10   11  12 13 14 15 16   17     18
 
-VMStatAIX = collections.namedtuple("VMStatAIX", ["user", "system", "idle", "wait"])
+VMStatAIX = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "VMStatAIX", ["user", "system", "idle", "wait"]
+)
 
 
 def parse_vmstat_aix(info):
@@ -25,27 +27,33 @@ def parse_vmstat_aix(info):
 
 
 def check_vmstat_aix(item, params, parsed):
-    if item != 'cpuperc':
+    if item != "cpuperc":
         return
 
     if parsed is None:
         return
 
-    return 0, "User: %s, System: %s, Idle: %s, Wait: %s"\
-           % (get_percent_human_readable(parsed.user),
-              get_percent_human_readable(parsed.system),
-              get_percent_human_readable(parsed.idle),
-              get_percent_human_readable(parsed.wait)),\
-           [('us', parsed.user),
-            ('sy', parsed.system),
-            ('id', parsed.idle),
-            ('wa', parsed.wait),
-           ]
+    return (
+        0,
+        "User: %s, System: %s, Idle: %s, Wait: %s"
+        % (
+            get_percent_human_readable(parsed.user),
+            get_percent_human_readable(parsed.system),
+            get_percent_human_readable(parsed.idle),
+            get_percent_human_readable(parsed.wait),
+        ),
+        [
+            ("us", parsed.user),
+            ("sy", parsed.system),
+            ("id", parsed.idle),
+            ("wa", parsed.wait),
+        ],
+    )
 
 
 check_info["vmstat_aix"] = {
-    'parse_function': parse_vmstat_aix,
-    'check_function': check_vmstat_aix,
-    'service_description': 'vmstat %s',
-    'has_perfdata': True,
+    "parse_function": parse_vmstat_aix,
+    "check_function": check_vmstat_aix,
+    "service_description": "vmstat %s",
+    "has_perfdata": True,
 }

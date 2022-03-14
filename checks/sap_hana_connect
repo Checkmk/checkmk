@@ -6,18 +6,9 @@
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 
 sap_hana_connect_state_map = {
-    "Worker: OK": {
-        "cmk_state": 0,
-        "fun": lambda inp: inp == "0"
-    },
-    "Standby: OK": {
-        "cmk_state": 0,
-        "fun": lambda inp: inp == "1"
-    },
-    "No connect": {
-        "cmk_state": 2,
-        "fun": lambda inp: inp not in ("0", "1")
-    }
+    "Worker: OK": {"cmk_state": 0, "fun": lambda inp: inp == "0"},
+    "Standby: OK": {"cmk_state": 0, "fun": lambda inp: inp == "1"},
+    "No connect": {"cmk_state": 2, "fun": lambda inp: inp not in ("0", "1")},
 }
 
 
@@ -26,13 +17,15 @@ def parse_sap_hana_connect(info):
     parsed = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         inst = parsed.setdefault(
-            sid_instance, {
+            sid_instance,
+            {
                 "server_node": "not found",
                 "driver_version": "not found",
                 "timestamp": "not found",
                 "cmk_state": 3,
-                "message": " ".join(lines[0])
-            })
+                "message": " ".join(lines[0]),
+            },
+        )
         for elem in lines[0]:
             if "retcode" in elem:
                 retcode = elem.split(":")[1].lstrip()
@@ -43,9 +36,9 @@ def parse_sap_hana_connect(info):
             if "Driver version" in elem:
                 inst["driver_version"] = elem.split("Driver version")[1].lstrip()
             if "Connect string:" in elem:
-                inst["server_node"] = re.search('SERVERNODE=(.*),SERVERDB', elem).group(1)
+                inst["server_node"] = re.search("SERVERNODE=(.*),SERVERDB", elem).group(1)
             if "Select now()" in elem:
-                inst["timestamp"] = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', elem).group()
+                inst["timestamp"] = re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", elem).group()
 
     return parsed
 
@@ -55,13 +48,17 @@ def check_sap_hana_connect(item, params, parsed):
 
     state = parsed["cmk_state"]
     message = "%s\nODBC Driver Version: %s, Server Node: %s, Timestamp: %s" % (
-        parsed["message"], parsed["driver_version"], parsed["server_node"], parsed["timestamp"])
+        parsed["message"],
+        parsed["driver_version"],
+        parsed["server_node"],
+        parsed["timestamp"],
+    )
     yield state, message
 
 
-check_info['sap_hana_connect'] = {
-    'parse_function': parse_sap_hana_connect,
-    'inventory_function': discover(),
-    'check_function': check_sap_hana_connect,
-    'service_description': 'SAP HANA CONNECT %s',
+check_info["sap_hana_connect"] = {
+    "parse_function": parse_sap_hana_connect,
+    "inventory_function": discover(),
+    "check_function": check_sap_hana_connect,
+    "service_description": "SAP HANA CONNECT %s",
 }

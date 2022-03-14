@@ -1,0 +1,24 @@
+title: Aruba 2930M: Fans
+agents: snmp
+catalog: hw/network/aruba
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the fan state of Aruba 2930M devices.
+
+ The state of the service is given by the device itself:
+
+ - {OK}: OK, MaxState
+
+ - {WARN}: Removed, Off, Underspeed, Overspeed
+
+ - {CRIT}: Failed
+
+
+ The check uses the hpicfDcFan-MIB.
+
+item:
+ The index of the fan.
+
+discovery:
+ One service is created for each fan.

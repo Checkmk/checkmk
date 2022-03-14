@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.artec import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.31560.3.1.1.1.48 33 --> ARTEC-MIB::hddTemperature
 
 # suggested by customer
@@ -30,13 +32,13 @@ def check_artec_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "artec_%s" % item)
 
 
-check_info['artec_temp'] = {
-    'inventory_function': inventory_artec_temp,
-    'check_function': check_artec_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.31560.3.1.1.1.48', ['']),
-    'snmp_scan_function': artec_scan_function,
-    'group': 'temperature',
-    'default_levels_variable': 'artec_temp_default_levels',
+check_info["artec_temp"] = {
+    "inventory_function": inventory_artec_temp,
+    "check_function": check_artec_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.31560.3.1.1.1.48", [""]),
+    "snmp_scan_function": artec_scan_function,
+    "group": "temperature",
+    "default_levels_variable": "artec_temp_default_levels",
 }

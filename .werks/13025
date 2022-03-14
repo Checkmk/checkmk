@@ -1,0 +1,22 @@
+Title: make `cmk --snmptranslate` more robust
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1626342728
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Before this werk it was possible that <tt>cmk --snmptranslate</tt> would crash
+if the oids to translate where to long.
+
+The oids where fed to snmptranslate as arguments and there is a limit for
+the number of characters. If this limit was exceeded by too long oids, <tt>cmkd
+--snmptranslate</tt> would stop without an error and needed to be killed.
+
+With this fix the oids are fed to snmptranslate via stdin. This reduced the
+time to process a walk with 137379 lines from 3 minutes 35 seconds to 2.4
+seconds.
+
+As the general speed is now much better, the status output was removed.

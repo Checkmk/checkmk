@@ -6,13 +6,14 @@
 
 import time
 from pathlib import Path
+
+from cmk.gui.cron import register_job
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.cron import register_job
 
 
 def rebuild_folder_lookup_cache():
     """Rebuild folder lookup cache around ~5AM
-       This needs to be done, since the cachefile might include outdated/vanished hosts"""
+    This needs to be done, since the cachefile might include outdated/vanished hosts"""
 
     localtime = time.localtime()
     if not (localtime.tm_hour == 5 and localtime.tm_min < 5):

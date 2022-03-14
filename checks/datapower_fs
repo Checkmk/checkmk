@@ -9,16 +9,20 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 def inventory_datapower_fs(info):
@@ -69,6 +73,7 @@ check_info["datapower_fs"] = {
             "6",  # dpStatusFilesystemStatusTotalTemporary
             "7",  # dpStatusFilesystemStatusFreeInternal
             "8",  # dpStatusFilesystemStatusTotalInternal
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
 }

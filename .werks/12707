@@ -1,0 +1,14 @@
+Title: `md` check: crashes with IndexError (list index out of range) on invalid input
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617963507
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Fed with input different from what the `md` check is made for it tries to access non-existent
+input elements and crashes with unhandled IndexError exception.
+This change makes `md` check for the minimum number of expected elements before accessing them.

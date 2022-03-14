@@ -1,7 +1,7 @@
 title: VMWare ESX Host Systems: Physical Network Interfaces
 agents: vsphere
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors performance counters of network interfaces via the vSphere API.
@@ -13,7 +13,7 @@ item:
  enumerates the interfaces, its description and its alias. For this check, the
  description and the alias are the same.
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6, 32,
@@ -24,4 +24,3 @@ inventory:
  interface but a group of interfaces that together form a pool.
  This check supports such pools by defining groups. The data of all members is
  accumulated and put together in a single grouped interface service.
-

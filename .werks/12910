@@ -1,0 +1,16 @@
+Title: Check_MK and Check_MK Discovery: clarify SNMP timeout message
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630500753
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When using the inline SNMP backend a timeout of the "Check_MK" and
+"Check_MK Discovery" service would result in the service state UNKNOWN
+and the output <i>"<built-in function getbulk> returned a result with an error set"</i>.
+This is not very helpful.
+
+The service now goes to CRIT, displaying <i>"Fetcher for host 'my_host' timed out after 60 seconds"</i>.

@@ -5,23 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_winperf_ts_sessions():
     return Dictionary(
-        help=_("This check monitors number of active and inactive terminal "
-               "server sessions."),
+        help=_("This check monitors number of active and inactive terminal " "server sessions."),
         elements=[
             (
                 "active",
@@ -55,4 +49,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_winperf_ts_sessions,
         title=lambda: _("Windows Terminal Server Sessions"),
-    ))
+    )
+)

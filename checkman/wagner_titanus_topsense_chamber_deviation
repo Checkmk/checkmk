@@ -1,7 +1,7 @@
 title: Wagner Titanus Top Sens: Chamber Deviation from Calibration Point
 agents: snmp
 catalog: hw/environment/wagner
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the Chamber Deviation from Calibration Point of Detectors in
@@ -10,10 +10,9 @@ description:
 
  The check is informational only and returns always {OK}.
 
-inventory:
+discovery:
  Two services are created.
  One service for every detector.
 
 item:
  One of the two numbers {{1}} or {{2}}
-

@@ -1,7 +1,7 @@
 title: Dell PowerEdge Server: Temperature Sensors
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature of Dell PowerEdge Servers by probing and
@@ -25,8 +25,6 @@ item:
  Either the name of the location variable configured for the temperature sensor, or
  the chassis index and sensor index seperated by a dash.
 
-inventory:
+discovery:
  One service is created for each temperature sensor
  if the state setting is not {unknown}.
-
-

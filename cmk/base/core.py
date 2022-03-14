@@ -5,31 +5,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
+import enum
 import os
 import subprocess
-from typing import Optional, Iterator
-import enum
 from contextlib import contextmanager
-
-import cmk.utils.paths
-import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.tty as tty
-import cmk.utils.store as store
-from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
-from cmk.utils.type_defs import TimeperiodName
-
-import cmk.base.obsolete_output as out
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-import cmk.base.nagios_utils
-from cmk.base.core_config import MonitoringCore
+from typing import Iterator, Optional
 
 # suppress "Cannot find module" error from mypy
 import livestatus
 
-#.
+import cmk.utils.cleanup
+import cmk.utils.debug
+import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
+from cmk.utils.type_defs import HostsToUpdate, TimeperiodName
+
+import cmk.base.config as config
+import cmk.base.core_config as core_config
+import cmk.base.nagios_utils
+import cmk.base.obsolete_output as out
+from cmk.base.core_config import MonitoringCore
+
+# .
 #   .--Control-------------------------------------------------------------.
 #   |                   ____            _             _                    |
 #   |                  / ___|___  _ __ | |_ _ __ ___ | |                   |
@@ -49,14 +49,21 @@ class CoreAction(enum.Enum):
     STOP = "stop"
 
 
-def do_reload(core: MonitoringCore) -> None:
-    do_restart(core, action=CoreAction.RELOAD)
+def do_reload(
+    core: MonitoringCore,
+    hosts_to_update: HostsToUpdate = None,
+) -> None:
+    do_restart(core, action=CoreAction.RELOAD, hosts_to_update=hosts_to_update)
 
 
-def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
+def do_restart(
+    core: MonitoringCore,
+    action: CoreAction = CoreAction.RESTART,
+    hosts_to_update: HostsToUpdate = None,
+) -> None:
     try:
         with activation_lock(mode=config.restart_locking):
-            core_config.do_create_config(core)
+            core_config.do_create_config(core, hosts_to_update=hosts_to_update)
             do_core_action(action)
 
     except Exception as e:
@@ -104,19 +111,24 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     else:
         command = ["omd", action.value, "cmc"]
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-    result = p.wait()
-    if result != 0:
-        assert p.stdout is not None
-        output = p.stdout.read()
+    completed_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        check=False,
+    )
+    if completed_process.returncode != 0:
         if not quiet:
-            out.output("ERROR: %r\n" % output)
-        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, output))
+            out.output("ERROR: %r\n" % completed_process.stdout)
+        raise MKGeneralException(
+            "Cannot %s the monitoring core: %r" % (action.value, completed_process.stdout)
+        )
     if not quiet:
         out.output(tty.ok + "\n")
 
 
-#.
+# .
 #   .--Timeperiods---------------------------------------------------------.
 #   |      _____ _                                _           _            |
 #   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |

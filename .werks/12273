@@ -1,0 +1,20 @@
+Title: API: modifications for downtime endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614773598
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk introduces a few changes to the downtime endpoint. Proper status codes
+are now returned when trying to set a downtime on non existing host and service groups.
+A 422 status code is returned when the provided query for setting a service or host
+downtime returned an empty list. The type 'by_id' is now an enabled option for
+the delete endpoint. The parameters 'hostname' and 'services' in the delete endpoint
+were renamed to 'host_name' and 'service_descriptions' to introduce more consistency.
+Previously, using the delete endpoint with a host_name via the delete_type 'params' resulted
+in the deletion of all downtimes that contained the specified host_name, regardless of
+service or host. This has now been changed to be restricted to host downtimes only.

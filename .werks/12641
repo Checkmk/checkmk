@@ -1,0 +1,18 @@
+Title: dell_compellent_disks: introduce unique item description
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1616410084
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The service description for Dell compellent storage disks contained the internal disk number,
+which unfortunately can change between multiple SNMP-requests.
+As a result the mapping of disks to services could change and one single disk health status
+could be reported to changing services.
+The service description was changed to use the "DELL-STORAGE-SC-MIB::scDiskNamePosition", which
+contains the enclosure number and the disk number.
+This scDiskNamePosition will remain stable across multiple SNMP-requests.
+All services of this plugin must be rediscovered.

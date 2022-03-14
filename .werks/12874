@@ -1,0 +1,13 @@
+Title: Fix filter on audit log page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1623319896
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The filter "Filter pattern (RegExp)" only matched on the user column of the
+audit log page.

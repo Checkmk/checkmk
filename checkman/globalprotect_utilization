@@ -1,0 +1,19 @@
+title: GlobalProtect: Utilization
+agents: snmp
+catalog: hw/network/palo_alto
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the utilization of GlobalProtect gateway.
+
+ The percent value of utilization, number of active sessions
+ and maximum number of allowed sessions are reported.
+
+ It is possible to configure upper levels for utilization
+ and number of active session for states {WARN} and {CRIT}.
+
+ If no upper levels are defined the service will go to
+ {WARN} on 80% and to {CRIT} on 90% of utilization.
+
+discovery:
+ One service is created.

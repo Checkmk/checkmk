@@ -5,25 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Optional,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, Optional, Tuple
 
 
 def _parameter_valuespec_vms_procs():
     return Optional(
-        Tuple(elements=[
-            Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
-            Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
-        ],),
+        valuespec=Tuple(
+            elements=[
+                Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
+                Integer(title=_("Critical at"), unit=_("processes"), default_value=200),
+            ],
+        ),
         title=_("Impose levels on number of processes"),
     )
 
@@ -34,4 +31,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vms_procs,
         title=lambda: _("OpenVMS processes"),
-    ))
+    )
+)

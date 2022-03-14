@@ -1,0 +1,32 @@
+Title: Mitigate wrong conversion of disabled service rules on update
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1639747685
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+During <tt>cmk-update-config</tt> some disabled services rules are being broken by introducing an undesired escaping.
+This werk reduces the number of cases in which this happens.
+
+Users "Disabled Services" rules were affected if they fullfilled <b>all</b> of the following criteria:
+<ul>
+<li>They have exactly one host condition (explicit or pattern)</li>
+<li>They have no tag based conditions</li>
+<li>All their patterns for the service name end in "<tt>$</tt>"</li>
+</ul>
+
+After this werk, only rules will be affected if they additionally
+<ul>
+<li> have exactly one <b>explicit</b> host condition (not a regular expression)</li>
+<li> contain <b>both</b> quoted and unquoted special characters</li> in their service name pattern
+</ul>
+
+For instance: "<tt>Foo[12]$</tt>" and "<tt>Foo\[12\]$</tt>" will remain unchanged, whereas "<tt>Foo\[1\][2]$</tt>" will be changed to "<tt>Foo\[1\]\[2\]$</tt>".
+
+If this still affects you, you can avoid meeting the above criteria.
+For instance try to replace "<tt>my_hostname</tt>" by "<tt>~^my_hostname$</tt>" or to craft a service name pattern that does not require the trailing "<tt>$</tt>".
+

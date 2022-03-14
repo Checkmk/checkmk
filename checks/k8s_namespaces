@@ -10,24 +10,29 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 @discover
 def inventory_k8s_namespaces(_namespace, status):
-    return status.get('status', {}).get('phase', '') == 'Active'
+    return status.get("status", {}).get("phase", "") == "Active"
 
 
 @get_parsed_item_data
 def check_k8s_namespaces(item, _no_params, status):
     state = 0
-    phase = status.get('status').get('phase', '')
-    if phase != 'Active':
+    phase = status.get("status").get("phase", "")
+    if phase != "Active":
         state = 2
-    return state, 'Status: %s' % phase
+    return state, "Status: %s" % phase
 
 
-check_info['k8s_namespaces'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_namespaces,
-    'check_function': check_k8s_namespaces,
-    'service_description': 'Namespace %s',
+check_info["k8s_namespaces"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": inventory_k8s_namespaces,
+    "check_function": check_k8s_namespaces,
+    "service_description": "Namespace %s",
 }

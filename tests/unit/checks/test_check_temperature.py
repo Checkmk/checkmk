@@ -6,14 +6,15 @@
 
 # coding=utf-8
 # yapf: disable
-import collections
-from testlib import Check  # type: ignore[import]
 import datetime as dt
+from typing import Any, Mapping, NamedTuple
 
-import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import freezegun
+import pytest
 
-from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
+from tests.testlib import Check
+
+from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
 
 @pytest.mark.parametrize(
@@ -174,16 +175,12 @@ def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
     return (datetime_obj - epoch).total_seconds()
 
 
-Entry = collections.namedtuple(
-    'Entry',
-    [
-        'reading',
-        'growth',
-        'seconds_elapsed',
-        'wato_dict',
-        'expected',
-    ]
-)
+class Entry(NamedTuple):
+    reading:float
+    growth:float
+    seconds_elapsed:float
+    wato_dict: Mapping[str,Any]
+    expected:Any
 
 _WATO_DICT = {
     'period': 5,
@@ -252,7 +249,7 @@ def test_check_temperature_trend(test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             result = check_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
@@ -284,7 +281,7 @@ def test_check_temperature_called(test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             # Assuming atmospheric pressure...
             result = check_temperature(

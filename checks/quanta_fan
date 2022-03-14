@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.quanta import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.1 1
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.2 2
 # ...
@@ -41,40 +43,44 @@ from cmk.base.check_legacy_includes.quanta import *  # pylint: disable=wildcard-
 
 @get_parsed_item_data
 def check_quanta_fan(item, params, entry):
-    yield entry.status[0], 'Status: %s' % entry.status[1]
+    yield entry.status[0], "Status: %s" % entry.status[1]
 
     if entry.value in (-99, None):
         return
 
     levels = {
-        'upper': params.get('upper', entry.upper_levels),
-        'lower': params.get('lower', entry.lower_levels),
+        "upper": params.get("upper", entry.upper_levels),
+        "lower": params.get("lower", entry.lower_levels),
     }
 
     yield check_fan(entry.value, levels)
 
-check_info['quanta_fan'] = {
-        'inventory_function': discover(),
-        'parse_function': parse_quanta,
-        'check_function': check_quanta_fan,
-        'service_description': 'Fan %s',
-        'group': 'hw_fans',
-        'has_perfdata': True,
-        # these is no good oid identifier for quanta devices, thats why the first oid is used here
-        'snmp_scan_function' : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.8072.3.2.10')and \
-                                    ( oid('.1.3.6.1.4.1.7244.1.2.1.1.1.0') is not None),
-        'snmp_info': [
-          (
-              '.1.3.6.1.4.1.7244.1.2.1.3.3.1',
-              [
-                1, # fanDeviceInfoIndex
-                2, # fanDeviceInfoStatus
-                3, # fanDeviceInfoLocationName
-                4, # fanDeviceReading
-                6, # fanDeviceUpperCriticalThreshold
-                7, # fanDeviceUpperNonCriticalThreshold
-                8, # fanDeviceLowerNonCriticalThreshold
-                9, # fanDeviceLowerCriticalThreshold
-            ]),
-      ]
-    }
+
+check_info["quanta_fan"] = {
+    "inventory_function": discover(),
+    "parse_function": parse_quanta,
+    "check_function": check_quanta_fan,
+    "service_description": "Fan %s",
+    "group": "hw_fans",
+    "has_perfdata": True,
+    # these is no good oid identifier for quanta devices, thats why the first oid is used here
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.8072.3.2.10"
+    )
+    and (oid(".1.3.6.1.4.1.7244.1.2.1.1.1.0") is not None),
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.7244.1.2.1.3.3.1",
+            [
+                1,  # fanDeviceInfoIndex
+                2,  # fanDeviceInfoStatus
+                3,  # fanDeviceInfoLocationName
+                4,  # fanDeviceReading
+                6,  # fanDeviceUpperCriticalThreshold
+                7,  # fanDeviceUpperNonCriticalThreshold
+                8,  # fanDeviceLowerNonCriticalThreshold
+                9,  # fanDeviceLowerCriticalThreshold
+            ],
+        ),
+    ],
+}

@@ -4,39 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Mapping,
-)
-from .agent_based_api.v1 import (
-    SNMPTree,
-    Service,
-    register,
-    get_value_store,
-)
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-    StringTable,
-)
-from .utils.df import (
-    df_check_filesystem_single,
-    FILESYSTEM_DEFAULT_LEVELS,
-)
+from typing import Any, Mapping, Optional
+
+from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 from .utils.fortinet import DETECT_FORTISANDBOX
 
 Section = Mapping[str, int]
 
 
-def parse_fortisandbox_disk(string_table: StringTable) -> Section:
+def parse_fortisandbox_disk(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortisandbox_disk([["1000", "2000"]])
     {'used': 1000, 'cap': 2000}
     """
-    return {
-        "used": int(string_table[0][0]),
-        "cap": int(string_table[0][1]),
-    }
+    return (
+        {
+            "used": int(string_table[0][0]),
+            "cap": int(string_table[0][1]),
+        }
+        if string_table
+        else None
+    )
 
 
 def discover_fortisandbox_disk(section: Section) -> DiscoveryResult:

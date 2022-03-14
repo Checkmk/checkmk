@@ -1,7 +1,7 @@
 title: Juniper/ScreenOS: Temperature Sensors
 catalog: hw/network/juniper
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the hardware temperatures of Juniper ScreenOS sensors.
@@ -9,6 +9,5 @@ description:
 item:
  The name of the sensor as described in the SNMP output.
 
-inventory:
+discovery:
  One service is created for each sensor in the system.
-

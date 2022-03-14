@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["juniper_screenos_temp_default_levels"] = {"levels": (70, 80)}
 
 
@@ -39,6 +40,7 @@ check_info["juniper_screenos_temp"] = {
         [
             4,  # Name
             3,  # Temperatur
-        ]),
-    "default_levels_variable": "juniper_screenos_temp_default_levels"
+        ],
+    ),
+    "default_levels_variable": "juniper_screenos_temp_default_levels",
 }

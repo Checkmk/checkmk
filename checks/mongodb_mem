@@ -33,11 +33,13 @@ def check_mongodb_mem(_no_item, params, parsed):
         if key in parsed:  # 'mapped' only for the MMAPv1 storage engine, deprecated with 4x
             value_bytes = parsed[key] * 1024**2
             levels = params.get("%s_levels" % key, (None, None))
-            yield check_levels(value_bytes,
-                               "process_%s_size" % key,
-                               levels,
-                               human_readable_func=get_bytes_human_readable,
-                               infoname="%s usage" % key.title())
+            yield check_levels(
+                value_bytes,
+                "process_%s_size" % key,
+                levels,
+                human_readable_func=get_bytes_human_readable,
+                infoname="%s usage" % key.title(),
+            )
 
     # MongoDB doc: If virtual value is significantly larger than mapped (e.g. 3 or more times),
     #              this may indicate a memory leak.
@@ -48,11 +50,11 @@ def check_mongodb_mem(_no_item, params, parsed):
             yield 1, textfmt % virt_mapped_factor
 
 
-check_info['mongodb_mem'] = {
+check_info["mongodb_mem"] = {
     "parse_function": parse_mongodb_mem,
     "inventory_function": discover_single,
     "check_function": check_mongodb_mem,
     "service_description": "Memory used MongoDB",
     "group": "mongodb_mem",
-    "has_perfdata": True
+    "has_perfdata": True,
 }

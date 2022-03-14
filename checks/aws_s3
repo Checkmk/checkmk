@@ -14,22 +14,22 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 def parse_aws_s3(info):  # pylint: disable=function-redefined
     parsed = {}
     for row in parse_aws(info):
-        bucket = parsed.setdefault(row['Label'], {})
+        bucket = parsed.setdefault(row["Label"], {})
         try:
-            bucket['LocationConstraint'] = row['LocationConstraint']
+            bucket["LocationConstraint"] = row["LocationConstraint"]
         except KeyError:
             pass
         try:
-            bucket['Tagging'] = row['Tagging']
+            bucket["Tagging"] = row["Tagging"]
         except KeyError:
             pass
-        storage_key, size_key = row['Id'].split("_")[-2:]
+        storage_key, size_key = row["Id"].split("_")[-2:]
         inst = bucket.setdefault(size_key, {})
         try:
             # if the entry exists, the first value is the numerical value of the metric and the
             # second one is the period, which is None here since these are not statistics of type
             # "Sum"
-            inst.setdefault(storage_key, row['Values'][0][0])
+            inst.setdefault(storage_key, row["Values"][0][0])
         except (IndexError, ValueError):
             pass
     return parsed
@@ -47,44 +47,47 @@ def parse_aws_s3(info):  # pylint: disable=function-redefined
 
 @get_parsed_item_data
 def check_aws_s3_objects(item, params, metrics):
-    bucket_sizes = metrics['BucketSizeBytes']
+    bucket_sizes = metrics["BucketSizeBytes"]
     storage_infos = []
     for storage_type, value in bucket_sizes.items():
         storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
-    yield check_levels(sum_size,
-                       "aws_bucket_size",
-                       params.get('bucket_size_levels', (None, None)),
-                       human_readable_func=get_bytes_human_readable,
-                       infoname='Bucket size')
+    yield check_levels(
+        sum_size,
+        "aws_bucket_size",
+        params.get("bucket_size_levels", (None, None)),
+        human_readable_func=get_bytes_human_readable,
+        infoname="Bucket size",
+    )
     if storage_infos:
         yield 0, ", ".join(storage_infos)
 
-    num_objects = sum(metrics['NumberOfObjects'].values())
-    yield 0, 'Number of objects: %s' % int(num_objects), [('aws_num_objects', num_objects)]
+    num_objects = sum(metrics["NumberOfObjects"].values())
+    yield 0, "Number of objects: %s" % int(num_objects), [("aws_num_objects", num_objects)]
 
-    location = metrics.get('LocationConstraint')
+    location = metrics.get("LocationConstraint")
     if location:
-        yield 0, 'Location: %s' % location
+        yield 0, "Location: %s" % location
 
     tag_infos = []
-    for tag in metrics.get('Tagging', {}):
-        tag_infos.append("%s: %s" % (tag['Key'], tag['Value']))
+    for tag in metrics.get("Tagging", {}):
+        tag_infos.append("%s: %s" % (tag["Key"], tag["Value"]))
     if tag_infos:
-        yield 0, '[Tags] %s' % ", ".join(tag_infos)
+        yield 0, "[Tags] %s" % ", ".join(tag_infos)
 
 
-check_info['aws_s3'] = {
-    'parse_function': parse_aws_s3,
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['BucketSizeBytes', 'NumberOfObjects']),
-    'check_function': check_aws_s3_objects,
-    'service_description': 'AWS/S3 Objects %s',
-    'has_perfdata': True,
-    'group': 'aws_s3_buckets_objects',
+check_info["aws_s3"] = {
+    "parse_function": parse_aws_s3,
+    "inventory_function": lambda p: inventory_aws_generic(
+        p, ["BucketSizeBytes", "NumberOfObjects"]
+    ),
+    "check_function": check_aws_s3_objects,
+    "service_description": "AWS/S3 Objects %s",
+    "has_perfdata": True,
+    "group": "aws_s3_buckets_objects",
 }
 
-#.
+# .
 #   .--summary-------------------------------------------------------------.
 #   |                                                                      |
 #   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
@@ -100,26 +103,30 @@ def check_aws_s3_summary(item, params, parsed):
     largest_bucket = None
     largest_bucket_size = 0
     for bucket_name, bucket in parsed.items():
-        bucket_size = sum(bucket['BucketSizeBytes'].values())
+        bucket_size = sum(bucket["BucketSizeBytes"].values())
         sum_size += bucket_size
         if bucket_size >= largest_bucket_size:
             largest_bucket = bucket_name
             largest_bucket_size = bucket_size
-    yield check_levels(sum_size,
-                       "aws_bucket_size",
-                       params.get('bucket_size_levels', (None, None)),
-                       human_readable_func=get_bytes_human_readable,
-                       infoname='Total size')
+    yield check_levels(
+        sum_size,
+        "aws_bucket_size",
+        params.get("bucket_size_levels", (None, None)),
+        human_readable_func=get_bytes_human_readable,
+        infoname="Total size",
+    )
 
     if largest_bucket:
-        yield 0, 'Largest bucket: %s (%s)' % \
-                 (largest_bucket, get_bytes_human_readable(largest_bucket_size)), [('aws_largest_bucket_size', largest_bucket_size)]
+        yield 0, "Largest bucket: %s (%s)" % (
+            largest_bucket,
+            get_bytes_human_readable(largest_bucket_size),
+        ), [("aws_largest_bucket_size", largest_bucket_size)]
 
 
-check_info['aws_s3.summary'] = {
-    'inventory_function': discover_single,
-    'check_function': check_aws_s3_summary,
-    'service_description': 'AWS/S3 Summary',
-    'has_perfdata': True,
-    'group': 'aws_s3_buckets',
+check_info["aws_s3.summary"] = {
+    "inventory_function": discover_single,
+    "check_function": check_aws_s3_summary,
+    "service_description": "AWS/S3 Summary",
+    "has_perfdata": True,
+    "group": "aws_s3_buckets",
 }

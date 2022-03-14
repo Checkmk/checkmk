@@ -9,11 +9,14 @@ from cmk.base.core_config import MonitoringCore
 
 def create_core(core_name: str) -> MonitoringCore:
     if core_name == "cmc":
-        from cmk.base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module,import-outside-toplevel
-        return CMC()
+        # pylint: disable=no-name-in-module,import-outside-toplevel
+        from cmk.base.cee.microcore_config import CmcPb
+
+        return CmcPb()
 
     if core_name == "nagios":
         from cmk.base.core_nagios import NagiosCore  # pylint: disable=import-outside-toplevel
+
         return NagiosCore()
 
     raise NotImplementedError

@@ -1,0 +1,30 @@
+Title: UNIX agent: Better error communication for failed python plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1621933770
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Werk #12149 states out that, on UNIX, a python agent plugin called <tt><em>plugin</em>.py</tt>
+is always executed with Python 3, while a plugin called <tt><em>plugin</em>_2.py</tt> is always
+executed with Python 2.
+
+While an error will be communicated if there is no suitable Python installation available,
+some other Python agent plugin related error situations pass silently. The cause for this is
+that the agent assumes that python plugins always come as a pair of Python 3 and Python 2 version,
+but this is not always the case in reality.
+
+With this Werk, the communication is improved, by showing a WARN state in the Check_MK service
+for the following situations:
+<ul>
+<li><tt><em>plugin</em>.py</tt> is deployed, but found no Python 3 installation, and there is no
+<tt><i>plugin</i>_2.py</tt> counterpart. The reason "Missing Python 3 installation" will be
+displayed alongside the failed plugin.</li>
+<li>The other way round: <tt><em>plugin</em>_2.py</tt> is deployed, but found no Python 2
+installation, and there is no <tt><i>plugin</i>.py</tt> counterpart. The reason "Missing Python 2
+installation" will be displayed alongside the failed plugin.</li>
+<ul>
+

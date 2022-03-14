@@ -1,0 +1,18 @@
+Title: check_mk_agent.aix: Fix execution of cached plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624605645
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Plugins in the folder {{/usr/check_mk/lib/plugins/NUMBER}} are executed
+asynchronously. Since Checkmk version 2.0.0b4 it was broken because in ksh,
+dash or similar the following command in the run_cached function
+C:+
+sh -c "COMMAND-STRING"
+C:-
+expects executable commands/files but not inline functions.

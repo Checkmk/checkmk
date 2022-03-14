@@ -5,53 +5,52 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mbg_lantime_state():
     return Dictionary(
         title=_("Meinberg Lantime State"),
         elements=[
-            ("stratum",
-             Tuple(
-                 title=_("Warning levels for Stratum"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         default_value=2,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         default_value=3,
-                     ),
-                 ],
-             )),
-            ("offset",
-             Tuple(
-                 title=_("Warning levels for Time Offset"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         unit=_("microseconds"),
-                         default_value=10,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         unit=_("microseconds"),
-                         default_value=20,
-                     ),
-                 ],
-             )),
+            (
+                "stratum",
+                Tuple(
+                    title=_("Warning levels for Stratum"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            default_value=2,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=3,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "offset",
+                Tuple(
+                    title=_("Warning levels for Time Offset"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            unit=_("microseconds"),
+                            default_value=10,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("microseconds"),
+                            default_value=20,
+                        ),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -63,4 +62,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mbg_lantime_state,
         title=lambda: _("Meinberg Lantime State"),
-    ))
+    )
+)

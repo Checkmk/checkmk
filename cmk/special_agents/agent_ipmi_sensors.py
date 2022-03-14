@@ -3,49 +3,234 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+Special agent for collecting data from IPMI sensors via freeipmi or ipmitool.
+"""
 
 import errno
-import getopt
 import os
 import subprocess
 import sys
-from typing import Dict, List, Tuple
+from argparse import _SubParsersAction
+from itertools import chain
+from typing import Iterable, Mapping, Optional, Sequence, Tuple
+
+from cmk.special_agents.utils.agent_common import special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
-def agent_ipmi_sensors_usage():
-    sys.stderr.write("""Check_MK IPMI Sensors
+def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
+    parser_freeipmi = subparsers.add_parser(
+        "freeipmi",
+        help="Use freeipmi",
+    )
+    parser_freeipmi.add_argument(
+        "privilege_lvl",
+        type=str,
+        metavar="PRIVILEGE-LEVEL",
+        help="Privilege level",
+        choices=("user", "operator", "admin"),
+    )
+    parser_freeipmi.add_argument(
+        "--driver",
+        type=str,
+        metavar="DRIVER",
+        help="IPMI driver",
+    )
+    parser_freeipmi.add_argument(
+        "--driver_type",
+        type=str,
+        metavar="DRIVER-TYPE",
+        help="Driver type to use instead of doing an auto selection",
+    )
+    parser_freeipmi.add_argument(
+        "--key",
+        type=str,
+        metavar="KEY",
+        help="K_g BMC key to use when authenticating with the remote host for IPMI 2.0",
+    )
+    parser_freeipmi.add_argument(
+        "--quiet_cache",
+        action="store_true",
+        help="Do not output information about cache creation/deletion",
+    )
+    parser_freeipmi.add_argument(
+        "--sdr_cache_recreate",
+        action="store_true",
+        help="Automatically recreate the sensor data repository (SDR) cache",
+    )
+    parser_freeipmi.add_argument(
+        "--interpret_oem_data",
+        action="store_true",
+        help="Attempt to interpret OEM data",
+    )
+    parser_freeipmi.add_argument(
+        "--output_sensor_state",
+        action="store_true",
+        help="Output sensor state",
+    )
+    parser_freeipmi.add_argument(
+        "--ignore_not_available_sensors",
+        action="store_true",
+        help="Ignore not-available (i.e. N/A) sensors in output",
+    )
+    parser_freeipmi.add_argument(
+        "--output_sensor_thresholds",
+        action="store_true",
+        help="Output sensor thresholds",
+    )
 
-USAGE: agent_ipmi_sensors [OPTIONS] HOST
-       agent_ipmi_sensors --help
 
-ARGUMENTS:
-  HOST                              Host name or IP address
-
-OPTIONS:
-  --help                            Show this help message and exit.
-  --debug                           Debug output
-  --ipmi-command IPMI-CMD           Possible values are 'freeipmi' or 'ipmitool'.
-                                    If no command is specified 'freeipmi' is used.
-  -u USER                           Username
-  -p PASSWORD                       Password
-  -l LEVEL                          Privilege level
-                                    Possible are 'user', 'operator', 'admin'
-
-FreeIPMI OPTIONS:
-  -D DRIVER                         Specify IPMI driver.
-  --quiet-cache                     Do not output information about cache creation/deletion.
-  --sdr-cache-recreate              Automatically recreate the sensor data repository (SDR) cache.
-  --interpret-oem-data              Attempt to interpret OEM data.
-  --output-sensor-state             Output sensor state in output.
-  --ignore-not-available-sensors    Ignore not-available (i.e. N/A) sensors in output.
-  --driver-type DRIVER-TYPE         Specify the driver type to use instead of doing an auto selection.
-  --output-sensor-thresholds        Output sensor thresholds in output.
-  -k KEY                            Specify the K_g BMC key to use when authenticating
-                                    with the remote host for IPMI 2.0.
-""")
+def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
+    parser_ipmitool = subparsers.add_parser(
+        "ipmitool",
+        help="Use ipmitool",
+    )
+    parser_ipmitool.add_argument(
+        "privilege_lvl",
+        type=str,
+        metavar="PRIVILEGE-LEVEL",
+        help="Privilege level",
+        choices=("callback", "user", "operator", "administrator"),
+    )
+    parser_ipmitool.add_argument(
+        "--intf",
+        type=str,
+        choices=("open", "imb", "lan", "lanplus"),
+        metavar="INTERFACE",
+        help=(
+            "IPMI Interface to be used. If not specified, the default interface as set at compile "
+            "time will be used."
+        ),
+    )
 
 
-def parse_data(data, excludes):
+def _parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument(
+        "host",
+        type=str,
+        metavar="HOST",
+        help="Host name or IP address",
+    )
+    parser.add_argument(
+        "user",
+        type=str,
+        metavar="USER",
+        help="Username",
+    )
+    parser.add_argument(
+        "password",
+        type=str,
+        metavar="PASSWORD",
+        help="Password",
+    )
+    ipmi_cmd_subparsers = parser.add_subparsers(
+        required=True,
+        dest="ipmi_cmd",
+        metavar="IPMI-CMD",
+        help="IPMI command to be used. Possible values are 'freeipmi' or 'ipmitool'.",
+    )
+    _add_freeipmi_args(ipmi_cmd_subparsers)
+    _add_ipmitool_args(ipmi_cmd_subparsers)
+    return parser.parse_args(argv)
+
+
+def _freeipmi_additional_args(
+    args: Args,
+) -> Iterable[str]:
+    yield from chain.from_iterable(
+        (freeipmi_opt, value)
+        for argname, freeipmi_opt in [
+            ("driver", "-D"),
+            ("driver_type", "--driver-type"),
+            ("key", "-k"),
+        ]
+        if (
+            value := getattr(
+                args,
+                argname,
+            )
+        )
+    )
+    yield from (
+        f"--{bool_arg.replace('_', '-')}"
+        for bool_arg in [
+            "quiet_cache",
+            "sdr_cache_recreate",
+            "interpret_oem_data",
+            "output_sensor_state",
+            "ignore_not_available_sensors",
+            "output_sensor_thresholds",
+        ]
+        if getattr(
+            args,
+            bool_arg,
+        )
+    )
+
+
+def _prepare_freeipmi_call(
+    args: Args,
+) -> Tuple[Sequence[str], Mapping[str, Tuple[Iterable[str], Iterable[str]]]]:
+    return (
+        [
+            "ipmi-sensors",
+            "-h",
+            args.host,
+            "-u",
+            args.user,
+            "-p",
+            args.password,
+            "-l",
+            args.privilege_lvl,
+            *_freeipmi_additional_args(args),
+        ],
+        {"_sensors": ([], [])},
+    )
+
+
+def _ipmitool_additional_args(
+    args: Args,
+) -> Iterable[str]:
+    if iface := getattr(args, "intf"):
+        yield "-I"
+        yield iface
+
+
+def _prepare_ipmitool_call(
+    args: Args,
+) -> Tuple[Sequence[str], Mapping[str, Tuple[Iterable[str], Iterable[str]]]]:
+    return (
+        [
+            "ipmitool",
+            "-H",
+            args.host,
+            "-U",
+            args.user,
+            "-P",
+            args.password,
+            "-L",
+            args.privilege_lvl,
+            *_ipmitool_additional_args(args),
+        ],
+        {
+            "": (
+                ["sensor", "list"],
+                ["command failed", "discrete"],
+            ),
+            "_discrete": (
+                ["sdr", "elist", "compact"],
+                [],
+            ),
+        },
+    )
+
+
+def parse_data(
+    data: Iterable[str],
+    excludes: Iterable[str],
+) -> None:
     for line in data:
         if line.startswith("ID"):
             continue
@@ -61,130 +246,53 @@ def parse_data(data, excludes):
             sys.stdout.write("%s\n" % line)
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        sys_argv = sys.argv[1:]
-
-    short_options = 'u:p:l:D:k:'
-    long_options = [
-        'help', 'debug', 'ipmi-command=', 'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
-        'output-sensor-state', 'ignore-not-available-sensors', 'driver-type=',
-        'output-sensor-thresholds'
-    ]
-
-    opt_debug = False
-    hostname = None
-    username = None
-    password = None
-    privilege_lvl = None
-    ipmi_cmd_type = None
-
-    try:
-        opts, args = getopt.getopt(sys_argv, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
-
-    additional_opts = []
-    for o, a in opts:
-        if o in ['--help']:
-            agent_ipmi_sensors_usage()
-            return 1
-        if o in ['--debug']:
-            opt_debug = True
-
-        # Common options
-        elif o in ['--ipmi-command']:
-            ipmi_cmd_type = a
-        elif o in ['-u']:
-            username = a
-        elif o in ['-p']:
-            password = a
-        elif o in ['-l']:
-            privilege_lvl = a
-
-        # FreeIPMI options
-        elif o in ['-D']:
-            additional_opts += ["%s" % o, "%s" % a]
-        elif o in ['--driver-type']:
-            additional_opts += ["%s=%s" % (o, a)]
-        elif o in ['-k']:
-            additional_opts += ["%s" % o, "%s" % a]
-        elif o in ['--quiet-cache']:
-            additional_opts.append(o)
-        elif o in ['--sdr-cache-recreate']:
-            additional_opts.append(o)
-        elif o in ['--interpret-oem-data']:
-            additional_opts.append(o)
-        elif o in ['--output-sensor-state']:
-            additional_opts.append(o)
-        elif o in ['--ignore-not-available-sensors']:
-            additional_opts.append(o)
-        elif o in ['--output-sensor-thresholds']:
-            additional_opts.append(o)
-
-    if len(args) == 1:
-        hostname = args[0]
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        return 1
-
-    if not (username and password and privilege_lvl):
-        sys.stderr.write("ERROR: Credentials are missing.\n")
-        return 1
-
+def _main(args: Args) -> None:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-    if ipmi_cmd_type in [None, 'freeipmi']:
-        ipmi_cmd = [ "ipmi-sensors",
-                     "-h", hostname, "-u", username,
-                     "-p", password, "-l", privilege_lvl ] + \
-                     additional_opts
-        queries: Dict[str, Tuple[List[str], List[str]]] = {"_sensors": ([], [])}
-    elif ipmi_cmd_type == 'ipmitool':
-        ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
-        # As in check_mk_agent
-        queries = {
-            "": (["sensor", "list"], ['command failed', 'discrete']),
-            "_discrete": (["sdr", "elist", "compact"], [])
-        }
+    ipmi_cmd, queries = {"freeipmi": _prepare_freeipmi_call, "ipmitool": _prepare_ipmitool_call,}[
+        args.ipmi_cmd
+    ](args)
 
-    else:
-        sys.stderr.write("ERROR: Unknown IPMI command '%s'.\n" % ipmi_cmd_type)
-        return 1
-
-    ipmi_cmd_str = subprocess.list2cmdline(ipmi_cmd)
-
-    if opt_debug:
-        sys.stderr.write("Executing: '%s'\n" % ipmi_cmd_str)
+    if args.debug:
+        sys.stderr.write("Executing: '%s'\n" % subprocess.list2cmdline(ipmi_cmd))
 
     errors = []
     for section, (types, excludes) in queries.items():
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(
-                    ipmi_cmd + types,
+                completed_process = subprocess.run(
+                    [
+                        *ipmi_cmd,
+                        *types,
+                    ],
                     close_fds=True,
-                    stdin=open(os.devnull),
+                    stdin=subprocess.DEVNULL,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     encoding="utf-8",
+                    check=False,
                 )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
-                    raise Exception("Could not find '%s' command (PATH: %s)" %
-                                    (ipmi_cmd_type, os.environ.get("PATH")))
+                    raise Exception(
+                        "Could not find '%s' command (PATH: %s)"
+                        % (args.ipmi_cmd, os.environ.get("PATH"))
+                    )
                 raise
 
-            stdout, stderr = p.communicate()
-            if stderr:
-                errors.append(stderr)
-            parse_data(stdout.splitlines(), excludes)
+            if completed_process.stderr:
+                errors.append(completed_process.stderr)
+            parse_data(completed_process.stdout.splitlines(), excludes)
         except Exception as e:
             errors.append(str(e))
 
     if errors:
         sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
-        return 1
-    return 0
+        return
+    return
+
+
+def main() -> None:
+    """Main entry point to be used"""
+    special_agent_main(_parse_arguments, _main)

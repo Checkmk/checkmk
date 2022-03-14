@@ -1,7 +1,7 @@
 title: MS SQL Server: Blocked Sessions
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check lists all blocked sessions on a MSSQL Server. As
@@ -18,5 +18,5 @@ description:
 item:
  Either an empty string or the name of the MSSQL instance
 
-inventory:
+discovery:
  One is created for each host.

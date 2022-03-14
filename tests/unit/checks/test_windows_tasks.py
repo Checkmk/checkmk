@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib import Check  # type: ignore[import]
-import cmk.gui.plugins.wato.check_parameters.windows_tasks as wato_windows_tasks
+import pytest
 
-import pytest  # type: ignore[import]
+from tests.testlib import Check
+
+import cmk.gui.plugins.wato.check_parameters.windows_tasks as wato_windows_tasks
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

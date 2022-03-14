@@ -1,0 +1,13 @@
+Title: API: adjusting code example for service endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614939810
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk changes the code example for the service endpoints
+to be more beginner friendly and compatible with this endpoint.

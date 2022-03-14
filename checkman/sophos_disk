@@ -1,11 +1,11 @@
 title: Sophos Device: Disk Usage
 agents: snmp
 catalog: hw/network/sophos
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the current disk usage for Sophos devices.
  Per default the levels for warning and critical if selected are 80 and 90 percentage respectively.
-	
-inventory:
+
+discovery:
  One service is created.

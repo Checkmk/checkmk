@@ -1,0 +1,15 @@
+Title: Fix label input fields only searched for labels beginning with search string
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632236144
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Label input fields like the filter "Host labels" or the label conditions field
+in rulesets only searched for labels matching the searched string at the
+beginning of the label. From now on this fields will search for labels
+containing the search string.

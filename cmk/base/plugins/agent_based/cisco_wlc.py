@@ -9,17 +9,20 @@
 >>> all(re.match(VERSION_CISCO_WLC_PATTERN, v) for v in (
 ...     ".1.3.6.1.4.1.14179.1.1.4.3",
 ...     ".1.3.6.1.4.1.9.1.1069",
-...     ".1.3.6.1.4.1.9.1.1615",
-...     ".1.3.6.1.4.1.9.1.1645",
-...     ".1.3.6.1.4.1.9.1.1631",
 ...     ".1.3.6.1.4.1.9.1.1279",
 ...     ".1.3.6.1.4.1.9.1.1293",
+...     ".1.3.6.1.4.1.9.1.1615",
+...     ".1.3.6.1.4.1.9.1.1631",
+...     ".1.3.6.1.4.1.9.1.1645",
 ...     ".1.3.6.1.4.1.9.1.2170",
 ...     ".1.3.6.1.4.1.9.1.2171",
-...     ".1.3.6.1.4.1.9.1.2371",
 ...     ".1.3.6.1.4.1.9.1.2250",
+...     ".1.3.6.1.4.1.9.1.2370",
+...     ".1.3.6.1.4.1.9.1.2371",
 ...     ".1.3.6.1.4.1.9.1.2391",
 ...     ".1.3.6.1.4.1.9.1.2427",
+...     ".1.3.6.1.4.1.9.1.2530",
+...     ".1.3.6.1.4.1.9.1.2860",
 ... ))
 True
 >>> any(re.match(VERSION_CISCO_WLC_PATTERN, v) for v in (
@@ -33,38 +36,24 @@ False
 
 from typing import Any, Dict, List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    matches,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import matches, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cisco_wlc import CISCO_WLC_OIDS
 
 Section = Dict[str, str]
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
-VERSION_CISCO_WLC_PATTERN = "|".join((
-    ".1.3.6.1.4.1.14179.1.1.4.3",
-    ".1.3.6.1.4.1.9.1.1069",
-    ".1.3.6.1.4.1.9.1.1615",
-    ".1.3.6.1.4.1.9.1.1645",
-    ".1.3.6.1.4.1.9.1.1631",
-    ".1.3.6.1.4.1.9.1.1279",
-    ".1.3.6.1.4.1.9.1.1293",
-    ".1.3.6.1.4.1.9.1.2170",
-    ".1.3.6.1.4.1.9.1.2171",
-    ".1.3.6.1.4.1.9.1.2371",
-    ".1.3.6.1.4.1.9.1.2250",
-    ".1.3.6.1.4.1.9.1.2391",
-    ".1.3.6.1.4.1.9.1.2427",
-)).replace(".", r"\.")
+VERSION_CISCO_WLC_PATTERN = "|".join(
+    CISCO_WLC_OIDS
+    + [
+        # Not sure if cisco_wlc_clients also supports these oids
+        ".1.3.6.1.4.1.9.1.2171",
+        ".1.3.6.1.4.1.9.1.2391",
+        ".1.3.6.1.4.1.9.1.2530",  # cisco WLC 9800
+        ".1.3.6.1.4.1.9.1.2860",  # cisco WLC C9800
+    ]
+).replace(".", r"\.")
 
 map_states = {
     "1": (state.OK, "online"),
@@ -101,8 +90,8 @@ def _ap_info(node: Optional[str], wlc_status: str) -> Result:
     status, state_readable = map_states.get(wlc_status, (state.UNKNOWN, "unknown[%s]" % wlc_status))
     return Result(
         state=status,
-        summary="Accesspoint: %s%s" % (state_readable,
-                                       (' (connected to %s)' % node) if node else ""),
+        summary="Accesspoint: %s%s"
+        % (state_readable, (" (connected to %s)" % node) if node else ""),
     )
 
 
@@ -122,7 +111,7 @@ def check_cisco_wlc(item: str, params: Mapping[str, Any], section: Section) -> C
 def cluster_check_cisco_wlc(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     """
     >>> list(cluster_check_cisco_wlc("AP19", {}, {"node1": {'AP19': '1', 'AP02': '1'}}))
@@ -131,7 +120,7 @@ def cluster_check_cisco_wlc(
     [Result(state=<State.CRIT: 2>, summary='Accesspoint not found')]
     """
     for node, node_section in section.items():
-        if item in node_section:
+        if node_section is not None and item in node_section:
             yield _ap_info(node, node_section[item])
             return
     yield _node_not_found(item, params)
@@ -142,10 +131,13 @@ register.snmp_section(
     detect=matches(OID_sysObjectID, VERSION_CISCO_WLC_PATTERN),
     parse_function=parse_cisco_wlc,
     fetch=[
-        SNMPTree(base=".1.3.6.1.4.1.14179.2.2.1.1", oids=[
-            "3",
-            "6",
-        ]),
+        SNMPTree(
+            base=".1.3.6.1.4.1.14179.2.2.1.1",
+            oids=[
+                "3",
+                "6",
+            ],
+        ),
     ],
 )
 

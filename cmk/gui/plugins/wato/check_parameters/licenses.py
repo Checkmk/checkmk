@@ -5,19 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    FixedValue,
-    Integer,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Alternative, FixedValue, Integer, Percentage, TextInput, Tuple
 
 
 def _vs_license():
@@ -25,32 +18,36 @@ def _vs_license():
         title=_("Levels for Number of Licenses"),
         default_value=None,
         elements=[
-            Tuple(title=_("Absolute levels for unused licenses"),
-                  elements=[
-                      Integer(title=_("Warning below"), default_value=5, unit=_("unused licenses")),
-                      Integer(title=_("Critical below"), default_value=0,
-                              unit=_("unused licenses")),
-                  ]),
-            Tuple(title=_("Percentual levels for unused licenses"),
-                  elements=[
-                      Percentage(title=_("Warning below"), default_value=10.0),
-                      Percentage(title=_("Critical below"), default_value=0),
-                  ]),
+            Tuple(
+                title=_("Absolute levels for unused licenses"),
+                elements=[
+                    Integer(title=_("Warning below"), default_value=5, unit=_("unused licenses")),
+                    Integer(title=_("Critical below"), default_value=0, unit=_("unused licenses")),
+                ],
+            ),
+            Tuple(
+                title=_("Percentual levels for unused licenses"),
+                elements=[
+                    Percentage(title=_("Warning below"), default_value=10.0),
+                    Percentage(title=_("Critical below"), default_value=0),
+                ],
+            ),
             FixedValue(
-                None,
+                value=None,
                 totext=_("Critical when all licenses are used"),
                 title=_("Go critical if all licenses are used"),
             ),
             FixedValue(
-                False,
+                value=False,
                 title=_("Always report OK"),
                 totext=_("Alerting depending on the number of used licenses is disabled"),
-            )
-        ])
+            ),
+        ],
+    )
 
 
 def _item_spec_citrix_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
         allow_empty=False,
     )
@@ -63,11 +60,12 @@ rulespec_registry.register(
         item_spec=_item_spec_citrix_licenses,
         parameter_valuespec=_vs_license,
         title=lambda: _("Number of used Citrix licenses"),
-    ))
+    )
+)
 
 
 def _item_spec_esx_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the license"),
         help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
         allow_empty=False,
@@ -81,11 +79,12 @@ rulespec_registry.register(
         item_spec=_item_spec_esx_licenses,
         parameter_valuespec=_vs_license,
         title=lambda: _("VMware licenses"),
-    ))
+    )
+)
 
 
 def _item_spec_ibmsvc_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("ID of the license, e.g. <tt>virtualization</tt>"),
         allow_empty=False,
     )
@@ -98,11 +97,12 @@ rulespec_registry.register(
         item_spec=_item_spec_ibmsvc_licenses,
         parameter_valuespec=_vs_license,
         title=lambda: _("IBM SVC licenses"),
-    ))
+    )
+)
 
 
 def _item_spec_rds_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
         allow_empty=False,
     )
@@ -115,4 +115,5 @@ rulespec_registry.register(
         item_spec=_item_spec_rds_licenses,
         parameter_valuespec=_vs_license,
         title=lambda: _("Number of used Remote Desktop Licenses"),
-    ))
+    )
+)

@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Summary of Disks
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check counts the number of disks which are owned by an IBM SVC storage device.
@@ -9,5 +9,5 @@ description:
  Additionally the check monitors the number of broken and spare disks.
  You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
 
-inventory:
+discovery:
  One service is created on each device.

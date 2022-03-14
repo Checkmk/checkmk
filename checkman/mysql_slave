@@ -1,7 +1,7 @@
 title: MySQL: Slave Sync Status
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the synchronsiation state of MySQL slave databases.
@@ -14,7 +14,6 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each instance on each host where the agent plugin
  {mk_mysql} is installed and the MySQL daemon is running.
-

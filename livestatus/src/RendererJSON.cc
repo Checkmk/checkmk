@@ -51,13 +51,9 @@ void RendererJSON::endDict() { _os << "}"; }
 void RendererJSON::outputNull() { _os << "null"; }
 
 void RendererJSON::outputBlob(const std::vector<char> &value) {
-    // cppcheck is too dumb to see that we just take the address... :-/
-    // cppcheck-suppress containerOutOfBoundsIndexExpression
     outputUnicodeString("", &value[0], &value[value.size()], Encoding::latin1);
 }
 
 void RendererJSON::outputString(const std::string &value) {
-    // cppcheck is too dumb to see that we just take the address... :-/
-    // cppcheck-suppress containerOutOfBoundsIndexExpression
     outputUnicodeString("", &value[0], &value[value.size()], _data_encoding);
 }

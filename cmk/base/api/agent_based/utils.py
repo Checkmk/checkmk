@@ -9,16 +9,16 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Union
+from typing import Any, Callable, Dict, Generator, MutableMapping, Optional, overload, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
 import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
-from cmk.base.api.agent_based.type_defs import ValueStore
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___
@@ -28,8 +28,11 @@ from cmk.base.api.agent_based.type_defs import ValueStore
 #                                      |_|
 
 
-def all_of(spec_0: SNMPDetectSpecification, spec_1: SNMPDetectSpecification,
-           *specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
+def all_of(
+    spec_0: SNMPDetectSpecification,
+    spec_1: SNMPDetectSpecification,
+    *specs: SNMPDetectSpecification,
+) -> SNMPDetectSpecification:
     """Detect the device if all passed specifications are met
 
     Args:
@@ -106,7 +109,7 @@ def contains(oidstr: str, value: str) -> SNMPDetectSpecification:
         >>> DETECT = contains("1.2.3", "isco")
 
     """
-    return SNMPDetectSpecification([[(oidstr, '.*%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, ".*%s.*" % re.escape(value), True)]])
 
 
 def startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
@@ -124,7 +127,7 @@ def startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
         >>> DETECT = startswith("1.2.3", "Sol")
 
     """
-    return SNMPDetectSpecification([[(oidstr, '%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, "%s.*" % re.escape(value), True)]])
 
 
 def endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
@@ -142,7 +145,7 @@ def endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
         >>> DETECT = endswith("1.2.3", "nix")
 
     """
-    return SNMPDetectSpecification([[(oidstr, '.*%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, ".*%s" % re.escape(value), True)]])
 
 
 def equals(oidstr: str, value: str) -> SNMPDetectSpecification:
@@ -160,7 +163,7 @@ def equals(oidstr: str, value: str) -> SNMPDetectSpecification:
         >>> DETECT = equals("1.2.3", "MySwitch")
 
     """
-    return SNMPDetectSpecification([[(oidstr, '%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, "%s" % re.escape(value), True)]])
 
 
 def exists(oidstr: str) -> SNMPDetectSpecification:
@@ -177,7 +180,7 @@ def exists(oidstr: str) -> SNMPDetectSpecification:
         >>> DETECT = exists("1.2.3")
 
     """
-    return SNMPDetectSpecification([[(oidstr, '.*', True)]])
+    return SNMPDetectSpecification([[(oidstr, ".*", True)]])
 
 
 def not_matches(oidstr: str, value: str) -> SNMPDetectSpecification:
@@ -241,8 +244,9 @@ def _do_check_levels(
     return State.OK, ""
 
 
-def _levelsinfo_ty(preposition: str, levels: Tuple[float, float],
-                   render_func: Callable[[float], str]) -> str:
+def _levelsinfo_ty(
+    preposition: str, levels: Tuple[float, float], render_func: Callable[[float], str]
+) -> str:
     # Again we are forgiving if we get passed 'None' in the levels.
     warn_str = "never" if levels[0] is None else render_func(levels[0])
     crit_str = "never" if levels[1] is None else render_func(levels[1])
@@ -295,10 +299,10 @@ def check_levels(
     Args:
 
         value:        The currently measured value
-        levels_upper: A pair of upper thresholds. If value is larger than these, the
-                      service goes to **WARN** or **CRIT**, respecively.
-        levels_lower: A pair of lower thresholds. If value is smaller than these, the
-                      service goes to **WARN** or **CRIT**, respecively.
+        levels_upper: A pair of upper thresholds, ie. warn and crit. If value is larger than these,
+                      the service goes to **WARN** or **CRIT**, respecively.
+        levels_lower: A pair of lower thresholds, ie. warn and crit. If value is smaller than these,
+                      the service goes to **WARN** or **CRIT**, respecively.
         metric_name:  The name of the datasource in the RRD that corresponds to this value
                       or None in order not to generate a metric.
         render_func:  A single argument function to convert the value from float into a
@@ -376,7 +380,7 @@ def check_levels_predictive(
 
     try:
         ref_value, levels_tuple = cmk.base.prediction.get_levels(
-            plugin_contexts.host_name(),
+            HostName(plugin_contexts.host_name()),
             plugin_contexts.service_description(),
             metric_name,
             levels,
@@ -398,11 +402,17 @@ def check_levels_predictive(
         yield Result(state=State.UNKNOWN, summary="%s" % e)
         return
 
-    levels_upper = (None if levels_tuple[0] is None or levels_tuple[1] is None else
-                    (levels_tuple[0], levels_tuple[1]))
+    levels_upper = (
+        None
+        if levels_tuple[0] is None or levels_tuple[1] is None
+        else (levels_tuple[0], levels_tuple[1])
+    )
 
-    levels_lower = (None if levels_tuple[2] is None or levels_tuple[3] is None else
-                    (levels_tuple[2], levels_tuple[3]))
+    levels_lower = (
+        None
+        if levels_tuple[2] is None or levels_tuple[3] is None
+        else (levels_tuple[2], levels_tuple[3])
+    )
 
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
@@ -432,35 +442,40 @@ class GetRateError(IgnoreResultsError):
 
 
 def get_rate(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     key: str,
     time: float,
     value: float,
     *,
     raise_overflow: bool = False,
 ) -> float:
-    """Return a rate based based on current value and time and last value and time
+    """Return a rate based on current value and time and last value and time
 
     Args:
 
-        value_store:     The Mapping that holds the last value.
+        value_store:     The mapping that holds the last value.
                          Usually this will be the value store provided by the APIs
                          :func:`get_value_store`.
-        key:             Unique ID for storing this average until the next check
+        key:             Unique ID for storing the time/value pair until the next check
         time:            Timestamp of new value
         value:           The new value
         raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
 
-    This function returns the rate of a measurement rₙ as the quotient of the
-    current value and time (xₙ, tₙ) and the last recorded value and time (xₙ₋₁, tₙ₋₁):
+    This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
+    provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
+    previous function call (xₙ₋₁, tₙ₋₁):
 
         rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    Note that the function simply computes the quotient of the values and times given,
+    regardless of any unit. You might as well pass something different than the time.
+    However, this function is written with the use case of passing timestamps in mind.
 
     A :class:`GetRateError` will be raised if one of the following happens:
 
         * the function is called for the first time
         * the time has not changed
-        * the rate is negative and `raise_overflow` is set to True (usefull
+        * the rate is negative and `raise_overflow` is set to True (useful
           for instance when dealing with counters)
 
     In general there is no need to catch a :class:`.GetRateError`, as it
@@ -469,8 +484,16 @@ def get_rate(
     Example:
 
         >>> # in practice: my_store = get_value_store()
-        >>> my_store = {"cookies": (1600000000, 23)}
-        >>> get_rate(my_store, "cookies", 1600000060, 56)
+        >>> my_store = {}
+        >>> try:
+        ...     rate = get_rate(my_store, 'my_rate', 10, 23)
+        ... except GetRateError:
+        ...     pass  # this fails the first time, because my_store is empty.
+        >>> my_store  # now remembers the last time/value
+        {'my_rate': (10, 23)}
+        >>> # Assume in the next check cycle (60 seconds later) the value has increased to 56.
+        >>> # get_rate uses the new and old values to compute (56 - 23) / (70 - 10)
+        >>> get_rate(my_store, 'my_rate', 70, 56)
         0.55
 
     Returns:
@@ -482,11 +505,11 @@ def get_rate(
     value_store[key] = (time, value)
 
     if not last_state or len(last_state) != 2:
-        raise GetRateError('Initialized: %r' % key)
+        raise GetRateError("Initialized: %r" % key)
     last_time, last_value = last_state
 
     if time <= last_time:
-        raise GetRateError('No time difference')
+        raise GetRateError("No time difference")
 
     rate = float(value - last_value) / (time - last_time)
     if raise_overflow and rate < 0:
@@ -494,13 +517,13 @@ def get_rate(
         # wether they are 32 or 64 bit. It also could happen counter
         # reset (reboot, etc.). Better is to leave this value undefined
         # and wait for the next check interval.
-        raise GetRateError('Value overflow')
+        raise GetRateError("Value overflow")
 
     return rate
 
 
 def get_average(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     key: str,
     time: float,
     value: float,
@@ -557,12 +580,12 @@ def get_average(
     if time_diff <= 0:
         # Gracefully handle time-anomaly of target systems
         return last_average
-    backlog_count = (backlog_minutes * 60.) / time_diff
+    backlog_count = (backlog_minutes * 60.0) / time_diff
 
     # go back to regular EMA once the timeseries is twice ↓ the backlog.
-    backlog_weight = 0.5**min(1, (time - start_time) / (2 * backlog_minutes * 60.))
+    backlog_weight = 0.5 ** min(1, (time - start_time) / (2 * backlog_minutes * 60.0))
 
-    weight = (1 - backlog_weight)**(1.0 / backlog_count)
+    weight = (1 - backlog_weight) ** (1.0 / backlog_count)
 
     average = (1.0 - weight) * value + weight * last_average
     value_store[key] = (start_time, time, average)

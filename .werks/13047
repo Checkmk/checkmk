@@ -1,0 +1,21 @@
+Title: RESTAPI: fix agent information and agent download
+Class: fix
+Compatible: compat
+Component: core
+Date: 1633074257
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this Werk, both endpoints for downloading the agent binary and for
+getting the configuration of a agent shared the same URL, so effectively only
+the "show agent information" endpoint to show the configuration was active.
+
+This endpoint did not work properly and returned an error:
+
+<tt>AttributeError: 'str' object has no attribute 'items'</tt>
+
+With this Werk a second endpoint was introduced to download the agent binary
+and the endpoint to show the agent configuration was fixed.

@@ -1,0 +1,14 @@
+Title: <tt>emc_isilon_iops</tt>: Fix for 0 operations/s
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630570605
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>emc_isilon_iops</tt>, which monitors the IOPS
+of disks in EMC Isilon storage systems, reported
+"Item not found"
+in case of 0 operations/s. This has been fixed.

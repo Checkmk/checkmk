@@ -1,7 +1,7 @@
 title: FireEye Appliances: Mail Rates
 agents: snmp
 catalog: hw/network/fireeye
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors email rates
@@ -17,6 +17,5 @@ description:
 
  The check is always in OK state.
 
-inventory:
+discovery:
  One service is created.
-

@@ -8,25 +8,27 @@ import cmk.base.plugins.agent_based.utils.docker as docker
 
 def parse_docker_node_disk_usage(info):
     disk_usage = docker.parse_multiline(info).data
-    return {r.get('type'): r for r in disk_usage if r is not None}
+    return {r.get("type"): r for r in disk_usage if r is not None}
 
 
 @get_parsed_item_data
 def check_docker_node_disk_usage(_no_item, params, data):
 
     for key, human_readable_func in (
-        ('size', get_bytes_human_readable),
-        ('reclaimable', get_bytes_human_readable),
-        ('count', lambda x: x),
-        ('active', lambda x: x),
+        ("size", get_bytes_human_readable),
+        ("reclaimable", get_bytes_human_readable),
+        ("count", lambda x: x),
+        ("active", lambda x: x),
     ):
         value = data[key]
 
-        yield check_levels(value,
-                           key,
-                           params.get(key),
-                           human_readable_func=human_readable_func,
-                           infoname=key.title())
+        yield check_levels(
+            value,
+            key,
+            params.get(key),
+            human_readable_func=human_readable_func,
+            infoname=key.title(),
+        )
 
 
 check_info["docker_node_disk_usage"] = {

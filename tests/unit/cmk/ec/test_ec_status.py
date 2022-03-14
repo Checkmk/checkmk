@@ -10,13 +10,15 @@ import pathlib  # pylint: disable=import-error
 import threading
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import CMKEventConsole
+from tests.testlib import CMKEventConsole
+
 import cmk.utils.paths
+
+import cmk.ec.export as ec
 import cmk.ec.history
 import cmk.ec.main
-import cmk.ec.export as ec
 
 
 class FakeStatusSocket:
@@ -46,8 +48,12 @@ class FakeStatusSocket:
 
 @pytest.fixture(name="settings", scope="function")
 def fixture_settings():
-    return ec.settings('1.2.3i45', pathlib.Path(cmk.utils.paths.omd_root),
-                       pathlib.Path(cmk.utils.paths.default_config_dir), ['mkeventd'])
+    return ec.settings(
+        "1.2.3i45",
+        cmk.utils.paths.omd_root,
+        pathlib.Path(cmk.utils.paths.default_config_dir),
+        ["mkeventd"],
+    )
 
 
 @pytest.fixture(name="lock_configuration", scope="function")
@@ -67,9 +73,13 @@ def fixture_config():
 
 @pytest.fixture(name="history", scope="function")
 def fixture_history(settings, config):
-    return cmk.ec.history.History(settings, config, logging.getLogger("cmk.mkeventd"),
-                                  cmk.ec.main.StatusTableEvents.columns,
-                                  cmk.ec.main.StatusTableHistory.columns)
+    return cmk.ec.history.History(
+        settings,
+        config,
+        logging.getLogger("cmk.mkeventd"),
+        cmk.ec.main.StatusTableEvents.columns,
+        cmk.ec.main.StatusTableHistory.columns,
+    )
 
 
 @pytest.fixture(name="perfcounters", scope="function")
@@ -79,24 +89,52 @@ def fixture_perfcounters():
 
 @pytest.fixture(name="event_status", scope="function")
 def fixture_event_status(settings, config, perfcounters, history):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters, history,
-                                   logging.getLogger("cmk.mkeventd.EventStatus"))
+    return cmk.ec.main.EventStatus(
+        settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
+    )
 
 
 @pytest.fixture(name="event_server", scope="function")
-def fixture_event_server(settings, config, slave_status, perfcounters, lock_configuration, history,
-                         event_status):
-    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config,
-                                   slave_status, perfcounters, lock_configuration, history,
-                                   event_status, cmk.ec.main.StatusTableEvents.columns, False)
+def fixture_event_server(
+    settings, config, slave_status, perfcounters, lock_configuration, history, event_status
+):
+    return cmk.ec.main.EventServer(
+        logging.getLogger("cmk.mkeventd.EventServer"),
+        settings,
+        config,
+        slave_status,
+        perfcounters,
+        lock_configuration,
+        history,
+        event_status,
+        cmk.ec.main.StatusTableEvents.columns,
+        False,
+    )
 
 
 @pytest.fixture(name="status_server", scope="function")
-def fixture_status_server(settings, config, slave_status, perfcounters, lock_configuration, history,
-                          event_status, event_server):
-    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings,
-                                    config, slave_status, perfcounters, lock_configuration, history,
-                                    event_status, event_server, threading.Event())
+def fixture_status_server(
+    settings,
+    config,
+    slave_status,
+    perfcounters,
+    lock_configuration,
+    history,
+    event_status,
+    event_server,
+):
+    return cmk.ec.main.StatusServer(
+        logging.getLogger("cmk.mkeventd.StatusServer"),
+        settings,
+        config,
+        slave_status,
+        perfcounters,
+        lock_configuration,
+        history,
+        event_status,
+        event_server,
+        threading.Event(),
+    )
 
 
 def test_handle_client(status_server):
@@ -112,33 +150,36 @@ def test_handle_client(status_server):
 def test_mkevent_check_query_perf(config, event_status, status_server):
     for num in range(10000):
         event_status.new_event(
-            CMKEventConsole.new_event({
-                "host": "heute-%d" % num,
-                "text":
-                    "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
+            CMKEventConsole.new_event(
+                {
+                    "host": "heute-%d" % num,
+                    "text": "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
                     " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@"
                     % (time.time(), num),
-                "core_host": "heute-%d" % num,
-            }))
+                    "core_host": "heute-%d" % num,
+                }
+            )
+        )
 
     assert len(event_status.events()) == 10000
 
-    s = FakeStatusSocket(b"GET events\n"
-                         b"Filter: event_host in heute-1 127.0.0.1 heute123\n"
-                         b"Filter: event_phase in open ack\n"
-                         #b"OutputFormat: plain\n"
-                         #b"Filter: event_application ~~ xxx\n"
-                        )
+    s = FakeStatusSocket(
+        b"GET events\n"
+        b"Filter: event_host in heute-1 127.0.0.1 heute123\n"
+        b"Filter: event_phase in open ack\n"
+        # b"OutputFormat: plain\n"
+        # b"Filter: event_application ~~ xxx\n"
+    )
 
     before = time.time()
 
-    #import cProfile, StringIO, pstats
-    #pr = cProfile.Profile()
-    #pr.enable()
+    # import cProfile, StringIO, pstats
+    # pr = cProfile.Profile()
+    # pr.enable()
     status_server.handle_client(s, True, "127.0.0.1")
-    #pr.disable()
-    #ps = pstats.Stats(pr, stream=StringIO.StringIO())
-    #ps.dump_stats("/tmp/test_mkevent_check_query_perf.profile")
+    # pr.disable()
+    # ps = pstats.Stats(pr, stream=StringIO.StringIO())
+    # ps.dump_stats("/tmp/test_mkevent_check_query_perf.profile")
 
     duration = time.time() - before
 
@@ -149,52 +190,63 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
     assert duration < 0.2
 
 
-@pytest.mark.parametrize('event, status_socket, is_match', [
-    (
-        {
-            'host': 'abc',
-            'text': 'not important',
-            'core_host': 'abc',
-        },
-        FakeStatusSocket(b'GET events\n'
-                         b'Filter: event_host in abc 127.0.0.1\n'
-                         b'Filter: event_phase in open ack\n'),
-        True,
-    ),
-    (
-        {
-            'host': '127.0.0.1',
-            'text': 'not important',
-            'core_host': '127.0.0.1',
-        },
-        FakeStatusSocket(b'GET events\n'
-                         b'Filter: event_host in abc 127.0.0.1\n'
-                         b'Filter: event_phase in open ack\n'),
-        True,
-    ),
-    (
-        {
-            'host': 'ABC',
-            'text': 'not important',
-            'core_host': 'ABC',
-        },
-        FakeStatusSocket(b'GET events\n'
-                         b'Filter: event_host in abc 127.0.0.1\n'
-                         b'Filter: event_phase in open ack\n'),
-        True,
-    ),
-    (
-        {
-            'host': 'ABC1',
-            'text': 'not important',
-            'core_host': 'ABC',
-        },
-        FakeStatusSocket(b'GET events\n'
-                         b'Filter: event_host in abc 127.0.0.1\n'
-                         b'Filter: event_phase in open ack\n'),
-        False,
-    ),
-])
+@pytest.mark.parametrize(
+    "event, status_socket, is_match",
+    [
+        (
+            {
+                "host": "abc",
+                "text": "not important",
+                "core_host": "abc",
+            },
+            FakeStatusSocket(
+                b"GET events\n"
+                b"Filter: event_host in abc 127.0.0.1\n"
+                b"Filter: event_phase in open ack\n"
+            ),
+            True,
+        ),
+        (
+            {
+                "host": "127.0.0.1",
+                "text": "not important",
+                "core_host": "127.0.0.1",
+            },
+            FakeStatusSocket(
+                b"GET events\n"
+                b"Filter: event_host in abc 127.0.0.1\n"
+                b"Filter: event_phase in open ack\n"
+            ),
+            True,
+        ),
+        (
+            {
+                "host": "ABC",
+                "text": "not important",
+                "core_host": "ABC",
+            },
+            FakeStatusSocket(
+                b"GET events\n"
+                b"Filter: event_host in abc 127.0.0.1\n"
+                b"Filter: event_phase in open ack\n"
+            ),
+            True,
+        ),
+        (
+            {
+                "host": "ABC1",
+                "text": "not important",
+                "core_host": "ABC",
+            },
+            FakeStatusSocket(
+                b"GET events\n"
+                b"Filter: event_host in abc 127.0.0.1\n"
+                b"Filter: event_phase in open ack\n"
+            ),
+            False,
+        ),
+    ],
+)
 def test_mkevent_query_filters(
     event_status,
     status_server,
@@ -203,6 +255,6 @@ def test_mkevent_query_filters(
     is_match,
 ):
     event_status.new_event(CMKEventConsole.new_event(event))
-    status_server.handle_client(status_socket, True, '127.0.0.1')
+    status_server.handle_client(status_socket, True, "127.0.0.1")
     response = status_socket.get_response()
     assert (len(response) == 2) is is_match

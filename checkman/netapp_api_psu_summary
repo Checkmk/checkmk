@@ -1,7 +1,7 @@
 title: NetApp Filer: Power Supplies Summary
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the state of the shelfes power supplies and groups them for for a NetApp filer summary.
@@ -10,5 +10,5 @@ description:
 item:
  The fixed statement {{Summary}}
 
-inventory:
+discovery:
  One summary service is created for all power supply units.

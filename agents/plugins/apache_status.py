@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 # Checkmk-Agent-Plugin - Apache Server Status
 #
@@ -32,11 +32,10 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 if sys.version_info[0] == 2:
-    from urllib2 import Request, urlopen  # pylint: disable=import-error
-    from urllib2 import URLError, HTTPError  # pylint: disable=import-error
+    from urllib2 import HTTPError, Request, URLError, urlopen  # pylint: disable=import-error
 else:
+    from urllib.error import HTTPError, URLError  # pylint: disable=import-error,no-name-in-module
     from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
-    from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
 
 
 def get_config():
@@ -56,7 +55,8 @@ def get_config():
         "ssl_ports": [443],
     }
     if os.path.exists(config_file):
-        exec(open(config_file).read(), config)
+        with open(config_file) as config_file_obj:
+            exec(config_file_obj.read(), config)
     return config
 
 
@@ -66,62 +66,62 @@ def get_instance_name(host, port_nr, conf):
     or from detected sites
     """
     search = "%s:%s" % (host, port_nr)
-    if search in conf['custom']:
-        return conf['custom'][search]
-    if 'omd_sites' in conf:
-        return conf['omd_sites'].get(search, host)
+    if search in conf["custom"]:
+        return conf["custom"][search]
+    if "omd_sites" in conf:
+        return conf["omd_sites"].get(search, host)
     return ""
 
 
 def try_detect_servers(ssl_ports):
     results = []
 
-    for netstat_line in os.popen('netstat -tlnp 2>/dev/null').readlines():
+    for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
         parts = netstat_line.split()
         # Skip lines with wrong format
-        if len(parts) < 7 or '/' not in parts[6]:
+        if len(parts) < 7 or "/" not in parts[6]:
             continue
 
-        pid, proc = parts[6].split('/', 1)
-        to_replace = re.compile('^.*/')
-        proc = to_replace.sub('', proc)
+        pid, proc = parts[6].split("/", 1)
+        to_replace = re.compile("^.*/")
+        proc = to_replace.sub("", proc)
 
         procs = [
-            'apache2',
-            'httpd',
-            'httpd-prefork',
-            'httpd2-prefork',
-            'httpd2-worker',
-            'httpd.worker',
-            'httpd-event',
-            'fcgi-pm',
+            "apache2",
+            "httpd",
+            "httpd-prefork",
+            "httpd2-prefork",
+            "httpd2-worker",
+            "httpd.worker",
+            "httpd-event",
+            "fcgi-pm",
         ]
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here
-        procs = [p[:19 - len(pid) - 1] for p in procs]
+        procs = [p[: 19 - len(pid) - 1] for p in procs]
 
         # Skip unwanted processes
         if proc not in procs:
             continue
 
-        server_address, _server_port = parts[3].rsplit(':', 1)
+        server_address, _server_port = parts[3].rsplit(":", 1)
         server_port = int(_server_port)
 
         # Use localhost when listening globally
-        if server_address == '0.0.0.0':
-            server_address = '127.0.0.1'
-        elif server_address == '::':
-            server_address = '[::1]'
-        elif ':' in server_address:
-            server_address = '[%s]' % server_address
+        if server_address == "0.0.0.0":
+            server_address = "127.0.0.1"
+        elif server_address == "::":
+            server_address = "[::1]"
+        elif ":" in server_address:
+            server_address = "[%s]" % server_address
 
         # Switch protocol if port is SSL port. In case you use SSL on another
         # port you would have to change/extend the ssl_port list
         if server_port in ssl_ports:
-            scheme = 'https'
+            scheme = "https"
         else:
-            scheme = 'http'
+            scheme = "http"
 
         results.append((scheme, server_address, server_port))
 
@@ -137,12 +137,18 @@ def _unpack(config):
             # Set cacert option.
             config = ((config[0], None),) + config[1:]
         return config + ("server-status",)
-    return ((config['protocol'], config.get('cafile', None)), config['address'], config['port'],
-            config.get("instance", ""), config.get('page', 'server-status'))
+    return (
+        (config["protocol"], config.get("cafile", None)),
+        config["address"],
+        config["port"],
+        config.get("instance", ""),
+        config.get("page", "server-status"),
+    )
 
 
 def get_ssl_no_verify_context():
     import ssl
+
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
@@ -157,21 +163,30 @@ def get_response_body(proto, cafile, address, portspec, page):
 # 'context' parameter was added to urlopen in python 3.5 / 2.7
 def urlopen_with_ssl(request, timeout):
     result = None
-    if (sys.version_info[0] == 3 and sys.version_info >= (3, 5)) or \
-        (sys.version_info[0] == 2 and sys.version_info >= (2, 7)):
+    if (sys.version_info[0] == 3 and sys.version_info >= (3, 5)) or (
+        sys.version_info[0] == 2 and sys.version_info >= (2, 7)
+    ):
         result = urlopen(request, context=get_ssl_no_verify_context(), timeout=timeout)
     else:
         if sys.version_info[0] == 2:
-            from urllib2 import HTTPSHandler, build_opener, install_opener  # pylint: disable=import-error
+            from urllib2 import (  # pylint: disable=import-error # isort: skip
+                build_opener,
+                HTTPSHandler,
+                install_opener,
+            )
         else:
-            from urllib.request import HTTPSHandler, build_opener, install_opener  # pylint: disable=import-error,no-name-in-module
+            from urllib.request import (  # pylint: disable=import-error,no-name-in-module # isort: skip
+                build_opener,
+                HTTPSHandler,
+                install_opener,
+            )
         install_opener(build_opener(HTTPSHandler()))
         result = urlopen(request, timeout=timeout)
     return result
 
 
 def get_response(proto, cafile, address, portspec, page):
-    url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
+    url = "%s://%s%s/%s?auto" % (proto, address, portspec, page)
     request = Request(url, headers={"Accept": "text/plain"})
     is_local = address in ("127.0.0.1", "[::1]", "localhost")
     # Try to fetch the status page for each server
@@ -182,10 +197,10 @@ def get_response(proto, cafile, address, portspec, page):
             return urlopen_with_ssl(request, timeout=5)
         return urlopen(request, timeout=5)
     except URLError as exc:
-        if 'unknown protocol' in str(exc):
+        if "unknown protocol" in str(exc):
             # HACK: workaround misconfigurations where port 443 is used for
             # serving non ssl secured http
-            url = 'http://%s%s/server-status?auto' % (address, portspec)
+            url = "http://%s%s/server-status?auto" % (address, portspec)
             return urlopen(url, timeout=5)
         raise
 
@@ -199,16 +214,16 @@ def get_response_charset(response):
 
 
 def get_instance_name_map(cfg):
-    instance_name_map = {'custom': cfg.get("CUSTOM_ADDRESS_OVERWRITE", {})}
-    if cfg.get('ENABLE_OMD_SITE_DETECTION') and os.path.exists('/usr/bin/omd'):
-        for line in os.popen('omd sites').readlines():
+    instance_name_map = {"custom": cfg.get("CUSTOM_ADDRESS_OVERWRITE", {})}
+    if cfg.get("ENABLE_OMD_SITE_DETECTION") and os.path.exists("/usr/bin/omd"):
+        for line in os.popen("omd sites").readlines():
             sitename = line.split()[0]
             path = "/opt/omd/sites/%s/etc/apache/listen-port.conf" % sitename
             with open(path) as site_cfg_handle:
                 site_raw_conf = site_cfg_handle.readlines()
                 site_conf = site_raw_conf[-2].strip().split()[1]
-                instance_name_map.setdefault('omd_sites', {})
-                instance_name_map['omd_sites'][site_conf] = sitename
+                instance_name_map.setdefault("omd_sites", {})
+                instance_name_map["omd_sites"][site_conf] = sitename
     return instance_name_map
 
 
@@ -223,27 +238,27 @@ def main():
     if not servers:
         return 0
 
-    sys.stdout.write('<<<apache_status:sep(124)>>>\n')
+    sys.stdout.write("<<<apache_status:sep(124)>>>\n")
     for server in servers:
         (proto, cafile), address, port, name, page = _unpack(server)
-        portspec = ':%d' % port if port else ''
+        portspec = ":%d" % port if port else ""
 
         try:
             response_body = get_response_body(proto, cafile, address, portspec, page)
-            for line in response_body.split('\n'):
+            for line in response_body.split("\n"):
                 if not line.strip():
                     continue
-                if line.lstrip()[0] == '<':
+                if line.lstrip()[0] == "<":
                     # Seems to be html output. Skip this server.
                     break
                 if not name:
                     name = get_instance_name(address, port, get_instance_name_map(config))
                 sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
         except HTTPError as exc:
-            sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
+            sys.stderr.write("HTTP-Error (%s%s): %s %s\n" % (address, portspec, exc.code, exc))
 
         except Exception as exc:  # pylint: disable=broad-except
-            sys.stderr.write('Exception (%s%s): %s\n' % (address, portspec, exc))
+            sys.stderr.write("Exception (%s%s): %s\n" % (address, portspec, exc))
 
     return 0
 

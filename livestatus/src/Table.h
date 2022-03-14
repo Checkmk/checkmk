@@ -51,6 +51,7 @@ class Table {
 public:
     explicit Table(MonitoringCore *mc);
     virtual ~Table();
+
     void addColumn(std::unique_ptr<Column> col);
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
 

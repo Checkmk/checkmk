@@ -6,7 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
-from .mem import get_levels_mode_from_value, check_memory_element
+from .mem import check_memory_element, get_levels_mode_from_value
 from .size_trend import size_trend
 
 CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
@@ -83,8 +83,9 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
 
     if params.get("trend_range"):
         mem_used_mb, mem_total_mb = mem_used / 1048576.0, mem_total / 1048576.0
-        trend_status, trend_infotext, trend_perfdata = size_trend('cisco_mem', item, "memory",
-                                                                  params, mem_used_mb, mem_total_mb)
+        trend_status, trend_infotext, trend_perfdata = size_trend(
+            "cisco_mem", item, "memory", params, mem_used_mb, mem_total_mb
+        )
         status = max(status, trend_status)
         infotext += trend_infotext
         perfdata.extend(trend_perfdata)

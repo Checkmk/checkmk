@@ -1,7 +1,7 @@
 title: SNMP HOST-RESOURCES-MIB: Used Space in Filesystems
 agents: snmp
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the usage of filesystems using SNMP and
@@ -23,7 +23,6 @@ item:
  The description of the filesystem as in {hrStorageDescr}. For
  Linux SNMP agents this is the mount point.
 
-inventory:
+discovery:
  One service is created for each fixed disk if the description
  of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
-

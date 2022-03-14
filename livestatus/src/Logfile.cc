@@ -8,38 +8,23 @@
 #include <fcntl.h>
 
 #include <algorithm>
-#include <cstdlib>
 #include <sstream>
-#include <utility>
+#include <stdexcept>
 #include <vector>
 
 #include "LogCache.h"
-#include "LogEntry.h"
 #include "Logger.h"
 
 namespace {
-time_t firstTimestampOf(const std::filesystem::path &path, Logger *logger) {
-    std::ifstream is(path, std::ios::binary);
-    if (!is) {
-        generic_error ge("cannot open logfile " + path.string());
-        Informational(logger) << ge;
-        return 0;
+std::chrono::system_clock::time_point firstTimestampOf(
+    const std::filesystem::path &path, Logger *logger) {
+    std::string line;
+    if (std::ifstream is{path}; is && std::getline(is, line)) {
+        return LogEntry{{}, line}.time();
     }
-
-    char line[12];
-    is.read(line, sizeof(line));
-    if (!is) {
-        return 0;  // ignoring. might be empty
-    }
-
-    if (line[0] != '[' || line[11] != ']') {
-        Informational(logger) << "ignoring logfile '" << path
-                              << "': does not begin with '[123456789] '";
-        return 0;
-    }
-
-    line[11] = 0;
-    return atoi(line + 1);
+    generic_error ge{"cannot determine first timestamp of " + path.string()};
+    Informational(logger) << ge;
+    return {};
 }
 }  // namespace
 
@@ -140,7 +125,8 @@ long Logfile::freeMessages(unsigned logclasses) {
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
-        if (((1U << static_cast<int>(it->second->_class)) & logclasses) != 0U) {
+        if (((1U << static_cast<int>(it->second->log_class())) & logclasses) !=
+            0U) {
             _entries.erase(it++);
             freed++;
         } else {
@@ -153,25 +139,26 @@ long Logfile::freeMessages(unsigned logclasses) {
 
 bool Logfile::processLogLine(size_t lineno, std::string line,
                              unsigned logclasses) {
-    auto entry = std::make_unique<LogEntry>(lineno, std::move(line));
-    // ignored invalid lines
-    if (entry->_class == LogEntry::Class::invalid) {
+    std::unique_ptr<LogEntry> entry;
+    try {
+        entry = std::make_unique<LogEntry>(lineno, std::move(line));
+    } catch (const std::invalid_argument &) {
+        return false;  // simply ignore invalid lines
+    }
+    if (((1U << static_cast<int>(entry->log_class())) & logclasses) == 0U) {
         return false;
     }
-    if (((1U << static_cast<int>(entry->_class)) & logclasses) == 0U) {
-        return false;
-    }
-    uint64_t key = makeKey(entry->_time, entry->_lineno);
+    auto key = makeKey(entry->time(), entry->lineno());
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
-        Error(_logger) << "strange duplicate logfile line " << entry->_message;
+        Error(_logger) << "strange duplicate logfile line " << entry->message();
         return false;
     }
     _entries[key] = std::move(entry);
     return true;
 }
 
-const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
+const Logfile::map_type *Logfile::getEntriesFor(size_t max_lines_per_logfile,
                                                 unsigned logclasses) {
     // make sure all messages are present
     load(max_lines_per_logfile, logclasses);
@@ -179,6 +166,20 @@ const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
 }
 
 // static
-uint64_t Logfile::makeKey(time_t t, size_t lineno) {
-    return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
+bool Logfile::processLogEntries(
+    const std::function<bool(const LogEntry &)> &process_log_entry,
+    const map_type *entries, const LogFilter &log_filter) {
+    auto it =
+        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
+    while (it != entries->begin()) {
+        --it;
+        const auto &entry = *it->second;
+        if (entry.time() < log_filter.since) {
+            return false;  // time limit exceeded
+        }
+        if (!process_log_entry(entry)) {
+            return false;
+        }
+    }
+    return true;
 }

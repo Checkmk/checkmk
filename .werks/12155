@@ -1,0 +1,28 @@
+Title: cmk_update_agent: Fix proxy configuration
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1616764448
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When configuring the ruleset "Automatic agent updates" to use a proxy
+server for connection, the agent updater will fail executing on the host,
+showing the error:<br>
+<tt>KeyError: 'server'</tt> (visible in the cmk-update-agent.log)
+
+This is fixed now.
+
+This werk is marked as incompatible, because in order to recover from this
+error, you need to either reinstall the agent on affected hosts after the
+Checkmk update, or manually add the "server" and "port" entries in the
+local agent updater proxy configuration at <tt>/etc/cmk-update-agent.state</tt>
+(Unix) or <tt>config/cmk-update-agent.state</tt> (Windows).<br>
+E.g., if the "proxy" entry looks like this:
+<tt>"proxy": {"proxy_protocol": "socks5", "user": "some_user",
+"password": "some_password"}</tt>,<br>
+change it to:<br>
+<tt>"proxy": {"proxy_protocol": "socks5", "server": "some_server",
+"port": 1234, "user": "some_user", "password": "some_password"}</tt>

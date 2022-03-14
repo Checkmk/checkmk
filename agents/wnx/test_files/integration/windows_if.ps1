@@ -1,18 +1,10 @@
-# Windows Teaming Interfaces
-# runs on windows 2003 or newer
-if ([Environment]::OSVersion.Version.Major -ge "5"){
-	Write-Host "<<<winperf_if:sep(9)>>>"
-}
-
-# runs on windows 2012 or newer
-# [teaming_start]
-# TeamName        TeamingMode     LoadBalancingAlgorithm  MemberMACAddresses      MemberNames     MemberDescriptions      Speed   GUID
-# LAN     Lacp    Dynamic         5C:F3:FC:37:2A:34;5C:F3:FC:37:2A:30     Ethernet;Ethernet 2     QLogic 1/10GbE Server Adapter #2;QLogic 1/10GbE Server Adapter  10000000000;10000000000 {11477AB1-0A749C-8768-A17F47C02A1F};{2B232067-0EE5-41EE-B498-0CA2FE8715D0}
-# [teaming_end]
+## runs on windows 2012 or newer
+## TeamName        TeamingMode     LoadBalancingAlgorithm  MemberMACAddresses      MemberNames     MemberDescriptions      Speed   GUID
+## LAN     Lacp    Dynamic         5C:F3:FC:37:2A:34;5C:F3:FC:37:2A:30     Ethernet;Ethernet 2     QLogic 1/10GbE Server Adapter #2;QLogic 1/10GbE Server Adapter  10000000000;10000000000 {11477AB1-0A749C-8768-A17F47C02A1F};{2B232067-0EE5-41EE-B498-0CA2FE8715D0}
 if ((([Environment]::OSVersion.Version.Major -eq "6") -and ([Environment]::OSVersion.Version.Minor -ge "2")) -or ([Environment]::OSVersion.Version.Major -ge "7")){
+	Write-Host "<<<winperf_if_teaming:sep(9)>>>"
 	$teams = Get-NetLbfoTeam
 	if ($teams){
-		Write-Host "[teaming_start]"
 		Write-Host "TeamName`tTeamingMode`tLoadBalancingAlgorithm`tMemberMACAddresses`tMemberNames`tMemberDescriptions`tSpeed`tGUID"
 		foreach ($team in $teams){
 			$membermacs = $null
@@ -42,7 +34,6 @@ if ((([Environment]::OSVersion.Version.Major -eq "6") -and ([Environment]::OSVer
 			$netguid = $netguid.TrimEnd(";")
 			Write-Host $netguid
 		}
-		Write-Host "[teaming_end]"
 	}
 }
 
@@ -57,6 +48,7 @@ if ((([Environment]::OSVersion.Version.Major -eq "6") -and ([Environment]::OSVer
 # NODE01   5C:F3:FC:37:2A:34       QLogic 1/10GbE Server Adapter   Ethernet        2               {11477AB1-0A73-449C-8768-A17F47C02A1F}
 # NODE01   5C:F3:FC:37:2A:30       Microsoft Network Adapter Multiplexor Driver    LAN     2       20000000000     {4FCE4C48-6217-465A-B807-B61499AE570C}
 if ([Environment]::OSVersion.Version.Major -ge "5"){
+	Write-Host "<<<winperf_if_win32_networkadapter:sep(9)>>>"
 	Write-Host "Node`tMACAddress`tName`tNetConnectionID`tNetConnectionStatus`tSpeed`tGUID"
 	foreach ($net in Get-WmiObject Win32_NetworkAdapter)
 	{

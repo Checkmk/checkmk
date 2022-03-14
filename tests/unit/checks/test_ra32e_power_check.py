@@ -4,16 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import Check  # type: ignore[import]
-from checktestlib import BasicCheckResult
+import pytest
+
+from tests.testlib import Check
+
+from .checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks
 
 RA32E_POWER = "ra32e_power"
 
 
-@pytest.mark.parametrize("info,result", [([[u'']], None), ([[u'0']], [(None, {})])])
+@pytest.mark.parametrize("info,result", [([[""]], None), ([["0"]], [(None, {})])])
 def test_ra32e_power_discovery(info, result):
     check = Check(RA32E_POWER)
     assert check.run_discovery(info) == result
@@ -21,7 +23,7 @@ def test_ra32e_power_discovery(info, result):
 
 def test_ra32e_power_check_battery():
     check = Check(RA32E_POWER)
-    result = check.run_check(None, {}, [['0']])
+    result = check.run_check(None, {}, [["0"]])
 
     assert len(result) == 2
     status, infotext = result
@@ -31,15 +33,15 @@ def test_ra32e_power_check_battery():
 
 def test_ra32e_power_check_acpower():
     check = Check(RA32E_POWER)
-    result = BasicCheckResult(*check.run_check(None, {}, [['1']]))
+    result = BasicCheckResult(*check.run_check(None, {}, [["1"]]))
 
     assert result.status == 0
-    assert 'AC/Utility' in result.infotext
+    assert "AC/Utility" in result.infotext
 
 
 def test_ra32e_power_check_nodata():
     check = Check(RA32E_POWER)
-    result = BasicCheckResult(*check.run_check(None, {}, [['']]))
+    result = BasicCheckResult(*check.run_check(None, {}, [[""]]))
 
     assert result.status == 3
-    assert 'unknown' in result.infotext
+    assert "unknown" in result.infotext

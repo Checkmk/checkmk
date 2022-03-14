@@ -1,12 +1,12 @@
 title: Kemp Loadmaster: HA State and Firmware Version
 agents: snmp
 catalog: hw/network/kemp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the HA state and the current Firmware Version.
  It is known to run on Kemp Loadmaster LM-2600 and LM-3600.
  No Alarms are triggerd.
 
-inventory:
+discovery:
  One service is created.

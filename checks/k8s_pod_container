@@ -3,7 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import collections
+
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 
 
 def inventory_k8s_pod_container(parsed):
@@ -13,15 +19,15 @@ def inventory_k8s_pod_container(parsed):
 
 def check_k8s_pod_container(_no_item, params, parsed):
     total = len(parsed)
-    ready = sum(container['ready'] for container in parsed.values())
+    ready = sum(container["ready"] for container in parsed.values())
     state = collections.defaultdict(int)
     exit_code = 0
     for container in parsed.values():
         state[container["state"]] += 1
         exit_code = max(exit_code, 0 if int(container["state_exit_code"]) == 0 else 2)
     perfdata = [
-        ('docker_all_containers', total, None, None, 0, total),
-        ('ready_containers', ready, None, None, 0, total),
+        ("docker_all_containers", total, None, None, 0, total),
+        ("ready_containers", ready, None, None, 0, total),
     ]
     yield 0, "Ready: %d/%d" % (ready, total), perfdata
     yield 0, "Running: %d" % state["running"]
@@ -29,9 +35,9 @@ def check_k8s_pod_container(_no_item, params, parsed):
     yield 0 if not exit_code else 2, "Terminated: %d" % state["terminated"]
 
 
-check_info['k8s_pod_container'] = {
+check_info["k8s_pod_container"] = {
     # section is already migrated
-    'inventory_function': inventory_k8s_pod_container,
-    'check_function': check_k8s_pod_container,
-    'service_description': 'Container',
+    "inventory_function": inventory_k8s_pod_container,
+    "check_function": check_k8s_pod_container,
+    "service_description": "Container",
 }

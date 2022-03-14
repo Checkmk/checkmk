@@ -22,140 +22,150 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
 fi
 
+section_checkmk() {
 
-echo "<<<check_mk>>>"
-echo "Version: 2.1.0i1"
-echo "AgentOS: hpux"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
+    echo "<<<check_mk>>>"
+    echo "Version: 2.2.0i1"
+    echo "AgentOS: hpux"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: $MK_CONFDIR"
+    echo "DataDirectory: $MK_VARDIR"
+    echo "SpoolDirectory: $SPOOLDIR"
+    echo "PluginsDirectory: $PLUGINSDIR"
+    echo "LocalDirectory: $LOCALDIR"
 
-# Filesystems. HP-UX does not provide a filesystem type. We assume
-# modern systems with vxfs only here. The filesystem type is currently
-# not used by the check anyway.
-echo '<<<df>>>'
-df -kP | sed 's/ / - /' | awk '/^(.*-.*)$/ { print $0 } /^([^-]+)$/ { printf $0 }' | grep -Ev "^/proc|^Filesystem|^/aha|:"
+}
 
-# Process table: HP-UX does not provide a resident size of processes.
-# We send a 0 here for RSZ.
-echo '<<<ps>>>'
-UNIX95=yes ps -ef -o user,vsz,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,0,\3) /'
+run_purely_synchronous_sections() {
 
+    section_checkmk
 
-echo '<<<hpux_cpu>>>'
-uptime
-# machinfo is unsupported addon thus not in $PATH
-/usr/contrib/bin/machinfo | grep -E 'logical proc|core' | tail -1
+    # Filesystems. HP-UX does not provide a filesystem type. We assume
+    # modern systems with vxfs only here. The filesystem type is currently
+    # not used by the check anyway.
+    echo '<<<df>>>'
+    df -kP | sed 's/ / - /' | awk '/^(.*-.*)$/ { print $0 } /^([^-]+)$/ { printf $0 }' | grep -Ev "^/proc|^Filesystem|^/aha|:"
 
-# Several machine performance counters
-echo '<<<hpux_vmstat>>>'
-vmstat -s
+    # Process table: HP-UX does not provide a resident size of processes.
+    # We send a 0 here for RSZ.
+    echo '<<<ps>>>'
+    UNIX95=yes ps -ef -o user,vsz,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,0,\3) /'
 
-# Memory information
-echo '<<<hpux_mem>>>'
-machinfo | grep ^Memory
-vmstat | sed -n 3p
+    echo '<<<hpux_cpu>>>'
+    uptime
+    # machinfo is unsupported addon thus not in $PATH
+    /usr/contrib/bin/machinfo | grep -E 'logical proc|core' | tail -1
 
-# TCP connection states
-echo '<<<tcp_conn_stats>>>'
-netstat -f inet -n | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+    # Several machine performance counters
+    echo '<<<hpux_vmstat>>>'
+    vmstat -s
 
-# Network interfaces
-echo '<<<hpux_if>>>'
-for nic in `nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'`
-do
-    nwmgr -g --st mib -c $nic
-done
+    # Memory information
+    echo '<<<hpux_mem>>>'
+    machinfo | grep ^Memory
+    vmstat | sed -n 3p
 
-# Logical Volume Manager
-echo '<<<hpux_lvm:sep(58)>>>'
-/sbin/vgdisplay -v -F
+    # TCP connection states
+    echo '<<<tcp_conn_stats>>>'
+    netstat -f inet -n | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
-# Multipathing
-echo '<<<hpux_multipath>>>'
-scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
-
-echo '<<<hpux_serviceguard:sep(124)>>>'
-if type cmviewcl >/dev/null 2>&1
-then
-    cmviewcl -v -f line | grep summary
-fi
-
-echo '<<<ntp>>>'
-# remove heading, make first column space separated
-ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-
-
-# Kernel tunnables
-if type kcusage >/dev/null 2>&1
-then
-    echo '<<<hpux_tunables>>>'
-    kcusage -l
-fi
-
-
-# State of FC HBAs
-fcms_util=/opt/fcms/bin/fcdutil
-echo '<<<hpux_hbahealth:sep(61)>>>'
-for hba in /dev/fcd* ; do
-    echo "$hba"
-    $fcms_util $hba | grep -e "Driver state" -e "Topology" -e "Dump Available"\
-                      -e "Code version" -e "Hardware Path" -e "Port World"
-done
-
-# Libelle Business Shadow
-if type trd >/dev/null 2>&1
-then
-  echo '<<<libelle_business_shadow:sep(58)>>>'
-  trd -s
-fi
-
-
-# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
-
-
-# Lokale Einzelchecks
-echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
-
-
-# MK's Remote Plugin Executor
-if [ -f "$MK_CONFDIR/mrpe.cfg" ]
-then
-    echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "$cmdline")
-        echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
+    # Network interfaces
+    echo '<<<hpux_if>>>'
+    for nic in $(nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'); do
+        nwmgr -g --st mib -c "$nic"
     done
-fi
+
+    # Logical Volume Manager
+    echo '<<<hpux_lvm:sep(58)>>>'
+    /sbin/vgdisplay -v -F
+
+    # Multipathing
+    echo '<<<hpux_multipath>>>'
+    scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
+
+    echo '<<<hpux_serviceguard:sep(124)>>>'
+    if type cmviewcl >/dev/null 2>&1; then
+        cmviewcl -v -f line | grep summary
+    fi
+
+    echo '<<<ntp>>>'
+    # remove heading, make first column space separated
+    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+
+    # Kernel tunnables
+    if type kcusage >/dev/null 2>&1; then
+        echo '<<<hpux_tunables>>>'
+        kcusage -l
+    fi
+
+    # State of FC HBAs
+    fcms_util=/opt/fcms/bin/fcdutil
+    echo '<<<hpux_hbahealth:sep(61)>>>'
+    for hba in /dev/fcd*; do
+        echo "$hba"
+        "${fcms_util}" "${hba}" | grep -e "Driver state" -e "Topology" -e "Dump Available" \
+            -e "Code version" -e "Hardware Path" -e "Port World"
+    done
+
+    # Libelle Business Shadow
+    if type trd >/dev/null 2>&1; then
+        echo '<<<libelle_business_shadow:sep(58)>>>'
+        trd -s
+    fi
+}
+
+run_plugins() {
+    (
+        cd "${PLUGINSDIR}" || return
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+        done
+    )
+}
+
+run_local_checks() {
+    (
+        cd "${LOCALDIR}" || return
+        echo '<<<local:sep(0)>>>'
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+        done
+    )
+}
+
+run_mrpe_plugins() {
+    if [ -f "$MK_CONFDIR/mrpe.cfg" ]; then
+        echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+                echo
+            done
+    fi
+}
+
+main() {
+
+    run_purely_synchronous_sections
+
+    run_plugins
+
+    run_local_checks
+
+    run_mrpe_plugins
+
+    return 0
+
+}

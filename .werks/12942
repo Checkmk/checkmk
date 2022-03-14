@@ -1,0 +1,15 @@
+Title: REST API: parse HTTP content-type header options
+Class: fix
+Compatible: compat
+Component: core
+Date: 1623062918
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Endpoints of the REST API didn't understand content-types in the form of
+"application/json; charset=utf-8" and rejected the call even if it would
+be valid according to the RFC. This has now been fixed and the error messsages
+have been improved as well.

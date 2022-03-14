@@ -10,7 +10,6 @@ ROOT=/omd/sites/$SITE
 
 # Little install helper used during development and test
 sudo cp -v bash_completion $ROOT/lib/omd/bash_completion
-sudo cp -v logout.php $ROOT/share/omd/htdocs/logout.php
 sudo rm -vf $ROOT/share/man/man8/omd.8.gz
 sudo cp -v omd.8 $ROOT/share/man/man8/omd.8
 sudo gzip $ROOT/share/man/man8/omd.8

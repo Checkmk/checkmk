@@ -1,13 +1,12 @@
 title: NetApp Filer: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the CPU utilization (in percent) of NetApp filers.
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
-inventory:
+discovery:
  One service is created on each filer.
-

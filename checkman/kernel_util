@@ -1,7 +1,7 @@
 title: CPU Utilization
 agents: linux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors both the total CPU utilization and the utilization of single cores.
@@ -16,5 +16,5 @@ description:
  utilization (both for the total and single-core utilizations). The time range over which
  the average is calculated can be set by the user.
 
-inventory:
+discovery:
  One service is created if the agent contains a {kernel} section with CPU information.

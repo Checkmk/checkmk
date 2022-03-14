@@ -6,6 +6,6 @@ Date: 1608312627
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The fields in check_ntp summary are now in the following order: offset, stratum, jitter

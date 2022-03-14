@@ -6,9 +6,9 @@
 
 from typing import Dict
 
-from .utils import docker
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .utils import docker
 
 Section = Dict[str, str]
 
@@ -24,8 +24,10 @@ register.agent_section(
 
 
 def inventory_docker_container_labels(section: Section) -> InventoryResult:
-    yield Attributes(path=docker.INVENTORY_BASE_PATH + ["container"],
-                     inventory_attributes={"labels": docker.format_labels(section)})
+    yield Attributes(
+        path=docker.INVENTORY_BASE_PATH + ["container"],
+        inventory_attributes={"labels": docker.format_labels(section)},
+    )
 
 
 register.inventory_plugin(

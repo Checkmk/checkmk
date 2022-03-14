@@ -1,7 +1,7 @@
 title: Dell OpenManage: PSU Unit State
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The state of a PSU is checked here. The state will change to {WARN} if "Non
@@ -12,5 +12,5 @@ description:
 item:
  The index of the PSU
 
-inventory:
+discovery:
  One service is created for each PSU.

@@ -1,0 +1,18 @@
+title: Alertmanager: Summary
+agents: alertmanager
+catalog: app/alertmanager
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows a summary of all alert rules that are not ignored.
+
+ For the options which alert rules can be ignored please refer to the manpage
+ {alertmanager_rules}. The options can be found in special agent configuration.
+
+ It shows the worst state of the individual rules and all the names of
+ the non {OK} alert rules in summary.
+ In the details you can see the message of the respective alert rules which
+ provides further information about the alert rule.
+
+discovery:
+ One summary service is created

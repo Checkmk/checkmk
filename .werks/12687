@@ -1,0 +1,17 @@
+Title: activation_cleanup: fix growing tmp directory due to inactive cleanup job
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1627407405
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The "Activate Changes" functionality creates a number of temporary directories
+under tmp, which are periodically removed by a cleanup job "Activation
+Cleanup". This job was not able to repair itself in the event that it had a
+broken or empty status file:
+~/var/check_mk/background_jobs/activation_cleanup/jobstatus.mk. This has been
+fixed, so that the job can continue to run.

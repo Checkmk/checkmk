@@ -9,64 +9,77 @@
 
 def get_time(timefromdevice):
     import struct
+
     length = len(timefromdevice)
-    DateAndTime = dict({8: '>HBBBBBB', 11: '>HBBBBBBcBB'})
+    DateAndTime = dict({8: ">HBBBBBB", 11: ">HBBBBBBcBB"})
     if length == 8 or length == 11:
-        timedecoded = (struct.unpack(DateAndTime[length], timefromdevice.encode('latin-1')))
+        timedecoded = struct.unpack(DateAndTime[length], timefromdevice.encode("latin-1"))
         if length == 8:
             timedevice = time.strftime(
-                "%d-%m-%Y %H:%M:%S", time.strptime(str(timedecoded),
-                                                   "(%Y, %m, %d, %H, %M, %S, %f)"))
+                "%d-%m-%Y %H:%M:%S", time.strptime(str(timedecoded), "(%Y, %m, %d, %H, %M, %S, %f)")
+            )
         else:
             offset = str(timedecoded[7]) + str(timedecoded[8]) + ":" + str(timedecoded[9])
             date = time.strftime(
                 "%d-%m-%Y %H:%M:%S %Z",
-                time.strptime(str(timedecoded[0:7]), "(%Y, %m, %d, %H, %M, %S, %f)"))
+                time.strptime(str(timedecoded[0:7]), "(%Y, %m, %d, %H, %M, %S, %f)"),
+            )
             timedevice = str(date) + "" + str(offset)
     return timedevice
 
 
 def parse_hepta(info):
     parsed = {}
-    parsed['devicetype'] = info[0][0]
-    parsed['serialnumber'] = info[0][1]
-    parsed['firmwareversion'] = info[0][2]
-    parsed['firmwaredate'] = get_time(info[0][3])
-    parsed['version'] = info[0][4]
-    parsed['ntpstratum'] = info[0][5]
-    parsed['syncmoduletimesyncstate'] = info[0][7]
-    parsed['syncmoduletimelocal'] = get_time(info[0][6])
+    parsed["devicetype"] = info[0][0]
+    parsed["serialnumber"] = info[0][1]
+    parsed["firmwareversion"] = info[0][2]
+    parsed["firmwaredate"] = get_time(info[0][3])
+    parsed["version"] = info[0][4]
+    parsed["ntpstratum"] = info[0][5]
+    parsed["syncmoduletimesyncstate"] = info[0][7]
+    parsed["syncmoduletimelocal"] = get_time(info[0][6])
     return parsed
 
 
 def check_hepta(item, params, parsed):
-    yield(0, "DeviceType %s ; SerialNumber %s ; FirmwareVersion %s ; FirmwareDate %s ; "\
-          "Version %s" % (parsed['devicetype'], parsed['serialnumber'], parsed['firmwareversion'], parsed['firmwaredate'], parsed['version']  ))
+    yield (
+        0,
+        "DeviceType %s ; SerialNumber %s ; FirmwareVersion %s ; FirmwareDate %s ; "
+        "Version %s"
+        % (
+            parsed["devicetype"],
+            parsed["serialnumber"],
+            parsed["firmwareversion"],
+            parsed["firmwaredate"],
+            parsed["version"],
+        ),
+    )
 
 
-check_info['hepta'] = {
-    'parse_function': parse_hepta,
-    'inventory_function': discover_single,
-    'check_function': check_hepta,
-    'service_description': 'HPF Info',
-    'snmp_info': (
-        '.1.3.6.1.4.1.12527',
-        ['29', '40'],
+check_info["hepta"] = {
+    "parse_function": parse_hepta,
+    "inventory_function": discover_single,
+    "check_function": check_hepta,
+    "service_description": "HPF Info",
+    "snmp_info": (
+        ".1.3.6.1.4.1.12527",
+        ["29", "40"],
         [
-            "1.1.0",  #hopf8030HEPTADeviceType
-            "1.3.0",  #hopf8030HEPTASerialNumber
-            "1.4.0",  #hopf8030HEPTAFirmwareVersion
-            "1.5.0",  #hopf8030HEPTAFirmwareDate
-            "1.6.0",  #hopf8030HEPTAVersion
-            "2.1.2.0",  #ntpSysStratum
-            "3.1.0",  #SyncModuleTimeLocal
-            "3.5.0",  #SyncModuleTimeSyncState
-        ]),
-    'has_perfdata': False,
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12527"),
+            "1.1.0",  # hopf8030HEPTADeviceType
+            "1.3.0",  # hopf8030HEPTASerialNumber
+            "1.4.0",  # hopf8030HEPTAFirmwareVersion
+            "1.5.0",  # hopf8030HEPTAFirmwareDate
+            "1.6.0",  # hopf8030HEPTAVersion
+            "2.1.2.0",  # ntpSysStratum
+            "3.1.0",  # SyncModuleTimeLocal
+            "3.5.0",  # SyncModuleTimeSyncState
+        ],
+    ),
+    "has_perfdata": False,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12527"),
 }
 
-#.
+# .
 #   .--SyncModuleTimeSyncState---------------------------------------------.
 #   |    ____                   __  __           _       _     _____ _     |
 #   |   / ___| _   _ _ __   ___|  \/  | ___   __| |_   _| | __|_   _(_)    |
@@ -90,27 +103,27 @@ def inventory_hepta_time_sync(info):
 
 
 def check_hepta_time_sync(item, params, parsed):
-    if parsed['syncmoduletimesyncstate'] == "R":
+    if parsed["syncmoduletimesyncstate"] == "R":
         yield (0, "Radio synchronous with high precision")
-    elif parsed['syncmoduletimesyncstate'] == "r":
+    elif parsed["syncmoduletimesyncstate"] == "r":
         yield (1, "Radio synchronous with low precision")
-    elif parsed['syncmoduletimesyncstate'] == "C":
+    elif parsed["syncmoduletimesyncstate"] == "C":
         yield (2, "Crystal")  # In manual the Crystal mode means Invalid Statum
-    elif parsed['syncmoduletimesyncstate'] == "I":
+    elif parsed["syncmoduletimesyncstate"] == "I":
         yield (2, "Invalid time and date")
     else:
         yield (3, "No data available")
 
 
-check_info['hepta.syncmoduletimesyncstate'] = {
-    'parse_function': parse_hepta,
-    'inventory_function': inventory_hepta_time_sync,
-    'check_function': check_hepta_time_sync,
-    'service_description': '%s',
+check_info["hepta.syncmoduletimesyncstate"] = {
+    "parse_function": parse_hepta,
+    "inventory_function": inventory_hepta_time_sync,
+    "check_function": check_hepta_time_sync,
+    "service_description": "%s",
 }
 
 
-#.
+# .
 #   .--ntpSysStratum-------------------------------------------------------.
 #   |          _        ____            ____  _             _              |
 #   |    _ __ | |_ _ __/ ___| _   _ ___/ ___|| |_ _ __ __ _| |_ _   _      |
@@ -132,25 +145,25 @@ def inventory_hepta_ntpsysstratum(info):
 
 
 def check_hepta_ntpsysstratum(item, params, parsed):
-    if parsed['ntpstratum'] == "1":
+    if parsed["ntpstratum"] == "1":
         yield (0, "Stratum 1, Primary Reference ")
-    elif parsed['ntpstratum'] == "16":
+    elif parsed["ntpstratum"] == "16":
         yield (2, "Stratum Invalid")
-    elif parsed['ntpstratum'] == "0":
+    elif parsed["ntpstratum"] == "0":
         yield (3, "Stratum Unknown")
     else:
         yield (1, "Stratum is using secondary reference(via NTP)")
 
 
-check_info['hepta.ntpsysstratum'] = {
-    'parse_function': parse_hepta,
-    'inventory_function': inventory_hepta_ntpsysstratum,
-    'check_function': check_hepta_ntpsysstratum,
-    'service_description': '%s',
+check_info["hepta.ntpsysstratum"] = {
+    "parse_function": parse_hepta,
+    "inventory_function": inventory_hepta_ntpsysstratum,
+    "check_function": check_hepta_ntpsysstratum,
+    "service_description": "%s",
 }
 
 
-#.
+# .
 #   .--SyncModuleTimeLocal-------------------------------------------------.
 #   |    ____                   __  __           _       _     _____ _     |
 #   |   / ___| _   _ _ __   ___|  \/  | ___   __| |_   _| | __|_   _(_)    |
@@ -172,12 +185,12 @@ def inventory_hepta_syncmoduletimelocal(info):
 
 
 def check_hepta_syncmoduletimelocal(item, params, parsed):
-    yield (0, "Module Time: %s " % parsed['syncmoduletimelocal'])
+    yield (0, "Module Time: %s " % parsed["syncmoduletimelocal"])
 
 
-check_info['hepta.syncmoduletimelocal'] = {
-    'parse_function': parse_hepta,
-    'inventory_function': inventory_hepta_syncmoduletimelocal,
-    'check_function': check_hepta_syncmoduletimelocal,
-    'service_description': '%s',
+check_info["hepta.syncmoduletimelocal"] = {
+    "parse_function": parse_hepta,
+    "inventory_function": inventory_hepta_syncmoduletimelocal,
+    "check_function": check_hepta_syncmoduletimelocal,
+    "service_description": "%s",
 }

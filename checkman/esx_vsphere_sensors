@@ -1,7 +1,7 @@
 title: VMWare ESX Host Systems: Hardware Sensors
 agents: vsphere
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the state of all of a VMWare ESX host system's
@@ -15,6 +15,5 @@ description:
  information here:
  http://kb.vmware.com/selfservice/microsites/search.do?cmd=displayKC&externalId=1037330
 
-inventory:
+discovery:
   One service is created for each ESX Host System.
-

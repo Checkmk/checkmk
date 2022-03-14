@@ -1,7 +1,7 @@
 title: Checkmk Appliance: Backup Job State
 agents: linux
-catalog: app/checkmk
-license: GPL
+catalog: app/cmk
+license: GPLv2
 distribution: checkmk
 description:
  This check checks the status of Checkmk Appliance device backup jobs. It
@@ -11,5 +11,5 @@ description:
 item:
  The ID of the job
 
-inventory:
+discovery:
  One service is created for each backup job.

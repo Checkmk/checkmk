@@ -1,0 +1,37 @@
+Title: Notification spooler connections can now be encrypted
+Class: feature
+Compatible: incomp
+Component: notifications
+Date: 1642494849
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+Notification spooler (mknotifyd) connections communicated via a plain text procotol
+since its introduction. This is ok for local connections or in secure networks.
+
+To secure the connections users had the choice to use TLS (e.g. via stunnel), SSH, VPN
+or another solution that encrypts the communication in their local setup.
+
+To improve the security for all users it is now possible to configure the encryption
+via TLS directly in Checkmk. An analyze configuration test will create a CRITICAL
+message about unencrypted mknotifyd connections.
+
+After an update from Checkmk version 2.0 the encryption setting for existing, outgoing
+connections is "Use unverified TLS encryption, fall back to plain text" and "Plain text
+communication" for existing, incoming connections. This way mknotifyd connections remain
+functional after an update and may be migrated gradually to encrypted connections in
+larger setups.
+
+To encrypt mknotifyd connections between two sites, you have to update both sites to
+Checkmk version 2.1. Afterwards you have to adapt the "Notification spooler configuration"
+in the "Global settings". For incoming and outgoing connections you have to set the
+"Encryption" to "Encrypt communication with TLS". After an activate changes the
+communication is encrypted. For new incoming and ougoing connections "Encrypt
+communication with TLS" is the default.
+
+Internally, mknotifyd connections use the internal CA that is used by livestatus as well.
+To support outgoing connections from a remote site to a central site, the CA of the
+central site is added to the "Trusted certificate authorities for SSL" in the "Global
+settings" for new sites and during an update from version 2.0.

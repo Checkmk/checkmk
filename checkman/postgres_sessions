@@ -1,7 +1,7 @@
 title: PostgreSQL: Sessions
 agents: linux
 catalog: app/postgresql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows tracking of the session parameters for a PostgreSQL
@@ -14,6 +14,5 @@ description:
 item:
  Name of the category
 
-inventory:
+discovery:
  One service is created for all sessions connected to the PostgreSQL daemon.
-

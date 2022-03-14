@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 dotnet_clrmemory_defaultlevels = {
     "upper": (10.0, 15.0)  # 10.0 percent specified by customer,
     # various sources (including MS) give
@@ -17,20 +18,18 @@ dotnet_clrmemory_defaultlevels = {
 
 
 def check_dotnet_clrmemory(item, params, parsed):
-    yield wmi_yield_raw_fraction(parsed[""],
-                                 item,
-                                 "PercentTimeinGC",
-                                 infoname="Time in GC",
-                                 perfvar="percent",
-                                 levels=params)
+    yield wmi_yield_raw_fraction(
+        parsed[""], item, "PercentTimeinGC", infoname="Time in GC", perfvar="percent", levels=params
+    )
 
 
-check_info['dotnet_clrmemory'] = {
-    'parse_function': parse_wmi_table,
-    'inventory_function': lambda parsed: inventory_wmi_table_instances(
-        parsed, filt=wmi_filter_global_only, levels="dotnet_clrmemory_defaultlevels"),
-    'check_function': check_dotnet_clrmemory,
-    'has_perfdata': True,
-    'service_description': "DotNet Memory Management %s",
-    'group': "clr_memory"
+check_info["dotnet_clrmemory"] = {
+    "parse_function": parse_wmi_table,
+    "inventory_function": lambda parsed: inventory_wmi_table_instances(
+        parsed, filt=wmi_filter_global_only, levels="dotnet_clrmemory_defaultlevels"
+    ),
+    "check_function": check_dotnet_clrmemory,
+    "has_perfdata": True,
+    "service_description": "DotNet Memory Management %s",
+    "group": "clr_memory",
 }

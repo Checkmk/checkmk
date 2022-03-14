@@ -7,14 +7,14 @@
 import re
 from typing import List
 
-from cmk.gui.i18n import _l
 from cmk.gui.globals import html
+from cmk.gui.i18n import _l
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
-    MainModuleTopic,
-    MenuItem,
     main_module_registry,
     main_module_topic_registry,
+    MainModuleTopic,
+    MenuItem,
 )
 
 
@@ -54,22 +54,26 @@ def register_modules(*args):
         internal_name = re.sub("[^a-zA-Z]", "", wato_module.mode_or_url)
 
         cls = type(
-            "LegacyMainModule%s" % internal_name.title(), (ABCMainModule,), {
+            "LegacyMainModule%s" % internal_name.title(),
+            (ABCMainModule,),
+            {
                 "mode_or_url": wato_module.mode_or_url,
-                "topic": MainModuleTopicCustom,
+                "topic": MainModuleTopicMisc,
                 "title": wato_module.title,
                 "icon": wato_module.icon,
                 "permission": wato_module.permission,
                 "description": wato_module.description,
                 "sort_index": wato_module.sort_index,
                 "is_show_more": False,
-            })
+            },
+        )
         main_module_registry.register(cls)
 
 
 def get_modules() -> List[ABCMainModule]:
-    return sorted([m() for m in main_module_registry.values()],
-                  key=lambda m: (m.sort_index, m.title))
+    return sorted(
+        [m() for m in main_module_registry.values()], key=lambda m: (m.sort_index, m.title)
+    )
 
 
 #   .--Topics--------------------------------------------------------------.
@@ -84,7 +88,7 @@ def get_modules() -> List[ABCMainModule]:
 #   | referenced by different WATO plugins. Additional individual plugins  |
 #   | are allowed to create their own topics.                              |
 #   '----------------------------------------------------------------------'
-#.
+# .
 
 MainModuleTopicHosts = main_module_topic_registry.register(
     MainModuleTopic(
@@ -92,7 +96,8 @@ MainModuleTopicHosts = main_module_topic_registry.register(
         title=_l("Hosts"),
         icon_name="topic_hosts",
         sort_index=10,
-    ))
+    )
+)
 
 MainModuleTopicServices = main_module_topic_registry.register(
     MainModuleTopic(
@@ -100,7 +105,8 @@ MainModuleTopicServices = main_module_topic_registry.register(
         title=_l("Services"),
         icon_name="topic_services",
         sort_index=20,
-    ))
+    )
+)
 
 MainModuleTopicBI = main_module_topic_registry.register(
     MainModuleTopic(
@@ -108,7 +114,8 @@ MainModuleTopicBI = main_module_topic_registry.register(
         title=_l("Business Intelligence"),
         icon_name="topic_bi",
         sort_index=30,
-    ))
+    )
+)
 
 MainModuleTopicAgents = main_module_topic_registry.register(
     MainModuleTopic(
@@ -116,7 +123,8 @@ MainModuleTopicAgents = main_module_topic_registry.register(
         title=_l("Agents"),
         icon_name="topic_agents",
         sort_index=40,
-    ))
+    )
+)
 
 MainModuleTopicEvents = main_module_topic_registry.register(
     MainModuleTopic(
@@ -124,7 +132,8 @@ MainModuleTopicEvents = main_module_topic_registry.register(
         title=_l("Events"),
         icon_name="topic_events",
         sort_index=50,
-    ))
+    )
+)
 
 MainModuleTopicUsers = main_module_topic_registry.register(
     MainModuleTopic(
@@ -132,7 +141,8 @@ MainModuleTopicUsers = main_module_topic_registry.register(
         title=_l("Users"),
         icon_name="topic_users",
         sort_index=60,
-    ))
+    )
+)
 
 MainModuleTopicGeneral = main_module_topic_registry.register(
     MainModuleTopic(
@@ -140,7 +150,8 @@ MainModuleTopicGeneral = main_module_topic_registry.register(
         title=_l("General"),
         icon_name="topic_general",
         sort_index=70,
-    ))
+    )
+)
 
 MainModuleTopicMaintenance = main_module_topic_registry.register(
     MainModuleTopic(
@@ -148,12 +159,14 @@ MainModuleTopicMaintenance = main_module_topic_registry.register(
         title=_l("Maintenance"),
         icon_name="topic_maintenance",
         sort_index=80,
-    ))
+    )
+)
 
-MainModuleTopicCustom = main_module_topic_registry.register(
+MainModuleTopicMisc = main_module_topic_registry.register(
     MainModuleTopic(
-        name="custom",
-        title=_l("Custom"),
-        icon_name="topic_custom",
+        name="misc",
+        title=_l("Miscellaneous"),
+        icon_name="topic_miscellaneous",
         sort_index=150,
-    ))
+    )
+)

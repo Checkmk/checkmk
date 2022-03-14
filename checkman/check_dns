@@ -1,7 +1,7 @@
 title: DNS Query to a Nameserver
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -18,4 +18,3 @@ description:
  and {CRIT}.
 
  This check can be configured by Wato.
-

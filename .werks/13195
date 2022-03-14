@@ -1,0 +1,14 @@
+Title: Add validation to Documentation URL
+Class: security
+Compatible: incomp
+Component: wato
+Date: 1639659190
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previous to this Werk the URLs to Documentation were not validated (e.g. in the
+rule creation dialog). This could have lead to malicious links, e.g. links
+containing javascript. These links now will be validated. The URL schemes are
+now restricted to "http" and "https". 

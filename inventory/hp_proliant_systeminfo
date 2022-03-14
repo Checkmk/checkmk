@@ -13,6 +13,6 @@ def inv_hp_proliant_systeminfo(info):
         node["serial"] = info[0][0][0]
 
 
-inv_info['hp_proliant_systeminfo'] = {
-    'inv_function': inv_hp_proliant_systeminfo,
+inv_info["hp_proliant_systeminfo"] = {
+    "inv_function": inv_hp_proliant_systeminfo,
 }

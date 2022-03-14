@@ -4,31 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Legacy style
-#( "Hostname", Port, [PiggyMode])
+from typing import Any, Mapping, Optional, Sequence
 
 
-def agent_activemq_arguments(params, hostname, ipaddress):
-    if isinstance(params, tuple):
-        new_params = {}
-        new_params["servername"] = params[0]
-        new_params["port"] = params[1]
-        if params[2] and "piggybag" in params[2]:  # yes, piggybag..
-            new_params["use_piggyback"] = params[1]
-        params = new_params
+def agent_activemq_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    return (
+        [
+            params["servername"],
+            f"{params['port']}",
+            "--protocol",
+            params["protocol"],
+        ]
+        + (["--piggyback"] if params.get("use_piggyback") else [])
+        + (
+            [
+                "--username",
+                params["basicauth"][0],
+                "--password",
+                params["basicauth"][1],
+            ]
+            if "basicauth" in params
+            else []
+        )
+    )
 
-    args = ["--servername", params["servername"]]
 
-    args += ["--port", "%s" % params["port"]]
-    args += ["--protocol", "%s" % params['protocol']]
-    if params.get("use_piggyback"):
-        args += ["--piggyback"]
-
-    if "basicauth" in params:
-        args += ["--username", params["basicauth"][0]]
-        args += ["--password", params["basicauth"][1]]
-
-    return args
-
-
-special_agent_info['activemq'] = agent_activemq_arguments
+special_agent_info["activemq"] = agent_activemq_arguments

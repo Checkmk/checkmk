@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When users were automatically logged out, for example due to inactivity, they
 have to login again. After logging back in into the user interface, the

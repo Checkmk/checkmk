@@ -1,14 +1,13 @@
 title: Virtual Machine under ESX: Snapshot Settings
 agents: vsphere
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  For a virtual machine running on ESX this check reports the number of
  snapshots, the currently running snapshot and the age of the latest snapshot
  as well as the oldest snapshot.
 
-inventory:
+discovery:
  One service is created for each Virtual Machine
  if there is snapshot information available.
-

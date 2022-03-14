@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Run and *send* only once every 4 hours
 INTERVAL=14400
@@ -20,15 +20,14 @@ UNTIL=$((NOW + INTERVAL + 600))
 
 #check if flagfile exits
 if [ -e "$FLAGFILE" ]; then
-    LAST_RUN=$(cat $FLAGFILE)
+    LAST_RUN=$(cat "$FLAGFILE")
 else
     #First run of the script
     LAST_RUN=0
 fi
 
-if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
-then
-    echo $NOW > $FLAGFILE
+if [ $((NOW - LAST_RUN)) -ge $INTERVAL ]; then
+    echo "$NOW" >"$FLAGFILE"
 
     # List of installed AIX packages
     if type lslpp >/dev/null; then
@@ -36,7 +35,7 @@ then
         lslpp -c -L
     fi
 
-    if type oslevel > /dev/null; then
+    if type oslevel >/dev/null; then
         # base level of the system
         echo "<<<aix_baselevel:persist($UNTIL)>>>"
         oslevel
@@ -46,7 +45,7 @@ then
         oslevel -sq
     fi
 
-    if type lparstat > /dev/null; then
+    if type lparstat >/dev/null; then
         echo "<<<aix_lparstat_inventory:sep(0):persist($UNTIL)>>>"
         lparstat -i
     fi
@@ -54,9 +53,8 @@ then
     # If you run the prtconf command without any flags, it displays the system model, machine serial,
     # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
     # information, paging space information, and devices information.
-    if type prtconf >/dev/null ; then
+    if type prtconf >/dev/null; then
         echo "<<<prtconf:sep(58):persist($UNTIL)>>>"
         prtconf
     fi
 fi
-

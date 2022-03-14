@@ -27,7 +27,7 @@ def check_db2_version(item, no_params, info):
     return 2, "Instance is down"
 
 
-check_info['db2_version'] = {
+check_info["db2_version"] = {
     "service_description": "DB2 Instance %s",
     "check_function": check_db2_version,
     "inventory_function": inventory_db2_version,

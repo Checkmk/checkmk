@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Status and Speed of Fans
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the fitted status and speed status of a fan in an Hitachi HNAS storage
@@ -18,5 +18,5 @@ description:
 item:
  The ID of the PNode plus the ID of the Fan, separated by a dot. E. g. 1.2
 
-inventory:
+discovery:
  One service is created for each fan.

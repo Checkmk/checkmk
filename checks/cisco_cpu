@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1") is depreceated by
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
 
@@ -16,17 +17,14 @@ cisco_cpu_default_levels = (80.0, 90.0)
 
 
 def inventory_cisco_cpu(info):
-    if info and \
-    (info[0][0].isdigit() or \
-    info[0][1].isdigit()):
-        return [(None, 'cisco_cpu_default_levels')]
+    if info and (info[0][0].isdigit() or info[0][1].isdigit()):
+        return [(None, "cisco_cpu_default_levels")]
 
 
 def check_cisco_cpu(item, params, info):
     # Value of info could be (None, None) or ("", "").
-    if not info[0][0].isdigit() and \
-       not info[0][1].isdigit():
-        return 3, 'No information about the CPU utilization available'
+    if not info[0][0].isdigit() and not info[0][1].isdigit():
+        return 3, "No information about the CPU utilization available"
 
     if info[0][1]:
         util = float(info[0][1])
@@ -35,11 +33,14 @@ def check_cisco_cpu(item, params, info):
 
     warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
 
-    return check_levels(util,
-                        "util", (warn, crit),
-                        human_readable_func=get_percent_human_readable,
-                        boundaries=(0, 100),
-                        infoname="Utilization in the last 5 minutes")
+    return check_levels(
+        util,
+        "util",
+        (warn, crit),
+        human_readable_func=get_percent_human_readable,
+        boundaries=(0, 100),
+        infoname="Utilization in the last 5 minutes",
+    )
 
 
 check_info["cisco_cpu"] = {

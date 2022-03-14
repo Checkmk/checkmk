@@ -1,0 +1,20 @@
+Title: DEV: make legacy includes packageable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1632980886
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This only affects plugin developers.
+
+With this werk, changes to files in <tt>cmk/base/check_legacy_includes</tt> can now be included in MKPs.
+The files in the sites <tt>local</tt> folder will be considered, and win over their shipped counterparts.
+
+This has been made necessary to backport various comissioned features or bug fixes.
+
+<b>Note:</b> This is, as the name suggests, all legacy code.
+The <tt>check_legacy_includes</tt> and its contents are <b>deprecated</b> and we strongly advise against using it.

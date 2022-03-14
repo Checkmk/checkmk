@@ -29,5 +29,5 @@ check_info["zebra_printer_status"] = {
     "inventory_function": inventory_zebra_printer_status,
     "service_description": "Zebra Printer Status",
     "snmp_info": (".1.3.6.1.2.1.25.3.5.1.1", ["1"]),
-    "snmp_scan_function": lambda oid: "zebra" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    "snmp_scan_function": lambda oid: "zebra" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

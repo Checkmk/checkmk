@@ -1,0 +1,11 @@
+Title: License usage: Fix last samples table; The first samples are displayed by mistake
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1619161122
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

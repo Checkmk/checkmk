@@ -1,7 +1,7 @@
 title: Microsoft Azure SQL Databases: Storage
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the amount of storage used by an azure database.
@@ -10,7 +10,6 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each database if all required metrics
  (average_storage_percent) are given.
-

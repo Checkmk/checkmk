@@ -1,0 +1,14 @@
+Title: Checkmk agents Linux, AIX, Solaris, FreeBSD, OpenWRT
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1629272828
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Checkmk agents for Linux, AIX, Solaris, FreeBSD and OpenWRT
+no longer include the caching interval in the cache files name.
+This avoids unnecesseary re-execution when the interval is
+changed, and avoids orphaned cache files.

@@ -1,0 +1,15 @@
+Title: agent_azure: Enable passing secret via commandline (for debugging)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1639039392
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Secrets for the special agents *should* be passed via stdin due to security reasons.
+But for debugging on the command line, we should enable passing them via a parameter.
+This was not working for agent_azure and is fixed now.
+

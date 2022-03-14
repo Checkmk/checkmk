@@ -1,7 +1,7 @@
 title: AWS: Costs and Usage per Service
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives an overview over the unblended costs of each service
@@ -17,5 +17,5 @@ description:
 item:
  Service name
 
-inventory:
+discovery:
  One service is created for each AWS service.

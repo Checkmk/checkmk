@@ -1,0 +1,41 @@
+Title: The password store is now storing passwords obfuscated
+Class: feature
+Compatible: compat
+Component: core
+Date: 1643612258
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+The password stores primary use is to centralize stored credentials. Instead of
+spreading the credentials in the whole configuration, we have this as a central
+place for sensitive information.
+
+We are a monitoring system. We definitely need credentials in clear text to
+contact remote some systems all the time. And we also need to be able do this
+after restarting the whole system without user interaction (for providing some
+kind of master key). This means the secrets need to be available to the site
+user on disk in clear text.
+
+To underline this fact, we kept the password store file in clear text on disk
+for a long time. This approach made the situation clearly visible to everyone.
+
+We are faced with the requirement that no credential shall be stored in clear
+text on disk, they need to be encrypted. We'd love to have that too. But since
+securing is not possible, we are now "obfuscating". In fact it's encryption,
+but we are doing it with a secret that is stored in the same context as the
+password store itself - this is why we call it obfuscation. The best we can do
+in this case.
+
+With the development of Checkmk 2.2 we will evaluate the usage of HSMs as well
+as vault solutions in the future which may be helpful in some use cases.
+
+The password store file <tt>var/check_mk/stored_passwords</tt> is now encrypted
+using the new password store key (<tt>etc/password_store.secret</tt>). This key
+is created during update to Checkmk 2.1 automatically. You are free to replace
+the secret with what ever text you want. But please note that the password store
+needs to be initialized again after changing the secret.
+
+All existing passwords stores will be obfuscated automatically during update to
+Checkmk 2.1.

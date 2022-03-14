@@ -1,0 +1,13 @@
+Title: SLA View: Displaced timelines
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1628496783
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The timelines in SLA views were displaced.
+First of all the Availability timeline was shifted to the right
+and all other timelines would not line up with the result row

@@ -1,0 +1,17 @@
+Title: Increase cache validity for NTP service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634582875
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The data for the NTP service "NTP Time" and "NTP Peer"
+had a cache validity intervall of 30 seconds, in order
+to create a new data set every time the agent was triggered.
+Unfortunately this meant that the data was expired, before
+it ever reached the monitoring server.
+This hack increases the validitiy of the data set to 120 seconds,
+while still recreating it every time the agent is called.

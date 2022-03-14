@@ -1,0 +1,20 @@
+Title: Add support for Cisco WLC 9800
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1624265308
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Checkmk will now additionally discover the following services on Cisco WLC 9800
+devices:
+
+<ul>
+<li>AP [access point name] (check plugin <tt>cisco_wlc</tt>):
+    Display whether the access point is online or offline</li>
+<li>Clients [SSID name|Summary] (check plugin <tt>wlc_clients</tt>):
+    Displays the number of connected devices on this SSID.
+    Summary displays the total number of connected devices.</li>
+</ul>

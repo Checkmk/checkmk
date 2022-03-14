@@ -1,7 +1,7 @@
 title: MySQL: Version
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check only shows the Version of the runnin MySQL Deamon.
@@ -14,7 +14,6 @@ description:
 item:
  Version of the MySQL service
 
-inventory:
+discovery:
  One service is created on each instance on a host where the agent plugin
  {mk_mysql} is being installed  and the MySQL daemon is running.
-

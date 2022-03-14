@@ -36,12 +36,14 @@ factory_settings["esx_vsphere_objects_default_levels"] = {
 
 def parse_esx_vsphere_objects(info):
     parsed = {}
-    Obj = collections.namedtuple("EsxObj", ["name", "hostsystem", "state"])
+    Obj = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "EsxObj", ["name", "hostsystem", "state"]
+    )
     for line in info:
         if len(line) < 2:
             continue
         if len(line) < 4:
-            line += [''] * (4 - len(line))
+            line += [""] * (4 - len(line))
         obj_type = vsphere_object_names.get(line[0], "Unknown Object")
         name = "%s %s" % (obj_type, line[1])
         obj = Obj(name, line[2], line[3])
@@ -87,12 +89,12 @@ def check_esx_vsphere_objects(item, params, parsed):
 
     if obj.hostsystem:
         if obj.state == "poweredOn":
-            yield 0, 'running on [%s]' % obj.hostsystem
+            yield 0, "running on [%s]" % obj.hostsystem
         else:
-            yield 0, 'defined on [%s]' % obj.hostsystem
+            yield 0, "defined on [%s]" % obj.hostsystem
 
 
-check_info['esx_vsphere_objects'] = {
+check_info["esx_vsphere_objects"] = {
     "parse_function": parse_esx_vsphere_objects,
     "inventory_function": inventory_esx_vsphere_objects,
     "check_function": check_esx_vsphere_objects,
@@ -111,13 +113,13 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
         params = {}
 
     virtualmachines = [o for o in parsed.values() if o.name.startswith("VM ")]
-    yield 0, "Virtualmachines: %d" % len(virtualmachines), [('vms', len(virtualmachines))]
+    yield 0, "Virtualmachines: %d" % len(virtualmachines), [("vms", len(virtualmachines))]
 
     hostsystems = [o for o in parsed.values() if o.name.startswith("HostSystem")]
     if not hostsystems:
         return
 
-    yield 0, "Hostsystems: %d" % len(hostsystems), [('hosts', len(hostsystems))]
+    yield 0, "Hostsystems: %d" % len(hostsystems), [("hosts", len(hostsystems))]
 
     for distribution in params.get("distribution", []):
         ruled_vms = distribution.get("vm_names", [])
@@ -125,13 +127,13 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
         count = len(hosts)
         hosts = sorted(hosts)
         if count < distribution["hosts_count"]:
-            yield distribution.get(
-                "state",
-                2), ("VMs %s are running on %d host%s: %s" %
-                     (', '.join(ruled_vms), count, '' if count == 1 else 's', ', '.join(hosts)))
+            yield distribution.get("state", 2), (
+                "VMs %s are running on %d host%s: %s"
+                % (", ".join(ruled_vms), count, "" if count == 1 else "s", ", ".join(hosts))
+            )
 
 
-check_info['esx_vsphere_objects.count'] = {
+check_info["esx_vsphere_objects.count"] = {
     "inventory_function": inventory_esx_vsphere_objects_count,
     "check_function": check_esx_vsphere_objects_count,
     "service_description": "Object count",

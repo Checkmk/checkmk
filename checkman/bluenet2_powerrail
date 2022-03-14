@@ -1,7 +1,7 @@
 title: Bachmann Bluenet2 Powerrail: Phases
 agents: snmp
 catalog: hw/environment/bachmann
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the voltage, current, active and apparent power
@@ -11,9 +11,8 @@ description:
  The device sends the state itsself.
  There are no default levels set.
 
-inventory:
+discovery:
  One service is created for each phase.
 
 item:
  The phase identifier.
-

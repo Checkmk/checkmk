@@ -6,7 +6,7 @@ Date: 1613059349
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If long service names contained no spaces, the service name was further
 written into the status detail column.

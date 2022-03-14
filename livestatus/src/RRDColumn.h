@@ -11,121 +11,117 @@
 // We keep <algorithm> for std::transform but IWYU wants it gone.
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>
-#include <iterator>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
-
-#include "DynamicRRDColumn.h"
-#include "ListLambdaColumn.h"
-#include "Renderer.h"
-#include "Row.h"
-#if defined(CMC)
-#include "cmc.h"
-#else
+#ifndef CMC
 #include "nagios.h"
+#include "pnp4nagios.h"
+#else
+#include "Host.h"
+#include "Object.h"
 #endif
+
+#include "ListColumn.h"
+#include "overload.h"  // IWYU pragma: keep
+class ListRenderer;
 class MonitoringCore;
-class ColumnOffsets;
+
+struct RRDColumnArgs {
+    RRDColumnArgs(const std::string &arguments, const std::string &column_name);
+    std::string rpn;
+    long int start_time;
+    long int end_time;
+    int resolution;
+    int max_entries;
+};
 
 namespace detail {
+struct Data {
+    using time_point = std::chrono::system_clock::time_point;
+    Data() : step{0} {}
+    Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
+        : start{s}, end{e}, step{d}, values{std::move(v)} {}
+    time_point start;
+    time_point end;
+    unsigned long step;
+    std::vector<double> values;
+
+    [[nodiscard]] auto size() const { return values.size() + 3; }
+    [[nodiscard]] auto cbegin() const { return values.begin(); }
+    [[nodiscard]] auto cend() const { return values.end(); }
+};
+}  // namespace detail
+
 class RRDDataMaker {
+    using C = std::chrono::system_clock;
+
 public:
-    struct Data {
-        std::chrono::system_clock::time_point start;
-        std::chrono::system_clock::time_point end;
-        unsigned long step{};
-        std::vector<double> values;
-    };
-    RRDDataMaker(MonitoringCore *mc, const RRDColumnArgs &args)
-        : _mc{mc}, _args{args} {}
+    using value_type = std::variant<C::time_point, unsigned long, double>;
+    RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
+        : _mc{mc}, _args{std::move(args)} {}
 
     template <class T>
-    [[nodiscard]] Data operator()(const T &row) const {
-        return make(getHostNameServiceDesc(row));
+    [[nodiscard]] std::vector<value_type> operator()(
+        const T &row, std::chrono::seconds timezone_offset) const {
+        const auto data = make(getHostNameServiceDesc(row));
+
+        // We output meta data as first elements in the list. Note: In Python or
+        // JSON we could output nested lists. In CSV mode this is not possible
+        // and we rather stay compatible with CSV mode.
+        std::vector<value_type> v;
+        v.reserve(data.size());
+        v.emplace_back(data.start + timezone_offset);
+        v.emplace_back(data.end + timezone_offset);
+        v.emplace_back(data.step);
+        v.insert(v.end(), data.cbegin(), data.cend());
+
+        return v;
     }
 
 private:
     MonitoringCore *_mc;
     const RRDColumnArgs _args;
 
-    template <class T>
-    [[nodiscard]] static std::pair<std::string, std::string>
-    getHostNameServiceDesc(const T &row);
+#ifndef CMC
+    static std::pair<std::string, std::string> getHostNameServiceDesc(
+        const host &row) {
+        return {row.name, dummy_service_description()};
+    }
 
-    [[nodiscard]] Data make(const std::pair<std::string, std::string>
-                                & /*host_name_service_description*/) const;
+    static std::pair<std::string, std::string> getHostNameServiceDesc(
+        const service &row) {
+        return {row.host_name, row.description};
+    }
+#else
+    static std::pair<std::string, std::string> getHostNameServiceDesc(
+        const Object &row) {
+        return {row.host()->name(), row.serviceDescription()};
+    }
+#endif
+
+    [[nodiscard]] detail::Data make(
+        const std::pair<std::string, std::string>
+            & /*host_name_service_description*/) const;
 };
-}  // namespace detail
 
-template <class T>
-class RRDColumn : public ListColumn {
-public:
-    RRDColumn(const std::string &name, const std::string &description,
-              const ColumnOffsets &offsets, MonitoringCore *mc,
-              const RRDColumnArgs &args)
-        : ListColumn{name, description, offsets}
-        , data_maker_{detail::RRDDataMaker{mc, args}} {}
-
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-
-    std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
-
-private:
-    const detail::RRDDataMaker data_maker_;
-
-    static std::vector<std::string> defaultValue(
-        std::chrono::seconds timezone_offset) {
-        constexpr auto str = [](auto &&t) {
-            return std::to_string(std::chrono::system_clock::to_time_t(
-                std::chrono::system_clock::time_point{} + t));
-        };
-        return {str(timezone_offset), str(timezone_offset), std::to_string(0)};
+struct RRDRenderer : ListColumnRenderer<RRDDataMaker::value_type> {
+    void output(ListRenderer &l, const value_type &value) const override {
+        std::visit([&l](auto &&x) { l.output(x); }, value);
     }
 };
 
-template <class T>
-void RRDColumn<T>::output(Row row, RowRenderer &r,
-                          const contact * /* auth_user */,
-                          std::chrono::seconds /*timezone_offset*/) const {
-    // We output meta data as first elements in the list. Note: In Python or
-    // JSON we could output nested lists. In CSV mode this is not possible and
-    // we rather stay compatible with CSV mode.
-    const auto data = columnData<T>(row) == nullptr
-                          ? detail::RRDDataMaker::Data{}
-                          : data_maker_(*columnData<T>(row));
-    ListRenderer l(r);
-    l.output(data.start);
-    l.output(data.end);
-    l.output(data.step);
-    for (const auto &value : data.values) {
-        l.output(value);
-    }
+namespace column::detail {
+template <>
+inline std::string serialize(const RRDDataMaker::value_type &v) {
+    using C = std::chrono::system_clock;
+    return std::visit(mk::overload{[](C::time_point x) {
+                                       return std::to_string(C::to_time_t(x));
+                                   },
+                                   [](auto &&x) { return std::to_string(x); }},
+                      v);
 }
-
-template <class T>
-std::vector<std::string> RRDColumn<T>::getValue(
-    Row row, const contact * /*auth_user*/,
-    std::chrono::seconds timezone_offset) const {
-    if (columnData<T>(row) == nullptr) {
-        return defaultValue(timezone_offset);
-    }
-    const auto data = data_maker_(*columnData<T>(row));
-    std::vector<std::string> strings;
-    strings.push_back(std::to_string(
-        std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
-    strings.push_back(std::to_string(
-        std::chrono::system_clock::to_time_t(data.end + timezone_offset)));
-    strings.push_back(std::to_string(data.step));
-    std::transform(data.values.begin(), data.values.end(),
-                   std::back_inserter(strings),
-                   [](const auto &value) { return std::to_string(value); });
-    return strings;
-}
-
-#include "RRDColumn-impl.h"  // IWYU pragma: keep
+}  // namespace column::detail
 
 #endif  // RRDColumn_h

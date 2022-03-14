@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Ceph Status OSDs check crashed with an error relating to a missing key:
 KeyError(osdmap). This is due to discrepancies in the format of the data

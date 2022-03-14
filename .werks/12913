@@ -1,0 +1,25 @@
+Title: cisco_ip_sla: use stable service descriptions
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1622625423
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you have "Cisco IP SLA X" services you need to rediscover the
+affected services, so that the new stable service discriptions will
+be active.
+
+Previously, the check plugin cisco_ip_sla used service descriptions
+starting from 0, e.g. "Cisco IP SLA 0", "Cisco IP SLA 1", etc. This
+had the drawback that if "Cisco IP SLA 0" is removed "Cisco IP SLA 1"
+will become the new "Cisco IP SLA 0" and so on.
+
+To circument this issue the plugin now uses the indices (OID end)
+provided by SNMP. If now e.g. "Cisco IP SLA 6" is removed it will
+not affect services that are defined later like e.g. "Cisco IP SLA 7".
+
+SUP-6595

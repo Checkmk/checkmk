@@ -1,0 +1,29 @@
+Title: Agent bakery: Fix host label conditions in distributed setups
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1616689093
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+In previous Checkmk versions agent bakery rules that were using host label
+conditions could not be used correctly in distributed setups.
+
+The background is that in distributed setups the discovered(!) host labels are
+stored on remote sites for hosts that are assigned with a remote site.  But the
+processing of agent bakery rules is done one the central site during agent
+baking. Without the discovered host labels of remote site hosts, the bakery
+could not compute the correct agent configuration for these hosts. The hosts
+were not matched based on their discovered host labels.
+
+This change now sets up a synchronization of discovered host labels from remote
+sites to the central site for the bakery rules to be able to match the correct
+hosts.
+
+The synchronization is being executed on a regular base (every 10 minutes for
+now) as background job. You can have a look at the state of this
+synchronization at "Setup > Background jobs > Discovered host label
+synchronization".

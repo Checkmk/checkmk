@@ -1,7 +1,7 @@
 title: Genua: State of Carp Interfaces on Carp Clusters and Nodes
 agents: snmp
 catalog: hw/network/genua
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the carp interfaces of genuscreen devices.
@@ -18,7 +18,7 @@ description:
  enterprise ID 3717 as well as the ID 3137 which was introduced in a bug in some
  versions of genuscreen.
 
-inventory:
+discovery:
  One service is created for the carp interface
  if the carp interface
 
@@ -28,4 +28,3 @@ inventory:
 
 item:
  The name of the carp interfaces
-

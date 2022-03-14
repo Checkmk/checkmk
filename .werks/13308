@@ -1,0 +1,11 @@
+Title: Update redis to 6.2.6
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1633445789
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

@@ -5,23 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Infoblox services and node services
 """
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Tuple
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    any_of,
-    startswith,
-    contains,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import any_of, contains, register, Result, Service, SNMPTree, startswith
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Tuple[str, str]]
 
@@ -90,6 +78,8 @@ SERVICE_ID = {
     "57": "cloud-api",
     "58": "threat-analytics",
     "59": "taxii",
+    "60": "bfd",
+    "61": "outbound",
 }
 STATUS_ID = {
     "1": "working",
@@ -155,38 +145,9 @@ def check_infoblox_services(item: str, section: Section) -> CheckResult:
     ...     print(result)
     Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
     """
-    if not item in section:
+    if item not in section:
         return
     status, description = section[item]
-    yield Result(
-        state=STATE[status],
-        summary="Status: %s%s" % (status, description and " (%s)" % description),
-    )
-
-
-def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckResult:
-    """
-    >>> for result in cluster_check_infoblox_services("memory", {
-    ...     "node1": {
-    ...         'memory': ('warning', '54% - System memory usage is LOW.'),
-    ...         'replication': ('working', 'Online'),
-    ...     }, "node2": {
-    ...         'memory': ('working', '14% - System memory usage is OK.'),
-    ...         'replication': ('working', 'Online'),
-    ...     }, "node3": {
-    ...         'memory': ('failed', '74% - System memory usage is CRIT.'),
-    ...         'replication': ('working', 'Online'),
-    ... }}):
-    ...     print(result)
-    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
-    """
-    try:
-        status, description = min(
-            (node_section[item] for node_section in section.values() if item in node_section),
-            key=lambda x: STATE[x[0]].value)
-    except ValueError:
-        # no node with given item found
-        return
     yield Result(
         state=STATE[status],
         summary="Status: %s%s" % (status, description and " (%s)" % description),
@@ -204,7 +165,8 @@ register.snmp_section(
                 "1",  # IB-PLATFORMONE-MIB::ibServiceName
                 "2",  # IB-PLATFORMONE-MIB::ibServiceStatus
                 "3",  # IB-PLATFORMONE-MIB::ibServiceDesc
-            ]),
+            ],
+        ),
     ],
 )
 
@@ -213,7 +175,6 @@ register.check_plugin(
     service_name="Service %s",
     discovery_function=discovery_infoblox_services,
     check_function=check_infoblox_services,
-    cluster_check_function=cluster_check_infoblox_services,
 )
 
 register.snmp_section(
@@ -227,7 +188,8 @@ register.snmp_section(
                 "1",  # IB-PLATFORMONE-MIB::ibNodeServiceName
                 "2",  # IB-PLATFORMONE-MIB::ibNodeServiceStatus
                 "3",  # IB-PLATFORMONE-MIB::ibNodeServiceDesc
-            ]),
+            ],
+        ),
     ],
 )
 
@@ -236,5 +198,4 @@ register.check_plugin(
     service_name="Node service %s",
     discovery_function=discovery_infoblox_services,
     check_function=check_infoblox_services,
-    cluster_check_function=cluster_check_infoblox_services,
 )

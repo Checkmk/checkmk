@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List
+
 from .agent_based_api.v1 import register
 
 
@@ -11,7 +12,7 @@ def parse_omd_apache(string_table):
     parsed: Dict[str, List[str]] = {}
     site = None
     for line in string_table:
-        if line[0][0] == '[':
+        if line[0][0] == "[":
             site = line[0][1:-1]
             parsed[site] = []
         elif site:

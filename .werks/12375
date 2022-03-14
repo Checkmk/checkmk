@@ -1,0 +1,17 @@
+Title: API host_config: modifying the folder link of the served host
+Class: feature
+Compatible: compat
+Component: core
+Date: 1616075360
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, the folder link of the served host was part of
+the members. This is now moved to the links with this change. In addition,
+the original rel is changed from using the folder id to using the canonical
+path of the folder. Since the canonical path of the folder may change during
+the course, an additional link (permalink) is add based on the folder id. Both
+links can be used to retrieve the folder config.

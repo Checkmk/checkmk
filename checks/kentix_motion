@@ -10,7 +10,7 @@
 
 def inventory_kentix_motion(info):
     if info:
-        index = info[0][0].split('.', 3)[-1]
+        index = info[0][0].split(".", 3)[-1]
         yield index, {}
 
 
@@ -25,35 +25,42 @@ def check_kentix_motion(item, params, info):
         return False
 
     for line in info:
-        if line[0].split('.', 3)[-1] == item:
+        if line[0].split(".", 3)[-1] == item:
             value, valmax = map(int, line[1:3])
             weekdays = [
-                'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
             ]
             today = time.localtime()
-            if params is not None and 'time_periods' in params:
-                periods = params['time_periods'][weekdays[today.tm_wday]]
+            if params is not None and "time_periods" in params:
+                periods = params["time_periods"][weekdays[today.tm_wday]]
             else:
                 periods = [((0, 0), (24, 0))]
             if value >= valmax:
                 status = 1 if test_in_period((today.tm_hour, today.tm_min), periods) else 0
-                return status, 'Motion detected', [('motion', value, valmax, None, 0, 100)]
-            return 0, 'No motion detected', [('motion', value, valmax, None, 0, 100)]
+                return status, "Motion detected", [("motion", value, valmax, None, 0, 100)]
+            return 0, "No motion detected", [("motion", value, valmax, None, 0, 100)]
 
 
-check_info['kentix_motion'] = {
-    'inventory_function': inventory_kentix_motion,
-    'check_function': check_kentix_motion,
-    'service_description': 'Motion Detector %s',
-    'has_perfdata': True,
-    'group': 'motion',
-    'snmp_info': (
-        '.1.3.6.1.4.1.37954',
-        ['2.1.5', '3.1.5'],
+check_info["kentix_motion"] = {
+    "inventory_function": inventory_kentix_motion,
+    "check_function": check_kentix_motion,
+    "service_description": "Motion Detector %s",
+    "has_perfdata": True,
+    "group": "motion",
+    "snmp_info": (
+        ".1.3.6.1.4.1.37954",
+        ["2.1.5", "3.1.5"],
         [
             0,  # Numeric index
-            '1',  # MotionValue
-            '2',  # MotionMax
-        ]),
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.332.11.6'),
+            "1",  # MotionValue
+            "2",  # MotionMax
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.332.11.6"),
 }

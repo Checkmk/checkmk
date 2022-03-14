@@ -25,7 +25,7 @@ h4 {
   color: $font-color;
 }
 
-h3 {
+h3:not(.table) {
   font-size: $font-size-large;
   font-weight: normal;
 }
@@ -68,7 +68,7 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba($black, 0.5);
     content: "";
   }
 
@@ -77,12 +77,12 @@ body {
     flex-direction: column;
     flex-wrap: nowrap;
     height: 100%;
-    padding: $main-body-padding;
+    padding: 0 0 0 $spacing;
     margin: 0;
     font-family: $font-family-default;
     font-weight: $font-weight-default;
     color: $font-color;
-    background: $color-background;
+    background: $bg-color;
 
     /* Can be toggled with N/n display option */
     &.inline {
@@ -94,14 +94,8 @@ body {
        This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
        on the URL */
     &.screenshotmode {
-      background-color: rgb(255, 255, 255);
+      background-color: $white;
       background-image: url("");
-    }
-
-    /* TODO: Reproduce this div.main element */
-    div.main {
-      padding-left: 10px;
-      border-left: 1px solid rgb(255, 0, 0);
     }
 
     /* The content page header containing the title, user, date */
@@ -111,13 +105,13 @@ body {
       max-width: 100%;
       padding: 8px 20px;
       margin: 0 0 5px;
-      color: rgb(255, 255, 255);
+      color: $font-color-white;
       background: $bg-color;
       border-spacing: 0;
 
       td {
         overflow: hidden;
-        color: rgb(255, 255, 255);
+        color: $font-color-white;
         text-overflow: ellipsis;
         -o-text-overflow: ellipsis;
         vertical-align: middle;
@@ -146,28 +140,6 @@ body {
           .popup_menu & span {
             color: $font-color;
           }
-
-          div.breadcrumb {
-            white-space: nowrap;
-
-            span,
-            a {
-              &:last-child:after {
-                content: "";
-              }
-              color: #ccc;
-              text-decoration: none;
-            }
-
-            a:hover {
-              color: #fff;
-            }
-
-            :after {
-              text-decoration: none;
-              content: " > ";
-            }
-          }
         }
 
         &.right {
@@ -193,7 +165,7 @@ body {
           }
 
           * {
-            color: $table-secondary-font-color;
+            color: $font-color-dimmed;
           }
         }
       }
@@ -204,8 +176,8 @@ body {
       position: relative;
       top: -14px;
       width: 100%;
-      font-family: monospace;
-      color: rgb(255, 255, 255);
+      font-family: $font-family-monospace;
+      color: $font-color-white;
     }
 
     div#main_page_content {
@@ -226,7 +198,6 @@ body {
   }
 }
 
-/* TODO: Reproduce all these pause styles */
 #reload_pause {
   position: fixed;
   top: 80px;
@@ -238,7 +209,7 @@ body {
   padding: 10px;
   text-align: center;
   text-decoration: none;
-  background-color: rgb(17, 17, 17);
+  background-color: $black;
   border-radius: 5px;
   opacity: 0.8;
   filter: alpha(opacity=80); /* For IE8 and earlier */
@@ -250,7 +221,7 @@ body {
   height: 60px;
   margin-top: 5px;
   margin-bottom: 5px;
-  background-color: rgb(255, 255, 255);
+  background-color: $white;
   border-radius: 5px;
   opacity: 0.9;
   filter: alpha(opacity=90); /* For IE8 and earlier */
@@ -269,7 +240,7 @@ body {
 #reload_pause_counter {
   font-size: $font-size-large;
   font-weight: bold;
-  color: $lightgrey;
+  color: $font-color-light-grey;
   text-align: center;
   text-decoration: none;
 
@@ -318,7 +289,7 @@ table.data {
     height: 24px;
     padding: 0 8px;
     letter-spacing: $letter-spacing-table;
-    color: $table-secondary-font-color;
+    color: $font-color-dimmed;
     text-align: left;
     vertical-align: middle;
     background-color: $odd-tr-bg-color;
@@ -333,7 +304,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $primary-hover-font-color;
+      color: $font-color;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -377,22 +348,12 @@ table.data {
     }
 
     &.unused {
-      color: rgb(136, 136, 136);
-    }
-
-    &:not(.state) {
-      color: $secondary-font-color;
+      color: $font-color-dimmed;
     }
 
     &.nowrap {
       white-space: nowrap;
     }
-  }
-
-  /* Two-lined header, for example in WATO: ChangeLog->Site Status */
-  /* TODO: Reproduce this html element */
-  tr.dualheader th {
-    border-bottom: 1px solid rgb(204, 204, 204);
   }
 
   tr.data {
@@ -404,18 +365,18 @@ table.data {
     > td {
       vertical-align: middle;
 
-      a {
-        color: $secondary-font-color;
-
-        &:hover {
-          color: $primary-hover-font-color;
-        }
+      a:hover {
+        color: $font-color;
       }
 
       &:not(.state):not(.hstate) {
         height: 26px;
         padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
+      }
+
+      ul {
+        padding-left: $spacing;
       }
     }
 
@@ -576,7 +537,7 @@ tr.data.grouped_row_header {
 }
 
 tr.data.group_end {
-  border-bottom: 2px solid rgb(204, 204, 204);
+  border-bottom: 2px solid $color-table-border;
 }
 
 tr.groupheader td {
@@ -695,14 +656,14 @@ div.snapin textarea,  // TODO: reproduce this element
   height: ($input-field-height - 2 * $padding);
   padding: $padding 6px;
   color: $font-color;
-  background-color: $inpage-highlight-color;
+  background-color: $input-background-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
 
 span.select2 .select2-selection {
-  background-color: $inpage-highlight-color;
+  background-color: $input-background-color;
 
   &:focus {
     outline: none;
@@ -715,7 +676,8 @@ textarea {
 }
 
 select,
-textarea {
+textarea,
+input[type="file"] {
   // textareas like e.g. comment fields should not have a fixed height
   height: auto;
 }
@@ -726,7 +688,7 @@ input[type="password"] {
 }
 
 input[type="password"] {
-  box-shadow: 0.1px 1.2px 1.8px 0 rgb(136, 0, 0) inset;
+  box-shadow: 0.1px 1.2px 1.8px 0 $color-state-2-background inset;
 }
 
 select {
@@ -747,7 +709,7 @@ input[type="checkbox"] {
   margin-left: 0;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
-  color: $input-button-color;
+  color: $font-color;
   background-color: $input-button-bg-color;
   box-shadow: none;
 
@@ -801,21 +763,13 @@ input.toggle_timespecific_parameter {
 /* TODO: Reproduce this html element */
 td.content hr {
   height: 1px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba($white, 0.2);
   border-style: none;
-}
-
-/* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
- *       elemenets in _logwatch.scss)
- */
-input.tab#results,
-input.tabactive#results {
-  background-color: rgb(255, 238, 102);
 }
 
 input.date,
 input.time {
-  font-family: monospace;
+  font-family: $font-family-monospace;
 }
 
 .inputerror {
@@ -830,7 +784,7 @@ input.time {
   span.checkbox,
   span.select2 .select2-selection,
   > select {
-    background-color: $color-nuance-15;
+    background-color: $input-error-bg-color;
   }
 
   span.checkbox {
@@ -864,7 +818,7 @@ table.nform {
   background: $bg-color-secondary;
   border-spacing: 0 0;
   border-radius: $theme-border-radius;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 rgba($black, 0.1);
   empty-cells: show;
 
   &.closed {
@@ -874,7 +828,7 @@ table.nform {
   }
 
   body.main.screenshotmode & {
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
     background-image: none;
   }
 
@@ -898,12 +852,11 @@ table.nform {
       padding: 4px 10px 3px 9px;
       font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
-      color: $secondary-font-color;
       background-color: $headline-color;
     }
 
     img.treeangle.nform {
-      margin: 0 8px 0 0;
+      margin: 0 $spacing 0 0;
     }
 
     a.more {
@@ -995,7 +948,7 @@ table.nform {
 
   hr {
     margin: 8px 0;
-    background-color: $nform-table-hr-color;
+    background-color: $line-color;
   }
 
   .ruleset {
@@ -1065,9 +1018,10 @@ table.nform {
   .vs_floating_text {
     display: inline-block;
     height: $input-field-height;
-    box-sizing: border-box;
     margin: $input-field-margin;
     line-height: $input-field-height;
+    vertical-align: bottom;
+    box-sizing: border-box;
   }
 }
 
@@ -1092,7 +1046,7 @@ div.help {
   padding: 8px 16px;
   margin: 8px 0;
   font-weight: normal;
-  color: rgb(0, 0, 0);
+  color: $font-color-black;
   text-align: left;
   text-transform: none; /* Neccessary due to help in H3 */
   background-color: $help-bg-color;
@@ -1103,10 +1057,9 @@ div.help {
   &:before {
     display: inline-block;
     height: 100%;
-    margin-right: 12px;
+    margin-right: $spacing;
     font-family: serif;
-    font-size: 16px;
-    font-style: italic;
+    font-size: $font-size-large;
     font-weight: $font-weight-bold;
     content: "i";
   }
@@ -1114,7 +1067,7 @@ div.help {
   a,
   a:link,
   a:visited {
-    color: $help-link-color;
+    color: $font-color-light-bg;
 
     &:hover {
       text-decoration: none;
@@ -1128,21 +1081,17 @@ div.help {
 
   table.help td {
     vertical-align: top;
-    border: 1px solid rgb(0, 0, 0);
+    border: 1px solid $black;
   }
 
   table.help td.tt {
-    font-family: courier, monospace;
+    font-family: $font-family-courier;
   }
 
   tt {
-    font-family: courier, monospace;
-    color: rgb(0, 0, 153);
+    font-family: $font-family-courier;
+    color: $font-color-blue-2;
   }
-}
-
-table.data div.help {
-  box-shadow: 0 0 3px rgb(0, 0, 0);
 }
 
 /*--Popupmenu--------------------------------------------------------------.
@@ -1158,12 +1107,12 @@ body.main .popup_menu {
   position: absolute;
   z-index: 50;
   min-width: 300px;
-  color: rgb(255, 255, 255);
+  color: $font-color-white;
   white-space: normal;
   background-color: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: 5px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba($black, 0.1);
 
   div.wrapper {
     position: relative;
@@ -1173,25 +1122,12 @@ body.main .popup_menu {
     padding: 5px 8px;
   }
 
-  /* TODO: Reproduce these .resizable html elements */
-  &.resizable {
-    div.resizer {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      width: 15px;
-      height: 15px;
-      pointer-events: none;
-      cursor: se-resize;
-      background-color: rgb(80, 138, 161);
-    }
-
-    div.content {
-      min-width: 312px;
-      min-height: 150px;
-      overflow: auto;
-      resize: both;
-    }
+  // Resizable popup menus built in JS
+  &.resizable div.content {
+    min-width: 312px;
+    min-height: 150px;
+    overflow: auto;
+    resize: both;
   }
 
   img {
@@ -1239,7 +1175,7 @@ body.main .popup_menu {
   position: relative;
   width: 100%;
   height: 100%;
-  min-width: 312px;
+  min-width: 392px;
   min-height: 150px;
 
   ul {
@@ -1247,7 +1183,7 @@ body.main .popup_menu {
     padding: 0;
     margin: 0;
     list-style: none;
-    border-bottom: 1px solid $nform-table-hr-color;
+    border-bottom: 1px solid $line-color;
   }
 
   li {
@@ -1260,15 +1196,13 @@ body.main .popup_menu {
       line-height: 21px;
 
       &:hover {
-        color: rgb(255, 255, 255);
         text-decoration: none;
-        background-color: rgb(98, 155, 177);
+        background-color: $line-color;
       }
     }
 
     &.active a {
-      color: $primary-font-color;
-      border-bottom: 1px solid rgb(80, 138, 161);
+      border-bottom: 1px solid $icons-popup-active-color;
     }
   }
 
@@ -1292,11 +1226,11 @@ body.main .popup_menu {
   }
 
   &.show_names a.icon {
-    width: 100px;
+    width: 180px;
 
     span {
       display: inline-block;
-      width: 62px;
+      width: 142px;
       margin: 0;
       overflow: hidden;
       font-weight: normal;
@@ -1336,7 +1270,7 @@ div.log_output,
 .crash_report pre {
   padding: 8px 16px;
   margin: 16px;
-  font-family: monospace;
+  font-family: $font-family-monospace;
   font-weight: $font-weight-default;
   background: $log-output-color;
   border: 1px solid $color-table-border;
@@ -1349,7 +1283,7 @@ div.log_output {
   vertical-align: top;
 
   pre {
-    font-family: monospace;
+    font-family: $font-family-monospace;
     color: $font-color;
   }
 }
@@ -1367,7 +1301,7 @@ a.element_dragger {
   cursor: move;
   background-color: $dragging-bg-color;
   transform: scale(1.005);
-  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 10px 0 rgba($black, 0.6);
   -webkit-transform: scale(1.005);
   -moz-transform: scale(1.005);
   -ms-transform: scale(1.005);
@@ -1385,32 +1319,23 @@ a.element_dragger {
 | html.debug_vars() outputs the variables in the current URL.              |
 '-------------------------------------------------------------------------*/
 
-/* TODO: Reproduce this table.debug_vars */
 table.debug_vars {
   border-collapse: collapse;
 
-  th {
-    font-weight: bold;
-    background-color: rgb(136, 204, 136);
-    border: 1px solid rgb(0, 136, 0);
+  th,
+  td {
+    padding: 0.5 * $spacing $spacing;
+    text-align: left;
+    border: 1px solid $color-table-border;
   }
 
-  td {
-    padding: 2px 6px;
-    font-family: courier, monospace;
-    border: 1px solid rgb(0, 85, 0);
+  th,
+  td.left {
+    font-weight: bold;
+  }
 
-    &.left {
-      font-weight: bold;
-      color: rgb(255, 255, 255);
-      background-color: rgb(51, 153, 85);
-    }
-
-    &.right {
-      font-weight: bold;
-      color: rgb(0, 0, 0);
-      background-color: rgb(136, 255, 204);
-    }
+  td.right {
+    font-family: $font-family-courier;
   }
 }
 
@@ -1429,6 +1354,7 @@ div.popup_trigger {
   }
 }
 
+/* TODO: Can we remove PNP4Nagios styling? */
 div.pnp_graph a {
   &.popup_trigger {
     position: absolute;
@@ -1447,23 +1373,6 @@ div.pnp_graph a {
 
   img {
     filter: $pnp4nagios-img-filter;
-  }
-}
-
-table.data tr.data td.pnpgraph {
-  padding: 0;
-
-  div.pnp_graph > a {
-    > img {
-      margin: 4px;
-      border: 1px solid $pnp-graph-img-border-color;
-    }
-
-    &.popup_trigger > img.icon {
-      margin: 0;
-      border: none;
-      box-shadow: none;
-    }
   }
 }
 
@@ -1552,9 +1461,10 @@ table.data.job_table td {
 
     > div {
       position: relative;
+      line-height: 1.1;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
-      color: $tag-font-color;
+      color: $font-color;
     }
 
     x {
@@ -1579,17 +1489,17 @@ table.data.job_table td {
   &:not([readonly]) tag {
     > div,
     &:hover > div {
-      background: $tag-input-bg-color;
+      background: $input-background-color;
       opacity: 1;
     }
 
     > div {
-      color: rgb(0, 0, 0);
+      color: $font-color-black;
     }
   }
 
   &__tag-text {
-    color: $tag-font-color;
+    color: $font-color;
   }
 
   tag,
@@ -1615,6 +1525,10 @@ table.data.job_table td {
 
     &.ruleset > div {
       background: rgba(222, 67, 131, $tag-opacity);
+
+      span.tagify__tag-text {
+        color: $font-color-white;
+      }
     }
   }
 
@@ -1627,16 +1541,14 @@ table.data.job_table td {
   }
 
   &__dropdown {
-    /* filter forms have z-index: 1000 and this needs to be above */
-    z-index: 1001;
-
-    background: $tag-input-bg-color;
+    z-index: 1001; /* filter forms have z-index: 1000 and this needs to be above */
+    background: $input-background-color;
     border: none;
     box-shadow: none;
 
     &__wrapper {
-      background: $tag-input-bg-color;
-      border: 1px solid $tag-dropdown-hover-border-color;
+      background: $input-background-color;
+      border: 1px solid $input-dropdown-border-color;
       border-radius: 4px;
     }
 
@@ -1644,9 +1556,8 @@ table.data.job_table td {
       margin: 1px;
 
       &--active {
-        color: $tag-dropdown-hover-font-color;
-        background-color: $tag-dropdown-hover-bg-color;
-        border: $tag-dropdown-hover-border-color;
+        color: $font-color-green;
+        background-color: $input-background-color;
       }
     }
   }

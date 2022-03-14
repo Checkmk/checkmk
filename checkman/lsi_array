@@ -1,7 +1,7 @@
 title: LSI RAID Controller: Array
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the status of an array of an LSI RAID controller. The Linux
@@ -13,7 +13,6 @@ description:
 item:
  The {VolumeID} of the raid array
 
-inventory:
+discovery:
  One service is created for each existing array.
  One service is also created if an array is in a bad state but the service will go {CRIT}.
-

@@ -9,21 +9,25 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_volume>>>
 # volumes 1 durable-id V0
 # volumes 1 virtual-disk-name IMSAKO2B1_U1_B01-04
@@ -176,19 +180,19 @@ def parse_hp_msa_volume(info):
     # replace numerical id with volume-name as uid for items, convert data
     parsed = {}
     for v in pre_parsed.values():
-        parsed.setdefault(v['volume-name'], v)
+        parsed.setdefault(v["volume-name"], v)
 
     return parsed
 
 
-check_info['hp_msa_volume'] = {
-    'parse_function': parse_hp_msa_volume,
-    'inventory_function': inventory_hp_msa_health,
-    'check_function': check_hp_msa_volume_health,
-    'service_description': 'Volume Health %s',
+check_info["hp_msa_volume"] = {
+    "parse_function": parse_hp_msa_volume,
+    "inventory_function": inventory_hp_msa_health,
+    "check_function": check_hp_msa_volume_health,
+    "service_description": "Volume Health %s",
 }
 
-#.
+# .
 #   .--volume df-----------------------------------------------------------.
 #   |                       _                            _  __             |
 #   |           __   _____ | |_   _ _ __ ___   ___    __| |/ _|            |
@@ -216,16 +220,19 @@ def check_hp_msa_volume_df(item, params, parsed):
         yield df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)
 
 
-check_info['hp_msa_volume.df'] = {
-    'inventory_function': inventory_hp_msa_volume_df,
-    'check_function': check_hp_msa_volume_df,
-    'service_description': 'Filesystem %s',
-    'has_perfdata': True,
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+check_info["hp_msa_volume.df"] = {
+    "inventory_function": inventory_hp_msa_volume_df,
+    "check_function": check_hp_msa_volume_df,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
     "group": "filesystem",
-    'default_levels_variable': "filesystem_default_levels",
+    "default_levels_variable": "filesystem_default_levels",
 }
 
-#.
+# .
 #   .--volume IO-----------------------------------------------------------.
 #   |                       _                        ___ ___               |
 #   |           __   _____ | |_   _ _ __ ___   ___  |_ _/ _ \              |
@@ -254,10 +261,10 @@ def check_hp_msa_volume_io(item, params, parsed):
         yield entry
 
 
-check_info['hp_msa_volume.io'] = {
-    'inventory_function': inventory_hp_msa_io,
-    'check_function': check_hp_msa_volume_io,
-    'service_description': 'Volume IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+check_info["hp_msa_volume.io"] = {
+    "inventory_function": inventory_hp_msa_io,
+    "check_function": check_hp_msa_volume_io,
+    "service_description": "Volume IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }

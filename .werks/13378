@@ -1,0 +1,16 @@
+Title: Fix detection of HTTP protocol
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1635328172
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The detection of the HTTP protocol, used in "Analyze configuration", "Crash
+reports" and to determine the shown default setting of "URL prefix for links to
+Checkmk" for notifications, was broken since 2.0.0. That leaded e.g. to a
+warning in section "Secure GUI (HTTP)" of "Analyze configuration", even if
+https was configured.

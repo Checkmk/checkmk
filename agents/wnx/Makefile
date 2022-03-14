@@ -28,6 +28,9 @@ msi_patch: $(MSI_STATE_FILE)
 	@type $(MSI_STATE_FILE)
 	@exit /b 0
 
+clean_artifacts:
+	@set arte=$(ARTE_PATH)&& call scripts\clean_artifacts.cmd
+
 
 setversion:
 	@python patch_windows_agent_version.py src\common\wnx_version.h $(NEW_VERSION)

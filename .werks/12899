@@ -1,0 +1,15 @@
+Title: Checkmk Service: Do not crash upon exceptions in plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1623604430
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously, the Checkmk services would go to UNKNOWN if a parse function
+crashed. This is no longer the case.
+
+In case an exception is raised in a parse function the Checkmk services
+will issue a WARNING, and a crash report will be created.

@@ -5,24 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-
-import os
 from pathlib import Path
 
+from tests.testlib.site import Site
 
-def test_no_exeption(site):
+
+def test_no_exeption(site: Site):
     """
     The execution of a special agent should not lead to an exception
     if the agent is called without any arguments.
     Possible reasons for an exception are e.g. a wrong shebang, import
     errors or a wrong PYTHONPATH.
     """
-    special_agent_dir = Path(site.root) / 'share' / 'check_mk' / 'agents' / 'special'
-    for special_agent_path in special_agent_dir.glob('agent_*'):
+    special_agent_dir = Path(site.root) / "share" / "check_mk" / "agents" / "special"
+    for special_agent_path in special_agent_dir.glob("agent_*"):
         command = [str(special_agent_path)]
-        p = site.execute(command,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         stdin=open(os.devnull))
+        p = site.execute(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
+        )
         stderr = p.communicate()[1]
         assert "Traceback (most recent call last):" not in stderr

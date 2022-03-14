@@ -1,0 +1,14 @@
+Title: Fix usage of default sender address of appliance
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1623679166
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The option "Default sender address" of the appliance configuration was only
+taken into account while sending system mails. Notifications send via ASCII or
+HTML Email did not use this address.

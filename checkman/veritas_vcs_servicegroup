@@ -1,45 +1,34 @@
 title: Veritas Cluster Service: Service Group
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check needs the {check_mk_agent.linux} agent which provides
- information about the Veritas Cluster Service if it is installed.
+ This check needs the {check_mk_agent.linux} agent which provides information
+ about the Veritas Cluster Service if it is installed.
 
- The check monitors the service group states. A states map can be
- configured in the rule "Veritas Cluster Server". By default the
- check can have the following states:
+ The check determines the state of the Veritas Cluster based on the following
+ priorities:
 
- - "ONLINE" will be OK,
+ OK: All nodes are online or running
+ CRIT: At least one node is faulted
+ UNKNOWN: At least one node is unknown
+ OK: At least one node is online or running, others may be offline
+ WARN: All nodes are offline
 
- - "OFFLINE" will be WARN,
+ Additionally, the check also reports frozen or temporarily frozen states (WARN
+ and CRIT respectively). In this case, the overall state of the service becomes
+ the worst of the two states.
 
- - "FAULTED" will be CRIT,
-
- - all others will be WARN
-
- The check is cluster-aware. In this case
-
- - if all service groups report the same, that state is used,
-
- - if any service group reports "FAULTED", "UNKNOWN", "ONLINE" or
-   "RUNNING", the respective state will be used (checked in that order)
-
- - otherwise the states will be concatenated.
-
- Additionaly the service group is checked for being (temporarily) frozen.
- By default
-
- - temporarily frozen will be WARN
-
- - frozen will be CRIT
+ The above are default levels, but the check may be configured using the
+ "Veritas Cluster Server" ruleset.
 
 item:
- The service group name.
+ The cluster name.
 
-inventory:
+discovery:
  One service is created for each service group.
 
 cluster:
-  On a cluster the service assumes the worst of all encountered node states.
+ On a cluster, the service determines the overall cluster state based on the
+ same priorities.

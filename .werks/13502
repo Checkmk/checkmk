@@ -1,0 +1,14 @@
+Title: Fix duplicatet context in title on export of views as PDF
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1637932831
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If views were exported via "This view as PDF", the title of the shown report
+showed the context of the report in the title twice, e.g. "Services of Host
+myhost myhost".

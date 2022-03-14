@@ -18,6 +18,7 @@
 #include "exception"            // for terminate
 #include "firewall.h"
 #include "fmt/format.h"
+#include "install_api.h"  // for terminate
 #include "on_start.h"
 #include "tools/_misc.h"
 #include "tools/_tgt.h"          // for IsDebug
@@ -26,8 +27,22 @@
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace fs = std::filesystem;
+using namespace std::string_literals;
 
 namespace tst {
+
+void AllowReadWriteAccess(const std::filesystem::path &path,
+                          std::vector<std::wstring> &commands) {
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",  // disable inheritance
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        commands.emplace_back(cmd);
+    }
+    XLOG::l.i("Protect file from User write '{}'", path);
+}
 
 std::string GetFabricYmlContent() {
     static std::string fabric_yaml_content;
@@ -36,7 +51,7 @@ std::string GetFabricYmlContent() {
         one_run = true;
         try {
             fabric_yaml_content = wtools::ReadWholeFile(GetFabricYml());
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             XLOG::l("Exception '{}' loading fabric yaml", e.what());
         }
     }
@@ -46,19 +61,26 @@ std::string GetFabricYmlContent() {
 
 class TestEnvironment : public ::testing::Environment {
 public:
-    static constexpr std::string_view temp_test_prefix_{"tmp_watest_"};
+    static constexpr std::string_view temp_test_prefix_{"tmp_watest"};
     virtual ~TestEnvironment() = default;
 
     void SetUp() override {
-        auto folder_name =
-            fmt::format("{}{}", temp_test_prefix_, ::GetCurrentProcessId());
-        temp_dir_ = fs::temp_directory_path() / folder_name;
+        auto test_root = cma::tools::win::GetEnv(cma::env::test_root);
+        if (!test_root.empty() && fs::exists(test_root)) {
+            temp_dir_ = fs::path(test_root) / temp_test_prefix_;
+        } else {
+            auto folder_name = fmt::format("{}_{}", temp_test_prefix_,
+                                           ::GetCurrentProcessId());
+            temp_dir_ = fs::temp_directory_path() / folder_name;
+        }
         fs::create_directories(temp_dir_);
     }
 
     void TearDown() override {
-        if (temp_dir_.u8string().find(temp_test_prefix_))
+        if (temp_dir_.u8string().find(temp_test_prefix_)) {
             fs::remove_all(temp_dir_);
+            fs::remove(temp_dir_);
+        }
     }
 
     [[nodiscard]] fs::path getTempDir() const noexcept { return temp_dir_; }
@@ -67,14 +89,14 @@ private:
     fs::path temp_dir_;
 };
 
-::testing::Environment* const g_env =
+::testing::Environment *const g_env =
     ::testing::AddGlobalTestEnvironment(new TestEnvironment);
 
 fs::path GetTempDir() {
-    return dynamic_cast<TestEnvironment*>(g_env)->getTempDir();
+    return dynamic_cast<TestEnvironment *>(g_env)->getTempDir();
 }
 
-TempDirPair::TempDirPair(const std::string& case_name) {
+TempDirPair::TempDirPair(const std::string &case_name) {
     path_ = GetTempDir() / case_name;
     in_ = path_ / "in";
     out_ = path_ / "out";
@@ -86,15 +108,16 @@ TempDirPair::TempDirPair(const std::string& case_name) {
 TempDirPair::~TempDirPair() {
     try {
         fs::remove_all(path_);
-    } catch (const std::filesystem::filesystem_error& e) {
+    } catch (const std::filesystem::filesystem_error &e) {
         XLOG::l("Failure deleting '{}' exception '{}'", path_, e.what());
     }
 }
 
-const std::filesystem::path G_ProjectPath = PROJECT_DIR;
-const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
-const std::filesystem::path G_TestPath =
-    MakePathToUnitTestFiles(G_SolutionPath);
+fs::path GetProjectRoot() { return fs::path{PROJECT_DIR}; }
+fs::path GetSolutionRoot() { return fs::path{SOLUTION_DIR}; }
+fs::path GetUnitTestFilesRoot() {
+    return MakePathToUnitTestFiles(GetSolutionRoot());
+}
 
 // below described the structure of the solution folder:
 // solution root <--- Use SOLUTION_DIR define
@@ -106,34 +129,25 @@ constexpr std::wstring_view kSolutionUnitTestsFolderName(L"unit_test");
 constexpr std::wstring_view kSolutionConfigTestFilesFolderName(L"config");
 constexpr std::wstring_view kSolutionCapTestFilesFolderName(L"cap");
 
-std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root) {
+std::filesystem::path MakePathToUnitTestFiles(const std::wstring &root) {
     std::filesystem::path r{root};
     r = r / kSolutionTestFilesFolderName / kSolutionUnitTestsFolderName;
     return r.lexically_normal();
 }
 
-std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root) {
+std::filesystem::path MakePathToConfigTestFiles(const std::wstring &root) {
     std::filesystem::path r{root};
     r = r / kSolutionTestFilesFolderName / kSolutionConfigTestFilesFolderName;
     return r.lexically_normal();
 }
 
-std::filesystem::path MakePathToCapTestFiles(const std::wstring& root) {
+std::filesystem::path MakePathToCapTestFiles(const std::wstring &root) {
     std::filesystem::path r{root};
     r = r / kSolutionTestFilesFolderName / kSolutionCapTestFilesFolderName;
     return r.lexically_normal();
 }
 
-void PrintNode(YAML::Node node, std::string_view S) {
-    if (tgt::IsDebug()) {
-        YAML::Emitter emit;
-        emit << node;
-        XLOG::l("{}:\n{}", S, emit.c_str());
-    }
-}
-
 void SafeCleanTempDir() {
-    namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
     auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
     if (!really_temp_dir) return;
@@ -185,9 +199,9 @@ void SafeCleanTempDir(std::string_view sub_dir) {
 
 namespace {
 template <typename T, typename V>
-void RemoveElement(T& Container, const V& Str) {
+void RemoveElement(T &Container, const V &Str) {
     Container.erase(std::remove_if(Container.begin(), Container.end(),
-                                   [Str](const std::string& Candidate) {
+                                   [Str](const std::string &Candidate) {
                                        return cma::tools::IsEqual(Str,
                                                                   Candidate);
                                    }),
@@ -195,7 +209,7 @@ void RemoveElement(T& Container, const V& Str) {
 }
 
 template <typename T, typename V>
-bool AddElement(T& container, const V& value) {
+bool AddElement(T &container, const V &value) {
     // add section name to internal array if not found
     if (std::end(container) ==
         std::find(container.begin(), container.end(), value)) {
@@ -244,7 +258,7 @@ void DisableSectionsNode(std::string_view value, bool update_global) {
     return ChangeSectionMode(value, update_global, SectionMode::disable);
 }
 
-std::vector<std::string> ReadFileAsTable(const std::string& Name) {
+std::vector<std::string> ReadFileAsTable(const std::string &Name) {
     std::ifstream in(Name.c_str());
     std::stringstream sstr;
     sstr << in.rdbuf();
@@ -253,7 +267,6 @@ std::vector<std::string> ReadFileAsTable(const std::string& Name) {
 }
 
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
-    namespace fs = std::filesystem;
     // Find Temporary Folder
     fs::path temp_folder{GetTempDir()};
     std::error_code ec;
@@ -264,6 +277,22 @@ std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
     }
 
     return temp_folder / folder_name;
+}
+
+TempFolder::TempFolder(std::wstring_view folder_name)
+    : folder_name_{MakeTempFolderInTempPath(folder_name)} {
+    std::error_code ec;
+    if (!fs::create_directory(folder_name_, ec)) {
+        XLOG::l("failed to create directory {}", folder_name_);
+        abort();  // failure in test
+    }
+}
+
+TempFolder::~TempFolder() {
+    std::error_code ec;
+    if (!folder_name_.empty() && fs::exists(folder_name_, ec)) {
+        fs::remove_all(folder_name_, ec);
+    }
 }
 
 std::wstring GenerateRandomFileName() noexcept {
@@ -310,7 +339,7 @@ TempCfgFs ::~TempCfgFs() {
     cma::cfg::GetCfg().setConfig(yaml_);
 }
 
-bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
+bool TempCfgFs::loadConfig(const std::filesystem::path &yml) {
     std::vector<std::wstring> cfg_files;
     if (mode_ == Mode::standard) {
         std::filesystem::copy_file(
@@ -321,8 +350,7 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
         cfg_files.emplace_back(yml);
     }
 
-    auto ret =
-        cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+    auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::nothing);
     if (ret) {
         cma::cfg::ProcessKnownConfigGroups();
         cma::cfg::SetupEnvironmentFromGroups();
@@ -330,6 +358,26 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
 
     return ret;
 }
+
+bool TempCfgFs::reloadConfig() {
+    std::vector<std::wstring> cfg_files;
+    if (mode_ == Mode::standard) {
+        cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
+    } else {
+        XLOG::l("No io mode doesnt allow reloading");
+        return false;
+    }
+
+    auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::update);
+    if (ret) {
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
+    }
+
+    return ret;
+}
+
+bool TempCfgFs::loadFactoryConfig() { return loadConfig(tst::GetFabricYml()); }
 
 bool TempCfgFs::loadContent(std::string_view content) {
     auto ret = cma::cfg::GetCfg().loadDirect(content);
@@ -341,9 +389,15 @@ bool TempCfgFs::loadContent(std::string_view content) {
     return ret;
 }
 
+void TempCfgFs::allowUserAccess() {
+    std::vector<std::wstring> commands;
+    tst::AllowReadWriteAccess(base_, commands);
+    wtools::ExecuteCommandsSync(L"all", commands);
+}
+
 [[nodiscard]] bool TempCfgFs::createFile(
-    const std::filesystem::path& filepath,
-    const std::filesystem::path& filepath_base, const std::string& content) {
+    const std::filesystem::path &filepath,
+    const std::filesystem::path &filepath_base, const std::string &content) {
     std::error_code ec;
     auto p = filepath_base / filepath;
     std::filesystem::remove(p, ec);
@@ -356,35 +410,35 @@ bool TempCfgFs::loadContent(std::string_view content) {
 }
 
 [[nodiscard]] bool TempCfgFs::createRootFile(
-    const std::filesystem::path& filepath, const std::string& content) const {
+    const std::filesystem::path &filepath, const std::string &content) const {
     return TempCfgFs::createFile(filepath, root_, content);
 }
 
 [[nodiscard]] bool TempCfgFs::createDataFile(
-    const std::filesystem::path& filepath, const std::string& content) const {
+    const std::filesystem::path &filepath, const std::string &content) const {
     return TempCfgFs::createFile(filepath, data_, content);
 }
 
 [[nodiscard]] void TempCfgFs::removeFile(
-    const std::filesystem::path& filepath,
-    const std::filesystem::path& filepath_base) {
+    const std::filesystem::path &filepath,
+    const std::filesystem::path &filepath_base) {
     std::error_code ec;
     auto p = filepath_base / filepath;
     std::filesystem::remove(p, ec);
 }
 
 [[nodiscard]] void TempCfgFs::removeRootFile(
-    const std::filesystem::path& filepath) const {
+    const std::filesystem::path &filepath) const {
     TempCfgFs::removeFile(filepath, root_);
 }
 
 [[nodiscard]] void TempCfgFs::removeDataFile(
-    const std::filesystem::path& filepath) const {
+    const std::filesystem::path &filepath) const {
     TempCfgFs::removeFile(filepath, data_);
 }
 
 std::filesystem::path GetFabricYml() {
-    return G_SolutionPath / "install" / "resources" /
+    return tst::GetSolutionRoot() / "install" / "resources" /
            cma::cfg::files::kDefaultMainConfig;
 }
 
@@ -452,5 +506,28 @@ FirewallOpener::~FirewallOpener() {
         cma::fw::RemoveRule(firewall_test_rule_name, argv0_);
     }
 }
+
+namespace misc {
+void CopyFailedPythonLogFileToLog(const std::filesystem::path &data) {
+    const auto &the_file =
+        tst::MakePathToUnitTestFiles() / "agent_msi.failed.python.log";
+    fs::create_directories(data / cma::cfg::dirs::kLog);
+    fs::copy_file(the_file, fs::path{cma::cfg::GetLogDir()} /
+                                cma::install::kMsiLogFileName);
+}
+}  // namespace misc
+
+namespace {
+using Level = cma::evl::EventLogRecordBase::Level;
+const std::vector<EventRecordData> simple_log_data{
+    {13, 0x11, 1, L"Source"s, L"Message 1"s, Level::error},
+    {13, 0x11, 2, L"Source"s, L"Message 1"s, Level::error},
+    {13, 0x11, 3, L"Source"s, L"Message 2"s, Level::error},
+    {13, 0x11, 4, L"Source"s, L"Message 3"s, Level::error},
+    {13, 0x11, 5, L"Source"s, L"Message 3"s, Level::error},
+    {13, 0x11, 6, L"Source"s, L"Message 3"s, Level::error}};
+}  // namespace
+
+const std::vector<EventRecordData> &SimpleLogData() { return simple_log_data; }
 
 }  // namespace tst

@@ -1,0 +1,17 @@
+Title: Password store: Fix sharing passwords with other contact group members
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1643182749
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In the password store it is possible to save a password entry and share it with members
+of other contact groups. The members of these groups can then use the passwords in their
+Checkmk configuration.
+
+The sharing based on contact group memberships did not work at all, because the
+matching of the contact groups a user has did not work. The result is that a
+shared password would not be displayed for members of the contact group.

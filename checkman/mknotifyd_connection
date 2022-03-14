@@ -1,7 +1,7 @@
 title: Checkmk Notification Spooler: Connection
 agents: linux
-catalog: app/checkmk
-license: GPL
+catalog: app/cmk
+license: GPLv2
 distribution: checkmk
 description:
  This check checks the status of indiviual TCP connections from a
@@ -15,5 +15,5 @@ item:
  incoming connections exist from the same remote host then an index will be
  appended.
 
-inventory:
+discovery:
  One sevice is created for each site and connection.

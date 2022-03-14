@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Status of FC Ports
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of FC Ports in an IBM SVC / Storwize V3700 / V7000
@@ -20,5 +20,5 @@ item:
 
  i. e. {{Node <node_ID> Slot <adapter_location> Port <adapter_port_ID>/<port_ID>}}
 
-inventory:
+discovery:
  One service is created for each FC Port with status {active}.

@@ -1,0 +1,14 @@
+Title: brocade_sfp: Correct assignment of Rx/Tx power levels for Brocade SFPs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619174322
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously, the levels within the "Brocade SFPs" ruleset were assigned incorrecly
+at the corresponding check, leading to a confusing state in the service.
+
+This is fixed with this Werk.

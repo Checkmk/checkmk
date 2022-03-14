@@ -1,7 +1,7 @@
 title: HP Proliant Servers: Storage System Drive Box Groups
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
@@ -19,5 +19,5 @@ description:
 item:
  Comination of the controller index and the bus index separated by "/".
 
-inventory:
+discovery:
  One service is created for each connected drive box.

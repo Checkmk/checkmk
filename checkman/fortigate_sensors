@@ -1,10 +1,10 @@
 title: FortiGate Firewalls: Sensor Summary
 agents: snmp
 catalog: hw/network/fortinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the overall alarm status of sensors of a FortiGate Firewall device. The status of the check is OK if all of the sensors have the alarm status 'false' (0) and CRIT if at least one sensor has the alarm status 'true' (1).
 
-inventory:
+discovery:
  One service is created.

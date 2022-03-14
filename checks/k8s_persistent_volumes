@@ -10,32 +10,37 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 @discover
 def inventory_k8s_persistent_volumes(_pv, status):
-    return status.get('status', {}).get('phase', '') == 'Bound'
+    return status.get("status", {}).get("phase", "") == "Bound"
 
 
 @get_parsed_item_data
 def check_k8s_persistent_volumes(item, _no_params, pv):
     state = 0
-    phase = pv['status']['phase']
-    if phase != 'Bound':
+    phase = pv["status"]["phase"]
+    if phase != "Bound":
         state = 2
-    yield state, 'Status: %s' % phase
+    yield state, "Status: %s" % phase
 
-    access = pv['access']
+    access = pv["access"]
     if access:
-        yield 0, 'Access modes: %s' % ', '.join(access)
+        yield 0, "Access modes: %s" % ", ".join(access)
 
-    capacity = pv['capacity']
+    capacity = pv["capacity"]
     if capacity:
-        yield 0, 'Capacity: %s' % get_bytes_human_readable(capacity)
+        yield 0, "Capacity: %s" % get_bytes_human_readable(capacity)
 
 
-check_info['k8s_persistent_volumes'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_persistent_volumes,
-    'check_function': check_k8s_persistent_volumes,
-    'service_description': 'PV %s',
+check_info["k8s_persistent_volumes"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": inventory_k8s_persistent_volumes,
+    "check_function": check_k8s_persistent_volumes,
+    "service_description": "PV %s",
 }

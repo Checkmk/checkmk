@@ -5,38 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Mapping
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    SNMPTree,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+
+from .agent_based_api.v1 import register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import huawei_osn, interfaces
 
 Section = Mapping[str, interfaces.Interface]
 
 
 def parse_huawei_osn_if(string_table: List[StringTable]) -> Section:
-    """
-    >>> from pprint import pprint
-    >>> pprint(parse_huawei_osn_if([[
-    ... ['board=2,subcard=255,port=3,path=1', '7082029074219', '17036981', '279', '6838315476691', '17036419', '279', '3948539971896391', '7735753792855325', '310', '1283'],
-    ... ['board=4,subcard=255,port=4,path=1', '6449739865058', '435114', '213', '17693276948796', '434014', '215', '1605155114074070', '22669531959919535', '0', '0'],
-    ... ]]))
-    {'board=2,subcard=255,port=3,path=1': Interface(index='board=2,subcard=255,port=3,path=1', descr='board=2,subcard=255,port=3,path=1', alias='board=2,subcard=255,port=3,path=1', type='39', speed=0, oper_status='1', in_octets=3948539971896391, in_ucast=7082029074219, in_mcast=17036981, in_bcast=279, in_discards=0, in_errors=310, out_octets=7735753792855325, out_ucast=6838315476691, out_mcast=17036419, out_bcast=279, out_discards=0, out_errors=1283, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=11684293764751716),
-     'board=4,subcard=255,port=4,path=1': Interface(index='board=4,subcard=255,port=4,path=1', descr='board=4,subcard=255,port=4,path=1', alias='board=4,subcard=255,port=4,path=1', type='39', speed=0, oper_status='1', in_octets=1605155114074070, in_ucast=6449739865058, in_mcast=435114, in_bcast=213, in_discards=0, in_errors=0, out_octets=22669531959919535, out_ucast=17693276948796, out_mcast=434014, out_bcast=215, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=24274687073993605)}
-    """
     return {
         name: interfaces.Interface(
             index=name,
             descr=name,
             alias=name,
-            type='39',
-            oper_status='1',
+            type="39",
+            oper_status="1",
             in_octets=interfaces.saveint(line[7]),
             in_ucast=interfaces.saveint(line[1]),
             in_mcast=interfaces.saveint(line[2]),
@@ -47,7 +31,9 @@ def parse_huawei_osn_if(string_table: List[StringTable]) -> Section:
             out_mcast=interfaces.saveint(line[5]),
             out_bcast=interfaces.saveint(line[6]),
             out_errors=interfaces.saveint(line[10]),
-        ) for line in string_table[0] for name in [line[0]]
+        )
+        for line in string_table[0]
+        for name in [line[0]]
     }
 
 
@@ -73,7 +59,7 @@ register.snmp_section(
         ),
     ],
     detect=huawei_osn.SNMP_DETECT,
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )
 
 

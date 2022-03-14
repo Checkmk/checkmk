@@ -1,9 +1,14 @@
 title: Kubernetes: Replicas
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_kubernetes) are deprecated
+ and will be removed in Checkmk version 2.2.0.
+
+ Please configure the new special agent using the "Kubernetes" ruleset.
+
  This check monitors the number of replicas in a Kubernetes deployment.
  The state of the check is dependent on the configuration of the deployment
  in Kubernetes.
@@ -21,5 +26,5 @@ description:
  and max surge is 25% the check will return {CRIT} if the number of
  is below 9 or raises above 13 replicas, respectively.
 
-inventory:
+discovery:
  One service is created.

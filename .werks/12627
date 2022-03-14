@@ -1,0 +1,13 @@
+Title: entity_sensors: discover non-operational sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1616576336
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The entity_sensors check previously only discovered any sensors that were in
+operational status "OK". Now, the check also discovers densors that have status
+"non-operational" or "unknown".

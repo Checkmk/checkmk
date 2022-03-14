@@ -1,0 +1,12 @@
+Title: check_mk_agent.linux: Write ntp section if ntpsec.service active
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634315925
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Linux agent now writes the ntp section in the agent output if there is
+an active ntpsec.service in systemctl.

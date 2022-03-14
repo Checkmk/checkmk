@@ -1,7 +1,7 @@
 title: HAProxy: Server Status
 agents: freebsd linux
 catalog: app/haproxy
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -17,5 +17,5 @@ description:
 item:
  The name of backend and server, separated by a "/".
 
-inventory:
+discovery:
  One service is created for each server.

@@ -9,12 +9,12 @@
 
 
 def inventory_dmi_sysinfo(info):
-    if len(info) > 0 and info[0] == ['System', 'Information']:
+    if len(info) > 0 and info[0] == ["System", "Information"]:
         return [(None, None)]
 
 
 def check_dmi_sysinfo(item, param, info):
-    if len(info) == 0 or info[0] != ['System', 'Information']:
+    if len(info) == 0 or info[0] != ["System", "Information"]:
         return (3, "Invalid information")
     data = {}
     for line in info:
@@ -23,16 +23,20 @@ def check_dmi_sysinfo(item, param, info):
             key, value = line.split(":", 1)
             data[key.strip()] = value.strip()
 
-    return (0, "Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s" % (
-        data.get("Manufacturer", "Unknown"),
-        data.get("Product Name", "Unknown"),
-        data.get("Version", "Unknown"),
-        data.get("Serial Number", "Unknown"),
-    ))
+    return (
+        0,
+        "Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s"
+        % (
+            data.get("Manufacturer", "Unknown"),
+            data.get("Product Name", "Unknown"),
+            data.get("Version", "Unknown"),
+            data.get("Serial Number", "Unknown"),
+        ),
+    )
 
 
 check_info["dmi_sysinfo"] = {
-    'check_function': check_dmi_sysinfo,
-    'inventory_function': inventory_dmi_sysinfo,
-    'service_description': 'DMI Sysinfo',
+    "check_function": check_dmi_sysinfo,
+    "inventory_function": inventory_dmi_sysinfo,
+    "service_description": "DMI Sysinfo",
 }

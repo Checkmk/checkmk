@@ -8,24 +8,25 @@
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_3par_volumes(parsed):
-    for entry in parsed.get('members', {}):
-        if not entry['policies']['system'] is True and \
-                "name" in entry:
-            yield (entry['name'], {})
+    for entry in parsed.get("members", {}):
+        if not entry["policies"]["system"] is True and "name" in entry:
+            yield (entry["name"], {})
 
 
 def check_3par_volumes(item, params, parsed):
@@ -45,32 +46,33 @@ def check_3par_volumes(item, params, parsed):
         7: "DDS",
     }
 
-    for entry in parsed.get('members', {}):
-        if entry.get('name') == item:
-            total = entry['sizeMiB']
-            usr_free = total - entry['userSpace']['usedMiB']
+    for entry in parsed.get("members", {}):
+        if entry.get("name") == item:
+            total = entry["sizeMiB"]
+            usr_free = total - entry["userSpace"]["usedMiB"]
             yield df_check_filesystem_list(item, params, [(item, total, usr_free, 0)])
 
             # This section seems not always to be present...
             if "capacityEfficiency" in entry:
                 # Even these sections are not always existend. Only add them if available.
-                if "deduplication" in entry['capacityEfficiency']:
-                    yield 0, "Dedup: %s" % entry['capacityEfficiency']['deduplication']
-                if "compaction" in entry['capacityEfficiency']:
-                    yield 0, "Compact: %s" % entry['capacityEfficiency']['compaction']
+                if "deduplication" in entry["capacityEfficiency"]:
+                    yield 0, "Dedup: %s" % entry["capacityEfficiency"]["deduplication"]
+                if "compaction" in entry["capacityEfficiency"]:
+                    yield 0, "Compact: %s" % entry["capacityEfficiency"]["compaction"]
 
             # Add some additional information and the performance data about Provisioning
-            provisioning = entry['userSpace']['rawReservedMiB'] * 1024 * 1024
-            yield states[entry['state']], "Type: %s, WWN: %s" % \
-                    (provisioning_map[entry['provisioningType']], entry['wwn']), \
-                    [ ( "fs_provisioning", provisioning) ]
+            provisioning = entry["userSpace"]["rawReservedMiB"] * 1024 * 1024
+            yield states[entry["state"]], "Type: %s, WWN: %s" % (
+                provisioning_map[entry["provisioningType"]],
+                entry["wwn"],
+            ), [("fs_provisioning", provisioning)]
 
 
-check_info['3par_volumes'] = {
-    'parse_function': parse_3par,
-    'inventory_function': inventory_3par_volumes,
-    'check_function': check_3par_volumes,
-    'service_description': "Volume %s",
-    'has_perfdata': True,
-    'group': "filesystem",
+check_info["3par_volumes"] = {
+    "parse_function": parse_3par,
+    "inventory_function": inventory_3par_volumes,
+    "check_function": check_3par_volumes,
+    "service_description": "Volume %s",
+    "has_perfdata": True,
+    "group": "filesystem",
 }

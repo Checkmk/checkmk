@@ -1,0 +1,13 @@
+Title: solaris agent: ps: don't cut user names after 8 chars
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626936126
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Before this werk, the user names in the ps output where cut after 8 characters
+on some solaris systems.
+Now the limit is lifted to 16 characters.

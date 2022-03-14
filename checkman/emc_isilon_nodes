@@ -1,7 +1,7 @@
 title: EMC Isilon: Online Status of Nodes
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Online Status of Nodes in an EMC Isilon Storage System.
@@ -9,6 +9,5 @@ description:
  Returns {OK} if all configured nodes are listed as online nodes
  and {CRIT} otherwise.
 
-inventory:
+discovery:
  One service is created for each EMC Isilon System, named Nodes.
-

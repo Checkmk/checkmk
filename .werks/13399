@@ -1,0 +1,27 @@
+Title: RESTAPI: Endpoint for downloading agent by host name
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1635428545
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Agent can now be downloaded by operating system and host name:
+
+<tt>/check_mk/api/1.0/domain-types/agent/actions/download_by_host/invoke?os_type=linux_tgz&host_name=example.com</tt>
+
+The previous URL used to download agents via the agent hash:
+
+<tt>/check_mk/api/1.0/objects/agent_binary/80e99ba3a66d4880?os_type=linux_tgz</tt>
+
+is replaced by
+
+<tt>/check_mk/api/1.0/domain-types/agent/actions/download_by_hash/invoke?os_type=linux_tgz&agent_hash=80e99ba3a66d4880</tt>
+
+In checkmk raw edition the packaged agents can now be downloaded by the following URL:
+
+<tt>/check_mk/api/1.0/domain-types/agent/actions/download/invoke?os_type=linux_deb</tt>
+
+Full description can be found in the built in REST API Documentation.

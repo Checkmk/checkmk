@@ -1,7 +1,7 @@
 title: Supermicro: Health Sensors
 agents: snmp
 catalog: hw/server/supermicro
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check tests individual sensors (Fan speeds, voltages,
@@ -18,5 +18,5 @@ description:
 item:
  Name of the sensor
 
-inventory:
+discovery:
  One service is created for each sensor.

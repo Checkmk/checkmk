@@ -13,25 +13,9 @@
   height: 100%;
 }
 
-#topology_filters {
-  position: absolute;
-  top: 124px;
-  right: 22px;
-  left: 22px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
 .topology_center,
 .topology_remote {
   fill: transparent;
-}
-
-#topology_filters div.floatfilter,
-#topology_filters input#search {
-  pointer-events: all;
-  background-color: $topology-filter-bg-color;
-  border-color: $topology-filter-border-color;
 }
 
 #node_visualization_root_div {
@@ -40,7 +24,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background: rgb(248, 248, 255); // ghostwhite
+  background-color: $bg-color-secondary;
 }
 
 div.node_vis {
@@ -70,20 +54,12 @@ div.node_vis {
     width: 29px;
     height: 29px;
     padding: 5px;
-    padding-left: 3px;
+    background-color: $input-background-color;
+    border-radius: $theme-border-radius;
 
     img {
       width: 28px;
       height: 28px;
-    }
-
-    &.down {
-      background-color: $node-vis-toggle-down-bg-color; // light grey
-      border-color: $node-vis-toggle-down-bg-color; // light grey
-
-      img {
-        left: 0;
-      }
     }
 
     img[title="Search"] {
@@ -92,16 +68,14 @@ div.node_vis {
   }
 
   .node_element .growth_root {
-    stroke: $node-vis-growth-root-color;
+    stroke: $font-color-dimmed;
     stroke-width: 1;
   }
 
   div.box,
   img.box {
-    background-color: $bg-color;
-    border: $node-vis-box-border;
+    background-color: $node-vis-menu-bg-color;
     border-radius: 4px;
-    box-shadow: $node-vis-box-shadow;
   }
 
   img.layouting_icon,
@@ -124,14 +98,11 @@ div.node_vis {
     left: 12px;
     width: 250px;
     overflow: hidden;
-    background-color: $node-vis-search-box-bg-color;
-    border: $node-vis-search-box-border;
-    box-shadow: $node-vis-box-shadow;
+    background-color: $input-background-color;
   }
 
   input.search_node {
     width: 236px;
-    border-color: $node-vis-search-field-border-color;
   }
 
   /* infobox */
@@ -194,7 +165,6 @@ div.node_vis {
     margin: 3px;
     margin-top: 8px;
     overflow: hidden;
-    background-color: $node-vis-menu-bg-color;
   }
 
   div#configuration_div table select {
@@ -272,51 +242,13 @@ div.node_vis {
     cursor: move;
   }
 
-  .node_element circle {
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-
-    &.topology_root {
-      stroke-width: 3;
-      stroke: $black;
-    }
-
-    &.collapsed {
-      stroke: rgb(128, 128, 128); // grey
-      stroke-width: 15;
-    }
+  .node_element circle.collapsed {
+    stroke-width: 15;
   }
 
   .node_element.focus circle {
-    stroke: rgb(25, 90, 230); // blue
+    stroke: $blue !important;
     stroke-width: 3;
-  }
-
-  .state0 {
-    color: $black;
-    fill: $success;
-  }
-
-  .state1 {
-    fill: rgb(255, 254, 68);
-  }
-
-  .state2 {
-    fill: rgb(255, 50, 50);
-  }
-
-  .state3 {
-    fill: rgb(255, 153, 17);
-  }
-
-  // state pending
-  .state-1 {
-    fill: rgb(136, 136, 136);
-  }
-
-  circle.state_circle {
-    stroke: #000;
-    stroke-width: 1;
   }
 
   .togglebox {
@@ -325,8 +257,12 @@ div.node_vis {
     height: 27px;
     text-align: center;
     vertical-align: middle;
+    cursor: pointer;
+    background: $input-background-color;
+    border-radius: $theme-border-radius;
 
     &.enabled {
+      color: $font-color-black;
       background: $node-vis-togglebox-enabled;
     }
   }
@@ -349,7 +285,7 @@ div.node_vis {
 
   circle.style_indicator.focus {
     opacity: 0.5;
-    stroke: rgb(255, 254, 68);
+    stroke: $warning;
     stroke-width: 3;
   }
 
@@ -393,7 +329,7 @@ div.node_vis {
 
   g.generic_stop_growth circle {
     stroke-width: 1;
-    stroke: #000;
+    stroke: $black;
   }
 
   g.generic_growth_possible circle {
@@ -481,24 +417,22 @@ div.node_vis path.dashed,
 
 .style_overlay {
   pointer-events: none;
-  opacity: 0.2;
   fill: none;
-  stroke: $node-vis-darkgrey;
+  stroke: $line-color;
   stroke-width: 2px;
   stroke-linejoin: round;
 }
 
 .block_style_overlay {
-  opacity: 0.3;
   vector-effect: non-scaling-stroke;
   fill: $node-vis-darkgrey;
   stroke: $node-vis-darkgrey;
-  stroke-width: 2px;
+  stroke-width: $spacing;
   stroke-linejoin: round;
 }
 
 svg text {
-  fill: $primary-font-color;
+  fill: $font-color;
 }
 
 div#main_window_layered {

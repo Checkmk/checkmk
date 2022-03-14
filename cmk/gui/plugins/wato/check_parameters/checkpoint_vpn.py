@@ -5,84 +5,130 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+from cmk.gui.plugins.wato.utils import (
     Levels,
+    register_check_parameters,
+    RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "checkpoint_packets",
+    RulespecGroupCheckParametersNetworking,
+    "checkpoint_packets",
     _("Checkpoint Firewall Packet Rates"),
-    Dictionary(elements=[
-        ("accepted",
-         Levels(title=_("Maximum Rate of Accepted Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("rejected",
-         Levels(title=_("Maximum Rate of Rejected Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("dropped",
-         Levels(title=_("Maximum Rate of Dropped Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("logged",
-         Levels(title=_("Maximum Rate of Logged Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("espencrypted",
-         Levels(title=_("Maximum Rate of ESP Encrypted Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("espdecrypted",
-         Levels(title=_("Maximum Rate of ESP Decrypted Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-    ]), None, "dict")
+    Dictionary(
+        elements=[
+            (
+                "accepted",
+                Levels(
+                    title=_("Maximum Rate of Accepted Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "rejected",
+                Levels(
+                    title=_("Maximum Rate of Rejected Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "dropped",
+                Levels(
+                    title=_("Maximum Rate of Dropped Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "logged",
+                Levels(
+                    title=_("Maximum Rate of Logged Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "espencrypted",
+                Levels(
+                    title=_("Maximum Rate of ESP Encrypted Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "espdecrypted",
+                Levels(
+                    title=_("Maximum Rate of ESP Decrypted Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+        ]
+    ),
+    None,
+    "dict",
+)
 
 register_check_parameters(
     RulespecGroupCheckParametersNetworking,
     "checkpoint_tunnels",
     _("Checkpoint Tunnel Status"),
-    Dictionary(elements=[
-        ("Active", MonitoringState(
-            title=_("State when VPN status is Active"),
-            default_value=0,
-        )),
-        ("Destroy", MonitoringState(
-            title=_("State when VPN status is Destroy"),
-            default_value=1,
-        )),
-        ("Idle", MonitoringState(
-            title=_("State when VPN status is Idle"),
-            default_value=0,
-        )),
-        ("Phase1", MonitoringState(
-            title=_("State when VPN status is Phase1"),
-            default_value=2,
-        )),
-        ("Down", MonitoringState(
-            title=_("State when VPN status is Down"),
-            default_value=2,
-        )),
-        ("Init", MonitoringState(
-            title=_("State when VPN status is Init"),
-            default_value=1,
-        )),
-    ]),
-    TextAscii(
+    Dictionary(
+        elements=[
+            (
+                "Active",
+                MonitoringState(
+                    title=_("State when VPN status is Active"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Destroy",
+                MonitoringState(
+                    title=_("State when VPN status is Destroy"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "Idle",
+                MonitoringState(
+                    title=_("State when VPN status is Idle"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Phase1",
+                MonitoringState(
+                    title=_("State when VPN status is Phase1"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "Down",
+                MonitoringState(
+                    title=_("State when VPN status is Down"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "Init",
+                MonitoringState(
+                    title=_("State when VPN status is Init"),
+                    default_value=1,
+                ),
+            ),
+        ]
+    ),
+    TextInput(
         title=_("Name of VPN tunnel"),
         allow_empty=True,
     ),

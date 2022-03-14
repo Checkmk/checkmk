@@ -1,7 +1,7 @@
 title: Riverbed Steelhead: Peer Connections
 agents: snmp
 catalog: hw/network/riverbed
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This is a simple check which checks the current connected peers
@@ -12,5 +12,5 @@ description:
 item:
  The name of the host
 
-inventory:
+discovery:
  One service is created for each peer.

@@ -1,0 +1,16 @@
+Title: Add possibility to change Windows Agent WMI timeout in WATO
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1628853017
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+On heavy loaded systems the Windows WMI subsystem may not respond in 
+time thus some WMI based services will be switched into the stale state.
+
+Since this release, the user can leverage above mentioned problem by 
+setting a higher value in wmi_timeout via the ruleset <i>"Windows WMI 
+Timeout"</i>. Acceptable range is 2-12 seconds, default value is 3 seconds.

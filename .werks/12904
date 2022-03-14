@@ -1,0 +1,17 @@
+Title: mrpe: Always display age of cached results
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1626592373
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The information about the age of cached agent data for mrpe
+based services is now always displayed in the same manner as
+for local check based services.
+
+Previously, users had to configure this with the `interval`
+option in the mrpe config file. This option has no effect
+anymore.

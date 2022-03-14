@@ -1,7 +1,7 @@
 title: MS Exchange: DAG Replication Health Test
 agents: windows
 catalog: app/exchange
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors various health states of Microsoft Exchange Mailbox
@@ -18,7 +18,7 @@ description:
  Test-ReplicationHealth cmdlet for the item is {passed}.  It is {WARN}
  otherwise.
 
-inventory:
+discovery:
  One service is created for each health check.
 
 item:

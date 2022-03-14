@@ -9,7 +9,6 @@
 #ifndef fileinfo_h__
 #define fileinfo_h__
 
-#include <filesystem>
 #include <string>
 
 #include "providers/internal.h"
@@ -18,43 +17,35 @@
 namespace cma {
 
 namespace provider {
-
 class FileInfo : public Asynchronous {
 public:
-    // check for * and ? in text
-    static bool ContainsGlobSymbols(std::string_view name);
-
-    // internal fixed defines
     static constexpr std::string_view kMissing = "missing";
     static constexpr std::string_view kStatFailed = "stat failed";
     static constexpr std::string_view kOk = "ok";
     static constexpr char kSep = '|';
 
+    static bool ContainsGlobSymbols(std::string_view name);
+
     enum class Mode {
         legacy,  // #deprecated
         modern
     };
-    FileInfo() : Asynchronous(cma::section::kFileInfoName, kSep) {}
+    FileInfo() : Asynchronous(section::kFileInfoName, kSep) {}
+    explicit FileInfo(Mode mode)
+        : Asynchronous(section::kFileInfoName, kSep), mode_{mode} {}
 
-    FileInfo(const std::string& Name, char Separator)
-        : Asynchronous(Name, Separator) {}
+    FileInfo(const std::string &name, char separator)
+        : Asynchronous(name, separator) {}
 
     virtual void loadConfig();
 
 protected:
     std::string makeBody() override;
-    std::string generateFileList(const YAML::Node& path_array_val);
-    Mode mode_ = Mode::legacy;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class FileInfoTest;
-    FRIEND_TEST(FileInfoTest, Base);
-    FRIEND_TEST(FileInfoTest, CheckOutput);
-    FRIEND_TEST(FileInfoTest, CheckDriveLetter);
-#endif
+    std::string generateFileList(const YAML::Node &path_array_val);
+    Mode mode_{Mode::legacy};
 };
-
 }  // namespace provider
 
-};  // namespace cma
+}  // namespace cma
 
 #endif  // fileinfo_h__

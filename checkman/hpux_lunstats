@@ -1,7 +1,7 @@
 title: HP-UX: Throughput LUNs
 agents: hpux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -14,10 +14,9 @@ item:
  name of the disk device, e.g. {"sda"}. In order to support configurations
  up to version 1.1.10 also the items {"read"} and {"write"} are supported.
 
-inventory:
+discovery:
   One service is created for each disk if the mode is set to {"single"} (default).
   If the mode is set to {"summary"} one summary service is created.
   If the mod  is set to {"legacy"} one service is created
   for each read and write (deprecated).
   The mode is configured via {diskstat_inventory_mode}.
-

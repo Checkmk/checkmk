@@ -9,13 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5080 Reheat Utilization
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5080 0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5080 %
 
-factory_settings['liebert_reheating_default_levels'] = {
-    'levels': (80, 90),
+factory_settings["liebert_reheating_default_levels"] = {
+    "levels": (80, 90),
 }
 
 
@@ -28,22 +29,23 @@ def check_liebert_reheating(_no_item, params, parsed):
     for key, (value, unit) in parsed.items():
         if "Reheat" not in key:
             continue
-        yield check_levels(value, 'filehandler_perc', params['levels'], unit=unit)
+        yield check_levels(value, "filehandler_perc", params["levels"], unit=unit)
 
 
-check_info['liebert_reheating'] = {
-    'parse_function': parse_liebert_wrapper,
-    'inventory_function': inventory_liebert_reheating,
-    'check_function': check_liebert_reheating,
-    'service_description': 'Reheating Utilization',
-    'snmp_info': (
-        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+check_info["liebert_reheating"] = {
+    "parse_function": parse_liebert_wrapper,
+    "inventory_function": inventory_liebert_reheating,
+    "check_function": check_liebert_reheating,
+    "service_description": "Reheating Utilization",
+    "snmp_info": (
+        ".1.3.6.1.4.1.476.1.42.3.9.20.1",
         [
-            '10.1.2.1.5080',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5080',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5080',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-        ]),
-    'snmp_scan_function': scan_liebert,
-    'has_perfdata': True,
-    'default_levels_variable': 'liebert_reheating_default_levels'
+            "10.1.2.1.5080",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5080",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5080",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+        ],
+    ),
+    "snmp_scan_function": scan_liebert,
+    "has_perfdata": True,
+    "default_levels_variable": "liebert_reheating_default_levels",
 }

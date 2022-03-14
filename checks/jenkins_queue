@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#<<<jenkins_queue>>>
+# <<<jenkins_queue>>>
 # [[u'[{"task": {"color": "blue_anime", "_class":
 # "org.jenkinsci.plugins.workflow.job.WorkflowJob", "name": "testbuild"},
 # "inQueueSince": 1566823138742, "why": "Build #471 is already in progress
@@ -49,21 +49,23 @@ def check_jenkins_queue(no_item, params, parsed):
 
     long_output = []
 
-    yield check_levels(len(parsed),
-                       "queue",
-                       params.get("queue_length"),
-                       human_readable_func=int,
-                       unit="Tasks",
-                       infoname="Queue length")
+    yield check_levels(
+        len(parsed),
+        "queue",
+        params.get("queue_length"),
+        human_readable_func=int,
+        unit="Tasks",
+        infoname="Queue length",
+    )
 
     levels = params["in_queue_since"]
     stuck_tasks = 0
     blocked_tasks = 0
     pending_tasks = 0
 
-    for task in sorted(parsed,
-                       key=lambda k: (k['stuck'], k['blocked'], -k['inQueueSince']),
-                       reverse=True):
+    for task in sorted(
+        parsed, key=lambda k: (k["stuck"], k["blocked"], -k["inQueueSince"]), reverse=True
+    ):
         now = time.time()
         len_state = 0
         timestamp_in_queue = task["inQueueSince"] / 1000
@@ -82,8 +84,12 @@ def check_jenkins_queue(no_item, params, parsed):
             blocked_state = params["blocked"]
 
         long_output_str = "ID: %d, Stuck: %s%s, Blocked: %s%s" % (
-            task["id"], MAP_QUEUE_STATES[task["stuck"]], state_markers[stuck_state],
-            MAP_QUEUE_STATES[task["blocked"]], state_markers[blocked_state])
+            task["id"],
+            MAP_QUEUE_STATES[task["stuck"]],
+            state_markers[stuck_state],
+            MAP_QUEUE_STATES[task["blocked"]],
+            state_markers[blocked_state],
+        )
 
         pending_state = 0
         # pending can be missing
@@ -92,15 +98,22 @@ def check_jenkins_queue(no_item, params, parsed):
             if task_pending:
                 pending_tasks += 1
             pending_state = params["pending"]
-            long_output_str += ", Pending: %s%s" % (MAP_QUEUE_STATES[task_pending],
-                                                    state_markers[pending_state])
+            long_output_str += ", Pending: %s%s" % (
+                MAP_QUEUE_STATES[task_pending],
+                state_markers[pending_state],
+            )
 
         long_output_str += ", In queue since: %s (%s)" % (
-            get_age_human_readable(since), get_timestamp_human_readable(timestamp_in_queue))
+            get_age_human_readable(since),
+            get_timestamp_human_readable(timestamp_in_queue),
+        )
 
         if len_state:
-            long_output_str += " (warn/crit at %s/%s)%s" % (get_age_human_readable(
-                levels[0]), get_age_human_readable(levels[1]), state_markers[len_state])
+            long_output_str += " (warn/crit at %s/%s)%s" % (
+                get_age_human_readable(levels[0]),
+                get_age_human_readable(levels[1]),
+                state_markers[len_state],
+            )
 
         state = max([len_state, stuck_state, blocked_state, pending_state])
 
@@ -110,18 +123,21 @@ def check_jenkins_queue(no_item, params, parsed):
 
     max_state = max([state for state, _infotext in long_output])
 
-    if stuck_tasks or blocked_tasks or pending_tasks:
-        for key, value, infotext in [(stuck_tasks, "stuck_tasks", "Stuck"),
-                                     (blocked_tasks, "blocked_tasks", "Blocked"),
-                                     (pending_tasks, "pending_tasks", "Pending")]:
+    for key, value, infotext in [
+        (stuck_tasks, "stuck_tasks", "Stuck"),
+        (blocked_tasks, "blocked_tasks", "Blocked"),
+        (pending_tasks, "pending_tasks", "Pending"),
+    ]:
 
-            jenkins_value = "jenkins_%s" % value
+        jenkins_value = "jenkins_%s" % value
 
-            yield check_levels(key,
-                               jenkins_value,
-                               params.get(jenkins_value),
-                               human_readable_func=int,
-                               infoname=infotext)
+        yield check_levels(
+            key,
+            jenkins_value,
+            params.get(jenkins_value),
+            human_readable_func=int,
+            infoname=infotext,
+        )
 
     if long_output:
         yield max_state, "See long output for further information"
@@ -134,7 +150,7 @@ check_info["jenkins_queue"] = {
     "parse_function": parse_jenkins_queue,
     "check_function": check_jenkins_queue,
     "inventory_function": inventory_jenkins_queue,
-    'default_levels_variable': "jenkins_queue_default_levels",
+    "default_levels_variable": "jenkins_queue_default_levels",
     "service_description": "Jenkins Queue",
     "has_perfdata": True,
     "group": "jenkins_queue",

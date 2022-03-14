@@ -1,0 +1,20 @@
+Title: Fix impossible host renaming if uninvolved sites have changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1639557619
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a host was renamed on page "Properties of MYHOST" via "Hosts" - "Rename",
+the renaming operation was not possible if any site in distributed environment
+had pending changes.
+
+This leaded to situations where no more renaming was possible, e.g. if remote sites
+where continuous disabled.
+
+From now on, only the central site and the site the renamed host is monitored
+on must have no pending changes.

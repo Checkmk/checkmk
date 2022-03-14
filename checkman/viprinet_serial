@@ -1,11 +1,10 @@
 title: Viprinet: Serial Number
 agents: snmp
 catalog: hw/network/viprinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the serial number of this host and is always {OK}.
 
-inventory:
+discovery:
  One service is created.
-

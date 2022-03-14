@@ -1,0 +1,23 @@
+Title: Fix logout of active user sessions when using multiple sessions
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1621579720
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previous Checkmk 2.0 releases could logout an active login sessions of a user
+when the same user was used from multiple clients (e.g. different browsers,
+GUI, API, or nagstamon). This was caused by an invalid session cleanup
+mechanism.
+
+Background: With Checkmk 2.0 a new login sessions tracking was introduced.
+This session tracking allows up to 20 active login sessions for a single user.
+Once the 21st login session is opened, a cleanup mechanism is triggered which
+cleans up a) all sessions except the newest 20 sessions and b) all sessions
+which were inactive for 7 days. Instead of keeping the newest sessions, the it
+was keeping the oldest sessions which lead to the active sessions being logged
+out in the moment the cleanup was triggered.

@@ -1,0 +1,18 @@
+Title: REST API: fix HTTP digest login
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614004785
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, when Checkmk was configured for using Basic Auth,
+the REST API couldn't be used because it confused the basic
+token for a bearer token.
+
+This has been fixed and the documented behavior now works.
+
+No further action is neccessary.

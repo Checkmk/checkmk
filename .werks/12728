@@ -1,0 +1,33 @@
+Title: <tt>cisco_asa_failover</tt>: Improve monitoring of Cisco ASA Failover
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1618211150
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk improves the monitoring of Cisco ASA Failover setups (check
+plugin <tt>cisco_asa_failover</tt>).
+
+<ul>
+<li>The corresponding service is now also discovered on Cisco
+Firepower devices.</li>
+<li>The service is renamed from "Cluster Status" to "Failover Status".
+Already existing services will continue to work, however, new services
+will be detected under the new name. This renaming is necessary because
+ASA clusters are something completely different than ASA failover pairs.
+In ASA clusters, up to 16 identical devices are connected by a control
+link and they all handle traffic at the same time. Cisco ASA failover
+pairs on the other hand consist of two identical devices connected by a
+failover link. Only one of the these devices, the active one, handles
+traffic. The other one is in standby and only takes over in case the
+active unit fails.</li>
+<li>The check plugin now has two additional configuration options 
+(ruleset "Failover states"): the monitoring status in case either the
+local or the remote device are not active or in standby and the
+monitoring status in case the failover link is not up. Previously,
+these monitoring statuses we hard-coded to WARN and CRIT, which is still
+the default.</li>
+</ul>

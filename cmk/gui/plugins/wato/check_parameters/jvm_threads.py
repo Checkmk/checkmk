@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_jvm_threads():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
         allow_empty=False,
@@ -28,8 +23,9 @@ def _item_spec_jvm_threads():
 
 def _parameter_valuespec_jvm_threads():
     return Tuple(
-        help=_("This rule sets the warn and crit levels for the number of threads "
-               "running in a JVM."),
+        help=_(
+            "This rule sets the warn and crit levels for the number of threads " "running in a JVM."
+        ),
         elements=[
             Integer(
                 title=_("Warning at"),
@@ -53,4 +49,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_threads,
         parameter_valuespec=_parameter_valuespec_jvm_threads,
         title=lambda: _("JVM threads"),
-    ))
+    )
+)

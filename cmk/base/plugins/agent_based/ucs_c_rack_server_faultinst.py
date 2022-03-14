@@ -13,6 +13,7 @@
 # faultInst<TAB>severity major<TAB>cause equipmentInoperable<TAB>code F0531<TAB>descr Storage Raid Battery 11 is inoperable: Check Controller battery<TAB>affectedDN sys/rack-unit-1/board/storage-SAS-SLOT-SAS/raid-battery-11
 
 from typing import Dict, List
+
 from .agent_based_api.v1 import register, type_defs
 
 
@@ -24,7 +25,7 @@ def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> Di
     {}
     """
     parsed: Dict[str, List[str]] = {}
-    key_translation = {'descr': 'Description', 'affectedDN': 'Affected DN'}
+    key_translation = {"descr": "Description", "affectedDN": "Affected DN"}
 
     for fault_inst_data in string_table:
         for data in fault_inst_data[1:]:
@@ -32,7 +33,7 @@ def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> Di
             key = key_translation.get(key, key.capitalize())
             parsed.setdefault(key, []).append(value)
 
-        parsed['Affected DN'][-1] = parsed['Affected DN'][-1].replace('sys/', '')
+        parsed["Affected DN"][-1] = parsed["Affected DN"][-1].replace("sys/", "")
 
     return parsed
 

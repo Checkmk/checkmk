@@ -1,0 +1,14 @@
+Title: redis_info: Fix RRD creation
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1617711689
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The item of automatic discovered instances contained a semicolon, leading to
+"Error creating RRD" messages in ~/var/log/cmc.log and missing RRD files.
+
+Rediscovery is needed.

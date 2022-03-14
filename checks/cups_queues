@@ -25,12 +25,12 @@
 # zam19-113565 Sebastian Hirschdobler 3561472 Fri Jul 31 12:58:01 2015
 
 # Default thresholds
-factory_settings['cups_queues_default_levels'] = {
-    'job_count': (5, 10),  # warn/crit for queue entries
-    'job_age': (360, 720),  # warn/crit for entry age in seconds
-    'is_idle': 0,  # state for "is idle"
-    'now_printing': 0,  # state for "now printing"
-    'disabled_since': 2,  # state for "disbaled since"
+factory_settings["cups_queues_default_levels"] = {
+    "job_count": (5, 10),  # warn/crit for queue entries
+    "job_age": (360, 720),  # warn/crit for entry age in seconds
+    "is_idle": 0,  # state for "is idle"
+    "now_printing": 0,  # state for "now printing"
+    "disabled_since": 2,  # state for "disbaled since"
 }
 
 
@@ -40,20 +40,18 @@ def parse_cups_queues(info):
     for num, line in enumerate(info):
         if line[0] == "printer":
             parsed[line[1]] = {
-                'status_readable': ' '.join(line[2:4]).replace(' ', '_').strip('.'),
-                'output': ' '.join(line[2:]),
-                'jobs': [],
+                "status_readable": " ".join(line[2:4]).replace(" ", "_").strip("."),
+                "output": " ".join(line[2:]),
+                "jobs": [],
             }
-            if len(info) > num+1 and \
-              not info[num+1][0] in [ 'printer', '---' ]:
-                parsed[line[1]]['output'] += " (%s)" % \
-                    " ".join(info[num+1])
+            if len(info) > num + 1 and not info[num + 1][0] in ["printer", "---"]:
+                parsed[line[1]]["output"] += " (%s)" % " ".join(info[num + 1])
         elif line[0] == "---":
             break
 
     queue_section = False
     for line in info:
-        if line[0] == '---':
+        if line[0] == "---":
             queue_section = True
             continue
 
@@ -61,12 +59,12 @@ def parse_cups_queues(info):
         if item in parsed and queue_section:
             # Handle different time formats...
             try:  # Tue Jun 29 09:05:54 2010
-                job_time = time.mktime(time.strptime(' '.join(line[-5:]), \
-                                '%a %b %d %H:%M:%S %Y'))
+                job_time = time.mktime(time.strptime(" ".join(line[-5:]), "%a %b %d %H:%M:%S %Y"))
             except Exception:  # Thu 29 Aug 2013 12:41:42 AM CEST
-                job_time = time.mktime(time.strptime(' '.join(line[-7:]), \
-                                '%a %d %b %Y %I:%M:%S %p %Z'))
-            parsed[item]['jobs'].append(job_time)
+                job_time = time.mktime(
+                    time.strptime(" ".join(line[-7:]), "%a %d %b %Y %I:%M:%S %p %Z")
+                )
+            parsed[item]["jobs"].append(job_time)
 
     return parsed
 
@@ -83,23 +81,22 @@ def check_cups_queues(item, params, parsed):
             params = {
                 "job_count": (params[0], params[1]),
                 "job_age": (params[2], params[3]),
-                'is_idle': 0,
-                'now_printing': 0,
-                'disabled_since': 2,
+                "is_idle": 0,
+                "now_printing": 0,
+                "disabled_since": 2,
             }
 
         if data["status_readable"] in params:
             state = params[data["status_readable"]]
             yield state, data["output"]
         else:
-            yield 3, "Undefinded status output in \"lpr -p\""
+            yield 3, 'Undefinded status output in "lpr -p"'
 
         now = time.time()
         jobs_count = len(data["jobs"])
         if jobs_count > 0:
             warn_num, crit_num = params["job_count"]
-            yield 0, "Jobs: %d" % jobs_count, \
-                     [ ("jobs", jobs_count, warn_num, crit_num, 0) ]
+            yield 0, "Jobs: %d" % jobs_count, [("jobs", jobs_count, warn_num, crit_num, 0)]
 
             warn_age, crit_age = params["job_age"]
             now = time.time()
@@ -120,11 +117,11 @@ def check_cups_queues(item, params, parsed):
 
 
 check_info["cups_queues"] = {
-    'parse_function': parse_cups_queues,
-    'inventory_function': inventory_cups_queues,
-    'check_function': check_cups_queues,
-    'service_description': 'CUPS Queue %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'cups_queues_default_levels',
-    'group': 'cups_queues'
+    "parse_function": parse_cups_queues,
+    "inventory_function": inventory_cups_queues,
+    "check_function": check_cups_queues,
+    "service_description": "CUPS Queue %s",
+    "has_perfdata": True,
+    "default_levels_variable": "cups_queues_default_levels",
+    "group": "cups_queues",
 }

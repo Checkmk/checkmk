@@ -5,17 +5,12 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" = / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync -varx --delete --exclude=.f12* --exclude windows --exclude=.gitignore --exclude=baked* --exclude=bakery --exclude=plugins ./ $ROOT/share/check_mk/agents/
-
-if [ -z "$ONLY_COPY" ]; then
-    if [ -e /etc/check_mk ]; then
-        sudo install -m 644 cfg_examples/logwatch.cfg /etc/check_mk/
-    fi
-
-    sudo install -m 755 check_mk_agent.linux /usr/bin/check_mk_agent
-    sudo install -m 755 mk-job /usr/bin/
-fi
+# don't delete *.deb and *.rpm files as those are part of the distribution and can not be found in the source directory
+sudo rsync -varx --delete --exclude=.f12* --exclude cmk-agent-ctl --exclude windows --exclude linux --exclude=.gitignore --exclude=baked* --exclude=bakery --exclude=plugins --exclude='*.deb' --exclude='*.rpm' ./ "$ROOT/share/check_mk/agents/"

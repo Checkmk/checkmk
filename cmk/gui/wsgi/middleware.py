@@ -7,39 +7,31 @@
 import functools
 import wsgiref.util
 
-import cmk.utils.store
-from cmk.gui import http, config, sites
-from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui import hooks
 
 
-def with_context_middleware(app):
-    """Middleware which constructs the right context on each request.
+class CallHooks:
+    def __init__(self, app):
+        self.app = app
 
-    """
-    @functools.wraps(app)
-    def with_context(environ, start_response):
-        req = http.Request(environ)
-        with AppContext(app), \
-                RequestContext(req=req, display_options=DisplayOptions()), \
-                cmk.utils.store.cleanup_locks(), \
-                sites.cleanup_connections():
-            config.initialize()
-            return app(environ, start_response)
-
-    return with_context
+    def __call__(self, environ, start_response):
+        hooks.call("request-start")
+        response = self.app(environ, start_response)
+        hooks.call("request-end")
+        return response
 
 
 def apache_env(app):
     """Add missing WSGI environment keys when a request comes from Apache."""
+
     @functools.wraps(app)
     def _add_apache_env(environ, start_response):
-        if not environ.get('REQUEST_URI'):
-            environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
+        if not environ.get("REQUEST_URI"):
+            environ["REQUEST_URI"] = wsgiref.util.request_uri(environ)
 
-        path_info = environ.get('PATH_INFO')
-        if not path_info or path_info == '/':
-            environ['PATH_INFO'] = environ['SCRIPT_NAME']
+        path_info = environ.get("PATH_INFO")
+        if not path_info or path_info == "/":
+            environ["PATH_INFO"] = environ["SCRIPT_NAME"]
 
         return app(environ, start_response)
 
@@ -54,6 +46,7 @@ class OverrideRequestMethod:
     Please be aware no validation for a "correct" HTTP verb will be done by this middleware,
     as this should be handled by other layers.
     """
+
     def __init__(self, app):
         self.app = app
 
@@ -61,8 +54,8 @@ class OverrideRequestMethod:
         return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):
-        override = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE')
+        override = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")
         if override:
-            if environ['REQUEST_METHOD'].lower() == 'post':
-                environ['REQUEST_METHOD'] = override
+            if environ["REQUEST_METHOD"].lower() == "post":
+                environ["REQUEST_METHOD"] = override
         return self.app(environ, start_response)

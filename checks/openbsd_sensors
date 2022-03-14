@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #   .--example output------------------------------------------------------.
 #   |                                               _                      |
 #   |                 _____  ____ _ _ __ ___  _ __ | | ___                 |
@@ -86,7 +89,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # .1.3.6.1.4.1.30155.2.1.2.1.7.40 0
 # .1.3.6.1.4.1.30155.2.1.2.1.7.47 0
 
-#.
+# .
 #   .--parse---------------------------------------------------------------.
 #   |                                                                      |
 #   |                      _ __   __ _ _ __ ___  ___                       |
@@ -116,26 +119,27 @@ def parse_openbsd_sensors(info):
         return new_name
 
     openbsd_map_state = {
-        '0': 3,
-        '1': 0,
-        '2': 1,
-        '3': 2,
+        "0": 3,
+        "1": 0,
+        "2": 1,
+        "3": 2,
     }
 
     openbsd_map_type = {
-        '0': 'temp',
-        '1': 'fan',
-        '2': 'voltage',
-        '9': 'indicator',
-        '13': 'drive',
-        '21': 'powersupply',
+        "0": "temp",
+        "1": "fan",
+        "2": "voltage",
+        "9": "indicator",
+        "13": "drive",
+        "21": "powersupply",
     }
 
     for descr, sensortype, value, unit, state in info:
         if sensortype not in openbsd_map_type:
             continue
-        if (sensortype == '0' and value == '-273.15') or \
-           (sensortype in [ '1', '2'] and float(value) == 0):
+        if (sensortype == "0" and value == "-273.15") or (
+            sensortype in ["1", "2"] and float(value) == 0
+        ):
             continue
 
         try:
@@ -145,15 +149,15 @@ def parse_openbsd_sensors(info):
 
         item_name = get_item_name(descr)
         parsed[item_name] = {
-            'state': openbsd_map_state[state],
-            'value': value_converted,
-            'unit': unit,
-            'type': openbsd_map_type[sensortype],
+            "state": openbsd_map_state[state],
+            "value": value_converted,
+            "unit": unit,
+            "type": openbsd_map_type[sensortype],
         }
     return parsed
 
 
-#.
+# .
 #   .--inventory-----------------------------------------------------------.
 #   |             _                      _                                 |
 #   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
@@ -169,12 +173,12 @@ def parse_openbsd_sensors(info):
 def inventory_openbsd_sensors(parsed, sensortype):
     inventory = []
     for key, values in parsed.items():
-        if values['type'] == sensortype:
+        if values["type"] == sensortype:
             inventory.append((key, {}))
     return inventory
 
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -189,29 +193,30 @@ def inventory_openbsd_sensors(parsed, sensortype):
 
 @get_parsed_item_data
 def check_openbsd_sensors(item, params, parsed):
-    return check_temperature(parsed['value'], params, "openbsd_sensors_%s" % item)
+    return check_temperature(parsed["value"], params, "openbsd_sensors_%s" % item)
 
 
-check_info['openbsd_sensors'] = {
-    'parse_function': parse_openbsd_sensors,
-    'inventory_function': lambda parsed: inventory_openbsd_sensors(parsed, 'temp'),
-    'check_function': check_openbsd_sensors,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.30155.2.1.2.1',
+check_info["openbsd_sensors"] = {
+    "parse_function": parse_openbsd_sensors,
+    "inventory_function": lambda parsed: inventory_openbsd_sensors(parsed, "temp"),
+    "check_function": check_openbsd_sensors,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.30155.2.1.2.1",
         [
             "2",  # sensorDescr
             "3",  # sensorType
             "5",  # sensorValue
             "6",  # sensorUnits
             "7",  # sensorStatus
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.4.1.30155.2.1.1.0"),
-    'group': 'temperature',
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.4.1.30155.2.1.1.0"),
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
 #   |                           / _| __ _ _ __                             |
@@ -223,27 +228,27 @@ check_info['openbsd_sensors'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['openbsd_sensors_fan_default_levels'] = {
-    'lower': (500, 300),
-    'upper': (8000, 8400),
+factory_settings["openbsd_sensors_fan_default_levels"] = {
+    "lower": (500, 300),
+    "upper": (8000, 8400),
 }
 
 
 @get_parsed_item_data
 def check_openbsd_sensors_fan(item, params, parsed):
-    return check_fan(parsed['value'], params)
+    return check_fan(parsed["value"], params)
 
 
-check_info['openbsd_sensors.fan'] = {
-    'inventory_function': lambda parsed: inventory_openbsd_sensors(parsed, 'fan'),
-    'check_function': check_openbsd_sensors_fan,
-    'service_description': 'Fan %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'openbsd_sensors_fan_default_levels',
-    'group': 'hw_fans',
+check_info["openbsd_sensors.fan"] = {
+    "inventory_function": lambda parsed: inventory_openbsd_sensors(parsed, "fan"),
+    "check_function": check_openbsd_sensors_fan,
+    "service_description": "Fan %s",
+    "has_perfdata": True,
+    "default_levels_variable": "openbsd_sensors_fan_default_levels",
+    "group": "hw_fans",
 }
 
-#.
+# .
 #   .--voltage-------------------------------------------------------------.
 #   |                             _ _                                      |
 #   |                 __   _____ | | |_ __ _  __ _  ___                    |
@@ -260,20 +265,20 @@ check_info['openbsd_sensors.fan'] = {
 def check_openbsd_sensors_voltage(item, params, parsed):
     item_elphase = {}
     parsed_elphase = {}
-    item_elphase['voltage'] = parsed['value']
+    item_elphase["voltage"] = parsed["value"]
     parsed_elphase[item] = item_elphase
 
     return check_elphase(item, params, parsed_elphase)
 
 
-check_info['openbsd_sensors.voltage'] = {
-    'inventory_function': lambda parsed: inventory_openbsd_sensors(parsed, 'voltage'),
-    'check_function': check_openbsd_sensors_voltage,
-    'service_description': 'Voltage Type %s',
-    'has_perfdata': True,
-    'group': 'el_inphase',
+check_info["openbsd_sensors.voltage"] = {
+    "inventory_function": lambda parsed: inventory_openbsd_sensors(parsed, "voltage"),
+    "check_function": check_openbsd_sensors_voltage,
+    "service_description": "Voltage Type %s",
+    "has_perfdata": True,
+    "group": "el_inphase",
 }
-#.
+# .
 #   .--powersupply---------------------------------------------------------.
 #   |                                                        _             |
 #   |     _ __   _____      _____ _ __ ___ _   _ _ __  _ __ | |_   _       |
@@ -288,15 +293,15 @@ check_info['openbsd_sensors.voltage'] = {
 
 @get_parsed_item_data
 def check_openbsd_sensors_powersupply(item, _no_params, parsed):
-    yield parsed['state'], "Status: %s" % parsed['value']
+    yield parsed["state"], "Status: %s" % parsed["value"]
 
 
-check_info['openbsd_sensors.powersupply'] = {
-    'inventory_function': lambda parsed: inventory_openbsd_sensors(parsed, 'powersupply'),
-    'check_function': check_openbsd_sensors_powersupply,
-    'service_description': 'Powersupply %s',
+check_info["openbsd_sensors.powersupply"] = {
+    "inventory_function": lambda parsed: inventory_openbsd_sensors(parsed, "powersupply"),
+    "check_function": check_openbsd_sensors_powersupply,
+    "service_description": "Powersupply %s",
 }
-#.
+# .
 #   .--indicator-----------------------------------------------------------.
 #   |               _           _ _           _                            |
 #   |              (_)_ __   __| (_) ___ __ _| |_ ___  _ __                |
@@ -311,15 +316,15 @@ check_info['openbsd_sensors.powersupply'] = {
 
 @get_parsed_item_data
 def check_openbsd_sensors_indicator(item, params, parsed):
-    yield parsed['state'], "Status: %s" % parsed['value']
+    yield parsed["state"], "Status: %s" % parsed["value"]
 
 
-check_info['openbsd_sensors.indicator'] = {
-    'inventory_function': lambda parsed: inventory_openbsd_sensors(parsed, 'indicator'),
-    'check_function': check_openbsd_sensors_indicator,
-    'service_description': 'Indicator %s',
+check_info["openbsd_sensors.indicator"] = {
+    "inventory_function": lambda parsed: inventory_openbsd_sensors(parsed, "indicator"),
+    "check_function": check_openbsd_sensors_indicator,
+    "service_description": "Indicator %s",
 }
-#.
+# .
 #   .--drive---------------------------------------------------------------.
 #   |                           _      _                                   |
 #   |                        __| |_ __(_)_   _____                         |
@@ -334,12 +339,12 @@ check_info['openbsd_sensors.indicator'] = {
 
 @get_parsed_item_data
 def check_openbsd_sensors_drive(item, params, parsed):
-    return parsed['state'], "Status: %s" % parsed['value']
+    return parsed["state"], "Status: %s" % parsed["value"]
 
 
-check_info['openbsd_sensors.drive'] = {
-    'inventory_function': lambda parsed: inventory_openbsd_sensors(parsed, 'drive'),
-    'check_function': check_openbsd_sensors_drive,
-    'service_description': 'Drive %s',
+check_info["openbsd_sensors.drive"] = {
+    "inventory_function": lambda parsed: inventory_openbsd_sensors(parsed, "drive"),
+    "check_function": check_openbsd_sensors_drive,
+    "service_description": "Drive %s",
 }
-#.
+# .

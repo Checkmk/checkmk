@@ -6,27 +6,29 @@
 """Is executed in container from git top level as working directory to install
 the desired Checkmk version"""
 
-import os
-import sys
-import logging
-import subprocess
 import abc
-from typing import List, Optional, Dict
+import hashlib
+import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
+from typing import Dict, List, Optional
 
 import requests
 
-# Make the testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from testlib.utils import (
-    current_base_branch_name,
+from tests.testlib.utils import (
     add_python_paths,
+    current_base_branch_name,
+    get_cmk_download_credentials,
+    package_hash_path,
 )
-from testlib.version import CMKVersion
-from testlib.utils import get_cmk_download_credentials
+from tests.testlib.version import CMKVersion
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -98,14 +100,14 @@ def _read_os_release() -> Optional[Dict[str, str]]:
             if "=" not in l:
                 continue
             key, val = l.strip().split("=", 1)
-            os_spec[key] = val.strip("\"")
+            os_spec[key] = val.strip('"')
 
     return os_spec
 
 
 class ABCPackageManager(abc.ABC):
     @classmethod
-    def factory(cls) -> 'ABCPackageManager':
+    def factory(cls) -> "ABCPackageManager":
         distro_name = get_omd_distro_name()
         logger.info("Distro: %s", distro_name)
 
@@ -130,20 +132,27 @@ class ABCPackageManager(abc.ABC):
 
         if build_system_path.exists():
             logger.info("Install from build system package (%s)", build_system_path)
+            self._write_package_hash(version, edition, build_system_path)
             self._install_package(build_system_path)
 
         else:
             logger.info("Install from download portal")
             package_path = self._download_package(version, package_name)
+            self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)
+
+    def _write_package_hash(self, version: str, edition: str, package_path: Path) -> None:
+        pkg_hash = sha256_file(package_path)
+        package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
 
     @abc.abstractmethod
     def _package_name(self, edition: str, version: str) -> str:
         raise NotImplementedError()
 
     def _build_system_package_path(self, version: str, package_name: str) -> Path:
-        return Path("/bauwelt/download").joinpath(version, package_name)
+        """On Jenkins inside a container the previous built packages get mounted into /packages."""
+        return Path("/packages", version, package_name)
 
     def _download_package(self, version: str, package_name: str) -> Path:
         temp_package_path = Path("/tmp", package_name)
@@ -151,7 +160,8 @@ class ABCPackageManager(abc.ABC):
 
         logger.info("Downloading from: %s", package_url)
         response = requests.get(  # nosec
-            package_url, auth=get_cmk_download_credentials(), verify=False)
+            package_url, auth=get_cmk_download_credentials(), verify=False
+        )
         response.raise_for_status()
 
         with open(temp_package_path, "wb") as f:
@@ -180,9 +190,19 @@ class ABCPackageManager(abc.ABC):
         if os.geteuid() != 0:
             cmd.insert(0, "sudo")
 
-        p = subprocess.Popen(cmd, shell=False, close_fds=True, encoding="utf-8")
-        if p.wait() >> 8 != 0:
+        completed_process = subprocess.run(
+            cmd, shell=False, close_fds=True, encoding="utf-8", check=False
+        )
+        if completed_process.returncode >> 8 != 0:
             raise Exception("Failed to install package")
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 class PackageManagerDEB(ABCPackageManager):

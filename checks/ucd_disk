@@ -9,19 +9,25 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.2021.9.1.2.1 /         --> UCD-SNMP-MIB::dskPath.1
 # .1.3.6.1.4.1.2021.9.1.6.1 958827968 --> UCD-SNMP-MIB::dskTotal.1
 # .1.3.6.1.4.1.2021.9.1.7.1 55330132  --> UCD-SNMP-MIB::dskAvail.1
+
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 def inventory_ucd_disk(info):
@@ -33,23 +39,25 @@ def check_ucd_disk(item, params, info):
         if disk_path == item:
             disk_total_mb = float(disk_total_str) / 1024
             disk_avail_mb = float(disk_avail_str) / 1024
-            return df_check_filesystem_single(item, disk_total_mb, disk_avail_mb, 0, None, None,
-                                              params)
+            return df_check_filesystem_single(
+                item, disk_total_mb, disk_avail_mb, 0, None, None, params
+            )
 
 
-check_info['ucd_disk'] = {
-    'inventory_function': inventory_ucd_disk,
-    'check_function': check_ucd_disk,
-    'service_description': 'Filesystem %s',
-    'has_perfdata': True,
-    'snmp_info': (
+check_info["ucd_disk"] = {
+    "inventory_function": inventory_ucd_disk,
+    "check_function": check_ucd_disk,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.2021.9.1",
         [
             "2",  # dskPath  -> where the disk is mounted.
             "6",  # dskTotal -> in kBytes
             "7",  # dskAvail -> in kBytes
-        ]),
-    'snmp_scan_function': prefer_hr_else_ucd,
+        ],
+    ),
+    "snmp_scan_function": prefer_hr_else_ucd,
     "group": "filesystem",
-    'default_levels_variable': "filesystem_default_levels",
+    "default_levels_variable": "filesystem_default_levels",
 }

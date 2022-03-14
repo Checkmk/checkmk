@@ -1,0 +1,21 @@
+Title: Local Checks: Make Min/Max Values Truly Optional
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626340862
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+As stated in the <a href="https://docs.checkmk.com/latest/en/localchecks.html">documentation</a>,
+min/max values are optional in the output of local checks. However, this
+was not fully implemented. Omitting min/max values in the output, i.e.
+<tt>a=5;3:7;2:8</tt>,
+worked, but empty values such as
+<tt>a=5;3:7;2:8;;</tt>,
+resulted in
+<tt>ValueError: could not convert string to float: ''</tt>
+on the Checkmk server.
+
+This has been fixed.

@@ -8,10 +8,12 @@
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
+from typing import Dict, Optional
+
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.interfaces import (
-    get_traffic_levels,
     get_specific_traffic_levels,
+    get_traffic_levels,
 )
 
 # <<<netapp_api_fcp:sep(9)>>>
@@ -73,8 +75,9 @@ def _speed_result(params, fcp_if):
     speed = fcp_if.get("speed")
     speed_str = None if speed is None else get_nic_speed_human_readable(speed)
     expected_speed = params.get("speed", params.get("inv_speed"))
-    expected_speed_str = (None if expected_speed is None else
-                          get_nic_speed_human_readable(expected_speed))
+    expected_speed_str = (
+        None if expected_speed is None else get_nic_speed_human_readable(expected_speed)
+    )
 
     if speed is None:
         if expected_speed is not None:
@@ -89,8 +92,9 @@ def _speed_result(params, fcp_if):
 
 
 def _io_bytes_results(item, params, fcp_if):
-    traffic_levels = get_specific_traffic_levels(get_traffic_levels(params), "Bytes",
-                                                 fcp_if.get("speed"), None, None)
+    traffic_levels = get_specific_traffic_levels(
+        get_traffic_levels(params), "Bytes", fcp_if.get("speed"), None, None
+    )
     now = fcp_if["now"]
     for what, levels_what, descr in [
         ("read_bytes", "in", "Read"),
@@ -100,13 +104,13 @@ def _io_bytes_results(item, params, fcp_if):
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
-        if (what, 'predictive') in traffic_levels:
-            level_params = traffic_levels[(what, 'predictive')]
+        if (what, "predictive") in traffic_levels:
+            level_params = traffic_levels[(what, "predictive")]
         else:
-            bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
-            bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
-            bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
-            bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
+            bw_warn = traffic_levels[(levels_what, "upper", "warn")]
+            bw_crit = traffic_levels[(levels_what, "upper", "crit")]
+            bw_warn_min = traffic_levels[(levels_what, "lower", "warn")]
+            bw_crit_min = traffic_levels[(levels_what, "lower", "crit")]
             level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
 
         yield check_levels(
@@ -128,13 +132,15 @@ def _io_ops_results(item, params, fcp_if):
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
-        yield _notice_only_fy(*check_levels(
-            value,
-            what,
-            None,
-            human_readable_func=int,
-            infoname=descr,
-        ))
+        yield _notice_only_fy(
+            *check_levels(
+                value,
+                what,
+                None,
+                human_readable_func=int,
+                infoname=descr,
+            )
+        )
 
 
 def _latency_results(item, params, fcp_if):
@@ -151,13 +157,15 @@ def _latency_results(item, params, fcp_if):
         except MKCounterWrapped:
             continue
 
-        yield _notice_only_fy(*check_levels(
-            value,
-            "%s_latency" % what,
-            params.get(what),
-            unit="ms",
-            infoname=text,
-        ))
+        yield _notice_only_fy(
+            *check_levels(
+                value,
+                "%s_latency" % what,
+                params.get(what),
+                unit="ms",
+                infoname=text,
+            )
+        )
 
 
 def _notice_only_fy(state, text, metrics):
@@ -166,24 +174,46 @@ def _notice_only_fy(state, text, metrics):
     return state, f"{newline}{text}", metrics
 
 
+def _get_and_try_cast_to_int(key: str, container: Dict, default_value: Optional[int] = None) -> int:
+    try:
+        to_be_casted = (
+            container.get(key, default_value) if default_value is not None else container[key]
+        )
+        return int(to_be_casted)
+    except ValueError as e:
+        # Some NetApp firmware versions return corrupt data.
+        # Known reported tickets (among others):
+        # SUP-9508, SUP-5407, SUP-6805
+        raise RuntimeError(
+            "Unable to cast the data to integer. "
+            "The reason therfore may be an issue in the used NetApp Firmware. "
+            "Consider upgrading and/or getting in touch with NetApp."
+            "Received data was: %s" % to_be_casted
+        ) from e
+
+
 def parse_netapp_api_fcp(info):
     now = time.time()
     parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
-        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn"), "now": now}
-        fcp_data["total_ops"] = int(values.get("total_ops", 0))
-        speed = int(values.get("data-link-rate", 0)) * 1000**3
+        fcp_data = {
+            "state": values.get("state"),
+            "address": values.get("port_wwpn"),
+            "now": now,
+            "total_ops": _get_and_try_cast_to_int("total_ops", values, 0),
+        }
+        speed = _get_and_try_cast_to_int("data-link-rate", values, 0) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 
         for what in ["read_ops", "write_ops", "read_data", "write_data"]:
             if what in values:
-                fcp_data[what.replace("data", "bytes")] = int(values[what])
+                fcp_data[what.replace("data", "bytes")] = _get_and_try_cast_to_int(what, values)
 
         for what in ["avg_latency", "avg_read_latency", "avg_write_latency"]:
             if what in values:
-                fcp_data[what] = int(values[what]) / 1000.0
+                fcp_data[what] = _get_and_try_cast_to_int(what, values) / 1000.0
         fcp_interfaces[key] = fcp_data
 
     return fcp_interfaces

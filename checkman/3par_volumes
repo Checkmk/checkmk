@@ -1,7 +1,7 @@
 title: HPE 3PAR: Volumes
 agents: 3par
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the utilization of a virtual volume.
@@ -28,5 +28,5 @@ description:
 item:
  Name of the volume.
 
-inventory:
+discovery:
  One service is created for each virtual volume.

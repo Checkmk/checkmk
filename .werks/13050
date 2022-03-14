@@ -1,0 +1,13 @@
+Title: mk_mongodb.py support non legacy hello result
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633611116
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Before this Werk <tt>mk_mongodb.py</tt> only supported legacy hello results and
+thus could not correctly distinguish between arbiter, secondary and primary
+when an up to date mongodb server was checked.

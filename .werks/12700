@@ -1,0 +1,14 @@
+Title: Fix false positives and high CPU for smart ping
+Class: fix
+Compatible: compat
+Component: core
+Date: 1635248811
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+A timeout from a host being checked by smart ping could result in
+100% CPU usage for the process and the program would stop working
+properly.  This may in turn result in false positives for some hosts.

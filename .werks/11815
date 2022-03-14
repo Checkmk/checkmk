@@ -1,0 +1,14 @@
+Title: Bakery plugin for Windows Oracle Monitoring
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1629201936
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Previously, only the unix-like operating systems did have a bakery plugin for baking a configuration for mk_oracle.
+Now the plugin also supports baking the configuration for the windows plugin (mk_oracle.ps1).
+However, please note that not all features of the bash plugin (mk_oracle) are available for windows yet.
+This is noted in the rulespec "ORACLE Databases (Linux, Solaris, AIX, Windows)".

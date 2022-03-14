@@ -46,22 +46,22 @@ def parse_graylog_nodes(info):
 
 
 factory_settings["graylog_nodes_default_levels"] = {
-    'lb_throttled': 2,
-    'lb_alive': 0,
-    'lb_dead': 2,
-    'lc_uninitialized': 1,
-    'lc_paused': 1,
-    'lc_running': 0,
-    'lc_failed': 2,
-    'lc_halting': 1,
-    'lc_throttled': 2,
-    'lc_starting': 1,
-    'lc_override_lb_alive': 0,
-    'lc_override_lb_dead': 1,
-    'lc_override_lb_throttled': 1,
-    'ps_true': 0,
-    'ps_false': 2,
-    'input_state': 1,
+    "lb_throttled": 2,
+    "lb_alive": 0,
+    "lb_dead": 2,
+    "lc_uninitialized": 1,
+    "lc_paused": 1,
+    "lc_running": 0,
+    "lc_failed": 2,
+    "lc_halting": 1,
+    "lc_throttled": 2,
+    "lc_starting": 1,
+    "lc_override_lb_alive": 0,
+    "lc_override_lb_dead": 1,
+    "lc_override_lb_throttled": 1,
+    "ps_true": 0,
+    "ps_false": 2,
+    "input_state": 1,
 }
 
 
@@ -95,8 +95,10 @@ def check_graylog_nodes(item, params, parsed):
 
                 state = params.get("%s%s" % (levels, str(value).lower()), 1)
 
-                yield state, "%s: %s" % (infotext, str(value).replace("True", "yes").replace(
-                    "False", "no"))
+                yield state, "%s: %s" % (
+                    infotext,
+                    str(value).replace("True", "yes").replace("False", "no"),
+                )
 
             long_output = []
             value_inputstates = node_info.get("inputstates")
@@ -126,13 +128,15 @@ def check_graylog_nodes(item, params, parsed):
 
                 long_output.append((state_of_input, long_output_str))
 
-        input_nr_levels = params.get('input_count_upper', (None, None))
-        input_nr_levels_lower = params.get('input_count_lower', (None, None))
-        yield check_levels(len(value_inputstates),
-                           "num_input",
-                           input_nr_levels + input_nr_levels_lower,
-                           human_readable_func=int,
-                           infoname="Inputs")
+        input_nr_levels = params.get("input_count_upper", (None, None))
+        input_nr_levels_lower = params.get("input_count_lower", (None, None))
+        yield check_levels(
+            len(value_inputstates),
+            "num_input",
+            input_nr_levels + input_nr_levels_lower,
+            human_readable_func=int,
+            infoname="Inputs",
+        )
 
         max_state = 0
         if long_output:

@@ -1,7 +1,7 @@
 title: F5 Big-IP: Virtual Servers
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP load balancers (local traffic
@@ -21,6 +21,6 @@ description:
 item:
  Name of virtual server
 
-inventory:
+discovery:
  One service is created for each server found online
  if the server is not in state "Warning".

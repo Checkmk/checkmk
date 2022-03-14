@@ -1,0 +1,16 @@
+Title: Fix missing new main dashboard
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1619100426
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The new main dashboard was missing in CME. It is now the default main
+dashboard. The dashboard "Main overview" represents the previous problem
+dashboard.
+
+If you have set a custom start URL before, it's possible that you have to
+choose your desired start dashboard again.

@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
+
 from cmk.base.check_api import check_levels
 
 
@@ -50,9 +51,11 @@ def check_uptime_seconds(params, uptime_sec):
         params = {}
 
     params = params.get("max", (None, None)) + params.get("min", (None, None))
-    return check_levels(uptime_sec,
-                        "uptime",
-                        params,
-                        human_readable_func=lambda x: timedelta(seconds=int(x)),
-                        infoname="Up since %s, uptime" %
-                        time.strftime("%c", time.localtime(time.time() - uptime_sec)))
+    return check_levels(
+        uptime_sec,
+        "uptime",
+        params,
+        human_readable_func=lambda x: timedelta(seconds=int(x)),
+        infoname="Up since %s, uptime"
+        % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+    )

@@ -1,7 +1,7 @@
 title: Cisco Devices: CPU Utilization (multiple Items)
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -10,6 +10,9 @@ item:
 description:
  Check CPU utilization of the last 5 minutes in percent on Cisco devices.
 
-inventory:
- One service is created for each CPU.
-
+discovery:
+ By default one service is created for each CPU.
+ The discovery is configured via the discovery Ruleset "CPU multi item discovery".
+ Checking only {"individual"} is equivalent to the default behaviour.
+ If {"average"} is checked a {"average"} item will be discovered showing the
+ average CPU of all individual CPUs.

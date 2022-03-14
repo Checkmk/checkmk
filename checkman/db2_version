@@ -1,7 +1,7 @@
 title: DB2: Instance Version
 agents: aix, linux
 catalog: app/db2
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the DB2 Version. It is always OK.
@@ -11,6 +11,5 @@ description:
 item:
  The DB2 instance name, e.g. db2ilog1
 
-inventory:
+discovery:
  One service is created for each DB2 instance.
-

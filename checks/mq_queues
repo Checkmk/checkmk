@@ -25,7 +25,7 @@ factory_settings["mq_queues_default_levels"] = {
 def inventory_mq_queues(info):
     inventory = []
     for line in info:
-        if line[0].startswith('[['):
+        if line[0].startswith("[["):
             item = line[0][2:-2]
             inventory.append((item, {}))
     return inventory
@@ -38,7 +38,7 @@ def check_mq_queues(item, params, info):
             size, consumerCount, enqueueCount, dequeueCount = map(int, line)
             msg = ""
             state = 0
-            warn, crit = params['consumerCount']
+            warn, crit = params["consumerCount"]
             if crit and consumerCount < crit:
                 state = 2
                 label = "(!!)"
@@ -50,7 +50,7 @@ def check_mq_queues(item, params, info):
                 msg += "(Levels Warn/Crit below %s/%s)%s, " % (warn, crit, label)
 
             label = ""
-            warn, crit = params['size']
+            warn, crit = params["size"]
             if crit and size >= crit:
                 state = 2
                 label = "(!!)"
@@ -64,7 +64,7 @@ def check_mq_queues(item, params, info):
 
             perf = [("queue", size, warn, crit), ("enque", enqueueCount), ("deque", dequeueCount)]
             return state, msg, perf
-        if line[0].startswith('[[') and line[0][2:-2] == item:
+        if line[0].startswith("[[") and line[0][2:-2] == item:
             found = True
     return 2, "Queue not found"
 

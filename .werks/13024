@@ -1,0 +1,18 @@
+Title: Restore SLA timeline proportions
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626270790
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The SLA timeline shows the state of a service by colored bars. Each element's
+width should be in relation to the duration the service was in this state.
+
+Before this werk, the rect representing the state had a padding, so very small
+time spans where falsely enlarged to bigger blocks.
+
+This should now be fixed.

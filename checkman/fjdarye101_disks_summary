@@ -18,6 +18,6 @@ description:
  readying, recovering, partbroken, spare, notexist or copying,
  OK otherise.
 
-inventory:
+discovery:
  One summary service is created if at least one disk is found.
 

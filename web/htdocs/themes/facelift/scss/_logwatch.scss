@@ -29,28 +29,27 @@
 
   td.WARN {
     background-color: $warning;
-    color: $black;
+    color: $font-color-black;
   }
 
   td.CRIT {
-    background-color: $danger;
-    color: $white;
+    color: $font-color-white;
+    background-color: $color-state-2-background;
   }
 
   td.OK {
     background-color: none;
-    color: $success;
+    color: $font-color-green;
   }
 
   td.date {
     padding-left: 6px;
     font-weight: $font-weight-default;
-    color: $grey-2;
     font-size: $font-size-small;
   }
 
   td.lines {
-    color: $logwatch-text-color;
+    color: $font-color-light-bg;
     padding: 1.6px 0 4px 12px;
     margin: 0;
     text-indent: -8px;
@@ -63,109 +62,45 @@
 
   tr:nth-child(odd) {
     &.context {
-      background-color: $table-highlight-color;
+      background-color: $odd-tr-bg-color;
+
       td.lines {
-        color: $logwatch-text-color-2;
+        color: $font-color;
       }
     }
+
     &.OK {
       background-color: $color-state-success-background;
     }
+
     &.WARN {
       background-color: $color-state-1-background;
     }
+
     &.CRIT {
       background-color: $color-state-2-background;
     }
   }
+
   tr:nth-child(even) {
     &.context {
-      background-color: $color-table-background;
+      background-color: $even-tr-bg-color;
+
       td.lines {
-        color: $logwatch-text-color-2;
+        color: $font-color;
       }
     }
+
     &.OK {
       background-color: lighten($color-state-success-background, 10%);
     }
+
     &.WARN {
       background-color: lighten($color-state-1-background, 10%);
     }
+
     &.CRIT {
       background-color: lighten($color-state-2-background, 10%);
     }
-  }
-
-  a {
-    width: 26px;
-    font-family: sans-serif;
-    font-weight: bold;
-    color: rgb(0, 0, 136);
-
-    /* TODO: Reproduce this html element */
-    b {
-      color: rgb(0, 136, 255);
-    }
-
-    /* TODO: Reproduce this html element */
-    &.ack {
-      padding: 2.1px 7px;
-      color: rgb(255, 255, 255);
-      text-decoration: none;
-      background-color: rgb(51, 51, 204);
-      border-color: rgb(204, 204, 204) rgb(136, 136, 136) rgb(51, 51, 51) rgb(119, 119, 119);
-      border-style: solid;
-      border-width: 2px;
-      border-radius: 6px;
-    }
-  }
-
-  /* TODO: Reproduce these three td.button elements */
-  td.button {
-    text-align: right;
-
-    a {
-      padding: 0.7px 7px;
-      font-weight: normal;
-      color: rgb(0, 0, 0);
-      text-decoration: none;
-      background-color: rgb(204, 204, 170);
-      border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
-      border-style: solid;
-      border-width: 1px;
-      border-radius: 4px;
-
-      &:active {
-        background-color: rgb(170, 170, 136);
-      }
-    }
-  }
-
-  /* --- navigation tabs in logwatch ------------------ */
-  /* TODO: Reproduce these .tab and .tabactive elements */
-
-  a.tab,
-  a.tabactive {
-    display: block;
-    width: 140px;
-    padding: 2.8px 12px;
-    margin-right: 2.1px;
-    margin-bottom: 0;
-    color: rgb(0, 0, 0);
-    text-decoration: none;
-    vertical-align: top;
-    background-color: rgb(255, 204, 0);
-    border-bottom: 1px solid rgb(0, 0, 0);
-    border-style: none;
-    border-radius: 12px 12px 0 0;
-  }
-
-  a.tab:hover {
-    padding-bottom: 10px;
-  }
-
-  a.tabactive {
-    padding-bottom: 6px;
-    border-bottom-style: none;
   }
 }

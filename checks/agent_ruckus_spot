@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_ruckus_spot_arguments(params, hostname, ipaddress):
+
+def agent_ruckus_spot_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     args = []
     if params["address"] is True:
-        args += ["--address", ipaddress, "%s" % params["port"]]
+        args += ["--address", ipaddress or hostname, "%s" % params["port"]]
     else:
         args += ["--address", params["address"], "%s" % params["port"]]
     args += ["--venueid", params["venueid"]]
@@ -18,4 +22,4 @@ def agent_ruckus_spot_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['ruckus_spot'] = agent_ruckus_spot_arguments
+special_agent_info["ruckus_spot"] = agent_ruckus_spot_arguments

@@ -16,12 +16,12 @@ import errno
 import getopt
 import json
 import logging
-from pathlib import Path
 import pprint
 import sys
 import time
-from typing import Any, Dict, List, Generator, Callable
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Callable, Dict, Generator, List
 
 import requests
 
@@ -36,7 +36,8 @@ class AgentJSON:
         self._title = title
 
     def usage(self):
-        sys.stderr.write("""
+        sys.stderr.write(
+            """
 Check_MK %s Agent
 
 USAGE: agent_%s --section_url [{section_name},{url}]
@@ -46,7 +47,9 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                         Can be defined multiple times
         --debug         Output json data with pprint
 
-""" % (self._title, self._key))
+"""
+            % (self._title, self._key)
+        )
 
     def get_content(self):
         short_options = "h"
@@ -69,7 +72,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                 newline_replacement = a
             elif o in ["--debug"]:
                 opt_debug = True
-            elif o in ['-h', '--help']:
+            elif o in ["-h", "--help"]:
                 self.usage()
                 sys.exit(0)
 
@@ -173,8 +176,8 @@ class DataCache(abc.ABC):
         return content
 
     def get_data(self, *args, **kwargs):
-        use_cache = kwargs.pop('use_cache', True)
-        if (use_cache and self.get_validity_from_args(*args) and self._cache_is_valid()):
+        use_cache = kwargs.pop("use_cache", True)
+        if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
                 return self.get_cached_data()
             except (OSError, IOError, ValueError) as exc:
@@ -195,11 +198,12 @@ class DataCache(abc.ABC):
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
 
         json_dump = json.dumps(raw_content, default=datetime_serializer)
-        store.save_file(str(self._cache_file), json_dump)
+        store.save_text_to_file(str(self._cache_file), json_dump)
 
 
 class _NullContext:
     """A context manager that does nothing and is falsey"""
+
     def __call__(self, *_args, **_kwargs):
         return self
 
@@ -236,15 +240,15 @@ def vcrtrace(**vcr_init_kwargs):
     If the corresponding flag ('--vcrtrace' in the above example) was not specified,
     the args attribute will be a null-context.
     """
+
     class VcrTraceAction(argparse.Action):
         def __init__(self, *args, **kwargs):
             kwargs.setdefault("metavar", "TRACEFILE")
-            help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split('\n\n')[3]
+            help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
             kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))
             # NOTE: There are various mypy issues around the kwargs Kung Fu
             # below, see e.g. https://github.com/python/mypy/issues/6799.
-            super(VcrTraceAction, self).__init__(  # type: ignore[misc]
-                *args, nargs=None, default=False, **kwargs)
+            super().__init__(*args, nargs=None, default=False, **kwargs)  # type: ignore[misc]
 
         def __call__(self, _parser, namespace, filename, option_string=None):
             if not filename:
@@ -252,6 +256,7 @@ def vcrtrace(**vcr_init_kwargs):
                 return
 
             import vcr  # type: ignore[import] # pylint: disable=import-outside-toplevel
+
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
             global_context = use_cassette(filename)
@@ -290,16 +295,26 @@ def to_bytes(string: str) -> int:
     132607115264
     """
     return round(  #
-        (float(string[:-3]) * (1 << 10)) if string.endswith("KiB") else
-        (float(string[:-2]) * (10**3)) if string.endswith("KB") else
-        (float(string[:-3]) * (1 << 20)) if string.endswith("MiB") else
-        (float(string[:-2]) * (10**6)) if string.endswith("MB") else
-        (float(string[:-3]) * (1 << 30)) if string.endswith("GiB") else
-        (float(string[:-2]) * (10**9)) if string.endswith("GB") else
-        (float(string[:-3]) * (1 << 40)) if string.endswith("TiB") else
-        (float(string[:-2]) * (10**12)) if string.endswith("TB") else  #
-        float(string[:-1]) if string.endswith("B") else  #
-        float(string))
+        (float(string[:-3]) * (1 << 10))
+        if string.endswith("KiB")
+        else (float(string[:-2]) * (10**3))
+        if string.endswith("KB")
+        else (float(string[:-3]) * (1 << 20))
+        if string.endswith("MiB")
+        else (float(string[:-2]) * (10**6))
+        if string.endswith("MB")
+        else (float(string[:-3]) * (1 << 30))
+        if string.endswith("GiB")
+        else (float(string[:-2]) * (10**9))
+        if string.endswith("GB")
+        else (float(string[:-3]) * (1 << 40))
+        if string.endswith("TiB")
+        else (float(string[:-2]) * (10**12))
+        if string.endswith("TB")
+        else float(string[:-1])  #
+        if string.endswith("B")
+        else float(string)  #
+    )
 
 
 @contextmanager
@@ -346,4 +361,5 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import pytest
+
     assert not pytest.main(["--doctest-modules", __file__])

@@ -40,34 +40,21 @@
 # 1248 2664021277 2664021277 type(40030500)
 # 1250 1330 1330 counter
 
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-)
 import time
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence
 
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
 
 _LINE_TO_METRIC = {
-    '-14': 'read_throughput',
-    '-12': 'write_throughput',
-    '-20': 'read_ios',
-    '-18': 'write_ios',
-    '1168': 'read_ql',
-    '1170': 'write_ql',
-    '-24': 'average_read_wait',
-    '-26': 'average_write_wait',
+    "-14": "read_throughput",
+    "-12": "write_throughput",
+    "-20": "read_ios",
+    "-18": "write_ios",
+    "1168": "read_ql",
+    "1170": "write_ql",
+    "-24": "average_read_wait",
+    "-26": "average_write_wait",
 }
 
 
@@ -82,17 +69,17 @@ def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[disks
 
     first_line = string_table[0]
     disk_template = {
-        'timestamp': float(first_line[0]),
+        "timestamp": float(first_line[0]),
     }
     try:
-        disk_template['frequency'] = int(first_line[2])
+        disk_template["frequency"] = int(first_line[2])
     except IndexError:
         pass
 
     instances_line = string_table[1]
     if instances_line[1] == "instances:":
         for disk_id_str in instances_line[2:-1]:
-            disk_id = disk_id_str.split('_')
+            disk_id = disk_id_str.split("_")
             new_disk = disk_template.copy()
             if disk_id[-1] in section:
                 section["%s_%s" % (disk_id[-1], disk_id[0])] = new_disk
@@ -107,12 +94,12 @@ def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[disks
         if not metric:
             continue
 
-        if metric.startswith('average') and line[-1] == 'average_base':
-            metric += '_base'
+        if metric.startswith("average") and line[-1] == "average_base":
+            metric += "_base"
 
         for disk, val in zip(
-                iter(section.values()),
-                iter(map(int, line[1:-2])),
+            iter(section.values()),
+            iter(map(int, line[1:-2])),
         ):
             disk[metric] = val
 
@@ -138,25 +125,25 @@ def discover_winperf_phydisk(
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
     value_store: MutableMapping[str, Any],
-    value_store_suffix: str = '',
+    value_store_suffix: str = "",
 ) -> diskstat.Disk:
 
     disk_with_rates = {}
-    timestamp = disk['timestamp']
-    frequency = disk.get('frequency')
+    timestamp = disk["timestamp"]
+    frequency = disk.get("frequency")
     raised_ignore_res_excpt = False
 
     for metric, value in disk.items():
 
-        if metric in ('timestamp', 'frequency') or metric.endswith('base'):
+        if metric in ("timestamp", "frequency") or metric.endswith("base"):
             continue
 
         # Queue Lengths (currently only Windows). Windows uses counters here.
         # I have not understood, why..
-        if metric.endswith('ql'):
-            denom = 10000000.
+        if metric.endswith("ql"):
+            denom = 10000000.0
 
-        elif metric.endswith('wait'):
+        elif metric.endswith("wait"):
             key_base = metric + "_base"
             base = disk.get(key_base)
             if base is None or frequency is None:
@@ -164,41 +151,47 @@ def _compute_rates_single_disk(
 
             # using 1 for the base if the counter didn't increase. This makes little to no sense
             try:
-                base = get_rate(
-                    value_store,
-                    key_base + value_store_suffix,
-                    timestamp,
-                    base,
-                    raise_overflow=True,
-                ) or 1
+                base = (
+                    get_rate(
+                        value_store,
+                        key_base + value_store_suffix,
+                        timestamp,
+                        base,
+                        raise_overflow=True,
+                    )
+                    or 1
+                )
             except IgnoreResultsError:
                 raised_ignore_res_excpt = True
 
             denom = base * frequency
 
         else:
-            denom = 1.
+            denom = 1.0
 
         try:
-            disk_with_rates[metric] = get_rate(
-                value_store,
-                metric + value_store_suffix,
-                timestamp,
-                value,
-                raise_overflow=True,
-            ) / denom
+            disk_with_rates[metric] = (
+                get_rate(
+                    value_store,
+                    metric + value_store_suffix,
+                    timestamp,
+                    value,
+                    raise_overflow=True,
+                )
+                / denom
+            )
 
         except IgnoreResultsError:
             raised_ignore_res_excpt = True
 
     if raised_ignore_res_excpt:
-        raise IgnoreResultsError('Initializing counters')
+        raise IgnoreResultsError("Initializing counters")
 
     return disk_with_rates
 
 
 def _averaging_to_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:
-    key_avg = 'average'
+    key_avg = "average"
     if key_avg in params:
         params = {
             **params,
@@ -217,7 +210,7 @@ def check_winperf_phydisk(
 
     value_store = get_value_store()
 
-    if item == 'SUMMARY':
+    if item == "SUMMARY":
         names_and_disks_with_rates = diskstat.compute_rates_multiple_disks(
             section,
             value_store,
@@ -245,13 +238,13 @@ def check_winperf_phydisk(
 def cluster_check_winperf_phydisk(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, diskstat.Section],
+    section: Mapping[str, Optional[diskstat.Section]],
 ) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section
     disks_merged: Dict[str, diskstat.Disk] = {}
     for node_section in section.values():
-        disks_merged.update(node_section)
+        disks_merged.update(node_section or {})
 
     yield from check_winperf_phydisk(
         item,
@@ -264,7 +257,7 @@ register.check_plugin(
     name="winperf_phydisk",
     service_name="Disk IO %s",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters={'summary': True},
+    discovery_default_parameters={"summary": True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_function=discover_winperf_phydisk,
     check_ruleset_name="disk_io",

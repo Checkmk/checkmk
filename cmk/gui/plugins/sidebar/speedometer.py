@@ -6,12 +6,10 @@
 
 import json
 
-from cmk.gui.plugins.sidebar import snapin_width
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 import cmk.gui.sites as sites
-
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.globals import html, request, response, theme
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_width
 
 
 @snapin_registry.register
@@ -26,15 +24,17 @@ class Speedometer(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("A gadget that shows your current service check rate in relation to "
-                 "the scheduled check rate. If the Speed-O-Meter shows a speed "
-                 "of 100 percent, all service checks are being executed in exactly "
-                 "the rate that is desired.")
+        return _(
+            "A gadget that shows your current service check rate in relation to "
+            "the scheduled check rate. If the Speed-O-Meter shows a speed "
+            "of 100 percent, all service checks are being executed in exactly "
+            "the rate that is desired."
+        )
 
     def show(self):
         html.open_div(class_="speedometer")
-        html.img(html.theme_url("images/speedometer.svg"), id_="speedometerbg")
-        html.canvas('', width=str(snapin_width), height="146", id_="speedometer")
+        html.img(theme.url("images/speedometer.svg"), id_="speedometerbg")
+        html.canvas("", width=str(snapin_width), height="146", id_="speedometer")
         html.close_div()
 
         html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
@@ -49,20 +49,21 @@ class Speedometer(SidebarSnapin):
         }
 
     def _ajax_speedometer(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled
             # check reate.
             # TODO: Do we need a get_float_input_mandatory?
-            last_perc = float(html.request.get_str_input_mandatory("last_perc"))
-            scheduled_rate = float(html.request.get_str_input_mandatory("scheduled_rate"))
-            last_program_start = html.request.get_integer_input_mandatory("program_start")
+            last_perc = float(request.get_str_input_mandatory("last_perc"))
+            scheduled_rate = float(request.get_str_input_mandatory("scheduled_rate"))
+            last_program_start = request.get_integer_input_mandatory("program_start")
 
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.
-            data = sites.live().query_summed_stats("GET status\n"
-                                                   "Columns: service_checks_rate program_start")
+            data = sites.live().query_summed_stats(
+                "GET status\n" "Columns: service_checks_rate program_start"
+            )
             current_rate = data[0]
             program_start = data[1]
 
@@ -78,14 +79,18 @@ class Speedometer(SidebarSnapin):
                 #
                 # Manually added services without check_interval could be a problem, but
                 # we have no control there.
-                scheduled_rate = sites.live().query_summed_stats(
-                    "GET services\n"
-                    "Stats: suminv check_interval\n")[0] / 60.0
+                scheduled_rate = (
+                    sites.live().query_summed_stats(
+                        "GET services\n" "Stats: suminv check_interval\n"
+                    )[0]
+                    / 60.0
+                )
 
             percentage = 100.0 * current_rate / scheduled_rate
-            title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
-                      "%.0f%% of the scheduled rate") % \
-                      (scheduled_rate, current_rate, percentage)
+            title = _(
+                "Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
+                "%.0f%% of the scheduled rate"
+            ) % (scheduled_rate, current_rate, percentage)
 
         except Exception as e:
             scheduled_rate = 0.0
@@ -94,11 +99,14 @@ class Speedometer(SidebarSnapin):
             last_perc = 0.0
             title = _("No performance data: %s") % e
 
-        html.write(
-            json.dumps({
-                "scheduled_rate": scheduled_rate,
-                "program_start": program_start,
-                "percentage": percentage,
-                "last_perc": last_perc,
-                "title": title,
-            }))
+        response.set_data(
+            json.dumps(
+                {
+                    "scheduled_rate": scheduled_rate,
+                    "program_start": program_start,
+                    "percentage": percentage,
+                    "last_perc": last_perc,
+                    "title": title,
+                }
+            )
+        )

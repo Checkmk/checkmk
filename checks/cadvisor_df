@@ -4,17 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import json
 
 
 def parse_cadvisor_df(info):
@@ -36,14 +38,15 @@ def check_cadvisor_df(item, params, parsed):
     reserved_mb = 0
     inodes_total = parsed["inodes_total"]
     inodes_free = parsed["inodes_free"]
-    return df_check_filesystem_single(item, size_mb, avail_mb, reserved_mb, inodes_total,
-                                      inodes_free, params)
+    return df_check_filesystem_single(
+        item, size_mb, avail_mb, reserved_mb, inodes_total, inodes_free, params
+    )
 
 
 check_info["cadvisor_df"] = {
-    'parse_function': parse_cadvisor_df,
-    'inventory_function': discover_single,
-    'check_function': check_cadvisor_df,
-    'service_description': 'Filesystem',
-    'has_perfdata': True,
+    "parse_function": parse_cadvisor_df,
+    "inventory_function": discover_single,
+    "check_function": check_cadvisor_df,
+    "service_description": "Filesystem",
+    "has_perfdata": True,
 }

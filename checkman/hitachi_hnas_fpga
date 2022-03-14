@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Utilization of Field Programmable Gate Arrays (FPGAs)
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Utilization of Field Programmable Gate Arrays (FPGAs) in
@@ -14,6 +14,5 @@ item:
  The ID of the PNode, a dot, the ID of the FPGA, a space, the name of the FPGA.
  E. g.: 1.0 wlog
 
-inventory:
+discovery:
  One service is created for each FPGA.
-

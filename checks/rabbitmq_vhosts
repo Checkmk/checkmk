@@ -55,18 +55,22 @@ def parse_rabbitmq_vhosts(info):
                 continue
 
             parsed.setdefault(
-                vhost_name, {
+                vhost_name,
+                {
                     "description": vhost.get("description"),
                     "messages": vhost.get("messages"),
                     "messages_ready": vhost.get("messages_ready"),
                     "messages_unacknowledged": vhost.get("messages_unacknowledged"),
                     "message_publish": vhost.get("message_stats", {}).get("publish"),
-                    "message_publish_rate": vhost.get("message_stats", {}).get(
-                        "publish_details", {}).get("rate"),
+                    "message_publish_rate": vhost.get("message_stats", {})
+                    .get("publish_details", {})
+                    .get("rate"),
                     "message_deliver": vhost.get("message_stats", {}).get("deliver_get"),
-                    "message_deliver_rate": vhost.get("message_stats", {}).get(
-                        "deliver_get_details", {}).get("rate"),
-                })
+                    "message_deliver_rate": vhost.get("message_stats", {})
+                    .get("deliver_get_details", {})
+                    .get("rate"),
+                },
+            )
 
     return parsed
 
@@ -98,8 +102,8 @@ def check_rabbitmq_vhosts(item, params, parsed):
         if "rate" in msg_key:
             unit = "1/s"
 
-        msg_levels_upper = params.get('%s_upper' % param_key, (None, None))
-        msg_levels_lower = params.get('%s_lower' % param_key, (None, None))
+        msg_levels_upper = params.get("%s_upper" % param_key, (None, None))
+        msg_levels_lower = params.get("%s_lower" % param_key, (None, None))
 
         yield check_levels(
             msg_value,

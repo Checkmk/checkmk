@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 GIT_ROOT=$(git rev-parse --show-toplevel)
@@ -12,8 +15,9 @@ sudo rsync \
     --exclude="flycheck*" \
     -aR \
     . \
-    $ROOT/lib/python3/cmk/gui/plugins/openapi
+    "$ROOT"/lib/python3/cmk/gui/plugins/openapi
 
-pushd $GIT_ROOT/web/htdocs/openapi/
-f12
-popd
+(
+    cd "$GIT_ROOT"/web/htdocs/openapi
+    bash .f12
+)

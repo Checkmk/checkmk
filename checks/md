@@ -73,17 +73,17 @@
 # ----------------------------------------------------------
 
 # Example of RAID5 being checked
-#Personalities : [raid1] [raid6] [raid5] [raid4]
-#md125 : active raid1 sdb2[0] sdd2[1]
+# Personalities : [raid1] [raid6] [raid5] [raid4]
+# md125 : active raid1 sdb2[0] sdd2[1]
 #      182751552 blocks super 1.2 [2/2] [UU]
 #      bitmap: 1/2 pages [4KB], 65536KB chunk
 #
-#md126 : active raid5 sdf1[5] sde1[2] sdc1[1] sdg1[3] sda1[0]
+# md126 : active raid5 sdf1[5] sde1[2] sdc1[1] sdg1[3] sda1[0]
 #      31255568384 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
 #      [===============>.....]  check = 76.0% (5938607824/7813892096) finish=255.8min speed=122145K/sec
 #      bitmap: 0/59 pages [0KB], 65536KB chunk
 #
-#md127 : active raid1 sdd1[1] sdb1[0]
+# md127 : active raid1 sdd1[1] sdb1[0]
 #      67107840 blocks super 1.2 [2/2] [UU]
 #      bitmap: 1/1 pages [4KB], 65536KB chunk
 
@@ -103,8 +103,8 @@
 def parse_md(info):
     parsed = {}
     instance = {}
-    for line in info:
-        if line[0].startswith("md") and line[1] == ':':
+    for line in (l for l in info if l):
+        if len(line) >= 6 and line[0].startswith("md") and line[1] == ":":
             if line[3].startswith("(") and line[3].endswith(")"):
                 raid_state = line[2] + line[3]
                 raid_name = line[4]
@@ -118,13 +118,15 @@ def parse_md(info):
             failed_disks = len([x for x in disk_list if x.endswith("(F)")])
 
             instance = parsed.setdefault(
-                line[0], {
-                    'raid_name': raid_name,
-                    'raid_state': raid_state,
-                    'spare_disks': spare_disks,
-                    'failed_disks': failed_disks,
-                    'active_disks': len(disk_list) - spare_disks - failed_disks,
-                })
+                line[0],
+                {
+                    "raid_name": raid_name,
+                    "raid_state": raid_state,
+                    "spare_disks": spare_disks,
+                    "failed_disks": failed_disks,
+                    "active_disks": len(disk_list) - spare_disks - failed_disks,
+                },
+            )
 
         elif instance:
             if line[0].startswith("resync="):
@@ -132,7 +134,7 @@ def parse_md(info):
                 instance["%s_state" % k] = v
                 continue
 
-            if line[0].startswith("[") and line[0].endswith("]"):
+            if len(line) >= 2 and line[0].startswith("[") and line[0].endswith("]"):
                 for idx, e in enumerate(line[1:]):
                     if e.startswith("finish=") or e.startswith("speed="):
                         k, v = e.split("=")
@@ -145,7 +147,7 @@ def parse_md(info):
                 instance["working_disks"] = line[-1][1:-1]
 
             if len(line) >= 2 and line[-2].startswith("[") and line[-2].endswith("]"):
-                for key, value in zip(["num_disks", "expected_disks"], line[-2][1:-1].split('/')):
+                for key, value in zip(["num_disks", "expected_disks"], line[-2][1:-1].split("/")):
                     try:
                         instance[key] = int(value)
                     except ValueError:
@@ -218,9 +220,9 @@ def check_md(item, _no_params, parsed):
 
 
 check_info["md"] = {
-    'parse_function': parse_md,
-    'inventory_function': inventory_md,
-    'check_function': check_md,
-    'service_description': 'MD Softraid %s',
-    'group': 'raid',
+    "parse_function": parse_md,
+    "inventory_function": inventory_md,
+    "check_function": check_md,
+    "service_description": "MD Softraid %s",
+    "group": "raid",
 }

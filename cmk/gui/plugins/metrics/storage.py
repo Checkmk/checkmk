@@ -5,15 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    KB,
-    MB,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -32,12 +26,6 @@ metric_info["age"] = {
     "title": _("Age"),
     "unit": "s",
     "color": "#80f000",
-}
-
-metric_info["age_oldest"] = {
-    "title": _("Oldest age"),
-    "unit": "s",
-    "color": "35/a",
 }
 
 metric_info["last_updated"] = {
@@ -1300,15 +1288,21 @@ metric_info["disk_drain_rate"] = {
     "color": "31/b",
 }
 
+metric_info["memory_used"] = {
+    "color": "46/a",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
-metric_info['kb_out_of_sync'] = {
+metric_info["kb_out_of_sync"] = {
     "title": _("KiB out of sync"),  # according to documentation
     "unit": "count",
     "color": "14/a",
 }
 
-metric_info['log_file_utilization'] = {
+metric_info["log_file_utilization"] = {
     "title": _("Percentage of log file used"),
     "unit": "%",
     "color": "42/a",
@@ -1320,7 +1314,7 @@ metric_info["checkpoint_age"] = {
     "color": "#006040",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -1397,15 +1391,15 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
         ("tablespace_wasted", "area"),
         ("indexspace_wasted", "stack"),
     ],
-    "legend_scale": MB,
-    "legend_precision": 2,
 }
 
 # diskstat checks
 
 graph_info["disk_utilization"] = {
     "title": _("Disk utilization"),
-    "metrics": [("disk_utilization", "area"),],
+    "metrics": [
+        ("disk_utilization", "area"),
+    ],
     "range": (0, 100),
     "scalars": [
         "disk_utilization:warn",
@@ -1425,7 +1419,6 @@ graph_info["disk_throughput"] = {
         ("disk_write_throughput:warn,-1,*", "Warning write"),
         ("disk_write_throughput:crit,-1,*", "Critical write"),
     ],
-    "legend_scale": MB,
 }
 
 graph_info["disk_io_operations"] = {
@@ -1450,7 +1443,6 @@ graph_info["average_request_size"] = {
         ("disk_average_read_request_size", "area"),
         ("disk_average_write_request_size", "-area"),
     ],
-    "legend_scale": KB,
 }
 
 graph_info["average_end_to_end_wait_time"] = {
@@ -1489,7 +1481,6 @@ graph_info["database_sizes"] = {
         "unused_size",
         "database_reclaimable",
     ],
-    "legend_scale": MB,
 }
 
 graph_info["number_of_shared_and_exclusive_locks"] = {
@@ -1498,7 +1489,6 @@ graph_info["number_of_shared_and_exclusive_locks"] = {
         ("shared_locks", "area"),
         ("exclusive_locks", "stack"),
     ],
-    "legend_precision": 0
 }
 
 graph_info["tablespace_sizes"] = {
@@ -1530,7 +1520,9 @@ graph_info["ram_swap_used"] = {
 
 graph_info["mem_used_percent"] = {
     "title": _("Used RAM"),
-    "metrics": [("mem_used_percent", "area"),],
+    "metrics": [
+        ("mem_used_percent", "area"),
+    ],
     "scalars": [
         "mem_used_percent:warn",
         "mem_used_percent:crit",
@@ -1540,29 +1532,37 @@ graph_info["mem_used_percent"] = {
 
 graph_info["cpu_mem_used_percent"] = {
     "title": _("Used CPU Memory"),
-    "metrics": [("cpu_mem_used_percent", "area"),],
+    "metrics": [
+        ("cpu_mem_used_percent", "area"),
+    ],
     "scalars": ["cpu_mem_used_percent:warn", "cpu_mem_used_percent:crit"],
     "range": (0, 100),
 }
 
 graph_info["mem_trend"] = {
     "title": _("Trend of memory usage growth"),
-    "metrics": [("mem_trend", "line"),],
+    "metrics": [
+        ("mem_trend", "line"),
+    ],
 }
 
 graph_info["mem_growing"] = {
     "title": _("Growing"),
-    "metrics": [(
-        "mem_growth.max,0,MAX",
-        "area",
-        _("Growth"),
-    ),],
+    "metrics": [
+        (
+            "mem_growth.max,0,MAX",
+            "area",
+            _("Growth"),
+        ),
+    ],
 }
 
 graph_info["mem_shrinking"] = {
     "title": _("Shrinking"),
     "consolidation_function": "min",
-    "metrics": [("mem_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),],
+    "metrics": [
+        ("mem_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
+    ],
 }
 
 # Linux memory graphs. They are a lot...
@@ -1621,7 +1621,9 @@ graph_info["active_and_inactive_memory"] = {
 
 graph_info["ram_used"] = {
     "title": _("RAM used"),
-    "metrics": [("mem_used", "area"),],
+    "metrics": [
+        ("mem_used", "area"),
+    ],
     "conflicting_metrics": ["swap_used"],
     "scalars": [
         ("mem_used:max#000000", "Maximum"),
@@ -1633,7 +1635,9 @@ graph_info["ram_used"] = {
 
 graph_info["commit_charge"] = {
     "title": _("Commit Charge"),
-    "metrics": [("pagefile_used", "area"),],
+    "metrics": [
+        ("pagefile_used", "area"),
+    ],
     "scalars": [
         ("pagefile_used:max#000000", "Maximum"),
         ("pagefile_used:warn", "Warning"),
@@ -1721,7 +1725,7 @@ graph_info["heap_memory_usage"] = {
     "scalars": [
         "mem_heap:warn",
         "mem_heap:crit",
-    ]
+    ],
 }
 
 graph_info["non-heap_memory_usage"] = {
@@ -1734,7 +1738,7 @@ graph_info["non-heap_memory_usage"] = {
         "mem_nonheap:warn",
         "mem_nonheap:crit",
         "mem_nonheap:max",
-    ]
+    ],
 }
 
 graph_info["private_and_shared_memory"] = {
@@ -1768,20 +1772,20 @@ graph_info["mem_perm_used"] = {
         "mem_perm_used:crit",
         ("mem_perm_used:max#000000", _("Max Perm used")),
     ],
-    "range": (0, "mem_perm_used:max")
+    "range": (0, "mem_perm_used:max"),
 }
 
 graph_info["datafile_sizes"] = {
     "title": _("Datafile Sizes"),
-    "metrics": [("allocated_size", "line"), ("data_size", "area")]
+    "metrics": [("allocated_size", "line"), ("data_size", "area")],
 }
 
-graph_info['files_notification_spool'] = {
-    'title': _('Amount of files in notification spool'),
-    'metrics': [
-        ('new_files', 'area'),
-        ('deferred_files', 'area'),
-        ('corrupted_files', 'area'),
+graph_info["files_notification_spool"] = {
+    "title": _("Amount of files in notification spool"),
+    "metrics": [
+        ("new_files", "area"),
+        ("deferred_files", "area"),
+        ("corrupted_files", "area"),
     ],
-    "optional_metrics": ['deferred_files', 'corrupted_files'],
+    "optional_metrics": ["deferred_files", "corrupted_files"],
 }

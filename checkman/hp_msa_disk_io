@@ -1,7 +1,7 @@
 title: HP MSA 2040: Disk IO
 agents: hp_msa
 catalog: hw/storagehw/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the disk IO of a HP MSA 2040 storage system.
@@ -13,5 +13,5 @@ description:
 item:
  The disk summary.
 
-inventory:
+discovery:
  One service is created.

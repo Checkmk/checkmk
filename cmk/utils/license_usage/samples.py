@@ -5,8 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Dict, Any
-from dataclasses import dataclass, asdict
+from collections import Counter
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List
+
+from cmk.utils.license_usage.export import (
+    ABCMonthlyServiceAverages,
+    DailyServices,
+    RawSubscriptionDetails,
+)
 
 LicenseUsageHistoryDumpVersion = "1.1"
 
@@ -19,7 +27,7 @@ class LicenseUsageExtensions:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_extensions: bytes) -> 'LicenseUsageExtensions':
+    def deserialize(cls, raw_extensions: bytes) -> "LicenseUsageExtensions":
         extensions = _migrate_extensions(_deserialize(raw_extensions))
         return cls(**extensions)
 
@@ -51,13 +59,12 @@ class LicenseUsageHistoryDump:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_history_dump: bytes) -> 'LicenseUsageHistoryDump':
+    def deserialize(cls, raw_history_dump: bytes) -> "LicenseUsageHistoryDump":
         history_dump = _deserialize(raw_history_dump)
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
             history=[
-                _migrate_sample(history_dump["VERSION"], s)
-                for s in history_dump.get("history", [])
+                _migrate_sample(history_dump["VERSION"], s) for s in history_dump.get("history", [])
             ],
         )
 
@@ -81,6 +88,9 @@ def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
         sample.setdefault("num_hosts_excluded", 0)
         sample.setdefault("num_services_excluded", 0)
 
+    # Restrict platform string to 50 chars due to the restriction of the license DB field.
+    sample["platform"] = sample["platform"][:50]
+
     migrated_extensions = _migrate_extensions(sample.get("extensions", {}))
     sample["extensions"] = LicenseUsageExtensions(**migrated_extensions)
     return LicenseUsageSample(**sample)
@@ -103,3 +113,41 @@ def rot47(input_str: str) -> str:
             decoded_char = char
         decoded_str += decoded_char
     return decoded_str
+
+
+class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
+    def __init__(
+        self,
+        username: str,
+        subscription_details: RawSubscriptionDetails,
+        short_samples: List,
+    ) -> None:
+        super().__init__(username, subscription_details, short_samples)
+        self._last_daily_services: Dict = {}
+
+    @property
+    def last_daily_services(self) -> Dict:
+        return self._last_daily_services
+
+    def _calculate_daily_services(self) -> DailyServices:
+        daily_services: DailyServices = {}
+        for site_id, history in self._short_samples:
+            self._last_daily_services.setdefault(site_id, history[0] if history else None)
+
+            for sample in history:
+                sample_date = datetime.fromtimestamp(sample.sample_time)
+                daily_services.setdefault(
+                    datetime(sample_date.year, sample_date.month, sample_date.day),
+                    Counter(),
+                ).update(num_services=sample.num_services)
+        return daily_services
+
+    def get_aggregation(self) -> Dict:
+        aggregation = super().get_aggregation()
+        aggregation.update(
+            {
+                "daily_services": self.daily_services,
+                "monthly_service_averages": self.monthly_service_averages,
+            }
+        )
+        return aggregation

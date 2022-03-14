@@ -1,7 +1,7 @@
 title: Apache ActiveMQ: Queue Lengths
 agents: special datasource
 catalog: app/activemq
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the length of ActiveMQ Queues. ActiveMQ is a
@@ -19,6 +19,5 @@ description:
 item:
  The name of the queue
 
-inventory:
+discovery:
  One service is created for each queue.
-

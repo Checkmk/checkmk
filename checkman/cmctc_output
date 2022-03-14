@@ -1,7 +1,7 @@
 title: Rittal CMC-TC: Output Sensors
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors output sensors connected to
@@ -12,5 +12,5 @@ item:
  the combination of IO unit number (3-6) and sensors index (1-4).
  Example: {"3.2"} for first IO unit and second sensor.
 
-inventory:
+discovery:
  One service is created for each detected sensor.

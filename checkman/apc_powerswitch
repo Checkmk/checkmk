@@ -1,7 +1,7 @@
 title: APC Powerswitch/APC PDU: Power Outlet Status
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of a power outlet of an APC Powerswitch/APC PDU.
@@ -17,6 +17,5 @@ description:
 item:
  The single power outlet port with it's number as delivered by SNMP.
 
-inventory:
+discovery:
  One service is created for each power outlet.
-

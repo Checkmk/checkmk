@@ -6,7 +6,7 @@ Date: 1615379791
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Inventory status data was present, but never shown in inventory tables. That
 causes, e.g. missing data in the "Site overview" dashlet in the new "Checkmk

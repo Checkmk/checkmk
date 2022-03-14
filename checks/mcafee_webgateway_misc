@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # -- Miscellaneous (these counter are NO lifetime counter; they show the actual number)
 # .1.3.6.1.4.1.1230.2.7.2.5.2.0 16 --> MCAFEE-MWG-MIB::stClientCount.0
 # .1.3.6.1.4.1.1230.2.7.2.5.3.0 35 --> MCAFEE-MWG-MIB::stConnectedSockets.0
@@ -25,7 +26,7 @@ def check_mcafee_webgateway_misc(_no_item, params, info):
         except ValueError:
             continue
         state = 0
-        infotext = '%s: %d' % (what, value)
+        infotext = "%s: %d" % (what, value)
         warn, crit = params.get(paramskey, (None, None))
         if paramskey and paramskey in params:
             if value >= crit:
@@ -33,7 +34,7 @@ def check_mcafee_webgateway_misc(_no_item, params, info):
             elif value >= warn:
                 state = 1
             if state:
-                infotext += ' (warn/crit at %d/%d)' % (warn, crit)
+                infotext += " (warn/crit at %d/%d)" % (warn, crit)
         perfdata = []
         if perfkey:
             perfdata = [(perfkey, value, warn, crit)]
@@ -41,17 +42,18 @@ def check_mcafee_webgateway_misc(_no_item, params, info):
         yield state, infotext, perfdata
 
 
-check_info['mcafee_webgateway_misc'] = {
-    'inventory_function': inventory_mcafee_gateway_generic,
-    'check_function': check_mcafee_webgateway_misc,
-    'service_description': 'Web gateway miscellaneous',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.7.2.5',
+check_info["mcafee_webgateway_misc"] = {
+    "inventory_function": inventory_mcafee_gateway_generic,
+    "check_function": check_mcafee_webgateway_misc,
+    "service_description": "Web gateway miscellaneous",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.7.2.5",
         [
             "2",  # MCAFEE-MWG-MIB::stClientCount
             "3",  # MCAFEE-MWG-MIB::stConnectedSockets
-        ]),
-    'snmp_scan_function': scan_mcafee_webgateway,
-    'has_perfdata': True,
-    'group': 'mcafee_web_gateway_misc',
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_webgateway,
+    "has_perfdata": True,
+    "group": "mcafee_web_gateway_misc",
 }

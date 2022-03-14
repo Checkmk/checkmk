@@ -57,7 +57,7 @@ factory_settings["emc_isilon_temp_default_levels"] = {
     "levels": (28, 33),  # assumed useful levels for ambient / air temperature
 }
 
-check_info['emc_isilon_temp'] = {
+check_info["emc_isilon_temp"] = {
     "inventory_function": lambda info: inventory_isilon_temp(info, is_cpu=False),
     "check_function": check_isilon_temp,
     "service_description": "Temperature %s",
@@ -68,12 +68,13 @@ check_info['emc_isilon_temp'] = {
         [
             "3",  # ISILON-MIB::tempSensorDescription
             "4",  # ISILON-MIB::tempSensorValue
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "default_levels_variable": "emc_isilon_temp_default_levels",
 }
 
-#.
+# .
 #   .--CPU Temperature-----------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |
@@ -93,7 +94,7 @@ factory_settings["emc_isilon_temp_cpu_default_levels"] = {
     "levels": (75, 85),  # assumed useful levels for ambient / air temperature
 }
 
-check_info['emc_isilon_temp.cpu'] = {
+check_info["emc_isilon_temp.cpu"] = {
     "inventory_function": lambda info: inventory_isilon_temp(info, is_cpu=True),
     "check_function": check_isilon_temp,
     "service_description": "Temperature %s",

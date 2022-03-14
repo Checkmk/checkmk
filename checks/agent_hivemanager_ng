@@ -13,10 +13,20 @@
 #     'redirect_url': 'https://www.getpostman.com/oauth2/callback'
 # }
 
-
-def agent_hivemanager_ng_arguments(params, hostname, ipaddress):
-    return [params["url"], params["vhm_id"], params["api_token"], params["client_id"], \
-            params["client_secret"], params["redirect_url"]]
+from typing import Any, Mapping, Optional, Sequence
 
 
-special_agent_info['hivemanager_ng'] = agent_hivemanager_ng_arguments
+def agent_hivemanager_ng_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    return [
+        params["url"],
+        params["vhm_id"],
+        params["api_token"],
+        params["client_id"],
+        params["client_secret"],
+        params["redirect_url"],
+    ]
+
+
+special_agent_info["hivemanager_ng"] = agent_hivemanager_ng_arguments

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
 # lif:vserver        instance_uuid 16        instance_name vsFS        sent_errors 0        recv_errors 0        ..
@@ -30,67 +31,142 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
         "lif:vserver": (
             "Ethernet",
             # ( what         perfname        perftext      scale     format_func)
-            [("recv_data", "if_in_octets", "received data", 1, get_bytes_human_readable),
-             ("sent_data", "if_out_octets", "sent data", 1, get_bytes_human_readable),
-             ("recv_errors", "if_in_errors", "received errors", 1, int),
-             ("sent_errors", "if_out_errors", "sent errors", 1, int),
-             ("recv_packet", "if_in_pkts", "received packets", 1, int),
-             ("sent_packet", "if_out_pkts", "sent packets", 1, int)]),
+            [
+                ("recv_data", "if_in_octets", "received data", 1, get_bytes_human_readable),
+                ("sent_data", "if_out_octets", "sent data", 1, get_bytes_human_readable),
+                ("recv_errors", "if_in_errors", "received errors", 1, int),
+                ("sent_errors", "if_out_errors", "sent errors", 1, int),
+                ("recv_packet", "if_in_pkts", "received packets", 1, int),
+                ("sent_packet", "if_out_pkts", "sent packets", 1, int),
+            ],
+        ),
         "fcp_lif:vserver": (
             "FCP",
-            [("fcp_read_latency", "fcp_read_latency", "avg. Read latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("fcp_write_latency", "fcp_write_latency", "avg. Write latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("read_data", "fcp_read_data", "read data", 1, get_bytes_human_readable),
-             ("write_data", "fcp_write_data", "write data", 1, get_bytes_human_readable)],
+            [
+                (
+                    "fcp_read_latency",
+                    "fcp_read_latency",
+                    "avg. Read latency",
+                    0.001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                (
+                    "fcp_write_latency",
+                    "fcp_write_latency",
+                    "avg. Write latency",
+                    0.001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                ("read_data", "fcp_read_data", "read data", 1, get_bytes_human_readable),
+                ("write_data", "fcp_write_data", "write data", 1, get_bytes_human_readable),
+            ],
         ),
         "cifs:vserver": (
             "CIFS",
-            [("cifs_read_latency", "cifs_read_latency", "read latency", 0.000000001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("cifs_write_latency", "cifs_write_latency", "write latency", 0.000000001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("cifs_read_ops", "cifs_read_ios", "read OPs", 1, int),
-             ("cifs_write_ops", "cifs_write_ios", "write OPs", 1, int)],
+            [
+                (
+                    "cifs_read_latency",
+                    "cifs_read_latency",
+                    "read latency",
+                    0.000000001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                (
+                    "cifs_write_latency",
+                    "cifs_write_latency",
+                    "write latency",
+                    0.000000001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                ("cifs_read_ops", "cifs_read_ios", "read OPs", 1, int),
+                ("cifs_write_ops", "cifs_write_ios", "write OPs", 1, int),
+            ],
         ),
         "iscsi_lif:vserver": (
             "iSCSI",
-            [("iscsi_read_latency", "iscsi_read_latency", "avg. Read latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("iscsi_write_latency", "iscsi_write_latency", "avg. Write latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("read_data", "iscsi_read_data", "read data", 1, get_bytes_human_readable),
-             ("write_data", "iscsi_write_data", "write data", 1, get_bytes_human_readable)],
+            [
+                (
+                    "iscsi_read_latency",
+                    "iscsi_read_latency",
+                    "avg. Read latency",
+                    0.001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                (
+                    "iscsi_write_latency",
+                    "iscsi_write_latency",
+                    "avg. Write latency",
+                    0.001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                ("read_data", "iscsi_read_data", "read data", 1, get_bytes_human_readable),
+                ("write_data", "iscsi_write_data", "write data", 1, get_bytes_human_readable),
+            ],
         ),
         "nfsv3": (
             "NFS",
-            [("nfsv3_read_ops", "nfs_read_ios", "read OPs", 1, int),
-             ("nfsv3_write_ops", "nfs_write_ios", "write OPs", 1, int),
-             ("nfsv3_read_throughput", "nfs_read_throughput", "read throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfsv3_write_throughput", "nfs_write_throughput", "write throughput",
-              1, lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfsv3_ops", "nfs_ios", "OPs", 1, int)],
+            [
+                ("nfsv3_read_ops", "nfs_read_ios", "read OPs", 1, int),
+                ("nfsv3_write_ops", "nfs_write_ios", "write OPs", 1, int),
+                (
+                    "nfsv3_read_throughput",
+                    "nfs_read_throughput",
+                    "read throughput",
+                    1,
+                    lambda x: get_bytes_human_readable(x) + "/s",
+                ),
+                (
+                    "nfsv3_write_throughput",
+                    "nfs_write_throughput",
+                    "write throughput",
+                    1,
+                    lambda x: get_bytes_human_readable(x) + "/s",
+                ),
+                ("nfsv3_ops", "nfs_ios", "OPs", 1, int),
+            ],
         ),
         "nfsv4": (
             "NFSv4",
-            [("nfsv4_read_ops", "nfsv4_read_ios", "read OPs", 1, int),
-             ("nfsv4_write_ops", "nfsv4_write_ios", "write OPs", 1, int),
-             ("nfs4_read_throughput", "nfsv4_read_throughput", "read throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfs4_write_throughput", "nfsv4_write_throughput", "write throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfsv4_ops", "nfsv4_ios", "OPs", 1, int)],
+            [
+                ("nfsv4_read_ops", "nfsv4_read_ios", "read OPs", 1, int),
+                ("nfsv4_write_ops", "nfsv4_write_ios", "write OPs", 1, int),
+                (
+                    "nfs4_read_throughput",
+                    "nfsv4_read_throughput",
+                    "read throughput",
+                    1,
+                    lambda x: get_bytes_human_readable(x) + "/s",
+                ),
+                (
+                    "nfs4_write_throughput",
+                    "nfsv4_write_throughput",
+                    "write throughput",
+                    1,
+                    lambda x: get_bytes_human_readable(x) + "/s",
+                ),
+                ("nfsv4_ops", "nfsv4_ios", "OPs", 1, int),
+            ],
         ),
         "nfsv4_1": (
             "NFSv4.1",
-            [("nfsv4_1_ops", "nfsv4_1_ios", "OPs", 1, int),
-             ("nfs41_read_throughput", "nfsv4_1_read_throughput", "read throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfs41_write_throughput", "nfsv4_1_write_throughput", "write throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s")],
-        )
+            [
+                ("nfsv4_1_ops", "nfsv4_1_ios", "OPs", 1, int),
+                (
+                    "nfs41_read_throughput",
+                    "nfsv4_1_read_throughput",
+                    "read throughput",
+                    1,
+                    lambda x: get_bytes_human_readable(x) + "/s",
+                ),
+                (
+                    "nfs41_write_throughput",
+                    "nfsv4_1_write_throughput",
+                    "write throughput",
+                    1,
+                    lambda x: get_bytes_human_readable(x) + "/s",
+                ),
+            ],
+        ),
     }
 
     def get_ref(what, data):
@@ -123,19 +199,28 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             if ref is None:
                 ref = now
 
-            rate = get_rate('%s.%s' % (protocol, what), ref, int(data[what]) * scale)
-            yield 0, "%s %s: %s" % (
-                protoname,
-                perftext,
-                format_func(rate),  # pylint: disable=not-callable
-            ), [(perfname, rate)]
+            try:
+                rate = get_rate(
+                    f"{protocol}.{what}",
+                    ref,
+                    int(data[what]) * scale,
+                    onwrap=RAISE,
+                )
+                yield (
+                    0,
+                    f"{protoname} {perftext}: {format_func(rate)}",  # pylint: disable=not-callable
+                    [(perfname, rate)],
+                )
+            except MKCounterWrapped as exc:
+                yield (0, f"{protoname} {perftext}: -")
 
 
 check_info["netapp_api_vs_traffic"] = {
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["protocol", "instance_name"]),
-    'inventory_function': inventory_netapp_api_vs_traffic,
-    'check_function': check_netapp_api_vs_traffic,
-    'service_description': 'Traffic vServer %s',
-    'has_perfdata': True,
+    "parse_function": lambda info: netapp_api_parse_lines(
+        info, custom_keys=["protocol", "instance_name"]
+    ),
+    "inventory_function": inventory_netapp_api_vs_traffic,
+    "check_function": check_netapp_api_vs_traffic,
+    "service_description": "Traffic vServer %s",
+    "has_perfdata": True,
 }

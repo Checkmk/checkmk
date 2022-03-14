@@ -1,7 +1,7 @@
 title: NetApp Filer: Used Space of LUNs
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the usage of LUNs of Netapp filers running in clustermode.
@@ -11,6 +11,5 @@ description:
 item:
  Name of the LUN as defined in the system
 
-inventory:
+discovery:
  One service is created for each LUN.
-

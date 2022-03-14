@@ -1,7 +1,7 @@
 title: NTP Peers
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of {ntpq -p} as sent by the agent. It is
@@ -17,9 +17,8 @@ description:
 item:
  The name or IP address of the peer (first column in output of {ntpq -p}.
 
-inventory:
+discovery:
  One service is created for each peer which has been contacted at least once
  if in the rule {NTP Discovery} the mode is set to {"detailed"} or {"both"}.
  One summary service of type {ntp.time} is created if the mode is
  set to {"summary"}.
-

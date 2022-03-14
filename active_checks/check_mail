@@ -7,80 +7,95 @@
 
 """
 
-from typing import Tuple, List, Union
-import os
 import argparse
-import logging
-import time
-import re
 import base64
+import logging
+import os
+import re
 import socket
+import time
+from pathlib import Path
+from typing import List, Tuple, Union
 
 from cmk.utils.mailbox import (
+    active_check_main,
+    Args,
+    CheckResult,
     ConnectError,
     ForwardToECError,
-    CheckResult,
-    active_check_main,
-    MailMessages,
-    Args,
     Mailbox,
+    MailMessages,
 )
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--forward-ec",
-                        action="store_true",
-                        help="Forward matched mails to the event console (EC)")
-    parser.add_argument("--forward-method",
-                        type=str,
-                        metavar="METHOD",
-                        help=("Configure how to connect to the event console to forward"
-                              "\nthe messages to. Can be configured to:"
-                              "\n    udp,<ADDR>,<PORT>        - Connect to remove EC via UDP"
-                              "\n    tcp,<ADDR>,<PORT>        - Connect to remove EC via TCP"
-                              "\n    spool:                   - Write to site local spool directory"
-                              "\n    spool:/path/to/spooldir  - Spool to given directory"
-                              "\n    /path/to/pipe            - Write to given EC event pipe"
-                              "\nDefaults to use the event console of the local OMD sites."))
-    parser.add_argument("--forward-facility",
-                        type=int,
-                        default=2,
-                        metavar="F",
-                        help="Syslog facility to use for forwarding (Defaults to '2' -> mail)")
-    parser.add_argument("--forward-app",
-                        type=str,
-                        metavar="APP",
-                        help=('Specify which string to use for the syslog application field '
-                              'when forwarding to the event console. '
-                              '\nYou can specify macros like \\1 or \\2 when you specified '
-                              '"--match-subject" with regex groups.'
-                              '\nDefaults to use the whole subject of the e mail'))
-    parser.add_argument("--forward-host",
-                        type=str,
-                        metavar="HOST",
-                        help='Hostname to use for the generated events')
-    parser.add_argument("--body-limit",
-                        type=int,
-                        metavar="SIZE",
-                        default=1000,
-                        help=('Limit the number of characters of the body to forward '
-                              '(default=1000)'))
-    parser.add_argument("--match-subject",
-                        type=str,
-                        metavar="REGEX",
-                        help='Use this option to not process all messages found in the inbox, '
-                        'but only the whones whose subject matches the given regular expression.')
-    parser.add_argument("--cleanup",
-                        type=str,
-                        metavar="METHOD",
-                        help='Delete processed messages (see --match-subject) or move to subfolder '
-                        'a matching the given path. This is configured with the following '
-                        'METHOD: '
-                        '\n   delete             - Simply delete mails'
-                        '\n   path/to/subfolder  - Move to this folder (Only supported with IMAP)'
-                        '\nBy default the mails are not cleaned up, which might make your '
-                        'mailbox grow when you not clean it up manually.')
+    parser.add_argument(
+        "--forward-ec", action="store_true", help="Forward matched mails to the event console (EC)"
+    )
+    parser.add_argument(
+        "--forward-method",
+        type=str,
+        metavar="METHOD",
+        help=(
+            "Configure how to connect to the event console to forward"
+            "\nthe messages to. Can be configured to:"
+            "\n    udp,<ADDR>,<PORT>        - Connect to remove EC via UDP"
+            "\n    tcp,<ADDR>,<PORT>        - Connect to remove EC via TCP"
+            "\n    spool:                   - Write to site local spool directory"
+            "\n    spool:/path/to/spooldir  - Spool to given directory"
+            "\n    /path/to/pipe            - Write to given EC event pipe"
+            "\nDefaults to use the event console of the local OMD sites."
+        ),
+    )
+    parser.add_argument(
+        "--forward-facility",
+        type=int,
+        default=2,
+        metavar="F",
+        help="Syslog facility to use for forwarding (Defaults to '2' -> mail)",
+    )
+    parser.add_argument(
+        "--forward-app",
+        type=str,
+        metavar="APP",
+        help=(
+            "Specify which string to use for the syslog application field "
+            "when forwarding to the event console. "
+            "\nYou can specify macros like \\1 or \\2 when you specified "
+            '"--match-subject" with regex groups.'
+            "\nDefaults to use the whole subject of the e mail"
+        ),
+    )
+    parser.add_argument(
+        "--forward-host", type=str, metavar="HOST", help="Hostname to use for the generated events"
+    )
+    parser.add_argument(
+        "--body-limit",
+        type=int,
+        metavar="SIZE",
+        default=1000,
+        help=("Limit the number of characters of the body to forward " "(default=1000)"),
+    )
+    parser.add_argument(
+        "--match-subject",
+        type=str,
+        metavar="REGEX",
+        help="Use this option to not process all messages found in the inbox, "
+        "but only the whones whose subject matches the given regular expression.",
+    )
+    parser.add_argument(
+        "--cleanup",
+        type=str,
+        metavar="METHOD",
+        help="Delete processed messages (see --match-subject) or move to subfolder "
+        "a matching the given path. This is configured with the following "
+        "METHOD: "
+        "\n   delete             - Simply delete mails"
+        "\n   path/to/subfolder  - Move to this folder (Only supported with IMAP)"
+        "\nBy default the mails are not cleaned up, which might make your "
+        "mailbox grow when you not clean it up manually.",
+    )
     return parser
 
 
@@ -102,30 +117,30 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> Tuple[List[str],
     priority = 5  # OK
 
     for index, msg in sorted(mails.items()):
-        subject = msg.get('Subject', 'None')
-        encoding = msg.get('Content-Transfer-Encoding', 'None')
+        subject = msg.get("Subject", "None")
+        encoding = msg.get("Content-Transfer-Encoding", "None")
         log_line = subject
         # Now add the body to the event
         if msg.is_multipart():
             # only care for the first text/plain element
             for part in msg.walk():
                 content_type = part.get_content_type()
-                disposition = str(part.get('Content-Disposition'))
-                encoding = part.get('Content-Transfer-Encoding', 'None')
-                if content_type == 'text/plain' and 'attachment' not in disposition:
+                disposition = str(part.get("Content-Disposition"))
+                encoding = part.get("Content-Transfer-Encoding", "None")
+                if content_type == "text/plain" and "attachment" not in disposition:
                     payload = part.get_payload()
                     if encoding == "base64":
-                        payload = base64.b64decode(payload)
-                    log_line += '|' + payload[:args.body_limit]
+                        payload = str(base64.b64decode(payload))
+                    log_line += "|" + payload[: args.body_limit]
                     break
         else:
             payload = msg.get_payload()
             if encoding == "base64":
-                payload = base64.b64decode(payload)
-            log_line += '|' + payload[:args.body_limit]
+                payload = str(base64.b64decode(payload))
+            log_line += "|" + payload[: args.body_limit]
 
-        log_line = log_line.replace('\r\n', '\0')
-        log_line = log_line.replace('\n', '\0')
+        log_line = log_line.replace("\r\n", "\0")
+        log_line = log_line.replace("\n", "\0")
 
         # replace match groups in "forward_app"
         if args.forward_app:
@@ -133,13 +148,13 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> Tuple[List[str],
             if args.match_subject:
                 matches = re.match(args.match_subject, subject)
                 for num, match in enumerate(matches.groups() if matches else []):
-                    application = application.replace('\\%d' % (num + 1,), match)
+                    application = application.replace("\\%d" % (num + 1,), match)
         else:
-            application = subject.replace('\n', '')
+            application = subject.replace("\n", "")
 
         # Construct the final syslog message
-        log = '<%d>%s' % ((int(args.forward_facility) << 3) + priority, cur_time)
-        log += ' %s %s: %s' % (args.forward_host or args.fetch_server, application, log_line)
+        log = "<%d>%s" % ((int(args.forward_facility) << 3) + priority, cur_time)
+        log += " %s %s: %s" % (args.forward_host or args.fetch_server, application, log_line)
         messages.append(log)
         forwarded.append(index)
     return messages, forwarded
@@ -153,11 +168,11 @@ def forward_to_ec(args: Args, messages: List[str]) -> CheckResult:
     # d) remote via tcp
     def evaluate_forward_method(description: str) -> Union[str, Tuple[str, str, str]]:
         if not description:
-            return "%s/tmp/run/mkeventd/eventsocket" % os.getenv('OMD_ROOT', '')
-        if description == 'spool:':
-            return "spool: %s/var/mkeventd/spool" % os.getenv('OMD_ROOT', '')
+            return "%s/tmp/run/mkeventd/eventsocket" % os.getenv("OMD_ROOT", "")
+        if description == "spool:":
+            return "spool: %s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
         if "," in description:
-            prot_addr_port = description.split(',')
+            prot_addr_port = description.split(",")
             return prot_addr_port[0], prot_addr_port[1], prot_addr_port[3]
         return description
 
@@ -170,15 +185,17 @@ def forward_to_ec(args: Args, messages: List[str]) -> CheckResult:
                 # connect either via tcp or udp
                 prot, addr, port = forward_method
                 sock = (
-                    socket.socket(socket.AF_INET, socket.SOCK_DGRAM) if prot == 'udp' else  #
-                    socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+                    socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    if prot == "udp"
+                    else socket.socket(socket.AF_INET, socket.SOCK_STREAM)  #
+                )
                 sock.connect((addr, port))
                 for message in messages:
                     sock.send(message.encode())
                     sock.send(b"\n")
                 sock.close()
 
-            elif not forward_method.startswith('spool:'):
+            elif not forward_method.startswith("spool:"):
                 # write into local event pipe
                 # Important: When the event daemon is stopped, then the pipe
                 # is *not* existing! This prevents us from hanging in such
@@ -197,22 +214,24 @@ def forward_to_ec(args: Args, messages: List[str]) -> CheckResult:
                 # Spool the log messages to given spool directory.
                 # First write a file which is not read into ec, then
                 # perform the move to make the file visible for ec
-                spool_path = forward_method[6:]
-                file_name = '.%s_%d_%d' % (args.forward_host, os.getpid(), time.time())
-                if not os.path.exists(spool_path):
+                if not (spool_path := Path(forward_method[6:])).exists():
                     os.makedirs(spool_path)
-                open('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
-                os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
+
+                file_name = ".%s_%d_%d" % (args.forward_host, os.getpid(), time.time())
+                path_spool_file = spool_path / file_name
+                path_spool_file.write_text("\n".join(messages) + "\n")
+                path_spool_file.rename(spool_path / file_name[1:])
 
         return (
             0,
-            'Forwarded %d messages to event console' % len(messages),
-            [('messages', len(messages))],
+            "Forwarded %d messages to event console" % len(messages),
+            [("messages", len(messages))],
         )
     except Exception as exc:
         raise ForwardToECError(
-            'Unable to forward messages to event console (%s). Left %d messages untouched.' %
-            (exc, len(messages))) from exc
+            "Unable to forward messages to event console (%s). Left %d messages untouched."
+            % (exc, len(messages))
+        ) from exc
 
 
 def check_mail(args: Args) -> CheckResult:
@@ -233,13 +252,13 @@ def check_mail(args: Args) -> CheckResult:
             )
             result = forward_to_ec(args, messages)
             if args.cleanup:
-                if args.cleanup != 'delete':
+                if args.cleanup != "delete":
                     mailbox.copy_mails(forwarded, args.cleanup)
                 mailbox.delete_mails(forwarded)
 
             return result
 
-    return 0, 'Successfully logged in to mailbox', None
+    return 0, "Successfully logged in to mailbox", None
 
 
 if __name__ == "__main__":

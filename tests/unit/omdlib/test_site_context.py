@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+
+import pytest
 
 import omdlib.main
 
@@ -52,8 +53,9 @@ def test_site_context_exists(monkeypatch):
 
 
 def test_site_context_is_empty(monkeypatch):
-    monkeypatch.setattr(os, "listdir", lambda p: []
-                        if p == "/omd/sites/dingeling" else ["abc", "version"])
+    monkeypatch.setattr(
+        os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
+    )
 
     site = omdlib.main.SiteContext("dingeling")
     assert site.is_empty()

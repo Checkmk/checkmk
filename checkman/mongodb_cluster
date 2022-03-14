@@ -1,7 +1,7 @@
 title: MongoDB: Cluster Information
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays and monitors database parameters relevant for a MongoDB cluster:
@@ -17,5 +17,5 @@ Note: This check will only be discovered, if the agent runs on the primary mongo
 item:
  Name of the cluster
 
-inventory:
+discovery:
  One service is created for each database named 'MongoDB Database: <database name>'.

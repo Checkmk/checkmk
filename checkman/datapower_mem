@@ -1,7 +1,7 @@
 title: IBM Datapower: Memory Usage
 agents: snmp
 catalog: hw/network/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -12,7 +12,7 @@ description:
  The check will result in a WARNING/CRITICAL state when the given thresholds
  for the used memory in percent are reached.
 
-inventory:
+discovery:
  One service is created for each gateway.
 
 item:

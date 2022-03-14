@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example for contents of info
 #           description         percent  status  online
 # ["Port 8 Feuchte USV Raum A",  "38",    "5",    "1"]
@@ -31,6 +33,7 @@ check_info["akcp_exp_humidity"] = {
             4,  # SPAGENT-MIB::sensorHumidityPercent
             6,  # SPAGENT-MIB::sensorHumidityStatus
             8,  # SPAGENT-MIB::sensorHumidityGoOffline
-        ]),
+        ],
+    ),
     "group": "humidity",
 }

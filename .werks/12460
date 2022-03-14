@@ -1,0 +1,13 @@
+Title: Title: Customer logos configured in 1.6 no longer leave "Activation changes" hanging
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1619006639
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If your customer configuration contained a logo, the activation change process was cancelled due to an internal coding exception.
+This has been fixed.

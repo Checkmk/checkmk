@@ -1,0 +1,13 @@
+Title: BI view filtering: fixed broken host and service filters
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1623155562
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The filters <tt>Affected hosts contain</tt> and <tt>Affected by service</tt> did not correctly filter aggregations.
+This lead to empty views.

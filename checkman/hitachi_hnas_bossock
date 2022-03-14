@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Number of Bossock Fibers
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the number of Bossock Fibers in Hitachi HNAS storage systems.
@@ -11,9 +11,8 @@ description:
  The checks gets WARN or CRIT depending on the warning and critical levels
  for the number of fibers.
 
-inventory:
+discovery:
  One service is created for each cluster node in the HNAS system.
 
 item:
  The ID of the node
-

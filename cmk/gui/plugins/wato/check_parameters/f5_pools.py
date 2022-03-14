@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_f5_pools():
@@ -32,7 +27,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="f5_pools",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of pool")),
+        item_spec=lambda: TextInput(title=_("Name of pool")),
         parameter_valuespec=_parameter_valuespec_f5_pools,
         title=lambda: _("F5 Loadbalancer Pools"),
-    ))
+    )
+)

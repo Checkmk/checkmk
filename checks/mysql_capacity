@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<mysql_capacity>>>
 # greendb 163840  1428160512
 # hirn    16384   238026752
@@ -42,8 +43,10 @@ def parse_mysql_capacity(info):
 @discover
 def inventory_mysql_size(instance, data):
     for dbname, values in data.items():
-        if dbname not in ("information_schema", "mysql", "performance_schema") \
-            and 'NULL' not in values:
+        if (
+            dbname not in ("information_schema", "mysql", "performance_schema")
+            and "NULL" not in values
+        ):
             yield "%s:%s" % (instance, dbname)
 
 
@@ -52,21 +55,19 @@ def check_mysql_size(item, params, parsed):
         # support items discovered before 1.2.7
         instance, dbname = "mysql", item
     else:
-        instance, dbname = item.split(':')
+        instance, dbname = item.split(":", 1)
 
     size, _avail = parsed.get(instance, {}).get(dbname, (None, None))
     if not isinstance(size, int):
         return
 
     # size and avail are given as bytes
-    yield check_levels(size,
-                       'database_size',
-                       params,
-                       human_readable_func=get_bytes_human_readable,
-                       infoname="Size")
+    yield check_levels(
+        size, "database_size", params, human_readable_func=get_bytes_human_readable, infoname="Size"
+    )
 
 
-check_info['mysql_capacity'] = {
+check_info["mysql_capacity"] = {
     "parse_function": parse_mysql_capacity,
     "inventory_function": inventory_mysql_size,
     "check_function": check_mysql_size,

@@ -1,7 +1,7 @@
 title: Citrix XenApp Controller: Overall State
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of Citrix XenApp 7.x controllers.
@@ -10,6 +10,5 @@ description:
  for this to work. The check reports OK if and only if the controller
  state is Active.
 
-inventory:
+discovery:
  One service is created for each controller.
-

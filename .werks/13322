@@ -1,0 +1,28 @@
+Title: Limit executable php scripts to NagVis files
+Class: security
+Compatible: compat
+Component: omd
+Date: 1639339710
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously the web server was able to execute <tt>.php</tt> files from all
+locations that are callable by the user. With this change, we now limit the
+execution of php files to the paths we need in the default installation for
+NagVis.
+
+Please note: In case you intentionally installed php files in your site to
+access them through the site web server, you may now need to extend your sites
+web server configuration to make it work again as before.
+
+For example, if you installed one file to <tt>var/www/my_script.php</tt>, you
+can make it usable again with the following configuration
+<tt>etc/apache/conf.d/my_script.conf</tt>:
+
+C+:
+<Location "/[site_id]/my_script.php">
+  Options +ExecCGI
+</Location>
+C-:

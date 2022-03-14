@@ -15,7 +15,7 @@ factory_settings["mongodb_collections_levels"] = {"levels_nindexes": (62, 65)}
 def parse_mongodb_collections(info):
     if info:
         return json.loads(str(info[0][0]))
-    return dict()
+    return {}
 
 
 def inventory_mongodb_collections(databases_dict):
@@ -26,8 +26,10 @@ def inventory_mongodb_collections(databases_dict):
     """
     db_coll_list = []
     for db_name in databases_dict:
-        db_coll_list += [("%s.%s" % (db_name, coll_name), {})
-                         for coll_name in databases_dict.get(db_name).get("collstats", [])]
+        db_coll_list += [
+            ("%s.%s" % (db_name, coll_name), {})
+            for coll_name in databases_dict.get(db_name).get("collstats", [])
+        ]
     return db_coll_list
 
 
@@ -40,12 +42,15 @@ def check_mongodb_collections(item, params, databases_dict):
     :return:
     """
     database_name, collection_name = _mongodb_collections_split_namespace(item)
-    collection_stats = databases_dict.get(database_name, {}).get("collstats",
-                                                                 {}).get(collection_name, {})
+    collection_stats = (
+        databases_dict.get(database_name, {}).get("collstats", {}).get(collection_name, {})
+    )
 
-    for key, label in (("size", "Uncompressed size in memory"), ("storageSize",
-                                                                 "Allocated for document storage"),
-                       ("totalIndexSize", "Total size of indexes")):
+    for key, label in (
+        ("size", "Uncompressed size in memory"),
+        ("storageSize", "Allocated for document storage"),
+        ("totalIndexSize", "Total size of indexes"),
+    ):
         if key not in collection_stats:
             return
 
@@ -62,19 +67,19 @@ def check_mongodb_collections(item, params, databases_dict):
             levels = (levels[0] * 1024, levels[1] * 1024)  # KByte to bytes
 
         perfdata = _mongodb_collections_get_perfdata_key(key)
-        yield check_levels(value,
-                           perfdata,
-                           levels,
-                           human_readable_func=get_bytes_human_readable,
-                           infoname=label)
+        yield check_levels(
+            value, perfdata, levels, human_readable_func=get_bytes_human_readable, infoname=label
+        )
 
     # check number of indexes per collection (max is 64 indexes)
     try:
-        yield check_levels(int(collection_stats.get("nindexes")),
-                           None,
-                           params.get("levels_nindexes"),
-                           human_readable_func=lambda v: "%d" % v,
-                           infoname="Number of indexes")
+        yield check_levels(
+            int(collection_stats.get("nindexes")),
+            None,
+            params.get("levels_nindexes"),
+            human_readable_func=lambda v: "%d" % v,
+            infoname="Number of indexes",
+        )
     except (TypeError, ValueError):
         pass
 
@@ -116,30 +121,45 @@ def _mongodb_collections_long_output(data):
     long_output = ["Collection"]
     if is_sharded:
         long_output.append("- Sharded: %s (Data distributed in cluster)" % is_sharded)
-        long_output.append("- Shards: %s (Number of shards)" %
-                           _mongodb_collections_get_as_int(data, "shardsCount"))
-        long_output.append("- Chunks: %s (Total number of chunks)" %
-                           _mongodb_collections_get_as_int(data, "nchunks"))
+        long_output.append(
+            "- Shards: %s (Number of shards)" % _mongodb_collections_get_as_int(data, "shardsCount")
+        )
+        long_output.append(
+            "- Chunks: %s (Total number of chunks)"
+            % _mongodb_collections_get_as_int(data, "nchunks")
+        )
 
-    long_output.append("- Document Count: %s (Number of documents in collection)" %
-                       _mongodb_collections_get_as_int(data, "count"))
-    long_output.append("- Object Size: %s (Average object size)" %
-                       _mongodb_collections_bytes_human_readable(data, "avgObjSize"))
-    long_output.append("- Collection Size: %s (Uncompressed size in memory)" %
-                       _mongodb_collections_bytes_human_readable(data, "size"))
-    long_output.append("- Storage Size: %s (Allocated for document storage)" %
-                       _mongodb_collections_bytes_human_readable(data, "storageSize"))
+    long_output.append(
+        "- Document Count: %s (Number of documents in collection)"
+        % _mongodb_collections_get_as_int(data, "count")
+    )
+    long_output.append(
+        "- Object Size: %s (Average object size)"
+        % _mongodb_collections_bytes_human_readable(data, "avgObjSize")
+    )
+    long_output.append(
+        "- Collection Size: %s (Uncompressed size in memory)"
+        % _mongodb_collections_bytes_human_readable(data, "size")
+    )
+    long_output.append(
+        "- Storage Size: %s (Allocated for document storage)"
+        % _mongodb_collections_bytes_human_readable(data, "storageSize")
+    )
 
     long_output.append("")
     long_output.append("Indexes:")
-    long_output.append("- Total Index Size: %s (Total size of all indexes)" %
-                       _mongodb_collections_bytes_human_readable(data, "totalIndexSize"))
-    long_output.append("- Number of Indexes: %s" %
-                       _mongodb_collections_get_as_int(data, "nindexes"))
+    long_output.append(
+        "- Total Index Size: %s (Total size of all indexes)"
+        % _mongodb_collections_bytes_human_readable(data, "totalIndexSize")
+    )
+    long_output.append(
+        "- Number of Indexes: %s" % _mongodb_collections_get_as_int(data, "nindexes")
+    )
     for index in _mongodb_collections_get_indexes_as_list(data):
         timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2] / 1000.0)
-        long_output.append("-- Index '%s' used %s times since %s" %
-                           (index[0], index[1], timestamp_for_humans))
+        long_output.append(
+            "-- Index '%s' used %s times since %s" % (index[0], index[1], timestamp_for_humans)
+        )
 
     return "\n" + "\n".join(long_output)
 
@@ -172,7 +192,7 @@ def _mongodb_collections_bytes_human_readable(data, key):
     try:
         return get_bytes_human_readable(int(data.get(key)))
     except (TypeError, ValueError):
-        return 'n/a'
+        return "n/a"
 
 
 def _mongodb_collections_timestamp_human_readable(value):
@@ -186,7 +206,7 @@ def _mongodb_collections_get_as_int(data, key):
     try:
         return int(data.get(key))
     except (TypeError, ValueError):
-        return 'n/a'
+        return "n/a"
 
 
 check_info["mongodb_collections"] = {

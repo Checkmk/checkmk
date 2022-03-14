@@ -1,0 +1,14 @@
+Title: Distributed setup: Prevent timeouts during synchronization
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1631691932
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Unpacking configuration snapshots on (slow) remote sites could take longer than 110 seconds and thus cause a timeout
+exception stating <tt>Got invalid data...</tt>. There was a risk that a snapshot could only be half unpacked.
+Pushing a snapshot during "Activate changes" or the "WATO service discovery" can now no longer run into a timeout.

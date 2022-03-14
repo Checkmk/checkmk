@@ -143,7 +143,7 @@ def parse_prtconf(info):
 
 def _split_vendor(string):
     if string.upper().startswith("IBM"):
-        return "IBM", string[3:].lstrip('., -/')
+        return "IBM", string[3:].lstrip("., -/")
     return "", string
 
 
@@ -254,6 +254,6 @@ def fill_volume_groups(inventory_tree, parsed):
         node["physical_volume_free_partitions"] = ""
 
 
-inv_info['prtconf'] = {
+inv_info["prtconf"] = {
     "inv_function": inv_prtconf,
 }

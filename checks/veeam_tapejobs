@@ -17,8 +17,8 @@ def parse_veeam_tapejobs(info):
         if len(line) < len(columns):
             continue
 
-        name = " ".join(line[:-(len(columns) - 1)])
-        job_id, last_result, last_state = line[-(len(columns) - 1):]
+        name = " ".join(line[: -(len(columns) - 1)])
+        job_id, last_result, last_state = line[-(len(columns) - 1) :]
         parsed[name] = {
             "job_id": job_id,
             "last_result": last_result,
@@ -43,7 +43,7 @@ def check_veeam_tapejobs(item, params, data):
     if last_result != "None" or last_state not in ("Working", "Idle"):
         yield BACKUP_STATE.get(last_result, 2), "Last backup result: %s" % last_result
         yield 0, "Last state: %s" % last_state
-        clear_item_state("%s.running_since" % job_id)
+        set_item_state("%s.running_since" % job_id, None)
         return
 
     running_since = get_item_state("%s.running_since" % job_id)
@@ -54,18 +54,22 @@ def check_veeam_tapejobs(item, params, data):
     running_time = now - running_since
 
     yield 0, "Backup in progress since %s (currently %s)" % (
-        get_timestamp_human_readable(running_since), last_state.lower())
-    yield check_levels(running_time,
-                       None,
-                       params,
-                       human_readable_func=get_age_human_readable,
-                       infoname="Running time")
+        get_timestamp_human_readable(running_since),
+        last_state.lower(),
+    )
+    yield check_levels(
+        running_time,
+        None,
+        params,
+        human_readable_func=get_age_human_readable,
+        infoname="Running time",
+    )
 
 
 check_info["veeam_tapejobs"] = {
-    'parse_function': parse_veeam_tapejobs,
-    'inventory_function': inventory_veeam_tapejobs,
-    'check_function': check_veeam_tapejobs,
-    'service_description': 'VEEAM Tape Job %s',
-    'group': 'veeam_tapejobs',
+    "parse_function": parse_veeam_tapejobs,
+    "inventory_function": inventory_veeam_tapejobs,
+    "check_function": check_veeam_tapejobs,
+    "service_description": "VEEAM Tape Job %s",
+    "group": "veeam_tapejobs",
 }

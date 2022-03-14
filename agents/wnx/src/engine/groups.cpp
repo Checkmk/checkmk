@@ -24,7 +24,6 @@ Global::Global() {
 
 // loader of yaml is going here
 void Global::loadFromMainConfig() {
-    using namespace std;
     auto config = cma::cfg::GetLoadedConfig();
 
     {
@@ -34,7 +33,7 @@ void Global::loadFromMainConfig() {
         try {
             me_ = config[groups::kGlobal];
             exist_in_cfg_ = true;
-        } catch (std::exception&) {
+        } catch (std::exception &) {
             me_.reset();
         }
 
@@ -136,7 +135,7 @@ void Global::setDefaults() {
 }
 
 static std::filesystem::path CheckAndCreateLogPath(
-    const std::filesystem::path& forced_path) {
+    const std::filesystem::path &forced_path) {
     namespace fs = std::filesystem;
     try {
         std::error_code ec;
@@ -148,7 +147,7 @@ static std::filesystem::path CheckAndCreateLogPath(
         XLOG::l.bp("Failed to create [{}' folder as log",
                    forced_path.u8string());
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.bp("Failed to use [{}' folder as log, exception is '{}'",
                    forced_path.u8string(), e.what());
     }
@@ -173,7 +172,7 @@ void Global::updateLogNames() {
 
 // empty string does nothing
 // used to set values during start
-void Global::setLogFolder(const std::filesystem::path& forced_path) {
+void Global::setLogFolder(const std::filesystem::path &forced_path) {
     std::unique_lock lk(lock_);
     if (cma::IsService()) {
         XLOG::details::LogWindowsEventAlways(
@@ -189,16 +188,14 @@ void Global::setLogFolder(const std::filesystem::path& forced_path) {
 
 // transfer global data into app environment
 void Global::setupLogEnvironment() {
-    using namespace XLOG;
-
-    setup::Configure(logfile_as_string_, debug_level_, windbg_, event_log_);
-    GetCfg().setLogFileDir(logfile_dir_.wstring());
+    XLOG::setup::Configure(logfile_as_string_, debug_level_, windbg_,
+                           event_log_);
+    GetCfg().setConfiguredLogFileDir(logfile_dir_.wstring());
 }
 
 // loader
 // gtest[+] partially
 void WinPerf::loadFromMainConfig() {
-    using namespace std;
     auto config = cma::cfg::GetLoadedConfig();
 
     std::lock_guard lk(lock_);
@@ -235,19 +232,18 @@ void WinPerf::loadFromMainConfig() {
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
         auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-        for (const auto& entry : counters) {
+        for (const auto &entry : counters) {
             counters_.emplace_back(entry.first, entry.second);
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         XLOG::l("Section {} ", groups::kWinPerf, e.what());
     }
 }
 
-void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node>& Yaml) noexcept {
-    for (const auto& entry : Yaml) {
+void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
+                          const std::vector<YAML::Node> &yaml_node) noexcept {
+    for (const auto &entry : yaml_node) {
         try {
-            // --exception control start --
             auto pattern = entry[vars::kPluginPattern].as<std::string>();
             pattern = ReplacePredefinedMarkers(pattern);
             auto async = entry[vars::kPluginAsync].as<bool>(false);
@@ -256,39 +252,41 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
             auto timeout =
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
             auto cache_age = entry[vars::kPluginCacheAge].as<int>(0);
+            if (cache_age < 0) {
+                cache_age = 0;
+            }
 
             auto group = entry[vars::kPluginGroup].as<std::string>("");
             auto user = entry[vars::kPluginUser].as<std::string>("");
 
-            if (cache_age && !async) {
+            std::optional<int> age;
+            if (cache_age != 0 || async) {
+                age = cache_age;
+            }
+
+            if (!async && age.has_value()) {
                 XLOG::d.t(
                     "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
                     pattern, cache_age);
-                async = true;
             }
 
-            if (async)
-                ExeUnit.emplace_back(pattern, timeout, cache_age, retry, run);
-            else
-                ExeUnit.emplace_back(pattern, timeout, retry, run);
-            ExeUnit.back().assign(entry);
+            exe_unit.emplace_back(pattern, timeout, age, retry, run);
+            exe_unit.back().assign(entry);
 
-            ExeUnit.back().assignGroup(group);
-            ExeUnit.back().assignUser(user);
-
-            // --exception control end  --
-        } catch (const std::exception& e) {
+            exe_unit.back().assignGroup(group);
+            exe_unit.back().assignUser(user);
+        } catch (const std::exception &e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
                     vars::kPluginsExecution, e.what());
         }
     }
 }
 
-void Plugins::ExeUnit::assign(const YAML::Node& entry) noexcept {
+void Plugins::ExeUnit::assign(const YAML::Node &entry) {
     try {
         source_ = YAML::Clone(entry);
         ApplyValueIfScalar(source_, run_, vars::kPluginRun);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         pattern_ = "";
         source_.reset();
         XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
@@ -296,11 +294,9 @@ void Plugins::ExeUnit::assign(const YAML::Node& entry) noexcept {
     }
 }
 
-void Plugins::ExeUnit::assignGroup(std::string_view group) noexcept {
-    group_ = group;
-}
+void Plugins::ExeUnit::assignGroup(std::string_view group) { group_ = group; }
 
-void Plugins::ExeUnit::assignUser(std::string_view user) noexcept {
+void Plugins::ExeUnit::assignUser(std::string_view user) {
     if (group_.empty())
         user_ = user;
     else
@@ -308,7 +304,7 @@ void Plugins::ExeUnit::assignUser(std::string_view user) noexcept {
 }
 
 void Plugins::ExeUnit::apply(std::string_view filename,
-                             const YAML::Node& entry) noexcept {
+                             const YAML::Node &entry) {
     try {
         if (!entry.IsMap()) return;
 
@@ -319,14 +315,14 @@ void Plugins::ExeUnit::apply(std::string_view filename,
         ApplyValueIfScalar(entry, timeout_, vars::kPluginTimeout);
         ApplyValueIfScalar(entry, group_, vars::kPluginGroup);
         ApplyValueIfScalar(entry, user_, vars::kPluginUser);
-        if (cache_age_ && !async_) {
+        if (cache_age_ != 0 && !async_) {
             XLOG::d.t(
                 "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
                 filename, cache_age_);
             async_ = true;
         }
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         pattern_ = "";
         source_.reset();
         XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
@@ -334,9 +330,7 @@ void Plugins::ExeUnit::apply(std::string_view filename,
     }
 }
 
-void Plugins::loadFromMainConfig(std::string_view GroupName) {
-    using namespace std;
-    using namespace cma::cfg;
+void Plugins::loadFromMainConfig(std::string_view group_name) {
     auto config = GetLoadedConfig();
 
     std::lock_guard lk(lock_);
@@ -344,50 +338,50 @@ void Plugins::loadFromMainConfig(std::string_view GroupName) {
     reset();
     units_.resize(0);
 
-    local_ = GroupName == groups::kLocal;
+    local_ = group_name == groups::kLocal;
 
     // attempt to load all
     try {
         // if section not present
         auto yaml = GetLoadedConfig();
-        auto me = yaml[GroupName];
+        auto me = yaml[group_name];
         if (!me.IsMap()) {
-            XLOG::l("Section {} absent or invalid", GroupName);
+            XLOG::l("Section {} absent or invalid", group_name);
             return;
         }
         exist_in_cfg_ = true;
 
-        enabled_in_cfg_ = GetVal(GroupName, vars::kEnabled, exist_in_cfg_);
+        enabled_in_cfg_ = GetVal(group_name, vars::kEnabled, exist_in_cfg_);
 
-        exe_name_ =
-            GetVal(GroupName, vars::kPluginExe, string("plugin_player.exe"));
+        exe_name_ = GetVal(group_name, vars::kPluginExe,
+                           std::string{"plugin_player.exe"});
 
-        auto units = GetArray<YAML::Node>(GroupName, vars::kPluginsExecution);
+        auto units = GetArray<YAML::Node>(group_name, vars::kPluginsExecution);
         LoadExeUnitsFromYaml(units_, units);
 
-        auto folders = GetArray<std::string>(GroupName, vars::kPluginsFolders);
         folders_.clear();
         if (local_) {
             folders_.push_back(cma::cfg::GetLocalDir());
         } else {
-            for (const auto& folder : folders) {
+            auto folders =
+                GetArray<std::string>(group_name, vars::kPluginsFolders);
+            for (const auto &folder : folders) {
                 auto f = ReplacePredefinedMarkers(folder);
                 folders_.push_back(wtools::ConvertToUTF16(f));
             }
         }
-    } catch (std::exception& e) {
-        XLOG::l("Section {} exception {}", GroupName, e.what());
+    } catch (std::exception &e) {
+        XLOG::l("Section {} exception {}", group_name, e.what());
     }
 }
 
 // To be used in plugin player
 // constructs command line from folders and patterns
 Plugins::CmdLineInfo Plugins::buildCmdLine() const {
-    using namespace std;
     namespace fs = std::filesystem;
 
     // pickup protected data from the structure
-    unique_lock lk(lock_);
+    std::unique_lock lk(lock_);
     auto units = units_;
     auto folders = folders_;
     lk.unlock();
@@ -396,22 +390,26 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     const auto default_folder_mark =
         wtools::ConvertToUTF16(vars::kPluginsDefaultFolderMark);
     auto default_plugins_folder = cma::cfg::GetCfg().getSystemPluginsDir();
-    if (folders.size() == 0) folders.emplace_back(default_folder_mark);
+    if (folders.empty()) {
+        folders.emplace_back(default_folder_mark);
+    }
 
     Plugins::CmdLineInfo cli;
 
     int count_of_folders = 0;
     int count_of_files = 0;
-    vector<wstring> files;
-    for (auto& folder : folders) {
+    std::vector<std::wstring> files;
+    for (auto &folder : folders) {
         if (folder == default_folder_mark) {
             folder = default_plugins_folder;
         }
         std::error_code ec;
-        if (!fs::exists(folder, ec)) continue;
+        if (!fs::exists(folder, ec)) {
+            continue;
+        }
         count_of_folders++;
 
-        for (const auto& unit : units) {
+        for (const auto &unit : units) {
             // THIS IS NOT VALID CODE
             // must be complicated full folder scanning by mask
             fs::path file = folder;
@@ -426,13 +424,14 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
 
     XLOG::d() << "we have processed:" << count_of_folders << " folders and "
               << count_of_files << " files";
+
     // remove duplicates
-    sort(files.begin(), files.end());
-    auto undefined = unique(files.begin(), files.end());
+    std::sort(files.begin(), files.end());
+    auto undefined = std::unique(files.begin(), files.end());
     files.erase(undefined, files.end());
 
     // build command line
-    for (const auto& file_name : files) {
+    for (const auto &file_name : files) {
         cli.cmd_line_ += L"\"" + file_name + L"\" ";
     }
     if (cli.cmd_line_.empty()) {

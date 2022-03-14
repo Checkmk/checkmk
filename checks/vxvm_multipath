@@ -21,8 +21,11 @@ def check_vxvm_multipath(item, params, info):
                 state = 1
             elif int(paths_inact) > 0 and float(paths_inact) > float(paths) / 2:
                 state = 2
-            return (state, "Status: %s, (%d/%d) Paths to enclosure %s enabled" %
-                    (status_txt, int(paths_act), int(paths), enclosure))
+            return (
+                state,
+                "Status: %s, (%d/%d) Paths to enclosure %s enabled"
+                % (status_txt, int(paths_act), int(paths), enclosure),
+            )
 
     return (3, "Item not found")
 

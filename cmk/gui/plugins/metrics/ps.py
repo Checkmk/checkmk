@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -56,7 +52,7 @@ metric_info["process_handles"] = {
     "color": "32/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -76,7 +72,9 @@ metric_info["process_handles"] = {
 # Further details see here: metrics/utils.py -> _get_implicit_graph_templates()
 graph_info["number_of_processes"] = {
     "title": _("Number of processes"),
-    "metrics": [("processes", "area"),]
+    "metrics": [
+        ("processes", "area"),
+    ],
 }
 
 graph_info["size_of_processes"] = {
@@ -86,7 +84,7 @@ graph_info["size_of_processes"] = {
         ("process_mapped_size", "stack"),
         ("process_resident_size", "area"),
     ],
-    "optional_metrics": ["process_mapped_size"]
+    "optional_metrics": ["process_mapped_size"],
 }
 
 graph_info["size_per_process"] = {
@@ -94,5 +92,5 @@ graph_info["size_per_process"] = {
     "metrics": [
         ("process_resident_size,processes,/", "area", _("Average resident size per process")),
         ("process_virtual_size,processes,/", "stack", _("Average virtual size per process")),
-    ]
+    ],
 }

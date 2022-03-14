@@ -1,16 +1,18 @@
 title: LSI MegaRAID: State of Physical Disks (via StorCLI)
-agents: windows
+agents: windows/linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the phyiscal disks of an LSI
- MegaRAID controller. The corresponding agent plugin uses the
- {storcli64.exe} utility, provided its location has been correctly
- entered in the script.
+ MegaRAID controller.
+ On Windows the corresponding agent plugin uses the {storcli64.exe}
+ utility, provided its location has been correctly entered in the script.
+ The linux plugin looks for {MegaCli}, {MegaCli64}, {megacli},
+ {storcli} or {storcli64} on the path.
 
 item:
  The controller number, the enclosure ID, and the slot number followed by the device ID (seperated by a {{-}}).
 
-inventory:
+discovery:
  One service is created for each found disk on each controller.

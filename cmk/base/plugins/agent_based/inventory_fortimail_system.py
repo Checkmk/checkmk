@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Mapping, Optional
 
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -13,19 +13,25 @@ from .utils.fortinet import DETECT_FORTIMAIL
 Section = Mapping[str, str]
 
 
-def parse_fortimail_system(string_table: StringTable) -> Section:
+def parse_fortimail_system(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortimail_system([["model 1a", "12345", "v5.4,build719,180328 (5.4.5 GA)"]])
     {'model': 'model 1a', 'serial': '12345', 'os': 'v5.4,build719,180328 (5.4.5 GA)'}
     """
-    return dict(zip(
-        [
-            "model",
-            "serial",
-            "os",
-        ],
-        string_table[0],
-    ))
+    return (
+        dict(
+            zip(
+                [
+                    "model",
+                    "serial",
+                    "os",
+                ],
+                string_table[0],
+            )
+        )
+        if string_table
+        else None
+    )
 
 
 register.snmp_section(

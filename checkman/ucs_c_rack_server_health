@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: Storage Controller Health
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about the storage controller health of an UCS C-Series Rack Servers racks.
@@ -31,7 +31,7 @@ description:
 
  - {UNKNOW} in case of any other health value than {Good}
 
-inventory:
+discovery:
  One service is created for each server rack included in the special agent output.
 
 item:

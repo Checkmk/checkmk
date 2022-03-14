@@ -4,15 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_prism_arguments(params, hostname, ipaddress):
-    arglist = ['--server', ipaddress]
 
-    for param in ['port', 'username', 'password']:
+def agent_prism_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    arglist = ["--server", ipaddress or hostname]
+
+    for param in ["port", "username", "password"]:
         if param in params:
-            arglist += ['--%s' % param, "%s" % params[param]]
+            arglist += ["--%s" % param, "%s" % params[param]]
 
     return arglist
 
 
-special_agent_info['prism'] = agent_prism_arguments
+special_agent_info["prism"] = agent_prism_arguments

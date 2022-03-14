@@ -19,7 +19,7 @@ def parse_mongodb_cluster(info):
     """
     if info:
         return json.loads(str(info[0][0]))
-    return dict()
+    return {}
 
 
 #   .--database------------------------------------------------------------.
@@ -30,7 +30,7 @@ def parse_mongodb_cluster(info):
 #   |              \__,_|\__,_|\__\__,_|_.__/ \__,_|___/\___|              |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+-'
-#.
+# .
 
 
 def inventory_mongodb_cluster_databases(databases_dict):
@@ -86,7 +86,7 @@ check_info["mongodb_cluster"] = {
 #   |                   |___/_| |_|\__,_|_|  \__,_|___/                    |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#.
+# .
 
 # description: [([interval for total number of chunks[, number of chunks threshold),...]
 BALANCE_THRESHOLDS = [((0, 20), 2), ((21, 79), 4), ((80, 2**31 - 1), 8)]
@@ -129,8 +129,13 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     #
     # output if collection is sharded or unsharded
     #
-    is_sharded = databases_dict.get("databases").get(database_name).get("collstats", {}).get(
-        collection_name, {}).get("sharded", False)
+    is_sharded = (
+        databases_dict.get("databases")
+        .get(database_name)
+        .get("collstats", {})
+        .get(collection_name, {})
+        .get("sharded", False)
+    )
     yield 0, "Collection: %s" % ("sharded" if is_sharded else "unsharded")
 
     #
@@ -138,16 +143,22 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     #
     if is_sharded:
         yield _mongodb_cluster_collection_is_balanced(
-            databases_dict.get("databases").get(database_name).get("collstats",
-                                                                   {}).get(collection_name, {}))
+            databases_dict.get("databases")
+            .get(database_name)
+            .get("collstats", {})
+            .get(collection_name, {})
+        )
 
     #
     # check if balancer is disabled for collection
     #
     if is_sharded:
         yield _mongodb_cluster_is_balancer_disabled(
-            databases_dict.get("databases").get(database_name).get("collstats",
-                                                                   {}).get(collection_name, {}))
+            databases_dict.get("databases")
+            .get(database_name)
+            .get("collstats", {})
+            .get(collection_name, {})
+        )
 
     #
     # check if shard contains jumbo chunks
@@ -155,21 +166,33 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     if is_sharded:
         yield _mongodb_cluster_shard_has_jumbos(
             params.get("levels_number_jumbo"),
-            databases_dict.get("databases").get(database_name).get("collstats",
-                                                                   {}).get(collection_name, {}))
+            databases_dict.get("databases")
+            .get(database_name)
+            .get("collstats", {})
+            .get(collection_name, {}),
+        )
 
     #
     # generate long output
     #
     perf_data = _mongodb_cluster_generate_performance_data(
-        databases_dict.get("databases").get(database_name).get("collstats",
-                                                               {}).get(collection_name, {}), params)
+        databases_dict.get("databases")
+        .get(database_name)
+        .get("collstats", {})
+        .get(collection_name, {}),
+        params,
+    )
     yield _generate_mongodb_cluster_long_output(
         is_sharded,
-        databases_dict.get("databases").get(database_name).get("collstats",
-                                                               {}).get(collection_name, {}),
+        databases_dict.get("databases")
+        .get(database_name)
+        .get("collstats", {})
+        .get(collection_name, {}),
         databases_dict.get("databases").get(database_name).get("primary", "unknown"),
-        databases_dict.get("settings", {}), databases_dict.get("shards", {}), perf_data)
+        databases_dict.get("settings", {}),
+        databases_dict.get("shards", {}),
+        perf_data,
+    )
 
 
 def _mongodb_cluster_is_balancer_disabled(collection_dict):
@@ -204,11 +227,13 @@ def _mongodb_cluster_shard_has_jumbos(levels, collection_dict):
 
         if number_of_jumbos >= levels[0]:
             warning_info.append(
-                "%s (%d jumbo %s)" %
-                (shard_name, number_of_jumbos, "chunks" if number_of_jumbos > 1 else "chunk"))
+                "%s (%d jumbo %s)"
+                % (shard_name, number_of_jumbos, "chunks" if number_of_jumbos > 1 else "chunk")
+            )
 
-    return warning_level, "Jumbo: %s" % ("[%s]" %
-                                         ", ".join(warning_info) if warning_level > 0 else "0")
+    return warning_level, "Jumbo: %s" % (
+        "[%s]" % ", ".join(warning_info) if warning_level > 0 else "0"
+    )
 
 
 def _mongodb_cluster_collection_is_balanced(collection_dict):
@@ -231,12 +256,14 @@ def _mongodb_cluster_collection_is_balanced(collection_dict):
     for shard_name in sorted(collection_dict.get("shards", {})):
 
         # get shard information
-        number_of_chunks_in_shard = collection_dict.get("shards").get(shard_name).get(
-            "numberOfChunks", 0)
+        number_of_chunks_in_shard = (
+            collection_dict.get("shards").get(shard_name).get("numberOfChunks", 0)
+        )
 
         # check if shard is in balance
-        balanced &= _mongodb_cluster_is_balanced(total_number_of_chunks, average_chunks_per_shard,
-                                                 number_of_chunks_in_shard)
+        balanced &= _mongodb_cluster_is_balanced(
+            total_number_of_chunks, average_chunks_per_shard, number_of_chunks_in_shard
+        )
 
         # generate additional warning output
         warning_info.append("%s (%d chunks)" % (shard_name, number_of_chunks_in_shard))
@@ -246,8 +273,9 @@ def _mongodb_cluster_collection_is_balanced(collection_dict):
     return 1, "Chunks: unbalanced [%s]" % ", ".join(warning_info)
 
 
-def _mongodb_cluster_is_balanced(total_number_of_chunks, average_chunks_per_shard,
-                                 number_of_chunks_in_shard):
+def _mongodb_cluster_is_balanced(
+    total_number_of_chunks, average_chunks_per_shard, number_of_chunks_in_shard
+):
     """
     check if deviation of chunks in shard is in range depended on total number of chunks
 
@@ -268,8 +296,9 @@ def _mongodb_cluster_is_balanced(total_number_of_chunks, average_chunks_per_shar
     return True
 
 
-def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_shard_name,
-                                          settings_dict, shards_dict, perf_data):
+def _generate_mongodb_cluster_long_output(
+    is_sharded, collection_dict, primary_shard_name, settings_dict, shards_dict, perf_data
+):
     """
     create long output with collection and shard information
     :param is_sharded: flag if collection is sharded
@@ -290,16 +319,21 @@ def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_s
     total_number_of_documents = collection_dict.get("count", 0)
     total_collection_size = collection_dict.get("size", 0)
     storage_size = collection_dict.get("storageSize", 0)
-    balancer_status = "disabled" if "noBalance" in collection_dict and collection_dict.get(
-        "noBalance", False) else "enabled"
+    balancer_status = (
+        "disabled"
+        if "noBalance" in collection_dict and collection_dict.get("noBalance", False)
+        else "enabled"
+    )
 
     # output per collection
     collections_info = ["Collection"]
     if has_shards:
         collections_info.append("- Shards: %d" % len(collection_shards_dict))
     if has_chunks:
-        collections_info.append("- Chunks: %d (Default chunk size: %s)" %
-                                (total_number_of_chunks, get_bytes_human_readable(chunk_size)))
+        collections_info.append(
+            "- Chunks: %d (Default chunk size: %s)"
+            % (total_number_of_chunks, get_bytes_human_readable(chunk_size))
+        )
     collections_info.append("- Docs: %d" % total_number_of_documents)
     collections_info.append("- Size: %s" % get_bytes_human_readable(total_collection_size))
     collections_info.append("- Storage: %s" % get_bytes_human_readable(storage_size))
@@ -313,14 +347,19 @@ def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_s
         aggregated_shards_dict["hostname"] = shards_dict.get(shard_name, {}).get("host", "unknown")
         aggregated_shards_dict["name"] = shard_name
         aggregated_shards_dict["is_primary"] = shard_name == primary_shard_name
-        shard_info.append("\n" + _mongodb_cluster_get_shard_statistic_info(
-            is_sharded, aggregated_shards_dict, total_collection_size, total_number_of_documents))
+        shard_info.append(
+            "\n"
+            + _mongodb_cluster_get_shard_statistic_info(
+                is_sharded, aggregated_shards_dict, total_collection_size, total_number_of_documents
+            )
+        )
 
     return 0, "\n%s\n%s" % ("\n".join(collections_info), "\n".join(shard_info)), perf_data
 
 
-def _mongodb_cluster_get_shard_statistic_info(is_sharded, shard_dict, total_shard_size,
-                                              total_number_of_documents):
+def _mongodb_cluster_get_shard_statistic_info(
+    is_sharded, shard_dict, total_shard_size, total_number_of_documents
+):
     """
     create output for shard information
     :param is_sharded: boolean, is shard sharded or unsharded
@@ -340,8 +379,11 @@ def _mongodb_cluster_get_shard_statistic_info(is_sharded, shard_dict, total_shar
 
     # calculate some stuff
     estDataPercent = (float(shard_size) / total_shard_size * 100) if total_shard_size > 0 else 0
-    estDocPercent = (float(number_of_documents) / total_number_of_documents *
-                     100) if total_number_of_documents > 0 else 0
+    estDocPercent = (
+        (float(number_of_documents) / total_number_of_documents * 100)
+        if total_number_of_documents > 0
+        else 0
+    )
     estChunkData = (float(shard_size) / number_of_chunks) if number_of_chunks > 0 else 0
     estChunkCount = (float(number_of_documents) / number_of_chunks) if number_of_chunks > 0 else 0
 
@@ -350,16 +392,20 @@ def _mongodb_cluster_get_shard_statistic_info(is_sharded, shard_dict, total_shar
     output = ["Shard %s" % shard_name_info]
     output.append("- Chunks: %d" % number_of_chunks)
     output.append("- Jumbos: %d" % number_of_jumbos)
-    output.append("- Docs: %d%s" %
-                  (number_of_documents, " (%1.2f%%)" % estDocPercent if is_sharded else ""))
-    if is_sharded:
-        output.append("--- per chunk: " + u'\u2248' + " %d" % estChunkCount)
     output.append(
-        "- Size: %s%s" %
-        (get_bytes_human_readable(shard_size), " (%1.2f%%)" % estDataPercent if is_sharded else ""))
+        "- Docs: %d%s" % (number_of_documents, " (%1.2f%%)" % estDocPercent if is_sharded else "")
+    )
     if is_sharded:
-        output.append("--- per chunk: " + u'\u2248' +
-                      " %s" % get_bytes_human_readable(estChunkData))
+        output.append("--- per chunk: " + "\u2248" + " %d" % estChunkCount)
+    output.append(
+        "- Size: %s%s"
+        % (
+            get_bytes_human_readable(shard_size),
+            " (%1.2f%%)" % estDataPercent if is_sharded else "",
+        )
+    )
+    if is_sharded:
+        output.append("--- per chunk: " + "\u2248" + " %s" % get_bytes_human_readable(estChunkData))
     output.append("- Host: %s" % hostname)
     return "\n".join(output)
 
@@ -385,8 +431,9 @@ def _mongodb_cluster_generate_performance_data(collection_dict, params):
     has_shards = collection_dict.get("shards", False)
     if has_shards:
         for shard_name in collection_dict.get("shards"):
-            number_of_jumbos = collection_dict.get("shards").get(shard_name).get(
-                "numberOfJumbos", 0)
+            number_of_jumbos = (
+                collection_dict.get("shards").get(shard_name).get("numberOfJumbos", 0)
+            )
             total_number_of_jumbos += number_of_jumbos
 
     perfdata = []
@@ -396,9 +443,14 @@ def _mongodb_cluster_generate_performance_data(collection_dict, params):
     if has_chunks:
         perfdata.append(("mongodb_chunk_count", number_of_chunks))
     if has_shards:
-        perfdata.append(("mongodb_jumbo_chunk_count", total_number_of_jumbos,
-                         params.get("levels_number_jumbo",
-                                    [0, 0])[0], params.get("levels_number_jumbo", [0, 0])[1]))
+        perfdata.append(
+            (
+                "mongodb_jumbo_chunk_count",
+                total_number_of_jumbos,
+                params.get("levels_number_jumbo", [0, 0])[0],
+                params.get("levels_number_jumbo", [0, 0])[1],
+            )
+        )
     return perfdata
 
 
@@ -438,7 +490,7 @@ check_info["mongodb_cluster.collections"] = {
 #   |              |_.__/ \__,_|_|\__,_|_| |_|\___\___|_|                  |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#.
+# .
 
 
 def check_mongodb_cluster_balancer(_item, _params, databases_dict):

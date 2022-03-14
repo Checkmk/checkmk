@@ -9,7 +9,6 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['alcatel_temp'] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 check_info["alcatel_cpu"] = {
     "check_function": check_alcatel_cpu,
@@ -19,6 +18,6 @@ check_info["alcatel_cpu"] = {
     "snmp_scan_function": alcatel_networking_products_scan_function,
     "snmp_info": (  # MIB module "ALCATEL-IND1-HEALTH-MIB"
         ".1.3.6.1.4.1.6486.800.1.2.1.16.1.1.1",  # MIB object "healthDeviceInfo"
-        [13]  # MIB object "healthDeviceCpuLatest"
+        [13],  # MIB object "healthDeviceCpuLatest"
     ),
 }

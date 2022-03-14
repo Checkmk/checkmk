@@ -15,15 +15,18 @@ def check_aruba_aps(_no_item, _params, info):
         connected_aps = info[0][0]
     except IndexError:
         return
-    return 0, "Connected: %s" % connected_aps, [('connections', connected_aps)]
+    return 0, "Connected: %s" % connected_aps, [("connections", connected_aps)]
 
 
 check_info["aruba_aps"] = {
-    'inventory_function': inventory_aruba_aps,
-    'check_function': check_aruba_aps,
-    'service_description': 'Access Points',
-    'snmp_info': ('.1.3.6.1.4.1.14823.2.2.1.1.3', [
-        '1',
-    ]),
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.14823'),
+    "inventory_function": inventory_aruba_aps,
+    "check_function": check_aruba_aps,
+    "service_description": "Access Points",
+    "snmp_info": (
+        ".1.3.6.1.4.1.14823.2.2.1.1.3",
+        [
+            "1",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14823"),
 }

@@ -1,7 +1,7 @@
 title: Rittal CMC-III IO Units: Status of Input and Output Ports
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the Input and Output Ports of
@@ -15,5 +15,5 @@ description:
 item:
  The internal name of the input or output ports
 
-inventory:
+discovery:
  One service is created for each input and output port.

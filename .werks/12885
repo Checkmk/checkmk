@@ -1,0 +1,23 @@
+Title: <tt>if64</tt>: Option to Check Combination of Operational and Admin States
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1623417088
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The interface check <tt>if64</tt> always displays the operational status
+<tt>ifOperStatus</tt> of the interface. Furthermore, it can be configured to
+fetch and display the admin status <tt>ifAdminStatus</tt>. For both states,
+there are configuration options to map them to monitoring states (eg.
+ifOperStatus=up --> OK, ifOperStatus=down --> CRIT).
+
+However, before this werk, there was no option to assign a monitoring state
+to a <i>combination</i> of an operational and an admin state. With the
+additional configuration option introduced by this werk, you can for example
+configure that an interface which is down <i>and</i> admin down should be
+considered OK. Such a setting will only apply to interfaces matching the
+configured operational <i>and</i> the configured admin state. For example, an
+interface which is down but admin up would not be affected.

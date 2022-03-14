@@ -1,0 +1,23 @@
+Title: Network Topology: The bookmark for this page now includes more settings
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1618811694
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+With this change the bookmark for the network topology includes
+<ul>
+<li>Current filters</li>
+<li>Number of configured hops</li>
+<li>Number of max nodes</li>
+<li>Current active overlays</li>
+<li>The currently selected root nodes, growth nodes and growth forbidden nodes</li>
+</ul>
+
+In a later version of the network topology, the rearrangement of nodes will be supported.
+Note: Since all of the above information is stored in one URL, the maximum number of options is limited. Quite high, but
+still limited.

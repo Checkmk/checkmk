@@ -1,11 +1,11 @@
 title: HPE StoreOnce: Uptime
 agents: storeonce
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the uptime of the appliance. The behaviour of this
  check is similar to the regular uptime check.
 
-inventory:
+discovery:
  One service is created.

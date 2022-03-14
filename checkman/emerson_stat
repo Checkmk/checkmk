@@ -1,7 +1,7 @@
 title: Emerson UPS: Status
 agents: snmp
 catalog: hw/power/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status OID of Emerson UPS devices which have the emerson energy
@@ -34,5 +34,5 @@ description:
  (9) "testing"
 
 
-inventory:
+discovery:
  One service is created for each host.

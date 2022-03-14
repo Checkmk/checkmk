@@ -10,19 +10,16 @@ def check_dns_arguments(params):
     args = ["-H", description]
 
     if "server" in settings:
-        if settings["server"] is not None:
+        if settings["server"] not in {None, "default DNS server"}:
             args += ["-s", settings["server"]]
     else:
         args += ["-s", "$HOSTADDRESS$"]
 
-    if "expected_address" in settings:
-        # Convert from old (str) to new (list of strings)
-        exp = settings["expected_address"]
-        if isinstance(exp, str):
-            exp = [exp]
-        for entry in exp:
-            sorted_entry = ",".join(sorted(entry.split(",")))
-            args += ['-a', sorted_entry]
+    if settings.get("expect_all_addresses", True):
+        args.append("-L")
+
+    for address in settings.get("expected_addresses_list", ()):
+        args += ["-a", address]
 
     if settings.get("expected_authority"):
         args.append("-A")

@@ -1,0 +1,18 @@
+Title: fortigate_memory_base: Wrong default levels and wrong absolute levels
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1620217988
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The absolute levels on memory usage were off by a factor of 1024^2.
+With regards to configured WATO rules this is now fixed.
+
+Additionally the default parameters were mistakenly taken to mean
+70/80 MB (instead of percent).
+To fix this either set up a WATO rule to override them, or rediscover
+the service.

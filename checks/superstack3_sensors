@@ -6,7 +6,7 @@
 
 
 def inventory_superstack3_sensors(info):
-    return [(line[0], None) for line in info if line[1] != 'not present']
+    return [(line[0], None) for line in info if line[1] != "not present"]
 
 
 def check_superstack3_sensors(item, params, info):
@@ -21,9 +21,9 @@ def check_superstack3_sensors(item, params, info):
 
 
 check_info["superstack3_sensors"] = {
-    'check_function': check_superstack3_sensors,
-    'inventory_function': inventory_superstack3_sensors,
-    'service_description': '%s',
-    'snmp_info': ('.1.3.6.1.4.1.43.43.1.1', ['7', '10']),
-    'snmp_scan_function': lambda oid: "3com superstack 3" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "check_function": check_superstack3_sensors,
+    "inventory_function": inventory_superstack3_sensors,
+    "service_description": "%s",
+    "snmp_info": (".1.3.6.1.4.1.43.43.1.1", ["7", "10"]),
+    "snmp_scan_function": lambda oid: "3com superstack 3" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

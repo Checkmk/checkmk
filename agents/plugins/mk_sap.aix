@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # cat sapservices
 ##!/bin/sh
@@ -46,21 +46,22 @@ sapservices="/usr/sap/sapservices"
 if [ -r "$sapservices" ]; then
     echo "<<<aix_sap_processlist:sep(44)>>>"
     # loop over ids
-    cat $sapservices | while read LINE
-    do
-        command=$(echo $LINE | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
-	if [ -n "$command" ]; then
-            id2=$(echo $command | awk -F"/" '{print $4}')
-            path=$(echo "/sapmnt/$id2/exe")
-            sappfpar=$(find $path -name sappfpar | head -1)
-            sapcontrol=$(find $path -name sapcontrol | head -1)
-            libpath=$(find $path -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
-            id=$(LIBPATH=$LIBPATH:$libpath $sappfpar SAPSYSTEM $command)
+    # SC2162: read without -r will mangle backslashes.
+    # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+    # Since escaping of field seperators is not relevant when reading into one variable, we probably
+    # would have wanted "read -r".
+    # shellcheck disable=SC2162
+    while read LINE; do
+        command=$(echo "$LINE" | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
+        if [ -n "$command" ]; then
+            id2=$(echo "$command" | awk -F"/" '{print $4}')
+            path="/sapmnt/$id2/exe"
+            sappfpar=$(find "$path" -name sappfpar | head -1)
+            sapcontrol=$(find "$path" -name sapcontrol | head -1)
+            lib_path=$(find "$path" -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
+            id=$(LIBPATH=$LIBPATH:$lib_path $sappfpar SAPSYSTEM "$command")
             echo -n "[$id]"
-            LIBPATH=$LIBPATH:$libpath $sapcontrol -nr $id -function GetProcessList
-	fi
-    done
+            LIBPATH=$LIBPATH:$lib_path $sapcontrol -nr "$id" -function GetProcessList
+        fi
+    done <"$sapservices"
 fi
-
-
-

@@ -12,14 +12,14 @@ def inventory_stulz_powerstate(info):
 def check_stulz_powerstate(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            if line[1] != '1':
+            if line[1] != "1":
                 message = "Device powered off"
                 power_state = 2
             else:
                 message = "Device powered on"
                 power_state = 6
 
-            return 0, message, [('state', power_state)]
+            return 0, message, [("state", power_state)]
     return 3, "No information found about the device"
 
 

@@ -18,38 +18,40 @@ You should find an example configuration file at
 '../cfg_examples/logwatch.cfg' relative to this file.
 """
 
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
+
 from __future__ import with_statement
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 import sys
+
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
     sys.exit(1)
 
-import io
+import ast
+import binascii
 import glob
+import io
+import locale
 import logging
 import os
-import re
-import shutil
-import time
-import socket
-import binascii
 import platform
-import locale
-import ast
-
+import re
 import shlex
+import shutil
+import socket
+import time
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
 if sys.version_info[0] >= 3:
-    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
-                                  newline='\n',
-                                  encoding=sys.stdout.encoding,
-                                  errors=sys.stdout.errors)
+    new_stdout = io.TextIOWrapper(
+        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
+    )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
@@ -63,17 +65,17 @@ IPV4_REGEX = re.compile(r"^(::ffff:|::ffff:0:|)(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
 ENCODINGS = (
-    (b'\xFF\xFE', "utf_16"),
-    (b'\xFE\xFF', "utf_16_be"),
+    (b"\xFF\xFE", "utf_16"),
+    (b"\xFE\xFF", "utf_16_be"),
 )
 
 TTY_COLORS = {
-    'C': '\033[1;31m',  # red
-    'W': '\033[1;33m',  # yellow
-    'O': '\033[1;32m',  # green
-    'I': '\033[1;34m',  # blue
-    '.': '',  # remain same
-    'normal': '\033[0m',
+    "C": "\033[1;31m",  # red
+    "W": "\033[1;33m",  # yellow
+    "O": "\033[1;32m",  # green
+    "I": "\033[1;34m",  # blue
+    ".": "",  # remain same
+    "normal": "\033[0m",
 }
 
 CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
@@ -90,7 +92,7 @@ else:
 
 
 # Borrowed from six
-def ensure_str(s, encoding='utf-8', errors='strict'):
+def ensure_str(s, encoding="utf-8", errors="strict"):
     """Coerce *s* to `str`.
 
     For Python 2:
@@ -126,6 +128,7 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-obj
     (Neither use optparse which is Python 2.3 to 2.7 only.
     Nor use argparse which is Python 2.7 onwards only.)
     """
+
     def __init__(self, argv):
         super(ArgsParser, self).__init__()
 
@@ -133,10 +136,10 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-obj
             sys.stderr.write(ensure_str(__doc__))
             sys.exit(0)
 
-        self.verbosity = argv.count('-v') + 2 * argv.count('-vv')
-        self.config = argv[argv.index('-c') + 1] if '-c' in argv else None
-        self.debug = '-d' in argv or '--debug' in argv
-        self.no_state = '--no_state' in argv
+        self.verbosity = argv.count("-v") + 2 * argv.count("-vv")
+        self.config = argv[argv.index("-c") + 1] if "-c" in argv else None
+        self.debug = "-d" in argv or "--debug" in argv
+        self.no_state = "--no_state" in argv
 
 
 def get_status_filename(cluster_config):
@@ -197,7 +200,7 @@ def get_status_filename(cluster_config):
 
 
 def is_comment(line):
-    return line.lstrip().startswith('#')
+    return line.lstrip().startswith("#")
 
 
 def is_empty(line):
@@ -212,9 +215,9 @@ def parse_filenames(line):
     if platform.system() == "Windows":
         # we can't use pathlib: Python 2.5 has no pathlib
         # to garantie that backslash is escaped
-        _processed_line = line.replace('\\', '/')
+        _processed_line = line.replace("\\", "/")
         _processed_line = os.path.normpath(_processed_line)
-        _processed_line = _processed_line.replace('\\', '\\\\')
+        _processed_line = _processed_line.replace("\\", "\\\\")
         return shlex.split(_processed_line)
 
     if sys.version_info[0] < 3:
@@ -237,20 +240,26 @@ def get_config_files(directory, config_file_arg=None):
 
 
 def iter_config_lines(files, debug=False):
+    no_cfg_content_yielded = True
     for file_ in files:
         try:
-            with open(file_, 'rb') as fid:
+            with open(file_, "rb") as fid:
                 try:
-                    decoded = (line.decode('utf-8') for line in fid)
+                    decoded = (line.decode("utf-8") for line in fid)
                     for line in decoded:
                         if not is_comment(line) and not is_empty(line):
                             yield line.rstrip()
+                            no_cfg_content_yielded = False
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
-            if debug:
-                raise
+            pass
+
+    if debug and no_cfg_content_yielded:
+        # We need at least one config file *with* content in one of the places:
+        # logwatch.d or MK_CONFDIR
+        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
 
 
 def consume_cluster_definition(config_lines):
@@ -275,13 +284,13 @@ def consume_logfile_definition(config_lines):
         line = config_lines.pop(0)
         level, raw_pattern = line.split(None, 1)
 
-        if level == 'A':
+        if level == "A":
             cont_list.append(raw_pattern)
 
-        elif level == 'R':
+        elif level == "R":
             rewrite_list.append(raw_pattern)
 
-        elif level in ('C', 'W', 'I', 'O'):
+        elif level in ("C", "W", "I", "O"):
             # New pattern for line matching => clear continuation and rewrite patterns
             cont_list = []
             rewrite_list = []
@@ -349,10 +358,10 @@ class State(object):  # pylint: disable=useless-object-inheritance
             # Support status files with the following structure:
             # /var/log/messages|7767698|32455445
             # These were used prior to to 1.7.0i1
-            parts = line.split('|')
+            parts = line.split("|")
             filename, offset = parts[0], int(parts[1])
             inode = int(parts[2]) if len(parts) >= 3 else -1
-            return {'file': filename, 'offset': offset, 'inode': inode}
+            return {"file": filename, "offset": offset, "inode": inode}
 
     def read(self):
         """Read state from file
@@ -361,10 +370,13 @@ class State(object):  # pylint: disable=useless-object-inheritance
         """
         LOGGER.debug("Reading state file: %r", self.filename)
 
+        if not os.path.exists(self.filename):
+            return self
+
         with open(self.filename) as stat_fh:
             for line in stat_fh:
                 line_data = self._load_line(line)
-                self._data[line_data['file']] = line_data
+                self._data[line_data["file"]] = line_data
 
         LOGGER.info("Read state: %r", self._data)
         return self
@@ -378,7 +390,7 @@ class State(object):  # pylint: disable=useless-object-inheritance
                 stat_fh.write(repr(data).encode("ascii") + b"\n")
 
     def get(self, key):
-        return self._data.setdefault(key, {'file': key})
+        return self._data.setdefault(key, {"file": key})
 
 
 class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
@@ -390,10 +402,10 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
         super(LogLinesIter, self).__init__()
         self._fd = os.open(logfile, os.O_RDONLY)
         self._lines = []  # List[Text]
-        self._buffer = b''
+        self._buffer = b""
         self._reached_end = False  # used for optimization only
         self._enc = encoding or self._get_encoding()
-        self._nl = u'\n'
+        self._nl = "\n"
         # for Windows we need a bit special processing. It is difficult to fit this processing
         # in current architecture smoothly
         self._utf16 = self._enc == "utf_16"
@@ -423,12 +435,14 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
         self._buffer = os.read(self._fd, enc_bytes_len)
         for bom, encoding in ENCODINGS:
             if self._buffer.startswith(bom):
-                self._buffer = self._buffer[len(bom):]
+                self._buffer = self._buffer[len(bom) :]
                 LOGGER.debug("Detected %r encoding by BOM", encoding)
                 return encoding
 
         pref_encoding = locale.getpreferredencoding()
-        encoding = "utf_8" if not pref_encoding or pref_encoding == "ANSI_X3.4-1968" else pref_encoding
+        encoding = (
+            "utf_8" if not pref_encoding or pref_encoding == "ANSI_X3.4-1968" else pref_encoding
+        )
         LOGGER.debug("Locale Preferred encoding is %s, using %s", pref_encoding, encoding)
         return encoding
 
@@ -451,7 +465,7 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
     def set_position(self, position):
         if position is None:
             return
-        self._buffer = b''
+        self._buffer = b""
         self._lines = []
         os.lseek(self._fd, position, os.SEEK_SET)
 
@@ -465,7 +479,7 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
 
     def skip_remaining(self):
         os.lseek(self._fd, 0, os.SEEK_END)
-        self._buffer = b''
+        self._buffer = b""
         self._lines = []
 
     def push_back_line(self, line):
@@ -490,6 +504,7 @@ def is_inode_capable(path):
     if system == "Windows":
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
         import win32api  # type: ignore[import] # pylint: disable=import-error
+
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
@@ -512,149 +527,169 @@ def process_logfile(section, filestate, debug):
     except OSError:
         if debug:
             raise
-        return u"[[[%s:cannotopen]]]\n" % section.name_write, []
+        return "[[[%s:cannotopen]]]\n" % section.name_write, []
 
-    header = u"[[[%s]]]\n" % section.name_write
+    try:
+        header = "[[[%s]]]\n" % section.name_write
 
-    stat = os.stat(section.name_fs)
-    inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
-    # If we have never seen this file before, we set the inode to -1
-    prev_inode = filestate.get('inode', -1)
-    filestate['inode'] = inode
+        stat = os.stat(section.name_fs)
+        inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
+        # If we have never seen this file before, we set the inode to -1
+        prev_inode = filestate.get("inode", -1)
+        filestate["inode"] = inode
 
-    # Look at which file offset we have finished scanning the logfile last time.
-    offset = filestate.get('offset')
-    # Set the current pointer to the file end
-    filestate['offset'] = stat.st_size
+        # Look at which file offset we have finished scanning the logfile last time.
+        offset = filestate.get("offset")
+        # Set the current pointer to the file end
+        filestate["offset"] = stat.st_size
 
-    # If we have never seen this file before, we do not want
-    # to make a fuss about ancient log messages... (unless configured to)
-    if offset is None and not (section.options.fromstart or debug):
-        return header, []
+        # If we have never seen this file before, we do not want
+        # to make a fuss about ancient log messages... (unless configured to)
+        if offset is None and not (section.options.fromstart or debug):
+            return header, []
 
-    # If the inode of the logfile has changed it has appearently
-    # been started from new (logfile rotation). At least we must
-    # assume that. In some rare cases (restore of a backup, etc)
-    # we are wrong and resend old log messages
-    if prev_inode >= 0 and inode != prev_inode:
-        offset = None
+        # If the inode of the logfile has changed it has appearently
+        # been started from new (logfile rotation). At least we must
+        # assume that. In some rare cases (restore of a backup, etc)
+        # we are wrong and resend old log messages
+        if prev_inode >= 0 and inode != prev_inode:
+            offset = None
 
-    # Our previously stored offset is the current end ->
-    # no new lines in this file
-    if offset == stat.st_size:
-        return header, []
+        # Our previously stored offset is the current end ->
+        # no new lines in this file
+        if offset == stat.st_size:
+            return header, []
 
-    # If our offset is beyond the current end, the logfile has been
-    # truncated or wrapped while keeping the same inode. We assume
-    # that it contains all new data in that case and restart from
-    # beginning.
-    if offset is not None and offset > stat.st_size:
-        offset = None
+        # If our offset is beyond the current end, the logfile has been
+        # truncated or wrapped while keeping the same inode. We assume
+        # that it contains all new data in that case and restart from
+        # beginning.
+        if offset is not None and offset > stat.st_size:
+            offset = None
 
-    # now seek to offset where interesting data begins
-    log_iter.set_position(offset)
+        # now seek to offset where interesting data begins
+        log_iter.set_position(offset)
 
-    worst = -1
-    warnings_and_errors = []
-    lines_parsed = 0
-    start_time = time.time()
+        worst = -1
+        warnings_and_errors = []
+        lines_parsed = 0
+        start_time = time.time()
 
-    while True:
-        line = log_iter.next_line()
-        if line is None:
-            break  # End of file
+        while True:
+            line = log_iter.next_line()
+            if line is None:
+                break  # End of file
 
-        # Handle option maxlinesize
-        if section.options.maxlinesize is not None and len(line) > section.options.maxlinesize:
-            line = line[:section.options.maxlinesize] + u"[TRUNCATED]\n"
+            # Handle option maxlinesize
+            if section.options.maxlinesize is not None and len(line) > section.options.maxlinesize:
+                line = line[: section.options.maxlinesize] + "[TRUNCATED]\n"
 
-        lines_parsed += 1
-        # Check if maximum number of new log messages is exceeded
-        if section.options.maxlines is not None and lines_parsed > section.options.maxlines:
-            warnings_and_errors.append(u"%s Maximum number (%d) of new log messages exceeded.\n" % (
-                section.options.overflow,
-                section.options.maxlines,
-            ))
-            worst = max(worst, section.options.overflow_level)
-            log_iter.skip_remaining()
-            break
+            lines_parsed += 1
+            # Check if maximum number of new log messages is exceeded
+            if section.options.maxlines is not None and lines_parsed > section.options.maxlines:
+                warnings_and_errors.append(
+                    "%s Maximum number (%d) of new log messages exceeded.\n"
+                    % (
+                        section.options.overflow,
+                        section.options.maxlines,
+                    )
+                )
+                worst = max(worst, section.options.overflow_level)
+                log_iter.skip_remaining()
+                break
 
-        # Check if maximum processing time (per file) is exceeded. Check only
-        # every 100'th line in order to save system calls
-        if section.options.maxtime is not None and lines_parsed % 100 == 10 \
-            and time.time() - start_time > section.options.maxtime:
-            warnings_and_errors.append(
-                u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
-                    section.options.overflow,
-                    section.options.maxtime,
-                ))
-            worst = max(worst, section.options.overflow_level)
-            log_iter.skip_remaining()
-            break
+            # Check if maximum processing time (per file) is exceeded. Check only
+            # every 100'th line in order to save system calls
+            if (
+                section.options.maxtime is not None
+                and lines_parsed % 100 == 10
+                and time.time() - start_time > section.options.maxtime
+            ):
+                warnings_and_errors.append(
+                    "%s Maximum parsing time (%.1f sec) of this log file exceeded.\n"
+                    % (
+                        section.options.overflow,
+                        section.options.maxtime,
+                    )
+                )
+                worst = max(worst, section.options.overflow_level)
+                log_iter.skip_remaining()
+                break
 
-        level = "."
-        for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
-
-            matches = pattern.search(line[:-1])
-            if matches:
-                level = lev
-                levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
-                worst = max(levelint, worst)
-
-                # TODO: the following for block should be a method of the iterator
-                # Check for continuation lines
-                for cont_pattern in cont_patterns:
-                    if isinstance(cont_pattern, int):  # add that many lines
-                        for _unused_x in range(cont_pattern):
-                            cont_line = log_iter.next_line()
-                            if cont_line is None:  # end of file
-                                break
-                            line = line[:-1] + "\1" + cont_line
-
-                    else:  # pattern is regex
-                        while True:
-                            cont_line = log_iter.next_line()
-                            if cont_line is None:  # end of file
-                                break
-                            if cont_pattern.search(cont_line[:-1]):
-                                line = line[:-1] + "\1" + cont_line
-                            else:
-                                log_iter.push_back_line(cont_line)  # sorry for stealing this line
-                                break
-
-                # Replacement
-                for replace in replacements:
-                    line = replace.replace('\\0', line.rstrip()) + "\n"
-                    for num, group in enumerate(matches.groups()):
-                        if group is not None:
-                            line = line.replace('\\%d' % (num + 1), group)
-
-                break  # matching rule found and executed
-
-        if level == "I":
             level = "."
-        if section.options.nocontext and level == '.':
-            continue
+            for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
 
-        out_line = "%s %s" % (level, line[:-1])
-        if sys.stdout.isatty():
-            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
-                "\1", "\nCONT:"), TTY_COLORS['normal'])
-        warnings_and_errors.append("%s\n" % out_line)
+                matches = pattern.search(line[:-1])
+                if matches:
+                    level = lev
+                    levelint = {"C": 2, "W": 1, "O": 0, "I": -1, ".": -1}[lev]
+                    worst = max(levelint, worst)
 
-    new_offset = log_iter.get_position()
-    log_iter.close()
+                    # TODO: the following for block should be a method of the iterator
+                    # Check for continuation lines
+                    for cont_pattern in cont_patterns:
+                        if isinstance(cont_pattern, int):  # add that many lines
+                            for _unused_x in range(cont_pattern):
+                                cont_line = log_iter.next_line()
+                                if cont_line is None:  # end of file
+                                    break
+                                line = line[:-1] + "\1" + cont_line
 
-    filestate['offset'] = new_offset
+                        else:  # pattern is regex
+                            while True:
+                                cont_line = log_iter.next_line()
+                                if cont_line is None:  # end of file
+                                    break
+                                if cont_pattern.search(cont_line[:-1]):
+                                    line = line[:-1] + "\1" + cont_line
+                                else:
+                                    log_iter.push_back_line(
+                                        cont_line
+                                    )  # sorry for stealing this line
+                                    break
+
+                    # Replacement
+                    for replace in replacements:
+                        line = replace.replace("\\0", line.rstrip()) + "\n"
+                        for num, group in enumerate(matches.groups()):
+                            if group is not None:
+                                line = line.replace("\\%d" % (num + 1), group)
+
+                    break  # matching rule found and executed
+
+            if level == "I":
+                level = "."
+            if section.options.nocontext and level == ".":
+                continue
+
+            out_line = "%s %s" % (level, line[:-1])
+            if sys.stdout.isatty():
+                out_line = "%s%s%s" % (
+                    TTY_COLORS[level],
+                    out_line.replace("\1", "\nCONT:"),
+                    TTY_COLORS["normal"],
+                )
+            warnings_and_errors.append("%s\n" % out_line)
+
+        new_offset = log_iter.get_position()
+    finally:
+        log_iter.close()
+
+    filestate["offset"] = new_offset
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
     if section.options.maxfilesize:
-        offset_wrap = (new_offset // section.options.maxfilesize)
+        offset_wrap = new_offset // section.options.maxfilesize
         if ((offset or 0) // section.options.maxfilesize) < offset_wrap:
             warnings_and_errors.append(
-                u"%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
-                (TTY_COLORS['W'] if sys.stdout.isatty() else '', section.options.maxfilesize,
-                 offset_wrap, TTY_COLORS['normal'] if sys.stdout.isatty() else ''))
+                "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n"
+                % (
+                    TTY_COLORS["W"] if sys.stdout.isatty() else "",
+                    section.options.maxfilesize,
+                    offset_wrap,
+                    TTY_COLORS["normal"] if sys.stdout.isatty() else "",
+                )
+            )
 
     # output all lines if at least one warning, error or ok has been found
     if worst > -1:
@@ -664,20 +699,21 @@ def process_logfile(section, filestate, debug):
 
 class Options(object):  # pylint: disable=useless-object-inheritance
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
-    MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
-    MAP_BOOL = {'true': True, 'false': False, '1': True, '0': False, 'yes': True, 'no': False}
+
+    MAP_OVERFLOW = {"C": 2, "W": 1, "I": 0, "O": 0}
+    MAP_BOOL = {"true": True, "false": False, "1": True, "0": False, "yes": True, "no": False}
     DEFAULTS = {
-        'encoding': None,
-        'maxfilesize': None,
-        'maxlines': None,
-        'maxtime': None,
-        'maxlinesize': None,
-        'regex': None,
-        'overflow': 'C',
-        'nocontext': None,
-        'maxcontextlines': None,
-        'maxoutputsize': 500000,  # same as logwatch_max_filesize in check plugin
-        'fromstart': False,
+        "encoding": None,
+        "maxfilesize": None,
+        "maxlines": None,
+        "maxtime": None,
+        "maxlinesize": None,
+        "regex": None,
+        "overflow": "C",
+        "nocontext": None,
+        "maxcontextlines": None,
+        "maxoutputsize": 500000,  # same as logwatch_max_filesize in check plugin
+        "fromstart": False,
     }
 
     def __init__(self):
@@ -685,47 +721,47 @@ class Options(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def encoding(self):
-        return self._attr_or_default('encoding')
+        return self._attr_or_default("encoding")
 
     @property
     def maxfilesize(self):
-        return self._attr_or_default('maxfilesize')
+        return self._attr_or_default("maxfilesize")
 
     @property
     def maxlines(self):
-        return self._attr_or_default('maxlines')
+        return self._attr_or_default("maxlines")
 
     @property
     def maxtime(self):
-        return self._attr_or_default('maxtime')
+        return self._attr_or_default("maxtime")
 
     @property
     def maxlinesize(self):
-        return self._attr_or_default('maxlinesize')
+        return self._attr_or_default("maxlinesize")
 
     @property
     def regex(self):
-        return self._attr_or_default('regex')
+        return self._attr_or_default("regex")
 
     @property
     def overflow(self):
-        return self._attr_or_default('overflow')
+        return self._attr_or_default("overflow")
 
     @property
     def nocontext(self):
-        return self._attr_or_default('nocontext')
+        return self._attr_or_default("nocontext")
 
     @property
     def maxcontextlines(self):
-        return self._attr_or_default('maxcontextlines')
+        return self._attr_or_default("maxcontextlines")
 
     @property
     def maxoutputsize(self):
-        return self._attr_or_default('maxoutputsize')
+        return self._attr_or_default("maxoutputsize")
 
     @property
     def fromstart(self):
-        return self._attr_or_default('fromstart')
+        return self._attr_or_default("fromstart")
 
     def _attr_or_default(self, key):
         if key in self.values:
@@ -741,34 +777,40 @@ class Options(object):  # pylint: disable=useless-object-inheritance
 
     def set_opt(self, opt_str):
         try:
-            key, value = opt_str.split('=', 1)
-            if key == 'encoding':
-                ''.encode(value)  # make sure it's an encoding
+            key, value = opt_str.split("=", 1)
+            if key == "encoding":
+                "".encode(value)  # make sure it's an encoding
                 self.values[key] = value
-            elif key in ('maxlines', 'maxlinesize', 'maxfilesize', 'maxoutputsize'):
+            elif key in ("maxlines", "maxlinesize", "maxfilesize", "maxoutputsize"):
                 self.values[key] = int(value)
-            elif key in ('maxtime',):
+            elif key in ("maxtime",):
                 self.values[key] = float(value)
-            elif key == 'overflow':
-                if value not in Options.MAP_OVERFLOW.keys():
-                    raise ValueError("Invalid overflow: %r (choose from %r)" % (
-                        value,
-                        Options.MAP_OVERFLOW.keys(),  # pylint: disable=dict-keys-not-iterating
-                    ))
-                self.values['overflow'] = value
-            elif key in ('regex', 'iregex'):
-                flags = (re.IGNORECASE if key.startswith('i') else 0) | re.UNICODE
-                self.values['regex'] = re.compile(value, flags)
-            elif key in ('nocontext', 'fromstart'):
-                if value.lower() not in Options.MAP_BOOL.keys():
-                    raise ValueError("Invalid %s: %r (choose from %r)" % (
-                        key,
-                        value,
-                        Options.MAP_BOOL.keys(),  # pylint: disable=dict-keys-not-iterating
-                    ))
+            elif key == "overflow":
+                if value not in Options.MAP_OVERFLOW:
+                    raise ValueError(
+                        "Invalid overflow: %r (choose from %r)"
+                        % (
+                            value,
+                            Options.MAP_OVERFLOW.keys(),
+                        )
+                    )
+                self.values["overflow"] = value
+            elif key in ("regex", "iregex"):
+                flags = (re.IGNORECASE if key.startswith("i") else 0) | re.UNICODE
+                self.values["regex"] = re.compile(value, flags)
+            elif key in ("nocontext", "fromstart"):
+                if value.lower() not in Options.MAP_BOOL:
+                    raise ValueError(
+                        "Invalid %s: %r (choose from %r)"
+                        % (
+                            key,
+                            value,
+                            Options.MAP_BOOL.keys(),
+                        )
+                    )
                 self.values[key] = Options.MAP_BOOL[value.lower()]
-            elif key == 'maxcontextlines':
-                before, after = (int(i) for i in value.split(','))
+            elif key == "maxcontextlines":
+                before, after = (int(i) for i in value.split(","))
                 self.values[key] = (before, after)
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
@@ -797,10 +839,14 @@ def _decode_to_unicode(match):
     # we can't use 'six': this code may be executed using Python 2.5/2.6
     if sys.version_info[0] == 2:
         # Python 2: str @Windows && @Linux
-        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')  # pylint: disable=undefined-variable
+        return (
+            match
+            if isinstance(match, unicode)  # pylint: disable=undefined-variable
+            else match.decode("utf8", "replace")
+        )
 
     # Python 3: bytes @Linux and unicode @Windows
-    return match.decode('utf-8', 'replace') if isinstance(match, bytes) else match
+    return match.decode("utf-8", "replace") if isinstance(match, bytes) else match
 
 
 def find_matching_logfiles(glob_pattern):
@@ -828,7 +874,7 @@ def find_matching_logfiles(glob_pattern):
         matches = list(glob.glob(glob_pattern))
     else:
         # we can't use glob on unicode, as it would try to re-decode matches with ascii
-        matches = glob.glob(glob_pattern.encode('utf8'))
+        matches = glob.glob(glob_pattern.encode("utf8"))
 
     # skip dirs
     file_refs = []
@@ -850,8 +896,8 @@ def _search_optimize_raw_pattern(raw_pattern):
     Stripping leading and trailing '.*' avoids catastrophic backtracking
     when long log lines are being processed
     """
-    start_idx = 2 if raw_pattern.startswith('.*') else 0
-    end_idx = -2 if raw_pattern.endswith('.*') else None
+    start_idx = 2 if raw_pattern.startswith(".*") else 0
+    end_idx = -2 if raw_pattern.endswith(".*") else None
     return raw_pattern[start_idx:end_idx] or raw_pattern
 
 
@@ -901,12 +947,12 @@ def parse_sections(logfiles_config):
         # First read all the options like 'maxlines=100' or 'maxtime=10'
         opt = Options()
         for item in cfg.files:
-            if '=' in item:
+            if "=" in item:
                 opt.set_opt(item)
 
         # Then handle the file patterns
         # The thing here is that the same file could match different patterns.
-        for glob_pattern in (f for f in cfg.files if '=' not in f):
+        for glob_pattern in (f for f in cfg.files if "=" not in f):
             logfile_refs = find_matching_logfiles(glob_pattern)
             if opt.regex is not None:
                 logfile_refs = [ref for ref in logfile_refs if opt.regex.search(ref[1])]
@@ -957,10 +1003,10 @@ def _subnetwork_to_ip_range(subnetwork):
 
     Raises ValueError in case of invalid subnetwork.
     """
-    if '/' not in subnetwork:
+    if "/" not in subnetwork:
         ip_integer, version = _ip_to_integer(subnetwork)
         return ip_integer, ip_integer, version
-    network_prefix, netmask_len = subnetwork.split('/', 1)
+    network_prefix, netmask_len = subnetwork.split("/", 1)
     # try parsing the subnetwork first as IPv4, then as IPv6
     for version, ip_len in ((socket.AF_INET, 32), (socket.AF_INET6, 128)):
         try:
@@ -982,7 +1028,7 @@ def _filter_maxoutputsize(lines, maxoutputsize):
     """Produce lines right *before* maxoutputsize is exceeded"""
     bytecount = 0
     for line in lines:
-        bytecount += len(line.encode('utf-8'))
+        bytecount += len(line.encode("utf-8"))
         if bytecount > maxoutputsize:
             break
         yield line
@@ -1016,7 +1062,7 @@ def write_output(header, lines, options):
     lines = _filter_maxoutputsize(lines, options.maxoutputsize)
 
     sys.stdout.write(header)
-    sys.stdout.writelines(lines)
+    sys.stdout.writelines(map(ensure_str, lines))
 
 
 def main(argv=None):
@@ -1049,7 +1095,7 @@ def main(argv=None):
         if sys.version_info[0] == 3:
             sys.stdout.write("[[[%s:missing]]]\n" % pattern)
         else:
-            sys.stdout.write((u"[[[%s:missing]]]\n" % pattern).encode('utf-8'))
+            sys.stdout.write(("[[[%s:missing]]]\n" % pattern).encode("utf-8"))
 
     state = State(status_filename)
     try:

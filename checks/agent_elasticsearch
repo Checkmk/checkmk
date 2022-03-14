@@ -11,12 +11,16 @@
 #     'user': 'blub'
 # }
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_elasticsearch_arguments(params, hostname, ipaddress):
+
+def agent_elasticsearch_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = []
 
     args += ["-P", params["protocol"]]
-    args += ["-m", ' '.join(params["infos"])]
+    args += ["-m", " ".join(params["infos"])]
 
     if "user" in params:
         args += ["-u", params["user"]]
@@ -30,4 +34,4 @@ def agent_elasticsearch_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['elasticsearch'] = agent_elasticsearch_arguments
+special_agent_info["elasticsearch"] = agent_elasticsearch_arguments

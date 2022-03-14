@@ -2,7 +2,7 @@ title: Oracle Instance: Uptime of Database
 agents: linux, aix, hpux, solaris, windows
 distribution: check_mk
 catalog: app/oracle
-license: GPL
+license: GPLv2
 description:
  This check monitors the uptime of an Oracle Instance.
 
@@ -11,6 +11,6 @@ description:
 item:
  The ORACLE_SID
 
-inventory:
+discovery:
  One service is created for each running database if the database has no
  invalid data or general error.

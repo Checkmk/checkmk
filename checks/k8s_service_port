@@ -10,6 +10,11 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def discover_k8s_service_port(parsed):
     if parsed:
@@ -22,41 +27,41 @@ def k8s_check_value(value, expected, infotext_template):
     infotext = infotext_template % value
     if expected is not None and value != expected:
         state = 2
-        infotext += ' (expected %s)' % expected
+        infotext += " (expected %s)" % expected
     return state, infotext
 
 
 @get_parsed_item_data
 def check_k8s_service_port(item, params, parsed):
     yield k8s_check_value(
-        parsed['port'],
-        params.get('port'),
-        'Port: %s',
+        parsed["port"],
+        params.get("port"),
+        "Port: %s",
     )
     yield k8s_check_value(
-        parsed['target_port'],
-        params.get('target_port'),
-        'Target port: %s',
+        parsed["target_port"],
+        params.get("target_port"),
+        "Target port: %s",
     )
 
-    if parsed['node_port']:
+    if parsed["node_port"]:
         yield k8s_check_value(
-            parsed['node_port'],
-            params.get('node_port'),
-            'Node port: %s',
+            parsed["node_port"],
+            params.get("node_port"),
+            "Node port: %s",
         )
 
     yield k8s_check_value(
-        parsed['protocol'],
-        params.get('protocol'),
-        'Protocol: %s',
+        parsed["protocol"],
+        params.get("protocol"),
+        "Protocol: %s",
     )
 
 
-check_info['k8s_service_port'] = {
+check_info["k8s_service_port"] = {
     # section is already migrated
-    'inventory_function': discover_k8s_service_port,
-    'check_function': check_k8s_service_port,
-    'service_description': 'Port %s',
-    'group': 'k8s_port',
+    "inventory_function": discover_k8s_service_port,
+    "check_function": check_k8s_service_port,
+    "service_description": "Port %s",
+    "group": "k8s_port",
 }

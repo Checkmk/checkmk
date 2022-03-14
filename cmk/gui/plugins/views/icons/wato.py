@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
-from cmk.gui.globals import html, request, display_options
+from cmk.gui.globals import config, display_options, request, response, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 
 @icon_and_action_registry.register
@@ -22,14 +22,13 @@ class WatoIcon(Icon):
         return _("Wato")
 
     def host_columns(self):
-        return ['filename']
+        return ["filename"]
 
     def render(self, what, row, tags, custom_vars):
         def may_see_hosts():
-            return config.user.may("wato.use") and \
-                (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+            return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
-        if not may_see_hosts() or html.mobile:
+        if not may_see_hosts() or is_mobile(request, response):
             return None
 
         wato_folder = _wato_folder_from_filename(row["host_filename"])
@@ -47,8 +46,7 @@ class WatoIcon(Icon):
             return None
 
         if display_options.enabled(display_options.X):
-            url = "wato.py?folder=%s&host=%s" % \
-                (html.urlencode(folder), html.urlencode(hostname))
+            url = "wato.py?folder=%s&host=%s" % (urlencode(folder), urlencode(hostname))
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")
@@ -65,6 +63,7 @@ class WatoIcon(Icon):
 @icon_and_action_registry.register
 class DownloadAgentOutputIcon(Icon):
     """Action for downloading the current agent output."""
+
     @classmethod
     def ident(cls):
         return "download_agent_output"
@@ -80,12 +79,15 @@ class DownloadAgentOutputIcon(Icon):
         return ["filename", "check_type"]
 
     def render(self, what, row, tags, custom_vars):
-        return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")  # pylint: disable=no-value-for-parameter
+        return _paint_download_host_info(
+            what, row, tags, custom_vars, ty="agent"
+        )  # pylint: disable=no-value-for-parameter
 
 
 @icon_and_action_registry.register
 class DownloadSnmpWalkIcon(Icon):
     """Action for downloading the current snmp output."""
+
     @classmethod
     def ident(cls):
         return "download_snmp_walk"
@@ -101,13 +103,17 @@ class DownloadSnmpWalkIcon(Icon):
         return 50
 
     def render(self, what, row, tags, custom_vars):
-        return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")  # pylint: disable=no-value-for-parameter
+        return _paint_download_host_info(
+            what, row, tags, custom_vars, ty="walk"
+        )  # pylint: disable=no-value-for-parameter
 
 
 def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
-    if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
-       and config.user.may("wato.download_agent_output") \
-       and not row["host_check_type"] == 2:  # Not for shadow hosts
+    if (
+        (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))
+        and user.may("wato.download_agent_output")
+        and not row["host_check_type"] == 2
+    ):  # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do
         # with the available information.
@@ -128,8 +134,8 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
 
         # When the download icon is part of the host/service action menu, then
         # the _back_url set in paint_action_menu() needs to be used. Otherwise
-        # makeuri(request, []) (not html.requested_uri()) is the right choice.
-        back_url = html.get_url_input("_back_url", makeuri(request, []))
+        # makeuri(request, []) (not request.requested_uri()) is the right choice.
+        back_url = request.get_url_input("_back_url", makeuri(request, []))
         if back_url:
             params.append(("back_url", back_url))
 

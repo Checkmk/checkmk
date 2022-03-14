@@ -4,14 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -27,66 +23,66 @@ from cmk.gui.plugins.metrics import (
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 metric_info["apache_state_startingup"] = {
-    "title": _("Starting up"),
+    "title": _l("Starting up"),
     "unit": "count",
     "color": "11/a",
 }
 
 metric_info["apache_state_waiting"] = {
-    "title": _("Waiting"),
+    "title": _l("Waiting"),
     "unit": "count",
     "color": "14/a",
 }
 
 metric_info["apache_state_logging"] = {
-    "title": _("Logging"),
+    "title": _l("Logging"),
     "unit": "count",
     "color": "21/a",
 }
 
 metric_info["apache_state_dns"] = {
-    "title": _("DNS lookup"),
+    "title": _l("DNS lookup"),
     "unit": "count",
     "color": "24/a",
 }
 
 metric_info["apache_state_sending_reply"] = {
-    "title": _("Sending reply"),
+    "title": _l("Sending reply"),
     "unit": "count",
     "color": "31/a",
 }
 
 metric_info["apache_state_reading_request"] = {
-    "title": _("Reading request"),
+    "title": _l("Reading request"),
     "unit": "count",
     "color": "34/a",
 }
 
 metric_info["apache_state_closing"] = {
-    "title": _("Closing connection"),
+    "title": _l("Closing connection"),
     "unit": "count",
     "color": "41/a",
 }
 
 metric_info["apache_state_idle_cleanup"] = {
-    "title": _("Idle clean up of worker"),
+    "title": _l("Idle clean up of worker"),
     "unit": "count",
     "color": "44/a",
 }
 
 metric_info["apache_state_finishing"] = {
-    "title": _("Gracefully finishing"),
+    "title": _l("Gracefully finishing"),
     "unit": "count",
     "color": "46/b",
 }
 
 metric_info["apache_state_keep_alive"] = {
-    "title": _("Keepalive"),
+    "title": _l("Keepalive"),
     "unit": "count",
     "color": "53/b",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -99,7 +95,7 @@ metric_info["apache_state_keep_alive"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["apache_status"] = {
-    "title": _("Apache status"),
+    "title": _l("Apache status"),
     "metrics": [
         ("apache_state_startingup", "area"),
         ("apache_state_waiting", "stack"),

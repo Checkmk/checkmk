@@ -1,0 +1,18 @@
+title: Aruba 2930M: Power Supply Temperature
+agents: snmp
+catalog: hw/network/aruba
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the power supply temperature of Aruba 2930M devices.
+
+ Per default the service goes {WARN}/{CRIT} if it exceeds the levels configured.
+ The default levels are {WARN}: 50.0°C, {CRIT}: 60.0°C
+
+ The check uses the hpicfDcPower-MIB.
+
+item:
+ The model name combined with the index of the power supply.
+
+discovery:
+ One service is created for each power supply not in state NotPresent or NotPlugged.

@@ -1,7 +1,7 @@
 title: HP-UX: Mirror State of LVM Logical Volumes
 agents: hpux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the mirror state of LVM logical volumes on HP-UX.
@@ -10,6 +10,5 @@ description:
 item:
  The device path of the LV (e.g. {"/dev/vg00/lvol4"}).
 
-inventory:
+discovery:
  One service is created for each logical volume.
-

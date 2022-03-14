@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<ibm_svc_mdisk:sep(58)>>>
 # 0:stp5_300G_01-01:online:managed:16:stp5_300G_01:1.1TB:0000000000000000:BLUBB5:600a0b80006e1dbc0000f6f9513026a000000000000000000000000000000000:generic_hdd
@@ -22,42 +23,42 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 # 8:stp6_300G_01-03:online:managed:15:stp6_300G_01:1.1TB:0000000000000003:BLUBB6:600a0b80006e1d5e00000e9a51305a3200000000000000000000000000000000:generic_hdd
 # 9:stp5_300G_01-04:online:managed:16:stp5_300G_01:1.1TB:0000000000000004:BLUBB5:600a0b80006e1dbc0000f7d051341cc000000000000000000000000000000000:generic_hdd
 
-factory_settings['ibm_svc_mdisk_default_levels'] = {
-    'online_state': 0,  # online state is OK
-    'degraded_state': 1,  # degraded state is WARN
-    'offline_state': 2,  # offline state is CRIT
-    'excluded_state': 2,  # excluded state is CRIT
-    'managed_mode': 0,  # managed mode is OK
-    'array_mode': 0,  # array mode is OK
-    'image_mode': 0,  # image mode is OK
-    'unmanaged_mode': 1,  # unmanaged mode is WARN
+factory_settings["ibm_svc_mdisk_default_levels"] = {
+    "online_state": 0,  # online state is OK
+    "degraded_state": 1,  # degraded state is WARN
+    "offline_state": 2,  # offline state is CRIT
+    "excluded_state": 2,  # excluded state is CRIT
+    "managed_mode": 0,  # managed mode is OK
+    "array_mode": 0,  # array mode is OK
+    "image_mode": 0,  # image mode is OK
+    "unmanaged_mode": 1,  # unmanaged mode is WARN
 }
 
 
 def parse_ibm_svc_mdisk(info):
     dflt_header = [
-        u'id',
-        u'name',
-        u'status',
-        u'mode',
-        u'mdisk_grp_id',
-        u'mdisk_grp_name',
-        u'capacity',
-        u'ctrl_LUN_#',
-        u'controller_name',
-        u'UID',
-        u'tier',
-        u'encrypt',
-        u'site_id',
-        u'site_name',
-        u'distributed',
-        u'dedupe',
+        "id",
+        "name",
+        "status",
+        "mode",
+        "mdisk_grp_id",
+        "mdisk_grp_name",
+        "capacity",
+        "ctrl_LUN_#",
+        "controller_name",
+        "UID",
+        "tier",
+        "encrypt",
+        "site_id",
+        "site_name",
+        "distributed",
+        "dedupe",
     ]
     parsed = {}
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         try:
             data = rows[0]
-            parsed.setdefault(data['name'], data)
+            parsed.setdefault(data["name"], data)
         except (KeyError, IndexError):
             continue
     return parsed
@@ -70,10 +71,10 @@ def inventory_ibm_svc_mdisk(parsed):
 
 @get_parsed_item_data
 def check_ibm_svc_mdisk(item, params, data):
-    mdisk_status = data['status']
+    mdisk_status = data["status"]
     yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
 
-    mdisk_mode = data['mode']
+    mdisk_mode = data["mode"]
     yield params.get("%s_mode" % mdisk_mode, 1), "Mode: %s" % mdisk_mode
 
 

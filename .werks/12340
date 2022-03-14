@@ -1,0 +1,18 @@
+Title: delete downtimes by_id
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615794058
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Deleting downtimes by id could in some circumstances result in an
+error indicating that many downtimes, instead of the expected one,
+were found. This was caused by the wrong comparison operator being used,
+and has now been fixed.
+
+No further action is required.
+

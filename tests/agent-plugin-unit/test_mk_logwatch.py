@@ -4,13 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# fmt: off
 # pylint: disable=protected-access,redefined-outer-name
 from __future__ import print_function
+
+import locale
 import os
 import re
 import sys
-import locale
-import pytest  # type: ignore[import]
+
+import pytest
 from utils import import_module
 
 
@@ -96,12 +99,12 @@ def test_get_config_files(mk_logwatch, tmpdir):
     logwatch_d_dir = os.path.join(fake_config_dir, "logwatch.d")
     os.mkdir(logwatch_d_dir)
 
-    open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w")
+    with open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w"):
 
-    expected = [
+        expected = [
         str(os.path.join(fake_config_dir, "logwatch.cfg")),
         str(os.path.join(fake_config_dir, "logwatch.d/custom.cfg"))
-    ]
+        ]
 
     assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
@@ -113,10 +116,18 @@ def test_iter_config_lines(mk_logwatch, tmpdir):
     os.mkdir(fake_config_path)
 
     fake_config_file = os.path.join(fake_config_path, "logwatch.cfg")
+    files = [fake_config_file]
+
+    # No config file at all available, raise in debug mode!
+    with pytest.raises(IOError):
+        list(mk_logwatch.iter_config_lines(files, debug=True))
+
+    # But it's ok without debug
+    list(mk_logwatch.iter_config_lines(files))
+
     with open(fake_config_file, "wb") as f:
         f.write(u"# this is a comment\nthis is a line   ".encode("utf-8"))
 
-    files = [fake_config_file]
     read = list(mk_logwatch.iter_config_lines(files))
 
     assert read == ['this is a line']
@@ -323,6 +334,11 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
 def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+
+    # In case the file is not created yet, read should not raise
+    state = mk_logwatch.State(file_path).read()
+    assert state._data == {}
+
     with open(file_path, "wb") as f:
         f.write(state_data.encode("utf-8"))
 
@@ -517,7 +533,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         (
             __file__,
             [
-                ('W', re.compile(u'^[^u]*W.*I match only myself', re.UNICODE), [], []),
+                ('W', re.compile(u'^[^u]*W.*I mätch önly mysélf 🧚', re.UNICODE), [], []),
                 ('I', re.compile(u'.*', re.UNICODE), [], []),
             ],
             {
@@ -528,7 +544,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
             },
             [
                 u"[[[%s]]]\n" % __file__,
-                u"W                 ('W', re.compile(u'^[^u]*W.*I match only myself', re.UNICODE), [], []),\n"
+                u"W                 ('W', re.compile(u'^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
             ],
         ),
         (
@@ -558,7 +574,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         (
             __file__,
             [
-                ('C', re.compile(u'äöü', re.UNICODE), [], []),
+                ('C', re.compile(u'🐉', re.UNICODE), [], []),
                 ('I', re.compile(u'.*', re.UNICODE), [], []),
             ],
             {
@@ -567,9 +583,9 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
             {
                 'offset': 0,
             },
-            [  # match umlauts
+            [
                 u"[[[%s]]]\n" % __file__,
-                u"C                 ('C', re.compile(u'\xe4\xf6\xfc', re.UNICODE), [], []),\n",
+                u"C                 ('C', re.compile(u'\U0001f409', re.UNICODE), [], []),\n",
             ],
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
@@ -584,7 +600,6 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     header, warning_and_errors = mk_logwatch.process_logfile(section, state, False)
     output = [header] + warning_and_errors
-    assert all(isinstance(item, text_type()) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert isinstance(state['offset'], int)

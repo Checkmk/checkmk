@@ -1,0 +1,11 @@
+Title: Fix XSS in conditions
+Class: security
+Compatible: compat
+Component: wato
+Date: 1630408348
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

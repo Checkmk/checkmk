@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_fan>>>
 # fan 1 durable-id fan_1.1
 # fan 1 name Fan Loc:left-PSU 1
@@ -65,22 +66,24 @@ def inventory_hp_msa_fan(parsed):
 def check_hp_msa_fan(item, params, parsed):
     if item in parsed:
         fan_speed = int(parsed[item]["speed"])
-        fan_state, fan_state_readable = \
-            hp_msa_state_numeric_map[parsed[item]["status-numeric"]]
-        fan_health_state, fan_health_state_readable = \
-            hp_msa_health_state_numeric_map[parsed[item]["health-numeric"]]
+        fan_state, fan_state_readable = hp_msa_state_numeric_map[parsed[item]["status-numeric"]]
+        fan_health_state, fan_health_state_readable = hp_msa_health_state_numeric_map[
+            parsed[item]["health-numeric"]
+        ]
         fan_health_reason = parsed[item].get("health-reason", "")
 
         yield fan_state, "Status: %s, speed: %s RPM" % (fan_state_readable, fan_speed)
 
         if fan_health_state and fan_health_reason:
-            yield fan_health_state, "health: %s (%s)" % \
-                  (fan_health_state_readable, fan_health_reason)
+            yield fan_health_state, "health: %s (%s)" % (
+                fan_health_state_readable,
+                fan_health_reason,
+            )
 
 
-check_info['hp_msa_fan'] = {
-    'parse_function': parse_hp_msa,
-    'inventory_function': inventory_hp_msa_fan,
-    'check_function': check_hp_msa_fan,
-    'service_description': 'Fan %s',
+check_info["hp_msa_fan"] = {
+    "parse_function": parse_hp_msa,
+    "inventory_function": inventory_hp_msa_fan,
+    "check_function": check_hp_msa_fan,
+    "service_description": "Fan %s",
 }

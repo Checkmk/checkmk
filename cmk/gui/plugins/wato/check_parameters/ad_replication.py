@@ -5,20 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_ad_replication():
-    return TextAscii(
+    return TextInput(
         title=_("Replication Partner"),
         help=_("The name of the replication partner (Destination DC Site/Destination DC)."),
     )
@@ -41,4 +37,5 @@ rulespec_registry.register(
         item_spec=_item_spec_ad_replication,
         parameter_valuespec=_parameter_valuespec_ad_replication,
         title=lambda: _("Active Directory Replication"),
-    ))
+    )
+)

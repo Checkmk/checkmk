@@ -1,0 +1,11 @@
+Title: Interface dependent links to ntopng
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1634049306
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Interface dependent links to ntopng were not working properly. This is fixed now.

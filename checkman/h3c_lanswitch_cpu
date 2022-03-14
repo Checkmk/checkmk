@@ -1,7 +1,7 @@
 title: 3Com and H3C Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/h3c
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check queries the CPU utilization of various LAN switches that are
@@ -22,10 +22,9 @@ description:
  BGP tables). In that case you might have to fine tune the check parameters
  or even have to disable the check.
 
-inventory:
+discovery:
  One service is created for each CPU.
 
 item:
  {{Switch}} followed by the ID of the switch followed by the CPU type
  (i.e. {{Slot}}, {{CPU}} or {{Unknown}}) followed by the number of the CPU
-

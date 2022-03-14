@@ -1,0 +1,20 @@
+title: Wireless LAN Controller (WLC): Number of Wifi Connections
+agents: snmp
+catalog: hw/network/generic
+license: GPLv2
+distribution: check_mk
+description:
+ This checks display the number of connected clients in an wireless network.
+ The check displays the number of clients per SSID and also one summary witht
+ the total number of connected clients on all SSIDs.
+
+ When using a Cisco device the client count per interface is shown in the
+ service summary.
+
+ Upper and lower levels can be set for each network via WATO.
+
+item:
+ Name of the SSID or "Summary" for the overall number of clients
+
+discovery:
+ One service is created for each wifi network and one summary service is created.

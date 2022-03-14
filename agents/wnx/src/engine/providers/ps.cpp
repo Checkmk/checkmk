@@ -9,6 +9,7 @@
 #include <shellapi.h>
 #endif
 
+#include <ranges>
 #include <string>
 #include <tuple>
 
@@ -62,7 +63,6 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
     return out_string;
 }
 
-// not static: tested
 // returns FORMATTED table of the processes
 std::wstring GetProcessListFromWmi(std::wstring_view separator) {
     wtools::WmiWrapper wmi;
@@ -75,7 +75,8 @@ std::wstring GetProcessListFromWmi(std::wstring_view separator) {
 
     // status will be ignored, ps doesn't support correct error processing
     // like other wmi sections
-    auto [table, ignored] = wmi.queryTable({}, L"Win32_Process", separator);
+    auto [table, ignored] = wmi.queryTable({}, L"Win32_Process", separator,
+                                           cfg::groups::global.getWmiTimeout());
     return table;
 }
 
@@ -85,9 +86,10 @@ std::string ExtractProcessOwner(HANDLE process) {
     HANDLE raw_handle{wtools::InvalidHandle()};
 
     if (::OpenProcessToken(process, TOKEN_READ, &raw_handle) == FALSE) {
-        if (GetLastError() != 5)
+        if (::GetLastError() != ERROR_ACCESS_DENIED) {
             XLOG::t.w("Failed to open process  to get a token {} ",
-                      GetLastError());
+                      ::GetLastError());
+        }
         return {};
     }
     ON_OUT_OF_SCOPE(::CloseHandle(raw_handle));
@@ -157,7 +159,7 @@ std::wstring GetFullPath(IWbemClassObject *wbem_object) {
     ON_OUT_OF_SCOPE(::LocalFree(argv));
     for (int i = 1; i < argc; ++i) {
         if (argv[i] != nullptr) {
-            process_name += std::wstring(L" ") + argv[i];
+            process_name += std::wstring(L"\t") + argv[i];
         }
     }
     return process_name;
@@ -311,6 +313,7 @@ uint64_t GetWstringAsUint64(IWbemClassObject *wmi_object,
 }
 
 std::string ProducePsWmi(bool use_full_path) {
+    namespace rs = std::ranges;
     // auto processes = GetProcessListFromWmi();
     wtools::WmiWrapper wmi;
 
@@ -331,7 +334,8 @@ std::string ProducePsWmi(bool use_full_path) {
     while (true) {
         IWbemClassObject *object{nullptr};
         wtools::WmiStatus status{wtools::WmiStatus::ok};
-        std::tie(object, status) = wtools::WmiGetNextObject(processes);
+        std::tie(object, status) = wtools::WmiGetNextObject(
+            processes, cfg::groups::global.getWmiTimeout());
         if (object == nullptr) {
             break;
         }
@@ -343,6 +347,11 @@ std::string ProducePsWmi(bool use_full_path) {
         auto process_owner = GetProcessOwner(process_id);
 
         auto process_name = BuildProcessName(object, use_full_path);
+
+        // some process name includes trash output which includes carriage
+        // return. Example: is pascom client crash handler.
+        rs::replace(process_name, L'\n', L' ');
+        rs::replace(process_name, L'\r', L' ');
 
         auto uptime = CalculateUptime(object);
 

@@ -1,7 +1,7 @@
 title: EMC ScaleIO: Volume Size and Throughput
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the total size and the user r/w of a volume. The ruleset
@@ -10,5 +10,5 @@ description:
 item:
  The volume id
 
-inventory:
+discovery:
  One service is created for each volume.

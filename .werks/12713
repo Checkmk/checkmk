@@ -1,0 +1,16 @@
+Title: check_ps: Check goes UNKN if configured to show percentage of RAM in some cases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619448155
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+check_ps was not configured to use data from <<<statgrab_mem>>> section which made the total RAM
+unavailable on systems providing <<<statgrab_mem>>> rather than <<<mem>>>, rendering "Process"
+Services UNKNOWN.
+This change makes check_ps use <<<statgrab_mem>>> again, restoring the behavior of version 1.6.0
+and below.

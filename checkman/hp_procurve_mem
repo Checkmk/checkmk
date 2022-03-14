@@ -1,7 +1,7 @@
 title: HP Procurve Switches: Memory Usage
 agents: snmp
 catalog: hw/network/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the memory usage on HP Procurve Switches which support the
@@ -16,6 +16,5 @@ description:
 item:
  Empty string
 
-inventory:
+discovery:
  One service is created on each switch.
-

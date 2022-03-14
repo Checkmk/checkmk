@@ -1,7 +1,7 @@
 title: Windows: Updates
 agents: windows
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check uses WMI to fetch the number of pending important and optional updates
@@ -13,6 +13,5 @@ description:
  The windows agent needs to be extended with the {windows_updates.vbs} provided
  in {agents/windows/plugins}.
 
-inventory:
+discovery:
  One service named {System Updates} is created for each host.
-

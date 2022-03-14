@@ -1,0 +1,28 @@
+Title: Fix xinetd installation problem on SLES15
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1645559754
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+When trying to install Checkmk on SLES15 this failed, because the package
+dependency 'xinetd' could not be provided by the official package repositories.
+It is not possible to get xinetd from official SLES package repositories,
+because it has been dropped in favour of systemd.
+
+The switch to systemd is possible, if you can register regular services to the
+systemd unit system and let systemd manage your units. But in our case, where
+we have an xinetd process that is managed as part of an OMD site, this way will
+not work.
+
+Users were able to solve the situation locally by installing xinetd from 3rd
+party sources, like for example OpenSUSE.org repositories. However, this
+approach is not supported by SLES nor straight forward for users.
+
+To make the installation more straight forward again, we now drop the xinetd
+package dependency for all supported SLES distributions from our Checkmk
+packages and ship xinetd together with Checkmk.

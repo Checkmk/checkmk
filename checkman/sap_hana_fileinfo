@@ -1,0 +1,18 @@
+title: SAP HANA: Age and Size of Files
+agents: linux
+catalog: app/sap_hana
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the size and age of specific files
+ in the target host's filesystem.
+ You can set lower and upper
+ limits on both the modification time and the size of
+ a file. When the file is missing then the check will
+ go {STALE}.
+
+item:
+ The complete path name of the file is sent by the agent.
+
+inventory:
+ One service is created for each file that the agent sends.

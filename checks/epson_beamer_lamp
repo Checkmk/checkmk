@@ -29,7 +29,7 @@ def check_epson_beamer_lamp(_no_item, params, info):
     return status, infotext
 
 
-check_info['epson_beamer_lamp'] = {
+check_info["epson_beamer_lamp"] = {
     "inventory_function": inventory_epson_beamer_lamp,
     "check_function": check_epson_beamer_lamp,
     "service_description": "Beamer Lamp",

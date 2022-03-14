@@ -20,15 +20,15 @@
 #include <unordered_set>
 
 #include "Host.h"
-#include "Object.h"
 #include "ObjectGroup.h"
-#include "Service.h"
-#include "cmc.h"
+#include "contact_fwd.h"
+class Service;
 #else
 #include "nagios.h"
 #endif
 
 class ServiceListState {
+    // TODO(sp) Actually we want an input_range of services.
 #ifdef CMC
     using value_type = std::unordered_set<const Service *>;
 #else
@@ -59,7 +59,7 @@ public:
     // NOTE: Due to an ugly technical reason, we have to delay getting the
     // service authorization, for details see the test
     // Store.TheCoreIsNotAccessedDuringConstructionOfTheStore.
-    ServiceListState(std::function<AuthorizationKind()> get_service_auth,
+    ServiceListState(std::function<ServiceAuthorization()> get_service_auth,
                      Type logictype)
         : _get_service_auth{std::move(get_service_auth)}
         , _logictype{logictype} {}
@@ -72,12 +72,9 @@ public:
         }
         return (*this)(v, auth_user);
     }
-    int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
-        auto v = value_type(g._objects.size());
-        for (const auto &e : g._objects) {
-            v.emplace(dynamic_cast<value_type::value_type>(e));
-        }
-        return (*this)(v, auth_user);
+    int32_t operator()(const ObjectGroup<Service> &g,
+                       const contact *auth_user) const {
+        return (*this)(value_type{g.begin(), g.end()}, auth_user);
     }
 #else
     int32_t operator()(const host &hst, const contact *auth_user) const {
@@ -90,9 +87,9 @@ public:
     int32_t operator()(const value_type &svcs, const contact *auth_user) const;
 
 private:
-    std::function<AuthorizationKind()> _get_service_auth;
+    std::function<ServiceAuthorization()> _get_service_auth;
     const Type _logictype;
-    static int32_t getValueFromServices(AuthorizationKind service_auth,
+    static int32_t getValueFromServices(ServiceAuthorization service_auth,
                                         Type logictype, const value_type &svcs,
                                         const contact *auth_user);
     static void update(Type logictype, ServiceState current_state,

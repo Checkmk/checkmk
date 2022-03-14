@@ -21,10 +21,17 @@ def check_palo_alto_sessions(_no_item, params, info):
     else:
         sessions_used_perc = float(total) * 100 / sessions_supported
 
-    infotext = "%d total active sessions: %d TCP, %d UDP, %d ICMP, %d SSL Proxy." % \
-                (total, tcp, udp, icmp, sslproxy)
-    infotext += " %.1f%% of %d supported sessions in use." % \
-                (sessions_used_perc, sessions_supported)
+    infotext = "%d total active sessions: %d TCP, %d UDP, %d ICMP, %d SSL Proxy." % (
+        total,
+        tcp,
+        udp,
+        icmp,
+        sslproxy,
+    )
+    infotext += " %.1f%% of %d supported sessions in use." % (
+        sessions_used_perc,
+        sessions_supported,
+    )
 
     warn, crit = params["levels_sessions_used"]
     levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
@@ -55,14 +62,17 @@ check_info["palo_alto_sessions"] = {
     "inventory_function": inventory_palo_alto_sessions,
     "check_function": check_palo_alto_sessions,
     "service_description": "Palo Alto Sessions",
-    "snmp_info": (".1.3.6.1.4.1.25461.2.1.2.3", [
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-    ]),
+    "snmp_info": (
+        ".1.3.6.1.4.1.25461.2.1.2.3",
+        [
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+        ],
+    ),
     "snmp_scan_function": lambda oid: "25461" in oid(".1.3.6.1.2.1.1.2.0"),
     "has_perfdata": True,
     "group": "palo_alto_sessions",

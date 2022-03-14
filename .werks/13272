@@ -1,0 +1,14 @@
+Title: prometheus_build: show Prometheus version optionally
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632325413
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In the previous version, the prometheus_build check always
+expected a version associated with the connecting Prometheus
+API. This effectively led to an error when the version was not
+included. This werk fixes this behaviour.

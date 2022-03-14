@@ -1,0 +1,73 @@
+Title: Migrating Checkmk configurations during site renamings
+Class: feature
+Compatible: compat
+Component: core
+Date: 1628080237
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+Users which execute <tt>omd mv</tt> or <tt>omd cp</tt> expect Checkmk to not
+only rename the site, but also migrate the Checkmk configuration in a way that
+they can continue seamlessly with their existing Checkmk configuration.
+
+This feature did not exist before and was a common misunderstanding. The
+commands listed above did not take care of the Checkmk configuration files. In
+fact the site management, which is realizing the renaming of a site, does not
+know anything about the Checkmk configuration files.
+
+However, with this change we create the integration of both worlds. In the
+moment a site renaming or copy is performed, the site management informs
+Checkmk about this action and gives it the chance to update it's configuration
+files.
+
+The most important parts of the Checkmk configuration are now updated:
+
+<ul>
+<li>Distributed monitoring (sites) configuration</li>
+<li>Host & folder site attributes</li>
+<li>Dynamic host configuration site attribute</li>
+</ul>
+
+The new logic is also trying to detect specific situations and displays
+warnings about things that can (currently) not be migrated automatically.
+
+For example, if the renaming of a distributed remote site is detected, a
+warning is now displayed that you also have to update the distributed
+monitoring configuration in the central site of your setup.
+
+<i>Details:</i>
+
+OMD, which is responsible for providing the site management of Checkmk, itself
+is only caring about migrating the files and file parts that are initially
+installed when creating a new Checkmk site. <b>Clearer:</b> If you create a
+clean site and then execute <tt>grep -r $OMD_SITE etc</tt> in your site, you
+can see a lot of files which contain the ID of the site. These things are
+already migrated by OMD.
+
+But OMD is not aware of the configuration files of the applications shipped
+with OMD. For example the Checkmk configuration files are not understood by
+OMD. And that's totally fine from an architectural point of view, because OMD
+is an separate component that manages installation of different applications,
+but must not mess with their individual files.
+
+However, from a users perspective it's clear that you also want the application
+files to be migrated during site renaming.
+
+This change introduces the general mechanism:
+
+<ul>
+<li>OMD detects changes of the site ID (mv, cp or restore)</li>
+<li>Then it executes the command <tt>post-rename-site -v -o [OLD_SITE_ID]</tt></li>
+<li>The command <tt>post-rename-site</tt> then takes care of the Checkmk
+  configuration updates</li>
+<li>It can also detect some situations it can not solve on it's own
+  and warns the user about potential manual steps to do afterwards.</li>
+</ul>
+
+The migration steps are realized in so called rename action plugins which can
+easily be extended. In the git you can find them at
+<tt>cmk/post_rename_site/plugins/actions</tt>.
+

@@ -4,18 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+
+from .utils_inventory import sort_inventory_result
 
 INFO = [["MODEL", "SERIAL", "BOOTLOADER", "FW", "_ALARMS", "_DIAGSTATE", "_TEMP_STR"]]
 
 EXPECTED = [
     Attributes(
-        path=['hardware', 'chassis'],
+        path=["hardware", "chassis"],
         inventory_attributes={
             "serial": "SERIAL",
             "model": "MODEL",
@@ -26,8 +25,6 @@ EXPECTED = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_perle_chassis():
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('perle_chassis'))
-    assert plugin
-    assert list(plugin.inventory_function(INFO)) == EXPECTED
+def test_inv_perle_chassis(fix_register):
+    plugin = fix_register.inventory_plugins[InventoryPluginName("perle_chassis")]
+    assert sort_inventory_result(plugin.inventory_function(INFO)) == sort_inventory_result(EXPECTED)

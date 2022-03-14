@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 #
 # <<<ucsc_server_temp:sep(9)>>>
@@ -29,28 +30,39 @@ def parse_ucs_c_rack_server_temp(info):
     for line in info:
         key_value_pairs = [kv.split(" ", 1) for kv in line[1:]]
         if "cpu-" in key_value_pairs[0][1]:
-            cpu = key_value_pairs[0][1].replace("sys/",
-                                                "").replace("rack-unit-", "Rack Unit ").replace(
-                                                    "/board",
-                                                    "").replace("/cpu-",
-                                                                " CPU ").replace("/env-stats", "")
+            cpu = (
+                key_value_pairs[0][1]
+                .replace("sys/", "")
+                .replace("rack-unit-", "Rack Unit ")
+                .replace("/board", "")
+                .replace("/cpu-", " CPU ")
+                .replace("/env-stats", "")
+            )
             try:
                 parsed[cpu] = float(key_value_pairs[3][1])
             except (ValueError, KeyError):
                 continue  # skip potentially invalid agent output
         elif "mem-" in key_value_pairs[0][1]:
-            mem = key_value_pairs[0][1].replace("sys/", "").replace(
-                "rack-unit-",
-                "Rack Unit ").replace("/board", "").replace("/memarray-", " Memory Array ").replace(
-                    "/mem-", " Memory DIMM ").replace("/dimm-env-stats", "")
+            mem = (
+                key_value_pairs[0][1]
+                .replace("sys/", "")
+                .replace("rack-unit-", "Rack Unit ")
+                .replace("/board", "")
+                .replace("/memarray-", " Memory Array ")
+                .replace("/mem-", " Memory DIMM ")
+                .replace("/dimm-env-stats", "")
+            )
             try:
                 parsed[mem] = float(key_value_pairs[3][1])
             except (ValueError, KeyError):
                 continue  # skip potentially invalid agent output
         elif "board" in key_value_pairs[0][1]:
-            mb = key_value_pairs[0][1].replace("sys/",
-                                               "").replace("rack-unit-", "Rack Unit ").replace(
-                                                   "/board/temp-stats", " Motherboard")
+            mb = (
+                key_value_pairs[0][1]
+                .replace("sys/", "")
+                .replace("rack-unit-", "Rack Unit ")
+                .replace("/board/temp-stats", " Motherboard")
+            )
             try:
                 parsed[mb] = float(key_value_pairs[2][1])
             except (ValueError, KeyError):
@@ -62,15 +74,16 @@ def parse_ucs_c_rack_server_temp(info):
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_temp(item, params, temperature):
-    yield check_temperature(temperature, params,
-                            'ucs_c_rack_server_%s' % item.lower().replace(" ", "_"))
+    yield check_temperature(
+        temperature, params, "ucs_c_rack_server_%s" % item.lower().replace(" ", "_")
+    )
 
 
 check_info["ucs_c_rack_server_temp"] = {
-    'parse_function': parse_ucs_c_rack_server_temp,
-    'inventory_function': discover(),
-    'check_function': check_ucs_c_rack_server_temp,
-    'group': 'temperature',
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
+    "parse_function": parse_ucs_c_rack_server_temp,
+    "inventory_function": discover(),
+    "check_function": check_ucs_c_rack_server_temp,
+    "group": "temperature",
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
 }

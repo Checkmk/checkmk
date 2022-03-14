@@ -1,0 +1,18 @@
+Title: LDAP: Fix potential crash "KeyError: force_authuser_webservice"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1618301282
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+An exception "KeyError: force_authuser_webservice" could occur on the Users
+page of the Setup. This was caused by the removal of the deprecated attribute
+"force_authuser_webservice" with Checkmk 2.0 for users which had enabled the
+synchronization of this attribute from the LDAP.
+
+The LDAP synchronization is now handling this situation by excluding these
+attributes from the synchronization.

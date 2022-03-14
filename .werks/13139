@@ -1,0 +1,33 @@
+Title: Add Alertmanager special agent and check plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1629454693
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+Add special agent and check plugins for Alertmanager.
+
+The special agent retrieves information from the Alertmanager rules API.
+It retrieves information about:
+<ul>
+<li>alert rule groups</li>
+<li>alert rules</li>
+    <ol>
+    <li>name</li>
+    <li>status</li>
+    <li>severity</li>
+    <li>message</li>
+    </ol>
+</ul>
+
+The check plugin monitors
+<ul>
+<li>Individual alert rules</li>
+<li>Alert rule groups</li>
+<li>Alert rule summary</li>
+</ul>
+
+For more information look at the respective manpages

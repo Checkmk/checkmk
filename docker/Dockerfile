@@ -1,8 +1,10 @@
-FROM debian:buster-slim
+ARG IMAGE_CMK_BASE
+# hadolint ignore=DL3006
+FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.1.0i1"
+ARG CMK_VERSION="2.2.0i1"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 
@@ -25,18 +27,24 @@ ENV MAIL_RELAY_HOST=""
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
 
-# First install the tools we need for fetching the package and installation
+# Install the tools we need for fetching the package and installation
 # Then fetch the package and install it. This will make sure all Checkmk
 # containers will share all dependencies, including this step.
+#
+# Also ensure that we apply the latest updates. The base image might not always
+# be up-to-date, especially when they are pinned in our build environment.
+#
 # hadolint ignore=SC2046,DL3008
 RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         postfix \
+        libsasl2-modules \
         inetutils-syslogd \
         bsd-mailx \
         gnupg2 \
@@ -51,7 +59,6 @@ RUN set -e \
     && rm -rf /var/lib/apt/lists/* \
     && rm needed-packages
 
-#
 # Optionally copy an existing Checkmk debian package to the container. In case the file is
 # available that is later used by the build procedure the file will not be downloaded.
 COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.buster_*.deb Check_MK-pubkey.gpg /

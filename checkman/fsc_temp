@@ -1,7 +1,7 @@
 title: Fujitsu Siemens FSC: Temperature Status of Hardware
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check can be used to monitor the temperature status of Fujitsu Siemens (FSC) Systems.
@@ -15,5 +15,5 @@ description:
 item:
  Name of the temperature sensor
 
-inventory:
+discovery:
  One service is created for each temperature sensor.

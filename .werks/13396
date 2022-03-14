@@ -1,0 +1,11 @@
+Title: mk_mongodb: replica: always output address if available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633939281
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Before this Werk the address was only returned if the node was a arbiter node.

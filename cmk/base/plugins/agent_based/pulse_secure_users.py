@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Generator, List, Mapping, Union
+from typing import Any, Generator, List, Mapping, Optional, Union
+
 from .agent_based_api.v1 import (
     check_levels,
     clusterize,
@@ -21,10 +22,11 @@ Section = Mapping[str, int]
 CheckOutput = Generator[Union[Result, Metric], None, None]
 
 
-def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Section:
-    raw_data = string_table[0][0][0]
+def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Optional[Section]:
     try:
-        return {'n_users': int(raw_data)}
+        return {"n_users": int(string_table[0][0][0])}
+    except IndexError:
+        return None
     except ValueError:
         return {}
 
@@ -61,13 +63,16 @@ def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> Che
 
 def cluster_check_pulse_secure_users(
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckOutput:
 
     n_users_total = 0
 
     for node_name, section_node in section.items():
-        n_users_total += section_node['n_users']
+        if section_node is None:
+            continue
+
+        n_users_total += section_node["n_users"]
         yield from clusterize.make_node_notice_results(
             node_name,
             check_pulse_secure_users(

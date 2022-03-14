@@ -1,0 +1,17 @@
+Title: check_dns: added option to use default DNS server
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1635344717
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If no DNS server is specified the error message "CRITICAL - Plugin timed out while executing system call" could have been reported.
+The reason for this error is that the check_dns option "-s" is used with the hostname as DNS server. The host might not be a DNS server
+and a timeout occurs.
+
+The new option "Use default DNS server" will omit the option "-s" for check_dns. In this case the default DNS server of the checkmk server
+will be used and no timeout occurs any more.

@@ -1,48 +1,37 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-echo "Update site $SITE..."
+echo "Updating compiled protobuf files..."
+make -C ../.. protobuf-files
 
-echo "Copy CRE files..."
-sudo rsync \
-    --exclude="*.pyc" \
-    --exclude="flycheck*" \
-    --exclude=cee \
-    --exclude=cee.py \
-    --exclude=cme.py \
-    --delete-excluded \
-    -a * $ROOT/lib/python3/cmk/base/
+echo "TARGET: $ROOT/share/check_mk/checks"
+# NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
+# would screw up our include caching mechanism!
+sudo rsync -rlpgoD --delete-after ../../checks/ "$ROOT/share/check_mk/checks/"
 
-# Ensure cmk.base[.cee] is a namespace package
-sudo rm -f \
-    "$ROOT/lib/python3/cmk/base/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc"
+echo "TARGET: $ROOT/share/check_mk/inventory"
+sudo rsync -ar --delete-after ../../inventory/ "$ROOT/share/check_mk/inventory/"
+
+(
+    cd ..
+    bash .f12
+)
 
 # Also deploy all other directories of same type
-if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
-        if [ -e ../../$WHAT/cmk/base/.f12 ]; then
+if [ "${ALL_EDITIONS:-1}" != 0 ]; then
+    for WHAT in enterprise managed plus; do
+        if [ -e "../../$WHAT/cmk/base/.f12" ]; then
             (
-                cd ../../$WHAT/cmk/base
+                cd "../../$WHAT/cmk/base"
                 ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
             )
         fi
     done
-fi
-
-if [ -z "$ONLY_COPY" ]; then
-    sudo $ROOT/bin/python3 -m compileall -qq $ROOT/lib/python3/cmk/base
 fi

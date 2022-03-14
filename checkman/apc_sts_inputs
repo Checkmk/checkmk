@@ -1,7 +1,7 @@
 title: APC STS: Input Phases
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the input measurements of a APC Static Transfer Switch.
@@ -13,5 +13,5 @@ description:
 item:
  The identifier of the phase (usually {"Source 1 Phase 1"}, {"Source 1 Phase 2"}, {"Source 1Phase 3"}).
 
-inventory:
+discovery:
  One service is created for each source and input phase

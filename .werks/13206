@@ -1,0 +1,13 @@
+Title: FRITZ!Box special agent: Display operating system
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1630913402
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The FRITZ!Box special agent will now yield "FRITZ!OS" as the operating
+system. This will be displayed in the output of the Checkmk service of
+affected hosts.

@@ -1,0 +1,18 @@
+Title: custom_files: Place plugins under the right directory on windows
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1642518146
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This Werk fixes a regression that got introduced with Checkmk 2.0.0p18.
+
+The changes from Werk #13131 lead to the situation that custom files placed
+under <tt>~/var/check_mk/agents/custom/&lt;pkg&gt;/lib/plugins</tt> accidentally
+got packaged directly under the Windows agent's installation directory.
+
+Now, they get placed correctly under <tt>&lt;install_dir&gt;\plugins</tt>,
+as it was the case before the regression.

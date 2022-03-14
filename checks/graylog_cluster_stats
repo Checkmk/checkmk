@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
 # {"org.graylog.plugins.beats.Beats2Input": 1,
@@ -48,8 +49,6 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # "dashboard_count": 0, "alarm_stats": {"alert_count": 0,
 # "alarmcallback_count_by_type": {}}}']]
 
-import json
-
 
 def check_graylog_cluster_stats(no_item, params, parsed):
     if not parsed:
@@ -67,19 +66,17 @@ def check_graylog_cluster_stats(no_item, params, parsed):
         data = parsed.get(key)
         if data is not None:
 
-            levels = params.get('%s_upper' % key, (None, None))
-            levels_lower = params.get('%s_lower' % key, (None, None))
-            yield check_levels(data,
-                               m_name,
-                               levels + levels_lower,
-                               human_readable_func=int,
-                               infoname=infotext)
+            levels = params.get("%s_upper" % key, (None, None))
+            levels_lower = params.get("%s_lower" % key, (None, None))
+            yield check_levels(
+                data, m_name, levels + levels_lower, human_readable_func=int, infoname=infotext
+            )
 
 
 check_info["graylog_cluster_stats"] = {
     "parse_function": parse_graylog_agent_data,
     "check_function": check_graylog_cluster_stats,
-    'inventory_function': discover_single,
+    "inventory_function": discover_single,
     "service_description": "Graylog Cluster Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats",
@@ -94,7 +91,7 @@ def inventory_graylog_cluster_stats_elastic(parsed):
 
 factory_settings["graylog_cluster_stats_elastic_defaultlevels"] = {
     "green": 0,
-    'yellow': 1,
+    "yellow": 1,
     "red": 2,
 }
 
@@ -136,17 +133,19 @@ def check_graylog_cluster_stats_elastic(no_item, params, parsed):
             if health_value is None:
                 continue
 
-            levels = params.get('%s_upper' % health_section, (None, None))
-            levels_lower = params.get('%s_lower' % health_section, (None, None))
+            levels = params.get("%s_upper" % health_section, (None, None))
+            levels_lower = params.get("%s_lower" % health_section, (None, None))
 
             if health_section == "pending_tasks":
                 health_section = "number_of_%s" % health_section
 
-            yield check_levels(health_value,
-                               health_section,
-                               levels + levels_lower,
-                               human_readable_func=int,
-                               infoname=health_info)
+            yield check_levels(
+                health_value,
+                health_section,
+                levels + levels_lower,
+                human_readable_func=int,
+                infoname=health_info,
+            )
 
     timedout_data = health_data.get("timed_out")
     if timedout_data is not None:
@@ -171,19 +170,21 @@ def check_graylog_cluster_stats_elastic(no_item, params, parsed):
             if indice_value is None:
                 continue
 
-            levels = params.get('%s_upper' % section, (None, None))
-            levels_lower = params.get('%s_lower' % section, (None, None))
+            levels = params.get("%s_upper" % section, (None, None))
+            levels_lower = params.get("%s_lower" % section, (None, None))
 
-            yield check_levels(indice_value,
-                               section,
-                               levels + levels_lower,
-                               human_readable_func=hr_func,
-                               infoname=info)
+            yield check_levels(
+                indice_value,
+                section,
+                levels + levels_lower,
+                human_readable_func=hr_func,
+                infoname=info,
+            )
 
 
 check_info["graylog_cluster_stats.elastic"] = {
     "check_function": check_graylog_cluster_stats_elastic,
-    'inventory_function': inventory_graylog_cluster_stats_elastic,
+    "inventory_function": inventory_graylog_cluster_stats_elastic,
     "default_levels_variable": "graylog_cluster_stats_elastic_defaultlevels",
     "service_description": "Graylog Cluster Elasticsearch Stats",
     "has_perfdata": True,
@@ -214,11 +215,19 @@ def check_graylog_cluster_stats_mongodb(no_item, params, parsed):
 
         for key, infotext, metric_name, hr_func in [
             ("indexes", "Indices", "index_count", int),
-            ("storage_size", "Allocated storage", "mongodb_collection_storage_size",
-             get_bytes_human_readable),
+            (
+                "storage_size",
+                "Allocated storage",
+                "mongodb_collection_storage_size",
+                get_bytes_human_readable,
+            ),
             ("index_size", "Total size", "indexes_size", get_bytes_human_readable),
-            ("data_size", "Total size of uncompressed data", "mongodb_collection_size",
-             get_bytes_human_readable),
+            (
+                "data_size",
+                "Total size of uncompressed data",
+                "mongodb_collection_size",
+                get_bytes_human_readable,
+            ),
             ("file_size", "Total data files size", "file_size", get_bytes_human_readable),
             ("ns_size_mb", "Total namespace size", "namespace_size", get_bytes_human_readable),
             ("avg_obj_size", "Average document size", "avg_doc_size", get_bytes_human_readable),
@@ -231,19 +240,21 @@ def check_graylog_cluster_stats_mongodb(no_item, params, parsed):
             if db_value is None:
                 continue
 
-            levels = params.get('%s_upper' % key, (None, None))
-            levels_lower = params.get('%s_lower' % key, (None, None))
+            levels = params.get("%s_upper" % key, (None, None))
+            levels_lower = params.get("%s_lower" % key, (None, None))
 
-            yield check_levels(db_value,
-                               metric_name,
-                               levels + levels_lower,
-                               human_readable_func=hr_func,
-                               infoname=infotext)
+            yield check_levels(
+                db_value,
+                metric_name,
+                levels + levels_lower,
+                human_readable_func=hr_func,
+                infoname=infotext,
+            )
 
 
 check_info["graylog_cluster_stats.mongodb"] = {
     "check_function": check_graylog_cluster_stats_mongodb,
-    'inventory_function': inventory_graylog_cluster_stats_mongodb,
+    "inventory_function": inventory_graylog_cluster_stats_mongodb,
     "service_description": "Graylog Cluster MongoDB Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats_mongodb",

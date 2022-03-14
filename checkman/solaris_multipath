@@ -1,7 +1,7 @@
 title: Solaris: Multipathing
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -24,7 +24,6 @@ description:
 item:
  The WWID (Word Wide Identifier) of the logical unit number.
 
-inventory:
+discovery:
  One service is created for each LUN that is reported by mpathadm. The total
  number of paths for each created service is also remembered during inventory.
-

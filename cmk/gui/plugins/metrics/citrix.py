@@ -4,14 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -27,12 +23,12 @@ from cmk.gui.plugins.metrics import (
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 metric_info["citrix_load"] = {
-    "title": _("Citrix Load"),
+    "title": _l("Citrix Load"),
     "unit": "%",
     "color": "34/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -45,8 +41,10 @@ metric_info["citrix_load"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["citrix_licenses"] = {
-    "title": _("Citrix licenses"),
-    "metrics": [("licenses", "area"),],
+    "title": _l("Citrix licenses"),
+    "metrics": [
+        ("licenses", "area"),
+    ],
     "scalars": [
         "licenses:warn",
         "licenses:crit",
@@ -56,7 +54,9 @@ graph_info["citrix_licenses"] = {
 }
 
 graph_info["citrix_serverload"] = {
-    "title": _("Citrix Serverload"),
-    "metrics": [("citrix_load", "area"),],
+    "title": _l("Citrix Serverload"),
+    "metrics": [
+        ("citrix_load", "area"),
+    ],
     "range": (0, 100),
 }

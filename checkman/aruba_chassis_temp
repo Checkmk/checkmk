@@ -1,0 +1,22 @@
+title: Aruba 2930M: Chassis Temperature
+agents: snmp
+catalog: hw/network/aruba
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the chassis temperature of Aruba 2930M devices.
+
+ The service status is dependent on the limits configured by device itself
+ but can be overridden via manual configuration.
+
+ Per default the service goes {WARN}/{CRIT} if it exceeds device limits or the
+ levels configured.
+ The default levels are {WARN}: 50.0°C, {CRIT}: 60.0°C
+
+ The check uses the hpicfChassis-MIB.
+
+item:
+ The name combined with the index of the chassis.
+
+discovery:
+ One service is created for each chassis.

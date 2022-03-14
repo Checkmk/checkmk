@@ -1,11 +1,10 @@
 title: Juniper/ScreenOS: CPU Utilization of the Last 1/5/15 Minutes
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Check CPU utilization of the last minute and  last 15 minutes in percent on Juniper ScreenOS devices.
 
-inventory:
+discovery:
  One service is created.
-

@@ -1,0 +1,21 @@
+Title: Disable outdated extension packages during site updates
+Class: feature
+Compatible: compat
+Component: core
+Date: 1625063043
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Since 1.6 there is the information "valid until version" available in MKPs.
+Since 2.0.0 Checkmk is now automatically disabling the packages during the site
+update (omd update).
+
+The mechanism tests all installed packages, checks the "valid until version"
+information of each package and once it is set, compare the version with the
+new Checkmk version you just updated to.
+
+In case it is considered outdated, the package is moved to the disabled
+packages. From this state you can either remove the package or reinstall it.

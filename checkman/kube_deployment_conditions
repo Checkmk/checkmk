@@ -1,0 +1,17 @@
+title: Kubernetes: Deployment Conditions
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ A Deployment enters various states during its lifecycle. Depending on this
+ the Deployment Controller will add different conditions. This check monitors
+ these different conditions.
+
+ This is provided by the API server. The service is OK per default but parameters
+ can be set for each condition.
+
+ It requires that the special agent kube is configured.
+
+discovery:
+ One service is created for each deployment.

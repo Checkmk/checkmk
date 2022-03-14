@@ -4,16 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-import time
 import functools
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import check_levels
-import collections
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
 import json
+import time
+from typing import Any, List, NamedTuple
+
+from cmk.base.check_api import (
+    check_levels,
+    get_bytes_human_readable,
+    get_percent_human_readable,
+    get_rate,
+    MKCounterWrapped,
+)
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
@@ -29,6 +31,7 @@ def get_data_or_go_stale(check_function):
     """Variant of get_parsed_item_data that raises MKCounterWrapped
     if data is not found.
     """
+
     @functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
         if not isinstance(parsed, dict):
@@ -40,7 +43,7 @@ def get_data_or_go_stale(check_function):
     return wrapped_check_function
 
 
-def azure_iter_informative_attrs(resource, include_keys=('location',)):
+def azure_iter_informative_attrs(resource, include_keys=("location",)):
     def cap(string):  # not quite what str.title() does
         return string[0].upper() + string[1:]
 
@@ -48,25 +51,20 @@ def azure_iter_informative_attrs(resource, include_keys=('location',)):
         if key in resource:
             yield cap(key), resource[key]
 
-    for key, value in sorted(resource.get('tags', {}).items()):
+    for key, value in sorted(resource.get("tags", {}).items()):
         if not key.startswith("hidden-"):
             yield cap(key), value
 
 
 def check_azure_metric(  # pylint: disable=too-many-locals
-        resource,
-        metric_key,
-        cmk_key,
-        display_name,
-        levels=None,
-        levels_lower=None,
-        use_rate=False):
-    metric = resource.get('metrics', {}).get(metric_key)
+    resource, metric_key, cmk_key, display_name, levels=None, levels_lower=None, use_rate=False
+):
+    metric = resource.get("metrics", {}).get(metric_key)
     if metric is None:
         return None
 
     if use_rate:
-        countername = "%s.%s" % (resource['id'], metric_key)
+        countername = "%s.%s" % (resource["id"], metric_key)
         value = get_rate(countername, time.time(), metric.value)
         unit = "%s_rate" % metric.unit
     else:
@@ -78,12 +76,12 @@ def check_azure_metric(  # pylint: disable=too-many-locals
 
     # convert to SI-unit
     if unit == "milli_seconds":
-        value /= 1000.
+        value /= 1000.0
     elif unit == "seconds_rate":
         # we got seconds, but we computed the rate -> seconds per second:
         # how long happend something / time period = percent of the time
         # e.g. CPU time: how much percent of of the time was the CPU busy.
-        value *= 100.
+        value *= 100.0
         unit = "percent"
 
     return check_levels(
@@ -91,7 +89,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         cmk_key,
         (levels or (None, None)) + (levels_lower or (None, None)),
         infoname=display_name,
-        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),
+        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),  # type: ignore[arg-type]
         boundaries=(0, None),
     )
 
@@ -105,10 +103,17 @@ def check_azure_metric(  # pylint: disable=too-many-locals
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-AZURE_AGENT_SEPARATOR = '|'
+AZURE_AGENT_SEPARATOR = "|"
 
-Metric = collections.namedtuple(
-    "Metric", ["name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"])
+
+class Metric(NamedTuple):
+    name: Any
+    aggregation: Any
+    value: float
+    unit: str
+    timestamp: Any
+    timegrain: Any
+    filters: Any
 
 
 def _read(row, types, defaults=None):
@@ -126,14 +131,14 @@ def _read(row, types, defaults=None):
 
 
 def _parse_resource(info):
-    '''read resource json and parse metric lines
+    """read resource json and parse metric lines
 
     Metrics are stored in a dict. Key is name, prefixed by their aggregation,
     spaces become underspcores:
       Disk Read Bytes|average|0.0|...
     is stored at
       resource["metrics"]["average_Disk_Read_Bytes"]
-    '''
+    """
     try:
         resource = json.loads(AZURE_AGENT_SEPARATOR.join(info[0]))
     except (ValueError, IndexError):
@@ -146,22 +151,29 @@ def _parse_resource(info):
     if key != "metrics following":
         return resource
 
-    for mline in info[2:2 + count]:
+    for mline in info[2 : 2 + count]:
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(mline))
-        value = metric_dict['value']
-        if metric_dict['unit'] in ('count', 'bytes') and value is not None:
+        value = metric_dict["value"]
+        if metric_dict["unit"] in ("count", "bytes") and value is not None:
             value = int(value)
 
-        key = "%s_%s" % (metric_dict['aggregation'], metric_dict['name'].replace(" ", "_"))
-        metr = Metric(metric_dict['name'], metric_dict['aggregation'], value, metric_dict['unit'],
-                      metric_dict['timestamp'], metric_dict['interval_id'], metric_dict['filter'])
-        resource.setdefault('metrics', {})[key] = metr
+        key = "%s_%s" % (metric_dict["aggregation"], metric_dict["name"].replace(" ", "_"))
+        metr = Metric(
+            metric_dict["name"],
+            metric_dict["aggregation"],
+            value,
+            metric_dict["unit"],
+            metric_dict["timestamp"],
+            metric_dict["interval_id"],
+            metric_dict["filter"],
+        )
+        resource.setdefault("metrics", {})[key] = metr
 
     return resource
 
 
 def parse_azure(info):
-    raw_resources = []
+    raw_resources: List[Any] = []
 
     # create list of lines per resource
     for row in info:
@@ -173,10 +185,10 @@ def parse_azure(info):
 
     parsed_resources = (_parse_resource(r) for r in raw_resources)
 
-    return {r['name']: r for r in parsed_resources if r}
+    return {r["name"]: r for r in parsed_resources if r}
 
 
-#.
+# .
 
 #   .--Discovery-----------------------------------------------------------.
 #   |              ____  _                                                 |
@@ -190,13 +202,14 @@ def parse_azure(info):
 
 def discover_azure_by_metrics(*desired_metrics):
     """Return a discovery function, that will discover if any of the metrics are found"""
+
     def discovery_function(parsed):
         for name, resource in parsed.items():
-            metr = resource.get('metrics', {})
+            metr = resource.get("metrics", {})
             if set(desired_metrics) & set(metr):
                 yield name, {}
 
     return discovery_function
 
 
-#.
+# .

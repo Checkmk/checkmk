@@ -5,24 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Transform,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
 
 
 def _parameter_valuespec_juniper_cpu_util():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             optional_keys=[],
             elements=[
                 (
@@ -37,7 +30,7 @@ def _parameter_valuespec_juniper_cpu_util():
                 ),
             ],
         ),
-        forth=lambda old: not old and {'levels': (80.0, 90.0)} or old,
+        forth=lambda old: not old and {"levels": (80.0, 90.0)} or old,
     )
 
 
@@ -45,8 +38,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="juniper_cpu_util",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Operating CPU"),),
+        item_spec=lambda: TextInput(
+            title=_("Operating CPU"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_juniper_cpu_util,
         title=lambda: _("Juniper Processor Utilization of Operating CPU"),
-    ))
+    )
+)

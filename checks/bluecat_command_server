@@ -23,12 +23,12 @@ def check_bluecat_command_server(item, params, info):
         2: "not running",
         3: "currently starting",
         4: "currently stopping",
-        5: "fault"
+        5: "fault",
     }
     state = 0
-    if oper_state in params['oper_states']['warning']:
+    if oper_state in params["oper_states"]["warning"]:
         state = 1
-    elif oper_state in params['oper_states']['critical']:
+    elif oper_state in params["oper_states"]["critical"]:
         state = 2
     yield state, "Command Server is %s" % oper_states[oper_state]
 
@@ -44,5 +44,6 @@ check_info["bluecat_command_server"] = {
         ".1.3.6.1.4.1.13315.3.1.7.2.1",
         [
             1,  # bcnCommandServerSerOperState
-        ])
+        ],
+    ),
 }

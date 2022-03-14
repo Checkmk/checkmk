@@ -1,0 +1,12 @@
+Title: Bar Chart Dashlet: Add possibility to set limits to x-axis
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1629104208
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+You can now configure a fixed range for x-axis limits in
+the Bar Chart Dashlet.

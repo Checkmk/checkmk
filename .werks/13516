@@ -1,0 +1,16 @@
+Title: <tt>mongodb_replica</tt>: Show both active and passive secondaries
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636995737
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>mongodb_replica</tt>, which monitors the status of
+MongoDB replica sets, now displays both active and passive secondaries.
+Before, the plugin displayed only active secondaries.
+
+Note that users have to update the MongoDB agent plugin of affected
+hosts.

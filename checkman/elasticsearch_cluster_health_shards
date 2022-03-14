@@ -1,13 +1,12 @@
 title: Elasticsearch: Cluster Shards
 agents: elasticsearch
 catalog: app/elasticsearch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows informations about shards of an elasticsearch cluster.
  Available Informations: Active, Active primary, Unassigned, Initializing,
  Relocating, Delayed unassigned shards and Ongoing shard info requests
 
-inventory:
+discovery:
  One service is created.
-

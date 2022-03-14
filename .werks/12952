@@ -1,0 +1,21 @@
+Title: REST API: make endpoint responses more specific
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1626111036
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Some endpoints of host_config and folder_config had the unspecific endpoint-type of
+DomainObject and DomainObjectCollection. These have now been upgraded to HostConfigCollection,
+HostConfigObject, FolderObject and FolderCollection.
+
+Some automatically generated API clients for statically typed programming languages may
+throw exceptions after these changes. You will have to recreate your API client based on
+the specification provided with the 2.0.0p8 release.
+
+The behaviour of the endpoints have not been changes, so if you use an API client in a
+dynamically typed language or a hand-written one, you may not have to change anything.

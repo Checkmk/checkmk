@@ -1,11 +1,10 @@
 title: Juniper/Trapeze: Serial and Firmware Version
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Show the serial number and firmware version
 
-inventory:
+discovery:
  One service is created for each controller.
-

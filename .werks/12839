@@ -1,0 +1,17 @@
+Title: Background job details: Do not flicker while job is running
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1625556614
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+While a background job is running, the background job detail page shows
+the current state of the background job and reloaded the information
+once a second. During this update, the page flickered in some browsers
+and also depending on the time needed to render the page.
+
+The update mechanism of this page has now been reworked to not produce
+these visual glitches.

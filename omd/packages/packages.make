@@ -27,7 +27,7 @@ $(HUMAN_INSTALL_TARGETS): %-install:
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _INSTALL, $(call package_target_prefix,$*)))
 
-$(HUMAN_BUILD_TARGETS): %-build:
+$(HUMAN_BUILD_TARGETS): %-build: $(BUILD_HELPER_DIR)
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
 
@@ -43,9 +43,6 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \
 	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
-	    if [ "$$PACKAGE_NAME" = "Python" ]; then \
-		PACKAGE_NAME="Python3" ; \
-	    fi ; \
 	    PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME"; \
 	    if [ ! -d "$$PACKAGE_PATH" ]; then \
 		echo "ERROR: Package directory does not exist" ; \
@@ -61,9 +58,6 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
-	if [ "$$DIR" = "Python" ]; then \
-	    DIR="Python3" ; \
-	fi ; \
 	if [ ! -d "$(PACKAGE_DIR)/$$DIR" ]; then \
 	    echo "ERROR: Package directory does not exist" ; \
 	    exit 1; \
@@ -124,17 +118,15 @@ include \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/lasso/lasso.make \
+    packages/xinetd/xinetd.make \
     packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
-    packages/check_mysql_health/check_mysql_health.make \
-    packages/check_oracle_health/check_oracle_health.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \
-    packages/jmx4perl/jmx4perl.make \
+    packages/cpp-libs/cpp-libs.make \
     packages/libgsf/libgsf.make \
-    packages/postgresql/postgresql.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
@@ -148,22 +140,31 @@ include \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
-    packages/Python3/Python3.make \
+    packages/protobuf/protobuf.make \
+    packages/Python/Python.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
     packages/net-snmp/net-snmp.make \
-    packages/python3-mod_wsgi/python3-mod_wsgi.make \
+    packages/mod_wsgi/mod_wsgi.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
-    packages/Webinject/Webinject.make \
     packages/appliance/appliance.make
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
+ifeq ($(EDITION),free)
+include $(REPO_PATH)/enterprise/enterprise.make
+endif
 ifeq ($(EDITION),managed)
-include $(REPO_PATH)/enterprise/enterprise.make \
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/managed/managed.make
+endif
+ifeq ($(EDITION),plus)
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/plus/plus.make
 endif

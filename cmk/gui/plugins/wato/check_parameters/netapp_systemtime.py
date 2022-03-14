@@ -5,40 +5,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _item_spec_netapp_systemtime():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the node"),
         allow_empty=False,
     )
 
 
 def _parameter_valuespec_netapp_systemtime():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Set upper levels for the time difference"),
-             help=_("Here you can Set upper levels for the time difference "
-                    "between agent and system time."),
-             elements=[
-                 Age(title=_("Warning if at")),
-                 Age(title=_("Critical if at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Set upper levels for the time difference"),
+                    help=_(
+                        "Here you can Set upper levels for the time difference "
+                        "between agent and system time."
+                    ),
+                    elements=[
+                        Age(title=_("Warning if at")),
+                        Age(title=_("Critical if at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -49,4 +49,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_systemtime,
         title=lambda: _("Netapp systemtime"),
-    ))
+    )
+)

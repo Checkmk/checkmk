@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5283 Supply Fluid Temp Set Point 1
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5283 18.0
@@ -42,49 +44,50 @@ def check_liebert_temp_fluid(item, params, parsed):
 
     value_celsius = check_temp_unit(data)
 
-    warn = check_temp_unit(parsed['Supply Fluid Over Temp Alarm Threshold'])
-    crit = check_temp_unit(parsed['Supply Fluid Over Temp Warning Threshold'])
-    warn_lower = check_temp_unit(parsed['Supply Fluid Under Temp Alarm Threshold'])
-    crit_lower = check_temp_unit(parsed['Supply Fluid Under Temp Warning Threshold'])
+    warn = check_temp_unit(parsed["Supply Fluid Over Temp Alarm Threshold"])
+    crit = check_temp_unit(parsed["Supply Fluid Over Temp Warning Threshold"])
+    warn_lower = check_temp_unit(parsed["Supply Fluid Under Temp Alarm Threshold"])
+    crit_lower = check_temp_unit(parsed["Supply Fluid Under Temp Warning Threshold"])
     if 0 in (warn, crit):
         warn = max(warn, crit)
         crit = warn
 
     thresholds = {
-        'levels': (warn, crit),
-        'levels_lower': (warn_lower, crit_lower),
+        "levels": (warn, crit),
+        "levels_lower": (warn_lower, crit_lower),
     }
     yield check_temperature(value_celsius, thresholds, "check_liebert_temp_fluid.%s" % item)
 
 
-check_info['liebert_temp_fluid'] = {
-    'parse_function': parse_liebert_wrapper,
-    'inventory_function': discover(lambda key, _value: "Set Point" in key),
-    'check_function': check_liebert_temp_fluid,
-    'service_description': '%s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+check_info["liebert_temp_fluid"] = {
+    "parse_function": parse_liebert_wrapper,
+    "inventory_function": discover(lambda key, _value: "Set Point" in key),
+    "check_function": check_liebert_temp_fluid,
+    "service_description": "%s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.476.1.42.3.9.20.1",
         [
-            '10.1.2.1.5283',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5283',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5283',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            '10.1.2.1.5284',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5284',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5284',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            '10.1.2.1.5285',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5285',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5285',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            '10.1.2.1.5286',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5286',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5286',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            '10.1.2.1.5287',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5287',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5287',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            '10.1.2.2.4644',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.2.4644',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.2.4644',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-        ]),
-    'snmp_scan_function': scan_liebert,
-    'group': 'temperature',
-    'has_perfdata': True,
+            "10.1.2.1.5283",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5283",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5283",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            "10.1.2.1.5284",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5284",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5284",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            "10.1.2.1.5285",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5285",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5285",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            "10.1.2.1.5286",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5286",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5286",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            "10.1.2.1.5287",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5287",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5287",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            "10.1.2.2.4644",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.2.4644",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.2.4644",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+        ],
+    ),
+    "snmp_scan_function": scan_liebert,
+    "group": "temperature",
+    "has_perfdata": True,
 }

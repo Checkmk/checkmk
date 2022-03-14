@@ -9,8 +9,9 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_s3_limits_default_levels'] = {
-    'buckets': (None, 80.0, 90.0),
+
+factory_settings["aws_s3_limits_default_levels"] = {
+    "buckets": (None, 80.0, 90.0),
 }
 
 
@@ -19,12 +20,12 @@ def check_aws_s3_limits(item, params, region_data):
     return check_aws_limits("s3", params, region_data)
 
 
-check_info['aws_s3_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_s3_limits,
-    'service_description': 'AWS/S3 Limits %s',
-    'group': 'aws_s3_limits',
-    'default_levels_variable': 'aws_s3_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_s3_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_s3_limits,
+    "service_description": "AWS/S3 Limits %s",
+    "group": "aws_s3_limits",
+    "default_levels_variable": "aws_s3_limits_default_levels",
+    "has_perfdata": True,
 }

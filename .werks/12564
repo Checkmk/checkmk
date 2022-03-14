@@ -1,0 +1,14 @@
+Title: Fix possible stored XSS issue when uploading backup keys
+Class: security
+Compatible: compat
+Component: wato
+Date: 1619465229
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Uploading backup keys could trigger a XSS issue which could lead to execution
+of arbitrary javascript code in the context of the user currently accessing the
+setup GUI.

@@ -1,7 +1,7 @@
 title: Supermicro: Health Smart
 agents: snmp
 catalog: hw/server/supermicro
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check tests S.M.A.R.T. health reported by snmp-enabled devices
@@ -18,5 +18,5 @@ description:
 item:
  Name of the device
 
-inventory:
+discovery:
  One service is created for each SMART-enabled harddisk.

@@ -4,72 +4,145 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
-import socket
-import shutil
 import logging
+import shutil
+import socket
 from pathlib import Path
+from typing import Any, Iterable, Iterator, Mapping, NamedTuple
+from unittest import mock
 
-from fakeredis import FakeRedis  # type: ignore[import]
 import pytest
+from fakeredis import FakeRedis  # type: ignore[import]
+
+from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
+
 import livestatus
 
+import cmk.utils.caching
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_registry import Registry
+from cmk.utils.site import omd_site
+
+import cmk.gui.dashboard
 
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
+import cmk.gui.permissions
+import cmk.gui.views
+from cmk.gui.livestatus_utils.testing import mock_livestatus
 
-# No stub file
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import mock_livestatus
-from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
-# No stub file
-from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
+if is_enterprise_repo():
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def fixture_umask(autouse=True):
+def enable_debug_fixture():
+    debug_mode = cmk.utils.debug.debug_mode
+    cmk.utils.debug.enable()
+    yield
+    cmk.utils.debug.debug_mode = debug_mode
+
+
+@pytest.fixture(autouse=True)
+def fixture_umask():
     """Ensure the unit tests always use the same umask"""
     with cmk.utils.misc.umask(0o0007):
         yield
 
 
-@pytest.fixture(name="edition_short", params=["cre", "cee", "cme"])
-def fixture_edition_short(monkeypatch, request):
+@pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
+def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
     edition_short = request.param
+    if edition_short == "cpe" and not is_plus_repo():
+        pytest.skip("Needed files are not available")
+
     if edition_short == "cme" and not is_managed_repo():
         pytest.skip("Needed files are not available")
 
     if edition_short == "cee" and not is_enterprise_repo():
         pytest.skip("Needed files are not available")
 
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    yield edition_short
+    yield cmk_version.Edition[edition_short.upper()]
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
-    monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
+    omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
     store.makedirs(cmk.utils.paths.autochecks_dir)
-    store.makedirs(cmk.utils.paths.var_dir + '/web')
-    store.makedirs(cmk.utils.paths.var_dir + '/php-api')
-    store.makedirs(cmk.utils.paths.var_dir + '/wato/php-api')
+    store.makedirs(cmk.utils.paths.var_dir + "/web")
+    store.makedirs(cmk.utils.paths.var_dir + "/php-api")
+    store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
-    store.makedirs(cmk.utils.paths.omd_root + '/var/log')
-    store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/conf.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/multisite.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
-    _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
-    _touch(cmk.utils.paths.default_config_dir + '/multisite.mk')
+    store.makedirs(cmk.utils.paths.tmp_dir + "/wato/activation")
+    store.makedirs(cmk.utils.paths.omd_root / "var/log")
+    store.makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
+    _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
+    _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
+
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
+    _dump(
+        omd_config_dir + "/site.conf",
+        """
+CONFIG_ADMIN_MAIL=''
+CONFIG_AGENT_RECEIVER='on'
+CONFIG_AGENT_RECEIVER_PORT='8000'
+CONFIG_APACHE_MODE='own'
+CONFIG_APACHE_TCP_ADDR='127.0.0.1'
+CONFIG_APACHE_TCP_PORT='5002'
+CONFIG_AUTOSTART='off'
+CONFIG_CORE='cmc'
+CONFIG_LIVEPROXYD='on'
+CONFIG_LIVESTATUS_TCP='off'
+CONFIG_LIVESTATUS_TCP_ONLY_FROM='0.0.0.0 ::/0'
+CONFIG_LIVESTATUS_TCP_PORT='6557'
+CONFIG_LIVESTATUS_TCP_TLS='on'
+CONFIG_MKEVENTD='on'
+CONFIG_MKEVENTD_SNMPTRAP='off'
+CONFIG_MKEVENTD_SYSLOG='on'
+CONFIG_MKEVENTD_SYSLOG_TCP='off'
+CONFIG_MULTISITE_AUTHORISATION='on'
+CONFIG_MULTISITE_COOKIE_AUTH='on'
+CONFIG_NAGIOS_THEME='classicui'
+CONFIG_NSCA='off'
+CONFIG_NSCA_TCP_PORT='5667'
+CONFIG_PNP4NAGIOS='on'
+CONFIG_TMPFS='on'
+    """,
+    )
+    _dump(
+        cmk.utils.paths.default_config_dir + "/mkeventd.d/wato/rules.mk",
+        r"""
+# Written by WATO
+# encoding: utf-8
+
+rule_packs += \
+[{'id': 'default', 'title': 'Default rule pack', 'rules': [], 'disabled': False, 'hits': 0}]
+""",
+    )
+
+    yield
+    omd_site.cache_clear()
+
+
+def _dump(path, data):
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        f.write(data)
 
 
 def _touch(path):
@@ -77,13 +150,17 @@ def _touch(path):
     Path(path).touch()
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def cleanup_after_test():
     yield
 
+    if cmk.utils.paths.omd_root == Path(""):
+        logger.warning("OMD_ROOT not set, skipping cleanup")
+        return
+
     # Ensure there is no file left over in the unit test fake site
     # to prevent tests involving eachother
-    for entry in Path(cmk.utils.paths.omd_root).iterdir():
+    for entry in cmk.utils.paths.omd_root.iterdir():
         # This randomly fails for some unclear reasons. Looks like a race condition, but I
         # currently have no idea which triggers this since the tests are not executed in
         # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
@@ -101,6 +178,25 @@ def cleanup_after_test():
 @pytest.fixture(scope="session")
 def site(request):
     pass
+
+
+def _clear_caches():
+    cmk.utils.caching.config_cache.clear()
+    cmk.utils.caching.runtime_cache.clear()
+
+    cmk_version.edition.cache_clear()
+
+
+@pytest.fixture(autouse=True, scope="module")
+def clear_caches_per_module():
+    """Ensures that module-scope fixtures are executed with clean caches."""
+    _clear_caches()
+
+
+@pytest.fixture(autouse=True)
+def clear_caches_per_function():
+    """Ensures that each test is executed with a non-polluted cache from a previous test."""
+    _clear_caches()
 
 
 # TODO: This fixes our unit tests when executing the tests while the local
@@ -121,8 +217,8 @@ def fixup_ip_lookup(monkeypatch):
 
 
 class FixRegister:
-    """Access agent based plugins
-    """
+    """Access agent based plugins"""
+
     def __init__(self):
         # Local import to have faster pytest initialization
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -133,17 +229,11 @@ class FixRegister:
         config._initialize_data_structures()
         assert config.check_info == {}
 
-        with cmk_debug_enabled():  # fail if a plugin can't be loaded
-            config.load_all_agent_based_plugins(check_api.get_check_api_context)
-            inventory_plugins.load_legacy_inventory_plugins(
-                check_api.get_check_api_context,
-                register.inventory_plugins_legacy.get_inventory_context,
-            )
-
-        # some sanitiy checks, may decrease as we migrate
-        assert len(config.check_info) > 1000
-        assert len(config.snmp_info) > 400
-        assert len(inventory_plugins._inv_info) > 60
+        config.load_all_agent_based_plugins(check_api.get_check_api_context)
+        inventory_plugins.load_legacy_inventory_plugins(
+            check_api.get_check_api_context,
+            register.inventory_plugins_legacy.get_inventory_context,
+        )
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
@@ -168,11 +258,12 @@ class FixRegister:
 
 
 class FixPluginLegacy:
-    """Access legacy dicts like `check_info`
-    """
+    """Access legacy dicts like `check_info`"""
+
     def __init__(self, fixed_register: FixRegister):
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.inventory_plugins as inventory_plugins
+
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
         self._check_info = copy.deepcopy(config.check_info)
@@ -207,14 +298,9 @@ class FixPluginLegacy:
         return self._check_variables
 
 
-@pytest.fixture(scope="session")
-def fix_register():
+@pytest.fixture(scope="session", name="fix_register")
+def fix_register_fixture():
     yield FixRegister()
-
-
-@pytest.fixture(scope="session")
-def load_all_agent_based_plugins(fix_register):
-    pass
 
 
 @pytest.fixture(scope="session")
@@ -227,9 +313,13 @@ def prevent_livestatus_connect(monkeypatch):
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
     monkeypatch.setattr(
-        livestatus.SingleSiteConnection, "_create_socket", lambda *_: pytest.fail(
+        livestatus.SingleSiteConnection,
+        "_create_socket",
+        lambda *_: pytest.fail(
             "The test tried to use a livestatus connection. This will result in connect timeouts. "
-            "Use mock_livestatus for mocking away the livestatus API"))
+            "Use mock_livestatus for mocking away the livestatus API"
+        ),
+    )
 
     orig_init = livestatus.MultiSiteConnection.__init__
 
@@ -264,7 +354,7 @@ def _mock_livestatus():
         yield live
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def use_fakeredis_client(monkeypatch):
     """Use fakeredis client instead of redis.Redis"""
     monkeypatch.setattr(
@@ -272,3 +362,42 @@ def use_fakeredis_client(monkeypatch):
         "Redis",
         FakeRedis,
     )
+
+
+class _MockVSManager(NamedTuple):
+    active_service_interface: Mapping[str, Any]
+
+
+@pytest.fixture()
+def initialised_item_state():
+    mock_vs = _MockVSManager({})
+    with mock.patch(
+        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+        mock_vs,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def registry_reset() -> Iterator[None]:
+    """Fixture to reset registries to its default entries."""
+    registries: list[Registry[Any]] = [
+        cmk.gui.dashboard.dashlet_registry,
+        cmk.gui.views.icon_and_action_registry,
+        cmk.gui.permissions.permission_registry,
+        cmk.gui.permissions.permission_section_registry,
+    ]
+    if is_enterprise_repo():
+        registries.append(
+            cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry
+        )
+        registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
+
+    defaults_per_registry = [(registry, list(registry)) for registry in registries]
+    try:
+        yield
+    finally:
+        for registry, defaults in defaults_per_registry:
+            for entry in list(registry):  # type: ignore[call-overload]
+                if entry not in defaults:
+                    registry.unregister(entry)  # type: ignore[attr-defined]

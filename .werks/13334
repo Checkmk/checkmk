@@ -1,0 +1,13 @@
+Title: Drop support for Internet Explorer 11 (IE11)
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1638354025
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+The support for IE11 is dropped beginning with version 2.1 of Checkmk. Since some of our
+dependencies already dropped the support and we don't want to ship old/outdated versions
+we are dropping support for IE11 as well, prior to the official end of life at 2022-06-15.

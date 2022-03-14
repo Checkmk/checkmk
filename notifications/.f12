@@ -5,9 +5,12 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo mkdir -p $ROOT/share/check_mk/notifications
-sudo cp -vp * $ROOT/share/check_mk/notifications
+sudo mkdir -p "$ROOT/share/check_mk/notifications"
+sudo cp -vp ./* "$ROOT/share/check_mk/notifications"

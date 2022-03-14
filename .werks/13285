@@ -1,0 +1,15 @@
+Title: Activate Changes: Minor speedup for setups with disabled/inactive sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1638191672
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Unreachable/disabled remote sites tend to accumulate lots of pending changes.
+There was an performance impact, if these sites had 100+ changes and the
+general size of the distributed monitoring setup was more than 50 sites.
+

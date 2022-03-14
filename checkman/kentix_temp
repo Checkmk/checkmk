@@ -1,7 +1,7 @@
 title: Kentix MultiSensor: Temperature Sensor
 agents: snmp
 catalog: hw/environment/kentix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature measured by the Kentix MultiSensor-LAN or MultiSensor-RACK device.
@@ -12,5 +12,5 @@ description:
 item:
  One of the two statements {{LAN}} or {{Rack}}
 
-inventory:
+discovery:
  One service is created.

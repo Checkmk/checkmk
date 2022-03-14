@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import host_name
-from cmk.base.check_api import host_extra_conf_merged
+from cmk.base.check_api import host_extra_conf_merged, host_name
 from cmk.base.plugins.agent_based.utils import netapp_api
 
 

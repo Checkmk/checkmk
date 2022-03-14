@@ -9,9 +9,10 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 
-factory_settings['threepar_remotecopy_default_levels'] = {
+factory_settings["threepar_remotecopy_default_levels"] = {
     1: 0,  # NORMAL
     2: 1,  # STARTUP
     3: 1,  # SHUTDOWN
@@ -35,7 +36,7 @@ def check_3par_remotecopy(_no_item, params, parsed):
         3: (2, "STOPPED"),
     }
 
-    state, state_readable = mode_translate[parsed.get('mode', 1)]
+    state, state_readable = mode_translate[parsed.get("mode", 1)]
     yield state, "Mode: %s" % state_readable
 
     status_translate = {
@@ -49,16 +50,16 @@ def check_3par_remotecopy(_no_item, params, parsed):
         8: "UPGRADE",
     }
 
-    status = parsed.get('status', 6)
+    status = parsed.get("status", 6)
     state_readable = status_translate[status]
     yield params[status], "Status: %s" % state_readable
 
 
-check_info['3par_remotecopy'] = {
-    'parse_function': parse_3par,
-    'inventory_function': inventory_3par_remotecopy,
-    'check_function': check_3par_remotecopy,
-    'service_description': "Remote copy",
-    'group': "threepar_remotecopy",
-    'default_levels_variable': "threepar_remotecopy_default_levels",
+check_info["3par_remotecopy"] = {
+    "parse_function": parse_3par,
+    "inventory_function": inventory_3par_remotecopy,
+    "check_function": check_3par_remotecopy,
+    "service_description": "Remote copy",
+    "group": "threepar_remotecopy",
+    "default_levels_variable": "threepar_remotecopy_default_levels",
 }

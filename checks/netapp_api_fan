@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_fan:sep(9)>>>
 # cooling-element-list 20 cooling-element-number 1    rpm 3000    cooling-element-is-error false
 # cooling-element-list 20 cooling-element-number 2    rpm 3000    cooling-element-is-error false
@@ -18,7 +19,7 @@ discovery_netapp_api_fan_rules = []
 
 
 def _format_item(key):
-    return key.replace('.', '/')
+    return key.replace(".", "/")
 
 
 def discovery_netapp_api_fan(parsed):
@@ -41,11 +42,12 @@ def check_netapp_api_fan(item, _no_params, parsed):
 
 
 check_info["netapp_api_fan"] = {
-    'check_function': check_netapp_api_fan,
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["cooling-element-list", "cooling-element-number"]),
-    'inventory_function': discovery_netapp_api_fan,
-    'service_description': 'Fan Shelf %s',
+    "check_function": check_netapp_api_fan,
+    "parse_function": lambda info: netapp_api_parse_lines(
+        info, custom_keys=["cooling-element-list", "cooling-element-number"]
+    ),
+    "inventory_function": discovery_netapp_api_fan,
+    "service_description": "Fan Shelf %s",
 }
 
 
@@ -53,7 +55,7 @@ def discovery_netapp_api_fan_summary(parsed):
     if discover_single_items(discovery_netapp_api_fan_rules):
         return
     if _get_fans_with_cooling(parsed):
-        yield 'Summary', {}
+        yield "Summary", {}
 
 
 def _get_fans_with_cooling(fans):
@@ -73,19 +75,22 @@ def _get_failed_cooling_elements(fans):
 
 
 def check_netapp_api_fan_summary(item, _no_params, parsed):
-    fans = _get_fans_with_cooling(parsed)  #dictionary now
+    fans = _get_fans_with_cooling(parsed)  # dictionary now
     yield 0, "%d fans in total" % len(fans)
 
     erred_fans = _get_failed_cooling_elements(fans)
     if erred_fans:
         erred_fans_names = ", ".join(erred_fans)
         count = len(erred_fans)
-        yield 2, "%d fan%s in error state (%s)" % (count, "" if count == 1 else "s",
-                                                   erred_fans_names)
+        yield 2, "%d fan%s in error state (%s)" % (
+            count,
+            "" if count == 1 else "s",
+            erred_fans_names,
+        )
 
 
-check_info['netapp_api_fan.summary'] = {
-    'check_function': check_netapp_api_fan_summary,
-    'inventory_function': discovery_netapp_api_fan_summary,
-    'service_description': 'Fan Shelf %s',
+check_info["netapp_api_fan.summary"] = {
+    "check_function": check_netapp_api_fan_summary,
+    "inventory_function": discovery_netapp_api_fan_summary,
+    "service_description": "Fan Shelf %s",
 }

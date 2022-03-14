@@ -1,0 +1,15 @@
+Title: FIX API: adjusting content of user endpoints and allowing disabling option for notifications
+Class: feature
+Compatible: compat
+Component: core
+Date: 1615188813
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This change makes some small modifications to the returned user attributes
+when calling the user create or update endpoints. The format of the returned
+attributes is now conform to the format of the request body when calling those
+endpoints. It also fixes the disable option of the disable_notifications attribute
+which was previously ignored.

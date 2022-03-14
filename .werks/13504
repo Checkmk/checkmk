@@ -1,0 +1,25 @@
+Title: Fix non functional change of OMD config variables for remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1638275132
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you changed sitespecific settings for remote sites that depend on the "omd
+config" command (like "Start during system boot", "Access to Livestatus via
+TCP", etc.), the changes were not correctly applied on the effected remote
+sites.
+
+This behaviour affects at least all versions since 1.5.
+
+If you change such settings now, the "Activate pending changes page" will show
+the following warning for each effected site:
+"The applied changes require a restart of all site services.
+These are performed now and will cause a short offline period."
+
+On activating changes, a background job will be started on the remote site to
+change the choosen settings. This background job needs to stop and start the
+site, what causes a short offline period on the remote site.

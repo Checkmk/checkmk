@@ -1,0 +1,24 @@
+Title: veritas_vcs: cluster behaviour regresses from Checkmk version <= 1.6
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637844983
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The veritas_vcs check determines the state of its service in the following
+way:<br>
+<br>
+OK: All nodes are running<br>
+OK: At least one node is online or running, others may be offline<br>
+WARN: All nodes are offline<br>
+CRIT: At least one node is faulted<br>
+UNKNOWN: At least one node is unknown<br>
+<br>
+(Of course this can be configurable).<br>
+<br>
+The cluster functionality of this check did not adhere to these priorities to
+determine the overall state of the clustered service. This has been fixed.

@@ -1,0 +1,21 @@
+Title: labels: Improve filtering in views
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1620368953
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+Filtering for host or service labels could lead to a memory leak in large
+setups with a large count of labels. With every character entered in the search
+field, one ajax call was created while the answer of the first fired ajax call
+was not already there.
+
+Therefore, labels are now cached in the shipped Redis database and the search
+input field was improved with a 300ms delay while typing new characters.
+
+The initial building of the Redis cache should be able to process ~60k
+labels/s. Depending of the count of labels in your setup, the first display of
+search results may take a certain amount of time.

@@ -12,9 +12,9 @@
 # License Status: Initial grace period
 # Time remaining: 11820 minute(s) (8 day(s))
 
-factory_settings['windows_license_default_levels'] = {
-    'status': ['Licensed', 'Initial grace period'],
-    'expiration_time': (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+factory_settings["windows_license_default_levels"] = {
+    "status": ["Licensed", "Initial grace period"],
+    "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
 }
 
 
@@ -24,48 +24,48 @@ def parse_win_license(info):
         if len(line) == 0:
             continue
 
-        if line[0] == 'License':
-            parsed['License'] = ' '.join(line[2:])
+        if line[0] == "License":
+            parsed["License"] = " ".join(line[2:])
 
         # Depending on Windows version this variable reads
         # Time remaining or Volume activation expiration or is not present
-        if line[0] in ['Time', 'Volume']:
-            expiration = ' '.join(line).split(':')[1].strip()
+        if line[0] in ["Time", "Volume"]:
+            expiration = " ".join(line).split(":")[1].strip()
             parsed["expiration"] = expiration
-            time_left_re = regex(r'(\d+) minute')
+            time_left_re = regex(r"(\d+) minute")
             time_left = int(time_left_re.search(expiration).group(1)) * 60
-            parsed['expiration_time'] = time_left
+            parsed["expiration_time"] = time_left
     return parsed
 
 
 def inventory_win_license(parsed):
-    if 'License' in parsed:
+    if "License" in parsed:
         return [(None, {})]
 
 
 def check_win_license(_item, params, parsed):
-    sw_license = parsed.get('License', None)
+    sw_license = parsed.get("License", None)
 
     if not sw_license:
         return
 
     message = "Software is %s" % sw_license
 
-    license_state = 0 if sw_license in params['status'] else 2
+    license_state = 0 if sw_license in params["status"] else 2
 
     if license_state:
-        message += " Required: " + ' '.join(params['status'])
+        message += " Required: " + " ".join(params["status"])
 
     yield license_state, message
 
-    time_left = parsed.get('expiration_time', None)
+    time_left = parsed.get("expiration_time", None)
 
     if not time_left:
         return
 
     time_message = "License will expire in %s" % get_age_human_readable(time_left)
 
-    warn, crit = params['expiration_time']
+    warn, crit = params["expiration_time"]
 
     time_state = 0
 
@@ -80,11 +80,11 @@ def check_win_license(_item, params, parsed):
     yield time_state, time_message
 
 
-check_info['win_license'] = {
-    'service_description': "Windows License",
-    'parse_function': parse_win_license,
-    'inventory_function': inventory_win_license,
-    'check_function': check_win_license,
-    'group': 'win_license',
-    'default_levels_variable': 'windows_license_default_levels',
+check_info["win_license"] = {
+    "service_description": "Windows License",
+    "parse_function": parse_win_license,
+    "inventory_function": inventory_win_license,
+    "check_function": check_win_license,
+    "group": "win_license",
+    "default_levels_variable": "windows_license_default_levels",
 }

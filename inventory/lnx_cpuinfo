@@ -76,6 +76,6 @@ def inv_lnx_cpuinfo(info):
         node["cpus"] = num_sockets
 
 
-inv_info['lnx_cpuinfo'] = {
+inv_info["lnx_cpuinfo"] = {
     "inv_function": inv_lnx_cpuinfo,
 }

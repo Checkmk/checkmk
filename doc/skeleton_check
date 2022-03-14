@@ -9,9 +9,9 @@
 # pylint: disable
 
 from typing import Any, Mapping
-from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
 from .agent_based_api.v1 import HostLabel, register, Result, RuleSetType, Service, State
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
 
 # define an appropriate section type
@@ -21,11 +21,11 @@ class Section:
 
 def parse_norris(string_table: StringTable) -> Section:
     """
-        >>> parse_norris([
-        ... # Example output from agent:
-        ... # Put here the example output of the data source
-        ... ])
-        Section(...)
+    >>> parse_norris([
+    ... # Example output from agent:
+    ... # Put here the example output of the data source
+    ... ])
+    Section(...)
     """
     return section
 
@@ -51,16 +51,17 @@ def check_norris(item: str, params: Mapping[str, Any], section: Section):
     yield Result(
         state=State.UNKNOWN,
         summary="Check not implemented",
-        details=("Check not implemented.\n"
-                 f"item: {item!r}\n"
-                 f"params: {params!r}\n"
-                 f"section: {section!r}\n"),
+        details=(
+            "Check not implemented.\n"
+            f"item: {item!r}\n"
+            f"params: {params!r}\n"
+            f"section: {section!r}\n"
+        ),
     )
 
 
 def cluster_check_norris(item: str, params: Mapping[str, Any], section: Mapping[str, Section]):
-    """This is just an example.
-    """
+    """This is just an example."""
     aggregated_data = Section()
     for _node_name, _node_section in section.items():
         # do something  clever here!

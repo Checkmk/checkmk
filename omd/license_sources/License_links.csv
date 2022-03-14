@@ -1,0 +1,36 @@
+License identifier,License link,Full name,Comment
+Apache-2.0,https://opensource.org/licenses/Apache-2.0,"Apache License, Version 2.0",
+Artistic-1.0,http://www.perl.com/perl/misc/Artistic.html,Artistic License 1.0,
+Artistic-2.0,https://opensource.org/licenses/Artistic-2.0,Artistic License 2.0,used by some for Perl 6
+BSD-0-Clause,https://spdx.org/licenses/0BSD.html,BSD Zero Clause License,
+BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,The 2-Clause BSD License,
+BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,The 3-Clause BSD License,also called New BSD License
+BSD-4-Clause,https://spdx.org/licenses/preview/BSD-4-Clause.html,"BSD 4-Clause ""Original"" or ""Old"" License",
+BSL-1.0,https://opensource.org/licenses/BSL-1.0,Boost Software License 1.0 ,
+CC-BY-4.0,https://spdx.org/licenses/CC-BY-4.0.html,Creative Commons Attribution 4.0 International Public License,
+CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,CC0 1.0 Universal,
+CDDL-1.0,https://opensource.org/licenses/CDDL-1.0,Common Development and Distribution License 1.0,
+EPL-2.0,https://opensource.org/licenses/EPL-2.0,
+GPL-1.0,https://spdx.org/licenses/GPL-1.0.html,,
+GPL-2.0,https://opensource.org/licenses/GPL-2.0,GNU General Public License version 2,
+GPL-3.0,https://opensource.org/licenses/GPL-3.0,GNU General Public License version 3,
+Icons8,https://icons8.com/download/Icons8_License.pdf,Standard License Agreement for Icons8,
+ISC,https://opensource.org/licenses/ISC,ISC License,
+LGPL-2.0,https://opensource.org/licenses/LGPL-2.0,GNU Library General Public License version 2,
+LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,GNU Lesser General Public License version 2.1,
+LGPL-3.0,https://opensource.org/licenses/LGPL-3.0,GNU Lesser General Public License version 3,
+MIT,https://opensource.org/licenses/MIT,The MIT License,Expat style
+MIT-CMU,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,The MIT License CMU Style,Derived for Carnegie Mellon University and Regents of the University of California
+MPL-1.1,https://opensource.org/licenses/MPL-1.1,Mozilla Public License 1.1,"Outdated, recommend to use V2, if possible"
+MPL-2.0,https://opensource.org/licenses/MPL-2.0,Mozilla Public License 2.0,
+OML,https://spdx.org/licenses/OML.html,Open Market License,
+OpenSSL,https://spdx.org/licenses/OpenSSL.html,OpenSSL License,"includes an ""Original SSLeay License"""
+PIL,http://www.pythonware.com/products/pil/license.htm,Python Imaging Library,
+PSF-2.0,https://spdx.org/licenses/PSF-2.0.html,Python Software Foundation License 2.0,
+Public-Domain,,Public Domain License ,
+Python-2.0,https://spdx.org/licenses/Python-2.0.html,Python License 2.0,
+Python-2.1.1,https://www.python.org/download/releases/2.1.1/license/,Python 2.1.1 License,
+Unlicense,https://opensource.org/licenses/unlicense,The Unlicense,
+WTFPL,https://spdx.org/licenses/WTFPL.html,Do What the F*ck You Want to Public License,
+X11,https://spdx.org/licenses/X11.html,X11 License,
+Zlib,https://opensource.org/licenses/Zlib,Zlib License,

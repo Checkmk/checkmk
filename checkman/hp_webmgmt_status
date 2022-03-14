@@ -1,7 +1,7 @@
 title: HP Web Management: Status
 agents: snmp
 catalog: hw/network/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the overall health status of various HP devices.
@@ -16,6 +16,5 @@ description:
 item:
  The unique device identification.
 
-inventory:
+discovery:
  One service is created for each management object which is usually one.
-

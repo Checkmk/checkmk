@@ -1,7 +1,7 @@
 title: Skype for Business: Mediation Server
 agents: windows
 catalog: app/skype
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors some general usage statistics of a skype mediation
@@ -18,6 +18,5 @@ description:
 
  Thresholds can be configured for all these counters except the failure index.
 
-inventory:
+discovery:
  One service is created.
-

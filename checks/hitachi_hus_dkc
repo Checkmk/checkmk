@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hitachi_hus import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["hitachi_hus_dkc"] = {
     "inventory_function": inventory_hitachi_hus,
     "check_function": check_hitachi_hus,
@@ -25,6 +26,7 @@ check_info["hitachi_hus_dkc"] = {
             7,  # dkcHWBattery
             8,  # dkcHWFan
             9,  # dkcHWEnvironment
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_hitachi_hus,
 }

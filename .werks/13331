@@ -1,0 +1,53 @@
+Title: Performance improvements for the mknotifyd
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1634825315
+Edition: cee
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+This werk fixes some performance regressions in the mknotifyd and can increase
+(depending on the setup) the throughput of the mknotifyd. The changes are most
+benificial if you use notification plugins with a short running time or if you
+forward notifications from remote to central sites. The fixed regressions are:
+
+In distributed setups forwarded messages were always processed in one subprocess
+before the actual notification plugins were executed. I.e. even if you used the
+option "Maximum concurrent executions" for a notification plugin, it may not
+have the desired effect if the processing of forwarded messages was the limiting
+factor. You can now use the option "Maximum concurrent executions for forwarded
+messages" in the "notification spooler configuration" of the "global settings"
+to configure the number of processes. Ideally, the number of processes should
+roughly match the concurrent executions of the notification plugins of the
+incoming messages. If no value is specified, a default of 1 is used. Note that
+higher values lead to a higher CPU load. If e.g. a value of 2 is used and a
+notification plugin uses 2 concurrent executions, 4 subprocesses can be started
+simultaneously.
+
+The mknotifyd polls for new data with a timeout of 1s. Previously, output of
+executed notification plugins was not recognized in the poll. I.e. if no data
+was present on a connection or no forwarding was used, the timeout of 1s was
+always hit. Now, the mknotifyd recignizes new output of notification plugins and
+the poll exits before the 1s timeout is hit.
+
+Incoming connections used blocking sockets and outgoing connections could
+occasionally end up with a blocking socket. This degraded the performance of the
+mknotifyd if a lot of notifications had to be sent to a remote site and the TCP
+queue was already full. It also may lead to occasional disconnects if heartbeats
+were missed due to a blocking call and could in the worst case lead to a
+deadlock if two sites are in a blocking call.
+
+If a connection had a lot of outgoing data the mknotifyd only sent data and did
+not read data from the socket which could leat to missed heartbeats and
+disconnects as well.
+
+Before this werk all spoolfiles in the spool and deferred directory were always
+processed. If a lot of spoolfiles were present in these directories, this could
+lead to up to 2s spent processing these directories per cycle.
+
+Finally, this werk increases the amount of data collected per cycle from a
+connection. This resolves the issue of TCP queues when a lot of notifications
+had to be forwarded to a remote site.

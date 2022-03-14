@@ -1,7 +1,7 @@
 title: EMC ScaleIO: Data Server Status
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors several states reported by a ScaleIO Data Server
@@ -12,5 +12,5 @@ description:
 item:
  The SDS id
 
-inventory:
+discovery:
  One service is created for each SDS.

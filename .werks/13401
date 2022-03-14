@@ -1,0 +1,22 @@
+Title: mk_mongodb.py adapt logging
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1637657056
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+In previous versions the mk_mongodb.py agent plugin printed expected exceptions
+to stderr. This may confuse the user as they may think something is wrong with
+the plugin or the mongodb server while this exception is totally fine.
+
+For example mk_mongodb.py queries for replica information. Is a mongodb server
+queried that has no replica configured, the plugin wrote an error message
+to stderr that it could not fetch the replication Information.
+
+These Errors are now hidden by default. They may be shown by specifying
+<tt>-vv</tt> when executing the agent plugin manually.
+
+The errors are logged with log level debug.

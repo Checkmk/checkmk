@@ -1,7 +1,7 @@
 title: APC Symmetra UPS: Output Power
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the output power (in Watt) of the
@@ -16,5 +16,5 @@ description:
 item:
  The index of the phase, e.g. {"1"}.
 
-inventory:
+discovery:
  One service is created for each power supply if the status is not 0 or -1

@@ -1,7 +1,7 @@
 title: Infoblox Devices: Node Services
 agents: snmp
 catalog: hw/network/infoblox
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the node services of Infoblox devices which
@@ -14,8 +14,5 @@ description:
 item:
  The service name.
 
-inventory:
+discovery:
  One service is created for each node service.
-
-cluster:
- The best status of all nodes for a given item is shown.

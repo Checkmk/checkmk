@@ -1,0 +1,15 @@
+Title: Successful configuration updates now produce a change
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1642066831
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Checkmk now adds a change after a successful configuration update with
+cmk-update-config. cmk-update-config is e.g. executed during a Checkmk
+version update. The change ensures that configuration changes are pushed
+to remote sites after an update. If any errors occur during an update
+no change is added.

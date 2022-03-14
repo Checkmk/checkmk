@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.0 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.0
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.1 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.1
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.2 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.2
@@ -90,18 +91,20 @@ def parse_netgear_fans(info):
             "__fans__": {},
         }
     for oid_end, sstate, reading_str in sensorinfo:
-        parsed["__fans__"].setdefault("%s" % oid_end.replace(".", "/"), {
-            "state": sstate,
-            "reading_str": reading_str,
-        })
+        parsed["__fans__"].setdefault(
+            "%s" % oid_end.replace(".", "/"),
+            {
+                "state": sstate,
+                "reading_str": reading_str,
+            },
+        )
     return parsed
 
 
 def inventory_netgear_fans(parsed):
     for sensorname, sensorinfo in parsed["__fans__"].items():
         state = sensorinfo["state"]
-        if state != "1" and not ( state == "2" and \
-           sensorinfo["reading_str"] in [ "0" ] ):
+        if state != "1" and not (state == "2" and sensorinfo["reading_str"] in ["0"]):
             yield sensorname, {}
 
 
@@ -113,27 +116,29 @@ def check_netgear_fans(item, params, parsed):
     reading_str = data["reading_str"]
     if reading_str != "Not Supported":
         yield check_fan(int(data["reading_str"]), params)
-    state, state_readable = netgear_map_state_txt_to_int(data["state"],
-                                                         parsed.get("__version__", ""))
+    state, state_readable = netgear_map_state_txt_to_int(
+        data["state"], parsed.get("__version__", "")
+    )
     yield state, "Status: %s" % state_readable
 
 
-check_info['netgear_fans'] = {
-    'parse_function': parse_netgear_fans,
-    'inventory_function': inventory_netgear_fans,
-    'check_function': check_netgear_fans,
-    'service_description': 'Fan %s',
-    'snmp_info': [
-        ('.1.3.6.1.4.1.4526.10.1.1.1.13', ['']),
+check_info["netgear_fans"] = {
+    "parse_function": parse_netgear_fans,
+    "inventory_function": inventory_netgear_fans,
+    "check_function": check_netgear_fans,
+    "service_description": "Fan %s",
+    "snmp_info": [
+        (".1.3.6.1.4.1.4526.10.1.1.1.13", [""]),
         (
-            '.1.3.6.1.4.1.4526.10.43.1.6.1',
+            ".1.3.6.1.4.1.4526.10.43.1.6.1",
             [
                 OID_END,
                 "3",  # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState
                 "4",  # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed
-            ])
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
-    'default_levels_variable': 'netgear_fans_default_levels',
-    'group': 'hw_fans',
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
+    "default_levels_variable": "netgear_fans_default_levels",
+    "group": "hw_fans",
 }

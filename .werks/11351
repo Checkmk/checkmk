@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The last typed search query was already cleared if the results were selected with arrow keys and followed by enter or if directly pressed enter.
 Now, they are also cleared when a result is selected by a mouse click.

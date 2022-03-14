@@ -1,7 +1,7 @@
 title: Huawei WLAN Access Controller
 agents: snmp
 catalog: hw/network/huawei
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature of the created access-points of a Huawei WLAN Access Controller (e.g. AC6508).
@@ -9,5 +9,5 @@ description:
 item:
  The access-point's SSID.
 
-inventory:
+discovery:
  One service per found access-point is created.

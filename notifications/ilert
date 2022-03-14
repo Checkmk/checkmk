@@ -3,7 +3,7 @@
 # iLert
 
 from cmk.notification_plugins import ilert
-from cmk.notification_plugins.utils import (post_request, process_by_result_map)
+from cmk.notification_plugins.utils import post_request, process_by_result_map
 
 if __name__ == "__main__":
     response = post_request(lambda context: context, url=ilert.ilert_url(), headers=ilert.HEADERS)

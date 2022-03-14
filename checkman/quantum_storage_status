@@ -1,12 +1,12 @@
 title: Quantum Storage Devices: Storage Status
 agents: snmp
 catalog: hw/storagehw/quantum
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state variables of Quantum Storage Devices.
  The states can be mapped to the desired monitoring status via the
  rule "Quantum Storage Status".
 
-inventory:
+discovery:
  One service is created.

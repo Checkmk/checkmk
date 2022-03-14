@@ -4,21 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_bi_arguments(params, hostname, ipaddress):
-    # there is an inconsistency between the WATO rule and the webapi.
-    # the WATO rule says 'aggr_groups', the webapi looks for 'groups'
-    # We add a quickfix here, because its easy to pick to 1.6, easy to
-    # package in an MKP, and it won't mess with user config.
-    # CMK-5507 is supposed to deal with this properly.
+# TODO: Cleanup this separation violation. This should be accessed through the check API
+from cmk.base.config import SpecialAgentConfiguration
+
+
+def agent_bi_arguments(
+    params: Sequence[Mapping[str, Any]], hostname: str, ipaddress: Optional[str]
+) -> SpecialAgentConfiguration:
+    # There is an inconsistency between the WATO rule and the webapi.
+    # WATO <-> API
+    #  aggr_groups / aggr_group_prefix <-> groups
+    #  aggr_name_regex / aggr_name <-> names
+    # Note: In 1.6 aggr_name_regex never worked as regex, it always was an exact match
     for param_set in params:
-        filter_ = param_set.get('filter', {})
-        if filter_.get("aggr_groups"):
-            filter_["groups"] = filter_["aggr_groups"]
+        filter_ = param_set.get("filter", {})
+        for replacement, name in (
+            ("groups", "aggr_groups"),  # 1.6 (deprecated)
+            ("names", "aggr_name_regex"),  # 1.6 (deprecated)
+            ("groups", "aggr_group_prefix"),
+            ("names", "aggr_name"),
+        ):
+            if name in filter_:
+                filter_[replacement] = filter_.pop(name)
 
-    # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.config
-    return cmk.base.config.SpecialAgentConfiguration([], repr(params))
+    return SpecialAgentConfiguration([], repr(params))
 
 
-special_agent_info['bi'] = agent_bi_arguments
+special_agent_info["bi"] = agent_bi_arguments

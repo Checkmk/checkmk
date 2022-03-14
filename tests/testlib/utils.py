@@ -8,19 +8,17 @@
 
 import logging
 import os
-from pathlib import Path
 import pwd
 import re
 import subprocess
 import sys
+from pathlib import Path
 from typing import List
-
-from six import ensure_binary, ensure_str
 
 logger = logging.getLogger()
 
 
-def repo_path():
+def repo_path() -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
@@ -36,29 +34,42 @@ def cme_path():
     return repo_path() + "/managed"
 
 
+def cpe_path():
+    return repo_path() + "/plus"
+
+
 def is_enterprise_repo():
     return os.path.exists(cmc_path())
 
 
-def is_managed_repo():
+def is_managed_repo() -> bool:
     return os.path.exists(cme_path())
 
 
+def is_plus_repo() -> bool:
+    return os.path.exists(cpe_path())
+
+
 def virtualenv_path() -> Path:
-    venv = subprocess.check_output([repo_path() + "/scripts/run-pipenv", "--bare", "--venv"])
-    return Path(ensure_str(venv).rstrip("\n"))
+    venv = subprocess.check_output(
+        [repo_path() + "/scripts/run-pipenv", "--bare", "--venv"], encoding="utf-8"
+    )
+    return Path(venv.rstrip("\n"))
 
 
 def find_git_rm_mv_files(dirpath: Path) -> List[str]:
     del_files = []
 
-    out = ensure_str(subprocess.check_output([
-        "git",
-        "-C",
-        str(dirpath),
-        "status",
-        str(dirpath),
-    ])).split("\n")
+    out = subprocess.check_output(
+        [
+            "git",
+            "-C",
+            str(dirpath),
+            "status",
+            str(dirpath),
+        ],
+        encoding="utf-8",
+    ).split("\n")
 
     for line in out:
         if "deleted:" in line or "renamed:" in line:
@@ -72,8 +83,10 @@ def find_git_rm_mv_files(dirpath: Path) -> List[str]:
 
 
 def current_branch_name() -> str:
-    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    return ensure_str(branch_name).split("\n", 1)[0]
+    branch_name = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], encoding="utf-8"
+    )
+    return branch_name.split("\n", 1)[0]
 
 
 def current_base_branch_name():
@@ -82,27 +95,31 @@ def current_base_branch_name():
     # Detect which other branch this one was created from. We do this by going back the
     # current branches git log one step by another and check which branches contain these
     # commits. Only search for our main (master + major-version) branches
-    commits = subprocess.check_output(["git", "rev-list", "--max-count=30", branch_name])
-    for commit in ensure_str(commits).strip().split("\n"):
+    commits = subprocess.check_output(
+        ["git", "rev-list", "--max-count=30", branch_name], encoding="utf-8"
+    )
+    for commit in commits.strip().split("\n"):
         # Asking for remote heads here, since the git repos checked out by jenkins do not create all
         # the branches locally
 
         # --format=%(refname): Is not supported by all distros :(
         #
-        #heads = subprocess.check_output(
+        # heads = subprocess.check_output(
         #    ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
-        #if not isinstance(heads, str):
+        # if not isinstance(heads, str):
         #    heads = heads.decode("utf-8")
 
-        #for head in heads.strip().split("\n"):
+        # for head in heads.strip().split("\n"):
         #    if head == "refs/remotes/origin/master":
         #        return "master"
 
         #    if re.match(r"^refs/remotes/origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
         #        return head
 
-        lines = subprocess.check_output(["git", "branch", "-r", "--contains", commit])
-        for line in ensure_str(lines).strip().split("\n"):
+        lines = subprocess.check_output(
+            ["git", "branch", "-r", "--contains", commit], encoding="utf-8"
+        )
+        for line in lines.strip().split("\n"):
             if not line:
                 continue
             head = line.split()[0]
@@ -111,7 +128,7 @@ def current_base_branch_name():
                 return "master"
 
             if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
-                return head
+                return head[7:]
 
     logger.warning("Could not determine base branch, using %s", branch_name)
     return branch_name
@@ -130,9 +147,9 @@ def get_cmk_download_credentials():
 
 
 def get_standard_linux_agent_output():
-    with Path(
-            repo_path(),
-            "tests/integration/cmk/base/test-files/linux-agent-output").open(encoding="utf-8") as f:
+    with Path(repo_path(), "tests/integration/cmk/base/test-files/linux-agent-output").open(
+        encoding="utf-8"
+    ) as f:
         return f.read()
 
 
@@ -162,20 +179,7 @@ def is_running_as_site_user():
         return False
 
 
-# TODO: Drop this and cleanup all call sites
-def is_gui_py3():
-    return True
-
-
-def api_str_type(s):
-    if not is_gui_py3():
-        return ensure_binary(s)
-    return ensure_str(s)
-
-
 def add_python_paths():
-    # make the testlib available to the test modules
-    sys.path.insert(0, os.path.dirname(__file__))
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
 
@@ -185,7 +189,5 @@ def add_python_paths():
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
-class DummyApplication:
-    def __init__(self, environ, start_response):
-        self._environ = environ
-        self._start_response = start_response
+def package_hash_path(version: str, edition: str) -> Path:
+    return Path(f"/tmp/cmk_package_hash_{version}_{edition}")

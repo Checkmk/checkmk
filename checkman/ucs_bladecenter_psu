@@ -1,7 +1,7 @@
 title: UCS Bladecenter: Chassis Voltage
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the voltage levels for each chassis module of
@@ -12,6 +12,5 @@ description:
 item:
  The chassis number combined with the module number, e.g. Chassis 1 Module 1
 
-inventory:
+discovery:
  One service is created for each chassis module on every server.
-

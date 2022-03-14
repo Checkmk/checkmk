@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.check_utils import maincheckify
-from cmk.gui.plugins.metrics import check_metrics
+
+from cmk.gui.plugins.metrics.utils import check_metrics
 
 
 def test_all_keys_migrated():

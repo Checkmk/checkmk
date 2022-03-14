@@ -1,0 +1,15 @@
+Title: MRPE agent bakery rule: allow more characters in service descriptions
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1629464036
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The agent bakery ruleset "Execute MRPE checks" allows for configuring the
+remote execution of Nagios plugins. Previously, the service description
+field was limited to letters, numbers, dashes, underscores, spaces and
+dots. Now, any printable ASCII character except '~' is allowed. '~'
+cannot be used because it would cause problems in cache file names.

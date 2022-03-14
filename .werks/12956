@@ -1,0 +1,17 @@
+Title: REST API exception handling
+Class: fix
+Compatible: compat
+Component: core
+Date: 1627486890
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous versions, some detailed intentional exceptions didn't
+get reported to the user in the full detail as they were cought by a
+translation process. This issue has been solved and such exceptions now
+will lead to a more detailed error JSON structure in the response.
+
+No further action is neccessary.

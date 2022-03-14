@@ -1,0 +1,14 @@
+Title: Fix reload of graphs if page update countdown is stopped
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1631012872
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If graphs were viewed and the page reload was paused, even if you clicked on
+"stop the countdown", the page was reloaded after 60 seconds.
+

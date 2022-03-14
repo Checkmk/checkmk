@@ -6,10 +6,7 @@
 
 import pytest
 
-from cmk.notification_plugins.pagerduty import (
-    _notification_source_from_context,
-    pagerduty_msg,
-)
+from cmk.notification_plugins.pagerduty import _notification_source_from_context, pagerduty_msg
 
 
 @pytest.mark.parametrize(
@@ -84,7 +81,7 @@ def test_notification_source_from_context(context, result):
                     },
                     "severity": "critical",
                     "source": "127.0.0.1",
-                    "summary": "CRITICAL: first on site1"
+                    "summary": "CRITICAL: first on site1",
                 },
                 "routing_key": "somehex",
                 "client": "Check_MK",
@@ -120,7 +117,7 @@ def test_notification_source_from_context(context, result):
                     },
                     "severity": "info",
                     "source": "10.3.1.239",
-                    "summary": "win7vm is UP"
+                    "summary": "win7vm is UP",
                 },
                 "routing_key": "somehex",
             },
@@ -154,7 +151,7 @@ def test_notification_source_from_context(context, result):
                     },
                     "severity": "info",
                     "source": "win7vm",
-                    "summary": "win7vm is UP"
+                    "summary": "win7vm is UP",
                 },
                 "routing_key": "somehex",
             },

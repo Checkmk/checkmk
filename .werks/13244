@@ -1,0 +1,13 @@
+Title: wut_webio: Fix AssertionError on rules page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632219699
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When opening the rules page for "W&T WebIO" from the effective parameters page
+of a host, an AssertionError occured.

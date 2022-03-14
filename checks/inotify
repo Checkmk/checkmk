@@ -5,110 +5,85 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections import defaultdict
+from typing import Counter, Dict, Literal, Mapping, NamedTuple
 
 # <<<inotify:sep(9)>>>
-# monitored folder    /tmp/noti
-# monitored file  /tmp/noti/test
-# monitored file  /tmp/noti/other
+# configured folder    /tmp/noti
+# configured file  /tmp/noti/test
+# configured file  /tmp/noti/other
 # 1465470055  modify  /tmp/noti/test  5   1465470055
 # 1465470055  open    /tmp/noti/test  5   1465470055
 # 1465470055  modify  /tmp/noti/test  5   1465470055
 # 1465470056  modify  /tmp/noti/test  5   1465470056
 # 1465470056  open    /tmp/noti/test  5   1465470056
 
+_Mode2Time = Mapping[str, int]
 
-def parse_inotify(info):
-    parsed = {
-        "meta": {
-            "warnings": {}
-        },
-        "configured": {
-            "file": set([]),
-            "folder": set([])
-        },
-        "stats": {}
-    }
+
+class Section(NamedTuple):
+    warnings: Counter[str]
+    configured: Mapping[str, Literal["file", "folder"]]
+    stats: Mapping[str, _Mode2Time]
+
+
+def parse_inotify(info) -> Section:
+
+    warnings: Counter[str] = Counter()
+    configured: Dict[str, Literal["file", "folder"]] = {}
+    stats: Dict[str, Dict[str, int]] = defaultdict(dict)
+
     for line in info:
         if line[0].startswith("warning"):
-            parsed["meta"]["warnings"].setdefault(line[1], 0)
-            parsed["meta"]["warnings"][line[1]] += 1
+            warnings[line[1]] += 1
             continue
-        elif line[0].startswith("configured"):
-            parsed["configured"][line[1]].add(line[2])
+        if line[0].startswith("configured"):
+            configured[line[2]] = "file" if line[1] == "file" else "folder"
             continue
 
-        timestamp, mode, filepath = line[:3]
-        parsed["stats"].setdefault(filepath, [])
-        folderpath = os.path.dirname(filepath)
-        parsed["stats"].setdefault(folderpath, [])
+        time, mode, filepath, *_unused = line
 
-        file_dict = {}
-        file_dict["timestamp"] = int(timestamp)
-        file_dict["mode"] = mode
-        # Unused
-        if len(line) > 3:
-            file_dict["size"] = line[3]
-            file_dict["mtime"] = line[4]
-        parsed["stats"][filepath].append(file_dict)
-        parsed["stats"][folderpath].append(file_dict)
+        stats[filepath][mode] = int(time)
+        stats[os.path.dirname(filepath)][mode] = int(time)
 
-    return parsed
+    return Section(warnings, configured, stats)
 
 
-def inventory_inotify(parsed):
-    for what in ["file", "folder"]:
-        for path in parsed["configured"][what]:
-            yield "%s %s" % (what.title(), path), {}
+def discover_inotify(section: Section):
+    yield from ((f"{type_.title()} {path}", {}) for path, type_ in section.configured.items())
 
 
-def check_inotify(item, params, parsed):
-    what, path = item.split(" ", 1)
-    if path not in parsed["configured"][what.lower()]:
-        return
-
-    data = parsed["stats"].get(path, {})
-
-    last_status = get_item_state(None, default={})
-    for file_dict in data:
-        mode = file_dict["mode"]
-        for key, value in file_dict.items():
-            last_status.setdefault(mode, {})
-            last_status[mode][key] = value
-
-    set_item_state(None, last_status)
+def check_inotify(item, params, section: Section):
+    last_status = get_item_state("last_operations", default={})
     now = time.time()
+    yield from _check_inotify(item, params, section, last_status, now)
+    set_item_state("last_operations", last_status)
 
-    def _check_levels(what):
-        for mode, warn, crit in params.get("age_last_operation", []):
-            if mode != what:
-                continue
-            timestamp = last_status[what]["timestamp"]
-            if now - timestamp >= crit:
-                return (2, "> %s" % get_age_human_readable(crit))
-            elif now - timestamp >= warn:
-                return (1, "> %s" % get_age_human_readable(warn))
+
+def _check_inotify(item, params, section: Section, last_status, now):
+    type_, path = item.split(" ", 1)
+    if section.configured.get(path) != type_.lower():
         return
 
-    for mode in sorted(last_status):
-        attr = last_status[mode]
-        levels_info = _check_levels(mode)
-        if levels_info:
-            state = levels_info[0]
-            yield state, "Last %s: %s ago (%s)" % (
-                mode.title(), get_age_human_readable(now - attr["timestamp"]), levels_info[1])
-        else:
-            yield 0, "Last %s: %s ago" % (mode.title(),
-                                          get_age_human_readable(now - attr["timestamp"]))
+    last_status.update(section.stats.get(path, {}))
 
-    for mode, _warn, _crit in params.get("age_last_operation", []):
-        if mode not in last_status:
-            yield 3, "Last %s unknown" % mode.title()
+    levels = {mode: (warn, crit) for mode, warn, crit in params.get("age_last_operation", [])}
 
-    warnings = parsed.get("meta", {}).get("warnings")
-    if warnings:
+    for mode, timestamp in sorted(last_status.items()):
+        yield check_levels(
+            now - timestamp,
+            None,
+            levels.get(mode),
+            human_readable_func=get_age_human_readable,
+            infoname=f"Time since last {mode}",
+        )
+
+    for mode in set(levels) - set(last_status):
+        yield 3, f"Time since last {mode}: unknown"
+
+    if section.warnings:
         yield 1, "Incomplete data!"
-        for warning, count in warnings.items():
-            yield 1, "%d Warnings: %s" % (count, warning)
+        yield from ((1, f"{count} warning(s): {msg}") for msg, count in section.warnings.items())
 
     if not last_status:
         yield 0, "No data available yet"
@@ -116,8 +91,8 @@ def check_inotify(item, params, parsed):
 
 check_info["inotify"] = {
     "parse_function": parse_inotify,
-    "inventory_function": inventory_inotify,
+    "inventory_function": discover_inotify,
     "check_function": check_inotify,
     "service_description": "INotify %s",
-    "group": "inotify"
+    "group": "inotify",
 }

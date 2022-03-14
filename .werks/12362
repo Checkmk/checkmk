@@ -1,0 +1,24 @@
+Title: netapp_api_snapvault: clustermode: duplicate item names lead to missing services
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1615319159
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+NetApp Snapvault services are disovered using the names of the destination
+volumes. For NetApp clustermode installations, however, the destination volume
+names may not be unique, leading to missing Snapvault services. This has been
+fixed by including the destination Vserver (SVM) in the item description. Please
+rediscover the services of your NetApp hosts to apply this fix.
+If you are sure that your destination volume names are unique, and you would
+like to continue using them as the item description, you can do so by selecting
+the "Exclude destination vserver" option in the "Discovery parameters for
+NetApp snapvault" ruleset. In this case, you do not need to rediscover the
+services.
+We strongly advise using the full item description for the services, as this is
+guaranteed to be unique. This is also the default behaviour of the discovery of
+this check going forward.

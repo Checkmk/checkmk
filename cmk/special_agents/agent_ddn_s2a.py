@@ -31,9 +31,9 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description=\
-                'A datasource program for Data Direct'
-                'Networks Silicon Storage Appliances')
+    parser = argparse.ArgumentParser(
+        description="A datasource program for Data Direct" "Networks Silicon Storage Appliances"
+    )
 
     parser.add_argument("ip_address")
     parser.add_argument("port", type=int)

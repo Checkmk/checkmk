@@ -19,19 +19,19 @@ def strem1_sensors_parse_info(info):
 
         items = group[1:]
         for i in range(0, len(items), 3):
-            parsed.append([grp + ' ' + items[i]] + list(items[i:i + 3]))
+            parsed.append([grp + " " + items[i]] + list(items[i : i + 3]))
     return parsed
 
 
 def inventory_strem1_sensors(info):
     inventory = []
     for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
-        lvls = 'strem1_temp_defaultlevels'
-        if typ == 'Humidity':
-            lvls = 'strem1_humidity_defaultlevels'
-        elif typ == 'Wetness':
-            lvls = 'strem1_wetness_defaultlevels'
-        if val != '-999.9':
+        lvls = "strem1_temp_defaultlevels"
+        if typ == "Humidity":
+            lvls = "strem1_humidity_defaultlevels"
+        elif typ == "Wetness":
+            lvls = "strem1_wetness_defaultlevels"
+        if val != "-999.9":
             inventory.append((index, lvls))
     return inventory
 
@@ -39,7 +39,7 @@ def inventory_strem1_sensors(info):
 def check_strem1_sensors(item, params, info):
     for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
         if index == item:
-            uom = info[0][0][0] if typ == 'Temperature' else '%'
+            uom = info[0][0][0] if typ == "Temperature" else "%"
             val = float(val)
             warn, crit = params
 
@@ -51,7 +51,7 @@ def check_strem1_sensors(item, params, info):
             if crit:
                 thrtext += ["crit at %.1f" % crit + uom]
             if thrtext:
-                infotext += ' (%s)' % ', '.join(thrtext)
+                infotext += " (%s)" % ", ".join(thrtext)
 
             if crit and val >= crit:
                 return (2, "%s is: " % typ + infotext, perfdata)
@@ -62,31 +62,32 @@ def check_strem1_sensors(item, params, info):
 
 
 check_info["strem1_sensors"] = {
-    'check_function': check_strem1_sensors,
-    'inventory_function': inventory_strem1_sensors,
-    'service_description': 'Sensor - %s',
-    'has_perfdata': True,
-    #1,  # SENSATRONICS-EM1::group1Name
-    #2,  # SENSATRONICS-EM1::group1TempName
-    #3,  # SENSATRONICS-EM1::group1TempDataStr
-    #4,  # SENSATRONICS-EM1::group1TempDataInt
-    #5,  # SENSATRONICS-EM1::group1HumidName
-    #6,  # group1HumidDataStr
-    #7,  # group1HumidDataInt
-    #8,  # group1WetName
-    #9,  # group1WetDataStr
-    #10, # group1WetDataInt
-    'snmp_info': [
-        ('.1.3.6.1.4.1.16174.1.1.3.2.3', [1]),
+    "check_function": check_strem1_sensors,
+    "inventory_function": inventory_strem1_sensors,
+    "service_description": "Sensor - %s",
+    "has_perfdata": True,
+    # 1,  # SENSATRONICS-EM1::group1Name
+    # 2,  # SENSATRONICS-EM1::group1TempName
+    # 3,  # SENSATRONICS-EM1::group1TempDataStr
+    # 4,  # SENSATRONICS-EM1::group1TempDataInt
+    # 5,  # SENSATRONICS-EM1::group1HumidName
+    # 6,  # group1HumidDataStr
+    # 7,  # group1HumidDataInt
+    # 8,  # group1WetName
+    # 9,  # group1WetDataStr
+    # 10, # group1WetDataInt
+    "snmp_info": [
+        (".1.3.6.1.4.1.16174.1.1.3.2.3", [1]),
         (
-            '.1.3.6.1.4.1.16174.1.1.3.3',
+            ".1.3.6.1.4.1.16174.1.1.3.3",
             [
                 # SENSATRONICS-EM1::measurementSystem
                 1,  # First group
                 2,  # Second group
                 3,  # Third group
                 4,  # Fourth group
-            ])
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: "Sensatronics EM1" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_scan_function": lambda oid: "Sensatronics EM1" in oid(".1.3.6.1.2.1.1.1.0"),
 }

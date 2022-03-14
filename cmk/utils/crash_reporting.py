@@ -7,35 +7,28 @@
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
+from __future__ import annotations
+
 import abc
 import base64
-import contextlib
 import inspect
-from itertools import islice
 import json
-from pathlib import Path
 import pprint
 import sys
 import traceback
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
-import uuid
 import urllib.parse
+import uuid
+from contextlib import suppress
+from itertools import islice
+from pathlib import Path
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 
-from six import ensure_str
-
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
-
-@contextlib.contextmanager
-def suppress(*exc):
-    # This is contextlib.suppress from Python 3.2
-    try:
-        yield
-    except exc:
-        pass
+CrashInfo = Dict[str, Any]  # TODO: improve this type
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
@@ -50,7 +43,8 @@ class RobustJSONEncoder(json.JSONEncoder):
 class CrashReportStore:
     _keep_num_crashes = 200
     """Caring about the persistance of crash reports in the local site"""
-    def save(self, crash: 'ABCCrashReport') -> None:
+
+    def save(self, crash: ABCCrashReport) -> None:
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
@@ -61,14 +55,15 @@ class CrashReportStore:
                 continue
 
             if fname == "crash.info":
-                store.save_text_to_file(crash.crash_dir() / fname,
-                                        str(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
+                store.save_text_to_file(
+                    crash.crash_dir() / fname, str(json.dumps(value, cls=RobustJSONEncoder)) + "\n"
+                )
             else:
                 store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
-    def _prepare_crash_dump_directory(self, crash: 'ABCCrashReport') -> None:
+    def _prepare_crash_dump_directory(self, crash: ABCCrashReport) -> None:
         crash_dir = crash.crash_dir()
         crash_dir.mkdir(parents=True, exist_ok=True)
 
@@ -81,6 +76,7 @@ class CrashReportStore:
 
     def _cleanup_old_crashes(self, base_dir: Path) -> None:
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
+
         def uuid_paths(path: Path) -> Iterator[Path]:
             for p in path.iterdir():
                 try:
@@ -90,9 +86,10 @@ class CrashReportStore:
                 yield p
 
         for crash_dir in islice(
-                sorted(uuid_paths(base_dir),
-                       key=lambda p: uuid.UUID(str(p.name)).time,
-                       reverse=True), self._keep_num_crashes, None):  # type: Path
+            sorted(uuid_paths(base_dir), key=lambda p: uuid.UUID(str(p.name)).time, reverse=True),
+            self._keep_num_crashes,
+            None,
+        ):  # type: Path
             # Remove crash report contents
             for f in crash_dir.iterdir():
                 with suppress(OSError):
@@ -102,7 +99,7 @@ class CrashReportStore:
             with suppress(OSError):
                 crash_dir.rmdir()
 
-    def load_from_directory(self, crash_dir: Path) -> 'ABCCrashReport':
+    def load_from_directory(self, crash_dir: Path) -> ABCCrashReport:
         """Populate the crash info from the given crash directory"""
         return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
 
@@ -124,19 +121,18 @@ class CrashReportStore:
         return serialized
 
 
-class ABCCrashReport(metaclass=abc.ABCMeta):
+class ABCCrashReport(abc.ABC):
     """Base class for the component specific crash report types"""
 
-    # TODO: Can not use this with python 2
-    #@abc.abstractclassmethod
     @classmethod
+    @abc.abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def from_exception(cls,
-                       details: Optional[Dict] = None,
-                       type_specific_attributes: Optional[Dict] = None) -> 'ABCCrashReport':
+    def from_exception(
+        cls, details: Optional[Dict] = None, type_specific_attributes: Optional[Dict] = None
+    ) -> ABCCrashReport:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
@@ -151,7 +147,7 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(cls: Type['ABCCrashReport'], serialized: dict) -> 'ABCCrashReport':
+    def deserialize(cls: Type[ABCCrashReport], serialized: dict) -> ABCCrashReport:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)
@@ -171,8 +167,8 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
 
         return self._serialize_attributes()
 
-    def __init__(self, crash_info: Dict) -> None:
-        super(ABCCrashReport, self).__init__()
+    def __init__(self, crash_info: CrashInfo) -> None:
+        super().__init__()
         self.crash_info = crash_info
 
     def ident(self) -> Tuple[str, ...]:
@@ -191,15 +187,16 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / ensure_str(self.type()) / ensure_str(ident_text)
+        return cmk.utils.paths.crash_dir / self.type() / ident_text
 
     def local_crash_report_url(self) -> str:
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % urllib.parse.urlencode([("component", self.type()),
-                                                       ("ident", self.ident_to_text())])
+        return "crash.py?%s" % urllib.parse.urlencode(
+            [("component", self.type()), ("ident", self.ident_to_text())]
+        )
 
 
-def _get_generic_crash_info(type_name: str, details: Dict) -> Dict:
+def _get_generic_crash_info(type_name: str, details: Dict) -> CrashInfo:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -228,23 +225,25 @@ def _get_generic_crash_info(type_name: str, details: Dict) -> Dict:
         try:
             exc_txt = exc_value.args[0].decode("utf-8")
         except UnicodeDecodeError:
-            exc_txt = u"b%s" % repr(exc_value.args[0])
+            exc_txt = "b%s" % repr(exc_value.args[0])
     elif len(exc_value.args) == 1:
         exc_txt = str(exc_value.args[0])
     else:
         exc_txt = str(exc_value.args)
 
     infos = cmk_version.get_general_version_infos()
-    infos.update({
-        "id": str(uuid.uuid1()),
-        "crash_type": type_name,
-        "exc_type": exc_type.__name__ if exc_type else None,
-        "exc_value": exc_txt,
-        # Py3: Make traceback.FrameSummary serializable
-        "exc_traceback": [tuple(e) for e in tb_list],
-        "local_vars": _get_local_vars_of_last_exception(),
-        "details": details,
-    })
+    infos.update(
+        {
+            "id": str(uuid.uuid1()),
+            "crash_type": type_name,
+            "exc_type": exc_type.__name__ if exc_type else None,
+            "exc_value": exc_txt,
+            # Py3: Make traceback.FrameSummary serializable
+            "exc_traceback": [tuple(e) for e in tb_list],
+            "local_vars": _get_local_vars_of_last_exception(),
+            "details": details,
+        }
+    )
     return infos
 
 
@@ -260,10 +259,9 @@ def _get_local_vars_of_last_exception() -> str:
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return ensure_str(
-        base64.b64encode(
-            _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
-                                   maxsize=5 * 1024 * 1024)))
+    return base64.b64encode(
+        _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024)
+    ).decode()
 
 
 def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> Any:

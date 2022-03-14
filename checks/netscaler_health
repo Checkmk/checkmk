@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
 #
@@ -45,8 +47,9 @@ netscaler_health_info = (
     [  # nsSysHealthTable
         1,  # sysHealthname
         2,  # sysHealthvalue
-    ])
-#.
+    ],
+)
+# .
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
 #   |                           / _| __ _ _ __                             |
@@ -84,7 +87,7 @@ check_info["netscaler_health.fan"] = {
     "default_levels_variable": "netscaler_health_fan_default_levels",
     "group": "hw_fans",
 }
-#.
+# .
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
 #   |                      | |_ ___ _ __ ___  _ __                         |
@@ -123,7 +126,7 @@ check_info["netscaler_health.temp"] = {
     "default_levels_variable": "netscaler_health_temp_default_levels",
 }
 
-#.
+# .
 #   .--psu-----------------------------------------------------------------.
 #   |                                                                      |
 #   |                           _ __  ___ _   _                            |
@@ -136,7 +139,7 @@ check_info["netscaler_health.temp"] = {
 
 def inventory_netscaler_health_psu(info):
     for name, state in info:
-        r = regex(r'PowerSupply([\d])(Failure|)Status')
+        r = regex(r"PowerSupply([\d])(Failure|)Status")
         m = r.match(name)
         if m:
             if int(state) > 0:
@@ -152,8 +155,9 @@ def check_netscaler_health_psu(item, _no_params, info):
     )
 
     for name, state in info:
-        if name.startswith("PowerSupply" + item) and (name.endswith("Status") \
-                or name.endswith("FailureStatus")):
+        if name.startswith("PowerSupply" + item) and (
+            name.endswith("Status") or name.endswith("FailureStatus")
+        ):
             return psu_status_map[int(state)]
 
 

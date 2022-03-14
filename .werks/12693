@@ -1,0 +1,12 @@
+Title: ups_cps_inphase: fixing error in parse function when either voltage or frequency value was missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618307164
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

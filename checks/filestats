@@ -22,7 +22,7 @@ import re
 
 # 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
-#.
+# .
 #   .--Parsing-------------------------------------------------------------.
 #   |                  ____                _                               |
 #   |                 |  _ \ __ _ _ __ ___(_)_ __   __ _                   |
@@ -41,7 +41,7 @@ def parse_filestats(info):
     for line in info:
         if not line:
             continue
-        if line[0].startswith('[[['):
+        if line[0].startswith("[[["):
             output_variety, subsection_name = line[0][3:-3].split(None, 1)
             current = sections_info.setdefault((output_variety, subsection_name), [])
         else:
@@ -64,7 +64,7 @@ def _parse_filestats_load_lines(info):
     return list_of_dicts
 
 
-#.
+# .
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -78,29 +78,31 @@ def _parse_filestats_load_lines(info):
 
 
 def check_filestats_count(count, params):
-    '''common check result - used by main and count_only check'''
+    """common check result - used by main and count_only check"""
     levels = params.get("maxcount", (None, None)) + params.get("mincount", (None, None))
-    return check_levels(count,
-                        'file_count',
-                        levels,
-                        infoname="Files in total",
-                        human_readable_func=lambda i: "%d" % i)
+    return check_levels(
+        count,
+        "file_count",
+        levels,
+        infoname="Files in total",
+        human_readable_func=lambda i: "%d" % i,
+    )
 
 
 def check_filestats_extremes(files, params, show_files=False):
-    '''common check result - used by main and extremes_only check'''
+    """common check result - used by main and extremes_only check"""
     if not files:
         return []
     long_output = {}
     for key, hr_function, minlabel, maxlabel in (
-        ('size', get_bytes_human_readable, 'smallest', 'largest'),
-        ('age', get_age_human_readable, 'newest', 'oldest'),
+        ("size", get_bytes_human_readable, "smallest", "largest"),
+        ("age", get_age_human_readable, "newest", "oldest"),
     ):
         files.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
         for efile, label in ((files[0], minlabel), (files[-1], maxlabel)):
-            levels = (params.get("max%s_%s" % (key, label),
-                                 (None, None)) + params.get("min%s_%s" % (key, label),
-                                                            (None, None)))
+            levels = params.get("max%s_%s" % (key, label), (None, None)) + params.get(
+                "min%s_%s" % (key, label), (None, None)
+            )
             yield check_levels(
                 efile[key],
                 None,
@@ -112,9 +114,9 @@ def check_filestats_extremes(files, params, show_files=False):
         if not show_files:
             continue
 
-        min_label_levels = (params.get("max%s_%s" % (key, minlabel),
-                                       (None, None)) + params.get("min%s_%s" % (key, minlabel),
-                                                                  (None, None)))
+        min_label_levels = params.get("max%s_%s" % (key, minlabel), (None, None)) + params.get(
+            "min%s_%s" % (key, minlabel), (None, None)
+        )
         for efile in files:
             state, _text, _no_perf = check_levels(
                 efile[key],
@@ -123,17 +125,17 @@ def check_filestats_extremes(files, params, show_files=False):
             )
             if state == 0:
                 break
-            if efile['path'] not in long_output:
-                text = 'Age: %s, Size: %s%s' % (
-                    get_age_human_readable(efile['age']),
-                    get_bytes_human_readable(efile['size']),
+            if efile["path"] not in long_output:
+                text = "Age: %s, Size: %s%s" % (
+                    get_age_human_readable(efile["age"]),
+                    get_bytes_human_readable(efile["size"]),
                     state_markers[state],
                 )
-                long_output[efile['path']] = text
+                long_output[efile["path"]] = text
 
-        max_label_levels = (params.get("max%s_%s" % (key, maxlabel),
-                                       (None, None)) + params.get("min%s_%s" % (key, maxlabel),
-                                                                  (None, None)))
+        max_label_levels = params.get("max%s_%s" % (key, maxlabel), (None, None)) + params.get(
+            "min%s_%s" % (key, maxlabel), (None, None)
+        )
         for efile in reversed(files):
             state, _text, _no_perf = check_levels(
                 efile[key],
@@ -142,18 +144,18 @@ def check_filestats_extremes(files, params, show_files=False):
             )
             if state == 0:
                 break
-            if efile['path'] not in long_output:
-                text = 'Age: %s, Size: %s%s' % (
-                    get_age_human_readable(efile['age']),
-                    get_bytes_human_readable(efile['size']),
+            if efile["path"] not in long_output:
+                text = "Age: %s, Size: %s%s" % (
+                    get_age_human_readable(efile["age"]),
+                    get_bytes_human_readable(efile["size"]),
                     state_markers[state],
                 )
-                long_output[efile['path']] = text
+                long_output[efile["path"]] = text
 
-    return ['[%s] %s' % key_text for key_text in sorted(long_output.items())]
+    return ["[%s] %s" % key_text for key_text in sorted(long_output.items())]
 
 
-#.
+# .
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
 #   |                   / ___| |__   ___  ___| | _____                     |
@@ -181,23 +183,23 @@ def check_filestats(_item, params, data):
         return
 
     # only WARN/CRIT files are shown
-    show_files = bool(params.get('show_all_files', False))
+    show_files = bool(params.get("show_all_files", False))
 
-    additional_rules = params.get('additional_rules', {})
+    additional_rules = params.get("additional_rules", {})
 
     matching_files = {}
     remaining_files = []
     for efile in files:
         for display_name, file_expression, rules in additional_rules:
-            if re.match(file_expression, efile['path']):
+            if re.match(file_expression, efile["path"]):
                 matching_files.setdefault(
                     file_expression,
                     {
-                        'display_name': display_name,
-                        'rules': rules,
-                        'file_list': [],
+                        "display_name": display_name,
+                        "rules": rules,
+                        "file_list": [],
                     },
-                )['file_list'].append(efile)
+                )["file_list"].append(efile)
                 break
         else:
             remaining_files.append(efile)
@@ -209,28 +211,28 @@ def check_filestats(_item, params, data):
     )
 
     if additional_rules:
-        yield 0, 'Additional rules enabled'
+        yield 0, "Additional rules enabled"
 
     remaining_files_count = count  # for display in service details
 
     for file_expression, file_details in matching_files.items():
-        file_list = file_details['file_list']
+        file_list = file_details["file_list"]
         file_count = len(file_list)
         remaining_files_count -= file_count
-        yield 0, '\n%s' % file_details['display_name']
-        yield 0, 'Pattern: %r' % file_expression
-        yield 0, 'Files in total: %d' % file_count
+        yield 0, "\n%s" % file_details["display_name"]
+        yield 0, "Pattern: %r" % file_expression
+        yield 0, "Files in total: %d" % file_count
         output = yield from check_filestats_extremes(
             file_list,
-            file_details['rules'],
+            file_details["rules"],
             show_files,
         )
-        yield 0, '\n'.join(output)
+        yield 0, "\n".join(output)
 
     if additional_rules:
-        yield 0, '\nRemaining files: %d' % remaining_files_count
+        yield 0, "\nRemaining files: %d" % remaining_files_count
 
-    yield 0, '\n' + '\n'.join(remaining_files_output)
+    yield 0, "\n" + "\n".join(remaining_files_output)
 
 
 @get_parsed_item_data
@@ -241,18 +243,20 @@ def check_filestats_single(_item, params, data):
         yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats)."
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
-    for key, hr_function in (('size', get_bytes_human_readable), ('age', get_age_human_readable)):
+    for key, hr_function in (("size", get_bytes_human_readable), ("age", get_age_human_readable)):
 
-        yield check_levels(single_stat.get(key),
-                           key if key == 'size' else None,
-                           (params.get("max_%s" % key,
-                                       (None, None))[0], params.get("max_%s" % key,
-                                                                    (None, None))[1],
-                            params.get("min_%s" % key,
-                                       (None, None))[0], params.get("min_%s" % key,
-                                                                    (None, None))[1]),
-                           human_readable_func=hr_function,
-                           infoname=key.title())
+        yield check_levels(
+            single_stat.get(key),
+            key if key == "size" else None,
+            (
+                params.get("max_%s" % key, (None, None))[0],
+                params.get("max_%s" % key, (None, None))[1],
+                params.get("min_%s" % key, (None, None))[0],
+                params.get("min_%s" % key, (None, None))[1],
+            ),
+            human_readable_func=hr_function,
+            infoname=key.title(),
+        )
 
 
 @discover
@@ -265,7 +269,7 @@ def discover_filestats_single(key, data):
     return data[0] == "single_file"
 
 
-check_info['filestats.single'] = {
+check_info["filestats.single"] = {
     "inventory_function": discover_filestats_single,
     "check_function": check_filestats_single,
     "service_description": "File %s",
@@ -273,7 +277,7 @@ check_info['filestats.single'] = {
     "group": "filestats_single",
 }
 
-check_info['filestats'] = {
+check_info["filestats"] = {
     "parse_function": parse_filestats,
     "inventory_function": discover_filestats,
     "check_function": check_filestats,

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
 
 factory_settings["cmc_temp_default_levels"] = {
@@ -24,15 +25,17 @@ def inventory_cmc_temp(info):
 def check_cmc_temp(item, params, info):
     offset = int(item) - 1
     current_temp = int(info[0][0][offset])
-    dev_high, dev_low = map(int, info[1][0][offset * 2:][:2])
-    return check_temperature(current_temp,
-                             params,
-                             "cmc_temp_%s" % item,
-                             dev_levels=(dev_high, dev_high),
-                             dev_levels_lower=(dev_low, dev_low))
+    dev_high, dev_low = map(int, info[1][0][offset * 2 :][:2])
+    return check_temperature(
+        current_temp,
+        params,
+        "cmc_temp_%s" % item,
+        dev_levels=(dev_high, dev_high),
+        dev_levels_lower=(dev_low, dev_low),
+    )
 
 
-check_info['cmc_temp'] = {
+check_info["cmc_temp"] = {
     "inventory_function": inventory_cmc_temp,
     "check_function": check_cmc_temp,
     "has_perfdata": True,
@@ -44,6 +47,6 @@ check_info['cmc_temp'] = {
     "snmp_info": [
         (".1.3.6.1.4.1.2606.1.1", [1, 2]),
         # setpointHighTemperature1, setpointLowTemperature1, setpointHighTemperature2, setpointLowTemperature2
-        (".1.3.6.1.4.1.2606.1.4", [4, 5, 6, 7])
-    ]
+        (".1.3.6.1.4.1.2606.1.4", [4, 5, 6, 7]),
+    ],
 }

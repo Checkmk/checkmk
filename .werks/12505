@@ -1,0 +1,16 @@
+Title: Legacy Check API: drop <tt>clear_item_states_by_full_keys</tt>
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1618465864
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This only affects users who have developed their own check plugins and are
+using the <tt>clear_item_states_by_full_keys</tt> function of the <b>old</b>
+check API. This function is no longer available.
+
+It was only used to mitigate a very particular problem, that will not arise
+when using the new check APIs <i>value store</i> concept.

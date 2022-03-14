@@ -24,14 +24,14 @@ def check_sap_hana_mem_resident(item, params, parsed):
     return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
-check_info['sap_hana_mem'] = {
-    'inventory_function': inventory_sap_hana_mem_resident,
-    'check_function': check_sap_hana_mem_resident,
-    'service_description': 'SAP HANA Resident Memory %s',
-    'default_levels_variable': 'sap_hana_mem_resident_default_levels',
+check_info["sap_hana_mem"] = {
+    "inventory_function": inventory_sap_hana_mem_resident,
+    "check_function": check_sap_hana_mem_resident,
+    "service_description": "SAP HANA Resident Memory %s",
+    "default_levels_variable": "sap_hana_mem_resident_default_levels",
 }
 
-#.
+# .
 #   .--database------------------------------------------------------------.
 #   |                  _       _        _                                  |
 #   |               __| | __ _| |_ __ _| |__   __ _ ___  ___               |
@@ -52,9 +52,9 @@ def check_sap_hana_mem_database(item, params, parsed):
     return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
-check_info['sap_hana_mem.database'] = {
-    'inventory_function': inventory_sap_hana_mem_database,
-    'check_function': check_sap_hana_mem_database,
-    'service_description': 'SAP HANA Used Memory %s',
-    'default_levels_variable': 'sap_hana_mem_database_default_levels',
+check_info["sap_hana_mem.database"] = {
+    "inventory_function": inventory_sap_hana_mem_database,
+    "check_function": check_sap_hana_mem_database,
+    "service_description": "SAP HANA Used Memory %s",
+    "default_levels_variable": "sap_hana_mem_database_default_levels",
 }

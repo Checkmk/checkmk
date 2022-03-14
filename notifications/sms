@@ -11,88 +11,57 @@
 # and restart the site
 
 import os
-import sys
 import shutil
+import sys
 import tempfile
 
+from cmk.notification_plugins.utils import collect_context, get_sms_message_from_context
+
 send_path = None
-for binary in ['sendsms', 'smssend']:
-    if os.system('which %s >/dev/null 2>/dev/null' % binary) == 0:  # nosec
+for binary in ["sendsms", "smssend"]:
+    if os.system("which %s >/dev/null 2>/dev/null" % binary) == 0:  # nosec
         send_path = binary
 
-smsd_user = 'smsd'
-spool_dir_ = '/var/spool/sms/outgoing'
+smsd_user = "smsd"
+spool_dir_ = "/var/spool/sms/outgoing"
 spool_dir = spool_dir_ if os.path.exists(spool_dir_) else None
 
 if not send_path and not spool_dir:
     sys.stderr.write(
-        'Error: SMS Tools binaries (sendsms or smssend) not found and spool dir does not exists.\n')
+        "Error: SMS Tools binaries (sendsms or smssend) not found and spool dir does not exists.\n"
+    )
     sys.exit(2)  # Fatal error, no retry
 
-recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
+recipient = os.environ["NOTIFY_CONTACTPAGER"].replace(" ", "")
 if not recipient:
-    contactname = os.environ['NOTIFY_CONTACTNAME']
-    sys.stderr.write('Error: Pager Number of %s not set\n' % contactname)
+    contactname = os.environ["NOTIFY_CONTACTNAME"]
+    sys.stderr.write("Error: Pager Number of %s not set\n" % contactname)
     sys.exit(2)  # Fatal error, no retry
 
-max_len = 160
-message = os.environ['NOTIFY_HOSTNAME'] + " "
-
-notification_type = os.environ["NOTIFY_NOTIFICATIONTYPE"]
-
-# Prepare Default information and Type PROBLEM, RECOVERY
-if os.environ['NOTIFY_WHAT'] == 'SERVICE':
-    if notification_type in ["PROBLEM", "RECOVERY"]:
-        message += os.environ['NOTIFY_SERVICESTATE'][:2] + " "
-        avail_len = max_len - len(message)
-        message += os.environ['NOTIFY_SERVICEDESC'][:avail_len] + " "
-        avail_len = max_len - len(message)
-        message += os.environ['NOTIFY_SERVICEOUTPUT'][:avail_len]
-    else:
-        message += os.environ['NOTIFY_SERVICEDESC']
-
-else:
-    if notification_type in ["PROBLEM", "RECOVERY"]:
-        message += "is " + os.environ['NOTIFY_HOSTSTATE']
-
-# Ouput the other State
-if notification_type.startswith("FLAP"):
-    if "START" in notification_type:
-        message += " Started Flapping"
-    else:
-        message += " Stopped Flapping"
-
-elif notification_type.startswith("DOWNTIME"):
-    what = notification_type[8:].title()
-    message += " Downtime " + what
-    message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
-
-elif notification_type == "ACKNOWLEDGEMENT":
-    message += " Acknowledged"
-    message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
-
-elif notification_type == "CUSTOM":
-    message += " Custom Notification"
-    message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
+raw_context = collect_context()
+message = get_sms_message_from_context(raw_context)
 
 
 def quote_message(msg, max_length=None):
     if max_length:
-        return "'" + msg.replace("'", "'\"'\"'")[:max_length - 2] + "'"
+        return "'" + msg.replace("'", "'\"'\"'")[: max_length - 2] + "'"
     return "'" + msg.replace("'", "'\"'\"'") + "'"
 
 
 if send_path:
-    if os.system(  # nosec
-            "%s %s %s" % (send_path, recipient, quote_message(message, 160))) >> 8 != 0:
+    if (
+        os.system("%s %s %s" % (send_path, recipient, quote_message(message, 160))) >> 8  # nosec
+        != 0
+    ):
         sys.exit(1)
 elif spool_dir:
     # On some distros, like debian, smstools does not ship with the sendsms/smssend helper
     # script. On this distro, simply drop the SMS in the outgoing spool directory.
-    fd, path = tempfile.mkstemp(prefix='cmk_sms_')
-    os.write(fd,
-             b'To: %s\n\n%s' % (recipient.encode("utf-8"), quote_message(message).encode("utf-8")))
+    fd, path = tempfile.mkstemp(prefix="cmk_sms_")
+    os.write(
+        fd, b"To: %s\n\n%s" % (recipient.encode("utf-8"), quote_message(message).encode("utf-8"))
+    )
     os.close(fd)
     os.chmod(path, 0o660)
-    filename = path.split('/')[-1]
-    shutil.move(path, spool_dir + '/' + filename)
+    filename = path.split("/")[-1]
+    shutil.move(path, spool_dir + "/" + filename)

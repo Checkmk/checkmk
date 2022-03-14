@@ -1,0 +1,13 @@
+Title: <tt>fortigate_ap_connection</tt>: Monitor connection of FortiGate WiFi Access Points
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1631786283
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The new check plugin <tt>fortigate_ap_connection</tt> monitors the
+connection of FortiGate WiFi Access Points to the controller (AC).
+Additionally, it reports the number of connected clients as a metric.

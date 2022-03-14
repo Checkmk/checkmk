@@ -1,0 +1,17 @@
+Title: real-time-checks: fix decryption if agent encryption is anabled
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631307570
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Since version 1.2.9 the real time check encryption did not work if
+the agent encryption was activated, as the agent also uses
+the corresponding secret to encrypt the payload of the real-time
+UDP packets in this case.
+The Checkmk server now follows this logic when decrypting the
+packets.

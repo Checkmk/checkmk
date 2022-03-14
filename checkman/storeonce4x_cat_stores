@@ -1,7 +1,7 @@
 title: HPE StoreOnce REST API 4.x: Catalyst Stores
 agents: storeonce4x
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks about Catalyst Stores on a HP StoreOnce system. The service gets CRIT in case the Store
@@ -10,6 +10,5 @@ description:
 item:
  The individual Catalyst Store entities
 
-inventory:
+discovery:
  One service per Catalyst Store is created
-

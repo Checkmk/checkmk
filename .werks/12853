@@ -1,0 +1,12 @@
+Title: Dynamic host configuration: Fix exception when displaying the execution history
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1631773033
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p11
+
+When trying to opening the history of the Dynamic Host Configuration, an error
+like "unhashable type 'list'" could be displayed.

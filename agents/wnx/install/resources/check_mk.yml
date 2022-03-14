@@ -106,7 +106,7 @@ global:
 
     # Windows may be slow during WMI, increase the value when you have problems
     # In seconds 
-    wmi_timeout: 3 
+    wmi_timeout: 5 
 
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
@@ -176,8 +176,9 @@ logwatch:
     
     sendall: no   # this value is MANDATORY, yes is useful only for debugging
     vista_api: no # this is RECOMMENDED
+    skip_duplicated: no # if yes the same messages will be replaced with text [the above messages repeated <n> times]
     max_size: 500000 #
-    max_line_length: -1 # -1 to ignore, or any positive, max lingth of the line
+    max_line_length: -1 # -1 to ignore, or any positive, max length of the line
     max_entries: -1     # -1 to ignore, or any positive, max count to receive
     timeout: -1         # -1 to ignore, or any positive, in seconds
 
@@ -264,16 +265,19 @@ modules:
 
     python: auto                          # allowed auto or system, system prevents module usage to execute *.py files
 
-    quick_reinstall: yes                  # use %temp% as temporary storage for modules when Windows agent is updated
+    quick_reinstall: no                   # use %temp% as temporary storage for modules when Windows agent is updated
 
     table:
-        - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
+        - name: 'python-3'              # this is name of the zip file and folder where  zip is installed to
           exts: ['.checkmk.py', '.py' ]   # list of extensions to be used automatically
           exec: '.venv\Scripts\python.exe {}'   # command line, exe is relative to folder modules
     
 
 system:
     enabled: yes
+
+    controller:
+        run: yes        # start controller if controller presented
 
     firewall:
         mode: configure # allowed none, remove, configure

@@ -1,7 +1,7 @@
 title: Age of Latest Backup by Timemachine
 agents: macosx
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the age of latest backup by timemachine.
@@ -10,6 +10,5 @@ description:
  Returns {WARN} or {CRIT} if the latest backup is older than given ages.
  Returns {CRIT} if the tmutil command returns an error.
 
-inventory:
+discovery:
  One service is created on every MAC OS machine having tmutil installed.
-

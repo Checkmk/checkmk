@@ -32,30 +32,28 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from typing import Dict, List
-from .agent_based_api.v1 import (
-    any_of,
-    contains,
-    register,
-    SNMPTree,
-    type_defs,
-)
+from typing import Dict, Optional
 
-SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
-METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']
+from .agent_based_api.v1 import any_of, contains, register, SNMPTree, type_defs
+
+SESSION_TYPES = ["IPsec RA", "IPsec L2L", "AnyConnect SVC", "WebVPN"]
+METRICS_PER_SESSION_TYPE = ["active_sessions", "cumulative_sessions", "peak_sessions"]
 
 
 def parse_cisco_vpn_sessions(
-        string_table: List[type_defs.StringTable]) -> Dict[str, Dict[str, int]]:
+    string_table: type_defs.StringTable,
+) -> Optional[Dict[str, Dict[str, int]]]:
+    if not string_table:
+        return None
 
-    raw_data = string_table[0][0]
+    raw_data = string_table[0]
     parsed = {}
-    summary = {'active_sessions': 0, 'cumulative_sessions': 0}
+    summary = {"active_sessions": 0, "cumulative_sessions": 0}
 
     max_sessions = None
     try:
         max_sessions = int(raw_data[-1])
-        summary['maximum_sessions'] = max_sessions
+        summary["maximum_sessions"] = max_sessions
     except ValueError:
         pass
 
@@ -64,18 +62,19 @@ def parse_cisco_vpn_sessions(
             session_metrics = {}
             for idx_metric, metric in enumerate(METRICS_PER_SESSION_TYPE):
                 session_metrics[metric] = int(
-                    raw_data[idx_session_type * len(METRICS_PER_SESSION_TYPE) + idx_metric])
+                    raw_data[idx_session_type * len(METRICS_PER_SESSION_TYPE) + idx_metric]
+                )
         except ValueError:
             continue
 
         if max_sessions is not None:
-            session_metrics['maximum_sessions'] = max_sessions
+            session_metrics["maximum_sessions"] = max_sessions
 
         parsed[session_type] = session_metrics
-        summary['active_sessions'] += session_metrics['active_sessions']
-        summary['cumulative_sessions'] += session_metrics['cumulative_sessions']
+        summary["active_sessions"] += session_metrics["active_sessions"]
+        summary["cumulative_sessions"] += session_metrics["cumulative_sessions"]
 
-    parsed['Summary'] = summary
+    parsed["Summary"] = summary
 
     return parsed
 
@@ -84,28 +83,26 @@ register.snmp_section(
     name="cisco_vpn_sessions",
     parse_function=parse_cisco_vpn_sessions,
     detect=any_of(
-        contains('.1.3.6.1.2.1.1.1.0', 'cisco pix security'),
-        contains('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
-        contains('.1.3.6.1.2.1.1.1.0', 'cisco firepower threat defense'),
+        contains(".1.3.6.1.2.1.1.1.0", "cisco pix security"),
+        contains(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),
+        contains(".1.3.6.1.2.1.1.1.0", "cisco firepower threat defense"),
     ),
-    fetch=[
-        SNMPTree(
-            base='.1.3.6.1.4.1.9.9.392.1',
-            oids=[
-                '3.26',  # crasIPSecNumSessions
-                '3.27',  # crasIPSecCumulateSessions
-                '3.28',  # crasIPSecPeakConcurrentSessions
-                '3.29',  # crasL2LNumSessions
-                '3.30',  # crasL2LCumulateSessions
-                '3.31',  # crasL2LPeakConcurrentSessions
-                '3.35',  # crasSVCNumSessions
-                '3.36',  # crasSVCCumulateSessions
-                '3.37',  # crasSVCPeakConcurrentSessions
-                '3.38',  # crasWebvpnNumSessions
-                '3.39',  # crasWebvpnCumulateSessions
-                '3.40',  # crasWebvpnPeakConcurrentSessions
-                '1.1',  # crasMaxSessionsSupportable
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.9.9.392.1",
+        oids=[
+            "3.26",  # crasIPSecNumSessions
+            "3.27",  # crasIPSecCumulateSessions
+            "3.28",  # crasIPSecPeakConcurrentSessions
+            "3.29",  # crasL2LNumSessions
+            "3.30",  # crasL2LCumulateSessions
+            "3.31",  # crasL2LPeakConcurrentSessions
+            "3.35",  # crasSVCNumSessions
+            "3.36",  # crasSVCCumulateSessions
+            "3.37",  # crasSVCPeakConcurrentSessions
+            "3.38",  # crasWebvpnNumSessions
+            "3.39",  # crasWebvpnCumulateSessions
+            "3.40",  # crasWebvpnPeakConcurrentSessions
+            "1.1",  # crasMaxSessionsSupportable
+        ],
+    ),
 )

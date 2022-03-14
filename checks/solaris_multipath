@@ -17,13 +17,13 @@
 
 def inventory_solaris_multipath(info):
     for device, _total, operational in info:
-        item = device.split('/')[-1]
+        item = device.split("/")[-1]
         yield item, int(operational)
 
 
 def check_solaris_multipath(item, params, info):
     for device, total, operational in info:
-        if item == device.split('/')[-1]:
+        if item == device.split("/")[-1]:
 
             operational = int(operational)
             total = int(total)
@@ -65,5 +65,5 @@ check_info["solaris_multipath"] = {
     "inventory_function": inventory_solaris_multipath,
     "check_function": check_solaris_multipath,
     "service_description": "Multipath %s",
-    "group": "multipath"
+    "group": "multipath",
 }

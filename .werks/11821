@@ -1,0 +1,12 @@
+Title: Avoid duplicated ntop painters in Service Views
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1634553663
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In case ntop painters where added to a service view, the painter was redrawn duplicated (= not added to the corresponding row).
+This is fixed now.

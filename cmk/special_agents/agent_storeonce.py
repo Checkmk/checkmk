@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import getopt
 import re
 import sys
-import getopt
 import xml.etree.ElementTree as ET
 
 import requests
@@ -14,7 +14,8 @@ import urllib3  # type: ignore[import]
 
 
 def usage():
-    sys.stderr.write("""Check_MK StoreOnce
+    sys.stderr.write(
+        """Check_MK StoreOnce
 
 USAGE: agent_storeonce [OPTIONS] HOST
 
@@ -24,7 +25,8 @@ OPTIONS:
   --user                        Username
   --password                    Password
   --no-cert-check               Disable certificate check
-""")
+"""
+    )
     sys.exit(1)
 
 
@@ -4532,18 +4534,18 @@ stores_xml = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http:/
     </body>
 </html>"""
 
-#.
+# .
 
 
 def query(url, args_dict, opt_cert):
     if not opt_cert:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response = requests.get(url,
-                            auth=(args_dict["username"], args_dict["password"]),
-                            verify=opt_cert)
+    response = requests.get(
+        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert
+    )
     raw_xml = response.text
     # Remove namespace nonsense
-    raw_xml = re.sub(' xmlns="[^"]+"', '', raw_xml, count=1)
+    raw_xml = re.sub(' xmlns="[^"]+"', "", raw_xml, count=1)
     xml_instance = ET.fromstring(raw_xml)
     return xml_instance
 
@@ -4561,7 +4563,7 @@ def process_cluster_info(args_dict, opt_demo, opt_cert):
 
 def query_cluster_info(args_dict, opt_demo, opt_cert):
     if opt_demo:
-        raw_xml = re.sub(' xmlns="[^"]+"', '', cluster_xml, count=1)
+        raw_xml = re.sub(' xmlns="[^"]+"', "", cluster_xml, count=1)
         return ET.fromstring(raw_xml)
     url = "https://%(address)s/storeonceservices/cluster/" % args_dict
     return query(url, args_dict, opt_cert)
@@ -4588,7 +4590,7 @@ def process_servicesets(args_dict, opt_demo, opt_cert):
 
 def query_servicesets(args_dict, opt_demo, opt_cert):
     if opt_demo:
-        raw_xml = re.sub(' xmlns="[^"]+"', '', servicesets_xml, count=1)
+        raw_xml = re.sub(' xmlns="[^"]+"', "", servicesets_xml, count=1)
         return ET.fromstring(raw_xml)
     url = "https://%(address)s/storeonceservices/cluster/servicesets/" % args_dict
     return query(url, args_dict, opt_cert)
@@ -4613,10 +4615,12 @@ def process_stores_info(args_dict, opt_demo, opt_cert):
 
 def query_stores_info(serviceset_id, args_dict, opt_demo, opt_cert):
     if opt_demo:
-        raw_xml = re.sub(' xmlns="[^"]+"', '', stores_xml, count=1)
+        raw_xml = re.sub(' xmlns="[^"]+"', "", stores_xml, count=1)
         return ET.fromstring(raw_xml)
-    url = "https://%(address)s/storeonceservices/cluster/servicesets/" % args_dict + \
-            "%s/services/cat/stores/" % serviceset_id
+    url = (
+        "https://%(address)s/storeonceservices/cluster/servicesets/" % args_dict
+        + "%s/services/cat/stores/" % serviceset_id
+    )
     return query(url, args_dict, opt_cert)
 
 

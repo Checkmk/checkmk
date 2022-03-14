@@ -1,0 +1,22 @@
+Title: Fix missing special agent in cluster configuration
+Class: fix
+Compatible: compat
+Component: core
+Date: 1619519390
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+<b>This fix is only necessary for Nagios.</b>
+
+Clusters containing nodes with a special agent would crash with
+the traceback
+
+<tt>
+  File "/omd/sites/core/lib/python3/cmk/base/checkers/programs.py", line 266, in _make_source_args
+    info_func = config.special_agent_info[special_agent_id]
+</tt>
+
+because the special agent was missing from the configuration
+of the cluster.

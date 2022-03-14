@@ -1,7 +1,7 @@
 title: EMC Datadomain: Battery Status of NVRAM
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the status of the batteries on NVRAM cards of the EMC Datadomain
@@ -14,5 +14,5 @@ description:
 item:
  "ID of the NVRAM card" - "ID of the battery on this card"
 
-inventory:
+discovery:
  One service is created for each NVRAM battery found on the device.

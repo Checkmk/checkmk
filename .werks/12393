@@ -1,0 +1,11 @@
+Title: informix_{dbspaces,locks,logusage,sessions}: Add missing WATO rulesets
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634807028
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

@@ -13,6 +13,6 @@ def inv_allnet_ip_sensoric(parsed, inventory_tree):
         node["model"] = model
 
 
-inv_info['allnet_ip_sensoric'] = {
-    'inv_function': inv_allnet_ip_sensoric,
+inv_info["allnet_ip_sensoric"] = {
+    "inv_function": inv_allnet_ip_sensoric,
 }

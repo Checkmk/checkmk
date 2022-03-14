@@ -1,0 +1,13 @@
+Title: fjdarye500_disks_summary: "Transform failed" during cmk-update-config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636494357
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+For services of the plugin <i>fjdarye500_disks_summary</i> the tool
+<i>cmk-update-config</i> reported "Transform failed".
+This is fixed now.

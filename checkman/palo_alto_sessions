@@ -1,12 +1,11 @@
 title: Palo Alto Firewall: Sessions
 agents: snmp
 catalog: hw/network/palo_alto
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current session load in terms of active sessions
  compared to supported sessions.
 
-inventory:
+discovery:
  One service is created for each Palo Alto firewall.
-

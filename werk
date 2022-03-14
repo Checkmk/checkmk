@@ -15,59 +15,53 @@ import sys
 import termios
 import time
 import tty
-from typing import Dict, List, NoReturn, Optional, Set, Tuple, Union
+from typing import Dict, List, NoReturn, Optional, Sequence, Set, Tuple, Union
 
 Werk = Dict[str, str]
 
 RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
-if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile('.my_ids'):
-    try:
-        # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
-        dest = shutil.move('.my_ids', RESERVED_IDS_FILE_PATH)
-        sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
-    except Exception:
-        sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
-    tty_red = '\033[31m'
-    tty_green = '\033[32m'
-    tty_yellow = '\033[33m'
-    tty_blue = '\033[34m'
-    tty_magenta = '\033[35m'
-    tty_cyan = '\033[36m'
-    tty_white = '\033[37m'
-    tty_bgred = '\033[41m'
-    tty_bggreen = '\033[42m'
-    tty_bgyellow = '\033[43m'
-    tty_bgblue = '\033[44m'
-    tty_bgmagenta = '\033[45m'
-    tty_bgcyan = '\033[46m'
-    tty_bgwhite = '\033[47m'
-    tty_bold = '\033[1m'
-    tty_underline = '\033[4m'
-    tty_normal = '\033[0m'
+    tty_red = "\033[31m"
+    tty_green = "\033[32m"
+    tty_yellow = "\033[33m"
+    tty_blue = "\033[34m"
+    tty_magenta = "\033[35m"
+    tty_cyan = "\033[36m"
+    tty_white = "\033[37m"
+    tty_bgred = "\033[41m"
+    tty_bggreen = "\033[42m"
+    tty_bgyellow = "\033[43m"
+    tty_bgblue = "\033[44m"
+    tty_bgmagenta = "\033[45m"
+    tty_bgcyan = "\033[46m"
+    tty_bgwhite = "\033[47m"
+    tty_bold = "\033[1m"
+    tty_underline = "\033[4m"
+    tty_normal = "\033[0m"
 
     def tty_colors(codes):
-        return '\033[%sm' % (';'.join([str(c) for c in codes]))
+        return "\033[%sm" % (";".join([str(c) for c in codes]))
+
 else:
-    tty_red = ''
-    tty_green = ''
-    tty_yellow = ''
-    tty_blue = ''
-    tty_magenta = ''
-    tty_cyan = ''
-    tty_white = ''
-    tty_bgred = ''
-    tty_bggreen = ''
-    tty_bgblue = ''
-    tty_bgmagenta = ''
-    tty_bgcyan = ''
-    tty_bgwhite = ''
-    tty_bold = ''
-    tty_underline = ''
-    tty_normal = ''
-    tty_ok = 'OK'
+    tty_red = ""
+    tty_green = ""
+    tty_yellow = ""
+    tty_blue = ""
+    tty_magenta = ""
+    tty_cyan = ""
+    tty_white = ""
+    tty_bgred = ""
+    tty_bggreen = ""
+    tty_bgblue = ""
+    tty_bgmagenta = ""
+    tty_bgcyan = ""
+    tty_bgwhite = ""
+    tty_bold = ""
+    tty_underline = ""
+    tty_normal = ""
+    tty_ok = "OK"
 
     def tty_colors(codes):
         return ""
@@ -80,7 +74,7 @@ grep_colors = [
 ]
 
 
-def parse_arguments(argv: List[str]) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -89,7 +83,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_blame = subparsers.add_parser("blame", help="Show who worked on a werk")
     parser_blame.add_argument(
         "id",
-        nargs='?',
+        nargs="?",
         type=int,
         help="werk ID",
         default=None,
@@ -100,7 +94,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_delete = subparsers.add_parser("delete", help="delete werk(s)")
     parser_delete.add_argument(
         "id",
-        nargs='+',
+        nargs="+",
         type=int,
         help="werk ID",
     )
@@ -110,7 +104,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_edit = subparsers.add_parser("edit", help="open werk in editor")
     parser_edit.add_argument(
         "id",
-        nargs='?',
+        nargs="?",
         type=int,
         help="werk ID (defaults to newest)",
     )
@@ -136,10 +130,10 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
         "grep",
         help="show werks containing all of the given keywords",
     )
-    parser_grep.add_argument('-v', '--vebose', action='store_true')
+    parser_grep.add_argument("-v", "--vebose", action="store_true")
     parser_grep.add_argument(
         "keywords",
-        nargs='+',
+        nargs="+",
         help="keywords to grep",
     )
     parser_grep.set_defaults(func=main_grep)
@@ -151,7 +145,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     )
     parser_ids.add_argument(
         "count",
-        nargs='?',
+        nargs="?",
         type=int,
         help="number of werks to reserve",
     )
@@ -160,15 +154,16 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     # KNOWNLEDGE
     parser_knowledge = subparsers.add_parser(
         "knowledge",
-        aliases=['knw'],
+        aliases=["knw"],
         help="Change the knowlege state of a werk",
     )
     parser_knowledge.add_argument("id", type=int, help="werk ID")
     parser_knowledge.add_argument(
         "state",
         choices=[c[0] for c in knowledge],
-        help=("knowlege state of werk. Allowed are %s." %
-              ", ".join("%s (%s)" % c for c in knowledge)),
+        help=(
+            "knowlege state of werk. Allowed are %s." % ", ".join("%s (%s)" % c for c in knowledge)
+        ),
     )
     parser_knowledge.set_defaults(func=main_knowledge)
 
@@ -191,7 +186,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_new = subparsers.add_parser("new", help="Create a new werk")
     parser_new.add_argument(
         "custom_files",
-        nargs='*',
+        nargs="*",
         help="files passed to 'git commit'",
     )
     parser_new.set_defaults(func=main_new)
@@ -210,7 +205,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     )
     parser_pick.add_argument(
         "commit",
-        nargs='+',
+        nargs="+",
         help="Pick these commits",
     )
     parser_pick.set_defaults(func=main_pick)
@@ -219,7 +214,7 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_show = subparsers.add_parser("show", help="Show several werks")
     parser_show.add_argument(
         "ids",
-        nargs='*',
+        nargs="*",
         help="Show these werks, or 'all' for all, of leave out for last",
     )
     parser_show.set_defaults(func=main_show)
@@ -230,6 +225,17 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_url.set_defaults(func=main_url)
 
     return parser.parse_args(argv)
+
+
+def try_migrate_werk_ids():
+
+    if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile(".my_ids"):
+        try:
+            # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
+            dest = shutil.move(".my_ids", RESERVED_IDS_FILE_PATH)
+            sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
+        except Exception:
+            sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 
 def get_tty_size() -> Tuple[int, int]:
@@ -254,8 +260,8 @@ g_base_dir = ""
 
 def goto_werksdir() -> None:
     global g_base_dir
-    g_base_dir = os.path.abspath('.')
-    while not os.path.exists(".werks") and os.path.abspath('.') != '/':
+    g_base_dir = os.path.abspath(".")
+    while not os.path.exists(".werks") and os.path.abspath(".") != "/":
         os.chdir("..")
 
     try:
@@ -305,16 +311,18 @@ def load_werks() -> None:
 
 def save_last_werkid(wid: int) -> None:
     try:
-        open(".last", "w").write("%d\n" % int(wid))
-    except Exception:
+        with open(".last", "w") as f:
+            f.write("%d\n" % int(wid))
+    except OSError:
         pass
 
 
 def load_current_version() -> str:
-    for line in open("../defines.make"):
-        if line.startswith("VERSION"):
-            version = line.split("=", 1)[1].strip()
-            return version
+    with open("../defines.make") as f:
+        for line in f:
+            if line.startswith("VERSION"):
+                version = line.split("=", 1)[1].strip()
+                return version
 
     bail_out("Failed to read VERSION from defines.make")
 
@@ -353,28 +361,27 @@ def load_werk(werkid: int) -> Werk:
         "knowledge": "undoc",
     }
 
-    f = open(str(werkid))
-    for line in f:
-        line = line.strip()
-        if line == "":
-            break
-        header, value = line.split(":", 1)
-        werk[header.strip().lower()] = value.strip()
+    with open(str(werkid)) as f:
+        for line in f:
+            line = line.strip()
+            if line == "":
+                break
+            header, value = line.split(":", 1)
+            werk[header.strip().lower()] = value.strip()
 
-    werk["description"] = f.read()
+        werk["description"] = f.read()
     versions.add(werk["version"])
     return werk
 
 
 def save_werk(werk: Werk) -> None:
-    f = open(werk["id"], "w")
-    f.write("Title: %s\n" % werk["title"])
-    for key, val in sorted(werk.items()):
-        if key not in ["title", "description", "id"]:
-            f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
-    f.write("\n")
-    f.write(werk["description"])
-    f.close()
+    with open(werk["id"], "w") as f:
+        f.write("Title: %s\n" % werk["title"])
+        for key, val in sorted(werk.items()):
+            if key not in ["title", "description", "id"]:
+                f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
+        f.write("\n")
+        f.write(werk["description"])
     git_add(werk)
     save_last_werkid(int(werk["id"]))
 
@@ -397,7 +404,7 @@ def git_commit(werk: Werk, custom_files: List[str]) -> None:
             if prefix:
                 title = "%s %s" % (prefix, title)
 
-    title = "%s %s" % (werk['id'].rjust(5, '0'), title)
+    title = "%s %s" % (werk["id"].rjust(5, "0"), title)
 
     if custom_files:
         files_to_commit = custom_files
@@ -406,19 +413,23 @@ def git_commit(werk: Werk, custom_files: List[str]) -> None:
             files_to_commit.append("%s/%s" % (git_top_level(), entry))
 
         os.chdir(g_base_dir)
-        cmd = "git commit %s -m %s" % (" ".join(files_to_commit),
-                                       quote_shell_string(title + "\n\n" + werk["description"]))
+        cmd = "git commit %s -m %s" % (
+            " ".join(files_to_commit),
+            quote_shell_string(title + "\n\n" + werk["description"]),
+        )
         os.system(cmd)  # nosec
 
     else:
         if something_in_git_index():
-            dash_a = ''
+            dash_a = ""
             os.system("cd '%s' ; git add .werks" % git_top_level())  # nosec
         else:
-            dash_a = '-a'
+            dash_a = "-a"
 
-        cmd = "git commit %s -m %s" % (dash_a,
-                                       quote_shell_string(title + "\n\n" + werk["description"]))
+        cmd = "git commit %s -m %s" % (
+            dash_a,
+            quote_shell_string(title + "\n\n" + werk["description"]),
+        )
         os.system(cmd)  # nosec
 
 
@@ -429,7 +440,7 @@ def git_top_level() -> str:
 
 def something_in_git_index() -> bool:
     for line in os.popen("git status --porcelain"):
-        if line[0] == 'M':
+        if line[0] == "M":
             return True
     return False
 
@@ -448,9 +459,15 @@ def next_werk_id() -> int:
 
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk["description"] += """
+    werk[
+        "description"
+    ] += """
 %s: %s
-%s""" % (time.strftime("%F %T"), title, comment)
+%s""" % (
+        time.strftime("%F %T"),
+        title,
+        comment,
+    )
 
 
 def num_color(n: int, colors: List[int], inverse: bool) -> str:
@@ -469,13 +486,26 @@ def list_werk(werk: Werk) -> None:
     else:
         bold = ""
     _lines, cols = get_tty_size()
-    title = werk["title"][:cols - 45]
+    title = werk["title"][: cols - 45]
     sys.stdout.write(
-        "%s %-9s %s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
-        (format_werk_id(werk["id"]), time.strftime("%F", time.localtime(int(werk["date"]))),
-         colored_class(werk["class"], 8), format_knw_state(werk["knowledge"]) if werk["class"]
-         == "feature" else "   ", werk["edition"], werk["component"], werk["compatible"], tty_bold,
-         werk["level"], tty_normal, werk["version"], bold, title, tty_normal))
+        "%s %-9s %s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
+        % (
+            format_werk_id(werk["id"]),
+            time.strftime("%F", time.localtime(int(werk["date"]))),
+            colored_class(werk["class"], 8),
+            format_knw_state(werk["knowledge"]) if werk["class"] == "feature" else "   ",
+            werk["edition"],
+            werk["component"],
+            werk["compatible"],
+            tty_bold,
+            werk["level"],
+            tty_normal,
+            werk["version"],
+            bold,
+            title,
+            tty_normal,
+        )
+    )
 
 
 def format_werk_id(werk_id: Union[int, str]) -> str:
@@ -512,9 +542,15 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
             a = g_current_version
 
         hit = False
-        for tp, values in [("edition", editions), ("component", all_components()),
-                           ("level", levels), ("class", classes), ("version", versions),
-                           ("compatible", compatible), ("knowledge", knowledge)]:
+        for tp, values in [
+            ("edition", editions),
+            ("component", all_components()),
+            ("level", levels),
+            ("class", classes),
+            ("version", versions),
+            ("compatible", compatible),
+            ("knowledge", knowledge),
+        ]:
             for v in values:  # type: ignore[attr-defined] # all of them are iterable.
                 if isinstance(v, tuple):
                     v = v[0]
@@ -528,8 +564,9 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
                 break
         if not hit:
             bail_out(
-                "No such edition, component, state, class, knowledge state or target version: %s" %
-                a)
+                "No such edition, component, state, class, knowledge state or target version: %s"
+                % a
+            )
 
     # Filter
     newwerks = []
@@ -599,7 +636,7 @@ def werk_effort(werk: Werk) -> int:
 
 
 def main_show(args: argparse.Namespace) -> None:
-    if 'all' in args.ids:
+    if "all" in args.ids:
         ids = [wid for (wid, _werk) in g_werks.items()]
     else:
         ids = args.ids or [get_last_werk()]
@@ -607,7 +644,8 @@ def main_show(args: argparse.Namespace) -> None:
     for wid in ids:
         if wid != ids[0]:
             sys.stdout.write(
-                "-------------------------------------------------------------------------------\n")
+                "-------------------------------------------------------------------------------\n"
+            )
         try:
             show_werk(g_werks[int(wid)])
         except Exception:
@@ -650,8 +688,8 @@ def getch() -> str:
 
 
 def input_choice(
-        what: str, choices: Union[List[str], List[Tuple[str, str]], List[Tuple[str, str,
-                                                                               str]]]) -> str:
+    what: str, choices: Union[List[str], List[Tuple[str, str]], List[Tuple[str, str, str]]]
+) -> str:
     next_index = 0
     ctc = {}
     texts = []
@@ -717,6 +755,7 @@ def main_new(args: argparse.Namespace) -> None:
     werk: Werk = {}
     werk["id"] = str(next_werk_id())
     werk["date"] = str(int(time.time()))
+    assert g_current_version
     werk["version"] = g_current_version
     werk["title"] = get_input("Title")
     if werk["title"] == "":
@@ -731,7 +770,7 @@ def main_new(args: argparse.Namespace) -> None:
         werk["knowledge"] = "undoc"  # Don't ask. Developers must not deal with this
     else:
         werk["knowledge"] = "doc"  # Bug and security fixes never get documented in user manual
-    werk["description"] = u"\n"
+    werk["description"] = "\n"
 
     g_werks[int(werk["id"])] = werk
     save_werk(werk)
@@ -769,13 +808,16 @@ def main_delete(args: argparse.Namespace) -> None:
             bail_out("There is no werk %s." % format_werk_id(werk_id))
 
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
-            sys.stdout.write("Deleted werk %s (%s).\n" %
-                             (format_werk_id(werk_id), g_werks[int(werk_id)]["title"]))
+            sys.stdout.write(
+                "Deleted werk %s (%s).\n"
+                % (format_werk_id(werk_id), g_werks[int(werk_id)]["title"])
+            )
             my_ids = get_werk_ids()
             my_ids.append(werk_id)
             store_werk_ids(my_ids)
-            sys.stdout.write("You lucky bastard now own the werk ID %s.\n" %
-                             format_werk_id(werk_id))
+            sys.stdout.write(
+                "You lucky bastard now own the werk ID %s.\n" % format_werk_id(werk_id)
+            )
 
 
 def grep(line: str, kw: str, n: int) -> Optional[str]:
@@ -784,7 +826,7 @@ def grep(line: str, kw: str, n: int) -> Optional[str]:
     if i == -1:
         return None
     col = grep_colors[n % len(grep_colors)]
-    return line[0:i] + col + line[i:i + len(kw)] + tty_normal + line[i + len(kw):]
+    return line[0:i] + col + line[i : i + len(kw)] + tty_normal + line[i + len(kw) :]
 
 
 def main_grep(args: argparse.Namespace) -> None:
@@ -870,35 +912,63 @@ def main_pick(args: argparse.Namespace) -> None:
 
 
 def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
+    # First get the werk_id
+    result = subprocess.run(
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
+        capture_output=True,
+        check=True,
+    )
+    werk_id = None
+    for line in result.stdout.splitlines():
+        filename = line.decode("utf-8")
+        if filename.startswith(".werks/") and filename[7:].isdigit():
+            werk_id = int(filename[7:])
+
+    if werk_id is not None:
+        if os.path.exists(str(werk_id)):
+            bail_out(f"Trying to pick werk {werk_id}, but werk already present. Aborted.")
+
     # Cherry-pick the commit in question from the other branch
-    os.system("git cherry-pick --no-commit '%s'" % commit_id)  # nosec
+    cmd = ["git", "cherry-pick"]
+    if no_commit:
+        cmd.append("--no-commit")
+    cmd.append(commit_id)
+    pick = subprocess.run(cmd, check=False)
 
     # Find werks that have been cherry-picked and change their version
     # to our current version
     load_werks()  # might have changed
-    for line in os.popen("git status --porcelain"):  # nosec
-        # M  .werks/103
-        #  M werk
-        _status, filename = line.strip().split(None, 1)
-        if filename.startswith(".werks/") and filename[7].isdigit():
-            werk_id = int(filename[7:])
-            change_werk_version(werk_id, g_current_version)
-            sys.stdout.write("Changed version of werk %s to %s.\n" %
-                             (format_werk_id(werk_id), g_current_version))
+    if werk_id is not None:
+        # Change the werk's version before checking the pick return code.
+        # Otherwise the dev may forget to change the version
+        assert g_current_version
+        change_werk_version(werk_id, g_current_version)
+        sys.stdout.write(
+            "Changed version of werk %s to %s.\n" % (format_werk_id(werk_id), g_current_version)
+        )
+
+    if pick.returncode:
+        # Exit with the result of the pick. This may be a merge conflict, so
+        # other tools may need to know about this.
+        sys.exit(pick.returncode)
 
     # Commit
-    if not no_commit:
-        os.system("git commit -C '%s'" % commit_id)  # nosec
+    if werk_id is not None:
 
-    else:
-        sys.stdout.write("We don't commit yet. Here is the status:\n")
-        sys.stdout.write("Please commit with git commit -C '%s'\n\n" % commit_id)
-        os.system("git status")
+        # This allows for picking regular commits as well
+        if not no_commit:
+            subprocess.run(["git", "add", str(werk_id)], check=True)
+            subprocess.run(["git", "commit", "--no-edit", "--amend"], check=True)
+        else:
+            sys.stdout.write("We don't commit yet. Here is the status:\n")
+            sys.stdout.write("Please commit with git commit -C '%s'\n\n" % commit_id)
+            subprocess.run(["git", "status"], check=True)
 
 
 def get_werk_ids() -> List[int]:
     try:
-        return eval(open(RESERVED_IDS_FILE_PATH, 'r').read())
+        with open(RESERVED_IDS_FILE_PATH, "r") as f:
+            return eval(f.read())
     except Exception:
         return []
 
@@ -912,25 +982,31 @@ def invalidate_my_werkid(wid: int) -> None:
 
 
 def store_werk_ids(l: List[int]) -> None:
-    open(RESERVED_IDS_FILE_PATH, 'w').write(repr(l) + "\n")
-    sys.stdout.write(f'Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n')
+    with open(RESERVED_IDS_FILE_PATH, "w") as f:
+        f.write(repr(l) + "\n")
+    sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
 
 
 def current_branch() -> str:
     return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
 
 
+def current_repo() -> str:
+    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("/")[-1]
+
+
 def main_fetch_ids(args: argparse.Namespace) -> None:
     if args.count is None:
-        sys.stdout.write('You have %d reserved IDs.\n' % (len(get_werk_ids())))
+        sys.stdout.write("You have %d reserved IDs.\n" % (len(get_werk_ids())))
         sys.exit(0)
 
-    if current_branch() != "master":
-        bail_out("It is not allowed to reserve IDs on any other branch than the master.")
+    if current_branch() != "master" or current_repo() != "check_mk":
+        bail_out("Werk IDs can only be reserved on the master branch of the check_mk repository.")
 
     # Get the start werk_id to reserve
     try:
-        first_free = int(open('first_free').read().strip())
+        with open("first_free") as f:
+            first_free = int(f.read().strip())
     except (IOError, ValueError):
         first_free = 0
 
@@ -958,10 +1034,13 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids
-    open('first_free', 'w').write(str(new_first_free) + "\n")
+    with open("first_free", "w") as f:
+        f.write(str(new_first_free) + "\n")
 
-    sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
-                     (args.count, len(my_ids)))
+    sys.stdout.write(
+        "Reserved %d additional IDs now. You have %d reserved IDs now.\n"
+        % (args.count, len(my_ids))
+    )
 
     if os.system("git commit -m 'Reserved %d Werk IDS' ." % args.count) == 0:  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
@@ -985,13 +1064,24 @@ levels: List[Tuple[str, str]] = []
 compatible: List[Tuple[str, str]] = []
 knowledge: List[Tuple[str, str]] = []
 online_url = ""
+current_version = None
 
 versions: Set[str] = set([])
-goto_werksdir()
-load_config()
-load_werks()
-g_current_version = load_current_version()
+g_current_version = None
+
+
+def main(argv: Optional[Sequence[str]] = None) -> None:
+    goto_werksdir()
+    try_migrate_werk_ids()
+    load_config()
+    load_werks()
+    global g_current_version
+    g_current_version = current_version or load_current_version()
+    if not g_current_version:
+        raise SystemExit("Unable to determine project version")
+    main_args = parse_arguments(argv or sys.argv[1:])
+    main_args.func(main_args)
+
 
 if __name__ == "__main__":
-    main_args = parse_arguments(sys.argv[1:])
-    sys.exit(main_args.func(main_args))
+    main()

@@ -1,0 +1,13 @@
+Title: check_http: maximum length of regex is enforced
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1619167987
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The internal limit of maximum characters of the regular expression of
+check_http is now checked in the webinterface. If the regular expression is
+longer than 1023 an error message is shown when trying to save it.

@@ -6,24 +6,30 @@
 """Submodule providing the `run` function of generictests package"""
 from ast import literal_eval
 from contextlib import contextmanager
-import freezegun  # type: ignore[import]
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
-                         CheckResult, assertCheckResultsEqual, \
-                         MockHostExtraConf, MockItemState, \
-                         Immutables, assertEqual
-from testlib import MissingCheckInfoError, Check  # type: ignore[import]
-from generictests.checkhandler import checkhandler
+import freezegun
+
+from tests.testlib import Check, MissingCheckInfoError
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.api.agent_based import value_store
-from cmk.base.check_utils import Service
 from cmk.base.plugin_contexts import current_host, current_service
 
+from ..checktestlib import (
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+    assertEqual,
+    CheckResult,
+    DiscoveryResult,
+    Immutables,
+    mock_item_state,
+    MockHostExtraConf,
+)
+from .checkhandler import checkhandler
+
 # TODO CMK-4180
-#from cmk.gui.watolib.rulespecs import rulespec_registry
+# from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
 class DiscoveryParameterTypeError(AssertionError):
@@ -37,7 +43,7 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
     and/or including extra sections.
     """
     # see if we have a parsed result defined
-    tmp = getattr(dataset, 'parsed', None)
+    tmp = getattr(dataset, "parsed", None)
     if tmp is not None:
         arg = [tmp]
     # see if we produced one earlier
@@ -50,7 +56,7 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
         except AttributeError:
             raise AttributeError("dataset has neither of the attributes " "'info' or 'parsed'")
 
-    es_dict = getattr(dataset, 'extra_sections', {})
+    es_dict = getattr(dataset, "extra_sections", {})
     for es in es_dict.get(subcheck, []):
         arg.append(es)
 
@@ -80,15 +86,15 @@ def get_merged_parameters(check, provided_p):
 
 
 def get_mock_values(dataset, subcheck):
-    mock_is_d = getattr(dataset, 'mock_item_state', {})
-    mock_hc_d = getattr(dataset, 'mock_host_conf', {})
-    mock_hc_m = getattr(dataset, 'mock_host_conf_merged', {})
+    mock_is_d = getattr(dataset, "mock_item_state", {})
+    mock_hc_d = getattr(dataset, "mock_host_conf", {})
+    mock_hc_m = getattr(dataset, "mock_host_conf_merged", {})
     return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {})
 
 
 def get_discovery_expected(subcheck, dataset):
     """Return expected DiscoveryResult"""
-    discovery_dict = getattr(dataset, 'discovery', {})
+    discovery_dict = getattr(dataset, "discovery", {})
     discovery_raw = discovery_dict.get(subcheck, [])
     return DiscoveryResult(discovery_raw)
 
@@ -102,7 +108,7 @@ def get_discovery_actual(check, info_arg, immu):
         return DiscoveryResult()
 
     d_result_raw = check.run_discovery(info_arg)
-    immu.test(' after discovery (%s): ' % disco_func.__name__)
+    immu.test(" after discovery (%s): " % disco_func.__name__)
 
     d_result = DiscoveryResult(d_result_raw)
     for entry in d_result.entries:
@@ -123,8 +129,7 @@ def update_dataset_attrs_with_discovery(dataset, check, subcheck, discovery_resu
 
 
 def validate_discovered_params(check, params):
-    """Validate params with respect to the rule's valuespec
-    """
+    """Validate params with respect to the rule's valuespec"""
     # TODO CMK-4180
     return
     # if not params:
@@ -165,13 +170,13 @@ def run_test_on_parse(dataset, immu):
     If the .parsed attribute is present, it is compared to the result.
     """
     print("parse: %r" % (dataset.checkname,))
-    info = getattr(dataset, 'info', None)
-    parsed_expected = getattr(dataset, 'parsed', None)
+    info = getattr(dataset, "info", None)
+    parsed_expected = getattr(dataset, "parsed", None)
 
     if info is None:
         return None
 
-    immu.register(dataset.info, 'info')
+    immu.register(dataset.info, "info")
     try:
         main_check = Check(dataset.checkname)
         parse_function = main_check.info.get("parse_function")
@@ -188,10 +193,10 @@ def run_test_on_parse(dataset, immu):
 
     parsed = main_check.run_parse(info)
     if parsed_expected is not None:
-        assertEqual(parsed, parsed_expected, ' parsed result ')
+        assertEqual(parsed, parsed_expected, " parsed result ")
 
-    immu.test(' after parse function ')
-    immu.register(parsed, 'parsed')
+    immu.test(" after parse function ")
+    immu.register(parsed, "parsed")
 
     return parsed
 
@@ -207,25 +212,19 @@ def run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write):
 
 def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
     """Run check for test case listed in dataset"""
-    test_cases = getattr(dataset, 'checks', {}).get(subcheck, [])
+    test_cases = getattr(dataset, "checks", {}).get(subcheck, [])
     check_func = check.info.get("check_function")
     check_plugin_name = CheckPluginName(maincheckify(check.name))
 
     for item, params, results_expected_raw in test_cases:
 
         print("Dataset item %r in check %r" % (item, check.name))
-        immu.register(params, 'params')
+        immu.register(params, "params")
 
-        with current_service(
-                Service(
-                    item=item,
-                    check_plugin_name=check_plugin_name,
-                    description="unit test description",
-                    parameters={},
-                )):
+        with current_service(check_plugin_name, "unit test description"):
             result = CheckResult(check.run_check(item, params, info_arg))
 
-        immu.test(' after check (%s): ' % check_func.__name__)
+        immu.test(" after check (%s): " % check_func.__name__)
 
         result_expected = CheckResult(results_expected_raw)
 
@@ -243,7 +242,7 @@ def optional_freeze_time(dataset):
     If present and truish the datasets freeze_time attribute is passed to
     freezegun.freeze_time.
     """
-    if getattr(dataset, 'freeze_time', None):
+    if getattr(dataset, "freeze_time", None):
         with freezegun.freeze_time(dataset.freeze_time):
             yield
     else:
@@ -264,24 +263,21 @@ def run(check_info, dataset, write=False):
 
         # LOOP OVER ALL (SUB)CHECKS
         for sname in checklist:
-            subcheck = (sname + '.').split('.')[1]
+            subcheck = (sname + ".").split(".")[1]
             check = Check(sname)
 
             info_arg = get_info_argument(dataset, subcheck, parsed)
-            immu.test(' after get_info_argument ')
-            immu.register(info_arg, 'info_arg')
+            immu.test(" after get_info_argument ")
+            immu.register(info_arg, "info_arg")
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with \
-                current_host("non-existent-testhost", write_state=False), \
-                value_store.context(CheckPluginName("test"), "unit-test"), \
-                MockItemState(mock_is), \
-                MockHostExtraConf(check, mock_hec), \
-                MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
+            with current_host("non-existent-testhost"), mock_item_state(mock_is), MockHostExtraConf(
+                check, mock_hec
+            ), MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write)
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu, write)
 
-        immu.test(' at end of subcheck loop %r ' % (subcheck,))
+        immu.test(" at end of subcheck loop %r " % (subcheck,))

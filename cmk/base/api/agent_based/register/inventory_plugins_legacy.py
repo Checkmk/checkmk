@@ -8,37 +8,36 @@
 from typing import Any, Callable, Dict, Generator, List
 
 import cmk.utils.misc
-
 from cmk.utils.check_utils import maincheckify
 
 from cmk.base.api.agent_based.inventory_classes import (
     Attributes,
-    TableRow,
     InventoryFunction,
     InventoryPlugin,
     InventoryResult,
+    TableRow,
 )
 from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 from cmk.base.api.agent_based.type_defs import Parameters
 
 
-class MockStructuredDataTree:
+class MockStructuredDataNode:
     def __init__(self):
         self.attributes = {}
         self.tables = {}
 
     @staticmethod
     def _normalize(path: str):
-        return tuple(path.strip(':.').split('.'))
+        return tuple(path.strip(":.").split("."))
 
     def get_dict(self, path: str):
-        return self.attributes.setdefault(self._normalize(path), dict())
+        return self.attributes.setdefault(self._normalize(path), {})
 
     def get_list(self, path: str):
-        return self.tables.setdefault(self._normalize(path), list())
+        return self.tables.setdefault(self._normalize(path), [])
 
 
-g_inv_tree = MockStructuredDataTree()  # every plugin will get its own!
+g_inv_tree = MockStructuredDataNode()  # every plugin will get its own!
 
 
 def inv_tree(path: str) -> Dict:
@@ -61,11 +60,12 @@ def _create_inventory_function(
     has_params: bool,
 ) -> InventoryFunction:
     """Create an API compliant inventory function"""
+
     def _inventory_generator(*args) -> InventoryResult:
         # mock the inventory/status data trees to later generate API objects
         # base on the info contained in them after running the legacy inventory function
-        local_status_data_tree = MockStructuredDataTree()
-        local_inventory_tree = MockStructuredDataTree()
+        local_status_data_tree = MockStructuredDataNode()
+        local_inventory_tree = MockStructuredDataNode()
         global g_inv_tree
         g_inv_tree = local_inventory_tree
 
@@ -77,14 +77,16 @@ def _create_inventory_function(
                 legacy_inventory_function,
                 inventory_tree=local_inventory_tree,
                 status_data_tree=local_status_data_tree,
-            ))
+            ),
+        )
 
         # Convert the content of the trees to the new API. Add a hint if this fails:
         try:
             yield from _generate_api_objects(local_status_data_tree, local_inventory_tree)
         except (TypeError, ValueError) as exc:
             raise RuntimeError(
-                "Unable to convert legacy results. Please migrate plugin to new API") from exc
+                "Unable to convert legacy results. Please migrate plugin to new API"
+            ) from exc
 
     if has_params:
 
@@ -93,24 +95,30 @@ def _create_inventory_function(
             section: Any,
         ) -> InventoryResult:
             yield from _inventory_generator(section, params)
+
     else:
 
         def inventory_migration_wrapper(  # type: ignore[misc] # different args on purpose!
-                section: Any,) -> InventoryResult:
+            section: Any,
+        ) -> InventoryResult:
             yield from _inventory_generator(section)
 
     return inventory_migration_wrapper
 
 
 def _function_has_params(legacy_function: Callable) -> bool:
-    return len(
-        set(cmk.utils.misc.getfuncargs(legacy_function)) -
-        {"status_data_tree", "inventory_tree"}) > 1
+    return (
+        len(
+            set(cmk.utils.misc.getfuncargs(legacy_function))
+            - {"status_data_tree", "inventory_tree"}
+        )
+        > 1
+    )
 
 
 def _generate_api_objects(
-    local_status_data_tree: MockStructuredDataTree,
-    local_inventory_tree: MockStructuredDataTree,
+    local_status_data_tree: MockStructuredDataNode,
+    local_inventory_tree: MockStructuredDataNode,
 ) -> InventoryResult:
 
     yield from _generate_attributes(local_status_data_tree, local_inventory_tree)
@@ -118,12 +126,13 @@ def _generate_api_objects(
 
 
 def _generate_attributes(
-    local_status_data_tree: MockStructuredDataTree,
-    local_inventory_tree: MockStructuredDataTree,
+    local_status_data_tree: MockStructuredDataNode,
+    local_inventory_tree: MockStructuredDataNode,
 ) -> Generator[Attributes, None, None]:
 
     for path in sorted(
-            set(local_status_data_tree.attributes) | set(local_inventory_tree.attributes)):
+        set(local_status_data_tree.attributes) | set(local_inventory_tree.attributes)
+    ):
         status_attributes = {
             str(k): v for k, v in local_status_data_tree.attributes.get(path, {}).items()
         }
@@ -140,18 +149,22 @@ def _generate_attributes(
 
 
 def _generate_table_rows(
-    local_status_data_tree: MockStructuredDataTree,
-    local_inventory_tree: MockStructuredDataTree,
+    local_status_data_tree: MockStructuredDataNode,
+    local_inventory_tree: MockStructuredDataNode,
 ) -> Generator[TableRow, None, None]:
 
     for path in sorted(set(local_status_data_tree.tables) | set(local_inventory_tree.tables)):
         inv_table = local_inventory_tree.tables.get(path, [])
         status_table = local_status_data_tree.tables.get(path, [])
 
-        common_inv_keys = {k for k in inv_table[0] if all(k in row for row in inv_table)
-                          } if inv_table else set()
-        common_status_keys = {k for k in status_table[0] if all(k in row for row in status_table)
-                             } if status_table else set()
+        common_inv_keys = (
+            {k for k in inv_table[0] if all(k in row for row in inv_table)} if inv_table else set()
+        )
+        common_status_keys = (
+            {k for k in status_table[0] if all(k in row for row in status_table)}
+            if status_table
+            else set()
+        )
 
         for row in inv_table:
             keys = (common_inv_keys & common_status_keys) or common_inv_keys
@@ -180,7 +193,7 @@ def create_inventory_plugin_from_legacy(
     inventory_info_dict: Dict[str, Any],
 ) -> InventoryPlugin:
 
-    if inventory_info_dict.get('depends_on'):
+    if inventory_info_dict.get("depends_on"):
         raise NotImplementedError("cannot auto-migrate plugins with dependencies")
 
     new_inventory_name = maincheckify(inventory_plugin_name)
@@ -195,7 +208,7 @@ def create_inventory_plugin_from_legacy(
 
     return create_inventory_plugin(
         name=new_inventory_name,
-        sections=[inventory_plugin_name.split('.', 1)[0]],
+        sections=[inventory_plugin_name.split(".", 1)[0]],
         inventory_function=inventory_function,
         inventory_default_parameters={} if has_parameters else None,
         inventory_ruleset_name=inventory_plugin_name if has_parameters else None,

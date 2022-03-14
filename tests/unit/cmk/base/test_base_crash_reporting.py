@@ -6,39 +6,41 @@
 
 from pathlib import Path
 
-import cmk.utils.crash_reporting
-import cmk.base.crash_reporting as crash_reporting
-import cmk.base.check_api as check_api
-import cmk.base.config as config
-import cmk.utils.version as cmk_version
+from tests.testlib.base import Scenario
 
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+import cmk.utils.crash_reporting
+from cmk.utils.type_defs import HostName
+
+import cmk.base.crash_reporting as crash_reporting
 
 
 def test_base_crash_report_registry():
-    assert (cmk.utils.crash_reporting.crash_report_registry["base"] ==
-            crash_reporting.CMKBaseCrashReport)
+    assert (
+        cmk.utils.crash_reporting.crash_report_registry["base"]
+        == crash_reporting.CMKBaseCrashReport
+    )
 
 
 def _check_generic_crash_info(crash):
     assert "details" in crash.crash_info
 
     for key, ty in {
-            "crash_type": str,
-            "time": float,
-            "os": str,
-            "version": str,
-            "python_version": str,
-            "python_paths": list,
-            "exc_type": str,
-            "exc_value": str,
-            "exc_traceback": list,
-            "local_vars": str,
+        "crash_type": str,
+        "time": float,
+        "os": str,
+        "version": str,
+        "python_version": str,
+        "python_paths": list,
+        "exc_type": str,
+        "exc_value": str,
+        "exc_traceback": list,
+        "local_vars": str,
     }.items():
         assert key in crash.crash_info
-        assert isinstance(crash.crash_info[key], ty), \
-                "Key %r has an invalid type %r" % (key, type(crash.crash_info[key]))
+        assert isinstance(crash.crash_info[key], ty), "Key %r has an invalid type %r" % (
+            key,
+            type(crash.crash_info[key]),
+        )
 
 
 def test_base_crash_report_from_exception():
@@ -76,15 +78,12 @@ def test_check_crash_report_from_exception(monkeypatch):
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
-            check_plugin_kwargs={
-                "item": None,
-                "params": None
-            },
+            check_plugin_kwargs={"item": None, "params": None},
             is_manual_check=False,
-            description=u"Uptime",
-            text=u"Output",
+            description="Uptime",
+            text="Output",
         )
 
     _check_generic_crash_info(crash)
@@ -93,19 +92,26 @@ def test_check_crash_report_from_exception(monkeypatch):
     assert crash.crash_info["exc_value"] == "DING"
 
     for key, (ty, value) in {
-            "check_output": (str, "Output"),
-            "host": (str, "testhost"),
-            "is_cluster": (bool, False),
-            "description": (str, "Uptime"),
-            "check_type": (str, "uptime"),
-            "item": (type(None), None),
-            "params": (type(None), None),
-            "inline_snmp": (bool, False),
-            "manual_check": (bool, False),
+        "check_output": (str, "Output"),
+        "host": (str, "testhost"),
+        "is_cluster": (bool, False),
+        "description": (str, "Uptime"),
+        "check_type": (str, "uptime"),
+        "item": (type(None), None),
+        "params": (type(None), None),
+        "inline_snmp": (bool, False),
+        "manual_check": (bool, False),
     }.items():
         assert key in crash.crash_info["details"]
-        assert isinstance(crash.crash_info["details"][key], ty), (  # pylint: disable=isinstance-second-argument-not-valid-type
-            "Key %r has wrong type: %r" % (key, type(crash.crash_info["details"][key])))
+        assert isinstance(  # pylint: disable= isinstance-second-argument-not-valid-type
+            crash.crash_info["details"][key], ty
+        ), (
+            "Key %r has wrong type: %r"
+            % (  # pylint: disable=isinstance-second-argument-not-valid-type
+                key,
+                type(crash.crash_info["details"][key]),
+            )
+        )
         assert crash.crash_info["details"][key] == value, "%r has invalid value" % key
 
 
@@ -116,12 +122,12 @@ def test_check_crash_report_save(monkeypatch):
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
             is_manual_check=False,
-            description=u"Uptime",
-            text=u"Output",
+            description="Uptime",
+            text="Output",
         )
         store.save(crash)
 
@@ -131,26 +137,21 @@ def test_check_crash_report_save(monkeypatch):
 
 def test_check_crash_report_read_agent_output(monkeypatch):
     Scenario().apply(monkeypatch)
-    config.load_checks(
-        check_api.get_check_api_context,
-        ["%s/uptime" % cmk.utils.paths.checks_dir,
-         "%s/snmp_uptime" % cmk.utils.paths.checks_dir])
-
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
-        f.write(u"<<<abc>>>\nblablub\n")
+        f.write("<<<abc>>>\nblablub\n")
 
     try:
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
             is_manual_check=False,
-            description=u"Uptime",
-            text=u"Output",
+            description="Uptime",
+            text="Output",
         )
 
     assert isinstance(crash, crash_reporting.CheckCrashReport)
@@ -160,26 +161,21 @@ def test_check_crash_report_read_agent_output(monkeypatch):
 
 def test_check_crash_report_read_snmp_info(monkeypatch):
     Scenario().apply(monkeypatch)
-    config.load_checks(
-        check_api.get_check_api_context,
-        ["%s/uptime" % cmk.utils.paths.checks_dir,
-         "%s/snmp_uptime" % cmk.utils.paths.checks_dir])
-
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
-        f.write(u"[]\n")
+        f.write("[]\n")
 
     try:
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="snmp_uptime",
             check_plugin_kwargs={},
             is_manual_check=False,
-            description=u"Uptime",
-            text=u"Output",
+            description="Uptime",
+            text="Output",
         )
 
     assert isinstance(crash, crash_reporting.CheckCrashReport)

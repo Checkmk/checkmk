@@ -5,30 +5,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListChoice,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
+from cmk.gui.valuespec import Dictionary, ListChoice
 
 
 def _valuespec_discovery_netapp_api_ports_ignored():
-    return Dictionary(title=_("Netapp port discovery"),
-                      elements=[
-                          ("ignored_ports",
-                           ListChoice(title=_("Ignore port types during discovery"),
-                                      help=_("Specify which port types should not be discovered"),
-                                      choices=[
-                                          ("physical", _("Physical")),
-                                          ("vlan", _("Vlan")),
-                                          ("trunk", _("Trunk")),
-                                      ])),
-                      ])
+    return Dictionary(
+        title=_("Netapp port discovery"),
+        elements=[
+            (
+                "ignored_ports",
+                ListChoice(
+                    title=_("Ignore port types during discovery"),
+                    help=_("Specify which port types should not be discovered"),
+                    choices=[
+                        ("physical", _("Physical")),
+                        ("vlan", _("Vlan")),
+                        ("trunk", _("Trunk")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -37,4 +39,5 @@ rulespec_registry.register(
         match_type="dict",
         name="discovery_netapp_api_ports_ignored",
         valuespec=_valuespec_discovery_netapp_api_ports_ignored,
-    ))
+    )
+)

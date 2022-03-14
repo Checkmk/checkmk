@@ -23,10 +23,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import sys
-import shutil
 import contextlib
+import os
+import shutil
+import sys
 from typing import Iterator
 
 import cmk.utils.tty as tty
@@ -60,7 +60,7 @@ def delete_user_file(user_path: str) -> None:
 
 def delete_directory_contents(d: str) -> None:
     for f in os.listdir(d):
-        delete_user_file(d + '/' + f)
+        delete_user_file(d + "/" + f)
 
 
 def omd_base_path() -> str:

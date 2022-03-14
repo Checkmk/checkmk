@@ -1,7 +1,7 @@
 title: Salesforce: Instances
 agents: salesforce
 catalog: app/salesforce
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the instances,
@@ -11,5 +11,5 @@ description:
 item:
  The name of the instance
 
-inventory:
+discovery:
  One service is created for each instance.

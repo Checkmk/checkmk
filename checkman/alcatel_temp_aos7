@@ -1,7 +1,7 @@
 title: Alcatel Switches (>=AOS7): Board Temperatures
 agents: snmp
 catalog: hw/network/alcatel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors board temperatures of the following Alcatel switches
@@ -33,5 +33,5 @@ description:
 item:
  The slot index and the name of the CPU. The slot index is optional
 
-inventory:
+discovery:
  One service is created for each connected board connected to the switch.

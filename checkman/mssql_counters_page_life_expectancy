@@ -1,0 +1,22 @@
+title: MSSQL Server: Page Life Expectancy (PLE)
+agents: windows
+catalog: app/mssql
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the page life expectancy on MSSQL Server. It is possible
+ to configure lower thresholds for PLE using the ruleset "MSSQL Page Life
+ Expectancy". By default, the check returns a WARN state if the PLE falls below
+ 350 seconds, and a CRIT state if it falls below 300 seconds.
+
+ The prerequisite for this check is that the mssql.vbs agent plugin is
+ installed on the host. Please refer to the online documentation for
+ installation instructions.
+
+item:
+ The MSSQL object and instance name (as defined in the view
+ "sys.dm_os_performance_counters"), separated by a space. If no instance name
+ is defined by MSSQL, the object name is used on its own.
+
+discovery:
+ One service is created for each available PLE counter.

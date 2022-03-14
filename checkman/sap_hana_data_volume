@@ -1,7 +1,7 @@
 title: SAP HANA: Data Volume
 agents: linux
 catalog: app/sap_hana
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the data volumes of SAP HANA.
@@ -17,7 +17,7 @@ description:
 item:
  The sid instance name followed by a {{-}} followed by the file type and the volume ID
 
-inventory:
+discovery:
  One service is created for each instance, file type and volume.
 
 cluster:

@@ -1,0 +1,15 @@
+Title: Fix wrong soft query limit warning
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624895134
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+With werk #12611 the calculation for HW/SW inventory views was fixed. But this
+caused problems in other views, where a limit was shown even the limit was
+not reached.
+

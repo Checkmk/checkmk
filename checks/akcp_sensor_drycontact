@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["akcp_sensor_drycontact"] = {
     "check_function": check_akcp_sensor_drycontact,
     "inventory_function": inventory_akcp_sensor_no_params,
@@ -20,5 +21,6 @@ check_info["akcp_sensor_drycontact"] = {
             1,  # Sensor Name
             3,  # Sensor Status (2 = OK, 4 = Not ok)
             5,  # Sensor Online
-        ]),
+        ],
+    ),
 }

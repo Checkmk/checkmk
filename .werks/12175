@@ -1,0 +1,16 @@
+Title: Postpone notifications for passively checked objects, too.
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1626258306
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+Even when a host is down, we can still receive check results for passive
+checks on that host, e.g. via the piggyback mechanism. Any notifications
+resulting from these check results should be postponed in the normal way,
+too.
+    
+

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // NOTE: We really need <sstream>, IWYU bug?
 #include <arpa/inet.h>
@@ -10,6 +11,7 @@
 #include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -140,7 +142,7 @@ int main(int argc, char **argv) {
         }
 
         char *port_str = strtok(nullptr, ":");
-        int remote_port = port_str != nullptr ? atoi(port_str) : 6558;
+        uint16_t remote_port = port_str != nullptr ? atoi(port_str) : 6558;
 
         sock = ::socket(AF_INET, SOCK_STREAM, 0);
         if (sock == -1) {
@@ -251,7 +253,8 @@ int main(int argc, char **argv) {
     while (true) {
         char response_chunk[4096];
         memset(response_chunk, 0, sizeof(response_chunk));
-        ssize_t bytes_read = ::read(sock, response_chunk, sizeof(response_chunk));
+        ssize_t bytes_read =
+            ::read(sock, response_chunk, sizeof(response_chunk));
         if (bytes_read == -1) {
             if (errno != EINTR) {
                 ioError("Error while reading response");

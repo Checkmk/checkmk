@@ -1,7 +1,7 @@
 title: UCS Bladecenter: Power Supply Switch
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the power supply of the switches in a UCS bladecenter.
@@ -11,6 +11,5 @@ description:
 item:
  The component where the fans are located, e.g chassis or switch
 
-inventory:
+discovery:
  One service is created for each switch module.
-

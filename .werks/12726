@@ -1,0 +1,17 @@
+Title: FreeBSD Agent: Improve detection of executables needed to create monitoring data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617965372
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The FreeBSD agent checks for various executables, such as zpool or statgrab, to
+create monitoring data. If they are not detected, the corresponding sections are
+skipped. This werk improves the detection of these executables, which might result
+in the discovery of additional services on monitored FreeBSD hosts.
+
+Note that you first have to update the FreeBSD agent on monitored hosts before
+this werk comes into effect.

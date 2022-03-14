@@ -1,7 +1,7 @@
 title: Raritan PX Devices Sensors: Temperature
 agents: snmp
 catalog: hw/environment/raritan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors temperature sensors connected to a Raritan PX device.
@@ -11,6 +11,5 @@ description:
 item:
  The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 
-inventory:
+discovery:
  One service is created for each sensor.
-

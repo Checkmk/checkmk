@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.emcvnx import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<emcvnx_info>>>
 #
@@ -52,48 +53,48 @@ from cmk.base.check_legacy_includes.emcvnx import *  # pylint: disable=wildcard-
 
 def parse_emcvnx_info(info):
     parsed = {
-        'info': [],
-        'storage': [],
-        'link': [],
-        'config': [],
-        'io': [],
+        "info": [],
+        "storage": [],
+        "link": [],
+        "config": [],
+        "io": [],
     }
     key_to_subcheck = {
-        'System Fault LED': 'info',
-        'Server IP Address': 'info',
-        'System Date': 'info',
-        'System Time': 'info',
-        'Serial Number For The SP': 'info',
-        'Storage Processor': 'storage',
-        'Storage Processor Network Name': 'storage',
-        'Storage Processor IP Address': 'storage',
-        'Storage Processor Subnet Mask': 'storage',
-        'Storage Processor Gateway Address': 'storage',
-        'Storage Processor IPv6 Mode': 'storage',
-        'Link Status': 'link',
-        'Current Speed': 'link',
-        'Requested Speed': 'link',
-        'Auto-Negotiate': 'link',
-        'Capable Speeds': 'link',
-        'Statistics Logging': 'config',
-        'SP Read Cache State': 'config',
-        'SP Write Cache State': 'config',
-        'Hw_flush_on': 'config',
-        'Idle_flush_on': 'config',
-        'Lw_flush_off': 'config',
-        'Max Requests': 'io',
-        'Average Requests': 'io',
-        'Hard errors': 'io',
-        'Total Reads': 'io',
-        'Total Writes': 'io',
-        'Read_requests': 'io',
-        'Write_requests': 'io',
-        'Blocks_read': 'io',
-        'Blocks_written': 'io',
-        'Sum_queue_lengths_by_arrivals': 'io',
-        'Arrivals_to_non_zero_queue': 'io',
-        'Write_cache_flushes': 'io',
-        'Write_cache_blocks_flushed': 'io',
+        "System Fault LED": "info",
+        "Server IP Address": "info",
+        "System Date": "info",
+        "System Time": "info",
+        "Serial Number For The SP": "info",
+        "Storage Processor": "storage",
+        "Storage Processor Network Name": "storage",
+        "Storage Processor IP Address": "storage",
+        "Storage Processor Subnet Mask": "storage",
+        "Storage Processor Gateway Address": "storage",
+        "Storage Processor IPv6 Mode": "storage",
+        "Link Status": "link",
+        "Current Speed": "link",
+        "Requested Speed": "link",
+        "Auto-Negotiate": "link",
+        "Capable Speeds": "link",
+        "Statistics Logging": "config",
+        "SP Read Cache State": "config",
+        "SP Write Cache State": "config",
+        "Hw_flush_on": "config",
+        "Idle_flush_on": "config",
+        "Lw_flush_off": "config",
+        "Max Requests": "io",
+        "Average Requests": "io",
+        "Hard errors": "io",
+        "Total Reads": "io",
+        "Total Writes": "io",
+        "Read_requests": "io",
+        "Write_requests": "io",
+        "Blocks_read": "io",
+        "Blocks_written": "io",
+        "Sum_queue_lengths_by_arrivals": "io",
+        "Arrivals_to_non_zero_queue": "io",
+        "Write_cache_flushes": "io",
+        "Write_cache_blocks_flushed": "io",
     }
 
     preparsed, errors = preparse_emcvnx_info(info)
@@ -125,20 +126,22 @@ def check_emcvnx_info(item, _no_params, parsed):
     output, errors = parsed
 
     if errors:
-        yield 2, ('Error(s) while parsing the output. This may effect the '
-                  'discovery of other emcvnx services. Please check your naviseccli '
-                  'configuration. Errors are: %s' % (' '.join(errors)))
+        yield 2, (
+            "Error(s) while parsing the output. This may effect the "
+            "discovery of other emcvnx services. Please check your naviseccli "
+            "configuration. Errors are: %s" % (" ".join(errors))
+        )
 
-    for key, value in output['info']:
+    for key, value in output["info"]:
         status = 0
-        if key == 'System Fault LED' and value != 'OFF':
+        if key == "System Fault LED" and value != "OFF":
             status = 2
         yield status, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_info'] = {
+check_info["emcvnx_info"] = {
     "parse_function": parse_emcvnx_info,
-    "inventory_function": lambda x: inventory_emcvnx_info(x, 'info'),
+    "inventory_function": lambda x: inventory_emcvnx_info(x, "info"),
     "check_function": check_emcvnx_info,
     "service_description": "EMC VNX Info",
 }
@@ -155,14 +158,14 @@ check_info['emcvnx_info'] = {
 
 def check_emcvnx_storage(item, params, parsed):
     output, _ = parsed
-    for key, value in output['storage']:
-        yield 0, '%s: %s' % (key, value)
+    for key, value in output["storage"]:
+        yield 0, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_info.storage'] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, 'storage'),
+check_info["emcvnx_info.storage"] = {
+    "inventory_function": lambda x: inventory_emcvnx_info(x, "storage"),
     "check_function": check_emcvnx_storage,
-    "service_description": "EMC VNX Storage Processor"
+    "service_description": "EMC VNX Storage Processor",
 }
 
 #   .--Link----------------------------------------------------------------.
@@ -177,17 +180,17 @@ check_info['emcvnx_info.storage'] = {
 
 def check_emcvnx_link(item, params, parsed):
     output, _ = parsed
-    for key, value in output['link']:
+    for key, value in output["link"]:
         status = 0
-        if key == u'Link Status' and value != u'Link-Up':
+        if key == "Link Status" and value != "Link-Up":
             status = 2
-        yield status, '%s: %s' % (key, value)
+        yield status, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_info.link'] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, 'link'),
+check_info["emcvnx_info.link"] = {
+    "inventory_function": lambda x: inventory_emcvnx_info(x, "link"),
     "check_function": check_emcvnx_link,
-    "service_description": "EMC VNX Link"
+    "service_description": "EMC VNX Link",
 }
 
 #   .--Config--------------------------------------------------------------.
@@ -202,14 +205,14 @@ check_info['emcvnx_info.link'] = {
 
 def check_emcvnx_config(item, params, parsed):
     output, _ = parsed
-    for key, value in output['config']:
-        yield 0, '%s: %s' % (key, value)
+    for key, value in output["config"]:
+        yield 0, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_info.config'] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, 'config'),
+check_info["emcvnx_info.config"] = {
+    "inventory_function": lambda x: inventory_emcvnx_info(x, "config"),
     "check_function": check_emcvnx_config,
-    "service_description": "EMC VNX Config"
+    "service_description": "EMC VNX Config",
 }
 
 #   .--IO------------------------------------------------------------------.
@@ -224,15 +227,15 @@ check_info['emcvnx_info.config'] = {
 
 def check_emcvnx_io(item, params, parsed):
     output, _ = parsed
-    for key, value in output['io']:
+    for key, value in output["io"]:
         status = 0
-        if key == 'Hard errors' and value != 'N/A':
+        if key == "Hard errors" and value != "N/A":
             status = 2
-        yield status, '%s: %s' % (key, value)
+        yield status, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_info.io'] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, 'io'),
+check_info["emcvnx_info.io"] = {
+    "inventory_function": lambda x: inventory_emcvnx_info(x, "io"),
     "check_function": check_emcvnx_io,
-    "service_description": "EMC VNX IO"
+    "service_description": "EMC VNX IO",
 }

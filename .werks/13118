@@ -1,0 +1,27 @@
+Title: <tt>sentry_pdu, raritan_pdu_plugs</tt>: Fix parameter handling
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1628689187
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugins <tt>sentry_pdu</tt> and <tt>raritan_pdu_plugs</tt> both
+monitor the status of PDUs. In the discovery phase, both plugins store the
+current states of the discovered PDUs. The subsequently computed check
+results are based on a comparison of the discovered states with the current
+states of the PDUs. Both plugins did not handle unknown states properly.
+
+Furthermore, users have the option to explicitly configure target states for
+the PDUs. In this case, the user-configured states are preferred over the
+discovered states. This mechanism was broken for <tt>sentry_pdu</tt>.
+
+Finally, when updating Checkmk from 1.6 to 2.0 and also during updates within
+2.0, the states discovered by the plugin <tt>sentry_pdu</tt> were lost.
+
+To fix these issues, users have to re-discover the corresponding services
+"Plug ...". Note that for <tt>raritan_pdu_plugs</tt>, depending on the
+current configuration, a re-discovery might not be necessary, but we
+recommend it preemptively.

@@ -1,0 +1,15 @@
+Title: Allow usage of host label conditions in service labels ruleset
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1634733995
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Werk #12840 implemented a validation that the rulesets "Host labels" and
+"Service labels" can not use host or service labels as conditions. But in the
+latter, it should be possible to use host label condition, what is possible
+again from now on.

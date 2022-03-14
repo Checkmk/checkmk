@@ -7,8 +7,6 @@
 from pathlib import Path
 from typing import Dict, Optional
 
-from six import ensure_str
-
 import cmk.utils.paths
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
@@ -19,7 +17,6 @@ from cmk.core_helpers.agent import (
     DefaultAgentFileCache,
     DefaultAgentFileCacheFactory,
 )
-from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -32,9 +29,8 @@ class ProgramSource(AgentSource):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         id_: str,
         main_data_source: bool,
         cmdline: str,
@@ -43,7 +39,6 @@ class ProgramSource(AgentSource):
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
             description=ProgramSource._make_description(
@@ -59,9 +54,8 @@ class ProgramSource(AgentSource):
     @staticmethod
     def special_agent(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
@@ -69,7 +63,6 @@ class ProgramSource(AgentSource):
         return SpecialAgentSource(
             hostname,
             ipaddress,
-            mode=mode,
             main_data_source=main_data_source,
             special_agent_id=special_agent_id,
             params=params,
@@ -80,21 +73,20 @@ class ProgramSource(AgentSource):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         main_data_source: bool = False,
         template: str,
     ) -> "DSProgramSource":
         return DSProgramSource(
             hostname,
             ipaddress,
-            mode=mode,
             main_data_source=main_data_source,
             template=template,
         )
 
     def _make_file_cache(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCacheFactory(
-            path=self.file_cache_path,
+            self.hostname,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()
@@ -108,13 +100,7 @@ class ProgramSource(AgentSource):
         )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:
-        return AgentSummarizerDefault(
-            self.exit_spec,
-            is_cluster=self.host_config.is_cluster,
-            agent_min_version=config.agent_min_version,
-            agent_target_version=self.host_config.agent_target_version,
-            only_from=self.host_config.only_from,
-        )
+        return AgentSummarizerDefault(self.exit_spec)
 
     @staticmethod
     def _make_description(cmdline, stdin):
@@ -128,16 +114,14 @@ class DSProgramSource(ProgramSource):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         main_data_source: bool = False,
         template: str,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             id_="agent",
             main_data_source=main_data_source,
             cmdline=DSProgramSource._translate(
@@ -152,7 +136,7 @@ class DSProgramSource(ProgramSource):
     def _translate(
         cmd: str,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
     ) -> str:
         host_config = config.HostConfig.make_host_config(hostname)
         return DSProgramSource._translate_host_macros(
@@ -164,7 +148,7 @@ class DSProgramSource(ProgramSource):
     def _translate_legacy_macros(
         cmd: str,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
     ) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
         return replace_macros_in_str(
@@ -190,19 +174,19 @@ class DSProgramSource(ProgramSource):
                     config_cache,
                     host_config,
                     parents_list,
-                ))
+                )
+            )
 
         macros = core_config.get_host_macros_from_attributes(host_config.hostname, attrs)
-        return ensure_str(core_config.replace_macros(cmd, macros))
+        return core_config.replace_macros(cmd, macros)
 
 
 class SpecialAgentSource(ProgramSource):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
@@ -210,7 +194,6 @@ class SpecialAgentSource(ProgramSource):
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             id_="special_%s" % special_agent_id,
             main_data_source=main_data_source,
             cmdline=SpecialAgentSource._make_cmdline(
@@ -232,7 +215,7 @@ class SpecialAgentSource(ProgramSource):
     @staticmethod
     def _make_cmdline(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
     ) -> str:
@@ -248,11 +231,15 @@ class SpecialAgentSource(ProgramSource):
     @staticmethod
     def _make_stdin(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
     ) -> Optional[str]:
         info_func = config.special_agent_info[special_agent_id]
+        # TODO: We call a user supplied function here.
+        # If this crashes during config generation, it can get quite ugly.
+        # We should really wrap this and implement proper sanitation and exception handling.
+        # Deal with this when modernizing the API (CMK-3812).
         agent_configuration = info_func(params, hostname, ipaddress)
         if isinstance(agent_configuration, SpecialAgentConfiguration):
             return agent_configuration.stdin
@@ -269,10 +256,11 @@ class SpecialAgentSource(ProgramSource):
     @staticmethod
     def _make_source_args(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
     ) -> str:
         info_func = config.special_agent_info[special_agent_id]
+        # TODO: CMK-3812 (see above)
         agent_configuration = info_func(params, hostname, ipaddress)
         return core_config.active_check_arguments(hostname, None, agent_configuration)

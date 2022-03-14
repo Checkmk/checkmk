@@ -1,0 +1,20 @@
+Title: Checkmk agent with systemd creates dedicated system user
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1634024358
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The installation of a systemd based agent package now creates a system user named <b>cmk-agent</b>.
+Failing to create (or find) such a user will cause the installation to fail.
+
+This user will allow for upcoming architectural changes.
+In particular it will be running helper processes for new agent-to-site communication modes.
+Also, the created user will be the only user allowed to read the agent output locally.
+
+The users home directory will be <i>/var/lib/cmk-agent</i>, it will have neither a login password nor a login shell.
+
+Note that the user is not removed if the package is uninstalled, as you may still have files belonging to that user, and we do not want the UID to be reassigned to a different user by chance.

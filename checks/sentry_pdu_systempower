@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.1718.3.1.6.0 2111
 
 # parsed = {
@@ -17,16 +18,16 @@ from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard
 
 
 def parse_sentry_pdu_systempower(info):
-    return {'Power Supply System': {'power': (int(info[0][0]), {})}}
+    return {"Power Supply System": {"power": (int(info[0][0]), {})}}
 
 
-check_info['sentry_pdu_systempower'] = {
-    'parse_function': parse_sentry_pdu_systempower,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': '%s',
-    'has_perfdata': True,
-    'group': 'el_inphase',
-    'snmp_info': (".1.3.6.1.4.1.1718.3.1", ["6"]),
+check_info["sentry_pdu_systempower"] = {
+    "parse_function": parse_sentry_pdu_systempower,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "%s",
+    "has_perfdata": True,
+    "group": "el_inphase",
+    "snmp_info": (".1.3.6.1.4.1.1718.3.1", ["6"]),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.1718.3",
 }

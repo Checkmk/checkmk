@@ -5,10 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
-import pytest  # type: ignore
+
 import os
-import subprocess
 import platform
+import subprocess
+
+import pytest  # type: ignore
 
 
 # we are checking that input is OK(long enough for example)
@@ -21,7 +23,7 @@ def check_actual_input(name, lines, alone, data):
         lines += 2
 
     if len(data) < lines:
-        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(data)))
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, "\n".join(data)))
         return False
 
     return True
@@ -52,7 +54,7 @@ def make_dir(dir):
 
 
 def check_os():
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         return False
 
     return True

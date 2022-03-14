@@ -1,7 +1,7 @@
 title: Cisco Devices: Memory
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -12,5 +12,5 @@ description:
  This check monitors the memory usage of Cisco devices. The check distinguishes
  between CPU and I/O pool memory.
 
-inventory:
+discovery:
  One service is created for the I/O pool and one for the CPU pool.

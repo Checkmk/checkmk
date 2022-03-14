@@ -13,13 +13,15 @@
 # open'}], 'password': ('password', 'my_password'), 'protocol': 'https',
 # 'user': 'my_user', 'project_workflows': [('my_project', ['in progress'])]}
 
+from typing import Any, Mapping, Optional, Sequence, Union
+
 
 def _get_project_workflow(project_values, prefix):
     options = []
     for key, values in project_values:
-        options.append('--%s-key' % prefix)
+        options.append("--%s-key" % prefix)
         options.append(key)
-        options.append('--%s-values' % prefix)
+        options.append("--%s-values" % prefix)
         options += values
     return options
 
@@ -27,27 +29,29 @@ def _get_project_workflow(project_values, prefix):
 def _get_custom_query(jql_values, prefix):
     options = []
     for values in jql_values:
-        options.append('--%s-desc' % prefix)
+        options.append("--%s-desc" % prefix)
         options.append(values["service_description"])
-        options.append('--%s-query' % prefix)
+        options.append("--%s-query" % prefix)
         options.append(values["query"])
-        options.append('--%s-result' % prefix)
+        options.append("--%s-result" % prefix)
         if isinstance(values["result"], tuple):
             options.append(values["result"][0])
-            options.append('--%s-field' % prefix)
+            options.append("--%s-field" % prefix)
             options.append(values["result"][1][0])
-            options.append('--%s-limit' % prefix)
+            options.append("--%s-limit" % prefix)
             options.append("%d" % values["result"][1][1])
         else:
             options.append(values["result"])
-            options.append('--%s-field' % prefix)
-            options.append('None')
-            options.append('--%s-limit' % prefix)
+            options.append("--%s-field" % prefix)
+            options.append("None")
+            options.append("--%s-limit" % prefix)
             options.append("0")
     return options
 
 
-def agent_jira_arguments(params, hostname, ipaddress):
+def agent_jira_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = [
         "-P",
         params["protocol"],
@@ -71,4 +75,4 @@ def agent_jira_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['jira'] = agent_jira_arguments
+special_agent_info["jira"] = agent_jira_arguments

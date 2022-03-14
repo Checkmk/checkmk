@@ -1,0 +1,283 @@
+# some thoughts about this file:
+# - stages should abort early if semantical condition is not met
+# - stages should be sorted by propability to fail * duration
+# - `make` is not needed at this level (but make-target could still call validate_changes.py)
+# - running inside docker should be optional
+# - some variables are not needed
+
+VARIABLES:
+    - NAME: PATCHSET_REVISION
+      # Will be used if not provided by Jenkins
+      SH: "git rev-parse HEAD"
+
+    - NAME: BASE_COMMIT_ID
+      # Can be provided directly instead of PATCHSET_REVISION in order to compare HEAD against
+      # arbitrary refs like `origin/master`
+      SH: "git rev-parse ${PATCHSET_REVISION}^"
+
+    - NAME: CHANGED_FILES_REL
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sed -E 's#(enterprise|managed|plus)/cmk/#cmk/#g' | sort"
+
+    - NAME: CHANGED_FILES_ABS
+      # prefix ${WORKSPACE} to every line, make sure empty input won't be handled as a line
+      SH: "echo '${CHANGED_FILES_REL}' | sed 's|^\\(.\\)|${WORKSPACE}/\\1|g'"
+
+    - NAME: GREP_PATTERNS
+      # turn a line break separated list into grep-expressions, make sure empty input won't be
+      # handled as a line
+      SH: "echo '${CHANGED_FILES_ABS}' | sed 's/^\\(.\\)/-e \\1/g'"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_MAKEFILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Makefile' - || true"
+
+    - NAME: CHANGED_TESTS_MAKEFILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/tests/Makefile' - || true"
+
+    - NAME: CHANGED_PYTHON_FILES
+      # filter list of all python files to contain only changed files. Make sure an empty list
+      # of grep expressions won't just grep for '-'
+      SH: "${WORKSPACE}/scripts/find-python-files | grep -h -e '^^' ${GREP_PATTERNS} - | sort"
+
+    - NAME: CHANGED_RUST_FILES
+      # filter list of all rust files to contain only changed files. Make sure an empty list
+      # of grep expressions won't just grep for '-'
+      SH: "${WORKSPACE}/scripts/find-rust-files | grep -h -e '^^' ${GREP_PATTERNS} - | sort"
+
+    - NAME: CHANGED_PYLINT_RC_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/.pylintrc' - || true"
+
+    - NAME: CHANGED_PYTEST_INI_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/pytest.ini' - || true"
+
+    - NAME: CHANGED_PYPROJECT_TOML_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/pyproject.toml' - || true"
+
+    - NAME: CHANGED_PIPFILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Pipfile' - || true"
+
+    - NAME: CHANGED_RUN_BLACK_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-black' - || true"
+
+    - NAME: CHANGED_RUN_MYPY_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-mypy' - || true"
+
+    - NAME: CHANGED_RUN_PIPENV_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-pipenv' - || true"
+
+      # Gather the list of changed agent plugins
+    - NAME: CHANGED_AGENT_PLUGINS
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
+      REPLACE_NEWLINES: true
+
+      # Gather the list of changed agent plugins unit tests
+    - NAME: CHANGED_AGENT_PLUGINS_TESTS
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/agent-plugin-unit/' || true"
+      REPLACE_NEWLINES: true
+
+      # Gather the list of changed livestatus / core files
+    - NAME: CHANGED_CORE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CLANG_TIDY_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.clang-tidy' - || true"
+
+      # Gather the list of changed JavaScript and CSS files in raw and enterprise edition
+    - NAME: CHANGED_JS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CSS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss$/!d' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_SW_DOC_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'doc/documentation/' || true"
+      REPLACE_NEWLINES: true
+
+STAGES:
+    - NAME: 'Python Typing'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
+      DIR: 'tests'
+      ENV_VARS:
+        JUNIT_XML: "--junit-xml ${RESULTS}/mypy.xml"
+        MYPY_ADDOPTS: "--no-color-output"
+      COMMAND: 'make --quiet test-mypy-docker'
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "MYPY"
+      RESULT_CHECK_FILE_PATTERN: "results/mypy.xml"
+
+    - NAME: 'Python Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_BLACK_SCRIPT
+      DIR: 'tests'
+      ENV_VARS:
+        PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
+      COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-format.txt"
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
+
+    - NAME: 'Python Unit Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
+      COMMAND: "make test-unit-docker"
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+
+    - NAME: 'Python Linting'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
+      DIR: 'tests'
+      ENV_VARS:
+        # this variable is needed as long as we have base plugins that are
+        # concantenated for pylint (See tests/pylint/test_pylint.py)
+        WORKDIR: "${WORKSPACE}/tmp"
+        PYLINT_ARGS: "--output-format=cmk_parseable"
+      COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
+      TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'
+      RESULT_CHECK_TYPE: "PYLINT"
+      RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
+
+    - NAME: 'Shell Format'
+      DIR: 'tests'
+      COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
+
+    - NAME: 'Shell check'
+      DIR: 'tests'
+      ENV_VARS:
+        SHELLCHECK_OUTPUT_ARGS: -e SC1091
+      COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
+
+    - NAME: 'Shell Unit'
+      DIR: 'tests'
+      COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
+
+    - NAME: 'JavaScript Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt"
+      TEXT_ON_SKIP: 'No JavaScript files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
+
+    - NAME: 'CSS Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
+      TEXT_ON_SKIP: 'No CSS files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/css-prettier.txt"
+
+    - NAME: 'Agent Plugin Unit Tests'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      COMMAND: "make test-agent-plugin-docker > ${RESULTS}/agent-plugin-unit-junit.txt"
+      TEXT_ON_SKIP: 'No agent files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
+
+    - NAME: 'NEB/CMC Compile'
+      COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
+
+    - NAME: 'Clang Tidy Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-tidy-livestatus-docker &> ${RESULTS}/livestatus-tidy.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "CLANG"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus-tidy.txt"
+
+    - NAME: 'Clang Tidy core'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-tidy-core-docker &> ${RESULTS}/core-tidy.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "CLANG"
+      RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
+
+    - NAME: 'IWYU Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-iwyu-livestatus-docker &> ${RESULTS}/livestatus-iwyu.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus-iwyu.txt"
+
+    - NAME: 'IWYU core'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-iwyu-core-docker &> ${RESULTS}/core-iwyu.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/core-iwyu.txt"
+
+    - NAME: 'Unit Test Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      DIR: 'livestatus/src/test'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+      COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus-neb-cmc.txt"
+
+    - NAME: 'Unit Test core'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      DIR: 'enterprise/core/src/test'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+      COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/core-neb-cmc.txt"
+
+    - NAME: 'Software Documentation Generation'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE
+      COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt"
+      TEXT_ON_SKIP: 'No SW Documentation files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
+
+    - NAME: 'Cargo/Rust Check'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-cargo-check-docker"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+#      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+
+    - NAME: 'Cargo/Rust Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-cargo-test-docker"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+#      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+
+    - NAME: 'Cargo/Rust Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-cargo-fmt-docker &> ${RESULTS}/rustfmt.txt"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/rustfmt.txt"
+
+    - NAME: 'Cargo/Rust Linting'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-cargo-clippy-docker &> ${RESULTS}/clippy.txt"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/clippy.txt"

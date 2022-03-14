@@ -56,15 +56,15 @@ def check_brocade_sys_mem(item, params, parsed):
         return status, infotext, perfdata
 
 
-check_info['brocade_sys.mem'] = {
-    'inventory_function': inventory_brocade_sys_mem,
-    'check_function': check_brocade_sys_mem,
-    'service_description': 'Memory',
-    'group': 'memory_relative',
-    'has_perfdata': True,
+check_info["brocade_sys.mem"] = {
+    "inventory_function": inventory_brocade_sys_mem,
+    "check_function": check_brocade_sys_mem,
+    "service_description": "Memory",
+    "group": "memory_relative",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |
@@ -83,19 +83,28 @@ def check_brocade_sys(item, params, parsed):
     return check_cpu_util(parsed["cpu_util"], params)
 
 
-check_info['brocade_sys'] = {
-    'parse_function': parse_brocade_sys,
-    'inventory_function': inventory_brocade_sys,
-    'check_function': check_brocade_sys,
-    'service_description': 'CPU utilization',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1588.2.1.1.1.26',
+def scan_brocade_sys(oid):
+    return (
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1")
+        or
+        # Extreme SLX9640; SLX Operating System Version 20.1.X:
+        oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.1916.2.306"
+    )
+
+
+check_info["brocade_sys"] = {
+    "parse_function": parse_brocade_sys,
+    "inventory_function": inventory_brocade_sys,
+    "check_function": check_brocade_sys,
+    "service_description": "CPU utilization",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1588.2.1.1.1.26",
         [  # Brocade-REG-MIB
             "1",  # swCpuUsage
             "6",  # swMemoryUsage
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"
-                                                                          ),
-    'group': 'cpu_utilization',
-    'has_perfdata': True,
+        ],
+    ),
+    "snmp_scan_function": scan_brocade_sys,
+    "group": "cpu_utilization",
+    "has_perfdata": True,
 }

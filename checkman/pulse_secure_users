@@ -1,7 +1,7 @@
 title: Pulse Secure: Number of Signed-in Users
 agents: snmp
 catalog: app/pulse_secure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of signed-in Pulse Secure web users.
@@ -10,7 +10,7 @@ description:
  There are no default upper levels, but they can be configured using
  the rule "Pulse Secure users".
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

@@ -53,9 +53,9 @@ check_info["casa_cpu_mem"] = {
     "group": "memory_multiitem",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
     "snmp_info": [
-        (".1.3.6.1.2.1.47.1.1.1.1.2", [OID_END, '']),  # Entity descriptions, quite long...
-        (".1.3.6.1.4.1.20858.10.13.1.1.1.1", [OID_END, '']),  # Total mem
-        (".1.3.6.1.4.1.20858.10.13.1.1.1.2", [OID_END, '']),  # Total allocated mem
-        (".1.3.6.1.4.1.20858.10.36.1.1.1.1", [OID_END, '']),  # Installed slot
+        (".1.3.6.1.2.1.47.1.1.1.1.2", [OID_END, ""]),  # Entity descriptions, quite long...
+        (".1.3.6.1.4.1.20858.10.13.1.1.1.1", [OID_END, ""]),  # Total mem
+        (".1.3.6.1.4.1.20858.10.13.1.1.1.2", [OID_END, ""]),  # Total allocated mem
+        (".1.3.6.1.4.1.20858.10.36.1.1.1.1", [OID_END, ""]),  # Installed slot
     ],
 }

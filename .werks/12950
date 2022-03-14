@@ -1,0 +1,17 @@
+Title: missing default tag groups in the REST API
+Class: fix
+Compatible: compat
+Component: core
+Date: 1625561499
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Starting from 2.0.0p5, some default tag groups like "tag_criticality",
+did not appear in the REST API unless one logged in first and after-
+wards restarted the Apache process. This is now fixed: the default
+tag groups will appear in the REST specification by default.
+
+No further action by the user is neccessary.

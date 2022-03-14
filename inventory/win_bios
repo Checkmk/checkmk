@@ -48,12 +48,11 @@ def inv_win_bios(info):
             node["model"] = value
 
     if smbios_version:
-        node["version"] = smbios_version + " " + major_version + \
-            "." + minor_version
+        node["version"] = smbios_version + " " + major_version + "." + minor_version
     else:
         node["version"] = bios_version
 
 
-inv_info['win_bios'] = {
+inv_info["win_bios"] = {
     "inv_function": inv_win_bios,
 }

@@ -4,32 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import List
-from .agent_based_api.v1 import (
-    register,
-    SNMPTree,
-    type_defs,
-)
-from .utils import (
-    hitachi_hnas,
-    if64,
-    interfaces,
-)
+
+from .agent_based_api.v1 import register, SNMPTree, type_defs
+from .utils import hitachi_hnas, if64, interfaces
 
 
 def parse_hitachi_hnas_fc_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
-    """
-    >>> from pprint import pprint
-    >>> pprint(parse_hitachi_hnas_fc_if([[
-    ... ['1', '0', '1', '4', '308224', '2162688', '0', '20', '1', '0', '0', '0', '0', '0'],
-    ... ['1', '1', '3', '4', '0', '0', '2', '0', '0', '0', '0', '0', '0', '0'],
-    ... ['2', '0', '1', '4', '34233856', '2300928', '0', '22', '1', '0', '0', '0', '0', '0'],
-    ... ['2', '1', '3', '4', '0', '0', '2', '0', '0', '0', '0', '0', '0', '0'],
-    ... ]]))
-    [Interface(index='1000', descr='1.0', alias='1.0', type='', speed=4000000000, oper_status='1', in_octets=308224, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=21, out_octets=2162688, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=2470912),
-     Interface(index='1001', descr='1.1', alias='1.1', type='', speed=4000000000, oper_status='2', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=2, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None, total_octets=0),
-     Interface(index='2000', descr='2.0', alias='2.0', type='', speed=4000000000, oper_status='1', in_octets=34233856, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=23, out_octets=2300928, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=36534784),
-     Interface(index='2001', descr='2.1', alias='2.1', type='', speed=4000000000, oper_status='2', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=2, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None, total_octets=0)]
-    """
     return [
         interfaces.Interface(
             index="%d%03d" % (int(line[0]), int(line[1])),
@@ -42,7 +22,8 @@ def parse_hitachi_hnas_fc_if(string_table: List[type_defs.StringTable]) -> inter
             in_discards=interfaces.saveint(line[13]),
             in_errors=sum(map(int, line[6:13])),
             out_octets=interfaces.saveint(line[5]),
-        ) for line in string_table[0]
+        )
+        for line in string_table[0]
     ]
 
 

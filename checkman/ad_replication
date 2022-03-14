@@ -1,7 +1,7 @@
 title: Microsoft Active Directory Replication between DCs: Status
 agents: windows
 catalog: app/ad
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check analyzes the replication status of Microsoft Active Directory Domain
@@ -28,7 +28,7 @@ description:
  The windows agent needs to be extended with the {ad_replication.bat} provided
  in {agents/windows/plugins}.
 
-inventory:
+discovery:
  One service is created for each replication partner.
 
 item:

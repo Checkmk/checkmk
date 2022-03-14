@@ -1,0 +1,13 @@
+Title: cisco_ucs_*: ValueError (invalid literal for int() with base 10: '') raised
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617005559
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+An empty value for @cucsStorageLocalLunSize raised an exception when tried to be parsed as int.
+This change will assume '0' if no value is given.

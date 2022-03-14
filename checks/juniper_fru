@@ -70,11 +70,13 @@ def parse_juniper_fru(info):
     for fru_name, fru_type, fru_state in info:
         # jnxFruName is read-only, thus we can replace here
         # some auto-generated declarations
-        name = fru_name.replace("Power Supply: Power Supply ", "") \
-                       .replace("FAN: Fan ", "") \
-                       .replace("@ ", "") \
-                       .replace("/*", "") \
-                       .strip()
+        name = (
+            fru_name.replace("Power Supply: Power Supply ", "")
+            .replace("FAN: Fan ", "")
+            .replace("@ ", "")
+            .replace("/*", "")
+            .strip()
+        )
         parsed[name] = {
             "fru_type": fru_type,
             "fru_state": fru_state,
@@ -83,47 +85,53 @@ def parse_juniper_fru(info):
 
 
 def inventory_juniper_fru(parsed, fru_type):
-    return [(fru_name, None)
-            for fru_name, fru_data in parsed.items()
-            if fru_data["fru_type"] == fru_type and fru_data["fru_state"] != "2"
-           ]  # ignore "empty" states
+    return [
+        (fru_name, None)
+        for fru_name, fru_data in parsed.items()
+        if fru_data["fru_type"] == fru_type and fru_data["fru_state"] != "2"
+    ]  # ignore "empty" states
+
+
+_MAP_FRU_STATE = {
+    "1": (3, "unknown"),
+    "2": (2, "empty"),
+    "3": (1, "present"),
+    "4": (0, "ready"),
+    "5": (0, "announce online"),
+    "6": (0, "online"),
+    "7": (2, "anounce offline"),
+    "8": (2, "offline"),
+    "9": (1, "diagnostic"),
+    "10": (1, "standby"),
+}
 
 
 def check_juniper_fru(item, _no_params, parsed):
-    map_fru_state = {
-        "1": (3, "unknown"),
-        "2": (2, "empty"),
-        "3": (1, "present"),
-        "4": (0, "ready"),
-        "5": (0, "announce online"),
-        "6": (0, "online"),
-        "7": (2, "anounce offline"),
-        "8": (2, "offline"),
-        "9": (1, "diagnostic"),
-        "10": (1, "standby")
-    }
     if item in parsed:
-        state, state_readable = map_fru_state[parsed[item]["fru_state"]]
+        state, state_readable = _MAP_FRU_STATE[parsed[item]["fru_state"]]
         return state, "Operational status: %s" % state_readable
 
 
-check_info['juniper_fru'] = {
-    'parse_function': parse_juniper_fru,
-    'inventory_function': lambda info: inventory_juniper_fru(info, "7"),
-    'check_function': check_juniper_fru,
-    'service_description': 'Power Supply FRU %s',
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"
-                                                                          ),
-    'snmp_info': (
+check_info["juniper_fru"] = {
+    "parse_function": parse_juniper_fru,
+    "inventory_function": lambda info: inventory_juniper_fru(info, "7"),
+    "check_function": check_juniper_fru,
+    "service_description": "Power Supply FRU %s",
+    # Use utils.juniper.DETECT when migrating
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.2636.1.1.1"
+    ),
+    "snmp_info": (
         ".1.3.6.1.4.1.2636.3.1.15.1",
         [
             "5",  # jnxFruName
             "6",  # jnxFruType
             "8",  # jnxFruState
-        ]),
+        ],
+    ),
 }
 
-#.
+# .
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
 #   |                           / _| __ _ _ __                             |
@@ -133,8 +141,8 @@ check_info['juniper_fru'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info['juniper_fru.fan'] = {
-    'inventory_function': lambda info: inventory_juniper_fru(info, "13"),
-    'check_function': check_juniper_fru,
-    'service_description': 'Fan FRU %s',
+check_info["juniper_fru.fan"] = {
+    "inventory_function": lambda info: inventory_juniper_fru(info, "13"),
+    "check_function": check_juniper_fru,
+    "service_description": "Fan FRU %s",
 }

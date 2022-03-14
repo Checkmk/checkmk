@@ -1,7 +1,7 @@
 title: Security Master: Humidity
 agents: snmp
 catalog: hw/environment/maykg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors humidity sensors of the security master.
@@ -11,6 +11,5 @@ description:
 item:
  The ID and name of the sensor.
 
-inventory:
+discovery:
  One service is created for each humidity sensor.
-

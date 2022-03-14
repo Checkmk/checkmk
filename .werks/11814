@@ -1,0 +1,17 @@
+Title: smart check: Evaluate command timeouts as counter
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1628495838
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, the metric "Command_Timeout" of the smart check was evaluated in the following manner:
+If the counter deviated from the discovered value, the check went {CRIT}.
+
+This led to a lot of false posivitves, as the counter may also increase after a simple reboot, which is no faulty situation.
+The rate however gives a better evaluation of the state.
+As from this werk, we allow all rates below 100 Command Timeouts per hour.

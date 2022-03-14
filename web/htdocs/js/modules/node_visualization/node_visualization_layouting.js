@@ -65,10 +65,6 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         this.toolbar_plugin._update_history_icons();
     }
 
-    get_overlay_config() {
-        return this.layout_applier.current_layout_group.overlay_config;
-    }
-
     add_active_style(style) {
         this._active_styles[style.id()] = style;
     }
@@ -792,8 +788,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
 
         // TODO: fixme
         table.selectAll(".configurable_overlay").remove();
-        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group
-            .overlay_config;
+        let current_overlay_config = this.layout_manager.viewport.get_overlay_configs();
         let rows = table.selectAll("tr.configurable_overlay").data(configurable_layers);
         let rows_enter = rows.enter().append("tr").classed("configurable_overlay", true);
 
@@ -844,7 +839,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             .attr("id", d => d.id)
             .attr("title", d => d.title)
             .attr("src", d => "themes/facelift/images/" + d.icon)
-            .on("click", d => d.handler())
+            .on("click", (event, d) => d.handler())
             .merge(icon_selection);
 
         if (this.layout_manager.layout_applier._undo_history.length == 0)
@@ -918,23 +913,16 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.update_save_layout_button();
     }
 
-    set_overlay_options(overlay_id, active = false, configurable = false) {
-        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group
-            .overlay_config;
-        current_overlay_config[overlay_id] = {active: active, configurable: configurable};
-        this.layout_manager.viewport.update_active_overlays();
-    }
-
     _overlay_checkbox_options_changed(event) {
-        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group
-            .overlay_config;
+        let current_overlay_configs = this.layout_manager.viewport.get_overlay_configs();
         let checkbox = d3.select(event.target);
         let checked = checkbox.property("checked");
         let option_id = checkbox.attr("option_id");
         let overlay_id = checkbox.attr("overlay_id");
-        if (!current_overlay_config[overlay_id]) current_overlay_config[overlay_id] = {};
-        current_overlay_config[overlay_id][option_id] = checked;
-        this.layout_manager.viewport.update_active_overlays();
+
+        let overlay_config = current_overlay_configs[overlay_id] || {};
+        overlay_config[option_id] = checked;
+        this.layout_manager.viewport.set_overlay_config(overlay_id, overlay_config);
     }
 
     _render_layout_management(into_selection) {
@@ -1223,9 +1211,8 @@ class LayoutingMouseEventsOverlay {
         if (!dragged_node_datum) return;
 
         if (dragged_node_datum.data.use_style) {
-            let new_position = this.layout_manager.get_viewport_percentage_of_node(
-                dragged_node_datum
-            );
+            let new_position =
+                this.layout_manager.get_viewport_percentage_of_node(dragged_node_datum);
             node_visualization_utils.log(7, "dragended: new position", new_position);
             dragged_node_datum.data.use_style.style_config.position = new_position;
             dragged_node_datum.data.use_style.force_style_translation();

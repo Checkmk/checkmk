@@ -1,7 +1,7 @@
 title: Enterasys Switch: CPU Utilization
 agents: snmp
 catalog: hw/network/enterasys
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the current average cpu utilization for each plugged-in CPU modules.
@@ -9,6 +9,5 @@ description:
 item:
  ID of the CPU
 
-inventory:
+discovery:
  One service is created for each module.
-

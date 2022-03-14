@@ -1,7 +1,7 @@
 title: Papouch TH2E Devices: Dew Point Sensors
 agents: snmp
 catalog: hw/environment/papouch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors dew point sensors of Papouch TH2E devices.
@@ -16,5 +16,5 @@ description:
 item:
  The dew point sensor identifier.
 
-inventory:
+discovery:
  One service is created for each sensor.

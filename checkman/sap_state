@@ -1,7 +1,7 @@
 title: SAP: State of Hosts
 agents: linux
 catalog: app/sap
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the state of monitored SAP hosts. It turns critical if
@@ -13,6 +13,5 @@ description:
 item:
  The name of the hostname of the monitored system.
 
-inventory:
+discovery:
  One service is created for each host configured in sap.cfg.
-

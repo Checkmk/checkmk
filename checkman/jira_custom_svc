@@ -1,7 +1,7 @@
 title: Jira: Custom Service
 agents: jira
 catalog: app/jira
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  With this check you can monitor custom Jira queries. It outputs the number of
@@ -13,6 +13,6 @@ description:
 item:
  The item is the name of custom service defined in the datasource rule.
 
-inventory:
+discovery:
  One service is created for each custom service configured within the datasource rule.
  E.g. {"Jira My_custom_service_name"}.

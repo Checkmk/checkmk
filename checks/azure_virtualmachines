@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # The following two are needed both in the factory settings for
 # the single check, as well as in the summary check.
 _AZURE_VM_STATES_PROV = {
@@ -28,7 +29,7 @@ _AZURE_VM_STATES_POWER = {
     "unknown": 3,
 }
 
-factory_settings['levels_azure_virtualmachines'] = {
+factory_settings["levels_azure_virtualmachines"] = {
     "map_provisioning_states": _AZURE_VM_STATES_PROV,
     "map_power_states": _AZURE_VM_STATES_POWER,
 }
@@ -36,7 +37,7 @@ factory_settings['levels_azure_virtualmachines'] = {
 
 def _azure_vms_get_status(resource, desired_type):
     for state in resource.get("specific_info", {}).get("statuses", []):
-        stat_type, stat_raw = state.get("code", "/").split('/')[:2]
+        stat_type, stat_raw = state.get("code", "/").split("/")[:2]
         if stat_type.startswith(desired_type):
             status = stat_raw.lower() if stat_raw != "-" else "unknown"
             raw_msg = state.get("message")
@@ -50,10 +51,10 @@ def check_azure_virtualmachines(_item, params, resource):
     map_provisioning_states = params.get("map_provisioning_states", {})
     map_power_states = params.get("map_power_states", {})
 
-    prov_state, msg = _azure_vms_get_status(resource, 'ProvisioningState')
+    prov_state, msg = _azure_vms_get_status(resource, "ProvisioningState")
     yield map_provisioning_states.get(prov_state, 1), "Provisioning %s%s" % (prov_state, msg)
 
-    power_state, msg = _azure_vms_get_status(resource, 'PowerState')
+    power_state, msg = _azure_vms_get_status(resource, "PowerState")
     yield map_power_states.get(power_state, 1), "VM %s%s" % (power_state, msg)
 
     # This service may be present on the agent host, the VM itself,
@@ -66,26 +67,22 @@ def check_azure_virtualmachines(_item, params, resource):
         yield 0, "%s: %s" % kv_pair
 
 
-check_info['azure_virtualmachines'] = {
-    'parse_function': parse_azure,
-    'inventory_function': discover(),
-    'check_function': check_azure_virtualmachines,
-    'service_description': "VM %s",
-    'default_levels_variable': 'levels_azure_virtualmachines',
-    'group': 'azure_vms',
+check_info["azure_virtualmachines"] = {
+    "parse_function": parse_azure,
+    "inventory_function": discover(),
+    "check_function": check_azure_virtualmachines,
+    "service_description": "VM %s",
+    "default_levels_variable": "levels_azure_virtualmachines",
+    "group": "azure_vms",
 }
 
-factory_settings['levels_azure_virtualmachines_summary'] = {
+factory_settings["levels_azure_virtualmachines_summary"] = {
     "levels_provisioning": {
-        "failed": {
-            "levels": (1, 1)
-        },
+        "failed": {"levels": (1, 1)},
     },
     "levels_power": {
-        "unknown": {
-            "levels": (1, 2)
-        },
-    }
+        "unknown": {"levels": (1, 2)},
+    },
 }
 
 
@@ -120,8 +117,8 @@ def discover_azure_virtualmachines_summary(parsed):
 
 def check_azure_virtualmachines_summary(_summary, params, parsed):
     fixed_resources_list = parsed.values()
-    provisionings = [_azure_vms_get_status(r, 'ProvisioningState')[0] for r in fixed_resources_list]
-    powers = [_azure_vms_get_status(r, 'PowerState')[0] for r in fixed_resources_list]
+    provisionings = [_azure_vms_get_status(r, "ProvisioningState")[0] for r in fixed_resources_list]
+    powers = [_azure_vms_get_status(r, "PowerState")[0] for r in fixed_resources_list]
     groups = [r.get("group") for r in fixed_resources_list]
 
     levels_provisioning = params.get("levels_provisioning", {})
@@ -133,7 +130,7 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
         state = max(state, state_p)
         if state_p != 0 or count:
             txt.append(msg_p)
-    yield state, "Provisioning: %s" % ' / '.join(txt)
+    yield state, "Provisioning: %s" % " / ".join(txt)
 
     levels_power = params.get("levels_power", {})
     state, txt = 0, []
@@ -144,12 +141,12 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
         state = max(state, state_p)
         if state_p != 0 or count:
             txt.append(msg_p)
-    yield state, "Power states: %s" % ' / '.join(txt)
+    yield state, "Power states: %s" % " / ".join(txt)
 
     unique_groups = sorted(set(groups))
     if unique_groups != [host_name()]:
         group_count = ("%s: %d" % (g, groups.count(g)) for g in unique_groups)
-        yield 0, "VMs per group: %s\n" % ' / '.join(group_count)
+        yield 0, "VMs per group: %s\n" % " / ".join(group_count)
 
     # long output
     templ = "%s: Provisioning %s, VM %s, Resource group: %s\n"
@@ -159,10 +156,10 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
         yield 0, templ % vmach
 
 
-check_info['azure_virtualmachines.summary'] = {
-    'inventory_function': discover_azure_virtualmachines_summary,
-    'check_function': check_azure_virtualmachines_summary,
-    'service_description': "VM Summary",
-    'default_levels_variable': 'levels_azure_virtualmachines_summary',
-    'group': 'azure_vms_summary',
+check_info["azure_virtualmachines.summary"] = {
+    "inventory_function": discover_azure_virtualmachines_summary,
+    "check_function": check_azure_virtualmachines_summary,
+    "service_description": "VM Summary",
+    "default_levels_variable": "levels_azure_virtualmachines_summary",
+    "group": "azure_vms_summary",
 }

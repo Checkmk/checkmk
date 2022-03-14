@@ -4,98 +4,178 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State as state,
-    type_defs,
-)
+import pytest
+
 from cmk.base.plugins.agent_based import brocade_optical
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
-@pytest.mark.parametrize('params, expect_service', [
-    (
-        [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-        True,
-    ),
-    (
-        [
-            {
-                'discovery_single': (False, {}),
-                'matching_conditions': (True, {}),
-            },
-            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-        ],
-        False,
-    ),
-    (
-        [
-            {
-                'discovery_single': (
-                    True,
-                    {
-                        'item_appearance': 'alias',
-                        'pad_portnumbers': True,
-                    },
-                ),
-                'matching_conditions': (
-                    False,
-                    {
-                        'porttypes': ['6'],
-                        'portstates': ['1', '3']
-                    },
-                ),
-            },
-            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-        ],
-        True,
-    ),
-    (
-        [
-            {
-                'discovery_single': (
-                    True,
-                    {
-                        'item_appearance': 'index',
-                        'pad_portnumbers': True,
-                    },
-                ),
-                'matching_conditions': (
-                    False,
-                    {
-                        'match_desc': ['10GigabitEthernet']
-                    },
-                ),
-            },
-            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-        ],
-        True,
-    ),
-])
+@pytest.mark.parametrize(
+    "params, expect_service",
+    [
+        (
+            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+            True,
+        ),
+        (
+            [
+                {
+                    "discovery_single": (False, {}),
+                    "matching_conditions": (True, {}),
+                },
+                (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            ],
+            False,
+        ),
+        (
+            [
+                {
+                    "discovery_single": (
+                        True,
+                        {
+                            "item_appearance": "alias",
+                            "pad_portnumbers": True,
+                        },
+                    ),
+                    "matching_conditions": (
+                        False,
+                        {"porttypes": ["6"], "portstates": ["1", "3"]},
+                    ),
+                },
+                (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            ],
+            True,
+        ),
+        (
+            [
+                {
+                    "discovery_single": (
+                        True,
+                        {
+                            "item_appearance": "index",
+                            "pad_portnumbers": True,
+                        },
+                    ),
+                    "matching_conditions": (
+                        False,
+                        {"match_desc": ["10GigabitEthernet"]},
+                    ),
+                },
+                (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            ],
+            True,
+        ),
+    ],
+)
 def test_discover_brocade_optical(params, expect_service):
     section: brocade_optical.Section = {
-        '1410': {
-            'description': '10GigabitEthernet23/2',
-            'operational_status': '1',
-            'part': '57-0000076-01',
-            'port_type': '6',
-            'rx_light': (-36.9897, 'Low-Alarm'),
-            'serial': 'ADF2094300014UN',
-            'temp': (31.4882, 'Normal'),
-            'tx_light': (-1.4508, 'Normal'),
-            'type': '10GE LR 10km SFP+'
+        "1410": {
+            "description": "10GigabitEthernet23/2",
+            "operational_status": "1",
+            "part": "57-0000076-01",
+            "port_type": "6",
+            "rx_light": (-36.9897, "Low-Alarm"),
+            "serial": "ADF2094300014UN",
+            "temp": (31.4882, "Normal"),
+            "tx_light": (-1.4508, "Normal"),
+            "type": "10GE LR 10km SFP+",
         }
     }
-    services = [Service(item='1410', parameters={}, labels=[])]
-    assert list(brocade_optical.discover_brocade_optical(
-        params,
-        section,
-    )) == (expect_service and services or [])
+    services = [Service(item="1410", parameters={}, labels=[])]
+    assert list(
+        brocade_optical.discover_brocade_optical(
+            params,
+            section,
+        )
+    ) == (expect_service and services or [])
 
 
+@pytest.mark.parametrize(
+    "item,params,section,expected",
+    [
+        (
+            "001410",
+            {},
+            {
+                "1410": {
+                    "description": "10GigabitEthernet23/2",
+                    "operational_status": "2",
+                    "part": "57-0000076-01",
+                    "port_type": "6",
+                    "rx_light": (-36.9897, "Low-Alarm"),
+                    "serial": "ADF2094300014UN",
+                    "temp": (31.4882, "Normal"),
+                    "tx_light": (-1.4508, "Normal"),
+                    "type": "10GE LR 10km SFP+",
+                }
+            },
+            [
+                Result(
+                    state=state.OK,
+                    summary="[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down",
+                ),
+                Metric("temp", 31.4882),
+                Result(state=state.OK, summary="Temperature: 31.5°C"),
+                Result(
+                    state=state.OK,
+                    notice="Configuration: prefer user levels over device levels (no levels found)",
+                ),
+                Result(state=state.OK, summary="TX Light -1.5 dBm (Normal)"),
+                Metric("tx_light", -1.4508),
+                Result(state=state.OK, summary="RX Light -37.0 dBm (Low-Alarm)"),
+                Metric("rx_light", -36.9897),
+            ],
+        ),
+        (
+            "1409",
+            {"rx_light": True, "tx_light": True, "lanes": True},
+            {
+                "1409": {
+                    "description": "10GigabitEthernet23/1",
+                    "lanes": {
+                        1: {
+                            "rx_light": (-2.2504, "Normal"),
+                            "temp": (31.4531, "Normal"),
+                            "tx_light": (-1.6045, "Normal"),
+                        }
+                    },
+                    "operational_status": "1",
+                    "part": "57-0000076-01",
+                    "port_type": "6",
+                    "rx_light": (-2.2504, "Normal"),
+                    "serial": "ADF2094300014TL",
+                    "temp": (None, None),
+                    "tx_light": (-1.6045, "Normal"),
+                    "type": "10GE LR 10km SFP+",
+                }
+            },
+            [
+                Result(
+                    state=state.OK,
+                    summary="[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up",
+                ),
+                Result(state=state.OK, summary="TX Light -1.6 dBm (Normal)"),
+                Metric("tx_light", -1.6045),
+                Result(state=state.OK, summary="RX Light -2.3 dBm (Normal)"),
+                Metric("rx_light", -2.2504),
+                Result(state=state.OK, notice="Temperature (Lane 1) Temperature: 31.5°C"),
+                Metric("port_temp_1", 31.4531),
+                Result(state=state.OK, notice="TX Light (Lane 1) -1.6 dBm (Normal)"),
+                Metric("tx_light_1", -1.6045),
+                Result(state=state.OK, notice="RX Light (Lane 1) -2.3 dBm (Normal)"),
+                Metric("rx_light_1", -2.2504),
+            ],
+        ),
+    ],
+)
+def test_check_brocade_optical(item, params, section, expected):
+    assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
+
+
+# Disable yapf here as it takes ages
+# yapf: disable
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (
         [
@@ -653,6 +733,7 @@ def test_discover_brocade_optical(params, expect_service):
         ],
     )
 ])
+# yapf: enable
 def test_regression(
     string_table,
     discovery_results,
@@ -660,15 +741,24 @@ def test_regression(
 ):
     section = brocade_optical.parse_brocade_optical(string_table)
 
-    assert list(
-        brocade_optical.discover_brocade_optical(
-            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-            section,
-        )) == discovery_results
+    assert (
+        list(
+            brocade_optical.discover_brocade_optical(
+                [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+                section,
+            )
+        )
+        == discovery_results
+    )
 
     for item, par, res in items_params_results:
-        assert list(brocade_optical.check_brocade_optical(
-            item,
-            (par),
-            section,
-        )) == res
+        assert (
+            list(
+                brocade_optical.check_brocade_optical(
+                    item,
+                    (par),
+                    section,
+                )
+            )
+            == res
+        )

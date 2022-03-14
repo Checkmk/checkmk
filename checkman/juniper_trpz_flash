@@ -1,7 +1,7 @@
 title: Juniper/Trapeze: Check Flash States
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the usage of flash.
@@ -9,6 +9,5 @@ description:
  Levels for warning and critical can be set either in percent
  or in absolute levels.
 
-inventory:
+discovery:
  One service is created for used and total flash memory.
-

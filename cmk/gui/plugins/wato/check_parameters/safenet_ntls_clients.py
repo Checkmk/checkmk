@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
+    Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    Levels,
 )
 
 
@@ -29,4 +28,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_safenet_ntls_clients,
         title=lambda: _("Safenet NTLS Clients"),
-    ))
+    )
+)

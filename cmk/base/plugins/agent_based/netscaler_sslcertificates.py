@@ -4,23 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    List,
-    Mapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    Service,
-    SNMPTree,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from typing import Any, List, Mapping
+
+from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.netscaler import SNMP_DETECT
 
 # example SNMP output:
@@ -69,48 +56,21 @@ def discover_netscaler_sslcertificates(section: Section) -> DiscoveryResult:
             yield Service(item=certname)
 
 
-def _check_netscaler_sslcertificates(
-    item: str,
-    params: Mapping[str, Any],
-    section: Section,
-    node_name: Optional[str] = None,
-) -> CheckResult:
-    if item not in section:
-        return
-    label = 'certificate valid for'
-    yield from check_levels(
-        section[item],
-        levels_lower=params['age_levels'],
-        metric_name='daysleft',
-        render_func=lambda d: str(d) + " days",
-        label=label if node_name is None else '[%s]: %s' % (node_name, label),
-    )
-
-
 def check_netscaler_sslcertificates(
     item: str,
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    yield from _check_netscaler_sslcertificates(
-        item,
-        params,
-        section,
+    if item not in section:
+        return
+    label = "certificate valid for"
+    yield from check_levels(
+        section[item],
+        levels_lower=params["age_levels"],
+        metric_name="daysleft",
+        render_func=lambda d: str(d) + " days",
+        label=label,
     )
-
-
-def cluster_check_netscaler_sslcertificates(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    for node_name, node_section in section.items():
-        yield from _check_netscaler_sslcertificates(
-            item,
-            params,
-            node_section,
-            node_name=node_name,
-        )
 
 
 register.check_plugin(
@@ -122,5 +82,4 @@ register.check_plugin(
         "age_levels": (30, 10),
     },
     check_function=check_netscaler_sslcertificates,
-    cluster_check_function=cluster_check_netscaler_sslcertificates,
 )

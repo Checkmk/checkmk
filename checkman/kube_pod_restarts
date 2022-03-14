@@ -1,0 +1,15 @@
+title: Kubernetes: Pod Restarts
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This service monitors the number of restarts of the underlying
+ containers in the pod. The service reports the total number of
+ restarts as well as the restart rate during the last hour.
+
+ Upper levels for {WARN}/{CRIT} can be defined for both restart
+ count and restart rate. No levels are set by default.
+
+discovery:
+ One service is created for a Pod.

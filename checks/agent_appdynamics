@@ -4,25 +4,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_appdynamics_arguments(params, hostname, ipaddress):
-    args = []
-    args += ['-u', params['username']]
-    args += ['-p', params['password']]
 
-    if 'port' in params:
-        args += ['-P', '%d' % params['port']]
+def agent_appdynamics_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    args = [
+        "-u",
+        params["username"],
+        "-p",
+        params["password"],
+    ]
 
-    if 'timeout' in params:
-        args += ['-t', '%d' % params['timeout']]
+    if "port" in params:
+        args += ["-P", "%d" % params["port"]]
 
-    if ipaddress:
-        args.append(ipaddress)
-    else:
-        args.append(hostname)
+    if "timeout" in params:
+        args += ["-t", "%d" % params["timeout"]]
 
-    args.append(params['application'])
+    args += [
+        ipaddress or hostname,
+        params["application"],
+    ]
     return args
 
 
-special_agent_info['appdynamics'] = agent_appdynamics_arguments
+special_agent_info["appdynamics"] = agent_appdynamics_arguments

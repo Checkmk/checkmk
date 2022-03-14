@@ -7,12 +7,16 @@
 from werkzeug.debug import DebuggedApplication
 
 import cmk.gui.log as log
-log.init_logging()  # Initialize logging as early as possible
+from cmk.gui.wsgi.applications.utils import load_gui_log_levels
 
-import cmk.gui.modules as modules
+# Initialize logging as early as possible
+log.init_logging()
+log.set_log_levels(load_gui_log_levels())
+
+from cmk.gui import main_modules
 from cmk.gui.wsgi import make_app
 
-modules.init_modules()
+main_modules.load_plugins()
 
 DEBUG = False
 

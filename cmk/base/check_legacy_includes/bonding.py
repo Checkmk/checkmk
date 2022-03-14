@@ -7,8 +7,8 @@
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 BONDING_CHECK_DEFAULT_PARAMETERS = {
-    'ieee_302_3ad_agg_id_missmatch_state': 1,
-    'expect_active': 'ignore',
+    "ieee_302_3ad_agg_id_missmatch_state": 1,
+    "expect_active": "ignore",
 }
 
 
@@ -30,18 +30,16 @@ def inventory_bonding(parsed):
         for bond, props in parsed.items()  #
         if props["status"] in {"up", "degraded"}  #
         for primary, active in ((props.get("primary", "None"), props.get("active", "None")),)  #
-        for params in ({} if primary != "None" or active == "None" else {
-            "primary": active
-        },)
+        for params in ({} if primary != "None" or active == "None" else {"primary": active},)
     ]
 
 
 def _check_ieee_302_3ad_specific(params, status):
-    master_id = status.get('aggregator_id')
-    missmatch_state = params['ieee_302_3ad_agg_id_missmatch_state']
+    master_id = status.get("aggregator_id")
+    missmatch_state = params["ieee_302_3ad_agg_id_missmatch_state"]
 
     for eth, slave in status["interfaces"].items():
-        slave_id = slave['aggregator_id']
+        slave_id = slave["aggregator_id"]
         if master_id is None:
             master_id = slave_id
         if slave_id != master_id:
@@ -83,7 +81,7 @@ def check_bonding(item, params, parsed):
     if "IEEE 802.3ad" in mode:
         yield from _check_ieee_302_3ad_specific(params, properties)
 
-    speed = properties.get('speed')
+    speed = properties.get("speed")
     if speed:
         yield 0, "Speed: %s" % speed
 
@@ -103,7 +101,7 @@ def check_bonding(item, params, parsed):
         # we don't expect an interface to be up and others to be down so check whether all
         # interfaces are up
         for eth, slave in properties["interfaces"].items():
-            state = 0 if slave["status"] == 'up' else 1
+            state = 0 if slave["status"] == "up" else 1
             if "hwaddr" in slave:
                 yield state, "%s/%s %s" % (eth, slave["hwaddr"], slave["status"])
             else:

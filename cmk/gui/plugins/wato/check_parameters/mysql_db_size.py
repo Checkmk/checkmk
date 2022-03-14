@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Filesize,
-    Optional,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Filesize, Optional, TextInput, Tuple
 
 
 def _item_spec_mysql_db_size():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the database"),
         help=_("Don't forget the instance: instance:dbname"),
     )
@@ -28,12 +22,16 @@ def _item_spec_mysql_db_size():
 
 def _parameter_valuespec_mysql_db_size():
     return Optional(
-        Tuple(elements=[
-            Filesize(title=_("warning at")),
-            Filesize(title=_("critical at")),
-        ],),
-        help=_("The check will trigger a warning or critical state if the size of the "
-               "database exceeds these levels."),
+        valuespec=Tuple(
+            elements=[
+                Filesize(title=_("warning at")),
+                Filesize(title=_("critical at")),
+            ],
+        ),
+        help=_(
+            "The check will trigger a warning or critical state if the size of the "
+            "database exceeds these levels."
+        ),
         title=_("Impose limits on the size of the database"),
     )
 
@@ -45,4 +43,5 @@ rulespec_registry.register(
         item_spec=_item_spec_mysql_db_size,
         parameter_valuespec=_parameter_valuespec_mysql_db_size,
         title=lambda: _("MySQL database sizes"),
-    ))
+    )
+)

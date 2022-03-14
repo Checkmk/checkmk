@@ -243,6 +243,9 @@
     <ClInclude Include="..\common\fmt_ext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="agent_controller.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -483,6 +486,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="zip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="agent_controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

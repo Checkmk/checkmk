@@ -1,0 +1,19 @@
+Title: mk_postgres: fix for CentOS 8: "MAIN": not running
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634652667
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The path for postgres instance "main" is called "data" and not "main" on some platforms.
+That could lead to the following error message:
+instance "MAIN": not running
+
+In order to support more platforms the instance detection for "main" will additionally fallback
+to find "data" in the path if "main" was not found.
+
+The agent must be redeployed in order to apply this bugfix.

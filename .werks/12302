@@ -1,0 +1,12 @@
+Title: Fix cache miss in SNMP discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1623325317
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Here we fix cache misses for SNMP data
+where discovery would miss entries.

@@ -1,7 +1,7 @@
 title: DMRaid: Logical Disks
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of logical disks (RAID arrays) of a BIOS-controlled software raid,
@@ -16,5 +16,5 @@ description:
 item:
  Mountpoint of the logical disk
 
-inventory:
+discovery:
  One service is created for each logical disk.

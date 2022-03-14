@@ -7,22 +7,24 @@
 Write cisco_prime_ sections containing JSON formatted results from Cisco Prime API
 """
 
-import sys
 import argparse
-import logging
 import json
+import logging
+import sys
 from typing import Optional, Sequence
 
 import requests
-from requests.packages import urllib3
+import urllib3
+
+from cmk.utils import password_store
 
 from cmk.special_agents.utils import vcrtrace
-from cmk.utils import password_store
 
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {
     "wifi_access_points": "AccessPoints.json?.full=true&.nocount=true&.maxResults=10000",
     "wifi_connections": "ClientCounts.json?.full=true&subkey=ROOT-DOMAIN&type=SSID",
+    "wlan_controller": "WlanControllers.json?.full=true",
 }
 
 
@@ -30,8 +32,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--hostname", required=True, help="Host to query")
-    parser.add_argument("--port", "-p", type=int, help='IPv4 port to connect to')
-    parser.add_argument("--basic-auth", "-u", type=str, help='username:password for basic_auth')
+    parser.add_argument("--port", "-p", type=int, help="IPv4 port to connect to")
+    parser.add_argument("--basic-auth", "-u", type=str, help="username:password for basic_auth")
     parser.add_argument("--no-tls", action="store_true", help="Use http instead of https")
     parser.add_argument("--no-cert-check", action="store_true")
     parser.add_argument(
@@ -39,11 +41,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "-t",
         type=float,
         default=20,
-        help='API call timeout in seconds',
+        help="API call timeout in seconds",
     )
     parser.add_argument("--debug", action="store_true", help="Keep some exceptions unhandled")
     parser.add_argument("--verbose", "-v", action="count", default=0)
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
     return parser.parse_args(argv)
 
 
@@ -51,12 +53,11 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
     """Writes `cisco_prime_` sections (currently only `connections`) containing the results of
     GET requests on the provided url.
     """
+
     def setup_logging(verbose: bool) -> None:
-        logging.basicConfig(level={
-            0: logging.WARN,
-            1: logging.INFO,
-            2: logging.DEBUG
-        }.get(verbose, logging.DEBUG),)
+        logging.basicConfig(
+            level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
+        )
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
         logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
         logging.getLogger("vcr").setLevel(logging.WARN)
@@ -79,8 +80,10 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
             # having to import `json` everywhere. This should be turned into s.th. like
             #    raise OurCustomException("Nice message") [from exc]
             # as soon as we have proper exception handling
-            raise RuntimeError("Server dit not return valid JSON (%s). Reply with %r" %
-                               (exc.msg, response.text[:30]))
+            raise RuntimeError(
+                "Server dit not return valid JSON (%s). Reply with %r"
+                % (exc.msg, response.text[:30])
+            )
 
     args = parse_arguments(argv)
     setup_logging(args.verbose)
@@ -93,10 +96,13 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
             API_PATH,
         )
         for service, request_string in REQUESTS.items():
-            print("<<<cisco_prime_%s:sep(0)>>>\n%s" % (
-                service,
-                fetch_json_data(url_prefix + request_string, args),
-            ))
+            print(
+                "<<<cisco_prime_%s:sep(0)>>>\n%s"
+                % (
+                    service,
+                    fetch_json_data(url_prefix + request_string, args),
+                )
+            )
 
     except Exception as exc:  # pylint: disable=broad-except
         if args.debug:

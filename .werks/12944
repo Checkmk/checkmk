@@ -1,0 +1,16 @@
+Title: REST API: acquire wato configuration lock before changing files
+Class: fix
+Compatible: compat
+Component: core
+Date: 1624010963
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously, the REST API failed to acquire the WATO configuration lock
+before performing file system operations. This could lead to race conditions
+when performing actions in parallell. This Werk introduces this lock for all
+endpoints that do change configuration files.
+
+No further action is needed.

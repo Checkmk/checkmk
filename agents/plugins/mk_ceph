@@ -9,28 +9,24 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Check Ceph storage
 # Config file must contain:
 # USER=client.admin
 # KEYRING=/etc/ceph/ceph.client.admin.keyring
 
+# shellcheck source=agents/cfg_examples/ceph.cfg
+. "$MK_CONFDIR/ceph.cfg" 2>/dev/null
 
-if [ -e "$MK_CONFDIR/ceph.cfg" ]; then
-    . $MK_CONFDIR/ceph.cfg
-fi
-
-
-if [ ! -z "$USER" ] && [ ! -z "$KEYRING" ]; then
+if [ -n "$USER" ] && [ -n "$KEYRING" ]; then
     CEPH_CMD="ceph -n $USER --keyring=$KEYRING"
     echo "<<<ceph_status>>>"
     $CEPH_CMD -s -f json-pretty
-    OUT=$($CEPH_CMD df detail --format json)
-    if [ $? -eq 0 ]; then
+    if OUT="$($CEPH_CMD df detail --format json)"; then
         echo "<<<ceph_df_json:sep(0)>>>"
         $CEPH_CMD version --format json
-        echo $OUT
+        echo "$OUT"
     else
         # fallback for old versions if json output is not available
         echo "<<<ceph_df>>>"

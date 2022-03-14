@@ -1,0 +1,21 @@
+Title: nagios core: include legacy dependencies of new api plugins
+Class: fix
+Compatible: compat
+Component: core
+Date: 1616746581
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This only applies to the raw edition with nagios core: If a new style
+check plugin is interested in multiple sections, and one section is a
+legacy style check, this section was not parsed at all and the string
+table of the section was forwarded to the new style api check, which then
+crashes as it expected the parsed data.
+
+For example: The diskstat check (new style api) is dependent on multipath
+(legacy check) and crashed if the multipath check was disabled.
+
+This should now be fixed.

@@ -1,12 +1,12 @@
 title: Cisco Nexus Devices: CPU Utilization
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization of Cisco Nexus devices.
 
  Default levels are 80, 90 percent. These are configurable.
 
-inventory:
+discovery:
  One service is created.

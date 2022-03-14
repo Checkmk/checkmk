@@ -9,13 +9,18 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
-fortigate_memory_base_default_levels = (70, 80)  # taken from fortigate_memory
+
+fortigate_memory_base_default_levels = {
+    "levels": (70.0, 80.0),
+}
+
+factory_settings["fortigate_memory_base_default_levels"] = fortigate_memory_base_default_levels
 
 
 def parse_fortigate_memory_base(info):
     try:
         total = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
-        used = float(info[0][0]) / 100. * total
+        used = float(info[0][0]) / 100.0 * total
     except (IndexError, ValueError):
         return ()
     return used, total
@@ -23,7 +28,7 @@ def parse_fortigate_memory_base(info):
 
 def inventory_fortigate_memory_base(parsed):
     if parsed:
-        return [(None, "fortigate_memory_base_default_levels")]
+        yield None, {}
 
 
 def check_fortigate_memory_base(_item, params, parsed):
@@ -31,8 +36,11 @@ def check_fortigate_memory_base(_item, params, parsed):
     if isinstance(params, tuple):
         levels = ("perc_used", params)
     else:
-        warn, crit = params.get("levels", (None, None))
-        levels = (get_levels_mode_from_value(warn), (abs(warn), abs(crit)))
+        warn, crit = params.get("levels", fortigate_memory_base_default_levels["levels"])
+        mode = get_levels_mode_from_value(warn)
+        # Rule 'memory' uses MiB for absolute values:
+        scale = 1.0 if mode.startswith("perc") else 2**20
+        levels = (mode, (abs(warn) * scale, abs(crit) * scale))
 
     if not parsed:
         return
@@ -44,15 +52,11 @@ def check_fortigate_memory_base(_item, params, parsed):
 check_info["fortigate_memory_base"] = {
     "parse_function": parse_fortigate_memory_base,
     "check_function": check_fortigate_memory_base,
+    "default_levels_variable": "fortigate_memory_base_default_levels",
     "inventory_function": inventory_fortigate_memory_base,
     "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info": (
-        ".1.3.6.1.4.1.12356.101.4.1",
-        [
-            4,  # fgSysMemUsage
-            5  # fgSysMemCapacity
-        ]),
+    "snmp_info": (".1.3.6.1.4.1.12356.101.4.1", [4, 5]),  # fgSysMemUsage  # fgSysMemCapacity
 }

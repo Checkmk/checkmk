@@ -1,0 +1,22 @@
+Title: Do not drop services of incompatibly changed plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637773448
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In rare cases a `cmk-update-config` could silently drop the service of a plugin (see below for which plugins can be affected).
+It would then appear as stale in the service view.
+A rediscovery would fix the issue (and usually report one or more new services).
+
+Now the affected service will go to UNKNOWN, and include "<missing an item>" in the service description.
+However the required action remains the same: Perform a rediscovery.
+It will now report the affected service as being vanished (and usually one or more new services).
+
+This only affects services of (custom) plugins, whose implementation was changed:
+From being a single service plugin ("without item") to being a multiple services plugin ("with item").
+In the case a shipped plugin is changed in this regard, this scenario should be avoided by implementing an automatic transition.
+For custom plugins however, you may encounter the described issue.

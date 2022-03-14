@@ -1,7 +1,7 @@
 title: AWS ELB: Healthy Hosts
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the healthy hosts connected to AWS/ELB services.
@@ -10,5 +10,5 @@ description:
 
  No default levels are set. Levels for overall hosts health are configurable.
 
-inventory:
+discovery:
  One service is created if all required metrics (HealthyHostCount, UnHealthyHostCount) are given.

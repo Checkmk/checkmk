@@ -5,27 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    Optional,
+from typing import Any, Dict, Mapping, Optional
+
+from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    StringTable,
 )
 from .utils import docker, uptime
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-    HostLabelGenerator,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    State as state,
-    HostLabel,
-    IgnoreResults,
-)
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 
@@ -37,7 +27,7 @@ HEALTH_STATUS_MAP = {
 
 
 def _is_active_container(section: Dict[str, Any]) -> bool:
-    '''return wether container is or should be running'''
+    """return wether container is or should be running"""
     if section.get("Status") in ("running", "exited"):
         return True
     restart_policy_name = section.get("RestartPolicy", {}).get("Name")
@@ -45,37 +35,62 @@ def _is_active_container(section: Dict[str, Any]) -> bool:
 
 
 def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
-    '''process the first line to a JSON object
+    """process the first line to a JSON object
 
     In case there are multiple lines of output sent by the agent only process the first
     line. We assume that this a full JSON object. The rest of the section is skipped.
     When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     in multiple JSON objects handed over to this check.
-    '''
+    """
     return docker.parse(string_table, strict=False).data
 
 
 def host_labels_docker_container_status(section) -> HostLabelGenerator:
-    """
-    >>> from pprint import pprint as pp
-    >>> list(host_labels_docker_container_status({}))
-    [HostLabel('cmk/docker_object', 'container')]
-    >>> list(host_labels_docker_container_status({"ImageTags": []}))
-    [HostLabel('cmk/docker_object', 'container')]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["doctor:strange"]})))
-    [HostLabel('cmk/docker_object', 'container'),
-     HostLabel('cmk/docker_image', 'doctor:strange'),
-     HostLabel('cmk/docker_image_name', 'doctor'),
-     HostLabel('cmk/docker_image_version', 'strange')]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["fiction/doctor:strange"]})))
-    [HostLabel('cmk/docker_object', 'container'),
-     HostLabel('cmk/docker_image', 'fiction/doctor:strange'),
-     HostLabel('cmk/docker_image_name', 'doctor'),
-     HostLabel('cmk/docker_image_version', 'strange')]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["library:8080/fiction/doctor"]})))
-    [HostLabel('cmk/docker_object', 'container'),
-     HostLabel('cmk/docker_image', 'library:8080/fiction/doctor'),
-     HostLabel('cmk/docker_image_name', 'doctor')]
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:container :
+            This label is set if the corresponding host is a docker container.
+
+        cmk/docker_image:
+            This label is set to the docker image if the corresponding host is
+            a docker container.
+            For instance: "docker.io/library/nginx:latest"
+
+        cmk/docker_image_name:
+            This label is set to the docker image name if the corresponding host
+            is a docker container. For instance: "nginx".
+
+        cmk/docker_image_version:
+            This label is set to the docker images version if the corresponding
+            host is a docker container. For instance: "latest".
+
+    Examples:
+
+        >>> from pprint import pprint
+        >>> def show(gen):
+        ...     for l in gen: print(':'.join(l))
+        ...
+        >>> show(host_labels_docker_container_status({}))
+        cmk/docker_object:container
+        >>> show(host_labels_docker_container_status({"ImageTags": []}))
+        cmk/docker_object:container
+        >>> show(host_labels_docker_container_status({"ImageTags": ["doctor:strange"]}))
+        cmk/docker_object:container
+        cmk/docker_image:doctor:strange
+        cmk/docker_image_name:doctor
+        cmk/docker_image_version:strange
+        >>> show(host_labels_docker_container_status({"ImageTags": ["fiction/doctor:strange"]}))
+        cmk/docker_object:container
+        cmk/docker_image:fiction/doctor:strange
+        cmk/docker_image_name:doctor
+        cmk/docker_image_version:strange
+        >>> show(host_labels_docker_container_status({"ImageTags": ["library:8080/fiction/doctor"]}))
+        cmk/docker_object:container
+        cmk/docker_image:library:8080/fiction/doctor
+        cmk/docker_image_name:doctor
+
     """
     yield HostLabel("cmk/docker_object", "container")
 
@@ -85,12 +100,12 @@ def host_labels_docker_container_status(section) -> HostLabelGenerator:
 
     image = image_tags[-1]
     yield HostLabel("cmk/docker_image", "%s" % image)
-    if '/' in image:
-        __, image = image.rsplit('/', 1)
-    if ':' in image:
-        image_name, image_version = image.rsplit(':', 1)
+    if "/" in image:
+        __, image = image.rsplit("/", 1)
+    if ":" in image:
+        image_name, image_version = image.rsplit(":", 1)
         yield HostLabel("cmk/docker_image_name", "%s" % image_name)
-        yield HostLabel(u"cmk/docker_image_version", "%s" % image_version)
+        yield HostLabel("cmk/docker_image_version", "%s" % image_version)
     else:
         yield HostLabel("cmk/docker_image_name", "%s" % image)
 
@@ -101,7 +116,7 @@ register.agent_section(
     host_label_function=host_labels_docker_container_status,
 )
 
-#.
+# .
 #   .--Health--------------------------------------------------------------.
 #   |                    _   _            _ _   _                          |
 #   |                   | | | | ___  __ _| | |_| |__                       |
@@ -141,8 +156,10 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
     # This was observed e.g. for the docker_container_status output of check-mk-enterprise:1.6.0p8
     health_report = last_log.get("Output", "no output").strip().replace("\n", ", ")
     if health_report:
-        yield Result(state=state(int(last_log.get("ExitCode") != 0)),
-                     summary="Last health report: %s" % health_report)
+        yield Result(
+            state=state(int(last_log.get("ExitCode") != 0)),
+            summary="Last health report: %s" % health_report,
+        )
 
     if cur_state == state.CRIT:
         failing_streak = section.get("Health", {}).get("FailingStreak", "not found")
@@ -150,7 +167,25 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
 
     health_test = section.get("Healthcheck", {}).get("Test")
     if health_test:
-        yield Result(state=state.OK, summary="Health test: %s" % ' '.join(health_test))
+        yield _health_test_result(f"Health test: {' '.join(health_test)}")
+
+
+def _health_test_result(health_test: str) -> Result:
+    """
+    >>> _health_test_result("Health test: ./my_health_tests_script.sh")
+    Result(state=<State.OK: 0>, summary='Health test: ./my_health_tests_script.sh')
+
+    >>> r = _health_test_result("Health test: CMD-SHELL #!/bin/bash\\n\\nexit 0\\n")
+    >>> r.summary
+    'Health test: CMD-SHELL'
+    >>> r.details
+    'Health test: CMD-SHELL #!/bin/bash\\n\\nexit 0\\n'
+    """
+    return Result(
+        state=state.OK,
+        summary=health_test.split("\n", 1)[0].split("#!", 1)[0].strip(),
+        details=health_test,
+    )
 
 
 register.check_plugin(
@@ -182,6 +217,8 @@ def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     status = section.get("Status", "unknown")
     cur_state = {"running": state.OK, "unknown": state.UNKNOWN}.get(status, state.CRIT)
 
+    # Please adjust PainterHostDockerNode if info is changed here
+    # 5019 node = output.split()[-1]
     info = "Container %s" % status
     node_name = section.get("NodeName")
     if node_name:
@@ -210,7 +247,7 @@ register.check_plugin(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
+# .
 
 
 def discover_docker_container_status_uptime(
@@ -224,8 +261,10 @@ def discover_docker_container_status_uptime(
             return
     if not section_docker_container_status:
         return
-    if _is_active_container(
-            section_docker_container_status) and "StartedAt" in section_docker_container_status:
+    if (
+        _is_active_container(section_docker_container_status)
+        and "StartedAt" in section_docker_container_status
+    ):
         yield Service()
 
 
@@ -241,7 +280,7 @@ def check_docker_container_status_uptime(
         return
 
     # assumed format: 2019-06-05T08:58:06.893459004Z
-    utc_start = datetime.datetime.strptime(started_str[:-4] + 'UTC', '%Y-%m-%dT%H:%M:%S.%f%Z')
+    utc_start = datetime.datetime.strptime(started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z")
 
     op_status = section_docker_container_status["Status"]
     if op_status == "running":

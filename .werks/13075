@@ -1,0 +1,15 @@
+Title: agent_prometheus: Remove web port option from custom url option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1629101053
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In the previous version, the Prometheus Web Port option was only
+relevant for the host name and ip address connection options. This
+led to confusion as it was possible to specify the Web Port but
+did not apply to the custom url connection option. This werk makes
+the port option more specific.

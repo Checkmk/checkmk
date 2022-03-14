@@ -12,7 +12,7 @@ def inventory_stulz_alerts(info):
 def check_stulz_alerts(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            if line[1] != '0':
+            if line[1] != "0":
                 return 2, "Device is in alert state"
             return 0, "No alerts on device"
     return 3, "No information found about the device"

@@ -1,0 +1,13 @@
+Title: Disable SSL checking with ntop
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1643813062
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Disabling the checking of SSL certificate torwards a ntopng instance was broken since 2.0.0p13.
+This is fixed now.

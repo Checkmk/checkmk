@@ -1,0 +1,13 @@
+Title: docker node disk usage (enforced services): field "type" changed from Text to DropDownChoice
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1617024647
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The text field "Type" in the enforced service rule "docker node disk usage" was changed to DropDownChoice
+in order to prevent wrong input.

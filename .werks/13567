@@ -1,0 +1,13 @@
+Title: Raise in debug only if no cfg was found (mk_logwatch)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638893013
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+mk_logwatch.py was raising IOError in debug mode although a logwatch.cfg existed in either logwatch.d or MK_CONFDIR.
+It is now only raising if no configuration at all was found.

@@ -35,8 +35,8 @@
 # 0  DEAD.QUEUE.SECURITY  100000  CURDEPTH(0)LGETDATE()LGETTIME() 2016_04_08-15_31_43
 
 websphere_mq_queues_default_levels = {
-    'message_count': (1000, 1200),
-    'message_count_perc': (80.0, 90.0)
+    "message_count": (1000, 1200),
+    "message_count_perc": (80.0, 90.0),
 }
 
 
@@ -52,21 +52,22 @@ def parse_websphere_mq_queues(info):
             continue
 
         inst = parsed.setdefault(line[1], {})
-        inst.setdefault('cur_depth', cur_depth)
+        inst.setdefault("cur_depth", cur_depth)
 
         if len(line) >= 3:
             if line[2].isdigit():
-                inst.setdefault('max_depth', int(line[2]))
+                inst.setdefault("max_depth", int(line[2]))
 
             if len(line) > 3:
-                for what in "".join(line[3:-1]).replace(" ", "").split(')'):
+                for what in "".join(line[3:-1]).replace(" ", "").split(")"):
                     if "(" in what:
-                        key, val = what.split('(')
+                        key, val = what.split("(")
                         inst.setdefault(key, val)
 
                 try:
-                    inst.setdefault("time_on_client",
-                                    time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
+                    inst.setdefault(
+                        "time_on_client", time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S"))
+                    )
                 except ValueError:
                     pass
 
@@ -74,8 +75,7 @@ def parse_websphere_mq_queues(info):
 
 
 def inventory_websphere_mq_queues(parsed):
-    return [ ( queue_name, 'websphere_mq_queues_default_levels' ) \
-             for queue_name in parsed ]
+    return [(queue_name, "websphere_mq_queues_default_levels") for queue_name in parsed]
 
 
 def check_websphere_mq_queues(item, params, parsed):
@@ -85,28 +85,32 @@ def check_websphere_mq_queues(item, params, parsed):
 
     if isinstance(params, tuple):
         params = {
-            'message_count': params,
-            'message_count_perc': websphere_mq_queues_default_levels["message_count_perc"]
+            "message_count": params,
+            "message_count_perc": websphere_mq_queues_default_levels["message_count_perc"],
         }
 
-    cur_depth = data['cur_depth']
-    yield check_levels(cur_depth,
-                       "queue",
-                       params.get("message_count", (None, None)),
-                       human_readable_func=lambda x: "%d" % x,
-                       infoname="Messages in queue")
+    cur_depth = data["cur_depth"]
+    yield check_levels(
+        cur_depth,
+        "queue",
+        params.get("message_count", (None, None)),
+        human_readable_func=lambda x: "%d" % x,
+        infoname="Messages in queue",
+    )
 
-    max_depth = data.get('max_depth')
+    max_depth = data.get("max_depth")
     if max_depth:
         # Just for ordering:
         # 1. message count
         # 2. message count percent
         used_perc = float(cur_depth) / max_depth * 100
-        yield check_levels(used_perc,
-                           None,
-                           params.get("message_count_perc", (None, None)),
-                           human_readable_func=get_percent_human_readable,
-                           infoname="Of max. %d messages" % max_depth)
+        yield check_levels(
+            used_perc,
+            None,
+            params.get("message_count_perc", (None, None)),
+            human_readable_func=get_percent_human_readable,
+            infoname="Of max. %d messages" % max_depth,
+        )
 
     if data.get("time_on_client") and "LGETDATE" in data and "LGETTIME" in data:
         lgetdate = data["LGETDATE"]
@@ -116,20 +120,24 @@ def check_websphere_mq_queues(item, params, parsed):
 
         if cur_depth and lgetdate and lgettime:
             time_str = "%s %s" % (lgetdate, lgettime)
-            time_diff  = data["time_on_client"] - \
-                time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
+            time_diff = data["time_on_client"] - time.mktime(
+                time.strptime(time_str, "%Y-%m-%d %H.%M.%S")
+            )
 
             diff_state, diff_info, _diff_perf = check_levels(
                 time_diff,
                 None,
                 params.get("age", (None, None)),
-                human_readable_func=get_age_human_readable)
+                human_readable_func=get_age_human_readable,
+            )
 
             yield diff_state, "Messages not processed since %s" % diff_info
 
         elif cur_depth:
-            yield params.get("state", 0), "No age of %d message%s not processed" % \
-                  (cur_depth, cur_depth > 1 and "s" or "")
+            yield params.get("state", 0), "No age of %d message%s not processed" % (
+                cur_depth,
+                cur_depth > 1 and "s" or "",
+            )
 
         else:
             yield 0, "Messages processed"

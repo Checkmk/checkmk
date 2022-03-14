@@ -1,7 +1,7 @@
 title: Kernel Tunables: Number of IPC Semaphore IDs
 agents: hpux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows for monitoring of admin-tunable kernel limits on HP-UX
@@ -13,7 +13,6 @@ description:
  check is always {OK}, but you can set levels for the used
  percentage.
 
-inventory:
+discovery:
  All hpux_tunable checks are combined in one service.
  One {hpux_tunable} service is created for each supported tunable.
-

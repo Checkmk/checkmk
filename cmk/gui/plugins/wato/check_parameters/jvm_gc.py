@@ -5,24 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    Percentage,
-    TextAscii,
-    Transform,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Transform, Tuple
 
 
 def _item_spec_jvm_gc():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine and/or<br>garbage collection type"),
         help=_("The name of the application server"),
         allow_empty=False,
@@ -42,25 +34,29 @@ def transform_units(params):
 
 def _parameter_valuespec_jvm_gc():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
             elements=[
-                ("collection_time",
-                 Tuple(
-                     title=_("Time spent collecting garbage in percent"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ],
-                 )),
-                ("collection_count",
-                 Tuple(
-                     title=_("Count of garbage collections per second"),
-                     elements=[
-                         Float(title=_("Warning at")),
-                         Float(title=_("Critical at")),
-                     ],
-                 )),
+                (
+                    "collection_time",
+                    Tuple(
+                        title=_("Time spent collecting garbage in percent"),
+                        elements=[
+                            Percentage(title=_("Warning at")),
+                            Percentage(title=_("Critical at")),
+                        ],
+                    ),
+                ),
+                (
+                    "collection_count",
+                    Tuple(
+                        title=_("Count of garbage collections per second"),
+                        elements=[
+                            Float(title=_("Warning at")),
+                            Float(title=_("Critical at")),
+                        ],
+                    ),
+                ),
             ],
         ),
         forth=transform_units,
@@ -75,4 +71,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jvm_gc,
         title=lambda: _("JVM garbage collection levels"),
-    ))
+    )
+)

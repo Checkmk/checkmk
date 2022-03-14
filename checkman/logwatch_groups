@@ -1,7 +1,7 @@
 title: Grouping of Logfiles
 agents: linux, windows, aix, solaris
 catalog: os/files
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is used to group multiple logfiles together. This is useful in cases when a logrotation mechanism is used,
@@ -12,7 +12,7 @@ description:
 item:
  Name of the group
 
-inventory:
+discovery:
  One service is created for each group.
 
 cluster:

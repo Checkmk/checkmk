@@ -1,7 +1,7 @@
 title: Microsoft Azure AD Connect: Sync
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the state of Microsoft Azure AD Connect.
@@ -11,5 +11,5 @@ description:
 item:
  The organization name registered with Azure
 
-inventory:
+discovery:
  One service is created per Azure organization if sync is enabled

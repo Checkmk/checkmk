@@ -1,0 +1,15 @@
+Title: Fix ignored changes on local defined config variables
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1623329764
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If configuration variables were declared in
+~/local/share/check_mk/web/plugins/config, changes on that variables in WATO or
+~/etc/check_mk/multisite.d/wato/global.mk had no effect.
+The configuration always used the default from the mentioned path.

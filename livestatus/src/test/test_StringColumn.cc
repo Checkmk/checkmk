@@ -4,6 +4,7 @@
 // source code package.
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "Row.h"
@@ -18,44 +19,13 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-TEST(StringColumn, ConstantString) {
-    const auto v = "hello"s;
-
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = StringColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-}
-
-TEST(StringColumn, ConstantDefaultRow) {
-    const auto v = "hello"s;
-
-    const auto row = DummyRow{nullptr};
-    const auto col = StringColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-}
-
-TEST(StringColumn, Reference) {
-    auto v = "hello"s;
-
-    const auto row = DummyRow{nullptr};
-    const auto col = StringColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-
-    v += " world"s;
-    EXPECT_EQ(v, col.getValue(row));
-}
-
 TEST(StringColumn, GetValueLambda) {
     auto v = "hello"s;
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = StringColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+    const auto col = StringColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
@@ -66,8 +36,8 @@ TEST(StringColumn, GetValueDefault) {
     auto v = "hello"s;
 
     const auto row = DummyRow{nullptr};
-    const auto col = StringColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+    const auto col = StringColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 

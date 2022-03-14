@@ -1,7 +1,7 @@
 title: EMC VPLEX Director: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the CPU utilization (in percent) of EMC VPLEX Directors.
@@ -11,6 +11,5 @@ description:
 item:
  Name of the director
 
-inventory:
+discovery:
  One service is created for each director.
-

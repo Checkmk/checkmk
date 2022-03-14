@@ -33,15 +33,16 @@ choices - available choices for enumeration hooks
 depends - exists with 1, if this hook misses its dependent hook settings
 """
 
+import logging
 import os
 import re
-import sys
-import logging
 import subprocess
-from typing import Tuple, Pattern, Union, Dict, TYPE_CHECKING, List, Iterable
+import sys
+from pathlib import Path
+from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
 
-from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.log import VERBOSE
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -57,33 +58,29 @@ ConfigHookResult = Tuple[int, str]
 
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
-def create_config_environment(site: 'SiteContext') -> None:
+def create_config_environment(site: "SiteContext") -> None:
     for varname, value in site.conf.items():
         os.environ["CONFIG_" + varname] = value
 
 
 # TODO: RENAME
-def save_site_conf(site: 'SiteContext') -> None:
-    confdir = site.dir + "/etc/omd"
-
-    if not os.path.exists(confdir):
-        os.mkdir(confdir)
-
-    f = open(site.dir + "/etc/omd/site.conf", "w")
-
-    for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
-        f.write("CONFIG_%s='%s'\n" % (hook_name, value))
+def save_site_conf(site: "SiteContext") -> None:
+    confdir = Path(site.dir, "etc/omd")
+    confdir.mkdir(exist_ok=True)
+    with Path(site.dir, "etc/omd/site.conf").open(mode="w") as f:
+        for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
+            f.write("CONFIG_%s='%s'\n" % (hook_name, value))
 
 
 # Get information about all hooks. Just needed for
 # the "omd config" command.
-def load_config_hooks(site: 'SiteContext') -> ConfigHooks:
+def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
     hook_dir = site.dir + "/lib/omd/hooks"
     for hook_name in os.listdir(hook_dir):
         try:
-            if hook_name[0] != '.':
+            if hook_name[0] != ".":
                 hook = _config_load_hook(site, hook_name)
                 # only load configuration hooks
                 if hook.get("choices", None) is not None:
@@ -96,7 +93,7 @@ def load_config_hooks(site: 'SiteContext') -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(site: 'SiteContext', hook_name: str) -> ConfigHook:
+def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
     hook: ConfigHook = {
         "name": hook_name,
         "deprecated": False,
@@ -104,19 +101,20 @@ def _config_load_hook(site: 'SiteContext', hook_name: str) -> ConfigHook:
 
     description = ""
     description_active = False
-    for line in open(site.dir + "/lib/omd/hooks/" + hook_name):
-        if line.startswith("# Alias:"):
-            hook["alias"] = line[8:].strip()
-        elif line.startswith("# Menu:"):
-            hook["menu"] = line[7:].strip()
-        elif line.startswith("# Deprecated: yes"):
-            hook["deprecated"] = True
-        elif line.startswith("# Description:"):
-            description_active = True
-        elif line.startswith("#  ") and description_active:
-            description += line[3:].strip() + "\n"
-        else:
-            description_active = False
+    with Path(site.dir, "lib/omd/hooks", hook_name).open() as hook_file:
+        for line in hook_file:
+            if line.startswith("# Alias:"):
+                hook["alias"] = line[8:].strip()
+            elif line.startswith("# Menu:"):
+                hook["menu"] = line[7:].strip()
+            elif line.startswith("# Deprecated: yes"):
+                hook["deprecated"] = True
+            elif line.startswith("# Description:"):
+                description_active = True
+            elif line.startswith("#  ") and description_active:
+                description += line[3:].strip() + "\n"
+            else:
+                description_active = False
     hook["description"] = description
 
     def get_hook_info(info: str) -> str:
@@ -150,7 +148,7 @@ def _config_load_hook(site: 'SiteContext', hook_name: str) -> ConfigHook:
     return hook
 
 
-def load_hook_dependencies(site: 'SiteContext', config_hooks: ConfigHooks) -> ConfigHooks:
+def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:
     for hook_name in sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
@@ -167,35 +165,36 @@ def sort_hooks(hook_names: List[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
-def hook_exists(site: 'SiteContext', hook_name: str) -> bool:
+def hook_exists(site: "SiteContext", hook_name: str) -> bool:
     hook_file = site.dir + "/lib/omd/hooks/" + hook_name
     return os.path.exists(hook_file)
 
 
-def call_hook(site: 'SiteContext', hook_name: str, args: List[str]) -> ConfigHookResult:
+def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHookResult:
 
     cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
     hook_env = os.environ.copy()
-    hook_env.update({
-        "OMD_ROOT": site.dir,
-        "OMD_SITE": site.name,
-    })
+    hook_env.update(
+        {
+            "OMD_ROOT": site.dir,
+            "OMD_SITE": site.name,
+        }
+    )
 
     logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
 
-    p = subprocess.Popen(
+    completed_process = subprocess.run(
         cmd,
         env=hook_env,
         close_fds=True,
         shell=False,
         stdout=subprocess.PIPE,
         encoding="utf-8",
+        check=False,
     )
-    content = p.communicate()[0].strip()
-    exitcode = p.poll()
-    assert exitcode is not None  # we have terminated, so there *is* an exit code
+    content = completed_process.stdout.strip()
 
-    if exitcode and args[0] != "depends":
+    if completed_process.returncode and args[0] != "depends":
         sys.stderr.write("Error running %s: %s\n" % (subprocess.list2cmdline(cmd), content))
 
-    return exitcode, content
+    return completed_process.returncode, content

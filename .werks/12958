@@ -1,0 +1,15 @@
+Title: add validation for custom tags to REST API
+Class: fix
+Compatible: compat
+Component: core
+Date: 1631534547
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, host attributes which were custom defined could not be used
+in the REST API due to a missing validation step. This Werk fixes this.
+Custom attributes can now be used in the REST API as soon as they are
+created (e.g. using the Setup GUI).

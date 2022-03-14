@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.config import factory_settings
-from .humidity import check_humidity
+# type: ignore[attr-defined]
+
+from typing import Dict, Optional
+
 from cmk.base.check_api import get_parsed_item_data
+
+from .humidity import check_humidity
 from .temperature import check_temperature
+
 map_units = {"1": "c", "2": "f", "3": "k", "4": "%"}
 
 map_dev_states = {
@@ -29,13 +33,13 @@ map_readable_states = {
     "alarm high": 2,
 }
 
-factory_settings["hwg_humidity_defaultlevels"] = {"levels": (60, 70)}
-factory_settings["hwg_temp_defaultlevels"] = {"levels": (30, 35)}
+HWG_HUMIDITY_DEFAULTLEVELS = {"levels": (60.0, 70.0)}
+HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
 
 
 def parse_hwg(info):
 
-    parsed = {}
+    parsed: Dict[str, Dict] = {}
 
     for index, descr, sensorstatus, current, unit in info:
 
@@ -43,28 +47,32 @@ def parse_hwg(info):
         if int(sensorstatus) != 0 and map_units.get(unit, "") == "%":
 
             parsed.setdefault(
-                index, {
+                index,
+                {
                     "descr": descr,
                     "humidity": float(current),
                     "dev_status_name": map_dev_states.get(sensorstatus, "n.a."),
                     "dev_status": sensorstatus,
-                })
+                },
+            )
 
         # Parse Temperature
         else:
             try:
-                tempval = float(current)
+                tempval: Optional[float] = float(current)
             except ValueError:
                 tempval = None
 
             parsed.setdefault(
-                index, {
+                index,
+                {
                     "descr": descr,
                     "dev_unit": map_units.get(unit),
                     "temperature": tempval,
                     "dev_status_name": map_dev_states.get(sensorstatus, ""),
                     "dev_status": sensorstatus,
-                })
+                },
+            )
 
     return parsed
 
@@ -99,12 +107,14 @@ def check_hwg_temp(item, params, parsed):
     if temp is None:
         return state, "Status: %s" % state_readable
 
-    state, infotext, perfdata = check_temperature(temp,
-                                                  params,
-                                                  "hwg_temp_%s" % item,
-                                                  dev_unit=parsed["dev_unit"],
-                                                  dev_status=state,
-                                                  dev_status_name=state_readable)
+    state, infotext, perfdata = check_temperature(
+        temp,
+        params,
+        "hwg_temp_%s" % item,
+        dev_unit=parsed["dev_unit"],
+        dev_status=state,
+        dev_status_name=state_readable,
+    )
 
     infotext += " (Description: %s, Status: %s)" % (parsed["descr"], parsed["dev_status_name"])
     return state, "%s" % infotext, perfdata

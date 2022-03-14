@@ -1,0 +1,36 @@
+Title: check_mk_agent: Fix issues with systemd
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627329909
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When deploying the checkmk agent on systemd based systems, users
+often encountered problems when hitting the limit of 3 connections
+per source (the monitoring server in this case).
+
+In addition the real time checks would not work for the same reason.
+
+This was due to systemd not terminating the connection until all
+child processes started by the agent had completed, including the
+started updates of the cached plugins, which were meant to be executed
+asynchronously.
+
+This is solved by adding a second service to checkmks systemd units:
+
+<tt>check-mk-agent@.service</tt>: The preexisting service.
+It is triggered by a remote connection of the monitoring server to the socket.
+This service no longer triggers the asynchronous jobs.
+It only outputs the available results.
+
+<tt>check-mk-agent-async.service</tt>: The new service.
+It consists of an agent process kept running in the background.
+It checks every 60 seconds wether new asynchronous jobs need to be started,
+to update the caches for cached plugins, and (if configured) run the real time checks.
+The created monitoring data is stored on disk.
+
+The (preexisting) agent process triggered by the socket will then output
+the prepared cached information.

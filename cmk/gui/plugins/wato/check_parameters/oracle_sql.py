@@ -5,19 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.utils import (
     register_check_parameters,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 register_check_parameters(
-    RulespecGroupCheckParametersApplications, "oracle_sql", _("Oracle Custom SQLs"),
-    Dictionary(elements=[
-        ("instance_error_state", MonitoringState(title=_("Instance error state"))),
-        ("perfdata_error_state", MonitoringState(title=_("Perfdata error state"))),
-    ],), TextAscii(title=_("Custom SQL")), "dict")
+    RulespecGroupCheckParametersApplications,
+    "oracle_sql",
+    _("Oracle Custom SQLs"),
+    Dictionary(
+        elements=[
+            ("instance_error_state", MonitoringState(title=_("Instance error state"))),
+            ("perfdata_error_state", MonitoringState(title=_("Perfdata error state"))),
+        ],
+    ),
+    TextInput(title=_("Custom SQL")),
+    "dict",
+)

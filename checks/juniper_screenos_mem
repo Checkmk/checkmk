@@ -31,5 +31,6 @@ check_info["juniper_screenos_mem"] = {
         [
             "1.0",  # Memory bytes used
             "2.0",  # Memory bytes free
-        ]),
+        ],
+    ),
 }

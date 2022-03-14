@@ -1,4 +1,4 @@
-// builds windows agent
+// builds windows agent + agent controller
 
 properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
@@ -13,6 +13,9 @@ node ('windows') {
         bat("make -C agents\\wnx NEW_VERSION=\"${CMK_VERS}\" setversion")
     }
     windows.build(
-        TARGET: 'agent'
+        TARGET: 'agent_no_sign'
+    )
+    windows.build(
+        TARGET: 'cmk_agent_ctl_no_sign'
     )
 }

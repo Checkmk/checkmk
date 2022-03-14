@@ -48,11 +48,14 @@ def check_tsm_storagepools(item, _no_params, parsed):
     data = parsed[item]
     stype = data["type"]
     size = int(float(data["size"]) * 1024**2)
-    return 0, "Used size: %s, Type: %s" % (get_bytes_human_readable(size), stype),\
-           [("used_space", size)]
+    return (
+        0,
+        "Used size: %s, Type: %s" % (get_bytes_human_readable(size), stype),
+        [("used_space", size)],
+    )
 
 
-check_info['tsm_storagepools'] = {
+check_info["tsm_storagepools"] = {
     "parse_function": parse_tsm_storagepools,
     "inventory_function": inventory_tsm_storagepools,
     "check_function": check_tsm_storagepools,

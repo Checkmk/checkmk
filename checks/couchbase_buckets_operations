@@ -24,81 +24,81 @@ def parse_couchbase_buckets_operations(info):
 @get_parsed_item_data
 def check_couchbase_buckets_operations(_item, params, data):
 
-    ops = data.get('ops')
+    ops = data.get("ops")
     if ops is not None:
         yield check_levels(
             ops,
-            'op_s',
-            params.get('ops'),
+            "op_s",
+            params.get("ops"),
             unit="/s",
-            infoname='Total (per server)',
+            infoname="Total (per server)",
         )
 
-    cmd_get = data.get('cmd_get')
+    cmd_get = data.get("cmd_get")
     if cmd_get is not None:
         yield check_levels(
             cmd_get,
             None,
             None,
             unit="/s",
-            infoname='Gets',
+            infoname="Gets",
         )
 
-    cmd_set = data.get('cmd_set')
+    cmd_set = data.get("cmd_set")
     if cmd_set is not None:
         yield check_levels(
             cmd_set,
             None,
             None,
             unit="/s",
-            infoname='Sets',
+            infoname="Sets",
         )
 
-    creates = data.get('ep_ops_create')
+    creates = data.get("ep_ops_create")
     if creates is not None:
         yield check_levels(
             creates,
             None,
             None,
             unit="/s",
-            infoname='Creates',
+            infoname="Creates",
         )
 
-    updates = data.get('ep_ops_update')
+    updates = data.get("ep_ops_update")
     if updates is not None:
         yield check_levels(
             updates,
             None,
             None,
             unit="/s",
-            infoname='Updates',
+            infoname="Updates",
         )
 
-    deletes = data.get('ep_num_ops_del_meta')
+    deletes = data.get("ep_num_ops_del_meta")
     if deletes is not None:
         yield check_levels(
             deletes,
             None,
             None,
             unit="/s",
-            infoname='Deletes',
+            infoname="Deletes",
         )
 
 
-check_info['couchbase_buckets_operations'] = {
-    'parse_function': parse_couchbase_buckets_operations,
-    'inventory_function': discover(lambda k, v: k is not None and 'ops' in v),
-    'check_function': check_couchbase_buckets_operations,
-    'service_description': 'Couchbase Bucket %s Operations',
-    'group': 'couchbase_ops',
-    'has_perfdata': True
+check_info["couchbase_buckets_operations"] = {
+    "parse_function": parse_couchbase_buckets_operations,
+    "inventory_function": discover(lambda k, v: k is not None and "ops" in v),
+    "check_function": check_couchbase_buckets_operations,
+    "service_description": "Couchbase Bucket %s Operations",
+    "group": "couchbase_ops",
+    "has_perfdata": True,
 }
 
-check_info['couchbase_buckets_operations.total'] = {
-    'parse_function': parse_couchbase_buckets_operations,
-    'inventory_function': discover(lambda k, v: k is None and 'ops' in v),
-    'check_function': check_couchbase_buckets_operations,
-    'service_description': 'Couchbase Bucket Operations',
-    'group': 'couchbase_ops_buckets',
-    'has_perfdata': True
+check_info["couchbase_buckets_operations.total"] = {
+    "parse_function": parse_couchbase_buckets_operations,
+    "inventory_function": discover(lambda k, v: k is None and "ops" in v),
+    "check_function": check_couchbase_buckets_operations,
+    "service_description": "Couchbase Bucket Operations",
+    "group": "couchbase_ops_buckets",
+    "has_perfdata": True,
 }

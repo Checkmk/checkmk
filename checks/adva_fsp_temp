@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # this is currently here only to prevent error messages when upgrading
 factory_settings["adva_fsp_temp_default_levels"] = {}
 
@@ -32,19 +33,20 @@ def check_adva_fsp_temp(item, params, info):
                 return 3, "Invalid sensor data"
 
             if low > -273:
-                return check_temperature(temp,
-                                         params,
-                                         "adva_fsp_temp_%s" % item,
-                                         dev_levels=(high, high),
-                                         dev_levels_lower=(low, low))
+                return check_temperature(
+                    temp,
+                    params,
+                    "adva_fsp_temp_%s" % item,
+                    dev_levels=(high, high),
+                    dev_levels_lower=(low, low),
+                )
 
-            return check_temperature(temp,
-                                     params,
-                                     "adva_fsp_temp_%s" % item,
-                                     dev_levels=(high, high))
+            return check_temperature(
+                temp, params, "adva_fsp_temp_%s" % item, dev_levels=(high, high)
+            )
 
 
-check_info['adva_fsp_temp'] = {
+check_info["adva_fsp_temp"] = {
     "inventory_function": inventory_adva_fsp_temp,
     "check_function": check_adva_fsp_temp,
     "service_description": "Temperature %s",
@@ -57,9 +59,10 @@ check_info['adva_fsp_temp'] = {
             "1.11.2.4.2.1.1.3",  # moduleDiagnosticsLowerTempThres
             "2.5.5.1.1.1",
             "2.5.5.2.1.5",
-            #"2.5.5.1.1.10",
-        ]),
+            # "2.5.5.1.1.10",
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7",
     "group": "temperature",
-    "default_levels_variable": "adva_fsp_temp_default_levels"
+    "default_levels_variable": "adva_fsp_temp_default_levels",
 }

@@ -1,0 +1,13 @@
+title: Kubernetes: API health
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the readiness and liveness of the Kubernetes API.
+ If the corresponding readyz or livez endpoint returns an status code
+ other than 200, the service is critical and the verbose output of said
+ endpoints is shown in details.
+
+discovery:
+ One service is created.

@@ -23,7 +23,8 @@ def parse_fortimail_queue(string_table: StringTable) -> Section:
         sub_table[0]: {
             "length": int(sub_table[1]),
             "size": int(sub_table[2]) * 1024,
-        } for sub_table in string_table
+        }
+        for sub_table in string_table
     }
 
 

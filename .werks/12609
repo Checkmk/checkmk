@@ -1,0 +1,15 @@
+Title: Fix metric selection in graph designer
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616171479
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you tried to add a metric in e.g. the custom graph designer, the metric
+dropdown showed no metrics after entering a hostname.
+
+A workaround was to add the metrics via the "Add this metric to..." option in
+the "Service metrics" column of a service.

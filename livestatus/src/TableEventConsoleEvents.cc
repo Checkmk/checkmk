@@ -5,9 +5,12 @@
 
 #include "TableEventConsoleEvents.h"
 
+#include <memory>
+#include <vector>
+
 #include "Column.h"
-#include "IntLambdaColumn.h"
-#include "ListLambdaColumn.h"
+#include "IntColumn.h"
+#include "ListColumn.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "Table.h"

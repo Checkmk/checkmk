@@ -5,10 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.plugins.agent_based.utils.liebert import (
-    parse_liebert_without_unit,
-    parse_liebert,
-)
+from cmk.base.plugins.agent_based.utils.liebert import parse_liebert, parse_liebert_without_unit
 
 
 def parse_liebert_wrapper(info, type_func=float):
@@ -25,7 +22,7 @@ def parse_liebert_without_unit_wrapper(info, type_func=float):
 
 def scan_liebert(oid):
 
-    return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.476.1.42')
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42")
 
 
 def levels_liebert(value, warn, crit, sorting="upper"):

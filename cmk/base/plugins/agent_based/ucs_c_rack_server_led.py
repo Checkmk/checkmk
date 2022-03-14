@@ -15,6 +15,7 @@
 # equipmentIndicatorLed<TAB>dn sys/rack-unit-1/indicator-led-0<TAB>name OVERALL_DIMM_STATUS<TAB>color green<TAB>operState on
 
 from typing import Dict
+
 from .agent_based_api.v1 import register, type_defs
 
 
@@ -24,13 +25,16 @@ def parse_ucs_c_rack_server_led(string_table: type_defs.StringTable) -> Dict[str
     {'Rack Unit 1 1': {'Name': 'LED_PSU_STATUS', 'Color': 'green', 'Operational state': 'on'}}
     """
     parsed = {}
-    key_translation = {'operState': 'Operational state'}
+    key_translation = {"operState": "Operational state"}
 
     for led_data in string_table:
 
         item = led_data[1].split(" ", 1)[1]
-        item = item.replace("sys", "").replace("/rack-unit-",
-                                               "Rack Unit ").replace("/indicator-led-", " ")
+        item = (
+            item.replace("sys", "")
+            .replace("/rack-unit-", "Rack Unit ")
+            .replace("/indicator-led-", " ")
+        )
 
         led_dict = {}
         for led_info in led_data[2:]:

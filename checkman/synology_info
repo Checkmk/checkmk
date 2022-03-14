@@ -1,12 +1,11 @@
 title: Synology NAS: Info
 agents: snmp
 catalog: hw/storagehw/synology
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check always is in {OK} state. It only outputs Model and Serial Number
 
 
-inventory:
+discovery:
  One service is created.
-

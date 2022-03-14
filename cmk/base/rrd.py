@@ -5,22 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from typing import Optional, Tuple
 
-from pathlib import Path
 from six import ensure_str
 
-import cmk.utils.paths
 import cmk.utils
-from cmk.utils.type_defs import MetricName, HostName
+import cmk.utils.paths
+from cmk.utils.type_defs import HostName, MetricName
 
 RRDServiceName = str
 
 
 def rrd_pnp_host_dir(hostname: HostName) -> str:
     # We need /opt here because of bug in rrdcached
-    return "/opt" + cmk.utils.paths.omd_root + "/var/pnp4nagios/perfdata/" + cmk.utils.pnp_cleanup(
-        hostname)
+    return str(cmk.utils.paths.rrd_multiple_dir / cmk.utils.pnp_cleanup(hostname))
 
 
 def xml_path_for(hostname: HostName, servicedesc: RRDServiceName = "_HOST_") -> str:
@@ -43,14 +42,21 @@ def set_text_attr(node: ET.Element, attr_name: str, value: Optional[str]) -> Non
 
 
 def write_xml(element: ET.Element, filepath: str) -> None:
-    with Path(filepath).open('w', encoding="utf-8") as fid:
-        fid.write(u'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
+    with Path(filepath).open("w", encoding="utf-8") as fid:
+        fid.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
         # TODO: Can be set to encoding="unicode" with Python3
-        fid.write(ensure_str(ET.tostring(element, method='html', encoding='UTF-8')) + u'\n')
+        # ? with UTF-8 encoding the argument of ensure_str seems to be of type bytes, with unicode encoding-str
+        fid.write(
+            ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                ET.tostring(element, method="html", encoding="UTF-8")
+            )
+            + "\n"
+        )
 
 
-def update_metric_pnp_xml_info_file(perfvar: MetricName, newvar: MetricName,
-                                    filepath: str) -> Tuple[str, str]:
+def update_metric_pnp_xml_info_file(
+    perfvar: MetricName, newvar: MetricName, filepath: str
+) -> Tuple[str, str]:
     """Update xml file related to the service described in filepath
 
     - Change DATASOURCE: NAME & LABEL to newvar
@@ -63,26 +69,26 @@ def update_metric_pnp_xml_info_file(perfvar: MetricName, newvar: MetricName,
     label = None
     for metric in root.iter("DATASOURCE"):
         if text_attr(metric, "NAME") == perfvar:
-            set_text_attr(metric, 'NAME', newvar)
+            set_text_attr(metric, "NAME", newvar)
             label = text_attr(metric, "LABEL")
-            set_text_attr(metric, 'LABEL', newvar)
+            set_text_attr(metric, "LABEL", newvar)
 
             rrdfile = text_attr(metric, "RRDFILE")
             if rrdfile is None:
                 raise TypeError()
-            rrdfilenew = rrdfile.replace(perfvar + '.rrd', newvar + '.rrd')
+            rrdfilenew = rrdfile.replace(perfvar + ".rrd", newvar + ".rrd")
             set_text_attr(metric, "RRDFILE", rrdfilenew)
             break
 
     if rrdfile is None:
         raise TypeError()
 
-    for perfdata in ['NAGIOS_PERFDATA', 'NAGIOS_SERVICEPERFDATA']:
+    for perfdata in ["NAGIOS_PERFDATA", "NAGIOS_SERVICEPERFDATA"]:
         if label:
             perfstr = text_attr(root, perfdata)
             if perfstr is None:
                 raise TypeError()
-            set_text_attr(root, perfdata, perfstr.replace(label + '=', newvar + '=', 1))
+            set_text_attr(root, perfdata, perfstr.replace(label + "=", newvar + "=", 1))
 
     write_xml(root, filepath)
 

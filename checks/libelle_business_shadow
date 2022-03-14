@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>
 #   DBShadow Oracle                           Libelle AG
@@ -218,7 +220,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #   recover 20140522172734OK      1212Recover of /u02/oradata/khvn/archive/logarcKHVN.743803837.131493.1 at 17:40 22.05.2014.
 #
 
-#.
+# .
 
 
 def check_libelle_business_shadow_to_mb(size):
@@ -249,8 +251,9 @@ def check_libelle_business_shadow_parse(info):
             parsed["release"] = re.sub("^ +", "", line[1])
         elif len(line) > 1 and line[0].startswith("Status   "):
             parsed["libelle_status"] = re.sub("^ +", "", line[1])
-        elif len(line) > 3 and ( line[0].startswith("trdrecover   ") or \
-            line[0].startswith("trdarchiver   ") ):
+        elif len(line) > 3 and (
+            line[0].startswith("trdrecover   ") or line[0].startswith("trdarchiver   ")
+        ):
             parsed["process"] = re.sub(" +$", "", line[0])
             parsed["process_status"] = re.sub("^[0-9]+ +", "", line[3])
         elif len(line) > 1 and line[0].startswith("Archive-Dir total   "):
@@ -294,7 +297,7 @@ check_info["libelle_business_shadow.info"] = {
     "service_description": "Libelle Business Shadow Info",
 }
 
-#.
+# .
 #   .--status--------------------------------------------------------------.
 #   |                         _        _                                   |
 #   |                     ___| |_ __ _| |_ _   _ ___                       |
@@ -332,7 +335,7 @@ check_info["libelle_business_shadow.status"] = {
     "service_description": "Libelle Business Shadow Status",
 }
 
-#.
+# .
 #   .--process-------------------------------------------------------------.
 #   |                                                                      |
 #   |                  _ __  _ __ ___   ___ ___  ___ ___                   |
@@ -354,8 +357,10 @@ def check_libelle_business_shadow_process(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
     status = 0
     if "process" in parsed:
-        message = "Active Process is: %s, Status: %s" % \
-            (parsed["process"], parsed["process_status"])
+        message = "Active Process is: %s, Status: %s" % (
+            parsed["process"],
+            parsed["process_status"],
+        )
         if parsed["process_status"] != "RUN":
             status = 2
     else:
@@ -371,7 +376,7 @@ check_info["libelle_business_shadow.process"] = {
     "service_description": "Libelle Business Shadow Process",
 }
 
-#.
+# .
 #   .--archive dir---------------------------------------------------------.
 #   |                          _     _                 _ _                 |
 #   |            __ _ _ __ ___| |__ (_)_   _____    __| (_)_ __            |
@@ -406,4 +411,4 @@ check_info["libelle_business_shadow.archive_dir"] = {
     "group": "filesystem",
 }
 
-#.
+# .

@@ -1,0 +1,17 @@
+Title: fix REST API ETag configuration option
+Class: fix
+Compatible: compat
+Component: core
+Date: 1634654524
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The configuration option for the ETags, previously introduced in
+Werk 11938 did not show up in the global configuration setup GUI.
+
+This was due to a bug, which this Werk fixes. The ETag functionality can now
+be turned on/off through the "Global settings > Site Management > REST API:
+Use HTTP ETags for optimistic locking" configuration value.

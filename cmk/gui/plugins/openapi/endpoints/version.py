@@ -11,29 +11,32 @@ This folder collects individual endpoints not fitting into the other endpoint fo
 import sys
 
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
+
 from cmk.gui.globals import request
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 
-from cmk.gui.plugins.openapi.restful_objects import Endpoint, response_schemas, constructors
 
-
-@Endpoint('/version', 'cmk/show', method='get', response_schema=response_schemas.InstalledVersions)
+@Endpoint("/version", "cmk/show", method="get", response_schema=response_schemas.InstalledVersions)
 def search(param):
     """Display some version information"""
-    if request.args.get('fail'):
+    if request.args.get("fail"):
         raise Exception("This is an intentional failure.")
-    return constructors.serve_json({
-        "site": cmk_version.omd_site(),
-        "group": request.environ.get('mod_wsgi.application_group', 'unknown'),
-        "rest_api": {
-            'revision': '0',
-        },
-        "versions": {
-            "apache": request.environ.get('apache.version', 'unknown'),
-            "checkmk": cmk_version.omd_version(),
-            "python": sys.version,
-            'mod_wsgi': request.environ.get('mod_wsgi.version', 'unknown'),
-            'wsgi': request.environ['wsgi.version'],
-        },
-        "edition": cmk_version.edition_short(),
-        "demo": cmk_version.is_demo(),
-    })
+    return constructors.serve_json(
+        {
+            "site": omd_site(),
+            "group": request.environ.get("mod_wsgi.application_group", "unknown"),
+            "rest_api": {
+                "revision": "0",
+            },
+            "versions": {
+                "apache": request.environ.get("apache.version", "unknown"),
+                "checkmk": cmk_version.omd_version(),
+                "python": sys.version,
+                "mod_wsgi": request.environ.get("mod_wsgi.version", "unknown"),
+                "wsgi": request.environ["wsgi.version"],
+            },
+            "edition": cmk_version.edition().short,
+            "demo": cmk_version.is_free_edition(),
+        }
+    )

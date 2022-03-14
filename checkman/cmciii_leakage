@@ -1,0 +1,17 @@
+title: Rittal CMC-III Units: Leakage
+agents: snmp
+catalog: hw/environment/rittal
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the leakage sensors of Rittal CMC-III units.
+ The state returned by the Rittal device is converted to the state
+ of the check plugin as follows:
+ If the Rittal device returns {OK}, the check is {OK}. Otherwise
+ the check is {CRIT}.
+
+item:
+ The unit name and the name of the leakage sensor
+
+discovery:
+ One service is created for each leakage sensor.

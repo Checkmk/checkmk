@@ -22,7 +22,7 @@ call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_
 
 rem with internal folder in the tar.gz
 set nm=asio
-set vv=-asio-1-18-0
+set vv=-asio-1-18-2
 set src_dir_name=%omd_path%\%nm%
 if not exist %src_dir_name% powershell Write-Host "%src_dir_name% is not found" -ForegroundColor Red && goto end
 set src_file_name=%nm%%vv%

@@ -1,0 +1,13 @@
+Title: OMD: Fix potential performance issue when system wide LDAP authorization is enabled
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1631627008
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Checkmk servers which not only use the local system user and group database (/etc/passwd and /etc/group), but also use an integration with a 3rd party system could run into performance issues. A common example for such a setup is an LDAP integration.
+This happened, for example, with <tt>omd su sitename</tt> or with any check_mk_agent (calls <tt>omd status --bare</tt>)

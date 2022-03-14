@@ -1,7 +1,7 @@
 title: Juniper Routers: BGP Status
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the BGP status for the connection to one peer at Juniper Routers.
@@ -15,5 +15,5 @@ description:
 item:
  The remote BGP peer's FSM state.
 
-inventory:
+discovery:
  One service is created for each BGP connection reported by SNMP.

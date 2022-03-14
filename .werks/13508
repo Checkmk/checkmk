@@ -1,0 +1,22 @@
+Title: Fix failed logins for LDAP user created with Checkmk versions below 1.4
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1639404800
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Since werk #13501, only LDAP connections are processed, the user has the user
+attribute for.
+
+In older versions of Checkmk only one LDAP connection was supported, setting
+the user attribute "connector" to "ldap".
+This attribute was later changed from "ldap" to "default", leading to failed
+logins now, because no LDAP connection matches.
+
+The problem will be fixed with this werk. A workaround was, to manually change
+the user attribute of affected users from 'connector':'ldap' to
+'connector':'default' in ~/var/check_mk/USERNAME/cached_profile.mk.

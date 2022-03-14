@@ -1,0 +1,17 @@
+Title: REST API: ETag validation is not less strict
+Class: fix
+Compatible: compat
+Component: core
+Date: 1624374192
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously the ETag/If-Match header pair were required to have a hexadecimal
+pattern of 32 bytes length. This was not honored by some endpoints, resulting
+in bad requests that should have been OK. This restriction has now been lifted
+and ETags can have any string content.
+
+There is no furhter action necessary.

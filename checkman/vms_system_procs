@@ -1,12 +1,11 @@
 title: OpenVMS: Number of Processes
 agents: openvms
 catalog: os/ps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the number of existing (not neccessarily
  running) processes on OpenVMS. You can set levels on the number.
 
-inventory:
+discovery:
  One service is created for each OpenVMS system.
-

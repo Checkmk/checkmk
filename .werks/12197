@@ -1,0 +1,13 @@
+Title: sophos_disk: Invalid metric name
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618400171
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Check sophos_disk failed because of invalid matric name.
+ 

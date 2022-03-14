@@ -1,0 +1,15 @@
+Title: Views: Do not show table headers on end of page without content
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1620739335
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In some cases the headers of a view table were shown at the bottom of
+the page without a following content row. On the next page the header
+was shown again with the following content rows. The header at the end
+of the page is not rendered anymore.

@@ -1,0 +1,10 @@
+Title: Inventory history: Fixed table styling
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 2.1.0b1
+Date: 1625046822
+Class: fix
+
+In "Inventory history of host" views the table styling was broken. It is now fixed to the same styling used for host inventory tables.

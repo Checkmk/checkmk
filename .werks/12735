@@ -1,0 +1,18 @@
+Title: SMART agent plugin: Exclude devices which can read CDs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620118947
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The SMART agent plugin now attempts to exclude devices which
+can read CDs. Such devices do not support SMART and not
+excluding them can lead to hanging <tt>smartctls</tt>
+processes. The plugin attempts to exclude such devices based
+on the output of <tt>udevadm</tt>, if this command is found.
+
+Note that you need to update the agents on affected linux hosts
+for this werk to come into effect.

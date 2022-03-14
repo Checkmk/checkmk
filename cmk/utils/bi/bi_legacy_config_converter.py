@@ -16,17 +16,21 @@
 # Welcome to the old world. Avoid adding any new features here.
 # This code will be abandoned with the version following 2.0
 
-from typing import Dict, Union, List, Any, Tuple
-from pathlib import Path
 import logging
 import re
-from cmk.utils.rulesets.ruleset_matcher import (RulesetToDictTransformer, get_tag_to_group_map)
-import cmk.gui.config as config  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.rulesets.ruleset_matcher import get_tag_to_group_map, RulesetToDictTransformer
+
+import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.globals import config  # pylint: disable=cmk-module-layer-violation
+
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
+
 from cmk.utils.bi.bi_packs import BIAggregationPacks
 from cmk.utils.exceptions import MKGeneralException
 
@@ -70,9 +74,11 @@ class BIRuleSchemaConverter:
         if new_schema["properties"]["icon"] is None:
             new_schema["properties"]["icon"] = ""
         new_schema["node_visualization"] = self.convert_node_visualization_old_to_new(
-            old_schema.get("layout_style"))
+            old_schema.get("layout_style")
+        )
         new_schema["aggregation_function"] = self.convert_aggr_func_old_to_new(
-            old_schema["aggregation"])
+            old_schema["aggregation"]
+        )
         new_schema["nodes"] = [
             self.convert_node_old_to_new(pack_id, ID, nr, node)
             for nr, node in enumerate(old_schema["nodes"], 1)
@@ -107,11 +113,11 @@ class BIRuleSchemaConverter:
         elif aggr_func_new["type"] == "count_ok":
             aggr_func_new["levels_ok"] = {
                 "type": "percentage" if str(aggr_func_old[1][0]).endswith("%") else "count",
-                "value": int(str(aggr_func_old[1][0]).rstrip("%"))
+                "value": int(str(aggr_func_old[1][0]).rstrip("%")),
             }
             aggr_func_new["levels_warn"] = {
                 "type": "percentage" if str(aggr_func_old[1][1]).endswith("%") else "count",
-                "value": int(str(aggr_func_old[1][1]).rstrip("%"))
+                "value": int(str(aggr_func_old[1][1]).rstrip("%")),
             }
         return aggr_func_new
 
@@ -127,16 +133,14 @@ class BIRuleSchemaConverter:
     def convert_node_old_to_new(self, pack_id: str, ID: str, nr: int, node):
         if node[0] == "call":
             return {
-                "search": {
-                    "type": "empty"
-                },
+                "search": {"type": "empty"},
                 "action": {
                     "type": "call_a_rule",
                     "rule_id": node[1][0],
                     "params": {
                         "arguments": node[1][1],
-                    }
-                }
+                    },
+                },
             }
         if node[0] == "service":
             host_regex = node[1][0]
@@ -144,40 +148,34 @@ class BIRuleSchemaConverter:
             service_regex = node[1][1]
             self._validate_regex(service_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
             return {
-                "search": {
-                    "type": "empty"
-                },
+                "search": {"type": "empty"},
                 "action": {
                     "type": "state_of_service",
                     "host_regex": host_regex,
                     "service_regex": service_regex,
-                }
+                },
             }
 
         if node[0] == "host":
             host_regex = node[1][0]
             self._validate_regex(host_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
             return {
-                "search": {
-                    "type": "empty"
-                },
+                "search": {"type": "empty"},
                 "action": {
                     "type": "state_of_host",
                     "host_regex": host_regex,
-                }
+                },
             }
 
         if node[0] == "remaining":
             host_regex = node[1][0]
             self._validate_regex(host_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
             return {
-                "search": {
-                    "type": "empty"
-                },
+                "search": {"type": "empty"},
                 "action": {
                     "type": "state_of_remaining_services",
                     "host_regex": host_regex,
-                }
+                },
             }
 
         if node[0] == "foreach_host":
@@ -194,17 +192,18 @@ class BIRuleSchemaConverter:
             else:
                 conditions["host_choice"] = {
                     "type": "host_alias_regex",
-                    "pattern": node_config[2][1]
+                    "pattern": node_config[2][1],
                 }
 
             return {
                 "search": {
                     "type": "host_search",
                     "refer_to": node_config[0],
-                    "conditions": conditions
+                    "conditions": conditions,
                 },
-                "action": self.convert_node_old_to_new(pack_id, ID + ".action", nr, node_config[3])
-                          ["action"]
+                "action": self.convert_node_old_to_new(pack_id, ID + ".action", nr, node_config[3])[
+                    "action"
+                ],
             }
 
         if node[0] == "foreach_service":
@@ -221,7 +220,7 @@ class BIRuleSchemaConverter:
             else:
                 conditions["host_choice"] = {
                     "type": "host_alias_regex",
-                    "pattern": node_config[1][1]
+                    "pattern": node_config[1][1],
                 }
             service_regex = node_config[2]
             self._validate_regex(service_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
@@ -229,12 +228,10 @@ class BIRuleSchemaConverter:
             conditions["service_labels"] = {}
 
             return {
-                "search": {
-                    "type": "service_search",
-                    "conditions": conditions
-                },
-                "action": self.convert_node_old_to_new(pack_id, ID + ".action", nr, node_config[3])
-                          ["action"]
+                "search": {"type": "service_search", "conditions": conditions},
+                "action": self.convert_node_old_to_new(pack_id, ID + ".action", nr, node_config[3])[
+                    "action"
+                ],
             }
 
 
@@ -250,7 +247,7 @@ class BIAggregationSchemaConverter:
         new_schema["computation_options"] = {
             "disabled": old_schema.get("disabled", False),
             "escalate_downtimes_as_warn": old_schema.get("downtime_aggr_warn", False),
-            "use_hard_states": old_schema.get("hard_states", False)
+            "use_hard_states": old_schema.get("hard_states", False),
         }
         node_vis = old_schema.get("node_visualization")
         if node_vis is None or node_vis == {}:
@@ -259,8 +256,9 @@ class BIAggregationSchemaConverter:
         if "customer" in old_schema:
             new_schema["customer"] = old_schema["customer"]
         rule_converter = BIRuleSchemaConverter(self._logger, self._error_counter)
-        new_schema["node"] = rule_converter.convert_node_old_to_new(pack_id, ID, 1,
-                                                                    old_schema["node"])
+        new_schema["node"] = rule_converter.convert_node_old_to_new(
+            pack_id, ID, 1, old_schema["node"]
+        )
         new_schema["groups"] = self.convert_old_groups(old_schema["groups"])
 
         return new_schema
@@ -320,21 +318,22 @@ class BIManagement:
 
     def _load_config(self):
         self._bi_constants = {
-            'ALL_HOSTS': 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'HOST_STATE': 'HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'HIDDEN': 'HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_HOST': 'FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_CHILD': 'FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_CHILD_WITH': 'FOREACH_CHILD_WITH-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_PARENT': 'FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_SERVICE': 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'REMAINING': 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'DISABLED': 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'HARD_STATES': 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'DT_AGGR_WARN': 'DT_AGGR_WARN-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            "ALL_HOSTS": "ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "HOST_STATE": "HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "HIDDEN": "HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "FOREACH_HOST": "FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "FOREACH_CHILD": "FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "FOREACH_CHILD_WITH": "FOREACH_CHILD_WITH-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "FOREACH_PARENT": "FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "FOREACH_SERVICE": "FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "REMAINING": "REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "DISABLED": "DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "HARD_STATES": "HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3",
+            "DT_AGGR_WARN": "DT_AGGR_WARN-f41e728b-0bce-40dc-82ea-51091d034fc3",
         }
         self._hosttags_transformer = RulesetToDictTransformer(
-            tag_to_group_map=get_tag_to_group_map(config.tags))
+            tag_to_group_map=get_tag_to_group_map(config.tags)
+        )
 
         try:
             vars_: Dict[str, Any] = {
@@ -348,8 +347,9 @@ class BIManagement:
             exec(self._get_config_string(), vars_, vars_)
 
             # put legacy non-pack stuff into packs
-            if (vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]) and \
-                "default" not in vars_["bi_packs"]:
+            if (
+                vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]
+            ) and "default" not in vars_["bi_packs"]:
                 vars_["bi_packs"]["default"] = {
                     "title": "Default Pack",
                     "rules": vars_["aggregation_rules"],
@@ -369,10 +369,12 @@ class BIManagement:
                 aggregations = []
                 for aggregation in pack["aggregations"]:
                     aggregations.append(
-                        self._convert_aggregation_from_bi(aggregation, single_host=False))
+                        self._convert_aggregation_from_bi(aggregation, single_host=False)
+                    )
                 for aggregation in pack["host_aggregations"]:
                     aggregations.append(
-                        self._convert_aggregation_from_bi(aggregation, single_host=True))
+                        self._convert_aggregation_from_bi(aggregation, single_host=True)
+                    )
 
                 self._packs[pack_id] = {
                     "id": pack_id,
@@ -436,7 +438,7 @@ class BIManagement:
                     s = n
                 else:
                     break
-        return s[0] + '\n ' + s[1:-1] + '\n' + s[-1]
+        return s[0] + "\n " + s[1:-1] + "\n" + s[-1]
 
     def _convert_aggregation_to_bi(self, aggr):
         node = self._convert_node_to_bi(aggr["node"])
@@ -462,9 +464,9 @@ class BIManagement:
         if node[0] == "call":
             return node[1]
         if node[0] == "host":
-            return (node[1][0], self._bi_constants['HOST_STATE'])
+            return (node[1][0], self._bi_constants["HOST_STATE"])
         if node[0] == "remaining":
-            return (node[1][0], self._bi_constants['REMAINING'])
+            return (node[1][0], self._bi_constants["REMAINING"])
         if node[0] == "service":
             return node[1]
         if node[0] == "foreach_host":
@@ -474,27 +476,40 @@ class BIManagement:
             if node[1][2]:
                 hostspec = node[1][2]
             else:
-                hostspec = self._bi_constants['ALL_HOSTS']
+                hostspec = self._bi_constants["ALL_HOSTS"]
 
-            if isinstance(what, tuple) and what[0] == 'child_with':
+            if isinstance(what, tuple) and what[0] == "child_with":
                 child_conditions = what[1]
                 what = what[0]
                 child_tags = child_conditions[0]
-                child_hostspec = child_conditions[1] if child_conditions[1] else self._bi_constants[
-                    'ALL_HOSTS']
-                return (self._bi_constants["FOREACH_" + what.upper()], child_tags, child_hostspec, tags, hostspec) \
-                       + self._convert_node_to_bi(node[1][3])
-            return (self._bi_constants["FOREACH_" + what.upper()], tags,
-                    hostspec) + self._convert_node_to_bi(node[1][3])
+                child_hostspec = (
+                    child_conditions[1] if child_conditions[1] else self._bi_constants["ALL_HOSTS"]
+                )
+                return (
+                    self._bi_constants["FOREACH_" + what.upper()],
+                    child_tags,
+                    child_hostspec,
+                    tags,
+                    hostspec,
+                ) + self._convert_node_to_bi(node[1][3])
+            return (
+                self._bi_constants["FOREACH_" + what.upper()],
+                tags,
+                hostspec,
+            ) + self._convert_node_to_bi(node[1][3])
         if node[0] == "foreach_service":
             tags = node[1][0]
             if node[1][1]:
                 spec = node[1][1]
             else:
-                spec = self._bi_constants['ALL_HOSTS']
+                spec = self._bi_constants["ALL_HOSTS"]
             service = node[1][2]
-            return (self._bi_constants["FOREACH_SERVICE"], tags, spec,
-                    service) + self._convert_node_to_bi(node[1][3])
+            return (
+                self._bi_constants["FOREACH_SERVICE"],
+                tags,
+                spec,
+                service,
+            ) + self._convert_node_to_bi(node[1][3])
 
     def _convert_aggregation_from_bi(self, aggr, single_host):
         if isinstance(aggr[0], dict):
@@ -565,8 +580,9 @@ class BIManagement:
         if "id" in brule:
             del brule["id"]
         brule["nodes"] = list(map(self._convert_node_to_bi, rule["nodes"]))
-        brule["aggregation"] = "!".join([rule["aggregation"][0]] +
-                                        list(map(str, rule["aggregation"][1])))
+        brule["aggregation"] = "!".join(
+            [rule["aggregation"][0]] + list(map(str, rule["aggregation"][1]))
+        )
         return brule
 
     # Convert node-Tuple into format used by CascadingDropdown
@@ -574,17 +590,17 @@ class BIManagement:
         if len(node) == 2:
             if isinstance(node[1], list):
                 return ("call", node)
-            if node[1] == self._bi_constants['HOST_STATE']:
+            if node[1] == self._bi_constants["HOST_STATE"]:
                 return ("host", (node[0],))
-            if node[1] == self._bi_constants['REMAINING']:
+            if node[1] == self._bi_constants["REMAINING"]:
                 return ("remaining", (node[0],))
             return ("service", node)
 
         foreach_spec = node[0]
-        if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+        if foreach_spec == self._bi_constants["FOREACH_CHILD_WITH"]:
             # extract the conditions meant for matching the childs
             child_conditions = list(node[1:3])
-            if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
+            if child_conditions[1] == self._bi_constants["ALL_HOSTS"]:
                 child_conditions[1] = None
             node = node[0:1] + node[3:]
 
@@ -603,22 +619,22 @@ class BIManagement:
             tags = {}
 
         hostspec = node[1]
-        if hostspec == self._bi_constants['ALL_HOSTS']:
+        if hostspec == self._bi_constants["ALL_HOSTS"]:
             hostspec = None
 
-        if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
+        if foreach_spec == self._bi_constants["FOREACH_SERVICE"]:
             service = node[2]
             subnode = self._convert_node_from_bi(node[3:])
             return ("foreach_service", (tags, hostspec, service, subnode))
 
         subnode = self._convert_node_from_bi(node[2:])
-        if foreach_spec == self._bi_constants['FOREACH_HOST']:
+        if foreach_spec == self._bi_constants["FOREACH_HOST"]:
             what: Union[str, Tuple] = "host"
-        elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
+        elif foreach_spec == self._bi_constants["FOREACH_CHILD"]:
             what = "child"
-        elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+        elif foreach_spec == self._bi_constants["FOREACH_CHILD_WITH"]:
             what = ("child_with", child_conditions)
-        elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
+        elif foreach_spec == self._bi_constants["FOREACH_PARENT"]:
             what = "parent"
         return ("foreach_host", (what, tags, hostspec, subnode))
 

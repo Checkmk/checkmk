@@ -1,0 +1,12 @@
+Title: <tt>cisco_ucs</tt> checks: Add support for UCS C480 M5 Servers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1638253438
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The <tt>cisco_ucs</tt> check plugins will now be discovered on Cisco
+UCS C480 M5 Rack Servers.

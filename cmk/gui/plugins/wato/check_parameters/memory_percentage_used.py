@@ -5,38 +5,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Percentage,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
 def _parameter_valuespec_memory_percentage_levels():
     return Dictionary(
         elements=[
-            ("levels",
-             Tuple(
-                 title=_("Levels"),
-                 elements=[
-                     Percentage(
-                         title=_("Warning at"),
-                         default_value=70.0,
-                     ),
-                     Percentage(
-                         title=_("Critical at"),
-                         default_value=80.0,
-                     ),
-                 ],
-             )),
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            default_value=70.0,
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            default_value=80.0,
+                        ),
+                    ],
+                ),
+            ),
         ],
-        required_keys=['levels'],  # There is only one value, so its required
+        required_keys=["levels"],  # There is only one value, so its required
     )
 
 
@@ -47,4 +44,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_percentage_levels,
         title=lambda: _("Memory percentage used"),
-    ))
+    )
+)

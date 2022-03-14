@@ -1,0 +1,11 @@
+Title: lsi_disk: Fix setting expected disk state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626087821
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The manually set value for the expected disk state was not compared correctly to the actual state of the disk. This was fixed.

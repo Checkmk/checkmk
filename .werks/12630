@@ -1,0 +1,14 @@
+Title: ntp: Check_MK Discovery crash "invalid literal for int() with base 10: 'st'"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1616850595
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The ntp check caused a Check_MK Discovery service crash with the error message
+"ValueError (invalid literal for int() with base 10: 'st')". This has been
+fixed.

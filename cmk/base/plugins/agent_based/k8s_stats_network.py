@@ -3,31 +3,28 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping, MutableMapping, Optional
 import collections
 from contextlib import suppress
+from typing import Any, Mapping, MutableMapping, Optional
 
 from .agent_based_api.v1 import (
-    register,
-    Service,
-    Metric,
-    IgnoreResults,
-    render,
-    GetRateError,
     check_levels,
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
+    Metric,
+    register,
+    render,
+    Service,
 )
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.k8s import Interface, Section, to_interface
 
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-)
-from .utils.k8s import (
-    Section,
-    Interface,
-    to_interface,
-)
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 
 
 def discover_k8s_stats_network(
@@ -60,9 +57,9 @@ def _k8s_network_err_pac(
     params: Mapping[str, Any],
     now: float,
 ) -> CheckResult:
-    warn, crit = params.get('errors', (None, None))
+    warn, crit = params.get("errors", (None, None))
 
-    for name, pway in (('Input', 'in'), ('Output', 'out')):
+    for name, pway in (("Input", "in"), ("Output", "out")):
         # Split error handling to ensure both rates get initialized on first run
         pac_rate, err_rate = None, None
         with suppress(GetRateError):
@@ -82,8 +79,8 @@ def _k8s_network_err_pac(
         if pac_rate is None or err_rate is None:
             continue
 
-        yield Metric('if_%s_pkts' % pway, pac_rate, boundaries=(0, None))
-        yield Metric('if_%s_errors' % pway, err_rate, boundaries=(0, None))
+        yield Metric("if_%s_pkts" % pway, pac_rate, boundaries=(0, None))
+        yield Metric("if_%s_errors" % pway, err_rate, boundaries=(0, None))
 
         if isinstance(warn, float) and isinstance(crit, float):
             yield from check_levels(
@@ -109,14 +106,17 @@ def _check__k8s_stats_network__core(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    now = section['timestamp']
+    now = section["timestamp"]
 
     interface: Interface = to_interface(
-        sum((collections.Counter(interface) for interface in section['interfaces'][item]),
-            collections.Counter()))
+        sum(
+            (collections.Counter(interface) for interface in section["interfaces"][item]),
+            collections.Counter(),
+        )
+    )
 
     # Bandwidth
-    for name, dsname in (('In', 'in'), ('Out', 'out')):
+    for name, dsname in (("In", "in"), ("Out", "out")):
         with suppress(GetRateError):
             yield from check_levels(
                 value=get_rate(
@@ -135,8 +135,8 @@ def _check__k8s_stats_network__core(
 
     # Discards
     for name, met, dsname in [
-        ('Input Discards', 'rx', 'if_in_discards'),
-        ('Output Discards', 'tx', 'if_out_discards'),
+        ("Input Discards", "rx", "if_in_discards"),
+        ("Output Discards", "tx", "if_out_discards"),
     ]:
         with suppress(GetRateError):
             yield from check_levels(
@@ -147,7 +147,7 @@ def _check__k8s_stats_network__core(
                     interface["rx_dropped"] if met == "rx" else interface["tx_dropped"],
                 ),
                 metric_name=dsname,
-                levels_upper=params.get('discards'),
+                levels_upper=params.get("discards"),
                 render_func=lambda v: "%.2f/s" % v,
                 label=name,
                 boundaries=(0, None),

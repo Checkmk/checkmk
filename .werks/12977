@@ -1,0 +1,15 @@
+Title: Fix UnboundLocalError on host import via CSV file
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626244786
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you used the option "Import hosts via CSV file" on page "Setup" - "Hosts"
+with option "Perform automatic service discovery" disabled, the following error
+"UnboundLocalError (local variable 'folder_path' referenced before assignment)"
+occured.

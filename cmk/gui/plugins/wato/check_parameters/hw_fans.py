@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-    Transform,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary, Integer, TextInput, Transform, Tuple
 
 
 def _parameter_valuespec_hw_fans():
@@ -30,8 +22,8 @@ def _parameter_valuespec_hw_fans():
                     help=_("Lower levels for the fan speed of a hardware device"),
                     title=_("Lower levels"),
                     elements=[
-                        Integer(title=_("warning if below"), unit=u"rpm"),
-                        Integer(title=_("critical if below"), unit=u"rpm"),
+                        Integer(title=_("warning if below"), unit="rpm"),
+                        Integer(title=_("critical if below"), unit="rpm"),
                     ],
                 ),
             ),
@@ -41,18 +33,20 @@ def _parameter_valuespec_hw_fans():
                     help=_("Upper levels for the fan speed of a hardware device"),
                     title=_("Upper levels"),
                     elements=[
-                        Integer(title=_("warning at"), unit=u"rpm"),
-                        Integer(title=_("critical at"), unit=u"rpm"),
+                        Integer(title=_("warning at"), unit="rpm"),
+                        Integer(title=_("critical at"), unit="rpm"),
                     ],
                 ),
             ),
-            ("output_metrics",
-             Checkbox(title=_("Performance data"), label=_("Enable performance data"))),
+            (
+                "output_metrics",
+                Checkbox(title=_("Performance data"), label=_("Enable performance data")),
+            ),
         ],
         optional_keys=["upper", "output_metrics"],
     )
     return Transform(
-        hw_fans_dict,
+        valuespec=hw_fans_dict,
         forth=lambda spec: spec if isinstance(spec, dict) else {"lower": spec},
     )
 
@@ -61,8 +55,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hw_fans",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Fan Name"), help=_("The identificator of the fan.")),
+        item_spec=lambda: TextInput(title=_("Fan Name"), help=_("The identificator of the fan.")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hw_fans,
         title=lambda: _("FAN speed of Hardware devices"),
-    ))
+    )
+)

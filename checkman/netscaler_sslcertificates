@@ -1,7 +1,7 @@
 title: Citrix Netscaler SSL Certificates: Age Validation
 agents: snmp
 catalog: app/netscaler
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check validates found SSL certificates against {WARN} and {CRIT} levels.
@@ -12,10 +12,7 @@ description:
 item:
  The name reported as {sslCertKeyName} (OID: .1.3.6.1.4.1.5951.4.1.1.56.1.1.1).
 
-inventory:
+discovery:
  One service is created for each SSL certificate.
 
  Use {ignored_services} if you need a host-specific configuration.
-
-cluster:
- On a cluster, the service state is set to to the worst encountered node state.

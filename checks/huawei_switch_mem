@@ -9,8 +9,9 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['huawei_switch_mem_default_levels'] = {
-    'levels': (80.0, 90.0),
+
+factory_settings["huawei_switch_mem_default_levels"] = {
+    "levels": (80.0, 90.0),
 }
 
 
@@ -24,24 +25,28 @@ def check_huawei_switch_mem(item, params, item_data):
         mem = float(item_data.value)
     except TypeError:
         return
-    return check_levels(mem,
-                        "mem_used_percent",
-                        params.get('levels', (None, None)),
-                        infoname="Usage",
-                        human_readable_func=get_percent_human_readable)
+    return check_levels(
+        mem,
+        "mem_used_percent",
+        params.get("levels", (None, None)),
+        infoname="Usage",
+        human_readable_func=get_percent_human_readable,
+    )
 
 
-check_info['huawei_switch_mem'] = {
-    'parse_function': parse_huawei_switch_mem,
-    'inventory_function': discover(),
-    'check_function': check_huawei_switch_mem,
-    'service_description': 'Memory %s',
-    'snmp_info': huawei_entity_specific_snmp_info((
-        '.1.3.6.1.4.1.2011.5.25.31.1.1.1.1',
-        [OID_END, "7"],
-    )),
-    'snmp_scan_function': huawei_switch_scan_function,
-    'has_perfdata': True,
-    'group': "memory_percentage_used_multiitem",
-    'default_levels_variable': 'huawei_switch_mem_default_levels',
+check_info["huawei_switch_mem"] = {
+    "parse_function": parse_huawei_switch_mem,
+    "inventory_function": discover(),
+    "check_function": check_huawei_switch_mem,
+    "service_description": "Memory %s",
+    "snmp_info": huawei_entity_specific_snmp_info(
+        (
+            ".1.3.6.1.4.1.2011.5.25.31.1.1.1.1",
+            [OID_END, "7"],
+        )
+    ),
+    "snmp_scan_function": huawei_switch_scan_function,
+    "has_perfdata": True,
+    "group": "memory_percentage_used_multiitem",
+    "default_levels_variable": "huawei_switch_mem_default_levels",
 }

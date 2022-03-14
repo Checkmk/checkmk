@@ -5,87 +5,82 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with host tags"""
 
-from typing import Any, Dict, List, Set, Tuple as _Tuple, Union, Optional
-
-import errno
-from pathlib import Path
-
 import abc
+import errno
 from enum import Enum
-
-from six import ensure_str
-
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
-from cmk.gui.exceptions import (MKAuthException, MKGeneralException)
+from pathlib import Path
+from typing import Any, Dict, Final, List, Optional, Set
+from typing import Tuple as _Tuple
+from typing import Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.i18n import _
-
 import cmk.utils.tags
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-from cmk.gui.watolib.utils import (
-    multisite_dir,
-    wato_root_dir,
-)
-from cmk.utils.tags import TagGroup, TagConfig
+from cmk.utils.i18n import _
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagGroup
+from cmk.utils.type_defs import TagConfigSpec
+
+import cmk.gui.watolib as watolib
+from cmk.gui.config import load_config
+from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
-class TagConfigFile(WatoSimpleConfigFile):
-    """Handles loading the 1.6 tag definitions from GUI tags.mk or
-    the pre 1.6 tag configuration from hosttags.mk
+class TagConfigFile:
+    """Handles loading the 1.6 tag definitions from GUI tags.mk
 
-    When saving the configuration it also writes out the tags.mk for
-    the cmk.base world.
+    The pre 1.6 tag configuration from hosttags.mk was loaded and transformed until 2.0.
+
+    When saving the configuration it also writes out the tags.mk for the cmk.base world.
     """
-    def __init__(self):
-        file_path = Path(multisite_dir()) / "tags.mk"
-        super(TagConfigFile, self).__init__(config_file_path=file_path, config_variable="wato_tags")
 
-    def _load_file(self, lock=False):
-        if not self._config_file_path.exists():
-            return self._load_pre_16_config(lock=lock)
-        return super(TagConfigFile, self)._load_file(lock=lock)
+    def __init__(self) -> None:
+        self._config_file_path: Final = Path(multisite_dir()) / "tags.mk"
+        self._config_variable: Final = "wato_tags"
 
-    def _pre_16_hosttags_path(self):
-        return Path(multisite_dir(), "hosttags.mk")
+    def load_for_reading(self) -> TagConfigSpec:
+        return self._load_file(lock=False)
 
-    def _load_pre_16_config(self, lock):
-        legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {
-            "wato_host_tags": [],
-            "wato_aux_tags": []
-        },
-                                        lock=lock)
+    def load_for_modification(self) -> TagConfigSpec:
+        return self._load_file(lock=True)
 
-        _migrate_old_sample_config_tag_groups(legacy_cfg["wato_host_tags"],
-                                              legacy_cfg["wato_aux_tags"])
-        return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
-                                                    legacy_cfg["wato_aux_tags"])
+    def _load_file(self, lock: bool = False) -> TagConfigSpec:
+        cfg = store.load_from_mk_file(
+            self._config_file_path,
+            key=self._config_variable,
+            default={},
+            lock=lock,
+        )
+        if not cfg:  # Initialize with empty default config
+            return {"tag_groups": [], "aux_tags": []}
+        return cfg
 
-    def save(self, cfg):
-        super(TagConfigFile, self).save(cfg)
+    def save(self, cfg: TagConfigSpec) -> None:
+        self._save_gui_config(cfg)
         self._save_base_config(cfg)
+        self._cleanup_pre_16_config()
+        _export_hosttags_to_php(cfg)
 
+    def _save_gui_config(self, cfg: TagConfigSpec) -> None:
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        store.save_to_mk_file(self._config_file_path, self._config_variable, cfg)
+
+    def _save_base_config(self, cfg: TagConfigSpec) -> None:
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
+
+    def _cleanup_pre_16_config(self) -> None:
         # Cleanup pre 1.6 config files (tags were just saved with new path)
         try:
-            self._pre_16_hosttags_path().unlink()
+            Path(multisite_dir(), "hosttags.mk").unlink()
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
 
-        _export_hosttags_to_php(cfg)
-
-    def _save_base_config(self, cfg):
-        base_config_file = WatoSimpleConfigFile(config_file_path=Path(wato_root_dir()) / "tags.mk",
-                                                config_variable="tag_config")
-        base_config_file.save(cfg)
-
 
 def load_tag_config() -> TagConfig:
     """Load the tag config object based upon the most recently saved tag config file"""
-    tag_config = cmk.utils.tags.TagConfig()
-    tag_config.parse_config(TagConfigFile().load_for_modification())
+    tag_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_modification())
     return tag_config
 
 
@@ -111,6 +106,7 @@ def load_tag_group(ident: str) -> Optional[TagGroup]:
 
     """
     tag_config = load_tag_config()
+    tag_config += BuiltinTagConfig()
     return tag_config.get_tag_group(ident)
 
 
@@ -128,9 +124,17 @@ def save_tag_group(tag_group: TagGroup):
     update_tag_config(tag_config)
 
 
-def tag_group_exists(ident: str) -> bool:
+def is_builtin(ident: str) -> bool:
+    """Verify if a tag group is a built-in"""
+    tag_config = BuiltinTagConfig()
+    return tag_config.tag_group_exists(ident)
+
+
+def tag_group_exists(ident: str, builtin_included=False) -> bool:
     """Verify if a tag group exists"""
     tag_config = load_tag_config()
+    if builtin_included:
+        tag_config += BuiltinTagConfig()
     return tag_config.tag_group_exists(ident)
 
 
@@ -142,7 +146,7 @@ def load_aux_tags() -> List[str]:
 
 
 def _update_tag_dependencies():
-    config.load_config()
+    load_config()
     watolib.Folder.invalidate_caches()
     watolib.Folder.root_folder().rewrite_hosts_files()
 
@@ -194,7 +198,7 @@ def identify_modified_tags(updated_group: TagGroup, old_group: TagGroup):
 
     Example:
 
-    >>> _old_group = TagGroup({
+    >>> _old_group = TagGroup.from_config({
     ...    'id': 'foo',
     ...    'title': 'foobar',
     ...    'tags': [{
@@ -204,7 +208,7 @@ def identify_modified_tags(updated_group: TagGroup, old_group: TagGroup):
     ...    }],
     ...    'topic': 'nothing'
     ... })
-    >>> _updated_group = TagGroup({
+    >>> _updated_group = TagGroup.from_config({
     ...    'id': 'foo',
     ...    'title': 'foobar',
     ...    'tags': [{
@@ -231,8 +235,9 @@ def identify_modified_tags(updated_group: TagGroup, old_group: TagGroup):
                 continue
 
         # Detect removal
-        if former_tag.id is not None \
-            and former_tag.id not in [tmp_tag.id for tmp_tag in updated_group.tags]:
+        if former_tag.id is not None and former_tag.id not in [
+            tmp_tag.id for tmp_tag in updated_group.tags
+        ]:
             # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
             remove_tag_ids.append(former_tag.id)
     return remove_tag_ids, replace_tag_ids
@@ -246,16 +251,17 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(metaclass=abc.ABCMeta):
+class ABCOperation(abc.ABC):
     """Base for all tag cleanup operations"""
+
     @abc.abstractmethod
     def confirm_title(self) -> str:
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
+class ABCTagGroupOperation(ABCOperation, abc.ABC):
     def __init__(self, tag_group_id: str) -> None:
-        super(ABCTagGroupOperation, self).__init__()
+        super().__init__()
         self.tag_group_id = tag_group_id
 
 
@@ -270,9 +276,13 @@ class OperationRemoveAuxTag(ABCTagGroupOperation):
 
 
 class OperationReplaceGroupedTags(ABCOperation):
-    def __init__(self, tag_group_id: str, remove_tag_ids: List[str],
-                 replace_tag_ids: Dict[str, str]) -> None:
-        super(OperationReplaceGroupedTags, self).__init__()
+    def __init__(
+        self,
+        tag_group_id: str,
+        remove_tag_ids: List[Optional[str]],
+        replace_tag_ids: Dict[str, str],
+    ) -> None:
+        super().__init__()
         self.tag_group_id = tag_group_id
         self.remove_tag_ids = remove_tag_ids
         self.replace_tag_ids = replace_tag_ids
@@ -303,7 +313,8 @@ def change_host_tags_in_folders(operation, mode, folder):
 
         for subfolder in folder.subfolders():
             aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(
-                operation, mode, subfolder)
+                operation, mode, subfolder
+            )
             affected_folders += aff_folders
             affected_hosts += aff_hosts
             affected_rulesets += aff_rulespecs
@@ -411,7 +422,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map: List[_Tuple[str, Any]] = list(operation.replace_tag_ids.items())
+    tag_map: List[_Tuple[Optional[str], Any]] = list(operation.replace_tag_ids.items())
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices
@@ -423,7 +434,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             continue
 
         current_value = rule.conditions.host_tags[operation.tag_group_id]
-        if current_value not in (old_tag, {'$ne': old_tag}):
+        if current_value not in (old_tag, {"$ne": old_tag}):
             continue  # old_tag id is not configured
 
         affected_rulesets.add(ruleset)
@@ -443,119 +454,6 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             ruleset.delete_rule(rule)
 
     return affected_rulesets
-
-
-# Previous to 1.5 the "Agent type" tag group was created as sample config and was not
-# a builtin tag group (which can not be modified by the user). With werk #5535 we changed
-# the tag scheme and need to deal with the user config (which might extend the original tag group).
-# Use two strategies:
-#
-# a) Check whether or not the tag group has been modified. If not, simply remove it from the user
-#    config and use the builtin tag group in the future.
-# b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
-# TODO: Move to wato/watolib and register using register_post_config_load_hook()
-def _migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
-    _remove_old_sample_config_tag_groups(host_tags, aux_tags_)
-    _extend_user_modified_tag_groups(host_tags)
-
-
-def _remove_old_sample_config_tag_groups(host_tags, aux_tags_):
-    legacy_tag_group_default = (
-        'agent',
-        u'Agent type',
-        [
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping', u'No Agent', []),
-        ],
-    )
-
-    try:
-        host_tags.remove(legacy_tag_group_default)
-
-        # Former tag choices (see above) are added as aux tags to allow the user to migrate
-        # these tags and the objects that use them
-        aux_tags_.insert(0,
-                         ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
-        aux_tags_.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
-    except ValueError:
-        pass  # Not there or modified
-
-    legacy_aux_tag_ids = [
-        'snmp',
-        'tcp',
-    ]
-
-    for aux_tag in aux_tags_[:]:
-        if aux_tag[0] in legacy_aux_tag_ids:
-            aux_tags_.remove(aux_tag)
-
-
-def _extend_user_modified_tag_groups(host_tags):
-    """This method supports migration from <1.5 to 1.5 in case the user has a customized "Agent type" tag group
-    See help of migrate_old_sample_config_tag_groups() and werk #5535 and #6446 for further information.
-
-    Disclaimer: The host_tags data structure is a mess which will hopefully be cleaned up during 1.6 development.
-    Basically host_tags is a list of configured tag groups. Each tag group is represented by a tuple like this:
-
-    # tag_group_id, tag_group_title, tag_choices
-    ('agent', u'Agent type',
-        [
-            # tag_id, tag_title, aux_tag_ids
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping',      u'No Agent', []),
-        ],
-    )
-    """
-    tag_group = None
-    for this_tag_group in host_tags:
-        if this_tag_group[0] == "agent":
-            tag_group = this_tag_group
-
-    if tag_group is None:
-        return  # Tag group does not exist
-
-    # Mark all existing tag choices as legacy to help the user that this should be cleaned up
-    for index, tag_choice in enumerate(tag_group[2][:]):
-        if tag_choice[0] in ["no-agent", "special-agents", "all-agents", "cmk-agent"]:
-            continue  # Don't prefix the standard choices
-
-        if tag_choice[1].startswith("Legacy: "):
-            continue  # Don't prefix already prefixed choices
-
-        tag_choice_list = list(tag_choice)
-        tag_choice_list[1] = "Legacy: %s" % tag_choice_list[1]
-        tag_group[2][index] = tuple(tag_choice_list)
-
-    tag_choices = [c[0] for c in tag_group[2]]
-
-    if "no-agent" not in tag_choices:
-        tag_group[2].insert(0, ("no-agent", _("No agent"), []))
-
-    if "special-agents" not in tag_choices:
-        tag_group[2].insert(
-            0, ("special-agents", _("No Checkmk agent, all configured special agents"), ["tcp"]))
-
-    if "all-agents" not in tag_choices:
-        tag_group[2].insert(
-            0, ("all-agents", _("Normal Checkmk agent, all configured special agents"), ["tcp"]))
-
-    if "cmk-agent" not in tag_choices:
-        tag_group[2].insert(
-            0, ("cmk-agent", _("Normal Checkmk agent, or special agent if configured"), ["tcp"]))
-    else:
-        # Change title of cmk-agent tag choice and move to top
-        for index, tag_choice in enumerate(tag_group[2]):
-            if tag_choice[0] == "cmk-agent":
-                tag_choice_list = list(tag_group[2].pop(index))
-                tag_choice_list[1] = _("Normal Checkmk agent, or special agent if configured")
-                tag_group[2].insert(0, tuple(tag_choice_list))
-                break
 
 
 # Creates a includable PHP file which provides some functions which
@@ -579,11 +477,10 @@ def _extend_user_modified_tag_groups(host_tags):
 #
 def _export_hosttags_to_php(cfg):
     php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
-    path = php_api_dir / 'hosttags.php'
+    path = php_api_dir / "hosttags.php"
     store.mkdir(php_api_dir)
 
-    tag_config = cmk.utils.tags.TagConfig()
-    tag_config.parse_config(cfg)
+    tag_config = cmk.utils.tags.TagConfig.from_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()
 
     # Transform WATO internal data structures into easier usable ones
@@ -597,7 +494,7 @@ def _export_hosttags_to_php(cfg):
 
     auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
-    content = u'''<?php
+    content = """<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
 $mk_hosttags = %s;
@@ -643,31 +540,39 @@ function all_taggroup_choices($object_tags) {
 }
 
 ?>
-''' % (_format_php(hosttags_dict), _format_php(auxtags_dict))
+""" % (
+        _format_php(hosttags_dict),
+        _format_php(auxtags_dict),
+    )
 
     store.save_text_to_file(path, content)
 
 
 # TODO: Fix copy-n-paste with cmk.gui.watolib.auth_pnp.
 def _format_php(data, lvl=1):
-    s = ''
+    s = ""
     if isinstance(data, (list, tuple)):
-        s += 'array(\n'
+        s += "array(\n"
         for item in data:
-            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
+            s += "    " * lvl + _format_php(item, lvl + 1) + ",\n"
+        s += "    " * (lvl - 1) + ")"
     elif isinstance(data, dict):
-        s += 'array(\n'
+        s += "array(\n"
         for key, val in data.items():
-            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
-                                                                                 lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
+            s += (
+                "    " * lvl
+                + _format_php(key, lvl + 1)
+                + " => "
+                + _format_php(val, lvl + 1)
+                + ",\n"
+            )
+        s += "    " * (lvl - 1) + ")"
     elif isinstance(data, str):
-        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
+        s += "'%s'" % data.replace("'", "\\'")
     elif isinstance(data, bool):
-        s += data and 'true' or 'false'
+        s += data and "true" or "false"
     elif data is None:
-        s += 'null'
+        s += "null"
     else:
         s += str(data)
 

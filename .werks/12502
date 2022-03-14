@@ -1,0 +1,26 @@
+Title: Rare bug during parsing for clustered custom plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618120376
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk only affects users that have certain custom plugins
+developed against the old check API in a clustered setup.
+
+Specificly: This affects you, if you have
+<ul>
+ <li>a custom check plugin</li>
+ <li>using the <i>*_item_state</i> features <b>in the parse function</b></li>
+ <li>in a clustered service setup</li>
+</ul>
+
+In this case, you probably observed crashes of the parse function or
+stale services (we have never observed this theoretical bug).
+This will be fixed. However: If this actually affected you, you should
+consider moving all <i>item_state</i> related logic into the check
+function (as this will be enforced by the new API).

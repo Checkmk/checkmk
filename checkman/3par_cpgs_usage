@@ -1,7 +1,7 @@
 title: HPE 3PAR: CPGs Usage
 agents: 3par
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measure the
@@ -23,5 +23,5 @@ item:
  {{SDUsage}} (Snapshot data space usage) or {{UsrUsage}} (User data space usage)
  and prefixed with the name of the {{CPG}} (Common Provisioning Group).
 
-inventory:
+discovery:
  One service is created for each usage type of a CPG member.

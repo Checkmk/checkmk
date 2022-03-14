@@ -10,6 +10,10 @@
 #       * hicpp-no-array-decay ("do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead")
 #
 #   * undesirable checks:
+#       * abseil-string-find-str-contains ("'find' called with a string literal of a single character; consider using...")
+#       * altera-id-dependent-backward-branch ("backward branch (while loop) is ID-dependent due to variable reference to 'foo' and may cause performance degradation")
+#       * altera-struct-pack-align ("accessing fields in struct 'FOO' is inefficient...")
+#       * altera-unroll-loops ("kernel performance could be improved by unrolling this loop with a '#pragma unroll' directive")
 #       * cppcoreguidelines-pro-type-static-cast-downcast ("do not use static_cast to downcast from a base to a derived class; use dynamic_cast instead")
 #       * fuchsia-default-arguments ("calling a function that uses a default argument is disallowed")
 #       * fuchsia-default-arguments-calls: ("calling a function that uses a default argument is disallowed")
@@ -27,10 +31,12 @@
 #       * android-cloexec-fopen ("use 'fopen' mode 'e' to set O_CLOEXEC") Ancient CentOS 5 doesn't have O_CLOEXEC
 #       * android-cloexec-open ("'open' should use O_CLOEXEC where possible") Ancient CentOS 5 doesn't have O_CLOEXEC
 #       * android-cloexec-pipe ("prefer pipe2() with O_CLOEXEC to avoid leaking file descriptors to child processes")
+#       * bugprone-easily-swappable-parameters ("2 adjacent parameters of 'foo' of similar type ('bar') are easily swapped by mistake")
 #       * cert-env33-c ("calling 'system' uses a command processor")
 #       * cert-err34-c ("'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead")
 #       * cppcoreguidelines-non-private-member-variables-in-classes: alias of misc-non-private-member-variables-in-classes
 #       * cppcoreguidelines-owning-memory ("deleting a pointer through a type that is not marked 'gsl::owner<>'; consider using a smart pointer instead") We won't fix this for 1.5.0
+#       * cppcoreguidelines-prefer-member-initializer ("'foo' should be initialized in a member initializer of the constructor")
 #       * cppcoreguidelines-pro-type-member-init ("uninitialized record type: 'foo'")
 #       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
 #       * cppcoreguidelines-pro-type-vararg ("do not call c-style vararg functions")
@@ -56,7 +62,17 @@
 #       * clang-analyzer-cplusplus.NewDeleteLeaks ("Potential leak of memory pointed to by field '_M_head_impl'") See https://bugs.llvm.org/show_bug.cgi?id=38176 ("clang-analyzer-cplusplus.NewDeleteLeaks false positive in C++17 mode only")
 #       * fuchsia-trailing-return: Doesn't really help that much, but gives various false positives.
 #
-Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-android-cloexec-pipe,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-default-arguments-calls,-fuchsia-overloaded-operator,-fuchsia-statically-constructed-objects,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-misc-non-private-member-variables-in-classes,-modernize-use-trailing-return-type,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-avoid-c-arrays,-hicpp-avoid-c-arrays,-modernize-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init,-clang-analyzer-cplusplus.NewDeleteLeaks,-fuchsia-trailing-return'
+#   * TODO (for clangd-12): Figure out the details for the following checks:
+#       * bugprone-narrowing-conversions
+#       * bugprone-reserved-identifier
+#       * cert-dcl37-c
+#       * cert-dcl51-cpp
+#       * concurrency-mt-unsafe
+#       * cppcoreguidelines-narrowing-conversions
+#       * misc-no-recursion
+#       * performance-no-int-to-ptr
+#
+Checks: '*,-abseil-string-find-str-contains,-altera-id-dependent-backward-branch,-altera-struct-pack-align,-altera-unroll-loops,-android-cloexec-fopen,-android-cloexec-open,-android-cloexec-pipe,-bugprone-easily-swappable-parameters,-bugprone-narrowing-conversions,-bugprone-reserved-identifier,-cert-dcl37-c,-cert-dcl51-cpp,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-clang-analyzer-cplusplus.NewDeleteLeaks,-clang-analyzer-optin.performance.Padding,-concurrency-mt-unsafe,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-narrowing-conversions,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-owning-memory,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-special-member-functions,-fuchsia-default-arguments,-fuchsia-default-arguments-calls,-fuchsia-overloaded-operator,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-google-runtime-int,-google-runtime-references,-hicpp-avoid-c-arrays,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-special-member-functions,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-misc-no-recursion,-misc-non-private-member-variables-in-classes,-modernize-avoid-c-arrays,-modernize-use-bool-literals,-modernize-use-default-member-init,-modernize-use-trailing-return-type,-performance-no-int-to-ptr,-readability-magic-numbers'
 WarningsAsErrors: '*'
 # Alas, readability-identifier-naming still has a few bugs. Nevertheless, we already configure a few things here...
 CheckOptions:
@@ -74,4 +90,10 @@ CheckOptions:
 #    value:           'lower_case'
   - key:             bugprone-signed-char-misuse.CharTypdefsToIgnore
     value:           'int8_t'
+# TODO: We need a very high threshold here, especially for unit tests (default is 25),
+# lowering this would be good. But does IgnoreMacros really work? I'm not so sure...
+  - key:             readability-function-cognitive-complexity.Threshold
+    value:           '188'
+  - key:             readability-function-cognitive-complexity.IgnoreMacros
+    value:           'true'
 ...

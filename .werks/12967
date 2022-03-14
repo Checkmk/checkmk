@@ -1,0 +1,13 @@
+Title: Fix sorting and disabled table limit on users page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624527445
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Sorting was not possible on the "Users" page. Also the table limit was ignored,
+even if disabled, when trying to sort.

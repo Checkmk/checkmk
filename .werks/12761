@@ -1,0 +1,24 @@
+Title: cmciii: the sensor description can now be used as an item
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1620311723
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+You can now use the discovery ruleset "Rittal CMC III discovery" to
+configure sensors to use the sensor description as an item. Additionally,
+the descriptions are prefixed with the device number and sensor id to
+be unique. An example of a service description of a sensor is e.g.
+"1-7 fire pre alarm".
+
+For backwards compatibility reasons some check plugins like e.g.
+cmciii_temp still use a prefix before the number and description, like
+"Temperature 4-3 Dew Point". If you want to alter this behaviour the
+ruleset "Translation of service descriptions" can be used.
+
+To make it easier to associate the sensors with the devices the device
+number is added before the device name in the cmciii plugin for the
+device state.

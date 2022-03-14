@@ -1,7 +1,7 @@
 title: Monitor Network Interfaces via Standard MIB Using 64-Bit Counters
 agents: snmp
 catalog: hw/network/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check does the same as {interfaces} but uses 64-bit counters from
@@ -44,7 +44,7 @@ item:
  There are three allowed ways to specify an interface: its index {ifIndex}, its
  description {ifDescr} and its alias {ifAlias}.
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6, 32,

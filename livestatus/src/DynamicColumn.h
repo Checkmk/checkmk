@@ -10,15 +10,21 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "Column.h"
 
 class DynamicColumn {
 public:
     DynamicColumn(std::string name, std::string description,
-                  ColumnOffsets offsets);
-    virtual ~DynamicColumn();
-    [[nodiscard]] std::string name() const;
+                  ColumnOffsets offsets)
+        : _name(std::move(name))
+        , _description(std::move(description))
+        , _offsets(std::move(offsets)) {}
+    virtual ~DynamicColumn() = default;
+
+    [[nodiscard]] std::string name() const { return _name; };
+
     virtual std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) = 0;
 

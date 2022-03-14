@@ -13,7 +13,6 @@ import itertools
 import struct
 import sys
 import termios
-
 from typing import Dict, Iterable, List, Tuple
 
 # TODO: Implementing the colors below as simple global variables is a bad idea,
@@ -27,26 +26,26 @@ from typing import Dict, Iterable, List, Tuple
 # In a nutshell: The colors below should probably be functions, not simple
 # variables, but this involves fixing all call sites.
 
-black = ''
-red = ''
-green = ''
-yellow = ''
-blue = ''
-magenta = ''
-cyan = ''
-white = ''
-bgblue = ''
-bgmagenta = ''
-bgwhite = ''
-bgyellow = ''
-bgred = ''
-bgcyan = ''
-bold = ''
-underline = ''
-normal = ''
-ok = ''
-warn = ''
-error = ''
+black = ""
+red = ""
+green = ""
+yellow = ""
+blue = ""
+magenta = ""
+cyan = ""
+white = ""
+bgblue = ""
+bgmagenta = ""
+bgwhite = ""
+bgyellow = ""
+bgred = ""
+bgcyan = ""
+bold = ""
+underline = ""
+normal = ""
+ok = ""
+warn = ""
+error = ""
 states: Dict[int, str] = {}
 
 
@@ -55,44 +54,44 @@ def reinit():
     global bgblue, bgmagenta, bgwhite, bgyellow, bgred, bgcyan
     global bold, underline, normal, ok, warn, error, states
     if sys.stdout.isatty():
-        black = '\033[30m'
-        red = '\033[31m'
-        green = '\033[32m'
-        yellow = '\033[33m'
-        blue = '\033[34m'
-        magenta = '\033[35m'
-        cyan = '\033[36m'
-        white = '\033[37m'
-        bgblue = '\033[44m'
-        bgmagenta = '\033[45m'
-        bgwhite = '\033[47m'
-        bgyellow = '\033[43m'
-        bgred = '\033[41m'
-        bgcyan = '\033[46m'
-        bold = '\033[1m'
-        underline = '\033[4m'
-        normal = '\033[0m'
+        black = "\033[30m"
+        red = "\033[31m"
+        green = "\033[32m"
+        yellow = "\033[33m"
+        blue = "\033[34m"
+        magenta = "\033[35m"
+        cyan = "\033[36m"
+        white = "\033[37m"
+        bgblue = "\033[44m"
+        bgmagenta = "\033[45m"
+        bgwhite = "\033[47m"
+        bgyellow = "\033[43m"
+        bgred = "\033[41m"
+        bgcyan = "\033[46m"
+        bold = "\033[1m"
+        underline = "\033[4m"
+        normal = "\033[0m"
     else:
-        black = ''
-        red = ''
-        green = ''
-        yellow = ''
-        blue = ''
-        magenta = ''
-        cyan = ''
-        white = ''
-        bgblue = ''
-        bgmagenta = ''
-        bgwhite = ''
-        bgyellow = ''
-        bgred = ''
-        bgcyan = ''
-        bold = ''
-        underline = ''
-        normal = ''
-    ok = green + bold + 'OK' + normal
-    warn = yellow + bold + 'WARNING' + normal
-    error = red + bold + 'ERROR' + normal
+        black = ""
+        red = ""
+        green = ""
+        yellow = ""
+        blue = ""
+        magenta = ""
+        cyan = ""
+        white = ""
+        bgblue = ""
+        bgmagenta = ""
+        bgwhite = ""
+        bgyellow = ""
+        bgred = ""
+        bgcyan = ""
+        bold = ""
+        underline = ""
+        normal = ""
+    ok = green + bold + "OK" + normal
+    warn = yellow + bold + "WARNING" + normal
+    error = red + bold + "ERROR" + normal
     states = {0: green, 1: yellow, 2: red, 3: magenta}
 
 
@@ -138,10 +137,9 @@ def get_size() -> Tuple[int, int]:
     return (24, 80)
 
 
-def print_table(headers: TableRow,
-                colors: TableColors,
-                rows: Iterable[TableRow],
-                indent: str = "") -> None:
+def print_table(
+    headers: TableRow, colors: TableColors, rows: Iterable[TableRow], indent: str = ""
+) -> None:
     num_columns = len(headers)
     lengths = _column_lengths(headers, rows, num_columns)
     dashes = ["-" * l for l in lengths]

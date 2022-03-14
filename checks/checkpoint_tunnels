@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 tunnel_states = {
     "3": "Active",
     "4": "Destroy",
@@ -40,17 +41,18 @@ def check_checkpoint_tunnels(item, params, info):
             return state, tunnel_states[status]
 
 
-check_info['checkpoint_tunnels'] = {
-    'check_function': check_checkpoint_tunnels,
-    'inventory_function': inventory_checkpoint_tunnels,
-    'group': "checkpoint_tunnels",
-    'default_levels_variable': "checkpoint_tunnels_default_levels",
-    'service_description': "Tunnel %s",
-    'snmp_scan_function': scan_checkpoint,
-    'snmp_info': (
-        '.1.3.6.1.4.1.2620.500.9002.1',
+check_info["checkpoint_tunnels"] = {
+    "check_function": check_checkpoint_tunnels,
+    "inventory_function": inventory_checkpoint_tunnels,
+    "group": "checkpoint_tunnels",
+    "default_levels_variable": "checkpoint_tunnels_default_levels",
+    "service_description": "Tunnel %s",
+    "snmp_scan_function": scan_checkpoint,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2620.500.9002.1",
         [
             2,  # TunnelPeerObjName
             3,  # tunnelState
-        ]),
+        ],
+    ),
 }

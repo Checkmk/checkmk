@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import datetime
+import time
+
 import cmk.utils.schedule as schedule
 
 
@@ -133,14 +134,16 @@ def test_endmonth_schedule_two_days():
 
 
 def test_last_scheduled_time_month_start():
-    result = schedule.last_scheduled_time(['month_begin', 4], [12, 30],
-                                          dt=datetime.datetime(2017, 2, 7, 10, 31, 52))
+    result = schedule.last_scheduled_time(
+        ["month_begin", 4], [12, 30], dt=datetime.datetime(2017, 2, 7, 10, 31, 52)
+    )
     expected = time.mktime(datetime.datetime(2017, 2, 4, 12, 30).timetuple())
     assert result == expected
 
 
 def test_next_scheduled_time_month_end():
-    result = schedule.next_scheduled_time(['month_end', 4], [12, 30],
-                                          dt=datetime.datetime(2017, 1, 31, 10, 31, 52))
+    result = schedule.next_scheduled_time(
+        ["month_end", 4], [12, 30], dt=datetime.datetime(2017, 1, 31, 10, 31, 52)
+    )
     expected = time.mktime(datetime.datetime(2017, 2, 25, 12, 30).timetuple())
     assert result == expected

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -57,19 +58,17 @@ def check_dell_om_fans(item, params, info):
         "10": (2, "FAILED"),
     }
 
-    for index, status, value, name, warn_upper, crit_upper, \
-            warn_lower, crit_lower in info:
+    for index, status, value, name, warn_upper, crit_upper, warn_lower, crit_lower in info:
         if index == item:
             state, state_readable = translate_status[status]
-            yield state, "Status: %s, Name: %s" % \
-                            (state_readable, name)
+            yield state, "Status: %s, Name: %s" % (state_readable, name)
             if params:
                 constructed_params = params
             else:
                 lower, upper = _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower)
                 constructed_params = {
-                    'lower': lower,
-                    'upper': upper,
+                    "lower": lower,
+                    "upper": upper,
                 }
             yield check_fan(int(value), constructed_params)
 
@@ -90,7 +89,8 @@ check_info["dell_om_fans"] = {
             "11",  # MIB-Dell-10892::coolingDeviceUpperCriticalThreshold
             "12",  # MIB-Dell-10892::coolingDeviceLowerNonCriticalThreshold
             "13",  # MIB-Dell-10892::coolingDeviceLowerCriticalThreshold
-        ]),
+        ],
+    ),
     "has_perfdata": True,
     "group": "hw_fans",
 }

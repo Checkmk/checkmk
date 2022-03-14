@@ -1,0 +1,21 @@
+Title: Improve page breaks when rendering graph columns over multiple pages
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1620679966
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+This change fixes a layout problem of reports or PDF exports of views
+containing graph columns which fill multiple pages. Previous Checkmk versions
+were displaying one or multiple empty pages in such a situation or pages which
+are not fully populated by graphs.
+
+The layout of graphs columns has now been improved to work better in common
+situation.  Even though the new layout algorithm is better than the previous
+one in specific situations, there are still several cases that are not handled
+ideally. To improve this further would require major rebuilding work that
+cannot be done as part of a bug fix of the stable version.

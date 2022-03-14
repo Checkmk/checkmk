@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
 # 1,Available Memory,/ram,Data,3.009140
@@ -41,82 +43,42 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # since the temperature sensors could be anything (cpu, gpu, hdd, psu) we need different
 # default levels per item type
-factory_settings['openhardwaremonitor_temperature_default_levels'] = {
-    "cpu": {
-        'levels': (60, 70)
-    },
-    "hdd": {
-        'levels': (40, 50)
-    },
-    "_default": {
-        'levels': (70, 80)
-    }
+factory_settings["openhardwaremonitor_temperature_default_levels"] = {
+    "cpu": {"levels": (60, 70)},
+    "hdd": {"levels": (40, 50)},
+    "_default": {"levels": (70, 80)},
 }
 
 OpenhardwaremonitorTraits = {
-    'Clock': {
-        'unit': " MHz",
-        'factor': 1.0,
-        'perf_var': 'clock'
-    },
-    'Temperature': {
-        'unit': u"°C",
-        'factor': 1.0
-    },
-    'Power': {
-        'unit': " W",
-        'factor': 1.0,
-        'perf_var': 'w'
-    },
-    'Fan': {
-        'unit': " RPM",
-        'factor': 1.0
-    },
-    'Level': {
-        'unit': "%",
-        'factor': 1.0
-    },
+    "Clock": {"unit": " MHz", "factor": 1.0, "perf_var": "clock"},
+    "Temperature": {"unit": "°C", "factor": 1.0},
+    "Power": {"unit": " W", "factor": 1.0, "perf_var": "w"},
+    "Fan": {"unit": " RPM", "factor": 1.0},
+    "Level": {"unit": "%", "factor": 1.0},
     # unused below here
-    'Voltage': {
-        'unit': " V",
-        'factor': 1.0
-    },
-    'Load': {
-        'unit': "%",
-        'factor': 1.0
-    },
-    'Flow': {
-        'unit': " L/h",
-        'factor': 1.0
-    },
-    'Control': {
-        'unit': "%",
-        'factor': 1.0
-    },
-    'Factor': {
-        'unit': "1",
-        'factor': 1.0
-    },
-    'Data': {
-        'unit': " B",
-        'factor': 1073741824.0
-    }
+    "Voltage": {"unit": " V", "factor": 1.0},
+    "Load": {"unit": "%", "factor": 1.0},
+    "Flow": {"unit": " L/h", "factor": 1.0},
+    "Control": {"unit": "%", "factor": 1.0},
+    "Factor": {"unit": "1", "factor": 1.0},
+    "Data": {"unit": " B", "factor": 1073741824.0},
 }
-OpenhardwaremonitorSensor = collections.namedtuple("OpenhardwaremonitorSensor",
-                                                   ("reading", "unit", "perf_var", "WMIstatus"))
+OpenhardwaremonitorSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "OpenhardwaremonitorSensor", ("reading", "unit", "perf_var", "WMIstatus")
+)
 
 
 def parse_openhardwaremonitor(info):
     parsed = {}
     for line in info:
-        if line[0] == 'Index':
+        if line[0] == "Index":
             # header line
             continue
 
         if len(line) == 5:
             # Old agent output has no WMIStatus column
             _index, name, parent, sensor_type, value = line
-            wmistatus = 'OK'
+            wmistatus = "OK"
         elif len(line) == 6:
             _index, name, parent, sensor_type, value, wmistatus = line
         else:
@@ -127,14 +89,18 @@ def parse_openhardwaremonitor(info):
         parsed.setdefault(sensor_type, {}).setdefault(
             full_name,
             OpenhardwaremonitorSensor(
-                float(value) * traits.get('factor', 1), traits.get('unit', ''),
-                traits.get('perf_var'), wmistatus))
+                float(value) * traits.get("factor", 1),
+                traits.get("unit", ""),
+                traits.get("perf_var"),
+                wmistatus,
+            ),
+        )
     return parsed
 
 
 def _create_openhardwaremonitor_full_name(parent, name):
     def dict_replace(input_, replacements):
-        pattern = regex(r'\b(' + '|'.join(replacements) + r')\b')
+        pattern = regex(r"\b(" + "|".join(replacements) + r")\b")
         return pattern.sub(lambda x: replacements[x.group()], input_)
 
     parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})
@@ -161,14 +127,16 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
     if item in parsed.get(sensor_type, {}):
         data = parsed[sensor_type][item]
         _check_openhardwaremonitor_wmistatus(data)
-        if 'lower' in params:
-            status_lower = _openhardwaremonitor_expect_order(params['lower'][1], params['lower'][0],
-                                                             data.reading)
+        if "lower" in params:
+            status_lower = _openhardwaremonitor_expect_order(
+                params["lower"][1], params["lower"][0], data.reading
+            )
         else:
             status_lower = 0
-        if 'upper' in params:
-            status_upper = _openhardwaremonitor_expect_order(data.reading, params['upper'][0],
-                                                             params['upper'][1])
+        if "upper" in params:
+            status_upper = _openhardwaremonitor_expect_order(
+                data.reading, params["upper"][0], params["upper"][1]
+            )
         else:
             status_upper = 0
 
@@ -176,13 +144,16 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
         if data.perf_var:
             perfdata = [(data.perf_var, data.reading)]
 
-        return (_openhardwaremonitor_worst_status(status_lower, status_upper),
-                '%.1f%s' % (data.reading, data.unit), perfdata)
+        return (
+            _openhardwaremonitor_worst_status(status_lower, status_upper),
+            "%.1f%s" % (data.reading, data.unit),
+            perfdata,
+        )
 
 
 def _check_openhardwaremonitor_wmistatus(data):
-    if data.WMIstatus.lower() == 'timeout':
-        raise MKCounterWrapped('WMI query timed out')
+    if data.WMIstatus.lower() == "timeout":
+        raise MKCounterWrapped("WMI query timed out")
 
 
 #   .--clock---------------------------------------------------------------.
@@ -194,16 +165,17 @@ def _check_openhardwaremonitor_wmistatus(data):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info['openhardwaremonitor'] = {
-    'inventory_function': lambda parsed: inventory_openhardwaremonitor('Clock', parsed),
-    'check_function': lambda item, params, parsed: check_openhardwaremonitor(
-        'Clock', item, params, parsed),
-    'parse_function': parse_openhardwaremonitor,
-    'has_perfdata': True,
-    'service_description': "Clock %s",
+check_info["openhardwaremonitor"] = {
+    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Clock", parsed),
+    "check_function": lambda item, params, parsed: check_openhardwaremonitor(
+        "Clock", item, params, parsed
+    ),
+    "parse_function": parse_openhardwaremonitor,
+    "has_perfdata": True,
+    "service_description": "Clock %s",
 }
 
-#.
+# .
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
 #   |                      | |_ ___ _ __ ___  _ __                         |
@@ -215,7 +187,7 @@ check_info['openhardwaremonitor'] = {
 
 
 def check_openhardwaremonitor_temperature(item, params, parsed):
-    if not 'levels' in params:
+    if not "levels" in params:
         found = False
         for key in params:
             if key in item:
@@ -225,22 +197,22 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
         if not found:
             params = params["_default"]
 
-    if item in parsed.get('Temperature', {}):
-        data = parsed['Temperature'][item]
+    if item in parsed.get("Temperature", {}):
+        data = parsed["Temperature"][item]
         _check_openhardwaremonitor_wmistatus(data)
         return check_temperature(data.reading, params, "openhardwaremonitor_%s" % item)
 
 
-check_info['openhardwaremonitor.temperature'] = {
-    'inventory_function': lambda parsed: inventory_openhardwaremonitor('Temperature', parsed),
-    'check_function': check_openhardwaremonitor_temperature,
-    'has_perfdata': True,
-    'service_description': "Temperature %s",
-    'group': 'temperature',
-    'default_levels_variable': 'openhardwaremonitor_temperature_default_levels',
+check_info["openhardwaremonitor.temperature"] = {
+    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
+    "check_function": check_openhardwaremonitor_temperature,
+    "has_perfdata": True,
+    "service_description": "Temperature %s",
+    "group": "temperature",
+    "default_levels_variable": "openhardwaremonitor_temperature_default_levels",
 }
 
-#.
+# .
 #   .--power---------------------------------------------------------------.
 #   |                                                                      |
 #   |                    _ __   _____      _____ _ __                      |
@@ -250,15 +222,16 @@ check_info['openhardwaremonitor.temperature'] = {
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
 
-check_info['openhardwaremonitor.power'] = {
-    'inventory_function': lambda parsed: inventory_openhardwaremonitor('Power', parsed),
-    'check_function': lambda item, params, parsed: check_openhardwaremonitor(
-        'Power', item, params, parsed),
-    'has_perfdata': True,
-    'service_description': "Power %s",
+check_info["openhardwaremonitor.power"] = {
+    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Power", parsed),
+    "check_function": lambda item, params, parsed: check_openhardwaremonitor(
+        "Power", item, params, parsed
+    ),
+    "has_perfdata": True,
+    "service_description": "Power %s",
 }
 
-#.
+# .
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
 #   |                           / _| __ _ _ __                             |
@@ -268,9 +241,9 @@ check_info['openhardwaremonitor.power'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['openhardwaremonitor_fan_default_levels'] = {
-    'lower': (None, None),
-    'upper': (None, None),
+factory_settings["openhardwaremonitor_fan_default_levels"] = {
+    "lower": (None, None),
+    "upper": (None, None),
 }
 
 
@@ -281,16 +254,16 @@ def check_openhardwaremonitor_fan(item, params, parsed):
         return check_fan(data.reading, params)
 
 
-check_info['openhardwaremonitor.fan'] = {
-    'inventory_function': lambda parsed: inventory_openhardwaremonitor('Fan', parsed),
-    'check_function': check_openhardwaremonitor_fan,
-    'has_perfdata': True,
-    'service_description': "Fan %s",
-    'default_levels_variable': 'openhardwaremonitor_fan_default_levels',
-    'group': 'hw_fans',
+check_info["openhardwaremonitor.fan"] = {
+    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
+    "check_function": check_openhardwaremonitor_fan,
+    "has_perfdata": True,
+    "service_description": "Fan %s",
+    "default_levels_variable": "openhardwaremonitor_fan_default_levels",
+    "group": "hw_fans",
 }
 
-#.
+# .
 #   .--smart---------------------------------------------------------------.
 #   |                                             _                        |
 #   |                    ___ _ __ ___   __ _ _ __| |_                      |
@@ -301,15 +274,11 @@ check_info['openhardwaremonitor.fan'] = {
 #   '----------------------------------------------------------------------'
 
 openhardwaremonitor_smart_readings = {
-    'Level': [{
-        'name': "Remaining Life",
-        'key': 'remaining_life',
-        'lower_bounds': True
-    }],
+    "Level": [{"name": "Remaining Life", "key": "remaining_life", "lower_bounds": True}],
 }
 
-factory_settings['openhardwaremonitor_smart_default_levels'] = {
-    'remaining_life': (30, 10),  # wild guess
+factory_settings["openhardwaremonitor_smart_default_levels"] = {
+    "remaining_life": (30, 10),  # wild guess
 }
 
 
@@ -326,36 +295,36 @@ def inventory_openhardwaremonitor_smart(parsed):
 def check_openhardwaremonitor_smart(item, params, parsed):
     for sensor_type, readings in openhardwaremonitor_smart_readings.items():
         for reading in readings:
-            reading_name = "%s %s" % (item, reading['name'])
+            reading_name = "%s %s" % (item, reading["name"])
 
             if not reading_name in parsed[sensor_type]:
                 # what smart values ohm reports is device dependent
                 continue
 
-            warn, crit = params[reading['key']]
+            warn, crit = params[reading["key"]]
             data = parsed[sensor_type][reading_name]
             _check_openhardwaremonitor_wmistatus(data)
 
-            if reading.get('lower_bounds', False):
+            if reading.get("lower_bounds", False):
                 status = _openhardwaremonitor_expect_order(crit, warn, data.reading)
             else:
                 status = _openhardwaremonitor_expect_order(data.reading, warn, crit)
 
             yield (
                 status,
-                "%s %.1f%s" % (reading['name'], data.reading, data.unit),
-                [(reading['key'], data.reading)],
+                "%s %.1f%s" % (reading["name"], data.reading, data.unit),
+                [(reading["key"], data.reading)],
             )
 
 
 # the smart check is different from the others as it has one item per device and
 # combines different sensors per item (but not all, i.e. hdd temperature is still
 # reported as a temperature item)
-check_info['openhardwaremonitor.smart'] = {
-    'inventory_function': inventory_openhardwaremonitor_smart,
-    'check_function': check_openhardwaremonitor_smart,
-    'has_perfdata': True,
-    'service_description': "SMART %s Stats",
-    'default_levels_variable': "openhardwaremonitor_smart_default_levels",
-    'group': "openhardwaremonitor_smart"
+check_info["openhardwaremonitor.smart"] = {
+    "inventory_function": inventory_openhardwaremonitor_smart,
+    "check_function": check_openhardwaremonitor_smart,
+    "has_perfdata": True,
+    "service_description": "SMART %s Stats",
+    "default_levels_variable": "openhardwaremonitor_smart_default_levels",
+    "group": "openhardwaremonitor_smart",
 }

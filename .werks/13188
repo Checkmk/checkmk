@@ -1,0 +1,15 @@
+Title: cisco_qos: 0 bandwidth leads to permanently critical services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637248055
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The check "cisco_qos" evaulates the used bandwidth and number of dropped
+bits/bytes as a percentage relative to the interface's available bandwidth. In
+the event that the available bandwidth is 0, the service remained permanently
+critical. This has been fixed.

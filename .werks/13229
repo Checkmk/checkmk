@@ -1,0 +1,17 @@
+Title: Drop support for creation of ServiceLabels in legacy plugins
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1634222992
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk only affect users who have implemented their own pre Checkmk 2.0 check plugins (those in <tt>local/share/check_mk/checks</tt>) *and* where creating ServiceLabels.
+
+Plugins trying to create ServiceLabel instances will fail with a NameError.
+
+The afore mentioned feature is no longer supported.
+Creation of service labels can now only be implemented using the new check API.
+For details please refer to the Sphinx documentation of the <tt>Service</tt> and <tt>ServiceLabel</tt> classes in the "Help" menu of your Checkmk site.

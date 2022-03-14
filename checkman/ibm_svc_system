@@ -1,7 +1,7 @@
 title: IBM SVC / V7000: System Info
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports name, location, code_level and email_contact_location of an
@@ -12,5 +12,5 @@ description:
  with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
  can be configured by WATO.
 
-inventory:
+discovery:
  One service is created for each device named IBM SVC Info.

@@ -4,31 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.plugin_loader import load_plugins
-
-#.
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   '----------------------------------------------------------------------'
-
-from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
-    APICallCollection, api_call_collection_registry, validate_host_attributes, validate_config_hash,
-    check_hostname, add_configuration_hash, compute_config_hash,
-)
-
-#.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
-
-load_plugins(__file__, __package__)
+#
+#    This file (cmk.gui.plugins.webapi.__init__.py) is only kept to make
+#    our dev tools (pylint & co) happy.
+#    It will not be deployed, as cmk.gui.plugins.webapi is supposed to be a
+#    namespace that can be shadowed/extended using the local/
+#    hierarchy.
+#
+#    This file must not contain any code.
+#

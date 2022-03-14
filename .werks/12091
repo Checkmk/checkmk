@@ -1,0 +1,14 @@
+Title: mysql_capacity: ValueError() raised if ':' in error message
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617011707
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Splitting a message string containing instance and message results in an error if the message
+itself contains the delimiter (':'). This change will make sure the input string will be splitted
+into 2 parts max.

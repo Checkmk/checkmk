@@ -1,7 +1,7 @@
 title: FortiGate Firewall Cluster Monitoring: Memory
 agents: snmp
 catalog: hw/network/fortinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors memory usage of individual nodes in a FortiGate High-Availability cluster.
@@ -16,6 +16,5 @@ description:
 item:
  Hostname of the node
 
-inventory:
+discovery:
  One service is created for each node.
-

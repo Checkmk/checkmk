@@ -1,0 +1,11 @@
+Title: check_mk_agent.{aix,solaris}: Move read_python_version in order to init PATH and MK_* correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621323240
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

@@ -1,7 +1,7 @@
 title: Windows: CPU Usage (deprecated)
 agents: windows
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU usage on a Windows system using the
@@ -16,6 +16,5 @@ description:
  Note: this check is deprecated and not used by modern Checkmk agents.
  It is replaced by {winperf_processor.util}.
 
-inventory:
+discovery:
  One service is created for each Windows host.
-

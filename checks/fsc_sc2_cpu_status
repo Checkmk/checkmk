@@ -9,24 +9,27 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc_sc2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['fsc_sc2_cpu_status'] = {
-    'inventory_function': inventory_fsc_sc2_cpu_status,
-    'check_function': check_fsc_sc2_cpu_status,
-    'service_description': 'FSC %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.231.2.10.2.2.10.6.4.1',
+
+check_info["fsc_sc2_cpu_status"] = {
+    "inventory_function": inventory_fsc_sc2_cpu_status,
+    "check_function": check_fsc_sc2_cpu_status,
+    "service_description": "FSC %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.231.2.10.2.2.10.6.4.1",
         [
-            '3',  #sc2cpuDesignation
-            '4',  #sc2cpuStatus
-            '5',  #sc2cpuModelName
-            '8',  #sc2cpuCurrentSpeed
-            '13',  #sc2cpuNumberCores
-        ]),
-    'snmp_scan_function': is_fsc_sc2,
+            "3",  # sc2cpuDesignation
+            "4",  # sc2cpuStatus
+            "5",  # sc2cpuModelName
+            "8",  # sc2cpuCurrentSpeed
+            "13",  # sc2cpuNumberCores
+        ],
+    ),
+    "snmp_scan_function": is_fsc_sc2,
     "management_board": HOST_ONLY,
 }

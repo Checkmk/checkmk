@@ -1,18 +1,17 @@
 title: CPU Load
-agents: linux, aix, freebsd, macosx, netbsd, openbsd, solaris
+agents: linux, aix, freebsd, macosx, netbsd, openbsd, solaris, snmp
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check measures and checks the averaged CPU load. The values
- for 1, 5 and 15 minute average are sent, although the PNP template
- shipped with check_mk only displays the 1 and 15 min average load.
+ This check measures the 1-, 5- and 15-minute-averages of the CPU
+ load. Additionally, the 15-minute-average is checked against user-
+ configurable levels.
 
  Note: The CPU load is the average number of processes that are
  currently in the state "running". Do not mix this up with the
  CPU "utiliziation" (which measures the current usage of the CPU
  in percent).
 
-inventory:
- One service is created for each Linux host.
-
+discovery:
+ One service is created per host.

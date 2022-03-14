@@ -1,7 +1,7 @@
 title: Safenet HSM: NTLS Connection Rate
 agents: snmp
 catalog: hw/network/safenet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the rate of successful and failed connections
@@ -10,6 +10,6 @@ description:
 item:
  One of the two statements: {{successful}}, {{failed}}
 
-inventory:
+discovery:
  Two services are created for each device.
  One service for the successful connections and one for the failed ones.

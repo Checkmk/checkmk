@@ -1,0 +1,14 @@
+Title: API time_period: fixing show endpoint which failed when time period with no exclude was called
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615994161
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, the show endpoint of the time period failed
+when a time period had no exclude configured. This werk fixes this
+behaviour.

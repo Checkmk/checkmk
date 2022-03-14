@@ -1,0 +1,14 @@
+Title: openbsd: Memory service not discovered
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1618568059
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+After upgrade to v2.0 mem_used check was no longer discovered on OpenBSD servers.
+To apply this fix install a new OpenBSD agent after upgrade.
+

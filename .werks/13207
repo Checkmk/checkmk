@@ -1,0 +1,27 @@
+Title: Windows interface plugins must be updated
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1631185534
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+This werk only affects users using the Windows agent plugins
+'windows_if.ps1' or 'wmic_if.bat' (bakery ruleset 'Network
+interfaces on Windows') or the plugin 'mk_dhcp_enabled.bat'.
+
+The above mentioned plugins have been restructured to improve
+code maintainability. As a result, users need to update these
+plugins on Windows systems where they are installed.
+
+The Windows interface check will go critical if these plugins
+are not updated. Furthermore, without an update, the data
+produced by these plugins will not be processed by Checkmk.
+
+In case interfaces are monitored using their aliases as items,
+the interface checks on affected hosts might also report
+"Item not found in monitoring data"
+and go UNKNOWN. Updating these plugins will fix this issue as
+well.

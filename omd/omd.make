@@ -38,8 +38,9 @@ PACKAGE_WORK_DIR := $(BUILD_BASE_DIR)/package_work
 # /opt/omd/versions/[version]/bin/python.
 INTERMEDIATE_INSTALL_BASE := $(BUILD_BASE_DIR)/intermediate_install
 # Results of intermediate install will be stored in package specific archives
-# that are stored in this directory
-PACKAGE_CACHE_BASE := $(BUILD_BASE_DIR)/package_cache
+# that are stored in the global cache directory.
+XDG_CACHE_HOME     ?= $(HOME)/.cache
+PACKAGE_CACHE_BASE := $(XDG_CACHE_HOME)/checkmk/packages
 
 CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
@@ -75,6 +76,10 @@ NEXUS_BUILD_CACHE_URL ?=
 # done using the CI system
 NEXUS_USERNAME ?=
 NEXUS_PASSWORD ?=
+
+define log_time
+	@echo "+++ [$(shell date +%s)] Build step '$1': $2" | tee --append omd_build_times.log
+endef
 
 define cache_pkg_name
 $1_$2_$(BRANCH_VERSION)_$(DISTRO_NAME)_$(DISTRO_VERSION).tar.gz
@@ -125,8 +130,19 @@ define upload_pkg_archive
 	fi
 endef
 
+# $1: Build ID that may be changed manually to enforce a cache invalidation
+# $2: List of file paths to have a look at for file changes
+define cache_pkg_build_id
+$(shell echo -n "$(1)" ; \
+    if [ -n "$(2)" ]; then \
+	echo -n "-" ; \
+	md5sum $(2) | cut -d' ' -f1 | md5sum | cut -d' ' -f1 ; \
+    fi \
+)
+endef
+
 ifeq (0,$(shell gcc -Xlinker --help | grep -e "-plugin" > /dev/null; echo $$?))
-PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
+PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations --with-lto
 else
 PYTHON_ENABLE_OPTIMIZATIONS ?=
 endif

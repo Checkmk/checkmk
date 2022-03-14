@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
 
@@ -47,12 +49,12 @@ def check_hr_cpu(_no_item, params, info):
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
 check_info["hr_cpu"] = {
-    'inventory_function': inventory_hr_cpu,
-    'check_function': check_hr_cpu,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.2.1.25.3.3.1', [2]),
-    'snmp_scan_function': is_hr,
-    'group': 'cpu_utilization_os',
-    'default_levels_variable': 'hr_cpu_default_levels',
+    "inventory_function": inventory_hr_cpu,
+    "check_function": check_hr_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.2.1.25.3.3.1", [2]),
+    "snmp_scan_function": is_hr,
+    "group": "cpu_utilization_os",
+    "default_levels_variable": "hr_cpu_default_levels",
 }

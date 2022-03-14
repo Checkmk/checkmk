@@ -1,0 +1,15 @@
+Title: <tt>qmail_stats</tt>: Check for <tt>/var/qmail/bin/qmail-qstat</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631619001
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If the <tt>qmail-qstat</tt> binary is not in the PATH of the agent,
+no <tt>qmail_qstats</tt> section is produced. On some systems, the
+binary was present, but not in the PATH. The Linux, FreeBSD and
+OpenWRT agents now append <tt>/var/qmail/bin</tt> to the PATH s.t.
+<tt>qmail-qstat</tt> is found on such systems.

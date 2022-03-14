@@ -1,7 +1,7 @@
 title: RabbitMQ: Cluster
 agents: rabbitmq
 catalog: app/rabbitmq
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows details of a RabbitMQ cluster. The service output
@@ -9,5 +9,5 @@ description:
 
  Needs the datasource "Check state of RabbitMQ" to be configured.
 
-inventory:
+discovery:
  One service {"RabbitMQ Cluster"} is created.

@@ -12,7 +12,7 @@ Do not forget to restart your site Apache after installing or modifiying the
 wato/foo.py.
 
 Now you can do inventory (cmk -I) on the target host and will get one new
-service named 'FOO'. In WATO you will have a new rule below "Parameters for Inventorized checks"
+service named 'FOO'. In Setup you will have a new rule below "Parameters for Inventorized checks"
 in the box "My own checks". Here you can setup no, fixed or predictive levels.
 
 Please note that predictive levels need some backlog of RRD data in order

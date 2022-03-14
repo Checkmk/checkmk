@@ -1,7 +1,7 @@
 title: ACME Devices: Temperature
 agents: snmp
 catalog: hw/environment/acme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature sensors of ACME devices.
@@ -24,5 +24,5 @@ description:
 item:
  Name of the temperature sensor.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.

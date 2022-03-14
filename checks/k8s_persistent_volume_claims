@@ -10,34 +10,39 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 @discover
 def inventory_k8s_persistent_volume_claims(_claim, data):
-    return data.get('phase', '') == 'Bound'
+    return data.get("phase", "") == "Bound"
 
 
 @get_parsed_item_data
 def check_k8s_persistent_volume_claims(_no_item, _no_params, claim):
-    status, phase = 0, claim.get('phase')
+    status, phase = 0, claim.get("phase")
     if phase is None:
-        yield 3, 'Phase: Unknown'
+        yield 3, "Phase: Unknown"
         return
 
-    if phase != 'Bound':
+    if phase != "Bound":
         status = 2
-    yield status, 'Phase: %s' % phase
+    yield status, "Phase: %s" % phase
 
-    namespace = claim.get('namespace')
+    namespace = claim.get("namespace")
     if namespace:
-        yield 0, 'Namespace: %s' % namespace
-    volume = claim.get('volume')
+        yield 0, "Namespace: %s" % namespace
+    volume = claim.get("volume")
     if volume:
-        yield 0, 'Volume: %s' % volume
+        yield 0, "Volume: %s" % volume
 
 
-check_info['k8s_persistent_volume_claims'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_persistent_volume_claims,
-    'check_function': check_k8s_persistent_volume_claims,
-    'service_description': 'PVC %s',
+check_info["k8s_persistent_volume_claims"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": inventory_k8s_persistent_volume_claims,
+    "check_function": check_k8s_persistent_volume_claims,
+    "service_description": "PVC %s",
 }

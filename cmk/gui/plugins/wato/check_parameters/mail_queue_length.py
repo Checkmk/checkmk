@@ -5,14 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (Dictionary, Integer, TextAscii, Transform, Tuple)
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_elements
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-
-from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_elements
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Transform, Tuple
 
 mailqueue_params = Dictionary(
     elements=[
@@ -21,8 +20,10 @@ mailqueue_params = Dictionary(
             "failed",
             Tuple(
                 title=_("Mails in failed mail queue"),
-                help=_("This rule is applied to the number of E-Mails currently "
-                       "in the failed mail queue"),
+                help=_(
+                    "This rule is applied to the number of E-Mails currently "
+                    "in the failed mail queue"
+                ),
                 elements=[
                     Integer(title=_("Warning at"), unit=_("mails"), default_value=1),
                     Integer(title=_("Critical at"), unit=_("mails"), default_value=1),
@@ -36,7 +37,7 @@ mailqueue_params = Dictionary(
 
 def _parameter_valuespec_mail_queue_length():
     return Transform(
-        mailqueue_params,
+        valuespec=mailqueue_params,
         forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
     )
 
@@ -45,8 +46,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mail_queue_length",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Mail queue name")),
+        item_spec=lambda: TextInput(title=_("Mail queue name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mail_queue_length,
         title=lambda: _("Mails in outgoing mail queue"),
-    ))
+    )
+)

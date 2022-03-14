@@ -1,0 +1,28 @@
+Title: df: The UUID can be used as part of the service item
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1619087095
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+On SLES15SP2 server device names like {{/dev/sda1}} for btrfs filesystem may
+change after a reboot. Afterwards the filesystem service reports
+{{UNKNOWN - Item not found in agent output}}.
+
+In order to solve this problem the UUID (from the command 'lsblk') can be used
+as item part. Basically items of btrfs filesystem services have the form
+{{btrfs DEVICE-NAME}} resp. {{btrfs UUID}}. This behaviour is configurable
+via {{Mountpoint for block devices}}.
+
+Within the ruleset {{Filesystem discovery}} you can additonally add
+{{Volume name}} or {{UUID}} to every service via the option {{Item appearance}}.
+For btrfs this option would lead to items like {{DEVICE-NAME btrfs DEVICE-NAME}}
+resp. {{UUID btrfs UUID}}.
+
+Moreover it's not allowed to mix {{Volume name}} and {{UUID}} in the parameters
+{{Mountpoint for block devices}}, {{Item appearance}} or {{Grouping}}.
+
+To make this work you have to install the newest {{check_mk_agent}} for Linux.

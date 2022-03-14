@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["nvidia_temp_default_levels"] = {"levels": (60, 65)}
 
 factory_settings["nvidia_temp_core_default_levels"] = {"levels": (90, 95)}
@@ -33,33 +34,34 @@ def inventory_nvidia_temp(core, info):
 
 def check_nvidia_temp(item, params, info):
     for line in info:
-        if format_nvidia_name(line[0].strip(":")) == item \
-           or item == line[0].strip(":"): # compatibility code for "old discovered" services
+        if format_nvidia_name(line[0].strip(":")) == item or item == line[0].strip(
+            ":"
+        ):  # compatibility code for "old discovered" services
             return check_temperature(int(line[1]), params, "nvidia_%s" % item)
 
 
 check_info["nvidia.temp"] = {
-    'check_function': check_nvidia_temp,
-    'inventory_function': lambda info: inventory_nvidia_temp(False, info),
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'group': 'temperature',
-    'default_levels_variable': 'nvidia_temp_default_levels'
+    "check_function": check_nvidia_temp,
+    "inventory_function": lambda info: inventory_nvidia_temp(False, info),
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "nvidia_temp_default_levels",
 }
 
 check_info["nvidia.temp_core"] = {
-    'check_function': check_nvidia_temp,
-    'inventory_function': lambda info: inventory_nvidia_temp(True, info),
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'group': 'temperature',
-    'default_levels_variable': 'nvidia_temp_core_default_levels'
+    "check_function": check_nvidia_temp,
+    "inventory_function": lambda info: inventory_nvidia_temp(True, info),
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "nvidia_temp_core_default_levels",
 }
 
 
 def inventory_nvidia_errors(info):
     for line in info:
-        if line[0] == 'GPUErrors:':
+        if line[0] == "GPUErrors:":
             return [(None, None)]
 
 
@@ -74,8 +76,8 @@ def check_nvidia_errors(_no_item, _no_params, info):
 
 
 check_info["nvidia.errors"] = {
-    'check_function': check_nvidia_errors,
-    'inventory_function': inventory_nvidia_errors,
-    'service_description': 'NVIDIA GPU Errors',
-    'group': 'hw_errors',
+    "check_function": check_nvidia_errors,
+    "inventory_function": inventory_nvidia_errors,
+    "service_description": "NVIDIA GPU Errors",
+    "group": "hw_errors",
 }

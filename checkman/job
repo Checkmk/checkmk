@@ -1,25 +1,13 @@
 title: Job Monitoring
-agents: linux
+agents: linux, aix, solaris
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check monitors state and performance information of any linux program
- call, for example regular running cronjobs.
+ This check monitors state and performance information of any program
+ call, for example regular running cronjobs on Linux, AIX or Solaris.
 
- The check uses information provided by the wrapper program {mk-job}. This
- program is shipped with the linux agent and installed to {/usr/bin}.
- {mk-job} is a wrapper which is called instead of the program. For
- example, if you have a command line {nightly-backup >/dev/null} which gets
- executed by a cronjob every night, you can change the command line to
- {mk-job backup nightly-backup >/dev/null} to let mk-job collect information
- about the job during runtime. In this expression, the string {backup} is
- the identifier of the job to be executed. It must be a unique identifier
- for this job on each host. When the job is finished, {mk-job} writes the
- collected data to {/var/lib/check_mk_agent/job/<identifier>}. The agent sends
- all these data to the Checkmk server.
-
- The check is {CRITICAL} if the exit code of the job is not {0}, or if
+ The check uses information provided by the wrapper program {mk-job} and is {CRITICAL} if the exit code of the job is not {0}, or if
  warning or critical limits for the job age have been reached. Other mappings
  of exit code to check state can be defined in the check parameters.
 
@@ -31,9 +19,5 @@ description:
 item:
  The identifier of the job defined by the first argument to {mk-job}.
 
-inventory:
+discovery:
  One service is created for each job.
-
-cluster:
-  The outcome on a cluster can be configured to be either the worst, or the
-  best state encountered for every job.

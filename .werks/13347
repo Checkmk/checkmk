@@ -1,0 +1,18 @@
+Title: <tt>check_sftp</tt>: Fix command line argument for private key
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632996269
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The active check <tt>check_sftp</tt> claimed to accept <tt>--private-key</tt>
+as a command line argument for specifying a private key to be used for the
+SFTP login. However, attempting to use this option resulted in the error
+<tt>option --private-key not recognized</tt>.
+
+As of this werk, <tt>check_sftp</tt> accepts <tt>--private-key-file</tt> as
+a command line argument. This can be used to specify the path to a private
+key or certificate file which will be used for authentication.

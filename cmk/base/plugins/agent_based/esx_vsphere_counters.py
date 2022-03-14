@@ -4,25 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-
 import time
-from .agent_based_api.v1 import (
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    Service,
-)
-from .utils import interfaces, diskstat
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import diskstat, interfaces
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -113,7 +100,7 @@ def average_parsed_data(values: Values) -> float:
     return sum(map(int, values)) / len(values) if values else 0
 
 
-#.
+# .
 #   .--Interfaces----------------------------------------------------------.
 #   |           ___       _             __                                 |
 #   |          |_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___  ___             |
@@ -135,47 +122,22 @@ def _get_ctr_multiplier(ctr_name: str) -> int:
 
 
 _CTR_TO_IF_FIELDS = {
-    'bytesRx': 'in_octets',  # is in Kilobytes!
-    'packetsRx': 'in_ucast',
-    'multicastRx': 'in_mcast',
-    'broadcastRx': 'in_bcast',
-    'droppedRx': 'in_discards',
-    'errorsRx': 'in_errors',
-    'bytesTx': 'out_octets',  # is in Kilobytes!
-    'packetsTx': 'out_ucast',
-    'multicastTx': 'out_mcast',
-    'broadcastTx': 'out_bcast',
-    'droppedTx': 'out_discards',
-    'errorsTx': 'out_errors',
+    "bytesRx": "in_octets",  # is in Kilobytes!
+    "packetsRx": "in_ucast",
+    "multicastRx": "in_mcast",
+    "broadcastRx": "in_bcast",
+    "droppedRx": "in_discards",
+    "errorsRx": "in_errors",
+    "bytesTx": "out_octets",  # is in Kilobytes!
+    "packetsTx": "out_ucast",
+    "multicastTx": "out_mcast",
+    "broadcastTx": "out_bcast",
+    "droppedTx": "out_discards",
+    "errorsTx": "out_errors",
 }
 
 
 def convert_esx_counters_if(section: Section) -> interfaces.Section:
-    r"""
-    >>> from pprint import pprint
-    >>> pprint(convert_esx_counters_if({
-    ... 'net.bandwidth': {'vmnic4': [(['10000000000'], 'bytes')]},
-    ... 'net.broadcastRx': {'vmnic4': [(['220', '196'], 'number')]},
-    ... 'net.broadcastTx': {'vmnic4': [(['0', '4'], 'number')]},
-    ... 'net.bytesRx': {'vmnic4': [(['19', '187'], 'kiloBytesPerSecond')]},
-    ... 'net.bytesTx': {'vmnic4': [(['33', '118'], 'kiloBytesPerSecond')]},
-    ... 'net.droppedRx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.droppedTx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.errorsRx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.errorsTx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.macaddress': {'vmnic4': [(['64:51:06:f0:c5:d0'], 'mac')]},
-    ... 'net.multicastRx': {'vmnic4': [(['157', '70'], 'number')]},
-    ... 'net.multicastTx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.packetsRx': {'vmnic4': [(['952', '3922'], 'number')]},
-    ... 'net.packetsTx': {'vmnic4': [(['401', '1892'], 'number')]},
-    ... 'net.received': {'vmnic4': [(['19', '187'], 'kiloBytesPerSecond')]},
-    ... 'net.state': {'vmnic4': [(['1'], 'state')]},
-    ... 'net.transmitted': {'vmnic4': [(['33', '118'], 'kiloBytesPerSecond')]},
-    ... 'net.unknownProtos': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.usage': {'vmnic4': [(['53', '305'], 'kiloBytesPerSecond')]},
-    ... }))
-    [Interface(index='0', descr='vmnic4', alias='vmnic4', type='6', speed=10000000000, oper_status='1', in_octets=105472, in_ucast=2437, in_mcast=113, in_bcast=208, in_discards=0, in_errors=0, out_octets=76800, out_ucast=1146, out_mcast=0, out_bcast=2, out_discards=0, out_errors=0, out_qlen=0, phys_address='dQ\x06ðÅÐ', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=182272)]
-    """
     rates: Dict[str, Dict[str, int]] = {}
     mac_addresses: Dict[str, str] = {}
 
@@ -221,7 +183,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
             index=str(index),
             descr=name,
             alias=name,
-            type='6',  # Ethernet
+            type="6",  # Ethernet
             speed=iface_rates.get("bandwidth", 0),
             oper_status=str(iface_rates.get("state", 1)),
             phys_address=interfaces.mac_address_from_hexstring(mac_addresses.get(name, "")),
@@ -280,7 +242,7 @@ def discover_esx_vsphere_counters_diskio(section: Section) -> DiscoveryResult:
 
 
 def _sum_instance_counts(counts: SubSectionCounter) -> float:
-    summed_avgs = 0.
+    summed_avgs = 0.0
     for data in counts.values():
         multivalues, _unit = data[0]
         summed_avgs += average_parsed_data(multivalues)
@@ -307,7 +269,7 @@ def check_esx_vsphere_counters_diskio(
         data = section.get("disk.%s" % op_type, {}).get("")
         multivalues, _unit = data[0] if data else (None, None)
         if multivalues is not None:
-            summary['%s_throughput' % op_type] = average_parsed_data(multivalues) * 1024
+            summary["%s_throughput" % op_type] = average_parsed_data(multivalues) * 1024
 
         # sum up all instances
         op_counts_key = "disk.number%sAveraged" % op_type.title()
@@ -316,7 +278,7 @@ def check_esx_vsphere_counters_diskio(
 
     latency = _max_latency(section.get("disk.deviceLatency", {}))
     if latency is not None:
-        summary['latency'] = latency / 1000.0
+        summary["latency"] = latency / 1000.0
 
     yield from diskstat.check_diskstat_dict(
         params=params,
@@ -327,11 +289,11 @@ def check_esx_vsphere_counters_diskio(
 
 
 register.check_plugin(
-    name='esx_vsphere_counters_diskio',
+    name="esx_vsphere_counters_diskio",
     sections=["esx_vsphere_counters"],
-    service_name='Disk IO %s',
+    service_name="Disk IO %s",
     discovery_function=discover_esx_vsphere_counters_diskio,
     check_function=check_esx_vsphere_counters_diskio,
     check_default_parameters={},
-    check_ruleset_name='diskstat',
+    check_ruleset_name="diskstat",
 )

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Displaying the detail text of changes could trigger execution of arbitrary
 javascript code that was previously stored by a modification made to the

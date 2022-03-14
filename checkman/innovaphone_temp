@@ -1,7 +1,7 @@
 title: Innovaphone Gateway: Current Temperature
 agents: special
 catalog: hw/network/innovaphone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the current device temperature in degree celsisus.
@@ -9,6 +9,5 @@ description:
 item:
  The fixed statement {{Ambient}}
 
-inventory:
+discovery:
  One service is created.
-

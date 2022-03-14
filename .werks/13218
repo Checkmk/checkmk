@@ -1,0 +1,24 @@
+Title: Wrongfully applied parameters for clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631963081
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+A clustered service should only have the parameters from
+rules matching the cluster host applied.
+From Checkmk version 1.6.0 to 2.0.0p11 however, the rules
+configured for one certain node where applied as well,
+with the rules matching the cluster taking precedence.
+
+The wrongfully applied rules were the rules matching the
+last node (according to the cluster definition) for which
+the service in question had been discovered.
+For instance for a cluster with the nodes <i>node_1</i>,
+<i>node_2</i>, <i>node_3</i> configured, where the service
+was discovered on <i>node_1</i> and <i>node_2</i>, the
+service would have also been applied all rules matching
+<i>node_2</i>.

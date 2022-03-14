@@ -4,15 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import gettext as gettext_module
-from typing import Dict, NamedTuple, Optional, List, Tuple
-from pathlib import Path
+from __future__ import annotations
 
-from flask_babel.speaklater import LazyString  # type: ignore[import]
+import gettext as gettext_module
+from pathlib import Path
+from typing import Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
 
 import cmk.utils.paths
 
-#.
+from cmk.gui.globals import local
+from cmk.gui.utils.speaklater import LazyString
+
+if TYPE_CHECKING:
+    from cmk.gui.globals import RequestContext
+
+# .
 #   .--Gettext i18n--------------------------------------------------------.
 #   |           ____      _   _            _     _ _  ___                  |
 #   |          / ___| ___| |_| |_ _____  _| |_  (_) |( _ ) _ __            |
@@ -24,39 +30,56 @@ import cmk.utils.paths
 #   | Handling of the regular localization of the GUI                      |
 #   '----------------------------------------------------------------------'
 
+
 # NullTranslations is the base class used by all translation classes in gettext
-Translation = NamedTuple("Translation", [
-    ("translation", gettext_module.NullTranslations),
-    ("name", str),
-])
-
-# Current active translation object
-_translation: Optional[Translation] = None
+class Translation(NamedTuple):
+    translation: gettext_module.NullTranslations
+    name: str
 
 
-def _(message: str) -> str:
-    if _translation:
-        return _translation.translation.gettext(message)
+def _request_context() -> RequestContext:
+    return local
+
+
+def _translation() -> Optional[Translation]:
+    try:
+        return _request_context().translation
+    except RuntimeError:
+        # TODO: Once we cleaned up all wrong _() to _l(), we can clean this up
+        pass
+    return None
+
+
+def _(message: str, /) -> str:
+    """
+    Positional-only argument to simplify additional linting of localized strings.
+    """
+    if translation := _translation():
+        return translation.translation.gettext(message)
     return str(message)
 
 
-def _l(string: str) -> str:
+def _l(string: str, /) -> LazyString:
     """Like _() but the string returned is lazy which means it will be translated when it is used as
-    an actual string."""
+    an actual string. Positional-only arguments to simplify additional linting of localized
+    strings."""
     return LazyString(_, string)
 
 
-def ungettext(singular: str, plural: str, n: int) -> str:
-    if _translation:
-        return _translation.translation.ngettext(singular, plural, n)
+def ungettext(singular: str, plural: str, n: int, /) -> str:
+    """
+    Positional-only argument to simplify additional linting of localized strings
+    """
+    if translation := _translation():
+        return translation.translation.ngettext(singular, plural, n)
     if n == 1:
         return str(singular)
     return str(plural)
 
 
 def get_current_language() -> Optional[str]:
-    if _translation:
-        return _translation.name
+    if translation := _translation():
+        return translation.name
     return None
 
 
@@ -99,13 +122,17 @@ def get_languages() -> List[Tuple[str, str]]:
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = {('', _('English'))}
+    languages = {("", _("English"))}
 
     for lang_dir in _get_language_dirs():
         try:
-            languages.update([(val.name, _("%s") % get_language_alias(val.name))
-                              for val in lang_dir.iterdir()
-                              if val.name != "packages" and val.is_dir()])
+            languages.update(
+                [
+                    (val.name, _("%s") % get_language_alias(val.name))
+                    for val in lang_dir.iterdir()
+                    if val.name != "packages" and val.is_dir()
+                ]
+            )
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
@@ -115,12 +142,10 @@ def get_languages() -> List[Tuple[str, str]]:
 
 
 def unlocalize() -> None:
-    global _translation
-    _translation = None
+    _request_context().translation = None
 
 
 def localize(lang: Optional[str]) -> None:
-    global _translation
     if lang is None:
         unlocalize()
         return
@@ -130,7 +155,7 @@ def localize(lang: Optional[str]) -> None:
         unlocalize()
         return
 
-    _translation = Translation(translation=gettext_translation, name=lang)
+    _request_context().translation = Translation(translation=gettext_translation, name=lang)
 
 
 def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
@@ -141,10 +166,9 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     translations: List[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
-            translation = gettext_module.translation("multisite",
-                                                     str(locale_base_dir),
-                                                     languages=[lang],
-                                                     codeset='UTF-8')
+            translation = gettext_module.translation(
+                "multisite", str(locale_base_dir), languages=[lang]
+            )
 
         except IOError:
             continue
@@ -160,11 +184,7 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     return translations[-1]
 
 
-def initialize() -> None:
-    unlocalize()
-
-
-#.
+# .
 #   .--User i18n-----------------------------------------------------------.
 #   |                _   _                 _ _  ___                        |
 #   |               | | | |___  ___ _ __  (_) |( _ ) _ __                  |
@@ -187,12 +207,11 @@ def _u(text: str) -> str:
         if current_language is None:
             return text
         return ldict.get(current_language, text)
+    if translation := _translation():
+        return translation.translation.gettext(text)
     return text
 
 
 def set_user_localizations(localizations: Dict[str, Dict[str, str]]) -> None:
     _user_localizations.clear()
     _user_localizations.update(localizations)
-
-
-initialize()

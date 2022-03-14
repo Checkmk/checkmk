@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Mirror View State
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the mirror view state and faulted state of
@@ -26,5 +26,5 @@ description:
 item:
  The logical unit number.
 
-inventory:
+discovery:
  One service is created for each logical unit.

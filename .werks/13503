@@ -1,0 +1,14 @@
+Title: Fix wrong sort order in PDF reports on exporting views
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1637940552
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you exported a view via "This view as PDF", e.g. "Events of host & service
+my_host", the sort order of the elements in the generated PDF report could
+differ.

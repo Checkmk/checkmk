@@ -4,19 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-def agent_netapp_arguments(params, hostname, ipaddress):
-    args = []
-
-    args += ["-u", params["username"]]
-    args += ["-s", params["password"]]
-    if params.get("skip_elements"):
-        no_ctrs = [x[4:] for x in params["skip_elements"] if x.startswith("ctr_")]
-        if no_ctrs:
-            args += ["--nocounters %s" % ",".join(no_ctrs)]
-
-    args += [ipaddress]
-    return args
+from typing import Any, Mapping, Optional, Sequence
 
 
-special_agent_info['netapp'] = agent_netapp_arguments
+def agent_netapp_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    return [
+        ipaddress or hostname,
+        params["username"],
+        params["password"],
+        "--no_counters",
+    ] + [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
+
+
+special_agent_info["netapp"] = agent_netapp_arguments

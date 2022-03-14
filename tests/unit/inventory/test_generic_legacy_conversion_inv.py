@@ -3,15 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import pytest  # type: ignore[import]
-
 from pathlib import Path
+
+import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
 
 from cmk.base.api.agent_based.inventory_classes import Attributes
-
-import cmk.base.api.agent_based.register as agent_based_register
 
 pytestmark = pytest.mark.checks
 
@@ -21,13 +19,15 @@ def test_no_new_legacy_tests():
 
     assert [p.name for p in this_dir.iterdir() if p.name != "__pycache__"] == [
         "test_generic_legacy_conversion_inv.py",
-    ], ("Please do not put new tests in %s. They belong to the tests for agent_based plugins." %
-        this_dir)
+    ], (
+        "Please do not put new tests in %s. They belong to the tests for agent_based plugins."
+        % this_dir
+    )
 
 
 def test_create_section_plugin_from_legacy(fix_plugin_legacy):
     for inv_info_dict in fix_plugin_legacy.inv_info.values():
-        assert 'snmp_info' not in inv_info_dict
+        assert "snmp_info" not in inv_info_dict
 
 
 def test_migrated_inventory_plugin(fix_plugin_legacy, fix_register):
@@ -51,5 +51,5 @@ def test_migrated_inventory_plugin(fix_plugin_legacy, fix_register):
         "version": "42.23",  # abracadabra! Is this your version?
         "vendor": "IBM",
         "type": "aix",
-        "name": "IBM AIX 42.23"
+        "name": "IBM AIX 42.23",
     }

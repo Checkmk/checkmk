@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#definitions:
+# definitions:
 # cmp', '(obp-device = pyhsical CPU's
 # core', '(core      = cores
 # cpu', '(cpu        = thread
@@ -28,6 +28,6 @@ def inv_solaris_prtpicl(info):
     node["threads"] = cpu_no
 
 
-inv_info['solaris_prtpicl'] = {
+inv_info["solaris_prtpicl"] = {
     "inv_function": inv_solaris_prtpicl,
 }

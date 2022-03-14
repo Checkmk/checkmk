@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mbg_lantime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
 #   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
@@ -134,15 +135,18 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
     }
 
     state, state_txt = refclock_states[state]
-    detailed_state_txt = (' (%s)' % refclock_substates[substate] if substate != '0' else '')
-    infotext = "Type: %s, Usage: %s, State: %s%s" % (mbg_lantime_ng_refclock_types[clock_type],
-                                                     refclock_usages[usage], state_txt,
-                                                     detailed_state_txt)
+    detailed_state_txt = " (%s)" % refclock_substates[substate] if substate != "0" else ""
+    infotext = "Type: %s, Usage: %s, State: %s%s" % (
+        mbg_lantime_ng_refclock_types[clock_type],
+        refclock_usages[usage],
+        state_txt,
+        detailed_state_txt,
+    )
 
     return state, infotext
 
 
-#.
+# .
 #   .--gps refclocks-------------------------------------------------------.
 #   |                                  __      _            _              |
 #   |       __ _ _ __  ___   _ __ ___ / _| ___| | ___   ___| | _____       |
@@ -162,12 +166,23 @@ def inventory_lantime_ng_refclock_gps(info):
         if clock_type is None:
             continue
         if clock_type.startswith("gps"):
-            yield (line[0], 'mbg_lantime_refclock_default_levels')
+            yield (line[0], "mbg_lantime_refclock_default_levels")
 
 
 def check_lantime_ng_refclock_gps(item, params, info):
-    for (index, clock_type, usage, state, substate, status_a, max_status_a, _, _, _,
-         leapsecond_date) in info:
+    for (
+        index,
+        clock_type,
+        usage,
+        state,
+        substate,
+        status_a,
+        max_status_a,
+        _,
+        _,
+        _,
+        leapsecond_date,
+    ) in info:
 
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
@@ -199,7 +214,7 @@ check_info["mbg_lantime_ng_refclock.gps"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--other refclocks-----------------------------------------------------.
 #   |                            _   _                                     |
 #   |                       ___ | |_| |__   ___ _ __                       |
@@ -227,8 +242,19 @@ def inventory_lantime_ng_refclock(info):
 
 def check_lantime_ng_refclock(item, _no_params, info):
 
-    for (index, clock_type, usage, state, substate, status_a, max_status_a, status_b, max_status_b,
-         _, _) in info:
+    for (
+        index,
+        clock_type,
+        usage,
+        state,
+        substate,
+        status_a,
+        max_status_a,
+        status_b,
+        max_status_b,
+        _,
+        _,
+    ) in info:
 
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
@@ -264,6 +290,7 @@ check_info["mbg_lantime_ng_refclock"] = {
             9,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockMaxStatusB
             10,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockAdditionalInfo
             11,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockLeapSecondDate
-        ]),
+        ],
+    ),
     "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
 }

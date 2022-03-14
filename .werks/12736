@@ -1,0 +1,15 @@
+Title: Honor date and timestamp format parameter in automation calls of views
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1617966215
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The parameter "po_ts_date" and "po_ts_format" were ignored on automation calls.
+
+If you've used this parameter for automation calls before, please check to see
+if adjustments are required.

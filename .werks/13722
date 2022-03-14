@@ -1,0 +1,16 @@
+Title: Don't return passwords
+Class: security
+Compatible: incomp
+Component: rest-api
+Date: 1644933751
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Before this werk it was possible to retrieve stored passwords in cleartext over
+the <i>REST API</i>. They are not shown in the GUI and should not be revealed
+to a user.
+
+A Checkmk admin can still retrieve the password with access to the filesystem
+though.

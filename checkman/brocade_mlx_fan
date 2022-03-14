@@ -1,7 +1,7 @@
 title: Brocade NetIron MLX / ADX / FGS / ICX Devices: Fans
 agents: snmp
 catalog: hw/environment/brocade
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the operational status of fans in Brocade NetIron MLX  / ADX /
@@ -14,5 +14,5 @@ item:
  If a fan description is delivered by SNMP, the item is build from the
  fan ID plus the description. Otherwise it is just the ID.
 
-inventory:
+discovery:
  One service is created for each fan.

@@ -1,0 +1,17 @@
+Title: mk_oracle: Fix bakery crash on deactivated agent rule
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1638967519
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When configuring one or more "ORACLE databases" agent rules and deactivating
+it with by setting "Activation" to "Do not deploy ORACLE databases plugin",
+the agent bakery failed to bake agents.
+
+This is fixed now by moving the activation/deactivation to an entry of the
+ruleset. As a result, for every active agent configuration, at least one rule
+with specified "Activation" entry must exist to successfully bake agents.

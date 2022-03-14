@@ -1,0 +1,29 @@
+Title: cmk-update-agent: Prevent crash on missing "Content-Length" HTTP header
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1623048459
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, the agent updater expected a "Content-Length" HTTP header in responses
+from the Checkmk server, and crashed with error message<br>
+<tt>KeyError: 'content-length'</tt><br>
+if it was missing. However, the missing header only occurs in special scenarios, when the
+agent updater doesn't communicate with the Checkmk server directly, e.g., when having a
+(reverse) proxy in between.
+
+This is fixed now.
+
+This werk is marked as incompatible, because manual interaction might be needed
+to overcome the error on a host. You can either install the newly baked agent
+manually on affected hosts, or prevent the cause that leads to the missing "Content-Length"
+header: An observed cause for the missing header can be an activated transport compression
+at some point in the infrastructure between Checkmk server and host. To prevent this, you
+can add the line<br>
+<tt>SetEnv no-gzip dont-vary</tt><br>
+at the top of the config file <tt>/etc/apache2/conf-enabled/zzz_omd.conf</tt> on the
+server running Checkmk, and reload the system apache with <tt>systemctl reload apache</tt>.

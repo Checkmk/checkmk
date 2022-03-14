@@ -1,0 +1,16 @@
+Title: Views: host custom attribute: Fix grouping, add sorting
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1617259537
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Grouping for a single host custom attribute works now, before this fix the
+group was determined by all host custom attributes of the host.
+
+Grouping by a host custom attribute is of limited usefulness without sorting,
+so sorting for host custom attributes was added.

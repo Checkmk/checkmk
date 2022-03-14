@@ -1,0 +1,13 @@
+Title: Fixed error in inventory if block device is virtual
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1635503259
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If a block device is not a physical one that contains a firmware revision or
+serial number the inventory plugin failed and showed an error. All information
+for a block device is now optional.

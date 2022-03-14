@@ -36,52 +36,52 @@
 #    125, # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasDrClosureConfig
 
 lgp_pdu_aux_types = {
-    '0': 'UNSPEC',
-    '1': 'TEMP',
-    '2': 'HUM',
-    '3': 'DOOR',
-    '4': 'CONTACT',
+    "0": "UNSPEC",
+    "1": "TEMP",
+    "2": "HUM",
+    "3": "DOOR",
+    "4": "CONTACT",
 }
 
 lgp_pdu_aux_states = [
-    'not-specified',
-    'open',
-    'closed',
+    "not-specified",
+    "open",
+    "closed",
 ]
 
 _lgp_pdu_aux_fields = {
     # Index, Type, Factor, ID
-    '10': (str, None, 'Type'),
-    '15': (str, None, 'SystemLabel'),
-    '20': (str, None, 'UserLabel'),
-    '35': (str, None, 'SerialNumber'),
-    '70': (savefloat, 0.1, 'Temp'),
-    '75': (savefloat, 0.1, 'TempLowCrit'),
-    '80': (savefloat, 0.1, 'TempHighCrit'),
-    '85': (savefloat, 0.1, 'TempLowWarn'),
-    '90': (savefloat, 0.1, 'TempHighWarn'),
-    '95': (savefloat, 0.1, 'Hum'),
-    '100': (savefloat, 0.1, 'HumLowCrit'),
-    '105': (savefloat, 0.1, 'HumHighCrit'),
-    '110': (savefloat, 0.1, 'HumLowWarn'),
-    '115': (savefloat, 0.1, 'HumHighWarn'),
-    '120': (saveint, None, 'DoorState'),
-    '125': (saveint, None, 'DoorConfig'),
+    "10": (str, None, "Type"),
+    "15": (str, None, "SystemLabel"),
+    "20": (str, None, "UserLabel"),
+    "35": (str, None, "SerialNumber"),
+    "70": (savefloat, 0.1, "Temp"),
+    "75": (savefloat, 0.1, "TempLowCrit"),
+    "80": (savefloat, 0.1, "TempHighCrit"),
+    "85": (savefloat, 0.1, "TempLowWarn"),
+    "90": (savefloat, 0.1, "TempHighWarn"),
+    "95": (savefloat, 0.1, "Hum"),
+    "100": (savefloat, 0.1, "HumLowCrit"),
+    "105": (savefloat, 0.1, "HumHighCrit"),
+    "110": (savefloat, 0.1, "HumLowWarn"),
+    "115": (savefloat, 0.1, "HumHighWarn"),
+    "120": (saveint, None, "DoorState"),
+    "125": (saveint, None, "DoorConfig"),
 }
 
 
 def lgp_pdu_aux_fmt(info):
     new_info = {}
     for oid, value in info:
-        type_, id_ = oid.split('.', 1)
+        type_, id_ = oid.split(".", 1)
         if not id_ in new_info:
-            new_info[id_] = {'TypeIndex': id_.split('.')[-1]}
+            new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
         # Skip not handled rows
         if type_ in _lgp_pdu_aux_fields:
             ty, factor, key = _lgp_pdu_aux_fields[type_]
 
-            if key == 'Type':
-                value = lgp_pdu_aux_types.get(value, 'UNHANDLED')
+            if key == "Type":
+                value = lgp_pdu_aux_types.get(value, "UNHANDLED")
             else:
                 if factor:
                     value = ty(value) * factor
@@ -98,84 +98,89 @@ def inventory_lgp_pdu_aux(info):
     for pdu in info.values():
         # Using SystemLabel as index. But it is not uniq in all cases.
         # Adding the Type-Index to prevent problems
-        inv.append((pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex'], None))
+        inv.append((pdu["Type"] + "-" + pdu["SystemLabel"] + "-" + pdu["TypeIndex"], None))
     return inv
 
 
 def check_lgp_pdu_aux(item, params, info):
     info = lgp_pdu_aux_fmt(info)
     for pdu in info.values():
-        if item == pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex']:
+        if item == pdu["Type"] + "-" + pdu["SystemLabel"] + "-" + pdu["TypeIndex"]:
             state = 0
             output = []
             perfdata = []
 
-            if pdu['UserLabel'] != '':
-                output.append('Label: %s (%s)' % (pdu['UserLabel'], pdu['SystemLabel']))
+            if pdu["UserLabel"] != "":
+                output.append("Label: %s (%s)" % (pdu["UserLabel"], pdu["SystemLabel"]))
             else:
-                output.append('Label: ' + pdu['SystemLabel'])
+                output.append("Label: " + pdu["SystemLabel"])
 
             def handle_type(ty, label, uom, pdu=pdu):
                 state = 0
-                perfdata = (ty.lower(), pdu[ty],
-                            '%0.2f:%0.2f' % (pdu[ty + 'LowWarn'], pdu[ty + 'HighWarn']),
-                            '%0.2f:%0.2f' % (pdu[ty + 'LowCrit'], pdu[ty + 'HighCrit']))
-                s_out = ''
-                if pdu[ty] >= pdu[ty + 'HighCrit']:
+                perfdata = (
+                    ty.lower(),
+                    pdu[ty],
+                    "%0.2f:%0.2f" % (pdu[ty + "LowWarn"], pdu[ty + "HighWarn"]),
+                    "%0.2f:%0.2f" % (pdu[ty + "LowCrit"], pdu[ty + "HighCrit"]),
+                )
+                s_out = ""
+                if pdu[ty] >= pdu[ty + "HighCrit"]:
                     state = 2
-                    s_out = ' >= %0.2f (!!)' % pdu[ty + 'HighCrit']
-                elif pdu[ty] <= pdu[ty + 'LowCrit']:
+                    s_out = " >= %0.2f (!!)" % pdu[ty + "HighCrit"]
+                elif pdu[ty] <= pdu[ty + "LowCrit"]:
                     state = 2
-                    s_out = ' <= %0.2f (!!)' % pdu[ty + 'LowCrit']
-                elif pdu[ty] >= pdu[ty + 'HighWarn']:
+                    s_out = " <= %0.2f (!!)" % pdu[ty + "LowCrit"]
+                elif pdu[ty] >= pdu[ty + "HighWarn"]:
                     state = 1
-                    s_out = ' >= %0.2f (!)' % pdu[ty + 'HighWarn']
-                elif pdu[ty] <= pdu[ty + 'LowWarn']:
+                    s_out = " >= %0.2f (!)" % pdu[ty + "HighWarn"]
+                elif pdu[ty] <= pdu[ty + "LowWarn"]:
                     state = 1
-                    s_out = ' <= %0.2f (!)' % pdu[ty + 'LowWarn']
+                    s_out = " <= %0.2f (!)" % pdu[ty + "LowWarn"]
 
-                return state, '%s: %0.2f%s%s' % (label, pdu[ty], uom, s_out), perfdata
+                return state, "%s: %0.2f%s%s" % (label, pdu[ty], uom, s_out), perfdata
 
-            if pdu['Type'] == 'TEMP':
-                state, out, perf = handle_type('Temp', 'Temperature', 'C')
+            if pdu["Type"] == "TEMP":
+                state, out, perf = handle_type("Temp", "Temperature", "C")
                 output.append(out)
                 perfdata.append(perf)
 
-            elif pdu['Type'] == 'HUM':
-                state, out, perf = handle_type('Hum', 'Humidity', '%')
+            elif pdu["Type"] == "HUM":
+                state, out, perf = handle_type("Hum", "Humidity", "%")
                 output.append(out)
                 perfdata.append(perf)
 
-            elif pdu['Type'] == 'DOOR':
+            elif pdu["Type"] == "DOOR":
                 # DoorConfig: 1 -> open, 0 -> disabled
-                if pdu['DoorConfig'] == 1 and lgp_pdu_aux_states[pdu['DoorState']] == 'open':
+                if pdu["DoorConfig"] == 1 and lgp_pdu_aux_states[pdu["DoorState"]] == "open":
                     state = 2
-                    output.append('Door is %s (!!)' % lgp_pdu_aux_states[pdu['DoorState']])
+                    output.append("Door is %s (!!)" % lgp_pdu_aux_states[pdu["DoorState"]])
                 else:
-                    output.append('Door is %s' % lgp_pdu_aux_states[pdu['DoorState']])
+                    output.append("Door is %s" % lgp_pdu_aux_states[pdu["DoorState"]])
 
-            return (state, ', '.join(output), perfdata)
+            return (state, ", ".join(output), perfdata)
 
-    return (3, 'Could not find given PDU.')
+    return (3, "Could not find given PDU.")
 
 
-check_info['lgp_pdu_aux'] = (check_lgp_pdu_aux, 'Liebert PDU AUX %s', 1, inventory_lgp_pdu_aux)
+check_info["lgp_pdu_aux"] = (check_lgp_pdu_aux, "Liebert PDU AUX %s", 1, inventory_lgp_pdu_aux)
 
-snmp_info['lgp_pdu_aux'] = (
-    '.1.3.6.1.4.1.476.1.42.3.8.60.15',
+snmp_info["lgp_pdu_aux"] = (
+    ".1.3.6.1.4.1.476.1.42.3.8.60.15",
     [
         OID_END,
-        '1',  # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasTable
-    ])
+        "1",  # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasTable
+    ],
+)
 
-snmp_scan_functions['lgp_pdu_aux'] = lambda oid: oid('.1.3.6.1.2.1.1.2.0') == \
-                                                         '.1.3.6.1.4.1.476.1.42'
+snmp_scan_functions["lgp_pdu_aux"] = (
+    lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.476.1.42"
+)
 
-#check_info["lgp_pdu_aux"] = {
+# check_info["lgp_pdu_aux"] = {
 #    "check_function"        : check_lgp_pdu_aux,
 #    "inventory_function"    : inventory_lgp_pdu_aux,
 #    "service_description"   : "Liebert PDU AUX %s",
 #    "has_perfdata"          : True,
 #    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == \
 #                                          ".1.3.6.1.4.1.476.1.42"
-#}
+# }

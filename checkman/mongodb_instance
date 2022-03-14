@@ -1,12 +1,12 @@
 title: MongoDB: Instance
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the current instance of the MongoDB. In case the instance
  is up, it displays information such as the mode, the address and the version.
  In case the instance is down, the check will go {CRIT}.
 
-inventory:
+discovery:
  One service is created.

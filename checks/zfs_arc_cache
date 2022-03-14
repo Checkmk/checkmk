@@ -160,67 +160,67 @@
 # size = 48851102592
 # snaptime = 6646791,81811455
 
-#<<<zfs_arc_cache>>>
-#hits                      = 97798158981
-#misses                    = 29159034052
-#demand_data_hits          = 21894170403
-#demand_data_misses        = 6555284601
-#demand_metadata_hits      = 67915356653
-#demand_metadata_misses    = 2138181167
-#prefetch_data_hits        = 6162208911
-#prefetch_data_misses      = 19200459846
-#prefetch_metadata_hits    = 1826423014
-#prefetch_metadata_misses  = 1265108438
-#mru_hits                  = 32456530155
-#mru_ghost_hits            = 2084134895
-#mfu_hits                  = 57357428725
-#mfu_ghost_hits            = 1416265946
-#deleted                   = 26434603017
-#recycle_miss              = 2014989945
-#mutex_miss                = 548212067
-#evict_skip                = 1758367956525
-#evict_l2_cached           =         0
-#evict_l2_eligible         = 236579643061760
-#evict_l2_ineligible       = 68829096635392
-#hash_elements             =    235200
-#hash_elements_max         =    441047
-#hash_collisions           = 5893650106
-#hash_chains               =     22800
-#hash_chain_max            =         8
-#p                         =       242 MB
-#c                         =      2048 MB
-#c_min                     =      2010 MB
-#c_max                     =      2048 MB
-#size                      =      1658 MB
-#hdr_size                  =  76639184
-#data_size                 = 998181888
-#other_size                = 664157400
-#l2_hits                   =         0
-#l2_misses                 =         0
-#l2_feeds                  =         0
-#l2_rw_clash               =         0
-#l2_read_bytes             =         0
-#l2_write_bytes            =         0
-#l2_writes_sent            =         0
-#l2_writes_done            =         0
-#l2_writes_error           =         0
-#l2_writes_hdr_miss        =         0
-#l2_evict_lock_retry       =         0
-#l2_evict_reading          =         0
-#l2_free_on_write          =         0
-#l2_abort_lowmem           =         0
-#l2_cksum_bad              =         0
-#l2_io_error               =         0
-#l2_size                   =         0
-#l2_hdr_size               =         0
-#memory_throttle_count     =   1014537
-#arc_no_grow               =         0
-#arc_tempreserve           =         0 MB
-#arc_meta_used             =      1196 MB
-#arc_meta_limit            =       512 MB
-#arc_meta_max              =      2132 MB
+# <<<zfs_arc_cache>>>
+# hits                      = 97798158981
+# misses                    = 29159034052
+# demand_data_hits          = 21894170403
+# demand_data_misses        = 6555284601
+# demand_metadata_hits      = 67915356653
+# demand_metadata_misses    = 2138181167
+# prefetch_data_hits        = 6162208911
+# prefetch_data_misses      = 19200459846
+# prefetch_metadata_hits    = 1826423014
+# prefetch_metadata_misses  = 1265108438
+# mru_hits                  = 32456530155
+# mru_ghost_hits            = 2084134895
+# mfu_hits                  = 57357428725
+# mfu_ghost_hits            = 1416265946
+# deleted                   = 26434603017
+# recycle_miss              = 2014989945
+# mutex_miss                = 548212067
+# evict_skip                = 1758367956525
+# evict_l2_cached           =         0
+# evict_l2_eligible         = 236579643061760
+# evict_l2_ineligible       = 68829096635392
+# hash_elements             =    235200
+# hash_elements_max         =    441047
+# hash_collisions           = 5893650106
+# hash_chains               =     22800
+# hash_chain_max            =         8
+# p                         =       242 MB
+# c                         =      2048 MB
+# c_min                     =      2010 MB
+# c_max                     =      2048 MB
+# size                      =      1658 MB
+# hdr_size                  =  76639184
+# data_size                 = 998181888
+# other_size                = 664157400
+# l2_hits                   =         0
+# l2_misses                 =         0
+# l2_feeds                  =         0
+# l2_rw_clash               =         0
+# l2_read_bytes             =         0
+# l2_write_bytes            =         0
+# l2_writes_sent            =         0
+# l2_writes_done            =         0
+# l2_writes_error           =         0
+# l2_writes_hdr_miss        =         0
+# l2_evict_lock_retry       =         0
+# l2_evict_reading          =         0
+# l2_free_on_write          =         0
+# l2_abort_lowmem           =         0
+# l2_cksum_bad              =         0
+# l2_io_error               =         0
+# l2_size                   =         0
+# l2_hdr_size               =         0
+# memory_throttle_count     =   1014537
+# arc_no_grow               =         0
+# arc_tempreserve           =         0 MB
+# arc_meta_used             =      1196 MB
+# arc_meta_limit            =       512 MB
+# arc_meta_max              =      2132 MB
 
-#.
+# .
 
 # parses agent output in a structure like
 # {'arc_meta_limit': 80,
@@ -271,32 +271,34 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
             if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
-                yield 0, "%sHit Ratio: %0.2f%%" % (human_key.title(), hit_ratio), \
-                      [("%shit_ratio" % key, hit_ratio, None, None, 0, 100)]
+                yield 0, "%sHit Ratio: %0.2f%%" % (human_key.title(), hit_ratio), [
+                    ("%shit_ratio" % key, hit_ratio, None, None, 0, 100)
+                ]
 
             else:
-                yield 0, "No %sHits or Misses" % human_key, \
-                      [("%shit_ratio" % key, 0, None, None, 0, 100)]
+                yield 0, "No %sHits or Misses" % human_key, [
+                    ("%shit_ratio" % key, 0, None, None, 0, 100)
+                ]
 
     # size
     if "size" in parsed:
         size_bytes = parsed["size"]
         size_readable = get_bytes_human_readable(size_bytes)
-        yield 0, "Cache size: %s" % size_readable, \
-              [("size", float(size_bytes), None, None, 0)]
+        yield 0, "Cache size: %s" % size_readable, [("size", float(size_bytes), None, None, 0)]
 
     # arc_meta
     # these values may be missing, this is ok too
     # in this case just do not report these values
-    if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and \
-       "arc_meta_max" in parsed:
-        yield 0, "Arc Meta %s used, Limit %s, Max %s"  % \
-              (get_bytes_human_readable(parsed["arc_meta_used"]),
-               get_bytes_human_readable(parsed["arc_meta_limit"]),
-               get_bytes_human_readable(parsed["arc_meta_max"])), \
-              [("arc_meta_used",  float(parsed["arc_meta_used"]), None, None, 0),
-               ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
-               ("arc_meta_max",   float(parsed["arc_meta_max"]), None, None, 0)]
+    if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and "arc_meta_max" in parsed:
+        yield 0, "Arc Meta %s used, Limit %s, Max %s" % (
+            get_bytes_human_readable(parsed["arc_meta_used"]),
+            get_bytes_human_readable(parsed["arc_meta_limit"]),
+            get_bytes_human_readable(parsed["arc_meta_max"]),
+        ), [
+            ("arc_meta_used", float(parsed["arc_meta_used"]), None, None, 0),
+            ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
+            ("arc_meta_max", float(parsed["arc_meta_max"]), None, None, 0),
+        ]
 
 
 check_info["zfs_arc_cache"] = {
@@ -307,7 +309,7 @@ check_info["zfs_arc_cache"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--L2 cache------------------------------------------------------------.
 #   |               _     ____                   _                         |
 #   |              | |   |___ \    ___ __ _  ___| |__   ___                |

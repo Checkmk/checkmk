@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import DropdownChoice, TextInput
 
 
 def _parameter_valuespec_switch_contact():
@@ -33,7 +29,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="switch_contact",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Sensor"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Sensor"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_switch_contact,
         title=lambda: _("Switch contact state"),
-    ))
+    )
+)

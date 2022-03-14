@@ -1,0 +1,13 @@
+Title: entity_sensors_temp: use device units for temperature
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1617104464
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The entity_sensors_temp check assumed the unit of all temperature sensor
+readings to be Celsius. With this change, the check reads the temperature unit
+directly from the device.

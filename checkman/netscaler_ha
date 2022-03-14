@@ -1,7 +1,7 @@
 title: Citrix Netscaler: High Availability
 agents: snmp
 catalog: app/netscaler
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the high availability status of Citrix Netscaler
@@ -16,5 +16,5 @@ description:
  or {unkown} because these states are not documented in the MIB. It is
  critical in other states {haCurState} can be.
 
-inventory:
+discovery:
  One service is created for each host.

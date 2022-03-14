@@ -5,20 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.notifications as notifications
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
-
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
 from cmk.gui.utils.urls import makeuri_contextless
 
 
 @dashlet_registry.register
 class FailedNotificationsDashlet(Dashlet):
     """Dashlet notifying users in case of failure to send notifications"""
+
     @classmethod
     def type_name(cls):
         return "notify_failed_notifications"
@@ -65,14 +61,9 @@ class FailedNotificationsDashlet(Dashlet):
 }"""
 
     def show(self):
-        notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
-                                                          stat_only=True)
-
-        if notdata is None:
-            failed_notifications = 0
-        else:
-            failed_notifications = notdata[0]
-
+        failed_notifications = notifications.number_of_failed_notifications(
+            after=notifications.acknowledged_time()
+        )
         if not failed_notifications:
             return
 
@@ -80,10 +71,9 @@ class FailedNotificationsDashlet(Dashlet):
         html.open_div(class_="failed_notifications_inner")
 
         confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
-        html.icon_button(confirm_url,
-                         _("Clear failed notifications"),
-                         "closetimewarp",
-                         target="main")
+        html.icon_button(
+            confirm_url, _("Clear failed notifications"), "closetimewarp", target="main"
+        )
 
         view_url = makeuri_contextless(
             request,

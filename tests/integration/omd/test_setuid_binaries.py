@@ -7,16 +7,30 @@
 import os
 import stat
 import subprocess
-import pytest  # type: ignore[import]
+
+import pytest
+
+from cmk.utils import version as cmk_version
 
 
-@pytest.mark.parametrize("rel_path,expected_capability", [
-    ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
-    ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
-    ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
-    ("lib/cmc/icmpsender", "cap_net_raw=ep"),
-    ("lib/cmc/icmpreceiver", "cap_net_raw=ep"),
-])
+@pytest.mark.parametrize(
+    "rel_path,expected_capability",
+    [
+        ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
+        ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
+        ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
+        pytest.param(
+            "lib/cmc/icmpsender",
+            "cap_net_raw=ep",
+            marks=pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No cmc in raw edition"),
+        ),
+        pytest.param(
+            "lib/cmc/icmpreceiver",
+            "cap_net_raw=ep",
+            marks=pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No cmc in raw edition"),
+        ),
+    ],
+)
 def test_binary_capability(site, rel_path, expected_capability):
     path = site.path(rel_path)
     assert os.path.exists(path)
@@ -31,21 +45,24 @@ def test_binary_capability(site, rel_path, expected_capability):
     if getcap_bin is None:
         raise Exception("Unable to find getcap")
 
-    p = subprocess.Popen([getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8")
-    assert p.stdout
-    stdout = p.stdout.read()
+    completed_process = subprocess.run(
+        [getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8", check=False
+    )
 
-    assert oct(stat.S_IMODE(os.stat(path).st_mode)) == '0o750'
+    assert oct(stat.S_IMODE(os.stat(path).st_mode)) == "0o750"
 
     # getcap 2.41 introduced a new output format. As long as we have distros with newer and older
     # versions, we need to support both formats.
-    if "%s =" % path in stdout:
+    if "%s =" % path in completed_process.stdout:
         # pre 2.41 format:
         # > getcap test
         # test = cap_net_raw+ep
-        assert stdout == "%s = %s\n" % (path, expected_capability.replace("=", "+"))
+        assert completed_process.stdout == "%s = %s\n" % (
+            path,
+            expected_capability.replace("=", "+"),
+        )
     else:
         # 2.41 format:
         # > getcap test
         # test cap_net_raw=ep
-        assert stdout == "%s %s\n" % (path, expected_capability)
+        assert completed_process.stdout == "%s %s\n" % (path, expected_capability)

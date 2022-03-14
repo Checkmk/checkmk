@@ -1,12 +1,17 @@
 NAGIOS := nagios
 NAGIOS_VERS := 3.5.1
 NAGIOS_DIR := $(NAGIOS)-$(NAGIOS_VERS)
+# Increase this to enforce a recreation of the build cache
+NAGIOS_BUILD_ID := 3-$(EDITION_SHORT)
 
+NAGIOS_UNPACK := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-unpack
 NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-patching
 NAGIOS_BUILD := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-build
+NAGIOS_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-install-intermediate
+NAGIOS_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-cache-pkg-process
 NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-install
 
-#NAGIOS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(NAGIOS_DIR)
+NAGIOS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(NAGIOS_DIR)
 NAGIOS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGIOS_DIR)
 #NAGIOS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NAGIOS_DIR)
 
@@ -14,8 +19,8 @@ NAGIOS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGIOS_DIR)
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
 NAGIOS_CONFIGUREOPTS := \
+    --prefix="" \
     --sbindir=$(OMD_ROOT)/lib/nagios/cgi-bin \
-    --bindir=$(OMD_ROOT)/bin \
     --datadir=$(OMD_ROOT)/share/nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
@@ -28,23 +33,39 @@ $(NAGIOS_BUILD): $(NAGIOS_PATCHING)
 	$(MAKE) -C $(NAGIOS_BUILD_DIR) all
 	$(TOUCH) $@
 
-$(NAGIOS_INSTALL): $(NAGIOS_BUILD)
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_BUILD_DIR) install-base
+NAGIOS_CACHE_PKG_PATH := $(call cache_pkg_path,$(NAGIOS_DIR),$(NAGIOS_BUILD_ID))
+
+$(NAGIOS_CACHE_PKG_PATH):
+	$(call pack_pkg_archive,$@,$(NAGIOS_DIR),$(NAGIOS_BUILD_ID),$(NAGIOS_INTERMEDIATE_INSTALL))
+
+$(NAGIOS_CACHE_PKG_PROCESS): $(NAGIOS_CACHE_PKG_PATH)
+	$(call unpack_pkg_archive,$(NAGIOS_CACHE_PKG_PATH),$(NAGIOS_DIR))
+	$(call upload_pkg_archive,$(NAGIOS_CACHE_PKG_PATH),$(NAGIOS_DIR),$(NAGIOS_BUILD_ID))
+	$(TOUCH) $@
+
+$(NAGIOS_INTERMEDIATE_INSTALL): $(NAGIOS_BUILD)
+	$(MAKE) DESTDIR=$(NAGIOS_INSTALL_DIR) -C $(NAGIOS_BUILD_DIR) install-base
 	
-	install -m 664 $(NAGIOS_BUILD_DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
+	$(MKDIR) $(NAGIOS_INSTALL_DIR)/lib/nagios
+	install -m 664 $(NAGIOS_BUILD_DIR)/p1.pl $(NAGIOS_INSTALL_DIR)/lib/nagios
 	
 	# Copy package documentations to have these information in the binary packages
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS)
+	$(MKDIR) $(NAGIOS_INSTALL_DIR)/share/doc/$(NAGIOS)
 	set -e ; for file in README THANKS LEGAL LICENSE ; do \
-	   install -m 644 $(NAGIOS_BUILD_DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS); \
+	   install -m 644 $(NAGIOS_BUILD_DIR)/$$file $(NAGIOS_INSTALL_DIR)/share/doc/$(NAGIOS); \
 	done
 	
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
+	$(MKDIR) $(NAGIOS_INSTALL_DIR)/bin
+	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/merge-nagios-config $(NAGIOS_INSTALL_DIR)/bin
 	
 	# Install the diskspace cleanup plugin
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
-	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
-	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	$(MKDIR) $(NAGIOS_INSTALL_DIR)/share/diskspace
+	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(NAGIOS_INSTALL_DIR)/share/diskspace/nagios
+	$(MKDIR) $(NAGIOS_INSTALL_DIR)/lib/omd/hooks
+	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(NAGIOS_INSTALL_DIR)/lib/omd/hooks/
+	$(TOUCH) $@
+
+
+$(NAGIOS_INSTALL): $(NAGIOS_CACHE_PKG_PROCESS)
+	$(RSYNC) $(NAGIOS_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

@@ -1,0 +1,14 @@
+Title: Improved performance when querying lots of data
+Class: feature
+Compatible: compat
+Component: liveproxy
+Date: 1626187735
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The data serialisation/deserialisation has been improved within livestatus and the liveproxyd.
+The performance improvement should be noticeable in views with a lot of data, e.g availability and the logfile history.
+Tests have shown that 70MB data is now transfered three times faster.

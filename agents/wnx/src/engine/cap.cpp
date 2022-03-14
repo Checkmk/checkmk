@@ -20,19 +20,16 @@
 #include "tools/_win.h"
 #include "tools/_xlog.h"
 #include "upgrade.h"
+namespace fs = std::filesystem;
 
-// returns TRUE only if file have been removed
-static std::string ErrorCodeToMessage(std::error_code ec) {
-    auto str = fmt::format("failed [{}] {}", ec.value(), ec.message());
-
-    if (!str.empty()) str.pop_back();
-    return str;
+namespace {
+std::string ErrorCodeToMessage(std::error_code ec) {
+    return fmt::format("failed [{}] {}", ec.value(), ec.message());
 }
 
-static void CopyFileWithLog(const std::filesystem::path &target,
-                            const std::filesystem::path &source) {
+void CopyFileWithLog(const fs::path &target, const fs::path &source) {
     std::error_code ec;
-    auto success = std::filesystem::copy_file(source, target, ec);
+    auto success = fs::copy_file(source, target, ec);
     if (success)
         XLOG::l.i("Copy file '{}' to '{}' [OK]", source, target);
     else
@@ -40,9 +37,9 @@ static void CopyFileWithLog(const std::filesystem::path &target,
                 ErrorCodeToMessage(ec));
 }
 
-static bool RemoveFileWithLog(const std::filesystem::path &f) {
+bool RemoveFileWithLog(const fs::path &f) {
     std::error_code ec;
-    auto success = std::filesystem::remove(f, ec);
+    auto success = fs::remove(f, ec);
     if (success || ec.value() == 0)
         XLOG::l.i("Remove '{}' [OK]", f);
     else
@@ -51,14 +48,13 @@ static bool RemoveFileWithLog(const std::filesystem::path &f) {
     //
     return success;
 }
+}  // namespace
 
 namespace cma::cfg::cap {
 
 // calculate valid path and create folder
 // returns path
 std::wstring ProcessPluginPath(const std::string &File) {
-    namespace fs = std::filesystem;
-
     // Extract basename and dirname from path
     fs::path fpath(File);
     fs::path plugin_folder = cma::cfg::GetUserDir();
@@ -108,7 +104,6 @@ std::string ReadFileName(std::ifstream &CapFile, uint32_t Length) {
 
 // skips too big files or invalid data
 std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
-    // read 32-bit length
     int32_t length = 0;
     CapFile.read(reinterpret_cast<char *>(&length), sizeof(length));
     if (!CapFile.good()) {
@@ -116,15 +111,17 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
         return {};
     }
     XLOG::d.t("Processing {} bytes of data", length);
-    constexpr uint32_t kMaxSizeSupported = 20 * 1024 * 1024;
-    if (length > kMaxSizeSupported) {
-        XLOG::l.crit("Size of data is too big {} ", length);
+
+    // ATTENTION: Value below must be bigger than cap.py::MAX_ALLOWED_SIZE
+    // This limit is only to avoid RAM problems, real control should be
+    // performed by WATO.
+    constexpr uint32_t max_allowed_size = 1024 * 1024 * 1024;
+    if (length > max_allowed_size) {
+        XLOG::l.crit("Size of data is too big {} allowed {}", length,
+                     max_allowed_size);
         return {};
     }
-
-    // read content
     size_t buffer_length = length;
-
     std::vector<char> dataBuffer(buffer_length, 0);
     CapFile.read(dataBuffer.data(), length);
 
@@ -137,7 +134,7 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
 
 // reads name and data
 // writes file
-// if problems or end return false
+// if problems or end - return false
 FileInfo ExtractFile(std::ifstream &cap_file) {
     // Read Filename
     auto l = ReadFileNameLength(cap_file);
@@ -169,7 +166,6 @@ FileInfo ExtractFile(std::ifstream &cap_file) {
 // may create dirs too
 // may create empty file
 bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
-    namespace fs = std::filesystem;
     fs::path fpath = Name;
     std::error_code ec;
     if (!fs::create_directories(fpath.parent_path(), ec) && ec.value() != 0) {
@@ -195,14 +191,16 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
 }
 
 [[nodiscard]] std::wstring GetProcessToKill(std::wstring_view name) {
-    namespace fs = std::filesystem;
     fs::path p = name;
     if (!p.has_filename()) return {};
-    if (!cma::tools::IsEqual(p.extension().u8string(), kAllowedExtension))
+    if (!tools::IsEqual(p.extension().u8string(), kAllowedExtension)) {
         return {};
+    }
 
     auto proc_name = p.filename().wstring();
-    if (proc_name.length() < kMinimumProcessNameLength) return {};
+    if (proc_name.length() < kMinimumProcessNameLength) {
+        return {};
+    }
 
     return proc_name;
 }
@@ -221,11 +219,11 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
     auto try_kill_mode = GetTryKillMode();
     if (try_kill_mode == cma::cfg::values::kTryKillSafe) {
         XLOG::d.i("Mode is safe, checking on list");
-        auto in_list = std::any_of(
-            std::begin(TryToKillAllowedNames), std::end(TryToKillAllowedNames),
-            [proc_name](const std::wstring &name) {
-                return cma::tools::IsEqual(proc_name, name);
-            });
+        auto in_list = std::any_of(std::begin(TryToKillAllowedNames),
+                                   std::end(TryToKillAllowedNames),
+                                   [proc_name](const std::wstring &name) {
+                                       return tools::IsEqual(proc_name, name);
+                                   });
         if (in_list) return true;
 
         XLOG::l.w("Can't kill the process for file '{}' as not safe process",
@@ -260,7 +258,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
 
         wtools::KillProcessFully(proc_name);
         constexpr auto delay = 500ms;
-        cma::tools::sleep(delay);
+        tools::sleep(delay);
     }
 
     return false;
@@ -272,7 +270,6 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
 }
 
 bool CheckAllFilesWritable(const std::string &Directory) {
-    namespace fs = std::filesystem;
     bool all_writable = true;
     for (const auto &p : fs::recursive_directory_iterator(Directory)) {
         std::error_code ec;
@@ -304,7 +301,7 @@ bool CheckAllFilesWritable(const std::string &Directory) {
 }
 
 // internal or advanced usage
-bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to) {
+bool ExtractAll(const std::string &cap_name, const fs::path &to) {
     std::ifstream ifs(cap_name, std::ifstream::in | std::ifstream::binary);
     if (!ifs) {
         XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
@@ -329,9 +326,8 @@ bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to) {
     return false;
 }
 
-bool Process(const std::string &cap_name, ProcMode Mode,
-             std::vector<std::wstring> &FilesLeftOnDisk) {
-    namespace fs = std::filesystem;
+bool Process(const std::string &cap_name, ProcMode mode,
+             std::vector<std::wstring> &files_left_on_disk) {
     std::ifstream ifs(cap_name, std::ifstream::in | std::ifstream::binary);
     if (!ifs) {
         XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
@@ -351,7 +347,7 @@ bool Process(const std::string &cap_name, ProcMode Mode,
         }
         const auto full_path = ProcessPluginPath(name);
 
-        if (Mode == ProcMode::install) {
+        if (mode == ProcMode::install) {
             auto success = IsStoreFileAgressive()
                                ? StoreFileAgressive(full_path, data,
                                                     kMaxAttemptsToStoreFile)
@@ -360,18 +356,19 @@ bool Process(const std::string &cap_name, ProcMode Mode,
                 XLOG::l("Can't store file '{}'", wtools::ToUtf8(full_path));
 
             std::error_code ec;
-            if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
-        } else if (Mode == ProcMode::remove) {
+            if (fs::exists(full_path, ec))
+                files_left_on_disk.push_back(full_path);
+        } else if (mode == ProcMode::remove) {
             std::error_code ec;
             auto removed = fs::remove(full_path, ec);
             if (removed || ec.value() == 0)
-                FilesLeftOnDisk.push_back(full_path);
+                files_left_on_disk.push_back(full_path);
             else {
                 XLOG::l("Cannot remove '{}' error {}",
                         wtools::ToUtf8(full_path), ec.value());
             }
-        } else if (Mode == ProcMode::list) {
-            FilesLeftOnDisk.push_back(full_path);
+        } else if (mode == ProcMode::list) {
+            files_left_on_disk.push_back(full_path);
         }
     }
 
@@ -382,36 +379,31 @@ bool Process(const std::string &cap_name, ProcMode Mode,
     return false;
 }
 
-bool NeedReinstall(const std::filesystem::path &Target,
-                   const std::filesystem::path &Src) {
-    namespace fs = std::filesystem;
+bool NeedReinstall(const fs::path &target, const fs::path &source) {
     std::error_code ec;
-
-    if (!fs::exists(Src, ec)) {
-        XLOG::d.w("Source File '{}' is absent, reinstall not possible",
-                  Src.u8string());
+    if (!fs::exists(source, ec)) {
+        XLOG::d.w("Source File '{}' is absent, reinstall not possible", source);
         return false;
     }
 
-    if (!fs::exists(Target, ec)) {
-        XLOG::d.i("Target File '{}' is absent, reinstall is mandatory",
-                  Target.u8string());
+    if (!fs::exists(target, ec)) {
+        XLOG::d.i("Target File '{}' is absent, reinstall is mandatory", target);
         return true;
     }
 
     // now both file are present
-    auto target_time = fs::last_write_time(Target, ec);
-    auto src_time = fs::last_write_time(Src, ec);
-    if (src_time > target_time) return true;
+    auto target_time = fs::last_write_time(target, ec);
+    auto src_time = fs::last_write_time(source, ec);
+    if (src_time > target_time) {
+        return true;
+    }
     XLOG::d.i("Timestamp OK, checking file content...");
-    return !cma::tools::AreFilesSame(Target, Src);
+    return !tools::AreFilesSame(target, source);
 }
 
 // returns true when changes had been done
-bool ReinstallCaps(const std::filesystem::path &target_cap,
-                   const std::filesystem::path &source_cap) {
+bool ReinstallCaps(const fs::path &target_cap, const fs::path &source_cap) {
     bool changed = false;
-    namespace fs = std::filesystem;
     std::error_code ec;
     std::vector<std::wstring> files_left;
     if (fs::exists(target_cap, ec)) {
@@ -443,16 +435,16 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
 }
 
 namespace details {
-void UninstallYaml(const std::filesystem::path &bakery_yaml,
-                   const std::filesystem::path &target_yaml) {
-    if (RemoveFileWithLog(target_yaml)) RemoveFileWithLog(bakery_yaml);
+void UninstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml) {
+    if (RemoveFileWithLog(target_yaml)) {
+        RemoveFileWithLog(bakery_yaml);
+    }
 }
 
-void InstallYaml(const std::filesystem::path &bakery_yaml,
-                 const std::filesystem::path &target_yaml,
-                 const std::filesystem::path &source_yaml) {
+void InstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
+                 const fs::path &source_yaml) {
     std::error_code ec;
-    if (std::filesystem::exists(source_yaml, ec)) {
+    if (fs::exists(source_yaml, ec)) {
         CopyFileWithLog(target_yaml, source_yaml);
         CopyFileWithLog(bakery_yaml, source_yaml);
     } else {
@@ -465,9 +457,8 @@ void InstallYaml(const std::filesystem::path &bakery_yaml,
 // Replaces target with source
 // Removes target if source absent
 // For non-packaged agents convert ini to bakery.yml
-bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
-                   const std::filesystem::path &target_yaml,
-                   const std::filesystem::path &source_yaml) {
+bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
+                   const fs::path &source_yaml) {
     std::error_code ec;
 
     XLOG::l.i("This Option/YML installation form MSI is ENABLED");
@@ -475,6 +466,12 @@ bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
     // we remove target file always good or bad our
     // This is uninstall process
     details::UninstallYaml(bakery_yaml, target_yaml);
+
+    // In 1.6 target_yml was not presented
+    if (fs::exists(bakery_yaml, ec)) {
+        XLOG::d.i("Looks as 1.6 installation: remove '{}'", bakery_yaml);
+        fs::remove(bakery_yaml, ec);
+    }
 
     try {
         auto yaml = YAML::LoadFile(source_yaml.u8string());
@@ -509,18 +506,8 @@ bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
     return true;
 }
 
-PairOfPath GetInstallPair(std::wstring_view name) {
-    namespace fs = std::filesystem;
-    fs::path target = cma::cfg::GetUserInstallDir();
-    target /= name;
-
-    fs::path source = cma::cfg::GetRootInstallDir();
-    source /= name;
-
-    return {target, source};
-}
-
-static void InstallCapFile() {
+namespace {
+void InstallCapFile() {
     auto [target_cap, source_cap] = GetInstallPair(files::kCapFile);
 
     XLOG::l.t("Installing cap file '{}'", source_cap);
@@ -533,13 +520,13 @@ static void InstallCapFile() {
     XLOG::l.t("Installing of CAP file is not required");
 }
 
-static void InstallYmlFile() {
+void InstallYmlFile() {
     auto [target_yml, source_yml] = GetInstallPair(files::kInstallYmlFileW);
 
     XLOG::l.t("Installing yml file '{}'", source_yml);
     if (NeedReinstall(target_yml, source_yml)) {
         XLOG::l.i("Reinstalling '{}' with '{}'", target_yml, source_yml);
-        std::filesystem::path bakery_yml = cma::cfg::GetBakeryDir();
+        fs::path bakery_yml = cma::cfg::GetBakeryDir();
 
         bakery_yml /= files::kBakeryYmlFile;
         ReinstallYaml(bakery_yml, target_yml, source_yml);
@@ -549,10 +536,9 @@ static void InstallYmlFile() {
     XLOG::l.t("Installing of YML file is not required");
 }
 
-static void PrintInstallCopyLog(std::string_view info_on_error,
-                                const std::filesystem::path &in_file,
-                                const std::filesystem::path &out_file,
-                                const std::error_code &ec) {
+void PrintInstallCopyLog(std::string_view info_on_error,
+                         const fs::path &in_file, const fs::path &out_file,
+                         const std::error_code &ec) {
     if (ec.value() == 0)
         XLOG::l.i("\tSuccess");
     else
@@ -560,10 +546,24 @@ static void PrintInstallCopyLog(std::string_view info_on_error,
                 out_file, ec.value(), ec.message());
 }
 
-static std::string KillTrailingCR(std::string &&message) {
-    if (!message.empty() && message.back() == '\n') message.pop_back();
-    if (!message.empty() && message.back() == '\r') message.pop_back();  // win
+std::string KillTrailingCR(std::string &&message) {
+    if (!message.empty()) {
+        if (message.back() == '\n' || message.back() == '\r') {
+            message.pop_back();
+        }
+    }
     return std::move(message);
+}
+}  // namespace
+
+PairOfPath GetInstallPair(std::wstring_view name) {
+    fs::path target = cma::cfg::GetUserInstallDir();
+    target /= name;
+
+    fs::path source = cma::cfg::GetRootInstallDir();
+    source /= name;
+
+    return {target, source};
 }
 
 // true when copy or copy not required
@@ -572,8 +572,6 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
                        std::wstring_view source_dir,  // @root/install
                        Mode mode) {
-    namespace fs = std::filesystem;
-
     std::error_code ec;
     fs::path target_file = target_dir;
     if (!fs::is_directory(target_dir, ec)) {
@@ -595,7 +593,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
         return true;
     }
 
-    if (!cma::tools::IsValidRegularFile(source_file)) {
+    if (!tools::IsValidRegularFile(source_file)) {
         XLOG::l.i("File '{}' is bad", source_file);
         return false;
     }
@@ -612,24 +610,22 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 }
 
 PairOfPath GetExampleYmlNames() {
-    using namespace cma::cfg;
-    namespace fs = std::filesystem;
-    fs::path src_example = GetRootInstallDir();
-
+    fs::path src_example{GetRootInstallDir()};
     src_example /= files::kUserYmlFile;
-    fs::path tgt_example = GetUserDir();
+    fs::path tgt_example{GetUserDir()};
     tgt_example /= files::kUserYmlFile;
     tgt_example.replace_extension(".example.yml");
+
     return {tgt_example, src_example};
 }
 
 constexpr bool G_PatchLineEnding =
     false;  // set to true to fix error during checkout git
 
-static void UpdateUserYmlExample(const std::filesystem::path &tgt,
-                                 const std::filesystem::path &src) {
-    namespace fs = std::filesystem;
-    if (!NeedReinstall(tgt, src)) return;
+static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
+    if (!NeedReinstall(tgt, src)) {
+        return;
+    }
 
     XLOG::l.i("User Example must be updated");
     std::error_code ec;
@@ -637,8 +633,9 @@ static void UpdateUserYmlExample(const std::filesystem::path &tgt,
     if (ec.value() == 0) {
         XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
                   tgt.u8string(), src.u8string());
-        // #PROPERTY:
-        if (G_PatchLineEnding) wtools::PatchFileLineEnding(tgt);
+        if (G_PatchLineEnding) {
+            wtools::PatchFileLineEnding(tgt);
+        }
     } else
         XLOG::l.i(
             "User Example '{}' have been failed to update with error [{}] from '{}'",
@@ -646,10 +643,6 @@ static void UpdateUserYmlExample(const std::filesystem::path &tgt,
 }
 
 void Install() {
-    using namespace cma::cfg;
-    using namespace cma::cfg::cap;
-    namespace fs = std::filesystem;
-
     try {
         InstallCapFile();
         InstallYmlFile();
@@ -660,7 +653,6 @@ void Install() {
 
     // DAT
     auto source = GetRootInstallDir();
-
     InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source,
                       Mode::normal);
 
@@ -676,20 +668,15 @@ void Install() {
         XLOG::d.i("Skip installing user yml file");
     }
 
-    {
-        auto [tgt_example, src_example] = GetExampleYmlNames();
-        UpdateUserYmlExample(tgt_example, src_example);
-    }
+    auto [tgt_example, src_example] = GetExampleYmlNames();
+    UpdateUserYmlExample(tgt_example, src_example);
 }
 
 // Re-install all files as is from the root-install
 bool ReInstall() {
-    using namespace cma::cfg;
-
-    namespace fs = std::filesystem;
-    fs::path root_dir = GetRootInstallDir();
-    fs::path user_dir = GetUserInstallDir();
-    fs::path bakery_dir = GetBakeryDir();
+    fs::path root_dir = cfg::GetRootInstallDir();
+    fs::path user_dir = cfg::GetUserInstallDir();
+    fs::path bakery_dir = cfg::GetBakeryDir();
 
     std::vector<std::pair<const std::wstring_view, const ProcFunc>> data_vector{
         {files::kCapFile, ReinstallCaps},

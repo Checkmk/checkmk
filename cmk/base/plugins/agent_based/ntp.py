@@ -18,7 +18,16 @@
 # % 127.127.1.0     .LOCL.          10 l   40   64  377    0.000    0.000   0.001
 import time
 from typing import Any, Dict, Final, Mapping, NamedTuple, Optional
-from .agent_based_api.v1 import check_levels, get_value_store, register, render, Result, Service, State
+
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.timesync import tolerance_check
 
@@ -36,19 +45,19 @@ class Peer(NamedTuple):
 
 Section = Dict[Optional[str], Peer]
 NTP_STATE_CODES: Final[Mapping[str, str]] = {
-    'x': "falsetick",
-    '.': "excess",
-    '-': "outlyer",
-    '+': "candidat",
-    '#': "selected",
-    '*': "sys.peer",
-    'o': "pps.peer",
-    '%': "discarded",
+    "x": "falsetick",
+    ".": "excess",
+    "-": "outlyer",
+    "+": "candidat",
+    "#": "selected",
+    "*": "sys.peer",
+    "o": "pps.peer",
+    "%": "discarded",
 }
 
 
 def _ntp_fmt_time(raw: str) -> int:
-    if raw == '-':
+    if raw == "-":
         return 0
     if raw[-1] == "m":
         return int(raw[:-1]) * 60
@@ -68,7 +77,22 @@ def parse_ntp(string_table: StringTable) -> Section:
     """
     section: Section = {}
     for line in string_table:
-        if len(line) != 11:
+        if len(line) != 11 or line == [
+            "%",
+            "remote",
+            "refid",
+            "st",
+            "t",
+            "when",
+            "poll",
+            "reach",
+            "delay",
+            "offset",
+            "jitter",
+        ]:
+            #  sometimes we get a header in the agent section:
+            #  %     remote           refid      st t when poll reach   delay   offset  jitter
+            #  = =============================================================================
             continue
         peer = Peer(
             statecode=line[0],
@@ -81,7 +105,7 @@ def parse_ntp(string_table: StringTable) -> Section:
             jitter=float(line[10]),
         )
         section[peer.name] = peer
-        if None not in section and peer.statecode in '*o':  # keep first one!
+        if None not in section and peer.statecode in "*o":  # keep first one!
             section[None] = peer
 
     return section
@@ -109,7 +133,7 @@ def discover_ntp(
         return
 
     for peer in section.values():
-        if peer.reach != "0" and peer.refid != '.LOCL.':
+        if peer.reach != "0" and peer.refid != ".LOCL.":
             yield Service(item=peer.name)
 
 
@@ -153,8 +177,9 @@ def check_ntp(
     )
 
     if peer.when > 0:
-        yield Result(state=State.OK,
-                     summary="Time since last sync: %s" % render.timespan(peer.when))
+        yield Result(
+            state=State.OK, summary="Time since last sync: %s" % render.timespan(peer.when)
+        )
 
     state = NTP_STATE_CODES.get(peer.statecode, "unknown")
     if state == "falsetick":
@@ -171,8 +196,9 @@ def check_ntp_summary(
     peer = section.get(None)
     if peer is None:
         if section:
-            yield Result(state=State.OK,
-                         summary=f"Found {len(section)} peers, but none is suitable")
+            yield Result(
+                state=State.OK, summary=f"Found {len(section)} peers, but none is suitable"
+            )
         yield from tolerance_check(
             set_sync_time=None,
             levels_upper=params.get("alert_delay"),

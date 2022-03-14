@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_mysql_sessions():
-    return TextAscii(
+    return TextInput(
         title=_("Instance"),
         help=_("Only needed if you have multiple MySQL Instances on one server"),
     )
@@ -28,8 +22,10 @@ def _item_spec_mysql_sessions():
 
 def _parameter_valuespec_mysql_sessions():
     return Dictionary(
-        help=_("This check monitors the current number of active sessions to the MySQL "
-               "database server as well as the connection rate."),
+        help=_(
+            "This check monitors the current number of active sessions to the MySQL "
+            "database server as well as the connection rate."
+        ),
         elements=[
             (
                 "total",
@@ -74,4 +70,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_sessions,
         title=lambda: _("MySQL Sessions & Connections"),
-    ))
+    )
+)

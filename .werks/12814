@@ -1,0 +1,19 @@
+Title: agent_aws(<tt>aws_ebs_limits</tt>): do not request public snapshots from marketplace
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620650736
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In previous versions the check <tt>aws_ebs_limits</tt> reported a wrong snapshot number,
+because even snapshots from the AWS marketplace were requested.
+This werk fixes the check <tt>aws_ebs_limits</tt> by appling a filter to the snapshot request.
+
+Furthermore, this fix also decreases the runtime of the agent, since considerably less snapshots are requested.
+
+In order to be able to monitor snapshots the "create volume permissions"
+are required for the monitoring AWS account.

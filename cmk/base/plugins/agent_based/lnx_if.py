@@ -4,20 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Mapping,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, TableRow, type_defs
+from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import interfaces
+from .utils.inventory_interfaces import Interface as InterfaceInv
+from .utils.inventory_interfaces import inventorize_interfaces
 
 # Example output from agent:
 
@@ -68,7 +61,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     ip_stats: SectionInventory = {}
     iface = None
     for line in lines:
-        if line == ['[end_iplink]']:
+        if line == ["[end_iplink]"]:
             break
 
         if line[0].endswith(":") and line[1].endswith(":"):
@@ -83,7 +76,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
         if not iface:
             continue
 
-        if line[0].startswith('link/'):
+        if line[0].startswith("link/"):
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
             # link/none
             try:
@@ -92,7 +85,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             except IndexError:
                 pass
 
-        elif line[0].startswith('inet'):
+        elif line[0].startswith("inet"):
             if "temporary" in line and "dynamic" in line:
                 continue
             # inet 127.0.0.1/8 scope host lo
@@ -121,7 +114,7 @@ def _parse_lnx_if_sections(string_table: type_defs.StringTable):
             iface.update({"counters": list(map(int, line[1].strip().split()))})
             continue
 
-        elif line[0].startswith('[') and line[0].endswith(']'):
+        elif line[0].startswith("[") and line[0].endswith("]"):
             # Parse 'ethtool' output
             # [IF_NAME]
             #       KEY: VAL
@@ -167,7 +160,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
         if speed_text is None:
             ifSpeed = 0
         else:
-            if speed_text == '65535Mb/s':  # unknown
+            if speed_text == "65535Mb/s":  # unknown
                 ifSpeed = 0
             elif speed_text.endswith("Kb/s"):
                 ifSpeed = int(float(speed_text[:-4])) * 1000
@@ -204,7 +197,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
             # No information from ethtool. We consider interfaces up
             # if they have been used at least some time since the
             # system boot.
-            state_infos = attr.get('state_infos')
+            state_infos = attr.get("state_infos")
             if state_infos is None:
                 if ifInOctets > 0:
                     ifOperStatus = 1  # assume up
@@ -226,7 +219,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
             # is an integer, eg. '1910236'; especially on OpenBSD.
             ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
         else:
-            ifPhysAddress = ''
+            ifPhysAddress = ""
 
         if_table.append(
             interfaces.Interface(
@@ -250,7 +243,8 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                 out_qlen=ifOutQLen,
                 alias=ifAlias,
                 phys_address=ifPhysAddress,
-            ))
+            )
+        )
 
     return if_table, ip_stats
 
@@ -289,12 +283,16 @@ def check_lnx_if(
 def cluster_check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
         params,
-        {node: node_section[0] for node, node_section in section.items()},
+        {
+            node: node_section[0]
+            for node, node_section in section.items()
+            if node_section is not None
+        },
     )
 
 
@@ -309,4 +307,78 @@ register.check_plugin(
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_lnx_if,
     cluster_check_function=cluster_check_lnx_if,
+)
+
+
+def inventory_lnx_if(section: Section) -> InventoryResult:
+    ifaces, ip_stats = section
+
+    yield from inventorize_interfaces(
+        {
+            "usage_port_types": [
+                "6",
+                "32",
+                "62",
+                "117",
+                "127",
+                "128",
+                "129",
+                "180",
+                "181",
+                "182",
+                "205",
+                "229",
+            ],
+        },
+        (
+            InterfaceInv(
+                index=interface.index,
+                descr=interface.descr,
+                alias=interface.alias,
+                type=interface.type,
+                speed=int(interface.speed),
+                oper_status=int(interface.oper_status),
+                phys_address=interfaces.render_mac_address(interface.phys_address),
+            )
+            for interface in sorted(ifaces, key=lambda i: i.index)
+            # Always exclude dockers veth* interfaces on docker nodes.
+            # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
+            # Ignore useless half-empty tables (e.g. Viprinet-Router).
+            if not interface.descr.startswith("veth") and interface.type not in ("231", "232")
+        ),
+        len(ifaces),
+    )
+
+    yield from _inventorize_addresses(ip_stats)
+
+
+def _inventorize_addresses(ip_stats: Mapping[str, Mapping[str, Any]]) -> InventoryResult:
+    for if_name, attrs in ip_stats.items():
+        for key, ty in [
+            ("inet", "ipv4"),
+            ("inet6", "ipv6"),
+        ]:
+            for network in attrs.get(key, []):
+                yield TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={
+                        "device": if_name,
+                        "address": _get_address(network),
+                    },
+                    inventory_columns={
+                        "type": ty,
+                    },
+                )
+
+
+def _get_address(network: str) -> str:
+    return network.split("/")[0]
+
+
+register.inventory_plugin(
+    name="lnx_if",
+    inventory_function=inventory_lnx_if,
+    # TODO Use inv_if? Also have a look at winperf_if and other interface intentories..
+    # inventory_ruleset_name="inv_if",
+    # inventory_default_parameters={},
 )

@@ -1,10 +1,10 @@
 title: Liebert: Reheating
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the capacity of reheating utilization in percent.
 
-inventory:
+discovery:
  One service is created.

@@ -38,6 +38,7 @@ check_info["mbg_lantime_ng_power"] = {
         [
             1,  # MBG-SNMP-LTNG-MIB::mbgLtNgSysPsIndex
             2,  # MBG-SNMP-LTNG-MIB::mbgLtNgSysPsStatus
-        ]),
+        ],
+    ),
     "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
 }

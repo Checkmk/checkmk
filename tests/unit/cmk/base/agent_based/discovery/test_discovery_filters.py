@@ -6,68 +6,69 @@
 
 # pylint: disable=protected-access
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.utils.type_defs import CheckPluginName
-
-import cmk.base.config as config
 from cmk.base.agent_based.discovery import _filters
 
 
-@pytest.mark.parametrize("parameters_rediscovery", [
-    {},
-    {
-        "service_whitelist": [],
-    },
-    {
-        "service_blacklist": [],
-    },
-    {
-        "service_whitelist": [],
-        "service_blacklist": [],
-    },
-    {
-        "vanished_service_whitelist": [],
-    },
-    {
-        "vanished_service_blacklist": [],
-    },
-    {
-        "vanished_service_whitelist": [],
-        "vanished_service_blacklist": [],
-    },
-])
+@pytest.mark.parametrize(
+    "parameters_rediscovery",
+    [
+        {},
+        {
+            "service_whitelist": [],
+        },
+        {
+            "service_blacklist": [],
+        },
+        {
+            "service_whitelist": [],
+            "service_blacklist": [],
+        },
+        {
+            "vanished_service_whitelist": [],
+        },
+        {
+            "vanished_service_blacklist": [],
+        },
+        {
+            "vanished_service_whitelist": [],
+            "vanished_service_blacklist": [],
+        },
+    ],
+)
 def test__get_service_filter_func_no_lists(parameters_rediscovery):
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is _filters._accept_all_services
     assert service_filters.vanished is _filters._accept_all_services
 
 
-@pytest.mark.parametrize("whitelist, result", [
-    (["^Test"], True),
-    (["^test"], False),
-    ([".*Description"], True),
-    ([".*Descript$"], False),
-])
+@pytest.mark.parametrize(
+    "whitelist, result",
+    [
+        (["^Test"], True),
+        (["^test"], False),
+        ([".*Description"], True),
+        ([".*Descript$"], False),
+    ],
+)
 def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
-    monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
-
     service_filters = _filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
-    service = _filters.Service(CheckPluginName("check_plugin_name"), "item", "Test Description",
-                               None)
     assert service_filters.new is not None
-    assert service_filters.new("hostname", service) is result
+    assert service_filters.new("Test Description") is result
 
     service_filters_inv = _filters.ServiceFilters.from_settings({"service_blacklist": whitelist})
     assert service_filters_inv.new is not None
-    assert service_filters_inv.new("hostname", service) is not result
+    assert service_filters_inv.new("Test Description") is not result
 
-    service_filters_both = _filters.ServiceFilters.from_settings({
-        "service_whitelist": whitelist,
-        "service_blacklist": whitelist,
-    })
+    service_filters_both = _filters.ServiceFilters.from_settings(
+        {
+            "service_whitelist": whitelist,
+            "service_blacklist": whitelist,
+        }
+    )
     assert service_filters_both.new is not None
-    assert service_filters_both.new("hostname", service) is False
+    assert service_filters_both.new("Test Description") is False
 
 
 @pytest.mark.parametrize(
@@ -80,7 +81,8 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
                 # Does not match
                 "service_blacklist": [".*Descript$"],
             },
-            True),
+            True,
+        ),
         (
             {
                 # Matches
@@ -88,7 +90,8 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
                 # Matches
                 "service_blacklist": [".*Description$"],
             },
-            False),
+            False,
+        ),
         (
             {
                 # Does not match
@@ -96,7 +99,8 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
                 # Matches
                 "service_blacklist": [".*Description$"],
             },
-            False),
+            False,
+        ),
         (
             {
                 # Does not match
@@ -104,149 +108,342 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
                 # Does not match
                 "service_blacklist": [".*Descript$"],
             },
-            False),
-    ])
+            False,
+        ),
+    ],
+)
 def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
-    monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
-
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
-    service = _filters.Service(CheckPluginName("check_plugin_name"), "item", "Test Description",
-                               None)
     assert service_filters.new is not None
-    assert service_filters.new("hostname", service) is result
+    assert service_filters.new("Test Description") is result
 
 
 @pytest.mark.parametrize(
-    "parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist", [
+    "parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist",
+    [
         ({}, None, None, None, None),
         ({}, None, None, None, None),
-        ({
-            "service_whitelist": ["white"],
-        }, ["white"], None, ["white"], None),
-        ({
-            "service_blacklist": ["black"],
-        }, None, ["black"], None, ["black"]),
-        ({
-            "service_whitelist": ["white"],
-            "service_blacklist": ["black"],
-        }, ["white"], ["black"], ["white"], ["black"]),
-        ({
-            "service_filters": ("combined", {}),
-        }, None, None, None, None),
-        ({
-            "service_filters": ("combined", {
+        (
+            {
                 "service_whitelist": ["white"],
-            }),
-        }, ["white"], None, ["white"], None),
-        ({
-            "service_filters": ("combined", {
+            },
+            ["white"],
+            None,
+            ["white"],
+            None,
+        ),
+        (
+            {
                 "service_blacklist": ["black"],
-            }),
-        }, None, ["black"], None, ["black"]),
-        ({
-            "service_filters": ("combined", {
+            },
+            None,
+            ["black"],
+            None,
+            ["black"],
+        ),
+        (
+            {
                 "service_whitelist": ["white"],
                 "service_blacklist": ["black"],
-            }),
-        }, ["white"], ["black"], ["white"], ["black"]),
-        ({
-            "service_filters": ("dedicated", {}),
-        }, None, None, None, None),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white"],
-            }),
-        }, ["white"], None, None, None),
-        ({
-            "service_filters": ("dedicated", {
-                "service_blacklist": ["black"],
-            }),
-        }, None, ["black"], None, None),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white"],
-                "service_blacklist": ["black"],
-            }),
-        }, ["white"], ["black"], None, None),
-        ({
-            "service_filters": ("dedicated", {
-                "vanished_service_whitelist": ["white"],
-            }),
-        }, None, None, ["white"], None),
-        ({
-            "service_filters": ("dedicated", {
-                "vanished_service_blacklist": ["black"],
-            }),
-        }, None, None, None, ["black"]),
-        ({
-            "service_filters": ("dedicated", {
-                "vanished_service_whitelist": ["white"],
-                "vanished_service_blacklist": ["black"],
-            }),
-        }, None, None, ["white"], ["black"]),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white_new"],
-                "vanished_service_whitelist": ["white_vanished"],
-            }),
-        }, ["white_new"], None, ["white_vanished"], None),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white_new"],
-                "vanished_service_blacklist": ["black_vanished"],
-            }),
-        }, ["white_new"], None, None, ["black_vanished"]),
-        ({
-            "service_filters": ("dedicated", {
-                "service_blacklist": ["black_new"],
-                "vanished_service_whitelist": ["white_vanished"],
-            }),
-        }, None, ["black_new"], ["white_vanished"], None),
-        ({
-            "service_filters": ("dedicated", {
-                "service_blacklist": ["black_new"],
-                "vanished_service_blacklist": ["black_vanished"],
-            }),
-        }, None, ["black_new"], None, ["black_vanished"]),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white_new"],
-                "service_blacklist": ["black_new"],
-                "vanished_service_whitelist": ["white_vanished"],
-            }),
-        }, ["white_new"], ["black_new"], ["white_vanished"], None),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white_new"],
-                "service_blacklist": ["black_new"],
-                "vanished_service_blacklist": ["black_vanished"],
-            }),
-        }, ["white_new"], ["black_new"], None, ["black_vanished"]),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white_new"],
-                "service_blacklist": ["black_new"],
-                "vanished_service_whitelist": ["white_vanished"],
-                "vanished_service_blacklist": ["black_vanished"],
-            }),
-        }, ["white_new"], ["black_new"], ["white_vanished"], ["black_vanished"]),
-        ({
-            "service_filters": ("dedicated", {
-                "service_whitelist": ["white_new"],
-                "vanished_service_whitelist": ["white_vanished"],
-                "vanished_service_blacklist": ["black_vanished"],
-            }),
-        }, ["white_new"], None, ["white_vanished"], ["black_vanished"]),
-        ({
-            "service_filters": ("dedicated", {
-                "service_blacklist": ["black_new"],
-                "vanished_service_whitelist": ["white_vanished"],
-                "vanished_service_blacklist": ["black_vanished"],
-            }),
-        }, None, ["black_new"], ["white_vanished"], ["black_vanished"]),
-    ])
-def test__get_service_filters_lists(parameters, new_whitelist, new_blacklist, vanished_whitelist,
-                                    vanished_blacklist):
+            },
+            ["white"],
+            ["black"],
+            ["white"],
+            ["black"],
+        ),
+        (
+            {
+                "service_filters": ("combined", {}),
+            },
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "combined",
+                    {
+                        "service_whitelist": ["white"],
+                    },
+                ),
+            },
+            ["white"],
+            None,
+            ["white"],
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "combined",
+                    {
+                        "service_blacklist": ["black"],
+                    },
+                ),
+            },
+            None,
+            ["black"],
+            None,
+            ["black"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "combined",
+                    {
+                        "service_whitelist": ["white"],
+                        "service_blacklist": ["black"],
+                    },
+                ),
+            },
+            ["white"],
+            ["black"],
+            ["white"],
+            ["black"],
+        ),
+        (
+            {
+                "service_filters": ("dedicated", {}),
+            },
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white"],
+                    },
+                ),
+            },
+            ["white"],
+            None,
+            None,
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_blacklist": ["black"],
+                    },
+                ),
+            },
+            None,
+            ["black"],
+            None,
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white"],
+                        "service_blacklist": ["black"],
+                    },
+                ),
+            },
+            ["white"],
+            ["black"],
+            None,
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "vanished_service_whitelist": ["white"],
+                    },
+                ),
+            },
+            None,
+            None,
+            ["white"],
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "vanished_service_blacklist": ["black"],
+                    },
+                ),
+            },
+            None,
+            None,
+            None,
+            ["black"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "vanished_service_whitelist": ["white"],
+                        "vanished_service_blacklist": ["black"],
+                    },
+                ),
+            },
+            None,
+            None,
+            ["white"],
+            ["black"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white_new"],
+                        "vanished_service_whitelist": ["white_vanished"],
+                    },
+                ),
+            },
+            ["white_new"],
+            None,
+            ["white_vanished"],
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white_new"],
+                        "vanished_service_blacklist": ["black_vanished"],
+                    },
+                ),
+            },
+            ["white_new"],
+            None,
+            None,
+            ["black_vanished"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_blacklist": ["black_new"],
+                        "vanished_service_whitelist": ["white_vanished"],
+                    },
+                ),
+            },
+            None,
+            ["black_new"],
+            ["white_vanished"],
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_blacklist": ["black_new"],
+                        "vanished_service_blacklist": ["black_vanished"],
+                    },
+                ),
+            },
+            None,
+            ["black_new"],
+            None,
+            ["black_vanished"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white_new"],
+                        "service_blacklist": ["black_new"],
+                        "vanished_service_whitelist": ["white_vanished"],
+                    },
+                ),
+            },
+            ["white_new"],
+            ["black_new"],
+            ["white_vanished"],
+            None,
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white_new"],
+                        "service_blacklist": ["black_new"],
+                        "vanished_service_blacklist": ["black_vanished"],
+                    },
+                ),
+            },
+            ["white_new"],
+            ["black_new"],
+            None,
+            ["black_vanished"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white_new"],
+                        "service_blacklist": ["black_new"],
+                        "vanished_service_whitelist": ["white_vanished"],
+                        "vanished_service_blacklist": ["black_vanished"],
+                    },
+                ),
+            },
+            ["white_new"],
+            ["black_new"],
+            ["white_vanished"],
+            ["black_vanished"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_whitelist": ["white_new"],
+                        "vanished_service_whitelist": ["white_vanished"],
+                        "vanished_service_blacklist": ["black_vanished"],
+                    },
+                ),
+            },
+            ["white_new"],
+            None,
+            ["white_vanished"],
+            ["black_vanished"],
+        ),
+        (
+            {
+                "service_filters": (
+                    "dedicated",
+                    {
+                        "service_blacklist": ["black_new"],
+                        "vanished_service_whitelist": ["white_vanished"],
+                        "vanished_service_blacklist": ["black_vanished"],
+                    },
+                ),
+            },
+            None,
+            ["black_new"],
+            ["white_vanished"],
+            ["black_vanished"],
+        ),
+    ],
+)
+def test__get_service_filters_lists(
+    parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist
+):
     service_filter_lists = _filters._get_service_filter_lists(parameters)
     assert service_filter_lists.new_whitelist == new_whitelist
     assert service_filter_lists.new_blacklist == new_blacklist

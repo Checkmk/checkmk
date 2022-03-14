@@ -12,7 +12,7 @@ function scale_factor_prefix(value, base, prefixes = ["", "k", "M", "G", "T", "P
     return [factor / base, prefix];
 }
 
-function drop_dotzero(value, digits = 2) {
+export function drop_dotzero(value, digits = 2) {
     return value.toFixed(digits).replace(/\.0+$/, "");
 }
 
@@ -69,7 +69,9 @@ export function scientific(v, precision) {
     if (v < 0) return "-" + scientific(-1 * v, precision);
 
     let [mantissa, exponent] = frexpb(v, 10);
-    if (-3 <= exponent <= 4) return v.toFixed(Math.max(0, precision - exponent));
+    if (-3 <= exponent <= 4) {
+        return v.toFixed(Math.min(precision, Math.max(0, precision - exponent)));
+    }
     return v.toExponetial(precision);
 }
 

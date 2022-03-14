@@ -1,0 +1,15 @@
+Title: hp_msa: Fix TypeError: Unicode-objects must be encoded before hashing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619688845
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The special agent hp_msa failed to connect with the error message
+"TypeError: Unicode-objects must be encoded before hashing",
+because the arguments were not encoded correctly.
+This fix contains the conversion of the arguments to UTF-8.

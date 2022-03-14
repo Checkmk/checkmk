@@ -1,11 +1,11 @@
 title: Bosch Video over IP: Link Status
 agents: snmp
 catalog: hw/environment/bosch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Whit this check you can check your cameras for the correct link states (10/100/1000 Mbit, Full/Half Duplex). The OK, Critical and Warning Levels can be set in Wato.
 
 
-inventory:
+discovery:
  One service is created.

@@ -1,7 +1,7 @@
 title: IBM Blade Center: Bays
 agents: snmp
 catalog: hw/server/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check makes sure that a bay of an IBM blade center
@@ -14,5 +14,5 @@ item:
  of the power domain (1 or 2) and {B} is the name of the bay
  (e.g. {Midplane}).
 
-inventory:
+discovery:
  One service is created for each bay with the state 1 (present and OK).

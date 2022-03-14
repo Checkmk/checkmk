@@ -1,0 +1,15 @@
+Title: mk_logwatch: fix "cannotopen" message for a large number of files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617789605
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When logwatch was configured to monitor a large number of files
+messages like "[[[file_name:cannotopen]]]" may appear in the output
+of the plugin for all files above a certain threshold. This error
+was caused by a file handle leak and is fixed with this werk.

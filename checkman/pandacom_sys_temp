@@ -1,7 +1,7 @@
 title: Pandacom SpeedCarrier Chassis 5u: System Temperature
 agents: snmp
 catalog: hw/network/pandacom
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the system temperature of
@@ -13,5 +13,5 @@ description:
 item:
  The fixed statement {{System}}
 
-inventory:
+discovery:
  One service is created.

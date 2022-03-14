@@ -1,7 +1,7 @@
 title: Vutlan EMS: Temperature
 agents: snmp
 catalog: hw/environment/vutlan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors different temperature sensors on Vutlan EMS devices which
@@ -18,6 +18,5 @@ description:
 item:
  The name of the temperature sensor.
 
-inventory:
+discovery:
  One service is created for each sensor.
-

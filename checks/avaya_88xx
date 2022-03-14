@@ -65,21 +65,23 @@ def check_avaya_88xx(item, params, parsed):
 
 
 check_info["avaya_88xx"] = {
-    'parse_function': parse_avaya_88xx,
-    'check_function': check_avaya_88xx,
-    'inventory_function': inventory_avaya_88xx,
-    'service_description': 'Temperature Fan %s',
-    'default_levels_variable': "avaya_88xx_default_levels",
-    'has_perfdata': True,
-    'group': 'temperature',
+    "parse_function": parse_avaya_88xx,
+    "check_function": check_avaya_88xx,
+    "inventory_function": inventory_avaya_88xx,
+    "service_description": "Temperature Fan %s",
+    "default_levels_variable": "avaya_88xx_default_levels",
+    "has_perfdata": True,
+    "group": "temperature",
     # RAPID-CITY MIB
-    'snmp_info':
-        (".1.3.6.1.4.1.2272.1.4.7.1.1", [2, 3]),  # rcChasFanOperStatus, rcChasFanAmbientTemperature
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.2272.1.4.7.1.1",
+        [2, 3],
+    ),  # rcChasFanOperStatus, rcChasFanAmbientTemperature
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
 }
 
 check_info["avaya_88xx.fan"] = {
-    'check_function': check_avaya_88xx_fan,
-    'inventory_function': inventory_avaya_88xx_fan,
-    'service_description': 'Fan %s Status',
+    "check_function": check_avaya_88xx_fan,
+    "inventory_function": inventory_avaya_88xx_fan,
+    "service_description": "Fan %s Status",
 }

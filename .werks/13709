@@ -1,0 +1,14 @@
+Title: <tt>bluecoat_sensors_temp</tt>: Handle state reported by sensor correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643213161
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>bluecoat_sensors_temp</tt> ignored states reported
+directly by the sensors. Hence, even sensors with non-OK states were displayed
+as OK by Checkmk as long as their temperatures were below the user-defined
+levels (if any).

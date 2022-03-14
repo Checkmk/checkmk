@@ -1,0 +1,12 @@
+Title: sap_hana: Cluster-aware checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1622476864
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+SAP HANA checks sap_hana_replication_status, sap_hana_diskusage, sap_hana_ess,
+sap_hana_memrate, sap_hana_events and sap_hana_proc are now cluster-aware.

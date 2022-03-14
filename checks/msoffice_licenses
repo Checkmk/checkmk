@@ -4,19 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#Example output:
-#<<<msoffice_licenses>>>
-#msonline:VISIOCLIENT 11 0 10
-#msonline:POWER_BI_PRO 13 0 11
-#msonline:WINDOWS_STORE 1000000 0 0
-#msonline:ENTERPRISEPACK 1040 1 395
-#msonline:FLOW_FREE 10000 0 11
-#msonline:EXCHANGESTANDARD 5 0 2
-#msonline:POWER_BI_STANDARD 1000000 0 18
-#msonline:EMS 1040 0 991
-#msonline:RMSBASIC 1 0 0
-#msonline:PROJECTPROFESSIONAL 10 0 10
-#msonline:ATP_ENTERPRISE 1040 0 988
+# Example output:
+# <<<msoffice_licenses>>>
+# msonline:VISIOCLIENT 11 0 10
+# msonline:POWER_BI_PRO 13 0 11
+# msonline:WINDOWS_STORE 1000000 0 0
+# msonline:ENTERPRISEPACK 1040 1 395
+# msonline:FLOW_FREE 10000 0 11
+# msonline:EXCHANGESTANDARD 5 0 2
+# msonline:POWER_BI_STANDARD 1000000 0 18
+# msonline:EMS 1040 0 991
+# msonline:RMSBASIC 1 0 0
+# msonline:PROJECTPROFESSIONAL 10 0 10
+# msonline:ATP_ENTERPRISE 1040 0 988
 
 
 def parse_msoffice_licenses(info):
@@ -27,11 +27,10 @@ def parse_msoffice_licenses(info):
             continue
 
         try:
-            parsed.setdefault(line[0], {
-                "active": int(line[1]),
-                "warning_units": int(line[2]),
-                "consumed": int(line[3])
-            })
+            parsed.setdefault(
+                line[0],
+                {"active": int(line[1]), "warning_units": int(line[2]), "consumed": int(line[3])},
+            )
         except ValueError:
             pass
 

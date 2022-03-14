@@ -1,0 +1,27 @@
+title: Kubernetes: Node Info
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides an informational overview of a Kubernetes node by
+ displaying
+
+ - Name
+
+ - Age, base on the creationTimestamp
+
+ - Operating system and family
+
+ - Container runtime
+
+ - Architecture
+
+ - Kernel version
+
+ This is provided by the API server. The service is always {OK}.
+
+ It requires that the special agent kube is configured.
+
+discovery:
+ One service is created for each node.

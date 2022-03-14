@@ -1,7 +1,7 @@
 title: Windows: Memory Statistics
 agents: windows
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of memory pages per second.
@@ -10,6 +10,5 @@ description:
  This {check_mk.ini} configuration can also be done via WATO in the agent bakery rules.
  You can configure levels for the number of pages per second.
 
-inventory:
+discovery:
  One service is created if the windows agents has the section {<<<winperf_mem>>>}.
-

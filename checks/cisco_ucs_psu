@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # comNET GmbH, Fabian Binder - 2018-05-07
 
 # .1.3.6.1.4.1.9.9.719.1.15.56.1.2  cucsEquipmentPsuDn
@@ -27,8 +28,9 @@ def check_cisco_ucs_psu(item, _no_params, info):
     for name, status, serial, model in info:
         name = name.split("/")[2]
         if name == item:
-            state, state_readable = map_operability.get(status,
-                                                        (3, "Unknown, status code %s" % status))
+            state, state_readable = map_operability.get(
+                status, (3, "Unknown, status code %s" % status)
+            )
             return state, "Status: %s, Model: %s, SN: %s" % (state_readable, model, serial)
 
 
@@ -44,5 +46,6 @@ check_info["cisco_ucs_psu"] = {
             "8",  # cucsEquipmentPsuOperability
             "13",  # cucsEquipmentPsuSerial
             "6",  # cucsEquipmentPsuModel
-        ]),
+        ],
+    ),
 }

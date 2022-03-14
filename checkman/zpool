@@ -1,7 +1,7 @@
 title: ZFS Storage Pool: Sizes
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current size and usage of ZFS storage pools. The information
@@ -15,5 +15,5 @@ description:
 item:
  The mountpoint of the filesystem
 
-inventory:
+discovery:
  One service is created for each pool.

@@ -24,7 +24,7 @@ def parse_mongodb_replication_info(info):
     """
     if info:
         return json.loads(str(info[0][0]))
-    return dict()
+    return {}
 
 
 def check_mongodb_replication_info(item, params, info_dict):
@@ -35,15 +35,18 @@ def check_mongodb_replication_info(item, params, info_dict):
     :param status_dict:
     :return:
     """
-    oplog_size = "Oplog size: %s of %s used" % (_bytes_human_readable(
-        info_dict, "usedBytes"), _bytes_human_readable(info_dict, "logSizeBytes"))
+    oplog_size = "Oplog size: %s of %s used" % (
+        _bytes_human_readable(info_dict, "usedBytes"),
+        _bytes_human_readable(info_dict, "logSizeBytes"),
+    )
 
     try:
         timestamp_first_operation = info_dict.get("tFirst", 0)
         timestamp_last_operation = info_dict.get("tLast", 0)
         time_difference_sec = timestamp_last_operation - timestamp_first_operation
         time_diff = "Time difference: %s between the first and last operation on oplog" % (
-            get_age_human_readable(time_difference_sec))
+            get_age_human_readable(time_difference_sec)
+        )
     except TypeError:
         time_diff = "Time difference: n/a"
 
@@ -80,14 +83,17 @@ def _long_output(info_dict):
     # output per collection
     long_output = []
     long_output.append("Operations log (oplog):")
-    long_output.append("- Total amount of space allocated: %s" %
-                       _bytes_human_readable(info_dict, "logSizeBytes"))
-    long_output.append("- Total amount of space currently used: %s" %
-                       _bytes_human_readable(info_dict, "usedBytes"))
+    long_output.append(
+        "- Total amount of space allocated: %s" % _bytes_human_readable(info_dict, "logSizeBytes")
+    )
+    long_output.append(
+        "- Total amount of space currently used: %s" % _bytes_human_readable(info_dict, "usedBytes")
+    )
     long_output.append("- Timestamp for the first operation: %s" % timestamp_first_operation)
     long_output.append("- Timestamp for the last operation: %s" % timestamp_last_operation)
-    long_output.append("- Difference between the first and last operation: %s" %
-                       time_difference_sec)
+    long_output.append(
+        "- Difference between the first and last operation: %s" % time_difference_sec
+    )
     long_output.append("")
     long_output.append("- Current time on host: %s" % timestamp_on_node)
     return "\n" + "\n".join(long_output)
@@ -97,7 +103,7 @@ def _bytes_human_readable(data, key):
     try:
         return get_bytes_human_readable(int(data.get(key)))
     except (TypeError, ValueError):
-        return 'n/a'
+        return "n/a"
 
 
 def _timestamp_human_readable(data, key):

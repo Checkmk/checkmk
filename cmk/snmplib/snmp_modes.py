@@ -7,26 +7,24 @@
 import os
 import subprocess
 import sys
-from contextlib import suppress
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from six import ensure_str
-
 import cmk.utils.cleanup
 import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName
 
 from . import snmp_cache
-from .type_defs import SNMPBackend, OID, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
+from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]
 
-#.
+# .
 #   .--Generic SNMP--------------------------------------------------------.
 #   |     ____                      _        ____  _   _ __  __ ____       |
 #   |    / ___| ___ _ __   ___ _ __(_) ___  / ___|| \ | |  \/  |  _ \      |
@@ -40,17 +38,16 @@ SNMPWalkOptions = Dict[str, List[OID]]
 
 
 # Contextes can only be used when check_plugin_name is given.
-def get_single_oid(oid: str,
-                   *,
-                   section_name: Optional[SectionName] = None,
-                   backend: SNMPBackend) -> Optional[SNMPDecodedString]:
+def get_single_oid(
+    oid: str, *, section_name: Optional[SectionName] = None, backend: SNMPBackend
+) -> Optional[SNMPDecodedString]:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
-    if oid[0] != '.':
+    if oid[0] != ".":
         if cmk.utils.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
-        oid = '.' + oid
+        oid = "." + oid
 
     # TODO: Use generic cache mechanism
     if oid in snmp_cache.single_oid_cache():
@@ -82,7 +79,9 @@ def get_single_oid(oid: str,
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(value)
+        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(
+            value
+        )  # used ensure_str function with different possible encoding arguments
     else:
         decoded_value = value
 
@@ -94,7 +93,7 @@ def walk_for_export(oid: OID, *, backend: SNMPBackend) -> SNMPRowInfoForStoredWa
     return _convert_rows_for_stored_walk(backend.walk(oid=oid))
 
 
-#.
+# .
 #   .--SNMP helpers--------------------------------------------------------.
 #   |     ____  _   _ __  __ ____    _          _                          |
 #   |    / ___|| \ | |  \/  |  _ \  | |__   ___| |_ __   ___ _ __ ___      |
@@ -118,7 +117,7 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
         encoded = ""
         for c in bytearray(v):
             encoded += "%02X " % c
-        return "\"%s\"" % encoded
+        return '"%s"' % encoded
 
     new_rows: SNMPRowInfoForStoredWalk = []
     for oid, value in rows:
@@ -128,11 +127,11 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
         if should_be_encoded(value):
             new_rows.append((oid, hex_encode_value(value)))
         else:
-            new_rows.append((oid, ensure_str(value)))
+            new_rows.append((oid, value.decode()))
     return new_rows
 
 
-#.
+# .
 #   .--Main modes----------------------------------------------------------.
 #   |       __  __       _                             _                   |
 #   |      |  \/  | __ _(_)_ __    _ __ ___   ___   __| | ___  ___         |
@@ -149,65 +148,61 @@ def do_snmptranslate(walk_filename: str) -> None:
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
-    walk_path = "%s/%s" % (cmk.utils.paths.snmpwalks_dir, walk_filename)
-    if not os.path.exists(walk_path):
+    walk_path = Path(cmk.utils.paths.snmpwalks_dir) / walk_filename
+    if not walk_path.exists():
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
-    def translate(lines: List[bytes]) -> List[Tuple[bytes, bytes]]:
-        result_lines = []
-        try:
-            oids_for_command = []
-            for line in lines:
-                oids_for_command.append(line.split(b" ")[0])
+    command: List[str] = [
+        "snmptranslate",
+        "-m",
+        "ALL",
+        "-M+%s" % cmk.utils.paths.local_mib_dir,
+        "-",
+    ]
+    with walk_path.open("rb") as walk_file:
+        walk = walk_file.read().split(b"\n")
+    while walk[-1] == b"":
+        del walk[-1]
 
-            command = [b"snmptranslate", b"-m", b"ALL",
-                       b"-M+%s" % cmk.utils.paths.local_mib_dir] + oids_for_command
-            p = subprocess.Popen(command,
-                                 stdout=subprocess.PIPE,
-                                 stderr=open(os.devnull, "w"),
-                                 close_fds=True)
-            p.wait()
-            if p.stdout is None:
-                raise RuntimeError()
-            output = p.stdout.read()
-            result = output.split(b"\n")[0::2]
-            for idx, line in enumerate(result):
-                result_lines.append((line.strip(), lines[idx].strip()))
+    # to be compatible to previous version of this script, we do not feed
+    # to original walk to snmptranslate (which would be possible) but a
+    # version without values. The output should look like:
+    # "[full oid] [value] --> [translated oid]"
+    walk_without_values = b"\n".join(line.split(b" ", 1)[0] for line in walk)
 
-        except Exception as e:
-            console.error("%s\n" % e)
+    completed_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+        check=False,
+        input=walk_without_values,
+    )
 
-        return result_lines
+    data_translated = completed_process.stdout.split(b"\n")
+    # remove last empty line (some tools add a '\n' at the end of the file, others not)
+    if data_translated[-1] == b"":
+        del data_translated[-1]
 
-    # Translate n-oid's per cycle
-    entries_per_cycle = 500
-    translated_lines: List[Tuple[bytes, bytes]] = []
+    if len(walk) != len(data_translated):
+        raise MKGeneralException("call to snmptranslate returned a ambiguous result")
 
-    walk_lines = open(walk_path, "rb").readlines()
-    console.error("Processing %d lines.\n" % len(walk_lines))
-
-    i = 0
-    while i < len(walk_lines):
-        console.error("\r%d to go...    " % (len(walk_lines) - i))
-        translated = translate(walk_lines[i:i + entries_per_cycle])
-        i += len(translated)
-        translated_lines += translated
-    console.error("\rfinished.                \n")
-
-    with suppress(IOError):
-        sys.stdout.write("\n".join("%s --> %s" % (ensure_str(line), ensure_str(translation))
-                                   for translation, line in translated_lines) + "\n")
+    for element_input, element_translated in zip(walk, data_translated):
+        sys.stdout.buffer.write(element_input.strip())
+        sys.stdout.buffer.write(b" --> ")
+        sys.stdout.buffer.write(element_translated.strip())
+        sys.stdout.buffer.write(b"\n")
 
 
 def do_snmpwalk(options: SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
         os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
-    #TODO: What about SNMP management boards?
+    # TODO: What about SNMP management boards?
     try:
-        _do_snmpwalk_on(options,
-                        cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
-                        backend=backend)
+        _do_snmpwalk_on(
+            options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
+        )
     except Exception as e:
         console.error("Error walking %s: %s\n" % (backend.hostname, e))
         if cmk.utils.debug.enabled():
@@ -229,11 +224,12 @@ def _do_snmpwalk_on(options: SNMPWalkOptions, filename: str, *, backend: SNMPBac
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
-def _execute_walks_for_dump(oids: List[OID], *,
-                            backend: SNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]:
+def _execute_walks_for_dump(
+    oids: List[OID], *, backend: SNMPBackend
+) -> Iterable[SNMPRowInfoForStoredWalk]:
     for oid in oids:
         try:
-            console.verbose("Walk on \"%s\"...\n" % oid)
+            console.verbose('Walk on "%s"...\n' % oid)
             yield walk_for_export(oid, backend=backend)
         except Exception as e:
             console.error("Error: %s\n" % e)
@@ -245,10 +241,7 @@ def oids_to_walk(options: Optional[SNMPWalkOptions] = None) -> List[OID]:
     if options is None:
         options = {}
 
-    oids = [
-        ".1.3.6.1.2.1",  # SNMPv2-SMI::mib-2
-        ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
-    ]
+    oids = [".1.3.6.1.2.1", ".1.3.6.1.4.1"]  # SNMPv2-SMI::mib-2  # SNMPv2-SMI::enterprises
 
     if "oids" in options:
         oids = options["oids"]
@@ -260,7 +253,7 @@ def oids_to_walk(options: Optional[SNMPWalkOptions] = None) -> List[OID]:
 
 
 def do_snmpget(oid: OID, *, backend: SNMPBackend) -> None:
-    #TODO what about SNMP management boards?
+    # TODO what about SNMP management boards?
     snmp_cache.initialize_single_oid_cache(backend.config)
 
     value = get_single_oid(oid, backend=backend)

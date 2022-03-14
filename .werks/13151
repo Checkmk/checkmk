@@ -1,0 +1,16 @@
+Title: Don't crash if SLAs are displayed in views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1631697199
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If an SLA was used in a view the site crashed and showed the error
+message "Internal error: a bytes-like object is required, not 'str'".
+This is fixed.
+
+This commit also fixes some small styling issues for SLAs.

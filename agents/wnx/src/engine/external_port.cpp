@@ -2,34 +2,50 @@
 
 #include "external_port.h"
 
+#include <chrono>
 #include <iostream>
 
+#include "agent_controller.h"
 #include "asio.h"
 #include "cfg.h"
 #include "encryption.h"
 #include "realtime.h"
 
 using asio::ip::tcp;
+using namespace std::chrono_literals;
 
 // This namespace contains classes used for external communication, for example
 // with Monitor
 namespace cma::world {
 
-// below is working example from asio
-// verified and working, Example is Echo TCP
-// try not damage it
-
-// will not used normally by agent
-void AsioSession::do_read() {
+void AsioSession::read_ip() {
+    XLOG::t("Get ip");
     auto self(shared_from_this());
-    socket_.async_read_some(
-        asio::buffer(data_, kMaxLength),  // data will be ignored
-        [this, self](std::error_code ec, [[maybe_unused]] size_t length) {
-            if (!ec) {
-                constexpr auto *internal_data = "Answer!\n";
-                do_write(internal_data, strlen(internal_data) + 1, nullptr);
-            }
-        });
+    {
+        std::scoped_lock l(data_lock_);
+        received_.reset();
+        remote_ip_.reset();
+    }
+    socket_.async_read_some(asio::buffer(data_, kMaxLength - 1),
+                            [this, self](std::error_code ec, size_t length) {
+                                std::scoped_lock l(data_lock_);
+                                received_ = ec ? 0U : length;
+                                cv_ready_.notify_one();
+                            });
+    std::unique_lock lk(data_lock_);
+    bool timeout = cv_ready_.wait_until(
+        lk, std::chrono::steady_clock::now() + 1000ms,
+        [this]() -> bool { return received_.has_value(); });
+    if (received_.has_value() &&
+        received_.value() >= std::string_view{"::1"}.length()) {
+        remote_ip_ = std::string{data_, *received_};
+        XLOG::d.i("Get ip = {}", *remote_ip_);
+
+    } else {
+        socket_.cancel();
+        received_.reset();
+        XLOG::d("Get ip = Nothing {}", timeout ? "timeout" : "some error");
+    }
 }
 
 size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *commander) {
@@ -142,7 +158,7 @@ void AsioSession::do_write(const void *data_block, std::size_t data_length,
                 // suboptimal method, but one additional packet pro 1 minute
                 // means for TCP nothing. Still candidate to optimize
                 if (static_cast<const void *>(data) == data_block)
-                    WriteStringToSocket(socket_, cma::rt::kPlainHeader);
+                    WriteStringToSocket(socket_, cma::rt::kEncryptedHeader);
 
                 written_bytes = WriteDataToSocket(socket_, buf, len);
 
@@ -228,9 +244,14 @@ static void OverLoadMemory() {
 #endif
 }
 
+bool IsIpAllowedAsException(const std::string &ip) {
+    return ac::IsRunController(cfg::GetLoadedConfig()) &&
+           (ip == "127.0.0.1" || ip == "::1");
+}
+
 // singleton thread
-void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
-    for (;;) {
+void ExternalPort::processQueue(const world::ReplyFunc &reply) {
+    while (true) {
         // we must to catch exception in every thread, even so simple one
         try {
             // processing block
@@ -241,9 +262,14 @@ void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
                     const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
                     XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
-                    OverLoadMemory();  // do nothing
-                    // only_from checking
-                    if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                    OverLoadMemory();
+                    // controller can contact us
+                    bool local_connection = ip == "127.0.0.1" || ip == "::1";
+                    if (cfg::groups::global.isIpAddressAllowed(ip) ||
+                        local_connection) {
+                        if (local_connection && (IsService() || IsTest())) {
+                            as->read_ip();
+                        }
                         as->start(reply);
 
                         // check memory block, terminate service if memory is
@@ -295,7 +321,7 @@ bool sinkProc(const cma::world::AsioSession::s_ptr &asio_session,
 // MAY BE RESTARTED if we have new port/ipv6 mode in config
 // OneShot - true, CMK way, connect, send data back, disconnect
 //         - false, accept send data back, no disconnect
-void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
+void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port) {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " started");
     // all threads must control exceptions
@@ -308,12 +334,10 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
             asio::io_context context;
 
             auto ipv6 = groups::global.ipv6();
-            auto port =
-                default_port_ == 0 ? groups::global.port() : default_port_;
 
             // server start
-            ExternalPort::server sock(context, ipv6, port);
             XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
+            ExternalPort::server sock(context, ipv6, port);
             sock.run_accept(sinkProc, this);
 
             registerContext(&context);
@@ -345,13 +369,16 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(const ReplyFunc &reply_func) {
+bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port) {
     std::lock_guard lk(io_thread_lock_);
-    if (io_thread_.joinable()) return false;  // thread is in exec state
+    if (io_thread_.joinable()) {  // thread is in exec state
+        return false;
+    }
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func);
+    io_thread_ =
+        std::thread(&ExternalPort::ioThreadProc, this, reply_func, port);
     io_started_ = true;
     return true;
 }

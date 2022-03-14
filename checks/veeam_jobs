@@ -25,19 +25,22 @@ def check_veeam_jobs(item, _no_params, info):
         if len(line) < 6:
             continue  # Skip incomplete lines
 
-        job_name, job_type, job_last_state, job_last_result, \
-            job_creation_time, job_end_time = line[:6]
+        job_name, job_type, job_last_state, job_last_result, job_creation_time, job_end_time = line[
+            :6
+        ]
 
         if job_name != item:
             continue  # Skip not matching lines
 
         if job_last_state in ["Working", "Postprocessing"]:
-            return 0, "Running since %s (current state is: %s)" % (job_creation_time,
-                                                                   job_last_state)
+            return 0, "Running since %s (current state is: %s)" % (
+                job_creation_time,
+                job_last_state,
+            )
 
         if job_last_result == "Success":
             state = 0
-        elif job_last_state == 'Idle' and job_type == "BackupSync":
+        elif job_last_state == "Idle" and job_type == "BackupSync":
             # A sync job is always idle
             state = 0
         elif job_last_result == "Failed":
@@ -47,12 +50,17 @@ def check_veeam_jobs(item, _no_params, info):
         else:
             state = 3
 
-        return state, "State: %s, Result: %s, Creation time: %s, End time: %s, Type: %s" % \
-            (job_last_state, job_last_result, job_creation_time, job_end_time, job_type)
+        return state, "State: %s, Result: %s, Creation time: %s, End time: %s, Type: %s" % (
+            job_last_state,
+            job_last_result,
+            job_creation_time,
+            job_end_time,
+            job_type,
+        )
 
 
 check_info["veeam_jobs"] = {
-    'check_function': check_veeam_jobs,
-    'inventory_function': inventory_veeam_jobs,
-    'service_description': 'VEEAM Job %s',
+    "check_function": check_veeam_jobs,
+    "inventory_function": inventory_veeam_jobs,
+    "service_description": "VEEAM Job %s",
 }

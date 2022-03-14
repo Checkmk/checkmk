@@ -8,15 +8,14 @@ import socket
 import time
 from typing import Any, Dict
 
-from testlib.web_session import CMKWebSession
+from tests.testlib.site import Site
 
 
 class CMKEventConsole:
-    def __init__(self, site):
-        super(CMKEventConsole, self).__init__()
+    def __init__(self, site: Site):
+        super().__init__()
         self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
-        self.web_session = CMKWebSession(site)
 
     def _config(self):
         cfg: Dict[str, Any] = {}
@@ -39,42 +38,25 @@ class CMKEventConsole:
         assert "mode=mkeventd_edit_configvar&amp;site=&amp;varname=remote_status" in html
 
         html = web.get(
-            "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status").text
+            "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status"
+        ).text
         assert "Save" in html
 
-        html = web.post("wato.py",
-                        data={
-                            "filled_in": "value_editor",
-                            "ve_use": "on",
-                            "ve_value_0": self.status_port,
-                            "ve_value_2_use": "on",
-                            "ve_value_2_value_0": "127.0.0.1",
-                            "save": "Save",
-                            "varname": "remote_status",
-                            "mode": "mkeventd_edit_configvar",
-                        },
-                        add_transid=True).text
+        html = web.post(
+            "wato.py",
+            data={
+                "filled_in": "value_editor",
+                "ve_use": "on",
+                "ve_value_0": self.status_port,
+                "ve_value_2_use": "on",
+                "ve_value_2_value_0": "127.0.0.1",
+                "save": "Save",
+                "varname": "remote_status",
+                "mode": "mkeventd_edit_configvar",
+            },
+            add_transid=True,
+        ).text
         assert "%d, no commands, 127.0.0.1" % self.status_port in html
-
-    def activate_changes(self, web):
-        old_t = web.site.live.query_value(
-            "GET eventconsolestatus\nColumns: status_config_load_time\n")
-        assert old_t > time.time() - 86400
-
-        self.web_session.activate_changes(allow_foreign_changes=True)
-
-        def config_reloaded():
-            new_t = web.site.live.query_value(
-                "GET eventconsolestatus\nColumns: status_config_load_time\n")
-            return new_t > old_t
-
-        reload_time, timeout = time.time(), 10
-        while not config_reloaded():
-            if time.time() > reload_time + timeout:
-                raise Exception("Config did not update within %d seconds" % timeout)
-            time.sleep(0.2)
-
-        assert config_reloaded()
 
     @classmethod
     def new_event(cls, attrs):
@@ -123,7 +105,7 @@ class CMKEventConsoleStatus:
             if not chunk:
                 break
 
-        return eval(response_text)
+        return eval(response_text)  # pylint:disable=eval-used
 
     def query_table_assoc(self, query):
         response = self.query(query)

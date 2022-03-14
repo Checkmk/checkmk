@@ -1,0 +1,25 @@
+title: Datadog: monitors
+agents: datadog
+catalog: cloud/datadog
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors Datadog monitors collected by the Datadog special
+ agent. The monitoring state in Checkmk depends on the state of the
+ monitor as reported by the Datadog API.
+
+ By default, "Ok" and "No Data" are mapped to OK. "Warn" and "Alert" mapped
+ to WARN and CRIT. All other states are mapped to UNKN. This can be changed
+ using the ruleset "Checking of Datadog monitors", where you can also
+ configure Datadog tags to be reported in the service output.
+
+ Furthermore, using the ruleset "Discovery of Datadog monitors", you can
+ exclude monitors from being discovered, based on their state as reported by
+ the Datadog API. By default, all monitors collected by the special agent
+ are discovered.
+
+discovery:
+ One service is created per monitor.
+
+item:
+ The name of the monitor.

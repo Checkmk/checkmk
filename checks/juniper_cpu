@@ -17,8 +17,11 @@ def check_juniper_cpu(item, params, info):
             # this check was using cpu load readings falsely reporting them
             # as utilization. Since the device doesn't seem to report the number
             # of available cpu cores, load monitoring isn't properly doable
-            return 3, "This check is obsolete and has been replaced, " \
-                "please re-discover service on this host"
+            return (
+                3,
+                "This check is obsolete and has been replaced, "
+                "please re-discover service on this host",
+            )
 
 
 check_info["juniper_cpu"] = {
@@ -26,14 +29,17 @@ check_info["juniper_cpu"] = {
     "inventory_function": inventory_juniper_cpu,
     "service_description": "CPU utilization %s",
     "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"
-                                                                          ),
+    # Use utils.juniper.DETECT when migrating
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.2636.1.1.1"
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.2636.3.1.13.1",
         [
-            5,  #jnxOperatingDescr
-            20,  #jnxOperating1MinLoadAvg
-            21,  #jnxOperating5MinLoadAvg
-            22,  #jnxOperating15MinLoadAvg
-        ])
+            5,  # jnxOperatingDescr
+            20,  # jnxOperating1MinLoadAvg
+            21,  # jnxOperating5MinLoadAvg
+            22,  # jnxOperating15MinLoadAvg
+        ],
+    ),
 }

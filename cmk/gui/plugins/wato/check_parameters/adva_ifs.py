@@ -5,45 +5,46 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    TextAscii,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _item_spec_adva_ifs():
-    return TextAscii(
+    return TextInput(
         title=_("Interface"),
         allow_empty=False,
     )
 
 
 def _parameter_valuespec_adva_ifs():
-    return Dictionary(elements=[
-        ("limits_output_power",
-         Tuple(
-             title=_("Sending Power"),
-             elements=[
-                 Float(title=_("lower limit"), unit="dBm"),
-                 Float(title=_("upper limit"), unit="dBm"),
-             ],
-         )),
-        ("limits_input_power",
-         Tuple(
-             title=_("Received Power"),
-             elements=[
-                 Float(title=_("lower limit"), unit="dBm"),
-                 Float(title=_("upper limit"), unit="dBm"),
-             ],
-         )),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "limits_output_power",
+                Tuple(
+                    title=_("Sending Power"),
+                    elements=[
+                        Float(title=_("lower limit"), unit="dBm"),
+                        Float(title=_("upper limit"), unit="dBm"),
+                    ],
+                ),
+            ),
+            (
+                "limits_input_power",
+                Tuple(
+                    title=_("Received Power"),
+                    elements=[
+                        Float(title=_("lower limit"), unit="dBm"),
+                        Float(title=_("upper limit"), unit="dBm"),
+                    ],
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -54,4 +55,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_adva_ifs,
         title=lambda: _("Adva Optical Transport Laser Power"),
-    ))
+    )
+)

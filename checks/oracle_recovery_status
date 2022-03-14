@@ -43,25 +43,51 @@ def check_oracle_recovery_status(item, params, info):
             itemfound = True
 
             if len(line) == 11:
-                db_name, db_unique_name, database_role, _open_mode, _filenr, \
-                _checkpoint_time, checkpoint_age, datafilestatus, _recovery, _fuzzy, _checkpoint_change = line
+                (
+                    db_name,
+                    db_unique_name,
+                    database_role,
+                    _open_mode,
+                    _filenr,
+                    _checkpoint_time,
+                    checkpoint_age,
+                    datafilestatus,
+                    _recovery,
+                    _fuzzy,
+                    _checkpoint_change,
+                ) = line
 
-                backup_state = 'unknown'
+                backup_state = "unknown"
 
             elif len(line) == 13:
-                db_name, db_unique_name, database_role, _open_mode, _filenr, \
-                _checkpoint_time, checkpoint_age, datafilestatus, _recovery, \
-                _fuzzy, _checkpoint_change, backup_state, backup_age = line
+                (
+                    db_name,
+                    db_unique_name,
+                    database_role,
+                    _open_mode,
+                    _filenr,
+                    _checkpoint_time,
+                    checkpoint_age,
+                    datafilestatus,
+                    _recovery,
+                    _fuzzy,
+                    _checkpoint_change,
+                    backup_state,
+                    backup_age,
+                ) = line
+
+            else:
+                return 2, ", ".join(line)
 
             if params.get("levels"):
                 warn, crit = params["levels"]
 
-            if backup_state == 'ACTIVE':
+            if backup_state == "ACTIVE":
                 backup_count += 1
                 oldest_backup_age = max(int(backup_age), oldest_backup_age)
 
-            if datafilestatus == 'ONLINE':
-                if backup_state == 'FILE MISSING':
+            if datafilestatus == "ONLINE":
+                if backup_state == "FILE MISSING":
                     filemissingcount += 1
                 elif checkpoint_age:
                     checkpoint_age = int(checkpoint_age)
@@ -83,83 +109,89 @@ def check_oracle_recovery_status(item, params, info):
 
         elif oldest_checkpoint_age <= -1:
             # we found a negative time for last checkpoint
-            infotext += ", oldest checkpoint is in the future  %s(!), check the time on the server" \
-                        % get_age_human_readable(int(oldest_checkpoint_age)*-1)
+            infotext += (
+                ", oldest checkpoint is in the future  %s(!), check the time on the server"
+                % get_age_human_readable(int(oldest_checkpoint_age) * -1)
+            )
             state = max(state, 1)
 
         else:
-            infotext += ", oldest Checkpoint %s ago" \
-                       % (get_age_human_readable(int(oldest_checkpoint_age)))
-
-        if (((database_role == 'PRIMARY' and db_name == '_MGMTDB' and db_unique_name == '_mgmtdb') \
-             or not params.get("levels")
+            infotext += ", oldest Checkpoint %s ago" % (
+                get_age_human_readable(int(oldest_checkpoint_age))
             )
-            or db_name[db_name.rfind('.')+1:] == 'PDB$SEED'
-           ):
+
+        if (
+            (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")
+            or not params.get("levels")
+        ) or db_name[db_name.rfind(".") + 1 :] == "PDB$SEED":
 
             # We ignore the state of the check when no parameters are known
             # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
             # ignore PDB$SEED because this PDB is always in READ ONLY mode
-            perfdata.append(('checkpoint_age', oldest_checkpoint_age))
+            perfdata.append(("checkpoint_age", oldest_checkpoint_age))
         else:
-            if database_role == 'PRIMARY':
+            if database_role == "PRIMARY":
                 # checkpoint age should not higher on primary as well
                 # There is no CRIT for older checkoint age as this is mostly not a
                 # serios issue.
                 # otherwise the standby will produca a warning or crit as well
                 if oldest_checkpoint_age >= warn:
-                    infotext += '(!)'
+                    infotext += "(!)"
                     state = max(1, state)
 
-                perfdata.append(('checkpoint_age', oldest_checkpoint_age, warn))
+                perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn))
             else:
-                perfdata.append(('checkpoint_age', oldest_checkpoint_age, warn, crit))
+                perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn, crit))
 
                 # check the checkpoint age on a non primary database!
                 if oldest_checkpoint_age >= crit:
-                    infotext += '(!!)'
+                    infotext += "(!!)"
                     state = 2
                 elif oldest_checkpoint_age >= warn:
-                    infotext += '(!)'
+                    infotext += "(!)"
                     state = max(1, state)
 
-            infotext += ' (warn/crit at %s/%s )' % (get_age_human_readable(warn),
-                                                    get_age_human_readable(crit))
+            infotext += " (warn/crit at %s/%s )" % (
+                get_age_human_readable(warn),
+                get_age_human_readable(crit),
+            )
 
         if offlinecount > 0:
-            infotext += " %i datafiles offline(!!)" \
-                        % (offlinecount)
+            infotext += " %i datafiles offline(!!)" % (offlinecount)
             state = 2
 
         if filemissingcount > 0:
-            infotext += " %i missing datafiles(!!)" \
-                        % (filemissingcount)
+            infotext += " %i missing datafiles(!!)" % (filemissingcount)
             state = 2
 
         if oldest_backup_age > 0:
-            infotext += " %i datafiles in backup mode oldest is %s" % ( \
-                         backup_count, get_age_human_readable(oldest_backup_age))
+            infotext += " %i datafiles in backup mode oldest is %s" % (
+                backup_count,
+                get_age_human_readable(oldest_backup_age),
+            )
 
             if params.get("backup_age"):
 
                 warn, crit = params["backup_age"]
-                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                       get_age_human_readable(crit))
-                perfdata.append(('backup_age', oldest_backup_age, warn, crit))
+                infotext += " (warn/crit at %s/%s)" % (
+                    get_age_human_readable(warn),
+                    get_age_human_readable(crit),
+                )
+                perfdata.append(("backup_age", oldest_backup_age, warn, crit))
 
                 if oldest_backup_age >= crit:
-                    infotext += '(!!)'
+                    infotext += "(!!)"
                     state = 2
                 elif oldest_backup_age >= warn:
-                    infotext += '(!)'
+                    infotext += "(!)"
                     state = max(1, state)
             else:
-                perfdata.append(('backup_age', oldest_backup_age))
+                perfdata.append(("backup_age", oldest_backup_age))
         else:
 
             # create a 'dummy' performance data with 0
             # => The age from plugin is only valid when a datafile is in backup mode!
-            perfdata.append(('backup_age', 0))
+            perfdata.append(("backup_age", 0))
 
         return state, infotext, perfdata
 
@@ -169,7 +201,7 @@ def check_oracle_recovery_status(item, params, info):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info['oracle_recovery_status'] = {
+check_info["oracle_recovery_status"] = {
     "check_function": check_oracle_recovery_status,
     "inventory_function": inventory_oracle_recovery_status,
     "service_description": "ORA %s Recovery Status",

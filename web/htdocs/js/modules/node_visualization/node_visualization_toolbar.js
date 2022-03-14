@@ -71,7 +71,6 @@ export class Toolbar {
                         .attr("id", "togglebutton_" + plugin_id)
                         .classed("togglebutton", true)
                         .classed("noselect", true)
-                        .classed("box", true)
                         .classed("on", true)
                         .classed("down", !plugin.active)
                         .classed("up", plugin.active)

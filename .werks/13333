@@ -1,0 +1,14 @@
+Title: Don't raise an exception if host and services are assigned to groups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1635404629
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Since the 2.0.0p13 an exception was raised when a rule of the ruleset "Assignment of hosts
+to contact groups", "Assignment of services to contact groups", "Assignment of services to
+service groups" or "Assignment of hosts to host groups" was saved. This is fixed.

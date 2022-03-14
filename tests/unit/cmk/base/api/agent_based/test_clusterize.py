@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-#import pytest  # type: ignore[import]
+# import pytest
 
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
@@ -70,9 +70,11 @@ def test_node_mutliline():
         Result(
             state=State.WARN,
             summary="[test_node]: These, are, four, lines",
-            details=("[test_node]: These\n"
-                     "[test_node]: are\n"
-                     "[test_node]: four\n"
-                     "[test_node]: lines"),
+            details=(
+                "[test_node]: These\n"
+                "[test_node]: are\n"
+                "[test_node]: four\n"
+                "[test_node]: lines"
+            ),
         ),
     ]

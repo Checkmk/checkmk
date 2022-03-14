@@ -1,0 +1,17 @@
+Title: pykerberos build under SLES*
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1629445045
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The shipped python module "kerberos" was broken for all SLES distributions.
+This could be observerd when using the active check "check_bi_aggr", which failed with:
+<tt>
+import kerberos
+ImportError: kerberos.cpython-38-x86_64-linux-gnu.so: undefined symbol: gss_nt_service_name
+</tt>

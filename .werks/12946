@@ -1,0 +1,15 @@
+Title: REST API: allow dots in pathnames through folder regexp
+Class: fix
+Compatible: compat
+Component: core
+Date: 1624373455
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously folders with dots (.) in their filename were erroneously rejected
+by the REST API. This has now been fixed, dots can now be used.
+
+There is no further action necessary.

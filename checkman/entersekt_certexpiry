@@ -1,11 +1,10 @@
 title: Entersekt Ecert: Certification Expiry
 agents: snmp
 catalog: app/entersekt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check verifies the number of days until the certificate expires.
 
-inventory:
+discovery:
  One service is created for each certificate.
-

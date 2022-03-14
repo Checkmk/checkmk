@@ -1,0 +1,16 @@
+Title: Fix validation of host addresses in different situations
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1639508820
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+There are different situations where host addresses can be configured within
+the Checkmk setup (e.g. Additional IP addresses, host diagnostic, management
+address). In some of them host names, IPv4 and IPv6 addresses are allowed and
+in some of them only a subset. Depending on the situation, the validation
+should be as specific as possible, but the inserted value was not correctly
+validated in all the situations.

@@ -1,0 +1,14 @@
+Title: API: adjustment of code example for user endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614931125
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, some attributes in the given code
+example for the create user endpoint differed to the actual
+attributes. This has been fixed with this werk.

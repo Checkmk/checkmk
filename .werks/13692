@@ -1,0 +1,17 @@
+Title: Checkmk agent: do not support systemd versions prior to 220
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645608125
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The Checkmk agent no longer uses systemd versions prior to 220.
+
+These systemd versions either do not support features the agent may need
+(e.g. setting of the REMOTE_ADDR environment variable) or they are buggy
+(e.g. <a href="https://github.com/systemd/systemd/issues/1742">ExecStopPost</a>)
+
+On theses systems, the agent will try to use xinetd.

@@ -1,0 +1,31 @@
+title: Zertificon Mail Queues
+agents: snmp
+catalog: app/zertificon
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the length of the mail queues of Zertificon mail encryption appliances.
+ The following seven queues are monitored:
+
+ - Total Postfix queue
+
+ - Incoming queue
+
+ - Active queue
+
+ - Deferred queue
+
+ - Hold queue
+
+ - Maildrop queue
+
+ - Z1 Messenger queue
+
+ The check goes WARN / CRIT if the length of any of these queues exceeds configurable
+ levels. Per default, there are no upper levels.
+
+discovery:
+ This check is only available as an enforced service, configurable via
+ "Setup > Enforced services > Zertificon Mail Queues".
+ This is necessary because Zertificon appliances cannot be decisively identified based
+ on their SNMP data.

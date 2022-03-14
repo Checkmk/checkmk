@@ -1,0 +1,11 @@
+Title: mk_logwatch: Make logwatch available for Solaris in Agent Bakery
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1620304618
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+

@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Disk Throughput for Drives/MDisks/VDisks per Node
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the disk throughput for Drives, MDisks and VDisks for each node
@@ -17,6 +17,5 @@ description:
 item:
  {{Drives}}, {{MDisks}} or {{VDisks}} plus the name of the node.
 
-inventory:
+discovery:
  One service is created for the drives, one for MDisks and one for VDisks for each node.
-

@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib import CMKWebSession
+from tests.testlib import CMKWebSession
+from tests.testlib.site import Site
 
 
-def test_01_login_and_logout(site):
+def test_01_login_and_logout(site: Site):
     web = CMKWebSession(site)
 
     r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)

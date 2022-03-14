@@ -1,7 +1,7 @@
 title: Brocade FibreChannel Switches: SFPs
 catalog: hw/storagehw/brocade
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the power level in dBm of brocade SFPs, as well as current and voltage.
@@ -16,7 +16,6 @@ item:
  in the check item (and thus the service description). This can be turned
  off.
 
-inventory:
+discovery:
   One service is created for each operational port. What this exactly means
   can be configured (see CONFIGURATION VARIABLES).
-

@@ -5,41 +5,49 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_eaton_enviroment():
-    return Dictionary(elements=[
-        ("temp",
-         Tuple(title=_("Temperature"),
-               elements=[
-                   Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                   Integer(title=_("critical at"), unit=u"°C", default_value=30),
-               ])),
-        ("remote_temp",
-         Tuple(title=_("Remote Temperature"),
-               elements=[
-                   Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                   Integer(title=_("critical at"), unit=u"°C", default_value=30),
-               ])),
-        ("humidity",
-         Tuple(
-             title=_("Humidity"),
-             elements=[
-                 Integer(title=_("warning at"), unit=u"%", default_value=60),
-                 Integer(title=_("critical at"), unit=u"%", default_value=75),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "temp",
+                Tuple(
+                    title=_("Temperature"),
+                    elements=[
+                        Integer(title=_("warning at"), unit="°C", default_value=26),
+                        Integer(title=_("critical at"), unit="°C", default_value=30),
+                    ],
+                ),
+            ),
+            (
+                "remote_temp",
+                Tuple(
+                    title=_("Remote Temperature"),
+                    elements=[
+                        Integer(title=_("warning at"), unit="°C", default_value=26),
+                        Integer(title=_("critical at"), unit="°C", default_value=30),
+                    ],
+                ),
+            ),
+            (
+                "humidity",
+                Tuple(
+                    title=_("Humidity"),
+                    elements=[
+                        Integer(title=_("warning at"), unit="%", default_value=60),
+                        Integer(title=_("critical at"), unit="%", default_value=75),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -49,4 +57,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_eaton_enviroment,
         title=lambda: _("Temperature and Humidity for Eaton UPS"),
-    ))
+    )
+)

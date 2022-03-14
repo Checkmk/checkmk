@@ -1,0 +1,11 @@
+[Unit]
+Description=Runs the AMI entrypoint scripts
+Before=omd.service
+
+[Service]
+TimeoutStartSec=300
+Type=oneshot
+ExecStart=sudo /root/ami-entrypoint.sh
+
+[Install]
+WantedBy=omd.service

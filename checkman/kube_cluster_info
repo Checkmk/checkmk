@@ -1,0 +1,12 @@
+title: Kubernetes: Cluster Info
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check displays general information about the Kubernetes cluster such
+ as the configured name. The service is always {OK}. It requires that the
+ special agent kube is configured.
+
+discovery:
+ One service is created for the cluster.

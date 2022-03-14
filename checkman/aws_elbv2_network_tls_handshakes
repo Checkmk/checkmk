@@ -1,7 +1,7 @@
 title: AWS NetworkELB: TLS Handshakes
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors
@@ -17,6 +17,6 @@ description:
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.
 
-inventory:
+discovery:
  One service is created if all required metrics (ClientTLSNegotiationErrorCount,
  TargetTLSNegotiationErrorCount) are given.

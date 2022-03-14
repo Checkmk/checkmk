@@ -8,15 +8,19 @@
 #     'timeout': 10,
 # }
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_fritzbox_arguments(params, hostname, ipaddress):
+
+def agent_fritzbox_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     args = []
 
     if "timeout" in params:
-        args += ['--timeout', "%d" % params["timeout"]]
+        args += ["--timeout", "%d" % params["timeout"]]
 
-    args.append(ipaddress)
+    args.append(ipaddress or hostname)
     return args
 
 
-special_agent_info['fritzbox'] = agent_fritzbox_arguments
+special_agent_info["fritzbox"] = agent_fritzbox_arguments

@@ -9,7 +9,8 @@ import cmk.utils.msi_engine as msi_engine
 
 def test_parse_command_line():
     msi_file, source_dir, revision, version_name, aghash = msi_engine.parse_command_line(
-        ["stub", "msi", "dir", "rev", "vers", "aghash"])
+        ["stub", "msi", "dir", "rev", "vers", "aghash"]
+    )
     assert msi_file == "msi"
     assert source_dir == "dir"
     assert revision == "rev"
@@ -17,7 +18,8 @@ def test_parse_command_line():
     assert aghash == "aghash"
     assert not msi_engine.opt_verbose
     msi_file, source_dir, revision, version_name, aghash = msi_engine.parse_command_line(
-        ["stub", "-v", "msi", "dir", "rev", "vers", "aghash"])
+        ["stub", "-v", "msi", "dir", "rev", "vers", "aghash"]
+    )
     assert msi_file == "msi"
     assert source_dir == "dir"
     assert revision == "rev"
@@ -26,10 +28,13 @@ def test_parse_command_line():
     assert msi_engine.opt_verbose
 
 
-EXPECTED_FILE_TABLE = ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
+EXPECTED_FILE_TABLE = ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"]
 
 EXPECTED_COMPONENT_TABLE = [
-    "check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"
+    "check_mk_install_yml_",
+    "checkmk.dat",
+    "plugins_cap_",
+    "python_3.cab",
 ]
 
 

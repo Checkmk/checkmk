@@ -6,7 +6,7 @@ Date: 1612960814
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For larger sites (>10k hosts), performance problems occurred during configuration generation.                                                       For each host, the current checkmk edition (CRE/CME/CEE) had to be determined from scratch.
 This took about 4 seconds. This information is now cached.

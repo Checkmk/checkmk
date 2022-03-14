@@ -4,22 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Mapping, Optional
+
+from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-)
 from .utils.fortinet import DETECT_FORTISANDBOX
 
 Section = Mapping[str, int]
 
 
-def parse_fortisandbox_mem_usage(string_table: StringTable) -> Section:
+def parse_fortisandbox_mem_usage(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortisandbox_mem_usage(([["4", "260459760"]]))
     {'MemFree': 256042362470, 'MemTotal': 266710794240}
     """
+    if not string_table:
+        return None
     total = int(string_table[0][1]) * 1024
     return {
         "MemFree": int(round(total * (1 - float(string_table[0][0]) / 100))),

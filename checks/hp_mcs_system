@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_mcs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 
 
@@ -32,16 +33,17 @@ def check_hp_mcs_system(item, _no_params, info):
     yield 0, "Serial: %s" % serial
 
 
-check_info['hp_mcs_system'] = {
-    'inventory_function': inventory_hp_mcs_system,
-    'check_function': check_hp_mcs_system,
-    'service_description': '%s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.232',
+check_info["hp_mcs_system"] = {
+    "inventory_function": inventory_hp_mcs_system,
+    "check_function": check_hp_mcs_system,
+    "service_description": "%s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.232",
         [
             "2.2.4.2",  # CPQSINFO-MIB::cpqSiProductName
             BINARY("11.2.10.1"),  # CPQHOST-MIB::cpqHoMibStatusArray
             "11.2.10.3",  # CPQHOST-MIB::cpqHoGUID
-        ]),
-    'snmp_scan_function': hp_mcs_scan_function,
+        ],
+    ),
+    "snmp_scan_function": hp_mcs_scan_function,
 }

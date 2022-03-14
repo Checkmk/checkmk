@@ -4,27 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import (
-    Any,
-    List,
-    Dict,
-    Mapping,
-    NamedTuple,
-    Generator,
-)
-from .agent_based_api.v1 import (
-    Service,
-    regex,
-    Result,
-    register,
-    State,
-)
+from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import regex, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
 # Output of old agent (< 1.1.10i2):
 # AeLookupSvc        running  Application Experience Lookup Service
 # Alerter            stopped  Alerter
@@ -72,7 +56,7 @@ Section = List[WinService]  # deterministic order!
 
 def parse_windows_services(string_table: StringTable) -> Section:
     def to_service(name: str, status: str, description: str) -> WinService:
-        cur_state, start_type = status.split('/', 1) if "/" in status else (status, "unknown")
+        cur_state, start_type = status.split("/", 1) if "/" in status else (status, "unknown")
         return WinService(name, cur_state, start_type, description)
 
     return [
@@ -87,44 +71,45 @@ register.agent_section(
 )
 
 
-def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
-    # Handle single entries (type str)
-    def add_matching_services(service: WinService, entry):
-        # New wato rule handling
-        svc, state, mode = entry
+def _extract_wato_compatible_rules(
+    params: Sequence[Mapping[str, Any]],
+) -> Sequence[Tuple[Optional[str], Optional[str], Optional[str]]]:
+    return [
+        (pattern, rule.get("state"), rule.get("start_mode"))
+        # If no rule is set by user, *no* windows services should be discovered.
+        # Skip the default settings which are the last element of the list:
+        for rule in params[:-1]
+        for pattern in rule.get("services") or [None]
+    ]
+
+
+def _add_matching_services(
+    service: WinService,
+    pattern: Optional[str],
+    state: Optional[str],
+    mode: Optional[str],
+) -> DiscoveryResult:
+    if pattern:
         # First match name or description (optional since rule based config option available)
-        if svc:
-            if not svc.startswith("~") and svc not in (service.name, service.description):
-                return
-
-            r = regex(svc[1:])
-            if not r.match(service.name) and not r.match(service.description):
-                return
-
-        if (state and state != service.state) or (mode and mode != service.start_type):
+        expr = regex(pattern)
+        if not (expr.match(service.name) or expr.match(service.description)):
             return
 
-        yield Service(item=service.name)
+    if (state and state != service.state) or (mode and mode != service.start_type):
+        return
 
+    yield Service(item=service.name)
+
+
+def discovery_windows_services(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
-    rules = []
-
-    # In case no rule is set by user, *no* windows services should be discovered.
-    # Therefore always skip the default settings which are the last element of the list.
-    for value in params[:-1]:
-        # Now extract the list of service regexes
-        svcs = value.get('services', [])
-        service_state = value.get('state', None)
-        start_mode = value.get('start_mode', None)
-        if svcs:
-            for svc in svcs:
-                rules.append(('~' + svc, service_state, start_mode))
-        else:
-            rules.append((None, service_state, start_mode))
+    rules = _extract_wato_compatible_rules(params)
 
     for service in section:
         for rule in rules:
-            yield from add_matching_services(service, rule)
+            yield from _add_matching_services(service, *rule)
 
 
 def check_windows_services_single(
@@ -143,20 +128,30 @@ def check_windows_services_single(
     # allow to match agains the internal name or agains the display name of the service
     additional_names = params.get("additional_servicenames", [])
     for service in section:
-        if item not in (service.name, service.description) and service.name not in additional_names:
-            continue
+        if _matches_item(service, item) or service.name in additional_names:
+            yield Result(
+                state=_match_service_against_params(params, service),
+                summary=f"{service.description}: {service.state} (start type is {service.start_type})",
+            )
 
-        for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
-            if ((t_state is None or t_state == service.state) and
-                (t_start_type is None or t_start_type == service.start_type)):
-                this_state = mon_state
-                break
-            this_state = params.get("else", 2)
 
-        yield Result(
-            state=State(this_state),
-            summary=f"{service.description}: {service.state} (start type is {service.start_type})",
-        )
+def _matches_item(service: WinService, item: str) -> bool:
+    return item in (service.name, service.description)
+
+
+def _match_service_against_params(params: Mapping[str, Any], service: WinService) -> State:
+    """
+    This function searches params for the first rule that matches the state and the start_type.
+    None is treated as a wildcard. If no match is found, the function defaults.
+    """
+    for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
+        if _wildcard(t_state, service.state) and _wildcard(t_start_type, service.start_type):
+            return State(mon_state)
+    return State(params.get("else", 2))
+
+
+def _wildcard(value, reference):
+    return value is None or value == reference
 
 
 def check_windows_services(
@@ -174,13 +169,15 @@ def check_windows_services(
 def cluster_check_windows_services(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their
     # states
     found = []
     for node, node_section in section.items():
+        if node_section is None:
+            continue
         results = list(check_windows_services_single(item, params, node_section))
         if results:
             found.append((node, results[0]))
@@ -243,7 +240,7 @@ def check_services_summary(params: Mapping[str, Any], section: Section) -> Check
     yield Result(
         state=State(params.get("state_if_stopped", 0)) if stoplist else State.OK,
         summary=f"Stopped services: {len(stoplist)}",
-        details=("Stopped services: %s" % ', '.join(stoplist)) if stoplist else None,
+        details=("Stopped services: %s" % ", ".join(stoplist)) if stoplist else None,
     )
 
     if num_blacklist:

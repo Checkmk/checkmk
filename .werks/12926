@@ -1,0 +1,12 @@
+Title: SAP HANA: New agent config where you can specify connection per database
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1625670167
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+There is an additional way of SAP HANA agent configuration where you can specify databases
+you want to monitor and authentication per database.

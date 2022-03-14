@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
+from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 
 
 # DEPRECATED: Please use check_memory_element from mem.inlude!
@@ -19,24 +18,30 @@ def check_memory_simple(used, total, params):
         params = {"levels": ("ignore")}
 
     perc_used = (float(used) / total) * 100
-    infotext = "Usage: %s (Used: %s, Total: %s)" % (get_percent_human_readable(perc_used),
-                                                    get_bytes_human_readable(used),
-                                                    get_bytes_human_readable(total))
+    infotext = "Usage: %s (Used: %s, Total: %s)" % (
+        get_percent_human_readable(perc_used),
+        get_bytes_human_readable(used),
+        get_bytes_human_readable(total),
+    )
 
     status = 0
     if params["levels"][0] == "perc_used":
         warn_perc, crit_perc = params["levels"][1]
         warn_abs = (warn_perc / 100.0) * total
         crit_abs = (crit_perc / 100.0) * total
-        levelstext = " (warn/crit at %s/%s used)" % (get_percent_human_readable(warn_perc),
-                                                     get_percent_human_readable(crit_perc))
+        levelstext = " (warn/crit at %s/%s used)" % (
+            get_percent_human_readable(warn_perc),
+            get_percent_human_readable(crit_perc),
+        )
 
     elif params["levels"][0] == "abs_free":
         warn_abs_free, crit_abs_free = params["levels"][1]
         warn_abs = total - warn_abs_free
         crit_abs = total - crit_abs_free
-        levelstext = " (warn/crit below %s/%s free)" % (get_bytes_human_readable(warn_abs_free),
-                                                        get_bytes_human_readable(crit_abs_free))
+        levelstext = " (warn/crit below %s/%s free)" % (
+            get_bytes_human_readable(warn_abs_free),
+            get_bytes_human_readable(crit_abs_free),
+        )
 
     else:
         # No levels imposed, ie. params = {'levels': 'ignore'}
@@ -57,26 +62,28 @@ def check_memory_simple(used, total, params):
 
 # DEPRECATED: Please use check_memory_element from mem.inlude!
 def check_memory_multiitem(params, data, base=1024):
-    if 'mem_total' not in data:
-        return 3, 'Invalid data: missing mem_total'
-    mem_total = data['mem_total']
+    if "mem_total" not in data:
+        return 3, "Invalid data: missing mem_total"
+    mem_total = data["mem_total"]
 
-    if 'mem_used' in data:
+    if "mem_used" in data:
         mem_used = data["mem_used"]
         mem_avail = mem_total - mem_used
-    elif 'mem_avail' in data:
-        mem_avail = data['mem_avail']
+    elif "mem_avail" in data:
+        mem_avail = data["mem_avail"]
         mem_used = mem_total - mem_avail
     else:
-        return 3, 'Invalid data: missing mem_used or mem_avail sizes'
+        return 3, "Invalid data: missing mem_used or mem_avail sizes"
 
-    infotext = '%s used (%s of %s)' % (get_percent_human_readable(
-        float(mem_used) / float(mem_total) * 100), get_bytes_human_readable(
-            mem_used, base=base), get_bytes_human_readable(mem_total, base=base))
+    infotext = "%s used (%s of %s)" % (
+        get_percent_human_readable(float(mem_used) / float(mem_total) * 100),
+        get_bytes_human_readable(mem_used, base=base),
+        get_bytes_human_readable(mem_total, base=base),
+    )
 
     state = 0
-    if 'levels' in params:
-        warn, crit = params['levels']
+    if "levels" in params:
+        warn, crit = params["levels"]
         if isinstance(warn, int):
             warn_absolute = warn
         else:
@@ -92,10 +99,12 @@ def check_memory_multiitem(params, data, base=1024):
         elif mem_used > warn_absolute:
             state = 1
         if state:
-            infotext += ' (warn/crit at %s/%s)' % (get_bytes_human_readable(warn_absolute),
-                                                   get_bytes_human_readable(crit_absolute))
+            infotext += " (warn/crit at %s/%s)" % (
+                get_bytes_human_readable(warn_absolute),
+                get_bytes_human_readable(crit_absolute),
+            )
     else:
         warn_absolute = None
         crit_absolute = None
 
-    return state, infotext, [('memused', mem_used, warn_absolute, crit_absolute, 0, mem_total)]
+    return state, infotext, [("memused", mem_used, warn_absolute, crit_absolute, 0, mem_total)]

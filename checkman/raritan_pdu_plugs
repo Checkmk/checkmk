@@ -1,7 +1,7 @@
 title: Raritan PX-2000 Family: PDU Plug State
 agents: snmp
 catalog: hw/environment/raritan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the plugs of the Raritan PX-2000
@@ -15,6 +15,5 @@ description:
 item:
  The ID of the plug as given by the device
 
-inventory:
+discovery:
  One service is created for each plug.
-

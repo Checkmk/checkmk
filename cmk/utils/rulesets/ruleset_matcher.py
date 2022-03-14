@@ -5,18 +5,39 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Pattern, Set, Tuple
+from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple, TYPE_CHECKING
 
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import boil_down_parameters
+from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
     ALL_SERVICES,
     CLUSTER_HOSTS,
-    PHYSICAL_HOSTS,
     NEGATE,
+    PHYSICAL_HOSTS,
 )
-from cmk.utils.regex import regex
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue, Union
+from cmk.utils.tags import TagConfig
+from cmk.utils.type_defs import (
+    HostName,
+    HostOrServiceConditions,
+    HostOrServiceConditionsSimple,
+    Labels,
+    RuleConditionsSpec,
+    Ruleset,
+    RuleSpec,
+    RuleValue,
+    ServiceName,
+    TagCondition,
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+    TaggroupID,
+    TaggroupIDToTagCondition,
+    TagID,
+    TagIDToTaggroupID,
+    TagsOfHosts,
+)
 
 if TYPE_CHECKING:
     from cmk.utils.labels import LabelManager
@@ -24,35 +45,39 @@ if TYPE_CHECKING:
 LabelConditions = Dict  # TODO: Optimize this
 PreprocessedHostRuleset = Dict[HostName, List[RuleValue]]
 PreprocessedPattern = Tuple[bool, Pattern[str]]
-PreprocessedServiceRuleset = List[Tuple[RuleValue, Set[HostName], LabelConditions, Tuple,
-                                        PreprocessedPattern]]
+PreprocessedServiceRuleset = List[
+    Tuple[RuleValue, Set[HostName], LabelConditions, Tuple, PreprocessedPattern]
+]
 
 
 class RulesetMatchObject:
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
+
     __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
 
     def __init__(
         self,
         host_name: Optional[HostName] = None,
         service_description: Optional[ServiceName] = None,
-        service_labels: Optional[Dict[str, str]] = None,
+        service_labels: Optional[Labels] = None,
     ) -> None:
-        super(RulesetMatchObject, self).__init__()
+        super().__init__()
         self.host_name = host_name
         self.service_description = service_description
         self.service_labels = service_labels
-        self.service_cache_id = (self.service_description, self._generate_hash(self.service_labels)
-                                 if self.service_labels else None)
+        self.service_cache_id = (
+            self.service_description,
+            self._generate_service_labels_hash(self.service_labels),
+        )
 
-    def _generate_hash(self, service_labels: Optional[Dict[str, str]]) -> int:
-        return hash(None if service_labels is None else frozenset(service_labels))
+    def _generate_service_labels_hash(self, service_labels: Optional[Labels]) -> int:
+        return hash(None if service_labels is None else frozenset(service_labels.items()))
 
     def to_dict(self) -> Dict:
         # TODO: Two getattr()?
         return {k: getattr(self, k) for k in self.__slots__ if getattr(self, k) is not None}
 
-    def copy(self) -> 'RulesetMatchObject':
+    def copy(self) -> "RulesetMatchObject":
         return RulesetMatchObject(**self.to_dict())
 
     def __repr__(self) -> str:
@@ -67,23 +92,24 @@ class RulesetMatcher:
     kept for performance reasons. Especially the service rulset matching is
     done very often in large setups. Be careful when working here.
     """
+
     def __init__(
         self,
-        tag_to_group_map: TagGroups,
-        host_tag_lists: Dict[HostName, TagList],
+        tag_to_group_map: TagIDToTaggroupID,
+        host_tags: TagsOfHosts,
         host_paths: Dict[HostName, str],
-        labels: 'LabelManager',
+        labels: "LabelManager",
         all_configured_hosts: Set[HostName],
         clusters_of: Dict[HostName, List[HostName]],
         nodes_of: Dict[HostName, List[HostName]],
     ) -> None:
-        super(RulesetMatcher, self).__init__()
+        super().__init__()
 
         self.tuple_transformer = RulesetToDictTransformer(tag_to_group_map=tag_to_group_map)
 
         self.ruleset_optimizer = RulesetOptimizer(
             self,
-            host_tag_lists,
+            host_tags,
             host_paths,
             labels,
             all_configured_hosts,
@@ -93,8 +119,7 @@ class RulesetMatcher:
 
         self._service_match_cache: Dict = {}
 
-    def is_matching_host_ruleset(self, match_object: RulesetMatchObject,
-                                 ruleset: List[Dict]) -> bool:
+    def is_matching_host_ruleset(self, match_object: RulesetMatchObject, ruleset: Ruleset) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -105,39 +130,43 @@ class RulesetMatcher:
             return value
         return False  # no match. Do not ignore
 
-    def get_host_ruleset_merged_dict(self, match_object: RulesetMatchObject,
-                                     ruleset: List[Dict]) -> Dict:
+    def get_host_ruleset_merged_dict(
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
+    ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        merged_dict: Dict = {}
-        for rule_dict in self.get_host_ruleset_values(match_object, ruleset, is_binary=False):
-            for key, value in rule_dict.items():
-                merged_dict.setdefault(key, value)
-        return merged_dict
+        merged = boil_down_parameters(
+            self.get_host_ruleset_values(match_object, ruleset, is_binary=False), {}
+        )
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        return merged
 
-    def get_host_ruleset_values(self, match_object: RulesetMatchObject, ruleset: List,
-                                is_binary: bool) -> Generator:
+    def get_host_ruleset_values(
+        self, match_object: RulesetMatchObject, ruleset: List, is_binary: bool
+    ) -> Generator:
         """Returns a generator of the values of the matched rules
         Replaces host_extra_conf"""
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=is_binary)
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
-        with_foreign_hosts = (match_object.host_name
-                              not in self.ruleset_optimizer.all_processed_hosts())
+        with_foreign_hosts = (
+            match_object.host_name not in self.ruleset_optimizer.all_processed_hosts()
+        )
 
-        optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(ruleset,
-                                                                    with_foreign_hosts,
-                                                                    is_binary=is_binary)
+        optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
+            ruleset, with_foreign_hosts, is_binary=is_binary
+        )
 
         assert match_object.host_name is not None
         for value in optimized_ruleset.get(match_object.host_name, []):
             yield value
 
-    def is_matching_service_ruleset(self, match_object: RulesetMatchObject,
-                                    ruleset: List[Dict]) -> bool:
+    def is_matching_service_ruleset(
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
+    ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -148,71 +177,92 @@ class RulesetMatcher:
             return value
         return False  # no match. Do not ignore
 
-    def get_service_ruleset_merged_dict(self, match_object: RulesetMatchObject,
-                                        ruleset: List[Dict]) -> Dict:
+    def get_service_ruleset_merged_dict(
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
+    ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        merged_dict: Dict = {}
-        for rule_dict in self.get_service_ruleset_values(match_object, ruleset, is_binary=False):
-            for key, value in rule_dict.items():
-                merged_dict.setdefault(key, value)
-        return merged_dict
+        merged = boil_down_parameters(
+            self.get_service_ruleset_values(match_object, ruleset, is_binary=False), {}
+        )
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        return merged
 
-    def get_service_ruleset_values(self, match_object: RulesetMatchObject, ruleset: List,
-                                   is_binary: bool) -> Generator:
+    def get_service_ruleset_values(
+        self, match_object: RulesetMatchObject, ruleset: List, is_binary: bool
+    ) -> Generator:
         """Returns a generator of the values of the matched rules
         Replaces service_extra_conf"""
         self.tuple_transformer.transform_in_place(ruleset, is_service=True, is_binary=is_binary)
 
-        with_foreign_hosts = match_object.host_name not in \
-                                self.ruleset_optimizer.all_processed_hosts()
-        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(ruleset,
-                                                                       with_foreign_hosts,
-                                                                       is_binary=is_binary)
+        with_foreign_hosts = (
+            match_object.host_name not in self.ruleset_optimizer.all_processed_hosts()
+        )
+        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
+            ruleset, with_foreign_hosts, is_binary=is_binary
+        )
 
-        for value, hosts, service_labels_condition, service_labels_condition_cache_id, service_description_condition in optimized_ruleset:
+        for (
+            value,
+            hosts,
+            service_labels_condition,
+            service_labels_condition_cache_id,
+            service_description_condition,
+        ) in optimized_ruleset:
             if match_object.service_description is None:
                 continue
 
             if match_object.host_name not in hosts:
                 continue
 
-            service_cache_id = (match_object.service_cache_id, service_description_condition,
-                                service_labels_condition_cache_id)
+            service_cache_id = (
+                match_object.service_cache_id,
+                service_description_condition,
+                service_labels_condition_cache_id,
+            )
 
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
-                match = self._matches_service_conditions(service_description_condition,
-                                                         service_labels_condition, match_object)
+                match = self._matches_service_conditions(
+                    service_description_condition, service_labels_condition, match_object
+                )
                 self._service_match_cache[service_cache_id] = match
 
             if match:
                 yield value
 
-    def _matches_service_conditions(self, service_description_condition: Tuple[bool, Pattern[str]],
-                                    service_labels_condition: Dict[str, str],
-                                    match_object: RulesetMatchObject) -> bool:
-        if not self._matches_service_description_condition(service_description_condition,
-                                                           match_object):
+    def _matches_service_conditions(
+        self,
+        service_description_condition: Tuple[bool, Pattern[str]],
+        service_labels_condition: Dict[str, str],
+        match_object: RulesetMatchObject,
+    ) -> bool:
+        if not self._matches_service_description_condition(
+            service_description_condition, match_object
+        ):
             return False
 
-        if service_labels_condition \
-           and not matches_labels(match_object.service_labels, service_labels_condition):
+        if service_labels_condition and not matches_labels(
+            match_object.service_labels, service_labels_condition
+        ):
             return False
 
         return True
 
-    def _matches_service_description_condition(self,
-                                               service_description_condition: Tuple[bool,
-                                                                                    Pattern[str]],
-                                               match_object: RulesetMatchObject) -> bool:
+    def _matches_service_description_condition(
+        self,
+        service_description_condition: Tuple[bool, Pattern[str]],
+        match_object: RulesetMatchObject,
+    ) -> bool:
         negate, pattern = service_description_condition
 
-        if match_object.service_description is not None \
-            and pattern.match(match_object.service_description) is not None:
+        if (
+            match_object.service_description is not None
+            and pattern.match(match_object.service_description) is not None
+        ):
             return not negate
         return negate
 
@@ -227,7 +277,7 @@ class RulesetMatcher:
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
         entries = []
         for rule in ruleset:
-            if "options" in rule and "disabled" in rule["options"]:
+            if _is_disabled(rule):
                 continue
 
             hostlist = rule["condition"].get("host_name")
@@ -238,7 +288,7 @@ class RulesetMatcher:
             if rule_path != "/":
                 continue
 
-            if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
+            if tags and not self.ruleset_optimizer.matches_host_tags(set(), tags):
                 continue
 
             if labels and not matches_labels({}, labels):
@@ -254,14 +304,21 @@ class RulesetMatcher:
 class RulesetOptimizer:
     """Performs some precalculations on the configured rulesets to improve the
     processing performance"""
-    def __init__(self, ruleset_matcher: RulesetMatcher, host_tag_lists: Dict[HostName, TagList],
-                 host_paths: Dict[HostName, str], labels: 'LabelManager',
-                 all_configured_hosts: Set[HostName], clusters_of: Dict[HostName, List[HostName]],
-                 nodes_of: Dict[HostName, List[HostName]]) -> None:
-        super(RulesetOptimizer, self).__init__()
+
+    def __init__(
+        self,
+        ruleset_matcher: RulesetMatcher,
+        host_tags: TagsOfHosts,
+        host_paths: Dict[HostName, str],
+        labels: "LabelManager",
+        all_configured_hosts: Set[HostName],
+        clusters_of: Dict[HostName, List[HostName]],
+        nodes_of: Dict[HostName, List[HostName]],
+    ) -> None:
+        super().__init__()
         self._ruleset_matcher = ruleset_matcher
         self._labels = labels
-        self._host_tag_lists = host_tag_lists
+        self._host_tags = {hn: set(tags_of_host.items()) for hn, tags_of_host in host_tags.items()}
         self._host_paths = host_paths
         self._clusters_of = clusters_of
         self._nodes_of = nodes_of
@@ -287,13 +344,9 @@ class RulesetOptimizer:
         self._folder_host_lookup: Dict[Tuple[bool, str], Set[HostName]] = {}
 
         # Provides a list of hosts with the same hosttags, excluding the folder
-        self._hosts_grouped_by_tags: Dict = {}
+        self._hosts_grouped_by_tags: Dict[Tuple[Tuple[TaggroupID, TagID], ...], Set[HostName]] = {}
         # Reference hostname -> tag group reference
-        self._host_grouped_ref: Dict = {}
-
-        # TODO: The folder will not be part of new dict tags anymore. This can
-        # be cleaned up then.
-        self._hosttags_without_folder: Dict[HostName, TagList] = {}
+        self._host_grouped_ref: Dict[HostName, Tuple[Tuple[TaggroupID, TagID], ...]] = {}
 
         # TODO: Clean this one up?
         self._initialize_host_lookup()
@@ -332,22 +385,24 @@ class RulesetOptimizer:
         self._adjust_processed_hosts_similarity()
 
     def _adjust_processed_hosts_similarity(self) -> None:
-        """ This function computes the tag similarities between of the processed hosts
+        """This function computes the tag similarities between of the processed hosts
         The result is a similarity factor, which helps finding the most perfomant operation
-        for the current hostset """
-        used_groups = set()
-        for hostname in self._all_processed_hosts:
-            used_groups.add(self._host_grouped_ref.get(hostname, ()))
+        for the current hostset"""
+        used_groups = {
+            self._host_grouped_ref.get(hostname, ()) for hostname in self._all_processed_hosts
+        }
 
         if not used_groups:
             self._all_processed_hosts_similarity = 1.0
             return
 
-        self._all_processed_hosts_similarity = (1.0 * len(self._all_processed_hosts) /
-                                                len(used_groups))
+        self._all_processed_hosts_similarity = (
+            1.0 * len(self._all_processed_hosts) / len(used_groups)
+        )
 
-    def get_host_ruleset(self, ruleset: Ruleset, with_foreign_hosts: bool,
-                         is_binary: bool) -> PreprocessedHostRuleset:
+    def get_host_ruleset(
+        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
+    ) -> PreprocessedHostRuleset:
         cache_id = id(ruleset), with_foreign_hosts
 
         if cache_id in self._host_ruleset_cache:
@@ -357,8 +412,9 @@ class RulesetOptimizer:
         self._host_ruleset_cache[cache_id] = host_ruleset
         return host_ruleset
 
-    def _convert_host_ruleset(self, ruleset: Ruleset, with_foreign_hosts: bool,
-                              is_binary: bool) -> PreprocessedHostRuleset:
+    def _convert_host_ruleset(
+        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
+    ) -> PreprocessedHostRuleset:
         """Precompute host lookup map
 
         Instead of a ruleset like list structure with precomputed host lists we compute a
@@ -366,7 +422,7 @@ class RulesetOptimizer:
         """
         host_values: PreprocessedHostRuleset = {}
         for rule in ruleset:
-            if "options" in rule and "disabled" in rule["options"]:
+            if _is_disabled(rule):
                 continue
 
             for hostname in self._all_matching_hosts(rule["condition"], with_foreign_hosts):
@@ -374,24 +430,26 @@ class RulesetOptimizer:
 
         return host_values
 
-    def get_service_ruleset(self, ruleset: Ruleset, with_foreign_hosts: bool,
-                            is_binary: bool) -> PreprocessedServiceRuleset:
+    def get_service_ruleset(
+        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
+    ) -> PreprocessedServiceRuleset:
         cache_id = id(ruleset), with_foreign_hosts
 
         if cache_id in self._service_ruleset_cache:
             return self._service_ruleset_cache[cache_id]
 
-        cached_ruleset = self._convert_service_ruleset(ruleset,
-                                                       with_foreign_hosts=with_foreign_hosts,
-                                                       is_binary=is_binary)
+        cached_ruleset = self._convert_service_ruleset(
+            ruleset, with_foreign_hosts=with_foreign_hosts, is_binary=is_binary
+        )
         self._service_ruleset_cache[cache_id] = cached_ruleset
         return cached_ruleset
 
-    def _convert_service_ruleset(self, ruleset: Ruleset, with_foreign_hosts: bool,
-                                 is_binary: bool) -> PreprocessedServiceRuleset:
+    def _convert_service_ruleset(
+        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
+    ) -> PreprocessedServiceRuleset:
         new_rules: PreprocessedServiceRuleset = []
         for rule in ruleset:
-            if "options" in rule and "disabled" in rule["options"]:
+            if _is_disabled(rule):
                 continue
 
             # Directly compute set of all matching hosts here, this will avoid
@@ -402,27 +460,36 @@ class RulesetOptimizer:
             service_labels_condition = rule["condition"].get("service_labels", {})
             service_labels_condition_cache_id = tuple(
                 (label_id, _tags_or_labels_cache_id(label_spec))
-                for label_id, label_spec in service_labels_condition.items())
+                for label_id, label_spec in service_labels_condition.items()
+            )
 
             # And now preprocess the configured patterns in the servlist
             new_rules.append(
-                (rule["value"], hosts, service_labels_condition, service_labels_condition_cache_id,
-                 self._convert_pattern_list(rule["condition"].get("service_description"))))
+                (
+                    rule["value"],
+                    hosts,
+                    service_labels_condition,
+                    service_labels_condition_cache_id,
+                    self._convert_pattern_list(rule["condition"].get("service_description")),
+                )
+            )
         return new_rules
 
-    def _convert_pattern_list(self, patterns: List[str]) -> PreprocessedPattern:
+    def _convert_pattern_list(
+        self, patterns: Optional[HostOrServiceConditions]
+    ) -> PreprocessedPattern:
         """Compiles a list of service match patterns to a to a single regex
 
         Reducing the number of individual regex matches improves the performance dramatically.
         This function assumes either all or no pattern is negated (like WATO creates the rules).
         """
         if not patterns:
-            return False, regex(u"")  # Match everything
+            return False, regex("")  # Match everything
 
-        negate, patterns = parse_negated_condition_list(patterns)
+        negate, parsed_patterns = parse_negated_condition_list(patterns)
 
         pattern_parts = []
-        for p in patterns:
+        for p in parsed_patterns:
             if isinstance(p, dict):
                 pattern_parts.append(p["$regex"])
             else:
@@ -430,16 +497,25 @@ class RulesetOptimizer:
 
         return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
 
-    def _all_matching_hosts(self, condition: Dict[str, Any],
-                            with_foreign_hosts: bool) -> Set[HostName]:
+    def _all_matching_hosts(
+        self, condition: RuleConditionsSpec, with_foreign_hosts: bool
+    ) -> Set[HostName]:
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
         hostlist = condition.get("host_name")
-        tags = condition.get("host_tags", {})
+        tag_conditions: TaggroupIDToTagCondition = condition.get("host_tags", {})
         labels = condition.get("host_labels", {})
         rule_path = condition.get("host_folder", "/")
 
-        cache_id = self._condition_cache_id(hostlist, tags, labels, rule_path), with_foreign_hosts
+        cache_id = (
+            self._condition_cache_id(
+                hostlist,
+                tag_conditions,
+                labels,
+                rule_path,
+            ),
+            with_foreign_hosts,
+        )
 
         try:
             return self._all_matching_hosts_match_cache[cache_id]
@@ -453,27 +529,31 @@ class RulesetOptimizer:
 
         # Thin out the valid hosts further. If the rule is located in a folder
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
-        valid_hosts = self.get_hosts_within_folder(rule_path,
-                                                   with_foreign_hosts).intersection(valid_hosts)
+        valid_hosts = self.get_hosts_within_folder(rule_path, with_foreign_hosts).intersection(
+            valid_hosts
+        )
 
-        if tags and hostlist is None and not labels:
+        if tag_conditions and hostlist is None and not labels:
             # TODO: Labels could also be optimized like the tags
-            matched_by_tags = self._match_hosts_by_tags(cache_id, valid_hosts, tags)
+            matched_by_tags = self._match_hosts_by_tags(cache_id, valid_hosts, tag_conditions)
             if matched_by_tags is not None:
                 return matched_by_tags
 
-        matching: Set[str] = set()
-        only_specific_hosts = (hostlist is not None and not isinstance(hostlist, dict) and
-                               all(not isinstance(x, dict) for x in hostlist))
+        matching: Set[HostName] = set()
+        only_specific_hosts = (
+            hostlist is not None
+            and not isinstance(hostlist, dict)
+            and all(not isinstance(x, dict) for x in hostlist)
+        )
 
         if hostlist == []:
             pass  # Empty host list -> Nothing matches
 
-        elif not tags and not labels and not hostlist:
+        elif not tag_conditions and not labels and not hostlist:
             # If no tags are specified and the hostlist only include @all (all hosts)
             matching = valid_hosts
 
-        elif not tags and not labels and only_specific_hosts and hostlist is not None:
+        elif not tag_conditions and not labels and only_specific_hosts and hostlist is not None:
             # If no tags are specified and there are only specific hosts we already have the matches
             matching = valid_hosts.intersection(hostlist)
 
@@ -487,7 +567,10 @@ class RulesetOptimizer:
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if tags and not self.matches_host_tags(self._host_tag_lists[hostname], tags):
+                if tag_conditions and not self.matches_host_tags(
+                    self._host_tags[hostname],
+                    tag_conditions,
+                ):
                     continue
 
                 if labels:
@@ -503,34 +586,43 @@ class RulesetOptimizer:
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def matches_host_name(self, host_entries, hostname):
+    def matches_host_name(
+        self, host_entries: Optional[HostOrServiceConditions], hostname: HostName
+    ) -> bool:
         if not host_entries:
             return True
 
         negate, host_entries = parse_negated_condition_list(host_entries)
+        if hostname == "":  # -> generic agent host
+            return negate
 
         for entry in host_entries:
-            use_regex = isinstance(entry, dict)
-
-            if hostname is True:  # -> generic agent host
-                continue
-
-            if not use_regex and hostname == entry:
+            if not isinstance(entry, dict) and hostname == entry:
                 return not negate
 
-            if use_regex and regex(entry["$regex"]).match(hostname) is not None:
+            if isinstance(entry, dict) and regex(entry["$regex"]).match(hostname) is not None:
                 return not negate
 
         return negate
 
-    def matches_host_tags(self, hosttags, required_tags):
-        for tag_spec in required_tags.values():
-            if matches_tag_spec(tag_spec, hosttags) is False:
-                return False
+    def matches_host_tags(
+        self,
+        hosttags: Set[Tuple[TaggroupID, TagID]],
+        required_tags: TaggroupIDToTagCondition,
+    ) -> bool:
+        return all(
+            matches_tag_condition(taggroup_id, tag_condition, hosttags)
+            for taggroup_id, tag_condition in required_tags.items()
+        )
 
-        return True
-
-    def _condition_cache_id(self, hostlist, tags, labels, rule_path):
+    # TODO: improve and cleanup types
+    def _condition_cache_id(
+        self,
+        hostlist: Optional[HostOrServiceConditions],
+        tag_conditions: TaggroupIDToTagCondition,
+        labels: Any,
+        rule_path: Any,
+    ) -> Tuple[Tuple[str, ...], Tuple[Tuple[str, Any], ...], Tuple[Tuple[Any, Any], ...], Any]:
         host_parts: List[str] = []
 
         if hostlist is not None:
@@ -550,43 +642,57 @@ class RulesetOptimizer:
         return (
             tuple(sorted(host_parts)),
             tuple(
-                (tag_id, _tags_or_labels_cache_id(tag_spec)) for tag_id, tag_spec in tags.items()),
-            tuple((label_id, _tags_or_labels_cache_id(label_spec))
-                  for label_id, label_spec in labels.items()),
+                (taggroup_id, _tags_or_labels_cache_id(tag_condition))
+                for taggroup_id, tag_condition in tag_conditions.items()
+            ),
+            tuple(
+                (label_id, _tags_or_labels_cache_id(label_spec))
+                for label_id, label_spec in labels.items()
+            ),
             rule_path,
         )
 
     # TODO: Generalize this optimization: Build some kind of key out of the tag conditions
     # (positive, negative, ...). Make it work with the new tag group based "$or" handling.
-    def _match_hosts_by_tags(self, cache_id, valid_hosts, tags):
+    def _match_hosts_by_tags(
+        self,
+        cache_id,
+        valid_hosts: Set[HostName],
+        tag_conditions: TaggroupIDToTagCondition,
+    ):
         matching = set()
         negative_match_tags = set()
         positive_match_tags = set()
-        for tag in tags.values():
-            if isinstance(tag, dict):
-                if "$ne" in tag:
-                    negative_match_tags.add(tag["$ne"])
+        for taggroup_id, tag_condition in tag_conditions.items():
+            if isinstance(tag_condition, dict):
+                if "$ne" in tag_condition:
+                    negative_match_tags.add(
+                        (
+                            taggroup_id,
+                            cast(TagConditionNE, tag_condition)["$ne"],
+                        )
+                    )
                     continue
 
-                if "$or" in tag:
+                if "$or" in tag_condition:
                     return None  # Can not be optimized, makes _all_matching_hosts proceed
 
-                if "$nor" in tag:
+                if "$nor" in tag_condition:
                     return None  # Can not be optimized, makes _all_matching_hosts proceed
 
                 raise NotImplementedError()
 
-            positive_match_tags.add(tag)
+            positive_match_tags.add((taggroup_id, tag_condition))
 
         # TODO:
-        #if has_specific_folder_tag or self._all_processed_hosts_similarity < 3.0:
+        # if has_specific_folder_tag or self._all_processed_hosts_similarity < 3.0:
         if self._all_processed_hosts_similarity < 3.0:
             # Without shared folders
             for hostname in valid_hosts:
-                host_tags = self._host_tag_lists[hostname]
-                if not positive_match_tags - host_tags:
-                    if not negative_match_tags.intersection(host_tags):
-                        matching.add(hostname)
+                if positive_match_tags <= self._host_tags[
+                    hostname
+                ] and not negative_match_tags.intersection(self._host_tags[hostname]):
+                    matching.add(hostname)
 
             self._all_matching_hosts_match_cache[cache_id] = matching
             return matching
@@ -600,22 +706,28 @@ class RulesetOptimizer:
             hosts_with_same_tag = self._filter_hosts_with_same_tags_as_host(hostname, valid_hosts)
             checked_hosts.update(hosts_with_same_tag)
 
-            tags = self._host_tag_lists[hostname]
-            if not positive_match_tags - tags:
-                if not negative_match_tags.intersection(tags):
-                    matching.update(hosts_with_same_tag)
+            if positive_match_tags <= self._host_tags[
+                hostname
+            ] and not negative_match_tags.intersection(self._host_tags[hostname]):
+                matching.update(hosts_with_same_tag)
 
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def _filter_hosts_with_same_tags_as_host(self, hostname, hosts):
+    def _filter_hosts_with_same_tags_as_host(
+        self,
+        hostname: HostName,
+        hosts: Set[HostName],
+    ):
         return self._hosts_grouped_by_tags[self._host_grouped_ref[hostname]].intersection(hosts)
 
     def get_hosts_within_folder(self, folder_path: str, with_foreign_hosts: bool) -> Set[HostName]:
         cache_id = with_foreign_hosts, folder_path
         if cache_id not in self._folder_host_lookup:
             hosts_in_folder = set()
-            relevant_hosts = self._all_configured_hosts if with_foreign_hosts else self._all_processed_hosts
+            relevant_hosts = (
+                self._all_configured_hosts if with_foreign_hosts else self._all_processed_hosts
+            )
 
             for hostname in relevant_hosts:
                 host_path = self._host_paths.get(hostname, "/")
@@ -628,19 +740,8 @@ class RulesetOptimizer:
         return self._folder_host_lookup[cache_id]
 
     def _initialize_host_lookup(self):
-        # Determine hosttags without folder tag
         for hostname in self._all_configured_hosts:
-            tags_without_folder = set(self._host_tag_lists[hostname])
-            try:
-                tags_without_folder.remove(self._host_paths.get(hostname, "/"))
-            except (KeyError, ValueError):
-                pass
-
-            self._hosttags_without_folder[hostname] = tags_without_folder
-
-        # Determine hosts with same tag setup (ignoring folder tag)
-        for hostname in self._all_configured_hosts:
-            group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
+            group_ref = tuple(sorted(self._host_tags[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
 
@@ -651,44 +752,73 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
             return "!%s" % tag_or_label_spec["$ne"]
 
         if "$or" in tag_or_label_spec:
-            return ("$or",
-                    tuple(
-                        _tags_or_labels_cache_id(sub_tag_or_label_spec)
-                        for sub_tag_or_label_spec in tag_or_label_spec["$or"]))
+            return (
+                "$or",
+                tuple(
+                    _tags_or_labels_cache_id(sub_tag_or_label_spec)
+                    for sub_tag_or_label_spec in tag_or_label_spec["$or"]
+                ),
+            )
 
         if "$nor" in tag_or_label_spec:
-            return ("$nor",
-                    tuple(
-                        _tags_or_labels_cache_id(sub_tag_or_label_spec)
-                        for sub_tag_or_label_spec in tag_or_label_spec["$nor"]))
+            return (
+                "$nor",
+                tuple(
+                    _tags_or_labels_cache_id(sub_tag_or_label_spec)
+                    for sub_tag_or_label_spec in tag_or_label_spec["$nor"]
+                ),
+            )
 
         raise NotImplementedError("Invalid tag / label spec: %r" % tag_or_label_spec)
 
     return tag_or_label_spec
 
 
-def matches_tag_spec(tag_spec: Union[dict, str], hosttags: TagList) -> bool:
-    is_not = False
-    if isinstance(tag_spec, dict):
-        if "$ne" in tag_spec:
-            is_not = True
-            tag_spec = tag_spec["$ne"]
+def matches_tag_condition(
+    taggroup_id: TaggroupID,
+    tag_condition: TagCondition,
+    hosttags: Set[Tuple[TaggroupID, TagID]],
+) -> bool:
+    if isinstance(tag_condition, dict):
+        if "$ne" in tag_condition:
+            return (
+                taggroup_id,
+                cast(TagConditionNE, tag_condition)["$ne"],
+            ) not in hosttags
 
-        elif "$or" in tag_spec:
-            return any(matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$or"])
+        if "$or" in tag_condition:
+            return any(
+                (
+                    taggroup_id,
+                    opt_tag_id,
+                )
+                in hosttags
+                for opt_tag_id in cast(
+                    TagConditionOR,
+                    tag_condition,
+                )["$or"]
+            )
 
-        elif "$nor" in tag_spec:
-            return not any(
-                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$nor"])
+        if "$nor" in tag_condition:
+            return not hosttags.intersection(
+                {
+                    (
+                        taggroup_id,
+                        opt_tag_id,
+                    )
+                    for opt_tag_id in cast(
+                        TagConditionNOR,
+                        tag_condition,
+                    )["$nor"]
+                }
+            )
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
-    matches = tag_spec in hosttags
-    if matches == is_not:
-        return False
-
-    return True
+    return (
+        taggroup_id,
+        tag_condition,
+    ) in hosttags
 
 
 def matches_labels(object_labels, required_labels) -> bool:
@@ -703,22 +833,25 @@ def matches_labels(object_labels, required_labels) -> bool:
     return True
 
 
-def parse_negated_condition_list(entries):
-    negate = False
+def parse_negated_condition_list(
+    entries: HostOrServiceConditions,
+) -> Tuple[bool, HostOrServiceConditionsSimple]:
     if isinstance(entries, dict) and "$nor" in entries:
-        negate = True
-        entries = entries["$nor"]
-    return negate, entries
+        return True, entries["$nor"]
+    if isinstance(entries, list):
+        return False, entries
+    raise ValueError("unsupported conditions")
 
 
 class RulesetToDictTransformer:
     """Transforms all rules in the given ruleset from the pre 1.6 tuple format to the dict format
     This is done in place to keep the references to the ruleset working.
     """
-    def __init__(self, tag_to_group_map):
-        super(RulesetToDictTransformer, self).__init__()
+
+    def __init__(self, tag_to_group_map: TagIDToTaggroupID) -> None:
+        super().__init__()
         self._tag_groups = tag_to_group_map
-        self._transformed_ids = set()
+        self._transformed_ids: Set[int] = set()
 
     def transform_in_place(self, ruleset, is_service, is_binary, use_ruleset_id_cache=True):
         if use_ruleset_id_cache:
@@ -788,12 +921,13 @@ class RulesetToDictTransformer:
         # Construct list of all item conditions
         for check_item in item_list:
             if negate:
-                if check_item[0] == '!':  # strip negate character
+                if check_item[0] == "!":  # strip negate character
                     check_item = check_item[1:]
                 else:
                     raise NotImplementedError(
-                        "Mixed negate / not negated rule found but not supported")
-            elif check_item[0] == '!':
+                        "Mixed negate / not negated rule found but not supported"
+                    )
+            elif check_item[0] == "!":
                 raise NotImplementedError("Mixed negate / not negated rule found but not supported")
 
             sub_conditions.append({"$regex": check_item})
@@ -835,10 +969,10 @@ class RulesetToDictTransformer:
 
         # Construct list of all host item conditions
         for check_item in host_list:
-            if check_item[0] == '!':  # strip negate character
+            if check_item[0] == "!":  # strip negate character
                 check_item = check_item[1:]
 
-            if check_item[0] == '~':
+            if check_item[0] == "~":
                 sub_conditions.append({"$regex": check_item[1:]})
                 continue
 
@@ -847,13 +981,15 @@ class RulesetToDictTransformer:
                     "Found a ruleset using CLUSTER_HOSTS as host condition. "
                     "This is not supported anymore. These rules can not be transformed "
                     "automatically to the new format. Please check out your configuration and "
-                    "replace the rules in question.")
+                    "replace the rules in question."
+                )
             if check_item == PHYSICAL_HOSTS[0]:
                 raise MKGeneralException(
                     "Found a ruleset using PHYSICAL_HOSTS as host condition. "
                     "This is not supported anymore. These rules can not be transformed "
                     "automatically to the new format. Please check out your configuration and "
-                    "replace the rules in question.")
+                    "replace the rules in question."
+                )
 
             sub_conditions.append(check_item)
 
@@ -875,7 +1011,7 @@ class RulesetToDictTransformer:
                 continue
 
             negate = False
-            if tag_id[0] == '!':
+            if tag_id[0] == "!":
                 tag_id = tag_id[1:]
                 negate = True
 
@@ -890,16 +1026,23 @@ class RulesetToDictTransformer:
         return conditions
 
 
-def get_tag_to_group_map(tag_config):
+def get_tag_to_group_map(tag_config: TagConfig) -> TagIDToTaggroupID:
     """The old rules only have a list of tags and don't know anything about the
     tag groups they are coming from. Create a map based on the current tag config
     """
-    tag_id_to_tag_group_id_map: Dict[str, str] = {}
+    tag_id_to_tag_group_id_map = {}
 
     for aux_tag in tag_config.aux_tag_list.get_tags():
         tag_id_to_tag_group_id_map[aux_tag.id] = aux_tag.id
 
     for tag_group in tag_config.tag_groups:
         for grouped_tag in tag_group.tags:
-            tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
+            # Do not care for the choices with a None value here. They are not relevant for this map
+            if grouped_tag.id is not None:
+                tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
     return tag_id_to_tag_group_id_map
+
+
+def _is_disabled(rule: RuleSpec) -> bool:
+    # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
+    return "options" in rule and bool(rule["options"].get("disabled", False))

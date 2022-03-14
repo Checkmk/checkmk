@@ -1,0 +1,71 @@
+# This is a simple entry point to execute the basic and most important Python
+# tests for Checkmk. We run tools like pylint, yapf and our py.test based unit
+# tests here. Some tests, like integration tests or tests of very specific
+# components are not executed.
+#
+# We focus on the tests that are needed by external developers, e.g. to support
+# check plugin development.
+---
+name: PR-CI
+
+on: [push, pull_request]
+
+jobs:
+  testing:
+    runs-on: ubuntu-20.04
+    env:
+      PIPENV_IGNORE_VIRTUALENVS: 1
+      USE_EXTERNAL_PIPENV_MIRROR: true
+      PYTHONWARNINGS: ignore:DeprecationWarning
+    strategy:
+      matrix:
+        include:
+        - name: Bandit tests
+          target: test-bandit
+        - name: Python formatting
+          target: test-format-python
+        - name: Pylint tests
+          target: test-pylint
+        - name: Python unit tests
+          target: test-unit
+        - name: mypy tests
+          target: test-mypy-raw
+    steps:
+    - name: Set Environment Variables
+      run: |
+        # Using existing environment variables within another variables is not working in the jobs.*.env section
+        #  more infos see: https://brandur.org/fragments/github-actions-env-vars-in-env-vars
+        echo "PIP_CACHE_DIR=$HOME/.cache/pip" >> $GITHUB_ENV
+        echo "PIPENV_CACHE_DIR=$HOME/.cache/pipenv" >> $GITHUB_ENV
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        key: pip-${{ runner.os }}-${{ hashFiles('Pipfile.lock') }}
+        path: ${{ env.PIP_CACHE_DIR  }}
+    - name: Cache pipenv
+      uses: actions/cache@v2
+      with:
+        key: pipenv-${{ runner.os }}-${{ hashFiles('Pipfile.lock') }}
+        path: ${{ env.PIPENV_CACHE_DIR  }}
+    - name: Setup Environment
+      run: |
+        # ksh: Needed for some "unit test" (test_mk_errpt_aix).
+        # librrd-dev: Needed for building rrdtool python bindings.
+        # libldap2-dev: Needed for building python-ldap.
+        # libsasl2-dev: Needed for building python-ldap.
+        # libkrb5-dev: Needed for building pykerberos.
+        # gettext: Needed for some "unit tests" (test_i18n.py)
+        sudo apt-get install ksh librrd-dev libldap2-dev libsasl2-dev libkrb5-dev gettext
+        buildscripts/infrastructure/build-nodes/scripts/install-pipenv.sh
+        make .venv
+    - name: Run ${{ matrix.name  }}
+      env:
+        TEST_TARGETS: ${{ matrix.target }}
+      run: |
+        make -C tests $TEST_TARGETS

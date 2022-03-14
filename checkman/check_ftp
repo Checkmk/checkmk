@@ -1,7 +1,7 @@
 title: FTP Server
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -14,4 +14,3 @@ description:
 
  It can check response times against given thresholds. In fact internally it
  uses the generic TCP connection check.
-

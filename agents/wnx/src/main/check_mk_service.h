@@ -10,8 +10,8 @@
 #pragma once
 #ifndef check_mk_service_h__
 #define check_mk_service_h__
-#include <cstdint>
 #include <string_view>
+
 namespace cma::cmdline {
 // Command Line parameters for service
 

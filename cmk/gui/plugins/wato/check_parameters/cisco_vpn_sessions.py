@@ -5,25 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextAscii,
-    Dictionary,
-    Integer,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_cisco_vpn_sessions():
-    return TextAscii(
+    return TextInput(
         title=_("Session type"),
-        help=_("Type of the VPN connection, either 'IPsec RA', 'IPsec L2L', 'AnyConnect SVC', "
-               "'WebVPN' or 'Summary'. The last item refers to the overall number of sessions "
-               "(summed over all session types)."),
+        help=_(
+            "Type of the VPN connection, either 'IPsec RA', 'IPsec L2L', 'AnyConnect SVC', "
+            "'WebVPN' or 'Summary'. The last item refers to the overall number of sessions "
+            "(summed over all session types)."
+        ),
         allow_empty=False,
     )
 
@@ -59,4 +56,5 @@ rulespec_registry.register(
         item_spec=_item_spec_cisco_vpn_sessions,
         parameter_valuespec=_parameter_valuespec_asa_svc_sessions,
         title=lambda: _("Cisco VPN Sessions"),
-    ))
+    )
+)

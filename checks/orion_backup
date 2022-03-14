@@ -11,26 +11,27 @@ def inventory_orion_backup(info):
 
 def check_orion_backup(item, params, info):
     map_states = {
-        '1': (1, 'inactive'),
-        '2': (0, 'OK'),
-        '3': (1, 'occured'),
-        '4': (2, 'fail'),
+        "1": (1, "inactive"),
+        "2": (0, "OK"),
+        "3": (1, "occured"),
+        "4": (2, "fail"),
     }
 
     backup_time_status, backup_time = info[0]
     state, state_readable = map_states[backup_time_status]
-    return state, 'Status: %s, Expected time: %s minutes' % (state_readable, backup_time)
+    return state, "Status: %s, Expected time: %s minutes" % (state_readable, backup_time)
 
 
-check_info['orion_backup'] = {
-    'inventory_function': inventory_orion_backup,
-    'check_function': check_orion_backup,
-    'service_description': 'Backup',
-    'snmp_info': (
-        '.1.3.6.1.4.1.20246.2.3.1.1.1.2.5.3.3',
+check_info["orion_backup"] = {
+    "inventory_function": inventory_orion_backup,
+    "check_function": check_orion_backup,
+    "service_description": "Backup",
+    "snmp_info": (
+        ".1.3.6.1.4.1.20246.2.3.1.1.1.2.5.3.3",
         [
-            '2',  # ORION-BASE-MIB::dcLossOfBackupTimeStatus
-            '3',  # ORION-BASE-MIB::dcExpectedBackupTime
-        ]),
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.20246'),
+            "2",  # ORION-BASE-MIB::dcLossOfBackupTimeStatus
+            "3",  # ORION-BASE-MIB::dcExpectedBackupTime
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20246"),
 }

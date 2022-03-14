@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+
 # <<<df_zos>>>
 # SYS5.OMVS.ALF0.HFS         720          92        504       16% /ALF0
 # HFS, Read/Write, Device:2, ACLS=Y
@@ -39,17 +42,17 @@ def parse_df_zos(info):
     options = []
 
     for line in info:
-        if line[0].startswith('#####'):
+        if line[0].startswith("#####"):
             # Add item for filesystem
             if fs and usage and options:
                 parsed.setdefault(fs, {})
-                parsed[fs].setdefault('size', usage)
-                parsed[fs].setdefault('options', options)
+                parsed[fs].setdefault("size", usage)
+                parsed[fs].setdefault("options", options)
 
             fs = None
             usage = []
             options = []
-        elif line[0].startswith('Filesystem'):
+        elif line[0].startswith("Filesystem"):
             # Ignore header line
             continue
         else:
@@ -60,15 +63,15 @@ def parse_df_zos(info):
             elif not options:
                 # Second line: filesystem options
                 for option in line:
-                    options.append(option.replace(',', ''))
-                if 'Read' in options and 'Only' in options:
-                    options.remove('Read')
-                    options.remove('Only')
-                    options.append('ReadOnly')
+                    options.append(option.replace(",", ""))
+                if "Read" in options and "Only" in options:
+                    options.remove("Read")
+                    options.remove("Only")
+                    options.append("ReadOnly")
     return parsed
 
 
-df_zos_exclude_list = ['AUTOMNT', 'TFS', 'NFS']
+df_zos_exclude_list = ["AUTOMNT", "TFS", "NFS"]
 
 
 def inventory_df_zos(parsed):
@@ -79,9 +82,9 @@ def inventory_df_zos(parsed):
         fs_ex = False
 
         # Check filesystem options
-        for option in parsed[item]['options']:
+        for option in parsed[item]["options"]:
             # Check if filesystem is rw
-            if option == 'Read/Write':
+            if option == "Read/Write":
                 fs_rw = True
 
             # Check if filesystem is excluded
@@ -90,14 +93,14 @@ def inventory_df_zos(parsed):
 
         if fs_rw and not fs_ex:
             mplist.append(item)
-    return df_inventory(mplist)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
 def check_df_zos(item, params, parsed):
     fslist = []
 
     for filesystem, fs_data in parsed.items():
-        (size_mb, used_mb, avail_mb) = map(float, fs_data['size'][0:3])
+        (size_mb, used_mb, avail_mb) = map(float, fs_data["size"][0:3])
         size_mb /= 1024
         used_mb /= 1024
         avail_mb /= 1024
@@ -106,12 +109,15 @@ def check_df_zos(item, params, parsed):
     return df_check_filesystem_list(item, params, fslist)
 
 
-check_info['df_zos'] = {
-    'parse_function': parse_df_zos,
-    'check_function': check_df_zos,
-    'inventory_function': inventory_df_zos,
-    'service_description': "Filesystem %s",
-    'has_perfdata': True,
-    'group': 'filesystem',
-    'default_levels_variable': "filesystem_default_levels",
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+check_info["df_zos"] = {
+    "parse_function": parse_df_zos,
+    "check_function": check_df_zos,
+    "inventory_function": inventory_df_zos,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

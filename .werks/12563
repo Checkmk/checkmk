@@ -1,0 +1,22 @@
+Title: Dynamic host configuration: Fix displaying of errors from remote sites
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1619444647
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The dynamic configuration can be configured to work in distributed setups. In
+this scenario, the dcd on the remote site gathers the raw host information
+(phase 1) and the central site compares the information from phase 1 with the
+Checkmk configuration and creates or deletes hosts based on the results of the
+comparison.
+
+It is possible that the central site continues to operate even in the event of
+a failure in the phase 1 execution on the remote site. In this situation the
+error will only be visible in the <tt>var/log/dcd.log</tt> on the remote site.
+On the central site, a) no update will be applied and b) the error message will
+not be visible in the user interface.

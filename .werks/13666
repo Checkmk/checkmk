@@ -1,0 +1,12 @@
+Title: Opsgenie: Fix using team names with spaces
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1643817119
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If team names contained spaces, no alert was created within Opsgenie.

@@ -18,8 +18,6 @@ $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
-	install -m 644 $(PACKAGE_DIR)/$(OMD)/logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip -f $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
@@ -39,10 +37,8 @@ $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(SKEL)/etc/bash_completion.d
 	$(TOUCH) $@
 
-omdlib-install: $(PYTHON3_CACHE_PKG_PROCESS)
+omdlib-install: $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/__init__.py
-	LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
-	    $(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/*.py
+	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m py_compile $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/*.py

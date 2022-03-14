@@ -10,20 +10,20 @@
 # Load a fake controller with known good values for the most
 # important parameters only and try to define their importance
 megaraid_bbu_refvalues = {
-    'Remaining Capacity Low': ('No', 1),  # nolearn
-    'I2c Errors Detected': ('No', 1),
-    'Temperature': ('OK', 2),
-    'Pack is about to fail & should be replaced': ('No', 1),
-    'Charging Status': ('None', 1),  # nolearn
-    'Battery State': ('Operational', 2),  # nolearn
-    'Learn Cycle Status': ('OK', 1),
-    'Learn Cycle Active': ('No', 0),
-    'Battery Pack Missing': ('No', 2),
-    'Battery Replacement required': ('No', 1),
-    'Over Temperature': ('No', 2),
-    'Over Charged': ('No', 1),
-    'Voltage': ('OK', 2),  # nolearn
-    'isSOHGood': ('Yes', 2),
+    "Remaining Capacity Low": ("No", 1),  # nolearn
+    "I2c Errors Detected": ("No", 1),
+    "Temperature": ("OK", 2),
+    "Pack is about to fail & should be replaced": ("No", 1),
+    "Charging Status": ("None", 1),  # nolearn
+    "Battery State": ("Operational", 2),  # nolearn
+    "Learn Cycle Status": ("OK", 1),
+    "Learn Cycle Active": ("No", 0),
+    "Battery Pack Missing": ("No", 2),
+    "Battery Replacement required": ("No", 1),
+    "Over Temperature": ("No", 2),
+    "Over Charged": ("No", 1),
+    "Voltage": ("OK", 2),  # nolearn
+    "isSOHGood": ("Yes", 2),
 }
 
 
@@ -63,12 +63,12 @@ def check_megaraid_bbu(item, _no_params, info):
     broken = []
     state = 0
     # get current charge level
-    if 'Relative State of Charge' not in controller:
+    if "Relative State of Charge" not in controller:
         charge = ", No charge information reported for this controller"
     else:
-        charge = ", Charge is %s" % controller['Relative State of Charge']
-        if 'Full Charge Capacity' in controller:
-            charge += ", Capacity is %s" % controller['Full Charge Capacity']
+        charge = ", Charge is %s" % controller["Relative State of Charge"]
+        if "Full Charge Capacity" in controller:
+            charge += ", Capacity is %s" % controller["Full Charge Capacity"]
 
     # verify defined important parameters to current level
     for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():
@@ -84,10 +84,10 @@ def check_megaraid_bbu(item, _no_params, info):
             elif varname in ["Temperature", "Voltage"] and value[0].isdigit():
                 pass
             elif value != refvalue:
-                text = '%s is %s' % (varname, value)
+                text = "%s is %s" % (varname, value)
                 if refstate:
-                    text += ' (%s)' % ("!" * refstate)
-                text += ' (Expected: %s)' % refvalue
+                    text += " (%s)" % ("!" * refstate)
+                text += " (Expected: %s)" % refvalue
                 broken.append(text)
                 state = max(state, refstate)
         except KeyError:
@@ -102,7 +102,7 @@ def check_megaraid_bbu(item, _no_params, info):
 
 
 check_info["megaraid_bbu"] = {
-    'check_function': check_megaraid_bbu,
-    'inventory_function': inventory_megaraid_bbu,
-    'service_description': 'RAID Adapter/BBU %s',
+    "check_function": check_megaraid_bbu,
+    "inventory_function": inventory_megaraid_bbu,
+    "service_description": "RAID Adapter/BBU %s",
 }

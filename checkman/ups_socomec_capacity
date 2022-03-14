@@ -1,7 +1,7 @@
 title: Socomec UPS Device: Remaining Battery Capacity
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors
@@ -13,6 +13,5 @@ description:
 
  Please refer to the manpage of {ups_capacity} for configuration examples.
 
-inventory:
+discovery:
  One service is created.
-

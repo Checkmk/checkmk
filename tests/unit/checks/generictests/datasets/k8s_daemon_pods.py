@@ -8,7 +8,7 @@
 # type: ignore
 
 
-from cmk.base.discovered_labels import HostLabel
+
 
 checkname = 'k8s_daemon_pods'
 

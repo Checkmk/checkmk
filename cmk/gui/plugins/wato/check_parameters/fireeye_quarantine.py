@@ -5,30 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_fireeye_quarantine():
-    return Dictionary(elements=[(
-        "usage",
-        Tuple(
-            title=_("Levels for Quarantine Usage"),
-            elements=[
-                Integer(title="Warning at", default_value=70, unit="%"),
-                Integer(title="Critical at", default_value=80, unit="%"),
-            ],
-        ),
-    )],)
+    return Dictionary(
+        elements=[
+            (
+                "usage",
+                Tuple(
+                    title=_("Levels for Quarantine Usage"),
+                    elements=[
+                        Integer(title="Warning at", default_value=70, unit="%"),
+                        Integer(title="Critical at", default_value=80, unit="%"),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_quarantine,
         title=lambda: _("Fireeye Quarantine Usage"),
-    ))
+    )
+)

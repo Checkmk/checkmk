@@ -7,10 +7,13 @@
 import argparse
 import sys
 import urllib.parse
+
 import requests
 import urllib3  # type: ignore[import]
-from cmk.utils.exceptions import MKGeneralException
+
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKGeneralException
+
 cmk.utils.password_store.replace_passwords()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -31,33 +34,30 @@ def main():
 
 def handle_request(args):
 
-    url = urllib.parse.urlunparse((args.protocol, "%s:%d" % (args.hostname, args.port),
-                                   "%s/_count" % args.index.replace(" ", ","), None, None, None))
+    url = urllib.parse.urlunparse(
+        (
+            args.protocol,
+            "%s:%d" % (args.hostname, args.port),
+            "%s/_count" % args.index.replace(" ", ","),
+            None,
+            None,
+            None,
+        )
+    )
 
     query = {
         "query": {
             "bool": {
                 "must": [
-                    {
-                        "query_string": {
-                            "query": args.pattern
-                        }
-                    },
-                    {
-                        "range": {
-                            "@timestamp": {
-                                "gte": "now-%ds" % args.timerange,
-                                "lt": "now"
-                            }
-                        }
-                    },
+                    {"query_string": {"query": args.pattern}},
+                    {"range": {"@timestamp": {"gte": "now-%ds" % args.timerange, "lt": "now"}}},
                 ]
             }
         },
     }
 
     if args.fieldname:
-        query['query']['bool']['must'][0]['query_string']['fields'] = args.fieldname.split(" ")
+        query["query"]["bool"]["must"][0]["query_string"]["fields"] = args.fieldname.split(" ")
 
     if args.user and args.password:
         raw_response = requests.get(url, json=query, auth=(args.user, args.password))
@@ -94,8 +94,9 @@ def parse_arguments(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
 
     parser.add_argument(
         "-u",

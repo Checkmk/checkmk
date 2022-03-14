@@ -1,12 +1,11 @@
 title: DECRU NAS: CPU Utilization
 agents: snmp
 catalog: hw/network/decru
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization of a DECRU NAS
  without applying any levels.
 
-inventory:
+discovery:
  One service is created for each DECRU NAS.
-

@@ -1,7 +1,7 @@
 title: Arbor Peakflow TMS: Updates
 agents: snmp
 catalog: hw/network/arbor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports time of last change for configuration of mitigation and
@@ -13,7 +13,7 @@ description:
 
  This check uses the PEAKFLOW-TMS-MIB.
 
-inventory:
+discovery:
  One service is created one for each type of configuration supported.
 
 item:

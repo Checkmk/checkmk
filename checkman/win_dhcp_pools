@@ -1,7 +1,7 @@
 title: Windows DHCP: Number of Free Addresses in DHCP Pools
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of "netsh dhcp server show mibinfo" as sent by the
@@ -18,6 +18,5 @@ description:
 item:
  The name of the DHCP pool as configured on the DHCP server.
 
-inventory:
+discovery:
  One service is created for each DHCP pool on the DHCP server.
-

@@ -27,7 +27,11 @@ def parse_citrix_state(info):
         elif line[0] == "HostingServer":
             parsed["hosting_server"] = " ".join(line[1:])
         elif line[0] in [
-                "FaultState", "MaintenanceMode", "PowerState", "RegistrationState", "VMToolsState"
+            "FaultState",
+            "MaintenanceMode",
+            "PowerState",
+            "RegistrationState",
+            "VMToolsState",
         ]:
             parsed["instance"][line[0]] = line[1]
 
@@ -59,7 +63,7 @@ check_info["citrix_state.controller"] = {
     "service_description": "Citrix Controller",
 }
 
-#.
+# .
 #   .--Hosting Server------------------------------------------------------.
 #   | _   _           _   _               ____                             |
 #   || | | | ___  ___| |_(_)_ __   __ _  / ___|  ___ _ ____   _____ _ __   |
@@ -85,7 +89,7 @@ check_info["citrix_state.hosting_server"] = {
     "service_description": "Citrix Hosting Server",
 }
 
-#.
+# .
 #   .--State---------------------------------------------------------------.
 #   |                       ____  _        _                               |
 #   |                      / ___|| |_ __ _| |_ ___                         |

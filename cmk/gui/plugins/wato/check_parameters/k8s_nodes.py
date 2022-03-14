@@ -5,38 +5,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Integer,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
+
+######################################################################
+# NOTE: This valuespec and associated check are deprecated and will be
+#       removed in Checkmk version 2.2.
+######################################################################
 
 
 def _parameter_valuespec_k8s_nodes():
-    return Dictionary(elements=[
-        ('levels',
-         Tuple(
-             title=_('Upper levels'),
-             elements=[
-                 Integer(title=_("Warning above")),
-                 Integer(title=_("Critical above")),
-             ],
-         )),
-        ('levels_lower',
-         Tuple(
-             title=_('Lower levels'),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper levels"),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower levels"),
+                    elements=[
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -46,4 +52,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_nodes,
         title=lambda: _("Kubernetes nodes"),
-    ))
+        is_deprecated=True,
+    )
+)

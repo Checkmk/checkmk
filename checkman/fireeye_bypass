@@ -1,7 +1,7 @@
 title: FireEye Appliances: Bypass Mail Rate
 agents: snmp
 catalog: hw/network/fireeye
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors bypass email count
@@ -14,6 +14,5 @@ description:
 
  To reset the expected value, Tabula Rasa is needed.
 
-inventory:
+discovery:
  One service is created.
-

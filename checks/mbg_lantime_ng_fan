@@ -40,16 +40,12 @@ def parse_mbg_lantime_ng_fan(info):
         )
 
         parsed.setdefault(
-            index, {
-                "status": {
-                    "state": fan_state,
-                    "name": fan_state_name
-                },
-                "error": {
-                    "state": error_state,
-                    "name": error_name
-                }
-            })
+            index,
+            {
+                "status": {"state": fan_state, "name": fan_state_name},
+                "error": {"state": error_state, "name": error_name},
+            },
+        )
 
     return parsed
 
@@ -77,6 +73,7 @@ check_info["mbg_lantime_ng_fan"] = {
             1,  # mgbLtNgSysFanIndex
             2,  # mgbLtNgSysFanStatus
             3,  # mgbLtNgSysFanError
-        ]),
+        ],
+    ),
     "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
 }

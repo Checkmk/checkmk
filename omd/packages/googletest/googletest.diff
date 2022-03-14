@@ -1,6 +1,6 @@
-diff -Nur googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h includes/googletest/gtest/gtest-param-test.h
---- includes/googletest/gtest/gtest-param-test.h.orig	2021-02-05 19:41:32.000000000 +0100
-+++ includes/googletest/gtest/gtest-param-test.h	2021-02-11 16:06:48.701307330 +0100
+diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/gtest-param-test.h googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h
+--- googletest-f3ef7e173f.orig/googletest/include/gtest/gtest-param-test.h	2021-02-05 19:41:32.000000000 +0100
++++ googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h	2022-01-07 14:25:06.828302401 +0100
 @@ -428,12 +428,12 @@
                ::testing::internal::CodeLocation(__FILE__, __LINE__));          \
        return 0;                                                                \
@@ -25,9 +25,90 @@ diff -Nur googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h incl
        GTEST_ATTRIBUTE_UNUSED_ =                                               \
            ::testing::UnitTest::GetInstance()                                  \
                ->parameterized_test_registry()                                 \
-diff -Nur googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-internal.h includes/googletest/gtest/internal/gtest-internal.h
---- includes/googletest/gtest/internal/gtest-internal.h.orig	2021-02-05 19:41:32.000000000 +0100
-+++ includes/googletest/gtest/internal/gtest-internal.h	2021-02-11 13:46:26.191391003 +0100
+diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-death-test-internal.h googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-death-test-internal.h
+--- googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-death-test-internal.h	2021-02-05 19:41:32.000000000 +0100
++++ googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-01-07 14:25:06.828302401 +0100
+@@ -219,14 +219,14 @@
+             #statement,                                                        \
+             ::testing::internal::MakeDeathTestMatcher(regex_or_matcher),       \
+             __FILE__, __LINE__, &gtest_dt)) {                                  \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__);                        \
++      goto GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__); /*NOLINT*/             \
+     }                                                                          \
+     if (gtest_dt != nullptr) {                                                 \
+       std::unique_ptr< ::testing::internal::DeathTest> gtest_dt_ptr(gtest_dt); \
+       switch (gtest_dt->AssumeRole()) {                                        \
+         case ::testing::internal::DeathTest::OVERSEE_TEST:                     \
+           if (!gtest_dt->Passed(predicate(gtest_dt->Wait()))) {                \
+-            goto GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__);                  \
++            goto GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__); /*NOLINT*/       \
+           }                                                                    \
+           break;                                                               \
+         case ::testing::internal::DeathTest::EXECUTE_TEST: {                   \
+diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-internal.h googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-internal.h
+--- googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-internal.h	2021-02-05 19:41:32.000000000 +0100
++++ googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-internal.h	2022-01-07 14:25:06.828302401 +0100
+@@ -1405,7 +1405,7 @@
+     gtest_msg.value += " with description \"";                                 \
+     gtest_msg.value += e.what();                                               \
+     gtest_msg.value += "\".";                                                  \
+-    goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);                \
++    goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); /*NOLINT*/     \
+   }
+ 
+ #else  // GTEST_HAS_EXCEPTIONS
+@@ -1428,13 +1428,13 @@
+       gtest_msg.value = "Expected: " #statement                             \
+                         " throws an exception of type " #expected_exception \
+                         ".\n  Actual: it throws a different type.";         \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);           \
++      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); /*NOLINT*/ \
+     }                                                                       \
+     if (!gtest_caught_expected) {                                           \
+       gtest_msg.value = "Expected: " #statement                             \
+                         " throws an exception of type " #expected_exception \
+                         ".\n  Actual: it throws nothing.";                  \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);           \
++      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); /*NOLINT*/ \
+     }                                                                       \
+   } else /*NOLINT*/                                                         \
+     GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__)                   \
+@@ -1449,7 +1449,7 @@
+     gtest_msg.value += " with description \"";                    \
+     gtest_msg.value += e.what();                                  \
+     gtest_msg.value += "\".";                                     \
+-    goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); \
++    goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); /*NOLINT*/ \
+   }
+ 
+ #else  // GTEST_HAS_EXCEPTIONS
+@@ -1467,7 +1467,7 @@
+     GTEST_TEST_NO_THROW_CATCH_STD_EXCEPTION_() \
+     catch (...) { \
+       gtest_msg.value = "it throws."; \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); \
++      goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); /*NOLINT*/ \
+     } \
+   } else \
+     GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__): \
+@@ -1485,7 +1485,7 @@
+       gtest_caught_any = true; \
+     } \
+     if (!gtest_caught_any) { \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__); \
++      goto GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__); /*NOLINT*/ \
+     } \
+   } else \
+     GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__): \
+@@ -1511,7 +1511,7 @@
+     ::testing::internal::HasNewFatalFailureHelper gtest_fatal_failure_checker; \
+     GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement); \
+     if (gtest_fatal_failure_checker.has_new_fatal_failure()) { \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__); \
++      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__); /*NOLINT*/ \
+     } \
+   } else \
+     GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__): \
 @@ -1541,11 +1541,11 @@
                                                                                \
     private:                                                                   \

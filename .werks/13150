@@ -1,0 +1,19 @@
+Title: Format of fallback notifications
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1630080393
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+In previous Checkmk versions fallback emails were sent in a predefined
+plain text format. The content of these emails was not configurable.
+
+Now, fallback notifications are sent either by the plugin ASCII Email
+or HTML Email and can be configured accordingly. By default the plugin
+ASCII Email is used.
+
+The format of fallback emails can be configurede with the Global setting
+"Fallback notification email format".

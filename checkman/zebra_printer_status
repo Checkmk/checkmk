@@ -1,11 +1,11 @@
 title: Zebra Printer: Status
 agents: snmp
 catalog: hw/printer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks shows the printer status of a Zebra printer. If a printer is offline the status of the check
  is {CRITICAL}, if the printer is online, printing or warming up the status is {OK}.
 
-inventory:
+discovery:
  One service is created for each device.

@@ -42,7 +42,7 @@ public:
                                           const CSVSeparators &separators,
                                           Encoding data_encoding);
 
-    virtual ~Renderer();
+    virtual ~Renderer() = default;
 
     // default implementation for (un)signed int/long
     template <typename T>
@@ -83,7 +83,7 @@ public:
     virtual void separateSublistElements() = 0;
     virtual void endSublist() = 0;
 
-    // Output a dictionary, see CustomVarsDictColumn.
+    // Output a dictionary, see DictColumn.
     virtual void beginDict() = 0;
     virtual void separateDictElements() = 0;
     virtual void separateDictKeyValue() = 0;
@@ -93,7 +93,8 @@ protected:
     std::ostream &_os;
     const Encoding _data_encoding;
 
-    Renderer(std::ostream &os, Logger *logger, Encoding data_encoding);
+    Renderer(std::ostream &os, Logger *logger, Encoding data_encoding)
+        : _os(os), _data_encoding(data_encoding), _logger(logger) {}
 
     void outputByteString(const std::string &prefix,
                           const std::vector<char> &value);
@@ -219,7 +220,6 @@ public:
                 _list.renderer().separateListElements();
             }
         }
-        ~BeginEnd() = default;
 
     private:
         ListRenderer &_list;
@@ -257,7 +257,6 @@ public:
                 _sublist.renderer().separateSublistElements();
             }
         }
-        ~BeginEnd() = default;
 
     private:
         SublistRenderer &_sublist;
@@ -295,7 +294,6 @@ public:
                 _dict.renderer().separateDictElements();
             }
         }
-        ~BeginEnd() = default;
 
     private:
         DictRenderer &_dict;

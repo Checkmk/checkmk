@@ -1,7 +1,7 @@
 title: APC InRow Cooling Devices: Temperature
 agents: snmp
 catalog: hw/environment/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The current temperature of all sensors in an InRow Cooling device.
@@ -15,6 +15,6 @@ description:
 item:
  The current mode of the check (i.e. RackInlet, Supply Air, Return Air, Entering Fluid, Leaving Fluid).
 
-inventory:
+discovery:
  One service is created for each temperature sensor:
  Entering/Leaving Fluid, Supply/Return Air, Rack Inlet

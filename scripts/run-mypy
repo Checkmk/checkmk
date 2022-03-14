@@ -7,7 +7,10 @@
 # tell mypy about the relevant paths using the MYPYPATH environment variable
 set -e
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
+
+# --no-print-directory prevents make dir change messages in the output
+PYTHON_MAJOR_DOT_MINOR=$(make --no-print-directory -f "$REPO_PATH/defines.make" print-PYTHON_MAJOR_DOT_MINOR)
 
 # Detect whether or not mypy is available and print out an error that is in the
 # same format as mypy issues. This message is understood by e.g. vims ALE and
@@ -27,10 +30,13 @@ fi
 
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
-# NOTE: In case of failure, we exit with code 255 to stop a potential xargs.
-MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$REPO_PATH/tests/typeshed" \
+# shellcheck disable=SC2086
+MYPYPATH="$REPO_PATH:\
+$REPO_PATH/livestatus/api/python:\
+$REPO_PATH/omd/packages/omd:\
+$REPO_PATH/agent-receiver" \
     exec "$REPO_PATH/scripts/run-pipenv" run mypy \
-    --python-version 3.8 \
+    --python-version "${PYTHON_MAJOR_DOT_MINOR}" \
     --scripts-are-modules \
     --show-error-codes \
     --check-untyped-defs \
@@ -38,4 +44,4 @@ MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/om
     --no-implicit-optional \
     --cache-dir=/dev/null \
     ${JUNIT_XML} \
-    "$@" || exit 255
+    "$@"

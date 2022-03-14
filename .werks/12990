@@ -1,0 +1,12 @@
+Title: <tt>allnet_ip_sensoric_humidity</tt>: Discover On Devices With Newer Firmware
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627310192
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>allnet_ip_sensoric_humidity</tt>, which monitors humidity sensors
+of ALLNET IP Sensoric devices, will now discover services on devices with newer firmware.

@@ -5,37 +5,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
+import abc
 import ast
+import enum
 import errno
 import os
 import time
-import abc
-import enum
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, NamedTuple,
-                    TypeVar, Generic)
 from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Type,
+    TYPE_CHECKING,
+    TypeVar,
+    Union,
+)
+
+from livestatus import SiteId
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, Labels
 from cmk.utils.object_diff import make_object_diff
+from cmk.utils.type_defs import Labels, UserId
 
 import cmk.gui.utils
-from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.globals import request
-from cmk.gui import config, escaping
-from cmk.gui.config import SiteId
-from cmk.gui.i18n import _
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import DropdownChoice
-
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, request, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_domain_registry, DomainSettings
+from cmk.gui.sites import activation_sites, site_is_local
+from cmk.gui.utils import escaping
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib import search
-
-from cmk.gui.plugins.watolib import config_domain_registry, ABCConfigDomain
 
 if TYPE_CHECKING:
     from cmk.gui.watolib.hosts_and_folders import CREHost
@@ -43,11 +56,12 @@ if TYPE_CHECKING:
 ChangeSpec = Dict[str, Any]
 LogMessage = Union[str, HTML]
 
-_VT = TypeVar('_VT')
+_VT = TypeVar("_VT")
 
 
 class ObjectRefType(enum.Enum):
     """Known types of objects"""
+
     Folder = "Folder"
     Host = "Host"
     User = "User"
@@ -58,6 +72,7 @@ class ObjectRefType(enum.Enum):
 @dataclass
 class ObjectRef:
     """Persisted in audit log and site changes to reference a Checkmk configuration object"""
+
     object_type: ObjectRefType
     ident: str
     labels: Labels = field(default_factory=dict)
@@ -80,29 +95,32 @@ class ObjectRef:
         )
 
 
-class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
+class ABCAppendStore(Generic[_VT], abc.ABC):
     """Managing a file with structured data that can be appended in a cheap way
 
     The file holds basic python structures separated by "\0".
     """
+
     @staticmethod
     @abc.abstractmethod
     def make_path(*args: str) -> Path:
         raise NotImplementedError()
 
     @staticmethod
-    def _serialize(raw: _VT) -> Any:
+    @abc.abstractmethod
+    def _serialize(entry: _VT) -> object:
         """Prepare _VT objects for serialization
 
         Override this to execute some logic before repr()"""
-        return raw
+        raise NotImplementedError()
 
     @staticmethod
-    def _deserialize(raw: Any) -> _VT:
+    @abc.abstractmethod
+    def _deserialize(raw: object) -> _VT:
         """Create _VT objects from serialized data
 
         Override this to execute some logic after literal_eval() to produce _VT objects"""
-        return raw
+        raise NotImplementedError()
 
     def __init__(self, path: Path) -> None:
         self._path = path
@@ -157,7 +175,7 @@ class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
             path.chmod(0o660)
 
         except Exception as e:
-            raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
+            raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
 
         finally:
             store.release_lock(path)
@@ -177,30 +195,33 @@ def _wato_var_dir() -> Path:
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
-    Entry = NamedTuple("Entry", [
-        ("time", int),
-        ("object_ref", Optional[ObjectRef]),
-        ("user_id", str),
-        ("action", str),
-        ("text", LogMessage),
-        ("diff_text", Optional[str]),
-    ])
+    class Entry(NamedTuple):
+        time: int
+        object_ref: Optional[ObjectRef]
+        user_id: str
+        action: str
+        text: LogMessage
+        diff_text: Optional[str]
 
     @staticmethod
     def make_path(*args: str) -> Path:
         return _wato_var_dir() / "log" / "wato_audit.log"
 
     @staticmethod
-    def _serialize(entry: "AuditLogStore.Entry") -> Dict:
+    def _serialize(entry: "AuditLogStore.Entry") -> object:
         raw = entry._asdict()
-        raw["text"] = (("html", str(entry.text)) if isinstance(entry.text, HTML) else
-                       ("str", entry.text))
+        raw["text"] = (
+            ("html", str(entry.text)) if isinstance(entry.text, HTML) else ("str", entry.text)
+        )
         raw["object_ref"] = raw["object_ref"].serialize() if raw["object_ref"] else None
         return raw
 
     @staticmethod
-    def _deserialize(raw: Dict) -> "AuditLogStore.Entry":
-        raw["text"] = (HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1])
+    def _deserialize(raw: object) -> "AuditLogStore.Entry":
+        if not isinstance(raw, dict):
+            raise ValueError("expected a dictionary")
+        # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
+        raw["text"] = HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1]
         raw["object_ref"] = ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
         return AuditLogStore.Entry(**raw)
 
@@ -222,13 +243,18 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         self._path.rename(newpath)
 
 
-def _log_entry(action: str, message: Union[HTML, str], object_ref: Optional[ObjectRef],
-               user_id: Optional[UserId], diff_text: Optional[str]) -> None:
+def _log_entry(
+    action: str,
+    message: Union[HTML, str],
+    object_ref: Optional[ObjectRef],
+    user_id: Optional[UserId],
+    diff_text: Optional[str],
+) -> None:
 
     entry = AuditLogStore.Entry(
         time=int(time.time()),
         object_ref=object_ref,
-        user_id=str(user_id or config.user.id or "-"),
+        user_id=str(user_id or user.id or "-"),
         action=action,
         text=message,
         diff_text=diff_text,
@@ -237,11 +263,13 @@ def _log_entry(action: str, message: Union[HTML, str], object_ref: Optional[Obje
     AuditLogStore(AuditLogStore.make_path()).append(entry)
 
 
-def log_audit(action: str,
-              message: LogMessage,
-              object_ref: Optional[ObjectRef] = None,
-              user_id: Optional[UserId] = None,
-              diff_text: Optional[str] = None) -> None:
+def log_audit(
+    action: str,
+    message: LogMessage,
+    object_ref: Optional[ObjectRef] = None,
+    user_id: Optional[UserId] = None,
+    diff_text: Optional[str] = None,
+) -> None:
 
     if config.wato_use_git:
         if isinstance(message, HTML):
@@ -257,61 +285,110 @@ def make_diff_text(old_object: Any, new_object: Any) -> Optional[str]:
     return None
 
 
-def add_change(action_name: str,
-               text: LogMessage,
-               object_ref: Optional[ObjectRef] = None,
-               diff_text: Optional[str] = None,
-               add_user: bool = True,
-               need_sync: Optional[bool] = None,
-               need_restart: Optional[bool] = None,
-               domains: Optional[List[Type[ABCConfigDomain]]] = None,
-               sites: Optional[List[SiteId]] = None) -> None:
+def add_change(
+    action_name: str,
+    text: LogMessage,
+    object_ref: Optional[ObjectRef] = None,
+    diff_text: Optional[str] = None,
+    add_user: bool = True,
+    need_sync: Optional[bool] = None,
+    need_restart: Optional[bool] = None,
+    domains: Optional[List[Type[ABCConfigDomain]]] = None,
+    sites: Optional[List[SiteId]] = None,
+    domain_settings: Optional[DomainSettings] = None,
+) -> None:
 
-    log_audit(action=action_name,
-              message=text,
-              object_ref=object_ref,
-              user_id=config.user.id if add_user else UserId(''),
-              diff_text=diff_text)
+    log_audit(
+        action=action_name,
+        message=text,
+        object_ref=object_ref,
+        user_id=user.id if add_user else UserId(""),
+        diff_text=diff_text,
+    )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     search.update_index_background(action_name)
 
-    # On each change to the Checkmk configuration mark the agents to be rebuild
-    # TODO: Really? Why?
-    #if has_agent_bakery():
-    #    import cmk.gui.cee.agent_bakery as agent_bakery
-    #    agent_bakery.mark_need_to_bake_agents()
-
-    ActivateChangesWriter().add_change(action_name, text, object_ref, add_user, need_sync,
-                                       need_restart, domains, sites)
+    ActivateChangesWriter().add_change(
+        action_name,
+        text,
+        object_ref,
+        add_user,
+        need_sync,
+        need_restart,
+        domains,
+        sites,
+        domain_settings,
+    )
 
 
 class ActivateChangesWriter:
-    def add_change(self, action_name: str, text: LogMessage, object_ref: Optional[ObjectRef],
-                   add_user: bool, need_sync: Optional[bool], need_restart: Optional[bool],
-                   domains: Optional[List[Type[ABCConfigDomain]]],
-                   sites: Optional[Iterable[SiteId]]) -> None:
+    _enabled = True
+
+    @classmethod
+    @contextmanager
+    def disable(cls) -> Iterator[None]:
+        try:
+            cls._enabled = False
+            yield
+        finally:
+            cls._enabled = True
+
+    def add_change(
+        self,
+        action_name: str,
+        text: LogMessage,
+        object_ref: Optional[ObjectRef],
+        add_user: bool,
+        need_sync: Optional[bool],
+        need_restart: Optional[bool],
+        domains: Optional[List[Type[ABCConfigDomain]]],
+        sites: Optional[Iterable[SiteId]],
+        domain_settings: Optional[DomainSettings],
+    ) -> None:
+        if not ActivateChangesWriter._enabled:
+            return
+
         # Default to a core only change
         if domains is None:
             domains = [config_domain_registry["check_mk"]]
 
         # All replication sites in case no specific site is given
         if sites is None:
-            sites = config.activation_sites().keys()
+            sites = activation_sites().keys()
 
         change_id = self._new_change_id()
 
         for site_id in sites:
-            self._add_change_to_site(site_id, change_id, action_name, text, object_ref, add_user,
-                                     need_sync, need_restart, domains)
+            self._add_change_to_site(
+                site_id,
+                change_id,
+                action_name,
+                text,
+                object_ref,
+                add_user,
+                need_sync,
+                need_restart,
+                domains,
+                domain_settings,
+            )
 
     def _new_change_id(self) -> str:
         return cmk.gui.utils.gen_id()
 
-    def _add_change_to_site(self, site_id: SiteId, change_id: str, action_name: str,
-                            text: LogMessage, object_ref: Optional[ObjectRef], add_user: bool,
-                            need_sync: Optional[bool], need_restart: Optional[bool],
-                            domains: List[Type[ABCConfigDomain]]) -> None:
+    def _add_change_to_site(
+        self,
+        site_id: SiteId,
+        change_id: str,
+        action_name: str,
+        text: LogMessage,
+        object_ref: Optional[ObjectRef],
+        add_user: bool,
+        need_sync: Optional[bool],
+        need_restart: Optional[bool],
+        domains: List[Type[ABCConfigDomain]],
+        domain_settings: Optional[DomainSettings],
+    ) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
             need_restart = any(d.needs_activation for d in domains)
@@ -328,36 +405,43 @@ class ActivateChangesWriter:
         # If the local site don't need a restart, there is no reason to add a
         # change for that site. Otherwise the activation page would show a
         # change but the site would not be selected for activation.
-        if config.site_is_local(site_id) and need_restart is False:
+        if site_is_local(site_id) and need_restart is False:
             return None
 
-        SiteChanges(SiteChanges.make_path(site_id)).append({
-            "id": change_id,
-            "action_name": action_name,
-            "text": "%s" % text,
-            "object": object_ref,
-            "user_id": config.user.id if add_user else None,
-            "domains": [d.ident() for d in domains],
-            "time": time.time(),
-            "need_sync": need_sync,
-            "need_restart": need_restart,
-        })
+        SiteChanges(SiteChanges.make_path(site_id)).append(
+            {
+                "id": change_id,
+                "action_name": action_name,
+                "text": "%s" % text,
+                "object": object_ref,
+                "user_id": user.id if add_user else None,
+                "domains": [d.ident() for d in domains],
+                "time": time.time(),
+                "need_sync": need_sync,
+                "need_restart": need_restart,
+                "domain_settings": domain_settings or {},
+            }
+        )
 
 
 class SiteChanges(ABCAppendStore[ChangeSpec]):
     """Manage persisted changes of a single site"""
+
     @staticmethod
     def make_path(*args: str) -> Path:
         return _wato_var_dir() / ("replication_changes_%s.mk" % args[0])
 
     @staticmethod
-    def _serialize(entry: Dict) -> Dict:
+    def _serialize(entry: ChangeSpec) -> object:
         raw = entry.copy()
         raw["object"] = raw["object"].serialize() if raw["object"] else None
         return raw
 
     @staticmethod
-    def _deserialize(raw: Dict) -> Dict:
+    def _deserialize(raw: object) -> ChangeSpec:
+        if not isinstance(raw, dict):
+            raise ValueError("expected a dictionary")
+        # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
         if isinstance(raw["object"], tuple):
             # Migrate the pre 2.0 change entries (Two element tuple: ("Folder/Host", "ident"))
             type_name, ident = raw["object"]
@@ -371,23 +455,30 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
         return raw
 
 
-def add_service_change(host: "CREHost",
-                       action_name: str,
-                       text: str,
-                       diff_text: Optional[str] = None,
-                       need_sync: bool = False) -> None:
-    add_change(action_name,
-               text,
-               object_ref=host.object_ref(),
-               sites=[host.site_id()],
-               diff_text=diff_text,
-               need_sync=need_sync)
+def add_service_change(
+    host: "CREHost",
+    action_name: str,
+    text: str,
+    diff_text: Optional[str] = None,
+    need_sync: bool = False,
+) -> None:
+    add_change(
+        action_name,
+        text,
+        object_ref=host.object_ref(),
+        sites=[host.site_id()],
+        diff_text=diff_text,
+        need_sync=need_sync,
+    )
 
 
 def make_object_audit_log_url(object_ref: ObjectRef) -> str:
-    return makeuri_contextless(request, [
-        ("mode", "auditlog"),
-        ("options_object_type", DropdownChoice.option_id(object_ref.object_type)),
-        ("options_object_ident", object_ref.ident),
-    ],
-                               filename="wato.py")
+    return makeuri_contextless(
+        request,
+        [
+            ("mode", "auditlog"),
+            ("options_object_type", DropdownChoice.option_id(object_ref.object_type)),
+            ("options_object_ident", object_ref.ident),
+        ],
+        filename="wato.py",
+    )

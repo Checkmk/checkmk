@@ -9,17 +9,18 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 from cmk.base.plugins.agent_based.aws_ec2 import EC2DefaultItemName
 
 #   .--status check--------------------------------------------------------.
@@ -38,8 +39,8 @@ def check_aws_ec2_status_check(item, params, parsed):
     go_stale = True
 
     for title, key in [
-        ('System', 'StatusCheckFailed_System'),
-        ('Instance', 'StatusCheckFailed_Instance'),
+        ("System", "StatusCheckFailed_System"),
+        ("Instance", "StatusCheckFailed_Instance"),
     ]:
         try:
             state, state_readable = _get_status_check_readable(parsed[key])
@@ -58,16 +59,16 @@ def _get_status_check_readable(value):
     return 2, "failed"
 
 
-check_info['aws_ec2'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
+check_info["aws_ec2"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
         p,
-        ['StatusCheckFailed_System', 'StatusCheckFailed_Instance'],
+        ["StatusCheckFailed_System", "StatusCheckFailed_Instance"],
     ),
-    'check_function': check_aws_ec2_status_check,
-    'service_description': 'AWS/EC2 Status Check',
+    "check_function": check_aws_ec2_status_check,
+    "service_description": "AWS/EC2 Status Check",
 }
 
-#.
+# .
 #   .--CPU credits---------------------------------------------------------.
 #   |           ____ ____  _   _                     _ _ _                 |
 #   |          / ___|  _ \| | | |   ___ _ __ ___  __| (_) |_ ___           |
@@ -77,40 +78,45 @@ check_info['aws_ec2'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['aws_cpu_credits'] = {
-    'balance_levels_lower': (10, 5),
+factory_settings["aws_cpu_credits"] = {
+    "balance_levels_lower": (10, 5),
 }
 
 
 def check_aws_ec2_cpu_credits(item, params, parsed):
-    return check_aws_metrics([{
-        'metric_val': parsed.get(cw_metric_name),
-        'metric_name': metric_name,
-        'levels': levels,
-        'human_readable_func': human_readable_func,
-        'info_name': info_name,
-    } for cw_metric_name, metric_name, levels, human_readable_func, info_name in zip(
-        ['CPUCreditUsage', 'CPUCreditBalance'],
-        [None, 'aws_cpu_credit_balance'],
-        [None, (None, None) + params["balance_levels_lower"]],
-        [lambda x: "%.2f" % x] * 2,
-        ['Usage', 'Balance'],
-    )])
+    return check_aws_metrics(
+        [
+            {
+                "metric_val": parsed.get(cw_metric_name),
+                "metric_name": metric_name,
+                "levels": levels,
+                "human_readable_func": human_readable_func,
+                "info_name": info_name,
+            }
+            for cw_metric_name, metric_name, levels, human_readable_func, info_name in zip(
+                ["CPUCreditUsage", "CPUCreditBalance"],
+                [None, "aws_cpu_credit_balance"],
+                [None, (None, None) + params["balance_levels_lower"]],
+                [lambda x: "%.2f" % x] * 2,
+                ["Usage", "Balance"],
+            )
+        ]
+    )
 
 
-check_info['aws_ec2.cpu_credits'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
+check_info["aws_ec2.cpu_credits"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
         p,
-        ['CPUCreditUsage', 'CPUCreditBalance'],
+        ["CPUCreditUsage", "CPUCreditBalance"],
     ),
-    'check_function': check_aws_ec2_cpu_credits,
-    'service_description': 'AWS/EC2 CPU Credits',
-    'group': 'aws_ec2_cpu_credits',
-    'default_levels_variable': 'aws_cpu_credits',
-    'has_perfdata': True,
+    "check_function": check_aws_ec2_cpu_credits,
+    "service_description": "AWS/EC2 CPU Credits",
+    "group": "aws_ec2_cpu_credits",
+    "default_levels_variable": "aws_cpu_credits",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--CPU utilization-----------------------------------------------------.
 #   |    ____ ____  _   _         _   _ _ _          _   _                 |
 #   |   / ___|  _ \| | | |  _   _| |_(_) (_)______ _| |_(_) ___  _ __      |
@@ -120,30 +126,30 @@ check_info['aws_ec2.cpu_credits'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['aws_ec2_cpu_util_default_levels'] = {
+factory_settings["aws_ec2_cpu_util_default_levels"] = {
     "util": (90.0, 95.0),
 }
 
 
 def check_aws_ec2_cpu_util(item, params, parsed):
-    if 'CPUUtilization' not in parsed:
+    if "CPUUtilization" not in parsed:
         raise MKCounterWrapped("Currently no data from AWS")
-    return check_cpu_util(parsed['CPUUtilization'], params, time.time())
+    return check_cpu_util(parsed["CPUUtilization"], params, time.time())
 
 
-check_info['aws_ec2.cpu_util'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
+check_info["aws_ec2.cpu_util"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
         p,
-        ['CPUUtilization'],
+        ["CPUUtilization"],
     ),
-    'check_function': check_aws_ec2_cpu_util,
-    'service_description': 'AWS/EC2 CPU utilization',
-    'group': 'cpu_utilization',
-    'default_levels_variable': 'aws_ec2_cpu_util_default_levels',
-    'has_perfdata': True,
+    "check_function": check_aws_ec2_cpu_util,
+    "service_description": "AWS/EC2 CPU utilization",
+    "group": "cpu_utilization",
+    "default_levels_variable": "aws_ec2_cpu_util_default_levels",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
 #   |                      __| (_)___| | __ |_ _/ _ \                      |
@@ -183,13 +189,13 @@ def check_aws_ec2_disk_io(item, params, metrics):
     return check_diskstat_dict(item, params, {item: disk_data})
 
 
-check_info['aws_ec2.disk_io'] = {
-    'inventory_function': lambda p: inventory_aws_generic(
+check_info["aws_ec2.disk_io"] = {
+    "inventory_function": lambda p: inventory_aws_generic(
         {EC2DefaultItemName: p},
-        ['DiskReadOps', 'DiskWriteOps', 'DiskReadBytes', 'DiskWriteBytes'],
+        ["DiskReadOps", "DiskWriteOps", "DiskReadBytes", "DiskWriteBytes"],
     ),
-    'check_function': check_aws_ec2_disk_io,
-    'service_description': 'AWS/EC2 Disk IO %s',
-    'group': 'diskstat',
-    'has_perfdata': True,
+    "check_function": check_aws_ec2_disk_io,
+    "service_description": "AWS/EC2 Disk IO %s",
+    "group": "diskstat",
+    "has_perfdata": True,
 }

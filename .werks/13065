@@ -1,0 +1,13 @@
+Title: Absolute Levels on Filesystem Growth: Change Internal Representation From MB to Bytes
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1626961443
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The absolute levels for filesystem growth trends used to be Integer fields. This was changed to the Filesize field, to be more convenient when inserting larger warning levels.
+
+Custom plugins which use the `size_trend` functions might need some minor adjustments since internally these levels are now handled as bytes instead of MB. If no custom plugins are used, no actions are necessary.

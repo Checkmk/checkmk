@@ -1,13 +1,13 @@
 title: NetApp Filer: Power Supplies
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the state of the shelfes power supplies for a NetApp filer.
  If the power supply fails the check reports {CRIT}.
 
-inventory:
+discovery:
  One service is created for each power supply.
 
 item:

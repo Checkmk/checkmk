@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Web Application Server Requests
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows to monitor the number of requests on web application servers.
@@ -15,6 +15,5 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-inventory:
+discovery:
  One service is created for each Jolokia instance sent by the agent.
-

@@ -1,0 +1,18 @@
+Title: REST API: option to show folders recursively and return type
+Class: feature
+Compatible: compat
+Component: core
+Date: 1624348513
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The folder list endpoint now supports a "recursive" option, which
+will result in the folder and all its subfolders to be in the resulting
+collection.
+
+Additionally, the endpoint will now always return the folder object and
+never only the link. This makes it easier for script writers to parse
+the result.

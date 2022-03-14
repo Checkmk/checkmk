@@ -51,19 +51,21 @@ def check_db2_mem(item, params, info):
         label = ""
         state = 0
 
-    message = "Max: %s, Used: %s (%.2d%% Free%s) " % \
-                    (get_bytes_human_readable(limit),
-                     get_bytes_human_readable(usage),
-                     perc_level, label)
+    message = "Max: %s, Used: %s (%.2d%% Free%s) " % (
+        get_bytes_human_readable(limit),
+        get_bytes_human_readable(usage),
+        perc_level,
+        label,
+    )
     perf = [("mem", usage, 0, 0, 0, limit)]
 
     return state, message, perf
 
 
-check_info['db2_mem'] = {
+check_info["db2_mem"] = {
     "check_function": check_db2_mem,
     "inventory_function": inventory_db2_mem,
     "service_description": "Memory %s",
     "has_perfdata": True,
-    "group": "db2_mem"
+    "group": "db2_mem",
 }

@@ -7,7 +7,8 @@
 #
 set -e
 
-source "$(dirname $0)/lib-precommit"
+# shellcheck source=scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
 
 # Filter out all tests/* files.
 declare -a FILES
@@ -16,7 +17,9 @@ for param in "$@"; do
     if [[ "$param" == tests* ]]; then
         continue
     fi
-    FILES+=($(readlink -f "$param"))
+    # the enterprise/... files are included via symlinks. The doctests do not work reliably
+    # when running out of the enterprise directory. So redirect to the symlink location.
+    FILES+=("$(readlink -f "$param" | sed -e "s|/enterprise/|/|g;s|/plus/|/|g;s|/managed/|/|g")")
 done
 
 NUM_PARAM=${#FILES[@]}
@@ -29,15 +32,15 @@ fi
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
-pushd $REPO_PATH > /dev/null
+pushd "$REPO_PATH" >/dev/null
 
-$PIPENV run pytest --doctest-modules $FILES || (
-EXIT=$?
-if test $EXIT -eq 5 || test $EXIT -eq 4; then
-    # This means no tests have been found.
-    exit 0
-else
-    exit $EXIT
-fi
+$PIPENV run python -m pytest --doctest-modules "${FILES[@]}" || (
+    EXIT=$?
+    if test $EXIT -eq 5 || test $EXIT -eq 4; then
+        # This means no tests have been found.
+        exit 0
+    else
+        exit $EXIT
+    fi
 )
-popd > /dev/null
+popd >/dev/null

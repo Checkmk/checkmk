@@ -1,0 +1,12 @@
+Title: Opsgenie: Fix notification plugin
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1616579877
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The notification script raised a ModuleNotFoundError "No module named
+‘opsgenie'".

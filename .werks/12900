@@ -1,0 +1,13 @@
+Title: Bulk discovery: Show host count in progress info
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1624256461
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+During bulk discovery, the output "HOST: discovery successful" is
+extended to read "[2/5] HOST: discovery successful" to give a better
+idea of the progress of the jobs.

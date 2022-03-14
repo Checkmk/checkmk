@@ -7,46 +7,50 @@
 remote sites in distributed WATO."""
 
 import ast
-import tarfile
-import os
 import json
-from typing import Dict, NamedTuple, List, Optional, Iterator, Tuple, Union
+import os
+import tarfile
+from dataclasses import asdict
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
 
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
-import cmk.gui.forms as forms
-import cmk.gui.weblib as weblib
-from cmk.gui.table import table_element, init_rowselect
+from livestatus import SiteId
+
 import cmk.utils.render as render
 
-from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
-from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
-import cmk.gui.watolib.snapshots
+import cmk.gui.forms as forms
+import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes
-import cmk.gui.watolib.activate_changes
-from cmk.gui.watolib.search import build_index_background
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request, display_options
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
-from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
-from cmk.gui.valuespec import DictionaryEntry
+import cmk.gui.watolib.read_only as read_only
+import cmk.gui.watolib.snapshots
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.globals import config, display_options, html, request, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_checkbox_selection_topic,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_checkbox_selection_topic,
-    make_simple_link,
-    make_javascript_link,
+    PageMenuTopic,
 )
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.watolib.utils import DomainRequest, DomainRequests
+from cmk.gui.sites import activation_sites
+from cmk.gui.table import Foldable, init_rowselect, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
+from cmk.gui.watolib import activate_changes
+from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
+from cmk.gui.watolib.search import build_index_background
 
 
 @mode_registry.register
@@ -61,8 +65,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def __init__(self):
         self._value = {}
-        super(ModeActivateChanges, self).__init__()
-        super(ModeActivateChanges, self).load()
+        super().__init__()
+        super().load()
 
     def title(self):
         return _("Activate pending changes")
@@ -100,17 +104,19 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("wato.sites"):
+        if user.may("wato.sites"):
             yield PageMenuEntry(
                 title=_("Sites"),
                 icon_name="sites",
-                item=make_simple_link(makeuri_contextless(
-                    global_request,
-                    [("mode", "sites")],
-                )),
+                item=make_simple_link(
+                    makeuri_contextless(
+                        request,
+                        [("mode", "sites")],
+                    )
+                ),
             )
 
-        if config.user.may("wato.auditlog"):
+        if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",
@@ -124,12 +130,15 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         yield PageMenuEntry(
             title=_("Discard all pending changes"),
             icon_name="delete",
-            item=make_simple_link(html.makeactionuri([("_action", "discard")])),
+            item=make_simple_link(makeactionuri(request, transactions, [("_action", "discard")])),
             name="discard_changes",
             is_enabled=self.has_changes() and self._get_last_wato_snapshot_file(),
         )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
+        if not self._may_activate_changes():
+            return
+
         if self._may_activate_changes():
             yield PageMenuEntry(
                 title=_("Activate on selected sites"),
@@ -137,7 +146,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     "icon": "save",
                     "emblem": "refresh",
                 },
-                item=make_javascript_link("cmk.activation.activate_changes(\"selected\")"),
+                item=make_javascript_link('cmk.activation.activate_changes("selected")'),
                 name="activate_selected",
                 is_shortcut=True,
                 is_suggested=True,
@@ -154,19 +163,22 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return True
 
     def _may_activate_changes(self) -> bool:
-        if not config.user.may("wato.activate"):
+        if not user.may("wato.activate"):
             return False
 
-        if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+            return False
+
+        if read_only.is_enabled() and not read_only.may_override():
             return False
 
         return True
 
     def action(self) -> ActionResult:
-        if html.request.var("_action") != "discard":
+        if request.var("_action") != "discard":
             return None
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         if not self._may_discard_changes():
@@ -180,29 +192,34 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         file_to_restore = self._get_last_wato_snapshot_file()
 
         if not file_to_restore:
-            raise MKUserError(None, _('There is no WATO snapshot to be restored.'))
+            raise MKUserError(None, _("There is no WATO snapshot to be restored."))
 
         msg = _("Discarded pending changes (Restored %s)") % file_to_restore
 
         # All sites and domains can be affected by a restore: Better restart everything.
-        watolib.add_change("changes-discarded",
-                           msg,
-                           domains=watolib.ABCConfigDomain.enabled_domains(),
-                           need_restart=True)
+        watolib.add_change(
+            "changes-discarded",
+            msg,
+            domains=watolib.ABCConfigDomain.enabled_domains(),
+            need_restart=True,
+        )
 
         self._extract_snapshot(file_to_restore)
-        cmk.gui.watolib.activate_changes.execute_activate_changes(
-            [d.ident() for d in watolib.ABCConfigDomain.enabled_domains()])
+        activate_changes.execute_activate_changes(
+            [d.get_domain_request([]) for d in watolib.ABCConfigDomain.enabled_domains()]
+        )
 
-        for site_id in config.activation_sites():
+        for site_id in activation_sites():
             self.confirm_site_changes(site_id)
 
         build_index_background()
 
-        html.header(self.title(),
-                    breadcrumb=self.breadcrumb(),
-                    show_body_start=display_options.enabled(display_options.H),
-                    show_top_heading=display_options.enabled(display_options.T))
+        html.header(
+            self.title(),
+            breadcrumb=self.breadcrumb(),
+            show_body_start=display_options.enabled(display_options.H),
+            show_top_heading=display_options.enabled(display_options.T),
+        )
         html.open_div(class_="wato")
 
         html.show_message(_("Successfully discarded all pending changes."))
@@ -211,21 +228,24 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return FinalizeRequest(code=200)
 
     def _extract_snapshot(self, snapshot_file):
-        self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
-                                watolib.backup_domains)
+        self._extract_from_file(
+            cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file, watolib.backup_domains
+        )
 
-    def _extract_from_file(self, filename: str,
-                           elements: Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None:
+    def _extract_from_file(
+        self, filename: str, elements: Dict[str, cmk.gui.watolib.snapshots.DomainSpec]
+    ) -> None:
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
-        cmk.gui.watolib.snapshots.extract_snapshot(tarfile.open(filename, "r"), elements)
+        with tarfile.open(filename, "r") as opened_file:
+            cmk.gui.watolib.snapshots.extract_snapshot(opened_file, elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
         for snapshot_file in self._get_snapshots():
             status = cmk.gui.watolib.snapshots.get_snapshot_status(snapshot_file)
-            if status['type'] == 'automatic' and not status['broken']:
+            if status["type"] == "automatic" and not status["broken"]:
                 return snapshot_file
 
     # TODO: Remove once new changes mechanism has been implemented
@@ -244,41 +264,36 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._activation_msg()
         self._activation_form()
 
-        html.h3(_("Activation status"))
         self._activation_status()
 
         if self.has_changes():
-            html.open_h3(class_="pending_changes_header")
-            html.write_text(_("Pending changes"))
-            html.div("", id_="row_info")
-            html.close_h3()
             self._change_table()
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")
-        html.show_message(self._get_initial_message())
+        if message := self._get_initial_message():
+            html.show_message(message)
         html.close_div()
 
-    def _get_initial_message(self) -> str:
-        changes = sum(len(self._changes_of_site(site_id)) for site_id in config.activation_sites())
-        if changes == 0:
-            if html.request.has_var("_finished"):
-                return _("Activation has finished.")
-            return _("Currently there are no changes to activate.")
-        if changes == 1:
-            return _("Currently there is one change to activate.")
-        return _("Currently there are %d changes to activate.") % changes
+    def _get_amount_changes(self) -> int:
+        return sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
+
+    def _get_initial_message(self) -> Optional[str]:
+        if self._get_amount_changes() != 0:
+            return None
+        if not request.has_var("_finished"):
+            return None
+        return _("Activation has finished.")
 
     def _activation_form(self):
-        if not config.user.may("wato.activate"):
+        if not user.may("wato.activate"):
             html.show_warning(_("You are not permitted to activate configuration changes."))
             return
 
         if not self._changes:
             return
 
-        if not config.user.may("wato.activateforeign") \
-           and self._has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
 
@@ -296,19 +311,25 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.help(valuespec.help())
 
         if self.has_foreign_changes():
-            if config.user.may("wato.activateforeign"):
+            if user.may("wato.activateforeign"):
                 html.show_warning(
-                    _("There are some changes made by your colleagues that you will "
-                      "activate if you proceed. You need to enable the checkbox above "
-                      "to confirm the activation of these changes."))
+                    _(
+                        "There are some changes made by your colleagues that you will "
+                        "activate if you proceed. You need to enable the checkbox above "
+                        "to confirm the activation of these changes."
+                    )
+                )
             else:
                 html.show_warning(
-                    _("There are some changes made by your colleagues that you can not "
-                      "activate because you are not permitted to. You can only activate "
-                      "the changes on the sites that are not affected by these changes. "
-                      "<br>"
-                      "If you need to activate your changes on all sites, please contact "
-                      "a permitted user to do it for you."))
+                    _(
+                        "There are some changes made by your colleagues that you can not "
+                        "activate because you are not permitted to. You can only activate "
+                        "the changes on the sites that are not affected by these changes. "
+                        "<br>"
+                        "If you need to activate your changes on all sites, please contact "
+                        "a permitted user to do it for you."
+                    )
+                )
 
         forms.end()
         html.hidden_field("selection_id", weblib.selection_id())
@@ -317,17 +338,21 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         init_rowselect(self.name())
 
     def _change_table(self):
-        with table_element("changes",
-                           sortable=False,
-                           searchable=False,
-                           css="changes",
-                           limit=None,
-                           empty_text=_("Currently there are no changes to activate.")) as table:
+        with table_element(
+            "changes",
+            title=_("Pending changes (%s)") % self._get_amount_changes(),
+            sortable=False,
+            searchable=False,
+            css="changes",
+            limit=None,
+            empty_text=_("Currently there are no changes to activate."),
+            foldable=Foldable.FOLDABLE_STATELESS,
+        ) as table:
             for _change_id, change in reversed(self._changes):
                 css = []
                 if self._is_foreign(change):
                     css.append("foreign")
-                if not config.user.may("wato.activateforeign"):
+                if not user.may("wato.activateforeign"):
                     css.append("not_permitted")
 
                 table.row(css=" ".join(css))
@@ -335,7 +360,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 table.cell("", css="buttons")
                 rendered = render_object_ref_as_icon(change["object"])
                 if rendered:
-                    html.write(rendered)
+                    html.write_html(rendered)
 
                 table.cell(_("Time"), render.date_and_time(change["time"]), css="narrow nobr")
                 table.cell(_("User"), css="narrow nobr")
@@ -343,7 +368,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 if self._is_foreign(change):
                     html.icon("foreign_changes", _("This change has been made by another user"))
 
-                table.cell(_("Change"), change["text"])
+                # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
+                # to handle this in a special way because of the SiteChanges file format. Would be
+                # cleaner to transport the text type (like AuditLogStore is doing it).
+                table.cell(_("Change"), HTML(change["text"]))
 
                 table.cell(_("Affected sites"), css="affected_sites")
                 if self._affects_all_sites(change):
@@ -352,10 +380,16 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     html.write_text(", ".join(sorted(change["affected_sites"])))
 
     def _activation_status(self):
-        with table_element("site-status", searchable=False, sortable=False,
-                           css="activation") as table:
+        with table_element(
+            "site-status",
+            title=_("Activation status"),
+            searchable=False,
+            sortable=False,
+            css="activation",
+            foldable=Foldable.FOLDABLE_STATELESS,
+        ) as table:
 
-            for site_id, site in sort_sites(config.activation_sites()):
+            for site_id, site in sort_sites(activation_sites()):
                 table.row()
 
                 site_status, status = self._get_site_status(site_id, site)
@@ -363,7 +397,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 is_online = self._site_is_online(status)
                 is_logged_in = self._site_is_logged_in(site_id, site)
                 has_foreign = self._site_has_foreign_changes(site_id)
-                can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
+                can_activate_all = not has_foreign or user.may("wato.activateforeign")
 
                 # Disable actions for offline sites and not logged in sites
                 if not is_online or not is_logged_in:
@@ -382,9 +416,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")
 
-                if config.user.may("wato.sites"):
-                    edit_url = watolib.folder_preserving_link([("mode", "edit_site"),
-                                                               ("site", site_id)])
+                if user.may("wato.sites"):
+                    edit_url = watolib.folder_preserving_link(
+                        [("mode", "edit_site"), ("site", site_id)]
+                    )
                     html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
 
                 # State
@@ -395,7 +430,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
                         icon="need_replicate",
-                        onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
+                        onclick='cmk.activation.activate_changes("site", "%s")' % site_id,
+                    )
 
                 if can_activate_all and need_restart:
                     html.icon_button(
@@ -403,32 +439,36 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         id_="activate_%s" % site_id,
                         cssclass="activate_site",
                         title=_(
-                            "This site needs a restart for activating the changes. Start it now."),
+                            "This site needs a restart for activating the changes. Start it now."
+                        ),
                         icon="need_restart",
-                        onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
+                        onclick='cmk.activation.activate_changes("site", "%s")' % site_id,
+                    )
 
                 if can_activate_all and not need_action:
                     html.icon("siteuptodate", _("This site is up-to-date."))
 
                 site_url = site.get("multisiteurl")
                 if site_url:
-                    html.icon_button(site_url,
-                                     _("Open this site's local web user interface"),
-                                     "url",
-                                     target="_blank")
+                    html.icon_button(
+                        site_url,
+                        _("Open this site's local web user interface"),
+                        "url",
+                        target="_blank",
+                    )
 
-                table.text_cell(_("Site"), site.get("alias", site_id), css="narrow nobr")
+                table.cell(_("Site"), site.get("alias", site_id), css="narrow nobr")
 
                 # Livestatus
                 table.cell(_("Status"), css="narrow nobr")
-                html.status_label(content=status,
-                                  status=status,
-                                  title=_("This site is %s") % status)
+                html.status_label(
+                    content=status, status=status, title=_("This site is %s") % status
+                )
 
                 # Livestatus-/Checkmk-Version
-                table.cell(_("Version"),
-                           site_status.get("livestatus_version", ""),
-                           css="narrow nobr")
+                table.cell(
+                    _("Version"), site_status.get("livestatus_version", ""), css="narrow nobr"
+                )
 
                 table.cell(_("Changes"), "%d" % nr_changes, css="number narrow nobr")
 
@@ -448,12 +488,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 if not last_state:
                     html.write_text(_("Has never been activated"))
-                elif (need_action and
-                      last_state["_state"] == cmk.gui.watolib.activate_changes.STATE_SUCCESS):
+                elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
                     html.write_text(_("Activation needed"))
                 else:
-                    html.javascript("cmk.activation.update_site_activation_state(%s);" %
-                                    json.dumps(last_state))
+                    html.javascript(
+                        "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
+                    )
 
                 html.close_div()
 
@@ -510,28 +550,37 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.User:
-        url = makeuri_contextless(global_request, [
-            ("mode", "edit_user"),
-            ("edit", object_ref.ident),
-        ],
-                                  filename="wato.py")
+        url = makeuri_contextless(
+            request,
+            [
+                ("mode", "edit_user"),
+                ("edit", object_ref.ident),
+            ],
+            filename="wato.py",
+        )
         return url, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Rule:
-        url = makeuri_contextless(global_request, [
-            ("mode", "edit_rule"),
-            ("varname", object_ref.labels["ruleset"]),
-            ("rule_id", object_ref.ident),
-        ],
-                                  filename="wato.py")
+        url = makeuri_contextless(
+            request,
+            [
+                ("mode", "edit_rule"),
+                ("varname", object_ref.labels["ruleset"]),
+                ("rule_id", object_ref.ident),
+            ],
+            filename="wato.py",
+        )
         return url, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Ruleset:
-        url = makeuri_contextless(global_request, [
-            ("mode", "edit_ruleset"),
-            ("varname", object_ref.ident),
-        ],
-                                  filename="wato.py")
+        url = makeuri_contextless(
+            request,
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", object_ref.ident),
+            ],
+            filename="wato.py",
+        )
         return url, object_ref.ident
 
     return None, object_ref.ident
@@ -543,24 +592,33 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
     if config.wato_activate_changes_comment_mode != "disabled":
         is_optional = config.wato_activate_changes_comment_mode != "enforce"
         elements.append(
-            ("comment",
-             TextAreaUnicode(
-                 title=_("Comment (optional)") if is_optional else _("Comment"),
-                 cols=40,
-                 try_max_width=True,
-                 rows=1,
-                 help=_("You can provide an optional comment for the current activation. "
+            (
+                "comment",
+                TextAreaUnicode(
+                    title=_("Comment (optional)") if is_optional else _("Comment"),
+                    cols=40,
+                    try_max_width=True,
+                    rows=1,
+                    help=_(
+                        "You can provide an optional comment for the current activation. "
                         "This can be useful to document the reason why the changes you "
-                        "activate have been made."),
-                 allow_empty=is_optional,
-             )))
+                        "activate have been made."
+                    ),
+                    allow_empty=is_optional,
+                ),
+            )
+        )
 
-    if has_foreign_changes and config.user.may("wato.activateforeign"):
-        elements.append(("foreign",
-                         Checkbox(
-                             title=_("Activate foreign changes"),
-                             label=_("Activate changes of other users"),
-                         )))
+    if has_foreign_changes and user.may("wato.activateforeign"):
+        elements.append(
+            (
+                "foreign",
+                Checkbox(
+                    title=_("Activate foreign changes"),
+                    label=_("Activate changes of other users"),
+                ),
+            )
+        )
 
     if not elements:
         return None
@@ -576,43 +634,46 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
+        user.need_permission("wato.activate")
 
-        config.user.need_permission("wato.activate")
-
-        request = self.webapi_request()
-
-        activate_until = request.get("activate_until")
+        api_request = self.webapi_request()
+        # ? type of activate_until is unclear
+        activate_until = api_request.get("activate_until")
         if not activate_until:
-            raise MKUserError("activate_until", _("Missing parameter \"%s\".") % "activate_until")
+            raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = watolib.ActivateChangesManager()
         manager.load()
-
-        affected_sites_request = ensure_str(request.get("sites", "").strip())
+        # ? type of api_request is unclear
+        affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            api_request.get("sites", "").strip()
+        )
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
-            affected_sites = affected_sites_request.split(",")
+            affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
 
-        comment: Optional[str] = request.get("comment", "").strip()
+        comment: Optional[str] = api_request.get("comment", "").strip()
 
-        activate_foreign = request.get("activate_foreign", "0") == "1"
+        activate_foreign = api_request.get("activate_foreign", "0") == "1"
 
         valuespec = _vs_activation("", manager.has_foreign_changes())
         if valuespec:
-            valuespec.validate_value({
-                "comment": comment,
-                "foreign": activate_foreign,
-            }, "activate")
+            valuespec.validate_value(
+                {
+                    "comment": comment,
+                    "foreign": activate_foreign,
+                },
+                "activate",
+            )
 
         if comment == "":
             comment = None
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),
-            comment=None if comment is None else ensure_str(comment),
+            activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
+            comment=comment,
             activate_foreign=activate_foreign,
         )
 
@@ -624,15 +685,13 @@ class ModeAjaxStartActivation(AjaxPage):
 @page_registry.register_page("ajax_activation_state")
 class ModeAjaxActivationState(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
+        user.need_permission("wato.activate")
 
-        config.user.need_permission("wato.activate")
+        api_request = self.webapi_request()
 
-        request = self.webapi_request()
-
-        activation_id = request.get("activation_id")
+        activation_id = api_request.get("activation_id")
         if not activation_id:
-            raise MKUserError("activation_id", _("Missing parameter \"%s\".") % "activation_id")
+            raise MKUserError("activation_id", _('Missing parameter "%s".') % "activation_id")
 
         manager = watolib.ActivateChangesManager()
         manager.load()
@@ -641,8 +700,9 @@ class ModeAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-ActivateChangesRequest = NamedTuple("ActivateChangesRequest", [("site_id", str),
-                                                               ("domains", List[str])])
+class ActivateChangesRequest(NamedTuple):
+    site_id: SiteId
+    domains: DomainRequests
 
 
 @watolib.automation_command_registry.register
@@ -651,16 +711,25 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return "activate-changes"
 
     def get_request(self):
-        site_id = html.request.get_ascii_input_mandatory("site_id")
-        cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
+        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
+        activate_changes.verify_remote_site_config(site_id)
 
         try:
-            domains = ast.literal_eval(html.request.get_ascii_input_mandatory("domains"))
+            serialized_domain_requests = ast.literal_eval(
+                request.get_ascii_input_mandatory("domains")
+            )
+            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
+                serialized_domain_requests = [
+                    asdict(DomainRequest(x)) for x in serialized_domain_requests
+                ]
         except SyntaxError:
             raise watolib.MKAutomationException(
-                _("Invalid request: %r") % html.request.get_ascii_input_mandatory("domains"))
+                _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
+            )
 
-        return ActivateChangesRequest(site_id=site_id, domains=domains)
+        return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
 
-    def execute(self, request):
-        return cmk.gui.watolib.activate_changes.execute_activate_changes(request.domains)
+    def execute(self, api_request):
+        return activate_changes.execute_activate_changes(
+            activate_changes.parse_serialized_domain_requests(api_request.domains)
+        )

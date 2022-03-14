@@ -15,11 +15,14 @@ def parse_ucs_c_rack_server_fans(info):
     for fan in info:
         try:
             key_value_pairs = [kv.split(" ", 1) for kv in fan[1:]]
-            fan = key_value_pairs[0][1].replace("sys/",
-                                                "").replace("rack-unit-", "Rack Unit ").replace(
-                                                    "/fan-module-",
-                                                    " Module ").replace("/fan-", " ")
-            parsed[fan] = {'operability': key_value_pairs[3][1]}
+            fan = (
+                key_value_pairs[0][1]
+                .replace("sys/", "")
+                .replace("rack-unit-", "Rack Unit ")
+                .replace("/fan-module-", " Module ")
+                .replace("/fan-", " ")
+            )
+            parsed[fan] = {"operability": key_value_pairs[3][1]}
         except (IndexError, ValueError):
             pass
 
@@ -44,8 +47,8 @@ def check_ucs_c_rack_server_fans(item, _no_params, data):
 
 
 check_info["ucs_c_rack_server_fans"] = {
-    'parse_function': parse_ucs_c_rack_server_fans,
-    'inventory_function': discover(),
-    'check_function': check_ucs_c_rack_server_fans,
-    'service_description': 'Fan %s',
+    "parse_function": parse_ucs_c_rack_server_fans,
+    "inventory_function": discover(),
+    "check_function": check_ucs_c_rack_server_fans,
+    "service_description": "Fan %s",
 }

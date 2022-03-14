@@ -1,0 +1,13 @@
+Title: Fix unique naming of host and service labels
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1618242350
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Sorters und columns of view used the title "Labels" for host and service
+labels.

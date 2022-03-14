@@ -9,11 +9,11 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # This is not part of the standard agent since it can produce much
 # output data of the table is large. This plugin is just needed for
 # checking if certain known TCP connections are established.
 
 echo '<<<netstat>>>'
-netstat -n -f inet  | fgrep -v '*.*' | egrep '^(tcp|udp)'
+netstat -n -f inet | grep -F -v '*.*' | grep -E '^(tcp|udp)'

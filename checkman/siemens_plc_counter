@@ -1,7 +1,7 @@
 title: Siemens PLC: Counter Values
 agents: siemens_plc
 catalog: hw/server/siemens
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the counter values reported by Siemens PLC (SPS) devices.
@@ -19,5 +19,5 @@ description:
 item:
  Name of the device and the mode seperated by a space
 
-inventory:
+discovery:
  One service is created for each configured counter.

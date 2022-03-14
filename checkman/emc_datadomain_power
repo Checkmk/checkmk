@@ -1,7 +1,7 @@
 title: EMC Datadomain: Power Modules
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the status of the power modules of the EMC Datadomain
@@ -14,5 +14,5 @@ description:
 item:
  "ID of the enclosure" - "ID of the module"
 
-inventory:
+discovery:
  One service is created for each power module found on the device.

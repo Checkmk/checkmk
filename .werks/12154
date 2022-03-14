@@ -6,7 +6,7 @@ Date: 1615808830
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When deploying files to agent packages using the agent bakery and the
 "Deploy custom files with agent" ruleset, the agent bakery would fail

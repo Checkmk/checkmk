@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.crash_reporting import crash_report_registry
-from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
+
+from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
 
 
 def test_ec_crash_report_registry():

@@ -9,21 +9,25 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.didactum import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.46501.6.2.1.5.201007 alpha-bravo_doppelboden_frischluft --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogName.201007
 # .1.3.6.1.4.1.46501.6.2.1.6.201007 normal --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogState.201007
 # .1.3.6.1.4.1.46501.6.2.1.7.201007 14.9 --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogValue.201007
@@ -44,13 +48,13 @@ def inventory_didactum_can_sensors_analog_temp(parsed):
     return inventory_didactum_sensors(parsed, "temperature")
 
 
-check_info['didactum_can_sensors_analog'] = {
-    'parse_function': parse_didactum_sensors,
-    'inventory_function': inventory_didactum_can_sensors_analog_temp,
-    'check_function': check_didactum_sensors_temp,
-    'service_description': 'Temperature CAN %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.46501.6.2.1',
+check_info["didactum_can_sensors_analog"] = {
+    "parse_function": parse_didactum_sensors,
+    "inventory_function": inventory_didactum_can_sensors_analog_temp,
+    "check_function": check_didactum_sensors_temp,
+    "service_description": "Temperature CAN %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.46501.6.2.1",
         [
             "4",  # DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogType
             "5",  # DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogName
@@ -60,13 +64,14 @@ check_info['didactum_can_sensors_analog'] = {
             "11",  # DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogLowWarning
             "12",  # DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogHighWarning
             "13",  # DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogHighAlarm
-        ]),
-    'snmp_scan_function': scan_didactum,
-    'has_perfdata': True,
-    'group': 'temperature',
+        ],
+    ),
+    "snmp_scan_function": scan_didactum,
+    "has_perfdata": True,
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
 #   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -81,15 +86,15 @@ def inventory_didactum_can_sensors_analog_humid(parsed):
     return inventory_didactum_sensors(parsed, "humidity")
 
 
-check_info['didactum_can_sensors_analog.humidity'] = {
-    'inventory_function': inventory_didactum_can_sensors_analog_humid,
-    'check_function': check_didactum_sensors_humidity,
-    'service_description': 'Humidity CAN %s',
-    'has_perfdata': True,
-    'group': 'humidity',
+check_info["didactum_can_sensors_analog.humidity"] = {
+    "inventory_function": inventory_didactum_can_sensors_analog_humid,
+    "check_function": check_didactum_sensors_humidity,
+    "service_description": "Humidity CAN %s",
+    "has_perfdata": True,
+    "group": "humidity",
 }
 
-#.
+# .
 #   .--voltage-------------------------------------------------------------.
 #   |                             _ _                                      |
 #   |                 __   _____ | | |_ __ _  __ _  ___                    |
@@ -104,10 +109,10 @@ def inventory_didactum_can_sensors_analog_volt(parsed):
     return inventory_didactum_sensors(parsed, "voltage")
 
 
-check_info['didactum_can_sensors_analog.voltage'] = {
-    'inventory_function': inventory_didactum_can_sensors_analog_volt,
-    'check_function': check_didactum_sensors_voltage,
-    'service_description': 'Phase CAN %s',
-    'has_perfdata': True,
-    'group': 'el_inphase',
+check_info["didactum_can_sensors_analog.voltage"] = {
+    "inventory_function": inventory_didactum_can_sensors_analog_volt,
+    "check_function": check_didactum_sensors_voltage,
+    "service_description": "Phase CAN %s",
+    "has_perfdata": True,
+    "group": "el_inphase",
 }

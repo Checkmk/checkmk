@@ -1,0 +1,13 @@
+title: Kubernetes: Node Container Count
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of containers per node in a kubernetes
+ cluster.
+ Upper and lower levels for running, waiting, terminated and total
+ containers per node are configurable via WATO.
+
+discovery:
+ One service is created.

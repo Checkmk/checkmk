@@ -1,0 +1,14 @@
+Title: Fix possible "Request-URI Too Long" error on editing contact groups
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1640695947
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If contact groups were edited and a large number of inventory paths or nagvis
+maps were added in the "Permissions" section, an "Request-URI Too Long" error
+could occur on saving the changes.

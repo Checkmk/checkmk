@@ -6,14 +6,15 @@
 #include "LogEntry.h"
 
 #include <algorithm>
-#include <cstdlib>
-#include <cstring>
-#include <functional>
+#include <array>
+#include <charconv>
+#include <ctime>
+#include <iterator>
 #include <stdexcept>
-#include <unordered_map>
+#include <system_error>
 #include <utility>
 
-#include "StringUtils.h"
+using namespace std::string_view_literals;
 
 // 0123456789012345678901234567890
 // [1234567890] FOO BAR: blah blah
@@ -22,50 +23,41 @@ static constexpr size_t timestamp_prefix_length = 13;
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
 LogEntry::LogEntry(size_t lineno, std::string line)
-    : _lineno(static_cast<int32_t>(lineno))
-    , _message(std::move(line))
-    , _state(0)
-    , _attempt(0) {
-    // pointer to options (everything after ':')
-    size_t pos = _message.find(':');
+    : lineno_(lineno), message_(std::move(line)), state_(0), attempt_(0) {
+    size_t pos = message_.find(':');
     if (pos != std::string::npos) {
-        pos = _message.find_first_not_of(' ', pos + 1);
+        pos = message_.find_first_not_of(' ', pos + 1);
     }
     if (pos == std::string::npos) {
-        pos = _message.size();
+        pos = message_.size();
     }
-    _options = &_message[pos];
+    options_ = std::string_view{message_}.substr(pos);
 
-    try {
-        if (_message.size() < timestamp_prefix_length || _message[0] != '[' ||
-            _message[11] != ']' || _message[12] != ' ') {
-            throw std::invalid_argument("timestamp delimiter");
-        }
-        _time = std::stoi(_message.substr(1, 10));
-    } catch (const std::logic_error &e) {
-        _class = Class::invalid;
-        _kind = LogEntryKind::none;
-        _time = 0;
-        _type = "";
-        return;  // ignore invalid lines silently
+    time_t timestamp{};
+    if (message_.size() < timestamp_prefix_length ||  //
+        message_[0] != '[' || message_[11] != ']' || message_[12] != ' ' ||
+        std::from_chars(&message_[1], &message_[11], timestamp).ec !=
+            std::errc{}) {
+        throw std::invalid_argument{"invalid log line"};
     }
+    time_ = std::chrono::system_clock::from_time_t(timestamp);
 
     classifyLogMessage();
 }
 
-void LogEntry::assign(Param par, const std::string &field) {
+void LogEntry::assign(Param par, std::string_view field) {
     switch (par) {
         case Param::HostName:
-            _host_name = field;
+            host_name_ = field;
             return;
         case Param::ServiceDescription:
-            _service_description = field;
+            service_description_ = field;
             return;
         case Param::CommandName:
-            _command_name = field;
+            command_name_ = field;
             return;
         case Param::CommandNameWithWorkaround:
-            _command_name = field;
+            command_name_ = field;
             // The NotifyHelper class has a long, tragic history: Through a long
             // series of commits, it suffered from spelling mistakes like
             // "HOST_NOTIFICATION" or "HOST NOTIFICATION" (without a colon),
@@ -74,47 +66,50 @@ void LogEntry::assign(Param par, const std::string &field) {
             // of this tragedy is that due to legacy reasons, we have to support
             // parsing an incorrect ordering of "state type" and "command name"
             // fields. :-P
-            if (_state_type.empty()) {
+            if (state_type_.empty()) {
                 return;  // extremely broken line
             }
-            if (_state_type == "check-mk-notify") {
+            if (state_type_ == "check-mk-notify"sv) {
                 // Ooops, we encounter one of our own buggy lines...
-                std::swap(_state_type, _command_name);
-                if (_state_type.empty()) {
+                std::swap(state_type_, command_name_);
+                if (state_type_.empty()) {
                     return;  // extremely broken line, even after swapping
                 }
             }
-            _state = _service_description.empty()
-                         ? static_cast<int>(parseHostState(_state_type))
-                         : static_cast<int>(parseServiceState(_state_type));
+            state_ = service_description_.empty()
+                         ? static_cast<int>(parseHostState(state_type_))
+                         : static_cast<int>(parseServiceState(state_type_));
             return;
         case Param::ContactName:
-            _contact_name = field;
+            contact_name_ = field;
             return;
         case Param::HostState:
-            _state = static_cast<int>(parseHostState(field));
+            state_ = static_cast<int>(parseHostState(field));
             return;
         case Param::ServiceState:
         case Param::ExitCode:  // HACK: Encoded as a service state! :-P
-            _state = static_cast<int>(parseServiceState(field));
+            state_ = static_cast<int>(parseServiceState(field));
             return;
         case Param::State:
-            _state = atoi(field.c_str());
+            state_ = 0;
+            std::from_chars(field.data(), field.data() + field.size(), state_);
             return;
         case Param::StateType:
-            _state_type = field;
+            state_type_ = field;
             return;
         case Param::Attempt:
-            _attempt = atoi(field.c_str());
+            attempt_ = 0;
+            std::from_chars(field.data(), field.data() + field.size(),
+                            attempt_);
             return;
         case Param::Comment:
-            _comment = field;
+            comment_ = field;
             return;
         case Param::PluginOutput:
-            _plugin_output = field;
+            plugin_output_ = field;
             return;
         case Param::LongPluginOutput:
-            _long_plugin_output = mk::to_multi_line(field);
+            long_plugin_output_ = field;
             return;
         case Param::Ignore:
             return;
@@ -128,74 +123,62 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            LogEntryKind::state_host_initial,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
             Param::PluginOutput, Param::LongPluginOutput}},
-    ////////////////
     LogDef{"CURRENT HOST STATE",
            Class::state,
            LogEntryKind::state_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
             Param::PluginOutput, Param::LongPluginOutput}},
-    ////////////////
     LogDef{"HOST ALERT",
            Class::alert,
            LogEntryKind::alert_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
             Param::PluginOutput, Param::LongPluginOutput}},
-    ////////////////
     LogDef{"HOST DOWNTIME ALERT",
            Class::alert,
            LogEntryKind::downtime_alert_host,
            {Param::HostName, Param::StateType, Param::Comment}},
-    ////////////////
     LogDef{"HOST ACKNOWLEDGE ALERT",
            Class::alert,
            LogEntryKind::acknowledge_alert_host,
            {Param::HostName, Param::StateType, Param::ContactName,
             Param::Comment}},
-    ////////////////
     LogDef{"HOST FLAPPING ALERT",
            Class::alert,
            LogEntryKind::flapping_host,
            {Param::HostName, Param::StateType, Param::Comment}},
-    ////////////////
     LogDef{"INITIAL SERVICE STATE",
            Class::state,
            LogEntryKind::state_service_initial,
            {Param::HostName, Param::ServiceDescription, Param::ServiceState,
             Param::StateType, Param::Attempt, Param::PluginOutput,
             Param::LongPluginOutput}},
-    ////////////////
     LogDef{"CURRENT SERVICE STATE",
            Class::state,
            LogEntryKind::state_service,
            {Param::HostName, Param::ServiceDescription, Param::ServiceState,
             Param::StateType, Param::Attempt, Param::PluginOutput,
             Param::LongPluginOutput}},
-    ////////////////
     LogDef{"SERVICE ALERT",
            Class::alert,
            LogEntryKind::alert_service,
            {Param::HostName, Param::ServiceDescription, Param::ServiceState,
             Param::StateType, Param::Attempt, Param::PluginOutput,
             Param::LongPluginOutput}},
-    ////////////////
     LogDef{"SERVICE DOWNTIME ALERT",
            Class::alert,
            LogEntryKind::downtime_alert_service,
            {Param::HostName, Param::ServiceDescription, Param::StateType,
             Param::Comment}},
-    ////////////////
     LogDef{"SERVICE ACKNOWLEDGE ALERT",
            Class::alert,
            LogEntryKind::acknowledge_alert_service,
            {Param::HostName, Param::ServiceDescription, Param::StateType,
             Param::ContactName, Param::Comment}},
-    ////////////////
     LogDef{"SERVICE FLAPPING ALERT",
            Class::alert,
            LogEntryKind::flapping_service,
            {Param::HostName, Param::ServiceDescription, Param::StateType,
             Param::Comment}},
-    ////////////////
     LogDef{"TIMEPERIOD TRANSITION",
            Class::state,
            LogEntryKind::timeperiod_transition,
@@ -204,7 +187,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
                Param::Ignore,  // from
                Param::Ignore   // to
            }},
-    ////////////////
+    // NOTE: Generated by CMC & mknotifyd, see cmk.utils.notification_message
     LogDef{"HOST NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
@@ -212,7 +195,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
             Param::CommandNameWithWorkaround, Param::PluginOutput,
             Param::Ignore,  // author
             Param::Comment, Param::LongPluginOutput}},
-    ////////////////
+    // NOTE: Generated by CMC & mknotifyd, see cmk.utils.notification_message
     LogDef{"SERVICE NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
@@ -221,69 +204,64 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
             Param::PluginOutput,
             Param::Ignore,  // author
             Param::Comment, Param::LongPluginOutput}},
-    ////////////////
+    // NOTE: Generated by mknotifyd & notification helper, see
+    // cmk.utils.notification_result_message
     LogDef{"HOST NOTIFICATION RESULT",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
             Param::CommandNameWithWorkaround, Param::PluginOutput,
             Param::Comment}},
-    ////////////////
+    // NOTE: Generated by mknotifyd & notification helper, see
+    // cmk.utils.notification_result_message
     LogDef{"SERVICE NOTIFICATION RESULT",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::ServiceDescription,
             Param::StateType, Param::CommandNameWithWorkaround,
             Param::PluginOutput, Param::Comment}},
-    ////////////////
     LogDef{"HOST NOTIFICATION PROGRESS",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
             Param::CommandNameWithWorkaround, Param::PluginOutput}},
-    ////////////////
+    // NOTE: Generated by mknotifyd, see cmk.utils.notification_progress_message
     LogDef{"SERVICE NOTIFICATION PROGRESS",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::ServiceDescription,
             Param::StateType, Param::CommandNameWithWorkaround,
             Param::PluginOutput}},
-    ////////////////
+    // NOTE: Generated by mknotifyd, see cmk.utils.notification_progress_message
     LogDef{"HOST ALERT HANDLER STARTED",
            Class::alert_handlers,
            LogEntryKind::none,
            {Param::HostName, Param::CommandName}},
-    ////////////////
     LogDef{"SERVICE ALERT HANDLER STARTED",
            Class::alert_handlers,
            LogEntryKind::none,
            {Param::HostName, Param::ServiceDescription, Param::CommandName}},
-    ////////////////
     LogDef{"HOST ALERT HANDLER STOPPED",
            Class::alert_handlers,
            LogEntryKind::none,
            {Param::HostName, Param::CommandName, Param::ExitCode,
             Param::PluginOutput}},
-    ////////////////
     LogDef{"SERVICE ALERT HANDLER STOPPED",
            Class::alert_handlers,
            LogEntryKind::none,
            {Param::HostName, Param::ServiceDescription, Param::CommandName,
             Param::ExitCode, Param::PluginOutput}},
-    ////////////////
-    // NOTE: Only Nagios writes such lines if configured to do so.
+    // NOTE: Generated by Nagios only
     LogDef{"PASSIVE SERVICE CHECK",
            Class::passivecheck,
            LogEntryKind::none,
            {Param::HostName, Param::ServiceDescription, Param::State,
             Param::PluginOutput}},
-    ////////////////
-    // NOTE: Only Nagios writes such lines if configured to do so.
+    // NOTE: Generated by Nagios only
     LogDef{"PASSIVE HOST CHECK",
            Class::passivecheck,
            LogEntryKind::none,
            {Param::HostName, Param::State, Param::PluginOutput}},
-    ////////////////
     LogDef{"EXTERNAL COMMAND",
            Class::ext_command,
            LogEntryKind::none,
@@ -293,118 +271,122 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
 
 // A bit verbose, but we avoid unnecessary string copies below.
 void LogEntry::classifyLogMessage() {
+    std::string_view message_sv{message_};
     for (const auto &def : log_definitions) {
         if (textStartsWith(def.prefix) &&
-            _message.compare(timestamp_prefix_length + def.prefix.size(), 2,
+            message_.compare(timestamp_prefix_length + def.prefix.size(), 2,
                              ": ") == 0) {
-            _type = &def.prefix[0];
-            _class = def.log_class;
-            _kind = def.log_type;
+            type_ = def.prefix;
+            class_ = def.log_class;
+            kind_ = def.log_type;
             // TODO(sp) Use boost::tokenizer instead of this index fiddling
             size_t pos = timestamp_prefix_length + def.prefix.size() + 2;
             for (Param par : def.params) {
-                size_t sep_pos = _message.find(';', pos);
+                size_t sep_pos = message_.find(';', pos);
                 size_t end_pos =
-                    sep_pos == std::string::npos ? _message.size() : sep_pos;
-                assign(par, _message.substr(pos, end_pos - pos));
-                pos = sep_pos == std::string::npos ? _message.size()
+                    sep_pos == std::string::npos ? message_.size() : sep_pos;
+                assign(par, message_sv.substr(pos, end_pos - pos));
+                pos = sep_pos == std::string::npos ? message_.size()
                                                    : (sep_pos + 1);
             }
             return;
         }
     }
-    _type = &_message[timestamp_prefix_length];
+    type_ = message_sv.substr(timestamp_prefix_length);
     if (textStartsWith("LOG VERSION: 2.0")) {
-        _class = Class::program;
-        _kind = LogEntryKind::log_version;
+        class_ = Class::program;
+        kind_ = LogEntryKind::log_version;
         return;
     }
     if (textStartsWith("logging initial states") ||
         textStartsWith("logging intitial states")) {
-        _class = Class::program;
-        _kind = LogEntryKind::log_initial_states;
+        class_ = Class::program;
+        kind_ = LogEntryKind::log_initial_states;
         return;
     }
     if (textContains("starting...") || textContains("active mode...")) {
-        _class = Class::program;
-        _kind = LogEntryKind::core_starting;
+        class_ = Class::program;
+        kind_ = LogEntryKind::core_starting;
         return;
     }
     if (textContains("shutting down...") || textContains("Bailing out") ||
         textContains("standby mode...")) {
-        _class = Class::program;
-        _kind = LogEntryKind::core_stopping;
+        class_ = Class::program;
+        kind_ = LogEntryKind::core_stopping;
         return;
     }
-    if (textContains("restarting...")) {
-        _class = Class::program;
-        _kind = LogEntryKind::none;
-        return;
-    }
-    _class = Class::info;
-    _kind = LogEntryKind::none;
+    class_ = Class::info;
+    kind_ = LogEntryKind::none;
 }
 
 bool LogEntry::textStartsWith(const std::string &what) const {
-    return _message.compare(timestamp_prefix_length, what.size(), what) == 0;
+    return message_.compare(timestamp_prefix_length, what.size(), what) == 0;
 }
 
 bool LogEntry::textContains(const std::string &what) const {
-    return _message.find(what, timestamp_prefix_length) != std::string::npos;
+    return message_.find(what, timestamp_prefix_length) != std::string::npos;
 }
 
 namespace {
-// Ugly: Depending on where we're called, the actual state type can be in
-// parentheses at the end, e.g. "ALERTHANDLER (OK)".
-std::string extractStateType(const std::string &str) {
+// TODO(sp) copy-n-paste from FetcherHelperChannel!
+template <class T, size_t N>
+using one_of = std::array<std::pair<std::string_view, T>, N>;
+
+// As complicated and inefficient as it looks, the function below is completely
+// unfolded in code: It basically results in very fast if-then-else cascades,
+// guarded by the lengths, see: https://www.youtube.com/watch?v=INn3xa4pMfg
+template <class T, size_t N>
+T parseState(std::string_view str, const one_of<T, N> &table, T default_value) {
+    // Ugly: Depending on where we're called, the actual state type can be in
+    // parentheses at the end, e.g. "ALERTHANDLER (OK)".
     if (!str.empty() && str[str.size() - 1] == ')') {
         size_t lparen = str.rfind('(');
         if (lparen != std::string::npos) {
-            return str.substr(lparen + 1, str.size() - lparen - 2);
+            str = str.substr(lparen + 1, str.size() - lparen - 2);
         }
     }
-    return str;
+    auto it = std::find_if(begin(table), end(table),
+                           [&](const auto &v) { return v.first == str; });
+    return it == table.end() ? default_value : it->second;
 }
 
-const std::unordered_map<std::string, ServiceState> fl_service_state_types{
-    // normal states
-    {"OK", ServiceState::ok},
-    {"WARNING", ServiceState::warning},
-    {"CRITICAL", ServiceState::critical},
-    {"UNKNOWN", ServiceState::unknown},
-    // states from "... ALERT"/"... NOTIFICATION"
-    {"RECOVERY", ServiceState::ok}};
-
-const std::unordered_map<std::string, HostState> fl_host_state_types{
-    // normal states
-    {"UP", HostState::up},
-    {"DOWN", HostState::down},
-    {"UNREACHABLE", HostState::unreachable},
-    // states from "... ALERT"/"... NOTIFICATION"
-    {"RECOVERY", HostState::up},
-    // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE) NOTIFICATION
-    // (RESULT|PROGRESS)"
-    {"OK", HostState::up},
-    {"WARNING", HostState::down},
-    {"CRITICAL", HostState::unreachable},
-    {"UNKNOWN", static_cast<HostState>(3)}};  // Horrible HACK
 }  // namespace
 
 // static
-ServiceState LogEntry::parseServiceState(const std::string &str) {
-    auto it = fl_service_state_types.find(extractStateType(str));
-    return it == fl_service_state_types.end() ? ServiceState::ok : it->second;
+ServiceState LogEntry::parseServiceState(std::string_view str) {
+    static constexpr one_of<ServiceState, 5> states{
+        {// normal states
+         {"OK"sv, ServiceState::ok},
+         {"WARNING"sv, ServiceState::warning},
+         {"CRITICAL"sv, ServiceState::critical},
+         {"UNKNOWN"sv, ServiceState::unknown},
+         // states from "... ALERT"/"... NOTIFICATION"
+         {"RECOVERY"sv, ServiceState::ok}}};
+    return parseState(str, states, ServiceState::ok);
 }
 
 // static
-HostState LogEntry::parseHostState(const std::string &str) {
-    auto it = fl_host_state_types.find(extractStateType(str));
-    return it == fl_host_state_types.end() ? HostState::up : it->second;
+HostState LogEntry::parseHostState(std::string_view str) {
+    static constexpr one_of<HostState, 8> states{
+        {// normal states
+         {"UP"sv, HostState::up},
+         {"DOWN"sv, HostState::down},
+         {"UNREACHABLE"sv, HostState::unreachable},
+         // states from "... ALERT"/"... NOTIFICATION"
+         {"RECOVERY"sv, HostState::up},
+         // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE)
+         // NOTIFICATION
+         // (RESULT|PROGRESS)"
+         {"OK"sv, HostState::up},
+         {"WARNING"sv, HostState::down},
+         {"CRITICAL"sv, HostState::unreachable},
+         {"UNKNOWN"sv, static_cast<HostState>(3)}}};  // Horrible HACK
+    return parseState(str, states, HostState::up);
 }
 
 namespace {
-std::string parens(const std::string &fun, const std::string &arg) {
-    return fun + " (" + arg + ")";
+std::string parens(std::string_view fun, std::string_view arg) {
+    return std::string{fun} + " (" + std::string{arg} + ")";
 }
 
 // TODO(sp) Centralized these mappings and their inverses...
@@ -451,54 +433,54 @@ std::string to_exit_code(int state) {
 }  // namespace
 
 std::string LogEntry::state_info() const {
-    switch (_kind) {
+    switch (kind_) {
         case LogEntryKind::state_host_initial:
         case LogEntryKind::state_host:
         case LogEntryKind::alert_host:
-            return parens(_state_type, to_host_state(_state));
+            return parens(state_type_, to_host_state(state_));
 
         case LogEntryKind::state_service_initial:
         case LogEntryKind::state_service:
         case LogEntryKind::alert_service:
-            return parens(_state_type, to_service_state(_state));
+            return parens(state_type_, to_service_state(state_));
 
         case LogEntryKind::none:
-            if (strcmp(_type, "HOST NOTIFICATION RESULT") == 0 ||
-                strcmp(_type, "SERVICE NOTIFICATION RESULT") == 0 ||
-                strcmp(_type, "HOST NOTIFICATION PROGRESS") == 0 ||
-                strcmp(_type, "SERVICE NOTIFICATION PROGRESS") == 0 ||
-                strcmp(_type, "HOST ALERT HANDLER STOPPED") == 0 ||
-                strcmp(_type, "SERVICE ALERT HANDLER STOPPED") == 0) {
-                return parens("EXIT_CODE", to_exit_code(_state));
+            if (type_ == "HOST NOTIFICATION RESULT"sv ||
+                type_ == "SERVICE NOTIFICATION RESULT"sv ||
+                type_ == "HOST NOTIFICATION PROGRESS"sv ||
+                type_ == "SERVICE NOTIFICATION PROGRESS"sv ||
+                type_ == "HOST ALERT HANDLER STOPPED"sv ||
+                type_ == "SERVICE ALERT HANDLER STOPPED"sv) {
+                return parens("EXIT_CODE"sv, to_exit_code(state_));
             }
-            if (strcmp(_type, "HOST NOTIFICATION") == 0) {
-                if (_state_type == "UP" ||    //
-                    _state_type == "DOWN" ||  //
-                    _state_type == "UNREACHABLE") {
-                    return parens("NOTIFY", _state_type);
+            if (type_ == "HOST NOTIFICATION"sv) {
+                if (state_type_ == "UP"sv ||    //
+                    state_type_ == "DOWN"sv ||  //
+                    state_type_ == "UNREACHABLE"sv) {
+                    return parens("NOTIFY"sv, state_type_);
                 }
-                if (mk::starts_with(_state_type, "ALERTHANDLER (")) {
-                    return parens("EXIT_CODE", to_exit_code(_state));
+                if (mk::starts_with(state_type_, "ALERTHANDLER (")) {
+                    return parens("EXIT_CODE"sv, to_exit_code(state_));
                 }
-                return _state_type;
+                return std::string{state_type_};
             }
-            if (strcmp(_type, "SERVICE NOTIFICATION") == 0) {
-                if (_state_type == "OK" ||        //
-                    _state_type == "WARNING" ||   //
-                    _state_type == "CRITICAL" ||  //
-                    _state_type == "UNKNOWN") {
-                    return parens("NOTIFY", _state_type);
+            if (type_ == "SERVICE NOTIFICATION"sv) {
+                if (state_type_ == "OK"sv ||        //
+                    state_type_ == "WARNING"sv ||   //
+                    state_type_ == "CRITICAL"sv ||  //
+                    state_type_ == "UNKNOWN"sv) {
+                    return parens("NOTIFY"sv, state_type_);
                 }
-                if (mk::starts_with(_state_type, "ALERTHANDLER (")) {
-                    return parens("EXIT_CODE", to_exit_code(_state));
+                if (mk::starts_with(state_type_, "ALERTHANDLER ("sv)) {
+                    return parens("EXIT_CODE"sv, to_exit_code(state_));
                 }
-                return _state_type;
+                return std::string{state_type_};
             }
-            if (strcmp(_type, "PASSIVE HOST CHECK") == 0) {
-                return parens("PASSIVE", to_host_state(_state));
+            if (type_ == "PASSIVE HOST CHECK"sv) {
+                return parens("PASSIVE"sv, to_host_state(state_));
             }
-            if (strcmp(_type, "PASSIVE SERVICE CHECK") == 0) {
-                return parens("PASSIVE", to_service_state(_state));
+            if (type_ == "PASSIVE SERVICE CHECK"sv) {
+                return parens("PASSIVE"sv, to_service_state(state_));
             }
             return "";
 
@@ -508,7 +490,7 @@ std::string LogEntry::state_info() const {
         case LogEntryKind::flapping_service:
         case LogEntryKind::acknowledge_alert_host:
         case LogEntryKind::acknowledge_alert_service:
-            return _state_type;
+            return std::string{state_type_};
 
         case LogEntryKind::timeperiod_transition:
         case LogEntryKind::core_starting:

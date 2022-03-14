@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <iosfwd>
 #include <list>
 #include <string>
@@ -31,7 +32,7 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const Result &r);
 
-    InputBuffer(int fd, const bool &termination_flag, Logger *logger,
+    InputBuffer(int fd, std::function<bool()> should_terminate, Logger *logger,
                 std::chrono::milliseconds query_timeout,
                 std::chrono::milliseconds idle_timeout);
     Result readRequest();
@@ -39,16 +40,17 @@ public:
     std::string nextLine();
 
 private:
-    int _fd;
-    const bool &_termination_flag;
-    std::chrono::milliseconds _query_timeout;
-    std::chrono::milliseconds _idle_timeout;
+    const int _fd;
+    const std::function<bool()> should_terminate_;
+    const std::chrono::milliseconds _query_timeout;
+    const std::chrono::milliseconds _idle_timeout;
     std::vector<char> _readahead_buffer;
     size_t _read_index;
     size_t _write_index;
     std::list<std::string> _request_lines;
     Logger *const _logger;
 
+    [[nodiscard]] bool shouldTerminate() const { return should_terminate_(); }
     Result readData();
 };
 

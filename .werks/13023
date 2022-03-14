@@ -1,0 +1,13 @@
+Title: agent_prism: add support for multiline messages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625667504
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this werk the prism_alerts would crash if a message contained a line
+break. Now agent_prism escapes line breaks in messages.

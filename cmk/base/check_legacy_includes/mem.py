@@ -4,31 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.config import factory_settings
-import time
 import collections
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import get_average
-from typing import NamedTuple
+import time
+from numbers import Integral
+from typing import Any, List, NamedTuple, Optional
 
-from cmk.base.plugins.agent_based.utils.memory import (
-    compute_state,
-    get_levels_mode_from_value,
-    normalize_levels as normalize_mem_levels,
-)
+from cmk.base.check_api import get_average, get_bytes_human_readable, get_percent_human_readable
+from cmk.base.plugins.agent_based.utils.memory import compute_state, get_levels_mode_from_value
+from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
 
 memused_default_levels = (150.0, 200.0)
 
-factory_settings["memory_default_levels"] = {
+MEMORY_DEFAULT_LEVELS = {
     "levels": memused_default_levels,
 }
 
 
-class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', float)])):
+class _MemBytesTuple(NamedTuple):
+    bytes: int
+    kb: float
+    mb: float
+
+
+class MemBytes(_MemBytesTuple):
     def __new__(cls, value):
-        return super(MemBytes, cls).__new__(cls, int(value * 1024), float(value), value / 1024.0)
+        return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 
     def render(self):
         return get_bytes_human_readable(self.bytes, base=1024)
@@ -41,16 +41,17 @@ def _compute_state(value, warn, crit):
 #############################################################################
 #    This function is already migrated and available in utils/memory.py !   #
 #############################################################################
-def check_memory_element(label,
-                         used,
-                         total,
-                         levels,
-                         label_total="",
-                         show_free=False,
-                         metric_name=None,
-                         create_percent_metric=False):
-    """Return a check result for one memory element
-    """
+def check_memory_element(
+    label,
+    used,
+    total,
+    levels,
+    label_total="",
+    show_free=False,
+    metric_name=None,
+    create_percent_metric=False,
+):
+    """Return a check result for one memory element"""
     if show_free:
         show_value = total - used
         show_text = " free"
@@ -82,14 +83,16 @@ def check_memory_element(label,
         perf.append((metric_name, used, warn, crit, 0, total))
     if create_percent_metric:
         scale_to_perc = 100.0 / total
-        perf.append((
-            "mem_used_percent",
-            used * scale_to_perc,
-            warn * scale_to_perc if warn is not None else None,
-            crit * scale_to_perc if crit is not None else None,
-            0.0,
-            None,  # some times over 100%!
-        ))
+        perf.append(
+            (
+                "mem_used_percent",
+                used * scale_to_perc,
+                warn * scale_to_perc if warn is not None else None,
+                crit * scale_to_perc if crit is not None else None,
+                0,
+                None,  # some times over 100%!
+            )
+        )
 
     return state, infotext, perf
 
@@ -223,8 +226,7 @@ def check_memory_dict(meminfo, params):
 
 
 def _get_total_usage(ramused, swapused, pagetables):
-    """get total usage and a description how it was computed
-    """
+    """get total usage and a description how it was computed"""
     totalused_kb = ramused.kb
     details = ["RAM"]
 
@@ -246,13 +248,16 @@ def check_memory(params, meminfo):
     if isinstance(params, tuple):
         params = {"levels": params}
 
-    memtotal = MemBytes(meminfo['MemTotal'])
-    memused = MemBytes(memtotal.kb - meminfo['MemFree'])
+    memtotal = MemBytes(meminfo["MemTotal"])
+    memused = MemBytes(memtotal.kb - meminfo["MemFree"])
 
+    swaptotal: Optional[MemBytes]
+    swapused: Optional[MemBytes]
+    perfdata: List[Any]
     if "SwapFree" in meminfo:
-        swaptotal = MemBytes(meminfo['SwapTotal'])
-        swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'])
-        perfdata = [('swap_used', swapused.bytes, None, None, 0, swaptotal.bytes)]
+        swaptotal = MemBytes(meminfo["SwapTotal"])
+        swapused = MemBytes(swaptotal.kb - meminfo["SwapFree"])
+        perfdata = [("swap_used", swapused.bytes, None, None, 0, swaptotal.bytes)]
     else:
         swaptotal = None
         swapused = None
@@ -261,19 +266,21 @@ def check_memory(params, meminfo):
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
-    if 'PageTables' in meminfo:
-        pagetables = MemBytes(meminfo['PageTables'])
-        perfdata.append(('mem_lnx_page_tables', pagetables.bytes))
+    pagetables: Optional[MemBytes]
+    if "PageTables" in meminfo:
+        pagetables = MemBytes(meminfo["PageTables"])
+        perfdata.append(("mem_lnx_page_tables", pagetables.bytes))
     else:
         pagetables = None
 
     # Buffers and Cached are optional. On Linux both mean basically the same.
-    caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0))
+    caches = MemBytes(meminfo.get("Buffers", 0) + meminfo.get("Cached", 0))
 
     ramused = MemBytes(memused.kb - caches.kb)
-    perfdata.append(('mem_used', ramused.bytes, None, None, 0, memtotal.bytes))
+    perfdata.append(("mem_used", ramused.bytes, None, None, 0, memtotal.bytes))
     perfdata.append(
-        ('mem_used_percent', 100. * ramused.bytes / memtotal.bytes, None, None, 0, 100.))
+        ("mem_used_percent", 100.0 * ramused.bytes / memtotal.bytes, None, None, 0, 100.0)
+    )
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
 
@@ -288,14 +295,12 @@ def check_memory(params, meminfo):
     # Take into account averaging
     average_min = params.get("average")
     if average_min:
-        totalused_mb_avg = get_average("mem.used.total",
-                                       time.time(),
-                                       totalused.mb,
-                                       average_min,
-                                       initialize_zero=False)
+        totalused_mb_avg = get_average(
+            "mem.used.total", time.time(), totalused.mb, average_min, initialize_zero=False
+        )
         totalused_perc_avg = totalused_mb_avg / memtotal.mb * 100
         infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
-        perfdata.append(('memusedavg', totalused_mb_avg))
+        perfdata.append(("memusedavg", totalused_mb_avg))
         comp_mb = totalused_mb_avg
     else:
         comp_mb = totalused.mb
@@ -312,8 +317,19 @@ def check_memory(params, meminfo):
         _perc_total=memtotal.mb,
         render_unit=1024**2,
     )
-    perfdata.append(('mem_lnx_total_used', totalused.bytes, warn_mb * 1024**2, crit_mb * 1024**2, 0,
-                     totalvirt.bytes))
+    assert isinstance(totalused, MemBytes)
+    assert isinstance(warn_mb, Integral)
+    assert isinstance(crit_mb, Integral)
+    perfdata.append(
+        (
+            "mem_lnx_total_used",
+            totalused.bytes,
+            warn_mb * 1024**2,
+            crit_mb * 1024**2,
+            0,
+            totalvirt.bytes,
+        )
+    )
 
     # Check levels
     state = _compute_state(comp_mb, warn_mb, crit_mb)
@@ -322,6 +338,10 @@ def check_memory(params, meminfo):
 
     yield state, infotext, perfdata
 
+    # Not sure why the next two lines are necessary: memtotal and ramused
+    # are not optional.
+    assert isinstance(ramused, MemBytes)
+    assert isinstance(memtotal, MemBytes)
     if totalused_descr != "RAM":
         yield check_memory_element(
             "RAM",
@@ -329,6 +349,8 @@ def check_memory(params, meminfo):
             memtotal.bytes,
             None,
         )
+        assert isinstance(swapused, MemBytes)
+        assert isinstance(swaptotal, MemBytes)
         if swaptotal and swaptotal.bytes:
             yield check_memory_element(
                 "Swap",
@@ -340,11 +362,11 @@ def check_memory(params, meminfo):
             yield 0, "Pagetables: %s" % pagetables.render(), []
 
     # Add additional metrics, provided by Linux.
-    if meminfo.get('Mapped'):
+    if meminfo.get("Mapped"):
         for key, label, metric in (
-            ('Mapped', 'Mapped', 'mem_lnx_mapped'),
-            ('Committed_AS', 'Committed', 'mem_lnx_committed_as'),
-            ('Shmem', 'Shared', 'mem_lnx_shmem'),
+            ("Mapped", "Mapped", "mem_lnx_mapped"),
+            ("Committed_AS", "Committed", "mem_lnx_committed_as"),
+            ("Shmem", "Shared", "mem_lnx_shmem"),
         ):
             value = MemBytes(meminfo.get(key, 0))
             yield 0, "%s: %s" % (label, value.render()), [(metric, value.bytes)]

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Note: The CMCIII checks for Water IN/OUT and similar stuff are
 # deep and fundamentally broken (such as the implementation of
 # Rittal). Need to rewrite an make *one* check with subchecks.
@@ -40,24 +41,32 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def parse_cmciii_lcp_water(info):
     units = {}
+    unit_lines = None
     for line in info:
         if line[0].endswith(" Unit"):
             unit_name = line[0].split(" ")[0]
             unit_lines = []
             units[unit_name] = unit_lines
         else:
-            unit_lines.append(line[0])
+            if unit_lines is not None:
+                unit_lines.append(line[0])
 
     if "Water" in units:
         return units["Water"]
 
+    return []
+
 
 def inventory_cmciii_lcp_water(parsed):
-    return []
+    if parsed:
+        yield (None, {})
 
 
 def check_cmciii_lcp_water(item, params, parsed):
     # New check: This sensor is handled by cmciii.temp
+    if not parsed:
+        return
+
     def parse_status(status_name):
         if status_name.lower() == "ok":
             return 0
@@ -80,25 +89,27 @@ def check_cmciii_lcp_water(item, params, parsed):
     limits = temperatures[1:]
     status_name = lines[-1]
 
-    status, info_text, perf_data = check_temperature(temp,
-                                                     params,
-                                                     "cmciii_lcp_water_" + item,
-                                                     dev_levels=(limits[1], limits[0]),
-                                                     dev_levels_lower=(limits[2], limits[3]),
-                                                     dev_status=parse_status(status_name),
-                                                     dev_status_name=status_name)
+    status, info_text, perf_data = check_temperature(
+        temp,
+        params,
+        "cmciii_lcp_water_" + item,
+        dev_levels=(limits[1], limits[0]),
+        dev_levels_lower=(limits[2], limits[3]),
+        dev_status=parse_status(status_name),
+        dev_status_name=status_name,
+    )
 
     yield status, "Temperature: " + info_text, perf_data
 
 
-check_info['cmciii_lcp_water'] = {
-    "parse_function"      : parse_cmciii_lcp_water,
-    "check_function"      : check_cmciii_lcp_water,
-    "inventory_function"  : inventory_cmciii_lcp_water,
-    "has_perfdata"        : True,
-    "service_description" : "Temperature Water LCP %s",
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP") and \
-                                        oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
-    "snmp_info"           : ( '.1.3.6.1.4.1.2606.7.4.2.2.1.10', [2] ),
-    "group"               : "temperature",
+check_info["cmciii_lcp_water"] = {
+    "parse_function": parse_cmciii_lcp_water,
+    "check_function": check_cmciii_lcp_water,
+    "inventory_function": inventory_cmciii_lcp_water,
+    "has_perfdata": True,
+    "service_description": "Temperature Water LCP %s",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP")
+    and oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
+    "snmp_info": (".1.3.6.1.4.1.2606.7.4.2.2.1.10", [2]),
+    "group": "temperature",
 }

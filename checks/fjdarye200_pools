@@ -9,12 +9,17 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-PoolEntry = collections.namedtuple(
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+PoolEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "EternusProvisioningPool",
     ["capacity", "usage", "available"],
 )
@@ -59,7 +64,8 @@ check_info["fjdarye200_pools"] = {
             "1",  # fjdaryMgtTpPoolNumber
             "3",  # fjdaryMgtTpPoolTotalCapacity
             "4",  # fjdaryMgtTpPoolUsedCapacity
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
     "default_levels_variable": "filesystem_default_levels",
     "group": "filesystem",

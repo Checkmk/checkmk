@@ -79,25 +79,31 @@ def check_cisco_stack(item, params, parsed):
     switch_role = data["switch_role"]
 
     status = params.get(data["switch_state"], 3)
-    infotext = "Switch state: %s (%s), switch role: %s" % (switch_state_descriptions.get(
-        switch_state, "Unknown"), switch_state, switch_role)
+    infotext = "Switch state: %s (%s), switch role: %s" % (
+        switch_state_descriptions.get(switch_state, "Unknown"),
+        switch_state,
+        switch_role,
+    )
     return status, infotext
 
 
-check_info['cisco_stack'] = {
-    'default_levels_variable': 'cisco_stack',
-    'parse_function': parse_cisco_stack,
-    'inventory_function': inventory_cisco_stack,
-    'check_function': check_cisco_stack,
-    'service_description': 'Switch stack status %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.9.9.500.1.2.1.1',
+check_info["cisco_stack"] = {
+    "default_levels_variable": "cisco_stack",
+    "parse_function": parse_cisco_stack,
+    "inventory_function": inventory_cisco_stack,
+    "check_function": check_cisco_stack,
+    "service_description": "Switch stack status %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.500.1.2.1.1",
         [
             "1",  # cswSwitchNumCurrent
             "3",  # cswSwitchRole
             "6",  # cswSwitchState
-        ]),
-    'snmp_scan_function': lambda oid: (oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.9.1.1208") or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")),
-    'group': 'cisco_stack',
+        ],
+    ),
+    "snmp_scan_function": lambda oid: (
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1208")
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")
+    ),
+    "group": "cisco_stack",
 }

@@ -1,7 +1,7 @@
 title: Fujitsu ETERNUS DX500 S3 Storage Systems: Flash of Controller Modules
 agents: snmp
 catalog: hw/storagehw/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the reported status of the flash of all installed channel
@@ -12,6 +12,6 @@ item:
  The index of the controller module flash in the SNMP table. It is of type
  integer. The first module has an index of {0}.
 
-inventory:
+discovery:
  One service is created for the flash of each controller module
  if the state is not {invalid} (4).

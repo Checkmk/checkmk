@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: High Availability Problems
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -15,6 +15,5 @@ description:
  In the devices observed so far the problem categories were called
  "Filter", "Synchronization", "cphad" and "fwd".
 
-inventory:
+discovery:
  One service is created for each problem category.
-

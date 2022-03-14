@@ -1,7 +1,7 @@
 title: Hitachi HNAS: FibreChannel Interfaces
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors FibreChannel interfaces of Hitachi HNAS storage systems.
@@ -18,7 +18,7 @@ item:
  ClusterNode 1. The description and the alias are given by the interface and the
  ClusterNode ID separated by a dot, eg. 1.2 for interface 2 on ClusterNode 1.
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6,
@@ -40,4 +40,3 @@ cluster:
  rules defining the interface groups must be configured to apply to the nodes, not
  to the cluster host (the latter has no effect). In case the grouping configurations
  vary across the nodes, the last node wins.
-

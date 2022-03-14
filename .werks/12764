@@ -1,0 +1,15 @@
+Title: agent_prometheus: don't crash if the cAdvisor is used without a namespace prefix
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1621417138
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This werk only affects you if you use the scrape target cAdvisor with the option
+"Entity level used to create Checkmk piggyback hosts" set to "Pod". If "Prepend
+namespace prefix for hosts" was not selected, the agent crashed with an error
+message. To be consistent with the remaining entity levels and the scrape target
+"Kube-state-metrics" the value is now mandatory.

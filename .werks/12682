@@ -1,0 +1,14 @@
+Title: f5_bigip_mem: item disappears from monitoring data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617712944
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Since Check_mk version 2.0.0, the F5 BIGIP memory services show an UNKNOWN
+status with the message "item not found in monitoring data". This has been
+fixed.

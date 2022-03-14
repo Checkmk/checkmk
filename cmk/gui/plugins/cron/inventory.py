@@ -5,6 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.inventory
-from cmk.gui.plugins.cron import register_job
+from cmk.gui.cron import register_job
 
 register_job(cmk.gui.inventory.InventoryHousekeeping().run)

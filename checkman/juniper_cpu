@@ -1,13 +1,12 @@
 title: Juniper Devices: Load Readings
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is obsoleted by juniper_cpu_util!
  The check was reporting load readings, not utilization! Those load readings
  aren't actualy usable as the number of cores processing that load isn't known.
 
-inventory:
+discovery:
  No service is created since this check is obsolete.
-

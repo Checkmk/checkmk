@@ -4,27 +4,47 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 from pathlib import Path
+from typing import Any, Dict, Mapping, Optional, Sequence
 
-from testlib.utils import get_standard_linux_agent_output
+from _pytest.monkeypatch import MonkeyPatch
+
+from tests.testlib.utils import get_standard_linux_agent_output
+
+import cmk.utils.tags
+from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
-import cmk.base.autochecks as autochecks
-import cmk.utils.tags
+from cmk.base import autochecks
+
+
+class _AutochecksMocker(autochecks.AutochecksManager):
+    def __init__(self):
+        super().__init__()
+        self.raw_autochecks: dict[HostName, Sequence[autochecks.AutocheckEntry]] = {}
+
+    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[autochecks.AutocheckEntry]:
+        return self.raw_autochecks.get(hostname, [])
 
 
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
-    def __init__(self, site_id="unit"):
+
+    @staticmethod
+    def _get_config_cache() -> config.ConfigCache:
+        cc = config.get_config_cache()
+        assert isinstance(cc, config.ConfigCache)
+        return cc
+
+    def __init__(self, site_id: str = "unit") -> None:
         super().__init__()
 
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id
-        self._autochecks = {}
+        self._autochecks_mocker = _AutochecksMocker()
 
-        self.config = {
+        self.config: dict[str, Any] = {
             "tag_config": tag_config,
             "distributed_wato_site": site_id,
             "all_hosts": [],
@@ -33,14 +53,16 @@ class Scenario:
             "host_labels": {},
             "clusters": {},
         }
-        self.config_cache = config.get_config_cache()
+        self.config_cache = self._get_config_cache()
 
-    def add_host(self,
-                 hostname,
-                 tags=None,
-                 host_path="/wato/hosts.mk",
-                 labels=None,
-                 ipaddress=None):
+    def add_host(
+        self,
+        hostname: HostName,
+        tags: Optional[dict[str, str]] = None,
+        host_path: str = "/wato/hosts.mk",
+        labels: Optional[dict[str, str]] = None,
+        ipaddress: Optional[HostAddress] = None,
+    ) -> None:
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -57,9 +79,7 @@ class Scenario:
         if ipaddress is not None:
             self.config.setdefault("ipaddresses", {})[hostname] = ipaddress
 
-        return self
-
-    def fake_standard_linux_agent_output(self, *test_hosts):
+    def fake_standard_linux_agent_output(self, *test_hosts: str) -> None:
         self.set_ruleset(
             "datasource_programs",
             [
@@ -74,7 +94,13 @@ class Scenario:
             with cache_path.open("w", encoding="utf-8") as f:
                 f.write(linux_agent_output)
 
-    def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):
+    def add_cluster(
+        self,
+        hostname: HostName,
+        tags: Optional[dict[str, str]] = None,
+        host_path: str = "/wato/hosts.mk",
+        nodes: Optional[Sequence[HostName]] = None,
+    ) -> None:
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -85,12 +111,11 @@ class Scenario:
         self.config["clusters"][hostname] = nodes
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
-        return self
 
     # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-    def _get_effective_tag_config(self, tags):
+    def _get_effective_tag_config(self, tags: Mapping[str, str]) -> Mapping[str, str]:
         """Returns a full set of tag groups
 
         It contains the merged default tag groups and their default values
@@ -101,13 +126,13 @@ class Scenario:
 
         # TODO: Compute this dynamically with self.tags
         tag_config = {
-            'piggyback': 'auto-piggyback',
-            'networking': 'lan',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'snmp_ds': 'no-snmp',
-            'site': self.site_id,
-            'address_family': 'ip-v4-only',
+            "piggyback": "auto-piggyback",
+            "networking": "lan",
+            "agent": "cmk-agent",
+            "criticality": "prod",
+            "snmp_ds": "no-snmp",
+            "site": self.site_id,
+            "address_family": "ip-v4-only",
         }
         tag_config.update(tags)
 
@@ -127,18 +152,18 @@ class Scenario:
 
         return tag_config
 
-    def set_option(self, varname, option):
+    def set_option(self, varname, option) -> None:
         self.config[varname] = option
-        return self
 
-    def set_ruleset(self, varname, ruleset):
+    def set_ruleset(self, varname, ruleset) -> None:
         self.config[varname] = ruleset
-        return self
 
-    def set_autochecks(self, hostname, services):
-        self._autochecks[hostname] = services
+    def set_autochecks(
+        self, hostname: HostName, entries: Sequence[autochecks.AutocheckEntry]
+    ) -> None:
+        self._autochecks_mocker.raw_autochecks[hostname] = entries
 
-    def apply(self, monkeypatch):
+    def apply(self, monkeypatch: MonkeyPatch) -> config.ConfigCache:
         check_vars: Dict = {}
         for key, value in self.config.items():
             if key in config._check_variables:
@@ -146,19 +171,31 @@ class Scenario:
                 continue
             monkeypatch.setattr(config, key, value)
 
-        self.config_cache = config.get_config_cache()
+        self.config_cache = self._get_config_cache()
         self.config_cache.initialize()
         config.set_check_variables(check_vars)
 
-        if self._autochecks:
-            # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
-            monkeypatch.setattr(self.config_cache._autochecks_manager,
-                                "_raw_autochecks",
-                                dict(self._autochecks.items()),
-                                raising=False)
-
+        if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
-                autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
+                self.config_cache,
+                "_autochecks_manager",
+                self._autochecks_mocker,
+                raising=False,
+            )
 
         return self.config_cache
+
+
+class CEEScenario(Scenario):
+    """Helper class to modify the Check_MK base configuration for unit tests"""
+
+    @staticmethod
+    def _get_config_cache() -> config.CEEConfigCache:
+        cc = config.get_config_cache()
+        assert isinstance(cc, config.CEEConfigCache)
+        return cc
+
+    def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:
+        cc = super().apply(monkeypatch)
+        assert isinstance(cc, config.CEEConfigCache)
+        return cc

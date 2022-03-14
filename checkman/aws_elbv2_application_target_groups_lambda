@@ -1,7 +1,7 @@
 title: AWS ApplicationELB: Lambda Target Groups
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of Lambda user errors produced by target
@@ -16,6 +16,6 @@ description:
 item:
  Name of the target group.
 
-inventory:
+discovery:
  One service is created for each target group of the ELB if the required
  metric RequestCount is given.

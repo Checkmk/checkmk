@@ -36,7 +36,7 @@ static std::vector<RtBlock> TestTable;
 // do NOT use in production
 class UdpServer {
 public:
-    UdpServer(asio::io_context& io_context, short port)
+    UdpServer(asio::io_context &io_context, short port)
         : socket_(io_context, udp::endpoint(udp::v4(), port)) {
         do_receive();
     }
@@ -61,14 +61,14 @@ private:
     char data_[max_length];
 };
 
-void StartTestServer(asio::io_context* IoContext, int Port) {
+void StartTestServer(asio::io_context *IoContext, int Port) {
     try {
         ;
 
         UdpServer s(*IoContext, Port);
 
         IoContext->run();
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
 }
@@ -135,7 +135,7 @@ TEST(RealtimeTest, PackData) {
         EXPECT_TRUE(0 == memcmp(data, kPlainHeader.data(), kHeaderSize));
         EXPECT_TRUE(0 == memcmp(data + kHeaderSize + kTimeStampSize,
                                 output.data(), output.size()));
-        auto char_data = reinterpret_cast<char*>(data);
+        auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
         auto timestamp_mid = std::atoll(timestamp.c_str());
@@ -154,7 +154,7 @@ TEST(RealtimeTest, PackData) {
         ASSERT_TRUE(crypt_result.size() >
                     output.size() + kHeaderSize + kTimeStampSize);
         auto data = crypt_result.data();
-        auto char_data = reinterpret_cast<char*>(data);
+        auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
         auto timestamp_mid = std::atoll(timestamp.c_str());
@@ -224,9 +224,9 @@ TEST(RealtimeTest, Base_Long) {
         if (first.joinable()) first.join();
         EXPECT_GT(TestTable.size(), static_cast<size_t>(3));
 
-        for (auto packet : TestTable) {
-            auto d = reinterpret_cast<const char*>(packet.data());
-            std::string p(d);
+        for (const auto &packet : TestTable) {
+            auto d = reinterpret_cast<const char *>(packet.data());
+            std::string p(d, packet.size());
             EXPECT_TRUE(p.find(kPlainHeader) == 0);
             EXPECT_TRUE(p.find("<<<df") != std::string::npos);
             EXPECT_TRUE(p.find("<<<mem") != std::string::npos);
@@ -254,13 +254,13 @@ TEST(RealtimeTest, Base_Long) {
         if (first.joinable()) first.join();
         EXPECT_TRUE(TestTable.size() > 3);
         cma::encrypt::Commander dec("encrypt");
-        for (auto packet : TestTable) {
-            auto d = reinterpret_cast<char*>(packet.data());
+        for (auto &packet : TestTable) {
+            auto d = reinterpret_cast<char *>(packet.data());
             auto [success, size] =
                 dec.decode(d + kHeaderSize + kTimeStampSize,
                            packet.size() - kHeaderSize - kTimeStampSize, true);
             ASSERT_TRUE(success);
-            std::string p(d);
+            std::string p(d, packet.size());
             ASSERT_TRUE(p.find(kEncryptedHeader) == 0);
 
             EXPECT_TRUE(p.find("<<<df") != std::string::npos);

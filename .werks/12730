@@ -1,0 +1,19 @@
+Title: <tt>mk_zypper</tt>: Increase timeout from 10 to 50 s
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619071406
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The agent plugin <tt>mk_zypper</tt>, which collects data about updates
+on SUSE Linux hosts, had an built-in timeout of 10 s. This was too
+short, since <tt>zypper refresh</tt> can run for 20 s or more.
+This werk increases the timeout to 50 s.
+
+Note that this plugin is normally executed asynchronously and in large
+time intervals, so increasing this timeout is not problematic. For this
+werk to come into effect, you need to update the agent on affected
+hosts.

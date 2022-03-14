@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example:
 # .1.3.6.1.4.1.89.53.15.1.9.1 = INTEGER: 42
 # .1.3.6.1.4.1.89.53.15.1.10.1 = INTEGER: ok(1)
@@ -30,11 +31,14 @@ def parse_dell_powerconnect_temp(info):
         temp = float(temp_str)
     except ValueError:
         temp = None
-    return temp, {
-        '1': 'OK',
-        '2': 'unavailable',
-        '3': 'non operational',
-    }.get(dev_status, "unknown[%s]" % dev_status)
+    return (
+        temp,
+        {
+            "1": "OK",
+            "2": "unavailable",
+            "3": "non operational",
+        }.get(dev_status, "unknown[%s]" % dev_status),
+    )
 
 
 def inventory_dell_powerconnect_temp(parsed):
@@ -58,11 +62,9 @@ def check_dell_powerconnect_temp(_no_item, params, parsed):
 
     if temp is None:
         return state, "Status: %s" % dev_state_readable
-    return check_temperature(temp,
-                             params,
-                             "dell_powerconnect",
-                             dev_status=state,
-                             dev_status_name=dev_state_readable)
+    return check_temperature(
+        temp, params, "dell_powerconnect", dev_status=state, dev_status_name=dev_state_readable
+    )
 
 
 check_info["dell_powerconnect_temp"] = {
@@ -76,9 +78,11 @@ check_info["dell_powerconnect_temp"] = {
         ".1.3.6.1.4.1.89.53.15.1",
         [
             "9",  # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorValue
-            "10"  # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorStatus
-        ]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.674.10895"
-                                                                          ),
+            "10",  # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorStatus
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.674.10895"
+    ),
     "group": "temperature",
 }

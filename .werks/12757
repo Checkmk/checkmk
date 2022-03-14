@@ -1,0 +1,16 @@
+Title: New Zerto special agent was not functional
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618572965
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The new Zerto agent that was added in version 2.0 was not
+functional. This is fixed.
+
+If you have any existing rules for the Zerto agent without
+a username and password please add them to your rule.

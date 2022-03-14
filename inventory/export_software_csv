@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.paths
+from pathlib import Path
+
 import cmk.utils.debug
+import cmk.utils.paths
 
 
 def inv_export_software_csv(hostname, params, tree):
@@ -37,19 +39,19 @@ def inv_export_software_csv(hostname, params, tree):
                 raise
             raise MKGeneralException("Cannot create missing directory %s: %s" % (dirname, e))
 
-    out = open(filename, "w")
-    keys = ["name", "version", "arch"]
+    with Path(filename).open(mode="w") as out:
+        keys = ["name", "version", "arch"]
 
-    if headers:
-        out.write(separator.join(map(quote, keys)) + "\n")
+        if headers:
+            out.write(separator.join(map(quote, keys)) + "\n")
 
-    for package in packages:
-        line = []
-        for key in keys:
-            line.append(quote(package.get(key, "")))
-        out.write("%s\n" % separator.join(line))
+        for package in packages:
+            line = []
+            for key in keys:
+                line.append(quote(package.get(key, "")))
+            out.write("%s\n" % separator.join(line))
 
 
-inv_export['software_csv'] = {
+inv_export["software_csv"] = {
     "export_function": inv_export_software_csv,
 }

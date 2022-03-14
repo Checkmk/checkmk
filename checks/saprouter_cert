@@ -72,9 +72,11 @@ def check_saprouter_cert(_no_item, params, parsed):
         validity_age = not_after - time.time()
 
         warn, crit = params["validity_age"]
-        infotext   = "Valid from %s to %s, %s to go" % \
-                     (not_before_readable, not_after_readable,
-                      get_age_human_readable(validity_age))
+        infotext = "Valid from %s to %s, %s to go" % (
+            not_before_readable,
+            not_after_readable,
+            get_age_human_readable(validity_age),
+        )
 
         state = 0
         if validity_age < crit:
@@ -83,8 +85,10 @@ def check_saprouter_cert(_no_item, params, parsed):
             state = 1
 
         if state:
-            infotext += " (warn/crit below %s/%s)" % \
-                (get_age_human_readable(warn), get_age_human_readable(crit))
+            infotext += " (warn/crit below %s/%s)" % (
+                get_age_human_readable(warn),
+                get_age_human_readable(crit),
+            )
 
         return state, infotext
 
@@ -92,11 +96,11 @@ def check_saprouter_cert(_no_item, params, parsed):
         return 3, " - ".join(parsed["failed"])
 
 
-check_info['saprouter_cert'] = {
-    'parse_function': parse_saprouter_cert,
-    'inventory_function': inventory_saprouter_cert,
-    'check_function': check_saprouter_cert,
-    'service_description': 'SAP router certificate',
-    'default_levels_variable': 'saprouter_cert_default_levels',
-    'group': 'saprouter_cert_age'
+check_info["saprouter_cert"] = {
+    "parse_function": parse_saprouter_cert,
+    "inventory_function": inventory_saprouter_cert,
+    "check_function": check_saprouter_cert,
+    "service_description": "SAP router certificate",
+    "default_levels_variable": "saprouter_cert_default_levels",
+    "group": "saprouter_cert_age",
 }

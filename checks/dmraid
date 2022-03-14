@@ -31,7 +31,7 @@ def check_dmraid_pdisks(item, _no_params, info):
                 status = line[4].split(",")[0]
                 if status == "ok":
                     pos = line.index("Model:")
-                    model = " ".join(line[pos + 1:])
+                    model = " ".join(line[pos + 1 :])
                     return (0, "Online (%s)" % model)
                 return (2, "Error on disk!!")
     return (2, "Missing disk!!")
@@ -53,13 +53,13 @@ def check_dmraid_ldisks(item, _no_params, info):
 
 
 check_info["dmraid.ldisks"] = {
-    'check_function': check_dmraid_ldisks,
-    'inventory_function': inventory_dmraid_ldisks,
-    'service_description': 'RAID LDisk %s',
+    "check_function": check_dmraid_ldisks,
+    "inventory_function": inventory_dmraid_ldisks,
+    "service_description": "RAID LDisk %s",
 }
 
 check_info["dmraid.pdisks"] = {
-    'check_function': check_dmraid_pdisks,
-    'inventory_function': inventory_dmraid_pdisks,
-    'service_description': 'RAID PDisk %s',
+    "check_function": check_dmraid_pdisks,
+    "inventory_function": inventory_dmraid_pdisks,
+    "service_description": "RAID PDisk %s",
 }

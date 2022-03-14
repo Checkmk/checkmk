@@ -1,0 +1,20 @@
+Title: SAP HANA: Separate instance dependent fileinfo checks, ie. new checks sap_hana_fileinfo and sap_hana_fileinfo_groups
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1625831794
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Previously fileinfo and fileinfo_groups were used for monitoring
+SAP HANA files and file groups.
+Now new sap_hana_fileinfo and sap_hana_fileinfo_groups checks are used
+for the same purpose. The difference is that with new checks services
+go to STALE when there is no data (connection to the database is lost).
+
+This werk is marked as incompatible because historical data from the
+file monitoring will be lost when new checks are used.
+Run the discovery to get new sap_hana_fileinfo and sap_hana_fileinfo_groups
+services.

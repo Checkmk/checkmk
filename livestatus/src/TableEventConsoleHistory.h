@@ -11,7 +11,8 @@
 #include <string>
 
 #include "TableEventConsole.h"
-#include "nagios.h"
+#include "contact_fwd.h"
+
 class MonitoringCore;
 class Row;
 

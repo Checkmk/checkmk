@@ -96,21 +96,17 @@
 # get cbQosQueueingCfgBandwidth
 # .1.3.6.1.4.1.9.9.166.1.9.1.1.1.1608 3094
 
-cisco_qos_default_levels = (None, None, 0.01, 0.01)
-
-#factory_settings["cisco_qos_default_values"] = {
-#    "drop" : (0.01, 0.01)
-#}
+factory_settings["cisco_qos_default_levels"] = {"drop": (0.01, 0.01)}
 
 
 def cisco_qos_get_config_entries_by_class_id(config, class_id):
-    return [if_index.split('.') for if_index, value in config.items() if value == class_id]
+    return [if_index.split(".") for if_index, value in config.items() if value == class_id]
 
 
 def inventory_cisco_qos(info):
     if len(info) == 12:
         ifs = dict(info[0])
-        config = dict([('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3]])
+        config = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[3]])
         if_names = dict(info[6])
 
         # Find all interfaces for each class and create one service for each pair
@@ -118,25 +114,16 @@ def inventory_cisco_qos(info):
         for class_id, class_name in info[2]:
             # Get interface ids which use this qos class
             for policy_id, _objects_id in cisco_qos_get_config_entries_by_class_id(
-                    config, class_id):
+                config, class_id
+            ):
                 if ifs.get(policy_id) in if_names:
                     if_name = if_names[ifs[policy_id]]
-                    items += [('%s: %s' % (if_name, class_name), {})]
+                    items += [("%s: %s" % (if_name, class_name), {})]
 
         return items
 
 
 def check_cisco_qos(item, params, info):
-    # Convert old params definitions
-    # Note: the float values of the post levels are converted to int
-    had_legacy_params = False
-    if isinstance(params, tuple):
-        params = {
-            "post": tuple(int(x) if x else None for x in params[0:2]),
-            "drop": params[2:4],
-        }
-        had_legacy_params = True
-
     unit = params.get("unit", "bit")
     average = params.get("average")
     post_warn, post_crit = params.get("post", (None, None))
@@ -146,9 +133,9 @@ def check_cisco_qos(item, params, info):
     ifs = dict(info[0])
     policies = dict(info[1])
     classes = dict(info[2])
-    config = dict([('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3]])
-    post_bytes = dict([('.'.join(oid.split('.')[-2:]), value) for oid, value in info[4]])
-    drop_bytes = dict([('.'.join(oid.split('.')[-2:]), value) for oid, value in info[5]])
+    config = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[3]])
+    post_bytes = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[4]])
+    drop_bytes = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[5]])
     if_names = dict(info[6])
     if_speeds = dict(info[7])
     parents = dict(info[8])
@@ -156,7 +143,7 @@ def check_cisco_qos(item, params, info):
     if_qos_bandwidth_units = dict(info[10])
     object_types = dict(info[11])
 
-    if_name, class_name = item.split(': ')
+    if_name, class_name = item.split(": ")
 
     # Gather the class id by class_name
     class_id = None
@@ -177,7 +164,8 @@ def check_cisco_qos(item, params, info):
 
     policy_id, objects_id, policy_map_id, policy_name = None, None, None, None
     for this_policy_id, this_objects_id in cisco_qos_get_config_entries_by_class_id(
-            config, class_id):
+        config, class_id
+    ):
         if if_id != ifs[this_policy_id]:
             continue  # skip the ones of other interfaces
 
@@ -185,22 +173,22 @@ def check_cisco_qos(item, params, info):
         # of type "policy map" from the config table. All of this type should have
         # the same value, which is then the policy_map_id.
         for key in object_types:
-            if key.startswith(this_policy_id + '.') and object_types[key] == '1':
+            if key.startswith(this_policy_id + ".") and object_types[key] == "1":
                 policy_map_id = config[key]
                 break
 
         if policy_map_id is None:
-            return 3, 'Invalid policy map id'
+            return 3, "Invalid policy map id"
 
         policy_name = policies.get(policy_map_id)
         policy_id = this_policy_id
         objects_id = this_objects_id
 
     if policy_id is None or objects_id is None:
-        return 3, 'Could not find policy_id or objects_id'
+        return 3, "Could not find policy_id or objects_id"
 
-    post_b = post_bytes.get(policy_id + '.' + objects_id, 0)
-    drop_b = drop_bytes.get(policy_id + '.' + objects_id, 0)
+    post_b = post_bytes.get(policy_id + "." + objects_id, 0)
+    drop_b = drop_bytes.get(policy_id + "." + objects_id, 0)
     speed = saveint(if_speeds[if_id])
 
     parent_value_cache = {a_value: a_key.split(".")[1] for a_key, a_value in config.items()}
@@ -226,7 +214,7 @@ def check_cisco_qos(item, params, info):
                         speed = speed * (qos_bandwidth / 100.0)
 
                     elif qos_unit == 3:
-                        remaining = (speed / 100.0) * qos_bandwidth
+                        remaining = speed * (qos_bandwidth / 100.0)
                         speed = speed - remaining
                     break
                 except KeyError:
@@ -240,26 +228,24 @@ def check_cisco_qos(item, params, info):
         post_warn = bw / 100.0 * post_warn
         post_crit = bw / 100.0 * post_crit
     elif isinstance(post_warn, int):
-        if unit == 'bit':
+        if unit == "bit":
             post_warn = post_warn // 8
             post_crit = post_crit // 8
 
     # Determine drop warn/crit levels
-    if isinstance(drop_warn, float) and not had_legacy_params:
+    if isinstance(drop_warn, float):
         drop_warn = bw / 100.0 * drop_warn
         drop_crit = bw / 100.0 * drop_crit
     # Convert the drop levels to byte
     elif unit == "bit":
-        # But only if our params where already provided in the new format
-        if not had_legacy_params:
-            if isinstance(drop_warn, int):
-                drop_warn = drop_warn / 8.0
-            if isinstance(drop_crit, int):
-                drop_crit = drop_crit / 8.0
+        if isinstance(drop_warn, int):
+            drop_warn = drop_warn / 8.0
+        if isinstance(drop_crit, int):
+            drop_crit = drop_crit / 8.0
 
     # Handle counter values
     state = 0
-    infotext = ''
+    infotext = ""
     this_time = time.time()
     rates = []
     perfdata = []
@@ -277,7 +263,8 @@ def check_cisco_qos(item, params, info):
             avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
             rates.append(avg_value)
             perfdata_avg.append(
-                ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val))
+                ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val)
+            )
 
     perfdata.extend(perfdata_avg)
 
@@ -294,21 +281,23 @@ def check_cisco_qos(item, params, info):
         post_rate = rates[0]
         drop_rate = rates[1]
 
-    for what, rate, warn, crit in [("post", post_rate, post_warn, post_crit),
-                                   ("drop", drop_rate, drop_warn, drop_crit)]:
-        infotext += ', %s: %s' % (what, format_value(rate))
-        if crit is not None and rate >= crit:
+    for what, rate, warn, crit in [
+        ("post", post_rate, post_warn, post_crit),
+        ("drop", drop_rate, drop_warn, drop_crit),
+    ]:
+        infotext += ", %s: %s" % (what, format_value(rate))
+        if crit is not None and rate >= crit and bw:
             state = max(2, state)
-            infotext += '(!!)'
-        elif warn is not None and rate >= warn:
+            infotext += "(!!)"
+        elif warn is not None and rate >= warn and bw:
             state = max(1, state)
-            infotext += '(!)'
+            infotext += "(!)"
 
     if policy_name:
-        infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))
+        infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (policy_name, format_value(bw))
     else:
-        infotext += ', Policy-Map-ID: %s, Int-Bandwidth: %s' % (policy_map_id, format_value(bw))
-    return (state, infotext.lstrip(', '), perfdata)
+        infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (policy_map_id, format_value(bw))
+    return (state, infotext.lstrip(", "), perfdata)
 
 
 check_info["cisco_qos"] = {
@@ -317,22 +306,23 @@ check_info["cisco_qos"] = {
     "inventory_function": inventory_cisco_qos,
     "has_perfdata": True,
     "group": "cisco_qos",
-    "default_levels_variable": "cisco_qos_default_"
+    "default_levels_variable": "cisco_qos_default_levels",
 }
 
-snmp_info['cisco_qos'] = [
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '1.1.1.4']),  # qosIfIndex
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '6.1.1.1']),  # qosPolicies
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '7.1.1.1']),  # qosClasses
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '5.1.1.2']),  # qosConfig
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '15.1.1.9']),  # qosPostBytes
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '15.1.1.16']),  # qosDropBytes
-    ('.1.3.6.1.2.1.2.2.1', [OID_END, '2']),  # ifNames
-    ('.1.3.6.1.2.1.2.2.1', [OID_END, '5']),  # ifSpeeds
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '5.1.1.4']),  # cbQosParentObjectsIndex
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '9.1.1.1']),  # qosQueueingConfigBandwidth
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '9.1.1.2']),  # cbQosQueueingCfgBandwidthUnits
-    ('.1.3.6.1.4.1.9.9.166.1', [OID_END, '5.1.1.3']),  # cbQosObjectsType
+snmp_info["cisco_qos"] = [
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "1.1.1.4"]),  # qosIfIndex
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "6.1.1.1"]),  # qosPolicies
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "7.1.1.1"]),  # qosClasses
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "5.1.1.2"]),  # qosConfig
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "15.1.1.9"]),  # qosPostBytes
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "15.1.1.16"]),  # qosDropBytes
+    (".1.3.6.1.2.1.2.2.1", [OID_END, "2"]),  # ifNames
+    (".1.3.6.1.2.1.2.2.1", [OID_END, "5"]),  # ifSpeeds
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "5.1.1.4"]),  # cbQosParentObjectsIndex
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "9.1.1.1"]),  # qosQueueingConfigBandwidth
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "9.1.1.2"]),  # cbQosQueueingCfgBandwidthUnits
+    (".1.3.6.1.4.1.9.9.166.1", [OID_END, "5.1.1.3"]),  # cbQosObjectsType
 ]
-snmp_scan_functions['cisco_qos'] = lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                                   oid(".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*")
+snmp_scan_functions["cisco_qos"] = lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and oid(
+    ".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*"
+)

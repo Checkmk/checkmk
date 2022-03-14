@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def inventory_k8s_job_info(parsed):
     if parsed:
@@ -14,11 +19,13 @@ def check_k8s_job_info(_no_item, params, parsed):
     active, failed, succeeded = parsed["active"], parsed["failed"], parsed["succeeded"]
     total = sum((active, failed, succeeded))
 
-    infotext = ", ".join((
-        "Running: %d/%d" % (active, total),
-        "Failed: %d" % failed,
-        "Succeeded: %d" % succeeded,
-    ))
+    infotext = ", ".join(
+        (
+            "Running: %d/%d" % (active, total),
+            "Failed: %d" % failed,
+            "Succeeded: %d" % succeeded,
+        )
+    )
     yield 0 if not failed else 2, infotext
 
 

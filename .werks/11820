@@ -1,0 +1,12 @@
+Title: Extend HP Proliant checks to HP Synergy
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1634203786
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+HP Synergy devices are now detected.

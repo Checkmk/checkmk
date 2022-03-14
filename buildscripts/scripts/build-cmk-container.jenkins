@@ -3,17 +3,14 @@ import java.text.SimpleDateFormat
 currentBuild.description = '\nBuilding the CMK docker container\n'
 
 def NODE = ''
-def DOCKER_TAG_DEFAULT
 withFolderProperties{
     NODE = env.BUILD_NODE
-    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
-    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, free, enterprise or managed' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
@@ -24,16 +21,8 @@ properties([
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
-def PACKAGE_DIR = '/bauwelt/download'
-def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
-def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk/'
-
-// Workaround to build arbitrary version: Copy the CMK package to /bauwelt/download/
-def ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
-
 // Duplicate code with nightly-build.jenkins
-def get_cmk_version(BRANCH, VERSION) {
+def get_cmk_version(BRANCH, VERSION){
     def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
     def DATE = new Date()
 
@@ -48,55 +37,65 @@ def get_cmk_version(BRANCH, VERSION) {
     }
 }
 
-node (NODE) {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        // We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
-        // Always use the default docker tag we got from the environment.
-        def CHECKOUT_IMAGE = docker.image('ubuntu-20.04:' + DOCKER_TAG_DEFAULT)
-        CHECKOUT_IMAGE.pull()
-        // The commands are executed with the 1001:1000 UID:GID (non-root).
-        // This is the UID of the jenkins user on the node which does not exist
-        // in the container. For the moment this does not look like a problem.
-        // But it may be that we get to the point where we need an existing
-        // user in the container.
-        CHECKOUT_IMAGE.inside('--ulimit nofile=1024:1024') {
-            stage('checkout sources') {
-                checkout(scm)
-            }
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
-            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+timeout(time: 12, unit: 'HOURS') {
+    node (NODE) {
+        def PACKAGE_DIR = WORKSPACE + '/download'
+        def DOCKER_GROUP_ID = ''
+    
+        stage('checkout sources') {
+            checkout(scm)
         }
-    }
-    try {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            def BUILD_IMAGE = docker.image('ubuntu-20.04:' + versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT))
-            BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock  -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR} -v /root/.cmk-credentials:/root/.cmk-credentials") {
-                stage('Build Container') {
-                    def CREDENTIALS_ID
-                    if (EDITION == "raw") {
-                        CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
-                    } else {
-                        CREDENTIALS_ID = "registry.checkmk.com"
+        notify = load 'buildscripts/scripts/lib/notify.groovy'
+        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+        upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
+        docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
+
+        // Get the ID of the docker group from the node(!). This must not be
+        // executed inside the container (as long as the IDs are different)
+        DOCKER_GROUP_ID = docker_util.get_docker_group_id()
+
+        try {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside("--ulimit nofile=1024:1024 --group-add=${DOCKER_GROUP_ID} -v /var/run/docker.sock:/var/run/docker.sock") {
+                    stage('Prepare package directory') {
+                        sh("rm -rf \"${PACKAGE_DIR}\"")
+                        sh("mkdir -p \"${PACKAGE_DIR}\"")
                     }
-                    withCredentials([usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
-                        sh """
-                            ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${DEMO}
-                        """
-                    }
-                    withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
-                        sh """
-                            cd ${PACKAGE_DIR}/${CMK_VERS}
-                            rsync -av --relative \
-                                --exclude '*dbgsym*.deb' \
-                                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR} -p 52022" \
-                                ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                                ${UPLOAD_DEST}
-                        """
+
+                    stage('Build Container') {
+                        def CREDENTIALS_ID
+                        if (EDITION == "raw") {
+                            CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
+                        } else {
+                            CREDENTIALS_ID = "registry.checkmk.com"
+                        }
+
+                        upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
+                        upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION)
+    
+                        withCredentials([
+                            usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
+                            usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                            sh """
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
+                            """
+                        }
+                        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                            sh """
+                                cd ${PACKAGE_DIR}/${CMK_VERS}
+                                rsync -av --relative \
+                                    --exclude '*dbgsym*.deb' \
+                                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
+                                    ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                                    ${WEB_DEPLOY_DEST}
+                            """
+                        }
                     }
                 }
             }
+        } catch(Exception e) {
+            notify.notify_error(e)
         }
-    } catch(Exception e) {
-        notify.notify_error(e)
     }
 }

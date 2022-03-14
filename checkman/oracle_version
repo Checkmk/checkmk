@@ -1,7 +1,7 @@
 title: Oracle Database: Version
 agents: linux, hpux, windows, solaris
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check does a login into an Oracle database and executes
@@ -13,6 +13,5 @@ item:
  The SID of the database (as appearing in the process
  name of the pmon_... process).
 
-inventory:
+discovery:
  One service is created for each running database.
-

@@ -1,7 +1,7 @@
 title: Stormshield: Services
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the {STORMSHIELD-MIB} to monitor the status of
@@ -10,6 +10,6 @@ description:
 item:
  The name of the service
 
-inventory:
+discovery:
  One service is created for each Stormshield Service if it is up.
  The Stormshield Services can be {0} (down) or {1} (up).

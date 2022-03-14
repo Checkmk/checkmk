@@ -5,56 +5,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    Integer,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, NetworkPort, TextInput
+
+######################################################################
+# NOTE: This valuespec and associated check are deprecated and will be
+#       removed in Checkmk version 2.2.
+######################################################################
 
 
 def _item_spec_k8s_port():
-    return TextAscii(
+    return TextInput(
         title=_("Port"),
         help=_("Name or number of the port"),
     )
 
 
 def _parameter_valuespec_k8s_port():
-    return Dictionary(elements=[
-        ('port', Integer(
-            title=_('Port'),
-            minvalue=0,
-            maxvalue=65535,
-        )),
-        ('target_port', Integer(
-            title=_('Target port'),
-            minvalue=0,
-            maxvalue=65535,
-        )),
-        ('node_port', Integer(
-            title=_('Node port'),
-            minvalue=0,
-            maxvalue=65535,
-        )),
-        ('protocol',
-         DropdownChoice(
-             title=_('Protocol'),
-             choices=[
-                 ('TCP', _('TCP')),
-                 ('UDP', _('UDP')),
-                 ('HTTP', _('HTTP')),
-                 ('PROXY', _('PROXY')),
-                 ('SCTP', _('SCTP')),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "port",
+                NetworkPort(
+                    title=_("Port"),
+                ),
+            ),
+            (
+                "target_port",
+                NetworkPort(
+                    title=_("Target port"),
+                ),
+            ),
+            (
+                "node_port",
+                NetworkPort(
+                    title=_("Node port"),
+                ),
+            ),
+            (
+                "protocol",
+                DropdownChoice(
+                    title=_("Protocol"),
+                    choices=[
+                        ("TCP", _("TCP")),
+                        ("UDP", _("UDP")),
+                        ("HTTP", _("HTTP")),
+                        ("PROXY", _("PROXY")),
+                        ("SCTP", _("SCTP")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -65,4 +71,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_port,
         title=lambda: _("Kubernetes Port"),
-    ))
+        is_deprecated=True,
+    )
+)

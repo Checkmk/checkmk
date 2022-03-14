@@ -1,0 +1,16 @@
+Title: Fix "element is not longer available" error on view edit
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1620112356
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Because of an empty grouping tooltip, the builtin views "hostnotifications",
+"hostsvcnotifications", "notifications", "failed_notifications",
+"svcnotifications", "contactnotifications" and "alerthandlers " showed an error
+"The selected element is not longer available. Please select something else."
+on edit.

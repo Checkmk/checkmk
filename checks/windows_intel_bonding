@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<windows_intel_bonding>>>
 # Caption    Name                                    RedundancyStatus
 # Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
@@ -27,12 +28,12 @@ from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard
 # 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #40           {82AE1F27-BF28-4E30-AC3D-809DF5FF0D39}
 # 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #38           {DC918766-F61C-4801-92F8-E5532907EA0D}
 
-factory_settings['bonding_default_levels'] = BONDING_CHECK_DEFAULT_PARAMETERS
+factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS
 
 
 def get_real_adapter_name(bond, name):
     prefix = "TEAM : %s - " % bond
-    return name[len(prefix):]
+    return name[len(prefix) :]
 
 
 def parse_windows_intel_bonding(info):
@@ -66,7 +67,7 @@ def parse_windows_intel_bonding(info):
                 adapters[adapter] = {
                     "function": adapter_function,
                     "status": adapter_status,
-                    "bond": adapter_bond
+                    "bond": adapter_bond,
                 }
 
         # Get adapter names
@@ -97,16 +98,18 @@ def parse_windows_intel_bonding(info):
                     "status": map_adapter_status.get(adapter_info["status"], "down"),
                 }
 
-        converted[status["caption"]].update({
-            "status": bond_status,
-            "mode": status["mode"],
-            "interfaces": interfaces,
-        })
+        converted[status["caption"]].update(
+            {
+                "status": bond_status,
+                "mode": status["mode"],
+                "interfaces": interfaces,
+            }
+        )
 
     return converted
 
 
-check_info['windows_intel_bonding'] = {
+check_info["windows_intel_bonding"] = {
     "parse_function": parse_windows_intel_bonding,
     "check_function": check_bonding,
     "inventory_function": inventory_bonding,

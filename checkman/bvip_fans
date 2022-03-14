@@ -1,7 +1,7 @@
 title: Bosch Video over IP: Fans
 agents: snmp
 catalog: hw/environment/bosch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   If the Camera or the Camera Stack from BVIP has a included fan, you can set
@@ -10,5 +10,5 @@ description:
 item:
  Identifier of fan
 
-inventory:
+discovery:
  One service is created for each Fan.

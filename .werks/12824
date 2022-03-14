@@ -1,0 +1,15 @@
+Title: UCS Bladecenter: support monitoring of racks and blades in the same ucs domain
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1629727360
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In previous versions only the racks were shown and blades were ignored if racks and blades existed in
+the same ucs domain.
+The special agent "UCS Bladecenter" now supports this usecase by detecting automatically the model type (rack or blade).
+
+You need to rediscover your services in order to apply this bugfix.

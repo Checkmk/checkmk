@@ -1,11 +1,11 @@
 title: ICOM Repeater: Operation Status
 agents: snmp
 catalog: hw/network/icom
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operation status of ICOM repeaters. It
  interprets off as CRIT, on as OK and all other states as UNKNOWN.
 
-inventory:
+discovery:
  One service is created for each device.

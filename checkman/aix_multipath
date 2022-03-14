@@ -1,7 +1,7 @@
 title: AIX: Multipathing
 agents: aix
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors
@@ -28,7 +28,6 @@ description:
 item:
  The WWID of the LUN.
 
-inventory:
+discovery:
  One service is created for each LUN that is reported by
  the lspath utility if the device starts with {"hdisk"}
-

@@ -1,0 +1,11 @@
+Title: Make UI forms submittable on enter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1631774877
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Due to a changed design of UI forms the forms were not submittable upon pressing the enter key anymore. This is fixed: UI forms with text input fields are now submittable on enter.

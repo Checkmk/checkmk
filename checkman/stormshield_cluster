@@ -1,7 +1,7 @@
 title: Stormshield: HA-Status
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the {STORMSHIELD-HA-MIB} for checking the HA-Status
@@ -9,5 +9,5 @@ description:
 
  The services will only be inventorized if you configured HA on your firewall.
 
-inventory:
+discovery:
  One service is created which holds information about the status of your HA.

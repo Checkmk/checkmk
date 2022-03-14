@@ -121,7 +121,7 @@ bool IsValid(std::string_view addr_template, std::string_view address) {
         XLOG::l("Invalid entry '{}' ignored", addr_template);
         return false;
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(
             XLOG_FUNC + " Parameters are invalid '{}' '{}', exception is '{}'",
             addr_template, address, e.what());
@@ -136,7 +136,7 @@ std::string MapToV6Address(std::string_view address) {
                 asio::ip::make_address_v6(asio::ip::v4_mapped, address_v4);
             return address_v6.to_string();
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " Parameter is invalid '{}', exception is '{}'",
                 address, e.what());
         return {};
@@ -156,7 +156,7 @@ std::string MapToV6Network(std::string_view network) {
                 asio::ip::make_network_v6(address_v6, prefix_len);
             return end_network.to_string();
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " Parameter is invalid '{}', exception is '{}'",
                 network, e.what());
         return {};

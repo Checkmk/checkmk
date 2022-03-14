@@ -1,7 +1,7 @@
 title: F5 Big-IP: System Fans
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the
@@ -11,7 +11,7 @@ description:
  It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3
  devices.
 
-inventory:
+discovery:
  One service is created for each available fan.
 
 item:

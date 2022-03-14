@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -176,7 +172,7 @@ metric_info["fc_c2_frjt_frames"] = {
     "color": "26/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -220,7 +216,7 @@ graph_info["fc_errors_detailed"] = {
         ("fc_c2c3_discards", "stack"),
         ("fc_c2_fbsy_frames", "stack"),
         ("fc_c2_frjt_frames", "stack"),
-    ]
+    ],
 }
 
 graph_info["throughput"] = {

@@ -1,7 +1,7 @@
 title: 3ware ATA RAID Controller: State of Disks
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of disks of an 3ware ATA RAID Controller.
@@ -20,5 +20,5 @@ description:
 item:
  The port identifier of the disk, e.g. {p0} or {p1}.
 
-inventory:
+discovery:
  One service is created for each logical unit which doesn't have the status NOT-PRESENT.

@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # 508 and 604 have the same mib
 janitza_umg_device_map = {
     ".1.3.6.1.4.1.34278.8.6": "96",
@@ -51,7 +54,7 @@ def parse_janitza_umg_inphase(info):
             "energy": 3,
             "sumenergy": 4,
             "misc": 6,
-        }
+        },
     }[dev_type]
 
     rmsphase = flatten(info[1])
@@ -111,15 +114,15 @@ def inventory_janitza_umg_inphase(parsed):
             yield item, {}
 
 
-check_info['janitza_umg'] = {
-    'parse_function': parse_janitza_umg_inphase,
-    'inventory_function': inventory_janitza_umg_inphase,
-    'check_function': check_elphase,
-    'service_description': 'Input %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'janitza_umg_inphase_default_levels',
-    'group': 'el_inphase',
-    'snmp_info': [
+check_info["janitza_umg"] = {
+    "parse_function": parse_janitza_umg_inphase,
+    "inventory_function": inventory_janitza_umg_inphase,
+    "check_function": check_elphase,
+    "service_description": "Input %s",
+    "has_perfdata": True,
+    "default_levels_variable": "janitza_umg_inphase_default_levels",
+    "group": "el_inphase",
+    "snmp_info": [
         (".1.3.6.1.2.1.1.2", ["0"]),  # device id
         (".1.3.6.1.4.1.34278", ["1"]),  # rmsPhase
         (".1.3.6.1.4.1.34278", ["2"]),  # rmsSum
@@ -130,40 +133,39 @@ check_info['janitza_umg'] = {
         (".1.3.6.1.4.1.34278", ["7"]),  #       "
         (".1.3.6.1.4.1.34278", ["8"]),  #       "
     ],
-    'snmp_scan_function': janitza_umg_scan,
+    "snmp_scan_function": janitza_umg_scan,
 }
 
 
 def inventory_janitza_umg_freq(parsed):
     # info[0] is frequency, info[1] is first temperature reading, info[2] is second.
     if "Frequency" in parsed:
-        yield "1", {}
+        yield "1", {}  # why?? :-(
 
 
 def check_janitza_umg_freq(item, params, parsed):
-    warn, crit = params.get("levels", (0, 0))
+    if "Frequency" not in parsed:
+        return
 
-    if "Frequency" in parsed:
-        reading = float(parsed["Frequency"]) / 100.0
-        perfdata = [("in_freq", reading, warn, crit)]
-
-        infotext = "Frequency: %.2f Hz" % reading
-        levelstext = "(warn/crit at %d/%d Hz)" % (warn, crit)
-
-        if reading <= crit:
-            return 2, infotext + " " + levelstext, perfdata
-        elif reading <= warn:
-            return 1, infotext + " " + levelstext, perfdata
-        return 0, infotext, perfdata
+    return check_levels(
+        float(parsed["Frequency"]) / 100.0,
+        "in_freq",
+        (None, None) + params["levels"],
+        human_readable_func=render.frequency,
+        infoname="Frequency",
+    )
 
 
-check_info['janitza_umg.freq'] = {
-    'inventory_function': inventory_janitza_umg_freq,
-    'check_function': check_janitza_umg_freq,
-    'service_description': 'Frequency %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'janitza_umg_freq_default_levels',
-    'group': 'efreq',
+factory_settings["janitza_umg_freq_default_levels"] = {"levels": (0, 0)}
+
+
+check_info["janitza_umg.freq"] = {
+    "inventory_function": inventory_janitza_umg_freq,
+    "check_function": check_janitza_umg_freq,
+    "service_description": "Frequency %s",
+    "has_perfdata": True,
+    "default_levels_variable": "janitza_umg_freq_default_levels",
+    "group": "efreq",
 }
 
 
@@ -179,14 +181,15 @@ def check_janitza_umg_temp(item, params, parsed):
     idx = int(item) - 1
     if len(parsed["Temperature"]) > idx:
         return check_temperature(
-            float(parsed["Temperature"][idx]) / 10.0, params, "janitza_umg_%s" % item)
+            float(parsed["Temperature"][idx]) / 10.0, params, "janitza_umg_%s" % item
+        )
 
 
-check_info['janitza_umg.temp'] = {
-    'inventory_function': inventory_janitza_umg_temp,
-    'check_function': check_janitza_umg_temp,
-    'service_description': 'Temperature External %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'janitza_umg_temp_default_levels',
-    'group': 'temperature',
+check_info["janitza_umg.temp"] = {
+    "inventory_function": inventory_janitza_umg_temp,
+    "check_function": check_janitza_umg_temp,
+    "service_description": "Temperature External %s",
+    "has_perfdata": True,
+    "default_levels_variable": "janitza_umg_temp_default_levels",
+    "group": "temperature",
 }

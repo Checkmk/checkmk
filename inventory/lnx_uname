@@ -17,6 +17,6 @@ def inv_lnx_uname(info):
         node["kernel_version"] = info[1][0]
 
 
-inv_info['lnx_uname'] = {
+inv_info["lnx_uname"] = {
     "inv_function": inv_lnx_uname,
 }

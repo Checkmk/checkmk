@@ -1,7 +1,7 @@
 title: State and Count of Processes
 agents: linux, windows, aix, solaris, openvms
 catalog: os/ps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check looks into the list of then current running processes for
@@ -15,7 +15,7 @@ item:
  Changing the description will make Nagios think that
  it is another service.
 
-inventory:
+discovery:
  One service is created for each configured process on the monitored system.
  Since Checkmk cannot know which processes are of relevance to you,
  some configuration is needed. The configuration is done via the ruleset
@@ -29,3 +29,6 @@ inventory:
 cluster:
  On a cluster all processes are accumulated, along with the information
  on which node they are running.
+ The percentual memory displayed is the quotient of the accumulated memory
+ use of the processes and the accumulated total memory of every node the
+ processes are running on.

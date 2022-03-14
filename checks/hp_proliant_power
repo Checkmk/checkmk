@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .2 cpqHePowerMeterStatus
 #    Description:        This value specifies whether Power Meter reading is supported by this Server .
 #    The following values are supported:
@@ -18,7 +19,7 @@ from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wild
 
 
 def inventory_hp_proliant_power(info):
-    if len(info) > 0 and info[0][0] not in ['0', '3']:
+    if len(info) > 0 and info[0][0] not in ["0", "3"]:
         return [(None, None)]
 
 
@@ -32,24 +33,27 @@ def check_hp_proliant_power(_item, params, info):
     if status != 2:
         return 2, "Power Meter state: %s" % (status_table[status])
 
-    return check_levels(reading,
-                        "watt",
-                        params if params else (None, None),
-                        infoname="Current reading",
-                        unit="Watts")
+    return check_levels(
+        reading,
+        "watt",
+        params if params else (None, None),
+        infoname="Current reading",
+        unit="Watts",
+    )
 
 
 check_info["hp_proliant_power"] = {
-    'group': 'epower_single',
-    'check_function': check_hp_proliant_power,
-    'inventory_function': inventory_hp_proliant_power,
-    'service_description': 'HW Power Meter',
-    'snmp_info': (
+    "group": "epower_single",
+    "check_function": check_hp_proliant_power,
+    "inventory_function": inventory_hp_proliant_power,
+    "service_description": "HW Power Meter",
+    "snmp_info": (
         ".1.3.6.1.4.1.232.6.2.15",
         [
             "2",  # cpqHePowerMeterStatus
             "3",  # cpqHePowerMeterCurrReading
-        ]),
-    'snmp_scan_function': hp_proliant_scan_function,
-    'has_perfdata': True
+        ],
+    ),
+    "snmp_scan_function": hp_proliant_scan_function,
+    "has_perfdata": True,
 }

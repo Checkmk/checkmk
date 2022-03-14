@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: Checkmk Enterprise License
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""This is small and primitive script to test usage of the memory by bin/fetcher.
+Configure host heute with desirable datasource.
+Copy this file to the $OMD_ROOT/bin and run the script with redirecting stdout to null.
+If no memory leaks found it is expected to find 0 in the last column at the end of testing.
+Second column shows size in memory of the Python VM.
+Third column shows the difference in RAM usage after every tick.
+You can also roughly estimate performance of the chosen datasource.
+"""
+
+import argparse
+import logging
+import os
+import sys
+import textwrap
+import time
+import tracemalloc
+
+import cmk.utils.log as log
+from cmk.utils.config_path import LATEST_CONFIG
+from cmk.utils.observer import FetcherMemoryObserver
+
+import cmk.core_helpers.controller as controller
+from cmk.core_helpers.protocol import CMCMessage
+
+import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
+
+logger = logging.getLogger("cmk.helper")
+cmk.base.utils.register_sigint_handler()
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(
+            """\
+    To use
+    \t1. copy fetcher_test to the $OMD_ROOT/bin
+    \t2. cd $OMD_ROOT/bin
+    \t3. fetcher_ram_usage_test > /dev/null.
+    NOTES:
+    - Based on the bin/fetcher code.
+    - It is expected that host heute exists.
+    - Last column shows average memory diff per 100 calls of fetcher. Normally you should have 0 here.
+    """
+        ),
+    )
+    return parser.parse_args()
+
+
+# TODO (sk): replace with normal reader after consulting with SP
+# we are using temporary this method as proven(_base._read_line)
+# slow, but for one command 10-20 bytes length  is ok.
+def _read_line() -> str:
+    line = b""
+    while byte := os.read(0, 1):
+        if byte == b"\n":
+            return line.decode("utf-8")
+        line += byte
+
+    return ""
+
+
+class FetcherFormatter(logging.Formatter):
+    def format(self, record) -> str:
+        return bytes(
+            CMCMessage.log_answer(
+                logging.Formatter.format(self, record),
+                record.levelno,
+            )
+        ).decode("utf-8")
+
+
+def setup_fetcher_logger():
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.terminator = ""  # to disable '\n' in microcore log
+    log.modify_logging_handler(
+        handler=handler, formatter=FetcherFormatter()  # log must be formatted according to protocol
+    )
+
+    # Temporary hack to unbreak SNMP discovery (that uses console.log)
+    # TODO: Drop this once a better solution was built (CMK-5598)
+    import cmk.utils.log.console as console
+
+    console._handler = handler
+
+
+start_size = 0
+
+
+def _vm_size() -> int:
+    with open("/proc/self/statm") as f:  # see: man proc(5).
+        return int(f.read().split()[0]) * 4096
+
+
+from pathlib import Path
+
+a_path = Path(os.path.realpath(Path(LATEST_CONFIG)))
+
+
+def print_memory_snapshot(snapshot: tracemalloc.Snapshot):
+    top_stats = snapshot.statistics("lineno")
+    limit = 20
+    print("[ Top 20 ] ", file=sys.stderr)
+    for stat in top_stats[:limit]:
+        print(stat, file=sys.stderr)
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        print("%s other: %.1f KiB" % (len(other), size / 1024), file=sys.stderr)
+    total = sum(stat.size for stat in top_stats)
+    print("Total allocated size: %.1f KiB" % (total / 1024), file=sys.stderr)
+
+
+def print_diff(top_stats):
+    limit = 20
+    print("[ Top 20 ] ", file=sys.stderr)
+    for stat in top_stats[:limit]:
+        print(stat, file=sys.stderr)
+    other = top_stats[:]
+    if other:
+        size = sum(stat.size for stat in other)
+        print("%s other: %.1f KiB" % (len(other), size / 1024), file=sys.stderr)
+    total = sum(stat.size for stat in top_stats)
+    print("Total allocated size: %.1f KiB" % (total / 1024), file=sys.stderr)
+
+
+def main() -> int:
+    parse_arguments()
+    setup_fetcher_logger()
+
+    cmk.base.utils.register_sigint_handler()  # as in cmk: do_keepalive
+    inc = []
+    memory_observer = FetcherMemoryObserver(500)
+
+    size_prev = 0
+
+    tracemalloc.start()
+    a = tracemalloc.take_snapshot()
+    sys.stderr.write(f"Tick     {'VM SIZE':10}{'Diff RAM':10} Average\n")
+
+    start = time.time()
+    count = 200
+    for pos in range(count):
+        raw_command = f"{a_path.name};heute;checking;60"
+
+        global start_size
+        if start_size == 0:
+            start_size = _vm_size()
+
+        controller.process_command(raw_command, memory_observer)
+
+        cur_size = _vm_size()
+        if size_prev == 0:
+            size_prev = cur_size
+
+        if pos == 5:
+            a = tracemalloc.take_snapshot()
+
+        inc.append(cur_size - size_prev)
+        sys.stderr.write(
+            f"{pos:4}. {_vm_size():10} "
+            f"{cur_size - size_prev:10} {int(sum(inc[-100:])/max(1,len(inc[-100:]))):10}\n"
+        )
+
+        size_prev = cur_size
+
+    end = time.time()
+
+    snapshot = tracemalloc.take_snapshot()
+    print_diff(snapshot.compare_to(a, "lineno"))
+    tracemalloc.stop()
+
+    sys.stderr.write(f"Per tick {round((end - start)/count, 3)} second\n")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

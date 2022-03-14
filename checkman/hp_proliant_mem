@@ -1,7 +1,7 @@
 title: HP Proliant Servers: Memory Modules
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
@@ -16,5 +16,5 @@ item:
  The slot in which the memory board or cartridge is installed.
  A value of 0 indicates memory installed directly on the system board.
 
-inventory:
+discovery:
  One check is automatically created for each present memory module.

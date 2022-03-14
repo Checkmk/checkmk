@@ -23,16 +23,15 @@ const std::wstring app_name_canonical_bad =
     L"\\checkmk\\service\\check_mk_agent.exe_";
 }  // namespace
 
-TEST(Firewall, PolicyCtor) {
+TEST(FirewallApi, PolicyCtor) {
     Policy policy;
     ASSERT_TRUE(policy.getRules() != nullptr);
     ASSERT_GE(policy.getRulesCount(), 10);
     ASSERT_NE(policy.getCurrentProfileTypes(), -1);
 }
 
-class FirewallFixture : public ::testing::Test {
+class FirewallApiFixture : public ::testing::Test {
     void SetUp() override {
-        OnStartTest();
         RemoveRule(rule_name);  // to be sure that no rules are
         RemoveRule(rule_name);  // Windows can create many rules with same name
     }
@@ -43,7 +42,7 @@ class FirewallFixture : public ::testing::Test {
     }
 };
 
-TEST_F(FirewallFixture, Integration) {
+TEST_F(FirewallApiFixture, BaseIntegration) {
     ASSERT_FALSE(FindRule(rule_name));
     EXPECT_EQ(CountRules(rule_name, L""), 0);
     ASSERT_TRUE(CreateInboundRule(rule_name, app_name_base, 9999));

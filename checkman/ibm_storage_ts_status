@@ -1,7 +1,7 @@
 title: IBM Tape Library: Device Status
 agents: snmp
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   This check displays the global device status as reported by
@@ -15,5 +15,5 @@ description:
   of managed libraries so this check status and the status in
   ibm_storage_ts.library are probably not independent.
 
-inventory:
+discovery:
  One service is created.

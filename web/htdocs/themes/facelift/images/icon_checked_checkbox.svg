@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 281 249" style="enable-background:new 0 0 281 249;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#B3E3FA;stroke:#1697C4;stroke-width:34;}
+	.st1{fill:none;stroke:#42D389;stroke-width:40;stroke-linejoin:round;}
+</style>
+<g id="Icons">
+	<g id="EXIT" transform="translate(-935.000000, -1156.000000)">
+		<g id="checked_checkbox" transform="translate(952.000000, 1171.000000)">
+			<path id="checkboxes" class="st0" d="M34,17h132c18.8,0,34,15.2,34,34v132c0,18.8-15.2,34-34,34H34c-18.8,0-34-15.2-34-34V51
+				C0,32.2,15.2,17,34,17z"/>
+			<polyline id="Path-10" class="st1" points="15,83.5 90.4,159 249,0 			"/>
+		</g>
+	</g>
+</g>
+</svg>

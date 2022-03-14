@@ -1,7 +1,7 @@
 title: ACME SBC: Health Settings
 agents: special
 catalog: hw/network/acme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors changes of health releated options on the device.
@@ -9,5 +9,5 @@ description:
  If e.g. Media Synchronized changes from true to disabled/false
  the service goes {CRIT}.
 
-inventory:
+discovery:
  One service is created.

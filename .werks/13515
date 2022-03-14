@@ -1,0 +1,18 @@
+Title: Fix possible LockNotOwnedError if data is queried from redis
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1641998061
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a query to redis took to long, the following error could occur in
+~/var/log/web.log:
+
+"redis.exceptions.LockNotOwnedError: Cannot release a lock that's no longer
+owned".
+
+This could have happened if you e.g. filtered for host labels in a view.

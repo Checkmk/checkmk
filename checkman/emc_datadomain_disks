@@ -1,7 +1,7 @@
 title: EMC Datadomain: Hard Disk State
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the status of the hard disks in use by the EMC
@@ -14,5 +14,5 @@ description:
 item:
  "ID of the enclosure" - "ID of the hard disk"
 
-inventory:
+discovery:
  One service is created for each disk found.

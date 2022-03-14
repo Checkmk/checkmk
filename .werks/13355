@@ -1,0 +1,24 @@
+Title: OpenWRT agent: Make <tt>df</tt> section work with BusyBox
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1635929336
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+BusyBox does not support <tt>-x</tt> and <tt>-l</tt> as arguments to the
+<tt>df</tt> command. These arguments are removed from the OpenWRT agent,
+s.t. the <tt>df</tt> section is now available in combination with BusyBox.
+
+Furthermore, <tt>-i</tt> is sometimes unsupported as well, so the agent
+will now first check if this argument is supported and only attempt to
+collect inodes information if it is.
+
+Note that in order to avoid hanging agents due to remote filesystems,
+the <tt>df</tt> calls are terminated after a fixed timeout of 5 s. This
+means that the agent will only attempt to produce the <tt>df</tt> section
+if the <tt>waitmax</tt> command is available. Checkmk provides a
+<tt>waitmax</tt> binary or alternatively, you can install the
+<tt>timeout</tt> command.

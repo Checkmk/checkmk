@@ -4,43 +4,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from itertools import chain
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
-    if isinstance(params, dict):
-        params = 'freeipmi', params
 
+def agent_ipmi_sensors_arguments(
+    params: tuple[str, Mapping[str, Any]], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     ipmi_command, options = params
-    args = [
-        "-u",
+    return [
+        ipaddress or hostname,
         options["username"],
-        "-p",
         options["password"],
-        "-l",
-        options["privilege_lvl"],
-        "--ipmi-command",
         ipmi_command,
+        options["privilege_lvl"],
+        *chain.from_iterable(
+            (
+                opt,
+                value,
+            )
+            for opt, parameter in [
+                ("--driver", "ipmi_driver"),
+                ("--driver_type", "driver_type"),
+                ("--key", "BMC_key"),
+                ("--intf", "intf"),
+            ]
+            if (value := options.get(parameter))
+        ),
+        *(
+            flag
+            for flag, checkbox in [
+                ("--quiet_cache", "quiet_cache"),
+                ("--sdr_cache_recreate", "sdr_cache_recreate"),
+                ("--interpret_oem_data", "interpret_oem_data"),
+                ("--output_sensor_state", "output_sensor_state"),
+                ("--ignore_not_available_sensors", "ignore_not_available_sensors"),
+                ("--output_sensor_thresholds", "output_sensor_thresholds"),
+            ]
+            if options.get(checkbox)
+        ),
     ]
 
-    for opt, what in [
-        ("-D", "ipmi_driver"),
-        ("-k", "BMC_key"),
-        ("--driver-type", "driver_type"),
-        ('--quiet-cache', "quiet_cache"),
-        ("--sdr-cache-recreate", "sdr_cache_recreate"),
-        ('--interpret-oem-data', "interpret_oem_data"),
-        ('--output-sensor-state', "output_sensor_state"),
-        ('--ignore-not-available-sensors', "output_sensor_thresholds"),
-        ('--output-sensor-thresholds', "ignore_not_available_sensors"),
-    ]:
-        this_opt = options.get(what)
-        if this_opt is None:
-            continue
-        args.append(opt)
-        if not isinstance(this_opt, bool):
-            args.append(this_opt)
 
-    args.append(ipaddress)
-    return args
-
-
-special_agent_info['ipmi_sensors'] = agent_ipmi_sensors_arguments
+special_agent_info["ipmi_sensors"] = agent_ipmi_sensors_arguments

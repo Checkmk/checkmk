@@ -1,0 +1,20 @@
+Title: Add four columns to livestatus for Robotmk
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1639562316
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Add four columns to the services table in order to read
+Robotmk logs.  The columns are
+
+LI: robotmk_last_log, the file content of the Robotmk log;
+LI: robotmk_last_log_gz, the gzipped file content of the Robotmk log;
+LI: robotmk_last_error_log, the file content of the Robotmk error log;
+LI: robotmk_last_error_log_gz, the gzipped file content of the Robotmk error log.
+
+The columns return the content of the files or the empty
+string if they are not present.

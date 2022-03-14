@@ -1,10 +1,10 @@
 title: Cisco UCS: Total Memory
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs the total available memory. It will always be {OK}
 
-inventory:
+discovery:
  One service is created.

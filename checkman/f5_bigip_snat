@@ -1,7 +1,7 @@
 title: F5 Big-IP: Source NAT
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP load balancers (local traffic
@@ -12,5 +12,5 @@ description:
 item:
  Name of the Source NAT (network address translation)
 
-inventory:
+discovery:
  One service is created for each source NAT.

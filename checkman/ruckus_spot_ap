@@ -1,7 +1,7 @@
 title: Ruckus Spot: Access Points
 agents: ruckus
 catalog: app/ruckus
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs information of the access points for the 2.4 GHz and 5 GHz bands
@@ -12,6 +12,5 @@ description:
 item:
  One of the two statements: {{2.4 GHz}}, {{5 GHz}}
 
-inventory:
+discovery:
  One service is created.
-

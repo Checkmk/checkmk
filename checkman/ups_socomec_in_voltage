@@ -1,7 +1,7 @@
 title: Socomec UPS Device: Input Voltage
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the input voltage on Socomec UPS Devices
@@ -11,6 +11,5 @@ description:
 item:
  ID of the phase
 
-inventory:
+discovery:
  One service is created for each phase.
-

@@ -5,21 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_jvm_threading():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
         allow_empty=False,
@@ -27,17 +23,25 @@ def _item_spec_jvm_threading():
 
 
 def _parameter_valuespec_jvm_threading():
-    return Dictionary(elements=[
-        ("threadcount_levels", Levels(
-            title=_("Maximal number of threads"),
-            default_value=None,
-        )),
-        ("threadrate_levels", Levels(
-            title=_("Maximal rate of thread count"),
-            default_value=None,
-        )),
-        ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "threadcount_levels",
+                Levels(
+                    title=_("Maximal number of threads"),
+                    default_value=None,
+                ),
+            ),
+            (
+                "threadrate_levels",
+                Levels(
+                    title=_("Maximal rate of thread count"),
+                    default_value=None,
+                ),
+            ),
+            ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -47,4 +51,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_threading,
         parameter_valuespec=_parameter_valuespec_jvm_threading,
         title=lambda: _("JVM threading"),
-    ))
+    )
+)

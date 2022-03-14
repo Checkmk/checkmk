@@ -8,31 +8,41 @@ SearchConfig = Dict[str, Any]
 
 ActionConfig = Dict[str, Any]
 
-NodeDict = TypedDict('NodeDict', {
-    'search': SearchConfig,
-    'action': ActionConfig,
-})
+NodeDict = TypedDict(
+    "NodeDict",
+    {
+        "search": SearchConfig,
+        "action": ActionConfig,
+    },
+)
 
-GroupConfigDict = TypedDict("GroupConfigDict", {
-    'names': List[str],
-    'paths': List[List[str]],
-})
+GroupConfigDict = TypedDict(
+    "GroupConfigDict",
+    {
+        "names": List[str],
+        "paths": List[List[str]],
+    },
+)
 
-ComputationConfigDict = TypedDict("ComputationConfigDict", {
-    'disabled': bool,
-    'use_hard_states': bool,
-    'escalate_downtimes_as_warn': bool,
-})
+ComputationConfigDict = TypedDict(
+    "ComputationConfigDict",
+    {
+        "disabled": bool,
+        "use_hard_states": bool,
+        "escalate_downtimes_as_warn": bool,
+    },
+)
 
 AggrConfigDict = TypedDict(
     "AggrConfigDict",
     {
-        'id': Any,
-        'customer': Any,
-        'groups': GroupConfigDict,
-        'node': NodeDict,
-        'computation_options': ComputationConfigDict,
-        'aggregation_visualization': Any,
+        "id": Any,
+        "comment": str,
+        "customer": Any,
+        "groups": GroupConfigDict,
+        "node": NodeDict,
+        "computation_options": ComputationConfigDict,
+        "aggregation_visualization": Any,
     },
     total=True,
 )

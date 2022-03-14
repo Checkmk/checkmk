@@ -4,101 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: The plugins in this file were deprecated in version 2.0.0p5
+
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 
 
-def parse_frac_prefix(value: str) -> float:
-    if value.endswith('m'):
-        return 0.001 * float(value[:-1])
-    return float(value)
+def check_deprecated(_no_item, _no_params, _no_info):
+    return 1, "This check is deprecated. Please rediscover the services of this host."
 
 
-def parse_mul_prefix(value: str) -> int:
-    if value.endswith('k'):
-        return 1000 * int(value[:-1])
-    return int(value)
-
-
-@get_parsed_item_data
-def check_k8s_pods_memory(item, params, metrics):
-
-    metric_names = [('rss', 'RSS'), ('swap', 'Swap'), ('usage_bytes', 'Bytes used'),
-                    ('max_usage_bytes', 'Max. bytes used')]
-    for what, title in metric_names:
-        try:
-            value = sum(
-                map(parse_mul_prefix,
-                    [pod_data['metrics']['memory_%s' % what] for pod_data in metrics]))
-            yield check_levels(value,
-                               what,
-                               params.get(what),
-                               human_readable_func=get_bytes_human_readable,
-                               infoname=title,
-                               boundaries=(0, None))
-        except KeyError:
-            yield 0, "Memory %s currently unavailable" % what
-
-
-check_info['k8s_pods_memory'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': discover(),
-    'check_function': check_k8s_pods_memory,
-    'service_description': 'Memory usage for Pods in %s namespace',
-    'group': 'k8s_pods_memory',
-    'has_perfdata': True,
+check_info["k8s_pods_memory"] = {
+    "inventory_function": lambda i: None,
+    "check_function": check_deprecated,
+    "service_description": "Memory usage for Pods in %s namespace",
+    "group": "k8s_pods_memory",
 }
 
-
-@get_parsed_item_data
-def check_k8s_pods_cpu(item, params, metrics):
-    metric_names = [('system', 'System'), ('user', 'User'), ('usage', 'Usage')]
-    for what, title in metric_names:
-        try:
-            value = sum(
-                map(parse_frac_prefix,
-                    [pod_data['metrics']['cpu_%s' % what] for pod_data in metrics]))
-            yield check_levels(value, what, params.get(what), infoname=title)
-        except KeyError:
-            yield 0, "CPU %s currently unavailable" % what.title()
-
-
-check_info['k8s_pods_cpu'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': discover(),
-    'check_function': check_k8s_pods_cpu,
-    'service_description': 'CPU usage for Pods in %s namespace',
-    'group': 'k8s_pods_cpu',
-    'has_perfdata': True,
+check_info["k8s_pods_cpu"] = {
+    "inventory_function": lambda i: None,
+    "check_function": check_deprecated,
+    "service_description": "CPU usage for Pods in %s namespace",
+    "group": "k8s_pods_cpu",
 }
 
-
-@get_parsed_item_data
-def check_k8s_pods_fs(item, params, metrics):
-    metric_names = [('inodes', 'INodes'), ('reads', 'Reads'), ('writes', 'Writes'),
-                    ('limit_bytes', 'Limit bytes'), ('usage_bytes', 'Bytes used')]
-    for what, title in metric_names:
-        try:
-            parser = parse_mul_prefix if 'bytes' in what else parse_frac_prefix
-            value = sum(map(parser, [pod_data['metrics']['fs_%s' % what] for pod_data in metrics]))
-            hrf = get_bytes_human_readable if 'bytes' in what else None
-            yield check_levels(value,
-                               what,
-                               params.get(what),
-                               human_readable_func=hrf,
-                               infoname=title)
-        except KeyError:
-            yield 0, "FS %s currently unavailable" % what.title()
-
-
-check_info['k8s_pods_fs'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': discover(),
-    'check_function': check_k8s_pods_fs,
-    'service_description': 'FS usage for Pods in %s namespace',
-    'group': 'k8s_pods_fs',
-    'has_perfdata': True,
+check_info["k8s_pods_fs"] = {
+    "inventory_function": lambda i: None,
+    "check_function": check_deprecated,
+    "service_description": "FS usage for Pods in %s namespace",
+    "group": "k8s_pods_fs",
 }

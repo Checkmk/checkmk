@@ -4,13 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Tuple
-from .agent_based_api.v1.type_defs import CheckResult
+from typing import Any, Mapping, Optional
 
 from .agent_based_api.v1 import register
-from .utils import cpu
-from .utils import memory
-from .utils import ps
+from .agent_based_api.v1.type_defs import CheckResult
+from .utils import cpu, memory, ps
 
 
 def check_ps(
@@ -18,6 +16,7 @@ def check_ps(
     params: Mapping[str, Any],
     section_ps: Optional[ps.Section],
     section_mem: Optional[memory.SectionMem],
+    section_mem_used: Optional[memory.SectionMem],
     section_cpu: Optional[cpu.Section],
 ) -> CheckResult:
     if not section_ps:
@@ -27,7 +26,7 @@ def check_ps(
     if section_cpu:
         cpu_cores = section_cpu.num_cpus or cpu_cores
 
-    total_ram = section_mem.get("MemTotal") if section_mem else None
+    total_ram = (section_mem or section_mem_used or {}).get("MemTotal")
 
     yield from ps.check_ps_common(
         label="Processes",
@@ -36,25 +35,28 @@ def check_ps(
         # no cluster in this function -> Node name is None:
         process_lines=[(None, ps_info, cmd_line) for ps_info, cmd_line in lines],
         cpu_cores=cpu_cores,
-        total_ram=total_ram,
+        total_ram_map={} if total_ram is None else {"": total_ram},
     )
 
 
 def cluster_check_ps(
-        item: str,
-        params: Mapping[str, Any],
-        section_ps: Dict[str, ps.Section],
-        section_mem: Dict[str, memory.SectionMem],  # unused
-        section_cpu: Dict[str, cpu.Section],  # unused
+    item: str,
+    params: Mapping[str, Any],
+    section_ps: Mapping[str, Optional[ps.Section]],
+    section_mem: Mapping[str, Optional[memory.SectionMem]],
+    section_mem_used: Mapping[str, Optional[memory.SectionMem]],
+    section_cpu: Mapping[str, Optional[cpu.Section]],  # unused
 ) -> CheckResult:
     # introduce node name
-    process_lines: List[Tuple[Optional[str], ps.ps_info, List[str]]] = [
+    process_lines = [
         (node_name, ps_info, cmd_line)
-        for node_name, (_cpu_cores, node_lines) in section_ps.items()
-        for (ps_info, cmd_line) in node_lines
+        for node_name, node_section in section_ps.items()
+        for (ps_info, cmd_line) in (node_section[1] if node_section else ())
     ]
 
-    core_counts = set(cpu_cores for (cpu_cores, _node_lines) in section_ps.values())
+    core_counts = set(
+        node_section[0] for node_section in section_ps.values() if node_section is not None
+    )
     if len(core_counts) == 1:
         cpu_cores = core_counts.pop()
     else:
@@ -67,14 +69,25 @@ def cluster_check_ps(
         params=params,
         process_lines=process_lines,
         cpu_cores=cpu_cores,
-        total_ram=None,
+        total_ram_map={
+            **{
+                node: section["MemTotal"]
+                for node, section in section_mem.items()
+                if section and "MemTotal" in section
+            },
+            **{
+                node: v
+                for node, section in section_mem_used.items()
+                if section and (v := section.get("MemTotal")) is not None
+            },
+        },
     )
 
 
 register.check_plugin(
     name="ps",
     service_name="Process %s",
-    sections=["ps", "mem", "cpu"],
+    sections=["ps", "mem", "mem_used", "cpu"],
     discovery_function=ps.discover_ps,
     discovery_ruleset_name="inventory_processes_rules",
     discovery_default_parameters={},

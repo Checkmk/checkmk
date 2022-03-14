@@ -22,49 +22,55 @@ def inventory_rmon_stats(info):
 
 def check_rmon_stats(item, _no_params, info):
     bytes_map = {
-        1: 'bcast',
-        2: 'mcast',
-        3: '0-63b',
-        4: '64-127b',
-        5: '128-255b',
-        6: '256-511b',
-        7: '512-1023b',
-        8: '1024-1518b'
+        1: "bcast",
+        2: "mcast",
+        3: "0-63b",
+        4: "64-127b",
+        5: "128-255b",
+        6: "256-511b",
+        7: "512-1023b",
+        8: "1024-1518b",
     }
     perfdata = []
-    infotext = ''
+    infotext = ""
     now = time.time()
     for line in info:
         if line[0] == item:
             for i, val in bytes_map.items():
-                octets = int(re.sub(' Packets', '', line[i]))
+                octets = int(re.sub(" Packets", "", line[i]))
                 rate = get_rate("%s-%s" % (item, val), now, octets)
                 perfdata.append((val, rate, 0, 0, 0))
                 infotext += "%s=%.0f " % (val, rate)
-            infotext += 'octets/sec'
+            infotext += "octets/sec"
             return 0, infotext, perfdata
 
     return (3, "port not found")
 
+
 check_info["rmon_stats"] = {
-    'check_function'        : check_rmon_stats,
-    'inventory_function'    : inventory_rmon_stats,
-    'service_description'   : 'RMON Stats IF %s',
-    'has_perfdata'          : True,
-    'snmp_info'             : ('.1.3.6.1.2.1.16.1.1.1', [ #
-                                        '1',    # etherStatsIndex = Item
-                                        '6',    # etherStatsBroadcastPkts
-                                        '7',    # etherStatsMulticastPkts
-                                        '14',   # etherStatsPkts64Octets
-                                        '15',   # etherStatsPkts65to127Octets
-                                        '16',   # etherStatsPkts128to255Octets
-                                        '17',   # etherStatsPkts256to511Octets
-                                        '18',   # etherStatsPkts512to1023Octets
-                                        '19',   # etherStatsPkts1024to1518Octets
-                                        ]),
+    "check_function": check_rmon_stats,
+    "inventory_function": inventory_rmon_stats,
+    "service_description": "RMON Stats IF %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.2.1.16.1.1.1",
+        [  #
+            "1",  # etherStatsIndex = Item
+            "6",  # etherStatsBroadcastPkts
+            "7",  # etherStatsMulticastPkts
+            "14",  # etherStatsPkts64Octets
+            "15",  # etherStatsPkts65to127Octets
+            "16",  # etherStatsPkts128to255Octets
+            "17",  # etherStatsPkts256to511Octets
+            "18",  # etherStatsPkts512to1023Octets
+            "19",  # etherStatsPkts1024to1518Octets
+        ],
+    ),
     # for the scan we need to check for any single object in the RMON tree,
     # we choose netDefaultGateway in the hope that it will always be present
-    'snmp_scan_function'    : lambda oid: ( oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco") \
-                    or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.11863.1.1.3" \
-                    ) and oid(".1.3.6.1.2.1.16.19.12.0") is not None,
+    "snmp_scan_function": lambda oid: (
+        oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco")
+        or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.11863.1.1.3"
+    )
+    and oid(".1.3.6.1.2.1.16.19.12.0") is not None,
 }

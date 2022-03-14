@@ -1,7 +1,7 @@
 title: Pulse Secure: IVE Memory Utilization
 agents: snmp
 catalog: app/pulse_secure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the RAM and swap utilization of
@@ -14,5 +14,5 @@ description:
  can be changed using the rule "Pulse Secure IVE memory
  utilization"
 
-inventory:
+discovery:
  One service is created.

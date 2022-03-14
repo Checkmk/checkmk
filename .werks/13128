@@ -1,0 +1,16 @@
+Title: agent_vsphere: Fix bug occuring when vSphere secret has a special format
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633531034
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When specifying a vSphere secret starting with a dash (a "-"), the vsphere
+special agent will run into an error, because the secret will get recognized
+as an additional command line argument by it's argument parser.
+
+This is fixed now by passing this argument in a more robust way.
+

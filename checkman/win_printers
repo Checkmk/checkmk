@@ -1,7 +1,7 @@
 title: Windows Printers: Queue and Printer States
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check needs the agent plugin win_printers.ps1 from our plugin directory.
@@ -12,6 +12,5 @@ description:
 item:
  The name of the printer
 
-inventory:
+discovery:
  One service is created for each printer.
-

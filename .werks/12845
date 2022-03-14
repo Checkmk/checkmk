@@ -1,0 +1,17 @@
+Title: Cleanup redundant custom sidebar snapin permission
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626858569
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously there was a duplicate permission declared for each custom sidebar
+snapin. One permission was registered below the topic "Custom sidebar snapins"
+and one below "Snapins".
+
+The general permission from the "Snapins" section has now been removed for
+custom snapins.

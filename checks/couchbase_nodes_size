@@ -9,8 +9,9 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['couchbase_nodes_size'] = {
-    'parse_function': parse_couchbase_lines,
+
+check_info["couchbase_nodes_size"] = {
+    "parse_function": parse_couchbase_lines,
 }
 
 
@@ -21,54 +22,54 @@ def get_couchbase_check_by_keys(key_disk, key_size):
         if on_disk is not None:
             yield check_levels(
                 on_disk,
-                'size_on_disk',
-                params.get('size_on_disk'),
+                "size_on_disk",
+                params.get("size_on_disk"),
                 human_readable_func=get_bytes_human_readable,
-                infoname='Size on disk',
+                infoname="Size on disk",
             )
 
         size = data.get(key_size)
         if size is not None:
             yield check_levels(
                 size,
-                'data_size',
-                params.get('size'),
+                "data_size",
+                params.get("size"),
                 human_readable_func=get_bytes_human_readable,
-                infoname='Data size',
+                infoname="Data size",
             )
 
     return check_couchbase_nodes_size
 
 
-check_info['couchbase_nodes_size.docs'] = {
-    'inventory_function': discover(),
-    'check_function': get_couchbase_check_by_keys(
-        'couch_docs_actual_disk_size',
-        'couch_docs_data_size',
+check_info["couchbase_nodes_size.docs"] = {
+    "inventory_function": discover(),
+    "check_function": get_couchbase_check_by_keys(
+        "couch_docs_actual_disk_size",
+        "couch_docs_data_size",
     ),
-    'service_description': 'Couchbase %s Documents',
-    'group': 'couchbase_size_docs',
-    'has_perfdata': True,
+    "service_description": "Couchbase %s Documents",
+    "group": "couchbase_size_docs",
+    "has_perfdata": True,
 }
 
-check_info['couchbase_nodes_size.spacial_views'] = {
-    'inventory_function': discover(),
-    'check_function': get_couchbase_check_by_keys(
-        'couch_spatial_disk_size',
-        'couch_spatial_data_size',
+check_info["couchbase_nodes_size.spacial_views"] = {
+    "inventory_function": discover(),
+    "check_function": get_couchbase_check_by_keys(
+        "couch_spatial_disk_size",
+        "couch_spatial_data_size",
     ),
-    'service_description': 'Couchbase %s Spacial Views',
-    'group': 'couchbase_size_spacial',
-    'has_perfdata': True,
+    "service_description": "Couchbase %s Spacial Views",
+    "group": "couchbase_size_spacial",
+    "has_perfdata": True,
 }
 
-check_info['couchbase_nodes_size.couch_views'] = {
-    'inventory_function': discover(),
-    'check_function': get_couchbase_check_by_keys(
-        'couch_views_actual_disk_size',
-        'couch_views_data_size',
+check_info["couchbase_nodes_size.couch_views"] = {
+    "inventory_function": discover(),
+    "check_function": get_couchbase_check_by_keys(
+        "couch_views_actual_disk_size",
+        "couch_views_data_size",
     ),
-    'service_description': 'Couchbase %s Couch Views',
-    'group': 'couchbase_size_couch',
-    'has_perfdata': True,
+    "service_description": "Couchbase %s Couch Views",
+    "group": "couchbase_size_couch",
+    "has_perfdata": True,
 }

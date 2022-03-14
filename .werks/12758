@@ -1,0 +1,19 @@
+Title: notification replay not working and errors in the cmc.log
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1619606076
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a "Recent notification (for analysis)" in Setup -> Events -> Notifications
+was replayed an error message was shown in the User interface. Furthermore,
+the error message:
+
+invalid signal byte ASCII 76, expected '*'
+read 76 further bytes: 'oading autochecks from /omd/sites/stable/var/check_mk/autochecks/stable.mk
+
+was logged in the cmc.log if a notification was sent. This is fixed.

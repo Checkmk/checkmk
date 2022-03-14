@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.3.1.0 "my_vsid"
@@ -40,14 +41,31 @@ def parse_checkpoint_vsx(info):
 
     vsid_info = [s + c for (s, c) in zip(status_table, counter_table)]
 
-    for vs_id, vs_name, vs_type, vs_ip, vs_policy, vs_policy_type, \
-        vs_sic_status, vs_ha_status, conn_num, conn_table_size, packets, \
-        packets_dropped, packets_accepted, packets_rejected, bytes_accepted, \
-        bytes_dropped, bytes_rejected, logged in vsid_info:
+    for (
+        vs_id,
+        vs_name,
+        vs_type,
+        vs_ip,
+        vs_policy,
+        vs_policy_type,
+        vs_sic_status,
+        vs_ha_status,
+        conn_num,
+        conn_table_size,
+        packets,
+        packets_dropped,
+        packets_accepted,
+        packets_rejected,
+        bytes_accepted,
+        bytes_dropped,
+        bytes_rejected,
+        logged,
+    ) in vsid_info:
 
         item = "%s %s" % (vs_name, vs_id)
         parsed.setdefault(
-            item, {
+            item,
+            {
                 "vs_name": vs_name,
                 "vs_type": vs_type,
                 "vs_sic_status": vs_sic_status,
@@ -55,7 +73,8 @@ def parse_checkpoint_vsx(info):
                 "vs_ip": vs_ip,
                 "vs_policy": vs_policy,
                 "vs_policy_type": vs_policy_type,
-            })
+            },
+        )
 
         inst = parsed.setdefault(item, {})
         for key, value in [
@@ -108,11 +127,11 @@ def check_checkpoint_vsx(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx"] = {
-    'parse_function': parse_checkpoint_vsx,
-    'inventory_function': discover(lambda k, values: "vs_name" in values),
-    'check_function': check_checkpoint_vsx,
-    'service_description': 'VS %s Info',
-    'snmp_info': [
+    "parse_function": parse_checkpoint_vsx,
+    "inventory_function": discover(lambda k, values: "vs_name" in values),
+    "check_function": check_checkpoint_vsx,
+    "service_description": "VS %s Info",
+    "snmp_info": [
         # CHECKPOINT-MIB:vsxStatusTable:vsxStatusEntry
         (
             ".1.3.6.1.4.1.2620.1.16.22.1.1",
@@ -125,7 +144,8 @@ check_info["checkpoint_vsx"] = {
                 7,  # vsxStatusVsPolicyType
                 8,  # vsxStatusSicTrustState
                 9,  # vsxStatusHAState
-            ]),
+            ],
+        ),
         # CHECKPOINT-MIB:vsxCountersTable:vsxCountersEntry
         (
             ".1.3.6.1.4.1.2620.1.16.23.1.1",
@@ -140,11 +160,12 @@ check_info["checkpoint_vsx"] = {
                 10,  # vsxCountersBytesDroppedTotal
                 11,  # vsxCountersBytesRejectedTotal
                 12,  # vsxCountersLoggedTotal
-            ])
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: False,  # already migrated!
+    "snmp_scan_function": lambda oid: False,  # already migrated!
 }
-#.
+# .
 #   .--connections---------------------------------------------------------.
 #   |                                        _   _                         |
 #   |         ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -155,8 +176,8 @@ check_info["checkpoint_vsx"] = {
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings['checkpoint_vsx_default_levels'] = {
-    'levels_perc': (90.0, 95.0),
+factory_settings["checkpoint_vsx_default_levels"] = {
+    "levels_perc": (90.0, 95.0),
 }
 
 
@@ -169,33 +190,37 @@ def check_checkpoint_vsx_connections(item, params, parsed):
     if conn_total is None:
         return
 
-    yield check_levels(conn_total,
-                       "connections",
-                       params.get("levels_abs"),
-                       human_readable_func=int,
-                       infoname="Used connections")
+    yield check_levels(
+        conn_total,
+        "connections",
+        params.get("levels_abs"),
+        human_readable_func=int,
+        infoname="Used connections",
+    )
 
     conn_limit = parsed.get("conn_table_size")
     if conn_limit is None:
         return
 
     if conn_limit > 0:
-        yield check_levels(100.0 * conn_total / conn_limit,
-                           None,
-                           params.get("levels_perc"),
-                           human_readable_func=get_percent_human_readable,
-                           infoname="Used percentage")
+        yield check_levels(
+            100.0 * conn_total / conn_limit,
+            None,
+            params.get("levels_perc"),
+            human_readable_func=get_percent_human_readable,
+            infoname="Used percentage",
+        )
 
 
 check_info["checkpoint_vsx.connections"] = {
-    'inventory_function': discover(lambda k, values: "conn_num" in values),
-    'check_function': check_checkpoint_vsx_connections,
-    'service_description': 'VS %s Connections',
-    'default_levels_variable': 'checkpoint_vsx_default_levels',
-    'group': 'checkpoint_vsx_connections',
-    'has_perfdata': True,
+    "inventory_function": discover(lambda k, values: "conn_num" in values),
+    "check_function": check_checkpoint_vsx_connections,
+    "service_description": "VS %s Connections",
+    "default_levels_variable": "checkpoint_vsx_default_levels",
+    "group": "checkpoint_vsx_connections",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--packets-------------------------------------------------------------.
 #   |                                   _        _                         |
 #   |                  _ __   __ _  ___| | _____| |_ ___                   |
@@ -228,22 +253,24 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         this_time = int(time.time())
         value_per_sec = get_rate("%s_rate" % key, this_time, value)
 
-        yield check_levels(value_per_sec,
-                           key,
-                           params.get(key),
-                           human_readable_func=int,
-                           infoname=infotext,
-                           unit="1/s")
+        yield check_levels(
+            value_per_sec,
+            key,
+            params.get(key),
+            human_readable_func=int,
+            infoname=infotext,
+            unit="1/s",
+        )
 
 
 check_info["checkpoint_vsx.packets"] = {
-    'inventory_function': discover(lambda k, values: "packets" in values),
-    'check_function': check_checkpoint_vsx_packets,
-    'service_description': 'VS %s Packets',
-    'group': 'checkpoint_vsx_packets',
-    'has_perfdata': True,
+    "inventory_function": discover(lambda k, values: "packets" in values),
+    "check_function": check_checkpoint_vsx_packets,
+    "service_description": "VS %s Packets",
+    "group": "checkpoint_vsx_packets",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--traffic-------------------------------------------------------------.
 #   |                    _              __  __ _                           |
 #   |                   | |_ _ __ __ _ / _|/ _(_) ___                      |
@@ -285,13 +312,13 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 
 check_info["checkpoint_vsx.traffic"] = {
-    'inventory_function': discover(lambda k, values: "bytes_accepted" in values),
-    'check_function': check_checkpoint_vsx_traffic,
-    'service_description': 'VS %s Traffic',
-    'group': 'checkpoint_vsx_traffic',
-    'has_perfdata': True,
+    "inventory_function": discover(lambda k, values: "bytes_accepted" in values),
+    "check_function": check_checkpoint_vsx_traffic,
+    "service_description": "VS %s Traffic",
+    "group": "checkpoint_vsx_traffic",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--status--------------------------------------------------------------.
 #   |                         _        _                                   |
 #   |                     ___| |_ __ _| |_ _   _ ___                       |
@@ -312,7 +339,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
     ha_state = parsed.get("vs_ha_status")
     if ha_state is not None:
         state = 0
-        if not ha_state.lower() in ['active', 'standby']:
+        if not ha_state.lower() in ["active", "standby"]:
             state = 2
 
         yield state, "HA Status: %s" % ha_state
@@ -340,9 +367,9 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx.status"] = {
-    'inventory_function': discover(lambda k, values: "vs_ha_status" in values),
-    'check_function': check_checkpoint_vsx_status,
-    'service_description': 'VS %s Status',
-    'group': 'checkpoint_vsx_traffic_status',
+    "inventory_function": discover(lambda k, values: "vs_ha_status" in values),
+    "check_function": check_checkpoint_vsx_status,
+    "service_description": "VS %s Status",
+    "group": "checkpoint_vsx_traffic_status",
 }
-#.
+# .

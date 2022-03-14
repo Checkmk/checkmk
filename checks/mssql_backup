@@ -50,7 +50,7 @@ def parse_mssql_backup(info):
         try:
             if b_time is None:
                 return int(b_date)
-            return time.mktime(time.strptime("%s %s" % (b_date, b_time), '%Y-%m-%d %H:%M:%S'))
+            return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
         except ValueError:
             return None
 
@@ -66,7 +66,9 @@ def parse_mssql_backup(info):
     }
 
     parsed = {}
-    Backup = collections.namedtuple("Backup", ["timestamp", "type", "state"])
+    Backup = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "Backup", ["timestamp", "type", "state"]
+    )
     for line in info:
         if len(line) <= 2:
             continue
@@ -96,7 +98,7 @@ def inventory_mssql_backup(parsed):
 def _mssql_backup_discovery_mode():
     rules = host_extra_conf(host_name(), discovery_mssql_backup)
     try:
-        return rules[0]['mode']
+        return rules[0]["mode"]
     except (IndexError, KeyError):
         return "summary"  # default, comp. to older versions
 
@@ -126,8 +128,9 @@ def check_mssql_backup(item, params, parsed):
             backup_type_var = backup.type.strip().replace(" ", "_")
             perfkey = "backup_age_%s" % backup_type_var
             backup_type_info = "[%s]" % backup.type
-        state, infotext, perfdata =\
-            _check_mssql_backup(backup, params.get(backup_type_var, (None, None)), perfkey)
+        state, infotext, perfdata = _check_mssql_backup(
+            backup, params.get(backup_type_var, (None, None)), perfkey
+        )
         yield state, "%s %s" % (backup_type_info, infotext), perfdata
 
 
@@ -140,27 +143,31 @@ def _check_mssql_backup(backup, levels, perfkey):
     elif age_warn is not None and sec_ago >= age_warn:
         state = 1
 
-    infotext = 'Last backup was at %s (%s ago)' % (time.strftime(
-        '%Y-%m-%d %H:%M:%S', time.localtime(backup.timestamp)), get_age_human_readable(sec_ago))
+    infotext = "Last backup was at %s (%s ago)" % (
+        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(backup.timestamp)),
+        get_age_human_readable(sec_ago),
+    )
 
     if state:
-        infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(age_warn),
-                                               get_age_human_readable(age_crit))
+        infotext += " (warn/crit at %s/%s)" % (
+            get_age_human_readable(age_warn),
+            get_age_human_readable(age_crit),
+        )
 
     return state, infotext, [(perfkey, sec_ago, age_warn, age_crit)]
 
 
-check_info['mssql_backup'] = {
-    'parse_function': parse_mssql_backup,
-    'check_function': check_mssql_backup,
-    'inventory_function': inventory_mssql_backup,
-    'service_description': 'MSSQL %s Backup',
-    'has_perfdata': True,
-    'group': 'mssql_backup',
-    'default_levels_variable': 'mssql_backup_default_levels',
+check_info["mssql_backup"] = {
+    "parse_function": parse_mssql_backup,
+    "check_function": check_mssql_backup,
+    "inventory_function": inventory_mssql_backup,
+    "service_description": "MSSQL %s Backup",
+    "has_perfdata": True,
+    "group": "mssql_backup",
+    "default_levels_variable": "mssql_backup_default_levels",
 }
 
-#.
+# .
 #   .--single--------------------------------------------------------------.
 #   |                          _             _                             |
 #   |                      ___(_)_ __   __ _| | ___                        |
@@ -196,10 +203,10 @@ def check_mssql_backup_per_type(item, params, parsed):
     raise MKCounterWrapped("Failed to connect to database")
 
 
-check_info['mssql_backup.per_type'] = {
-    'check_function': check_mssql_backup_per_type,
-    'inventory_function': inventory_mssql_backup_per_type,
-    'service_description': 'MSSQL %s Backup',
-    'has_perfdata': True,
-    'group': 'mssql_backup_per_type',
+check_info["mssql_backup.per_type"] = {
+    "check_function": check_mssql_backup_per_type,
+    "inventory_function": inventory_mssql_backup_per_type,
+    "service_description": "MSSQL %s Backup",
+    "has_perfdata": True,
+    "group": "mssql_backup_per_type",
 }

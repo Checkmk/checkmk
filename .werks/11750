@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 After initializing the connection from a central site with a remote site, the
 user is redirected back to the list of sites. After some seconds a browser popup

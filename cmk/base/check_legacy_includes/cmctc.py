@@ -12,12 +12,7 @@ def cmctc_snmp_scan_function(oid):
 
 
 def cmctc_translate_status(status):
-    return {
-        4: 0,  # ok
-        7: 1,  # warning
-        8: 1,  # too low
-        9: 2  # too high
-    }.get(status, 3)
+    return {4: 0, 7: 1, 8: 1, 9: 2}.get(status, 3)  # ok  # warning  # too low  # too high
 
 
 def cmctc_translate_status_text(status):

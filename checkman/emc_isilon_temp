@@ -1,7 +1,7 @@
 title: EMC Isilon: Temperature Sensors
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks various temperature in EMC Isilon storage devices.
@@ -9,5 +9,5 @@ description:
 item:
  The name of the sensor without the prefix {Temp}, e.g. {Front Panel}
 
-inventory:
+discovery:
  One service is created for each sensor.

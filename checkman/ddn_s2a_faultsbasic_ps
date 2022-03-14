@@ -1,11 +1,11 @@
 title: DDN S2A: Power Supply Failures
 agents: ddn_s2a
 catalog: hw/storagehw/ddn_s2a
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of detected power supply failures.
  More than 0 detected failures is treated as CRIT.
 
-inventory:
+discovery:
  One service is created for each device.

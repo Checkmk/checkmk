@@ -1,0 +1,13 @@
+Title: Fix duplicated warnings while activating pending changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1629369576
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Warnings like "Cannot lookup IP address of ..." on page "Activate pending
+changes" were shown twice.

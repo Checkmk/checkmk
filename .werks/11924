@@ -6,7 +6,7 @@ Date: 1611589788
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you tried to archive an event in the view "Events" with the icon button
 "Archive this event", an error message "No rows selected" was shown.

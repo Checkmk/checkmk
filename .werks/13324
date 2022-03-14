@@ -1,0 +1,19 @@
+Title: Shipping software bill of materials with Checkmk
+Class: security
+Compatible: compat
+Component: omd
+Date: 1639780264
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+A software bill of materials can be used to analyze the components that are
+part of Checkmk. An accurate inventory of all components enables organizations
+to identify risk, allows for greater transparency, and enables rapid impact
+analysis.
+
+Checkmk packages are now shipping a BOM in OWASP CycloneDX format. As of
+Checkmk 2.1.0 and 2.0.0p18 it can be found in each site at the path
+<tt>share/doc/bill-of-materials.json</tt>.

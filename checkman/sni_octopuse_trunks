@@ -1,7 +1,7 @@
 title: Siemens Octopus E: Trunk Ports
 agents: snmp
 catalog: hw/phone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check queries the status of trunk ports on local PBX
@@ -15,7 +15,7 @@ description:
 item:
  The index of the card and the index of the port seperated by a {{/}}
 
-inventory:
+discovery:
  One service is created for each trunk port if two conditions are fulfilled.
 
  - The port must be named "S0 trunk: extern"

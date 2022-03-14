@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The columns have been empty, regardless, if the option "Display long output
 in timeline" has been activated. The data has been fetched, but not displayed.

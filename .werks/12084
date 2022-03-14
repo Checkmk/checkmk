@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some command line arguments for the check_mail active check had been assembled in a way that
 allowed invalid values for {{forward_app}} or {{match_subject}}.

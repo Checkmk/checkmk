@@ -1,7 +1,7 @@
 title: MSSQL Database: Jobs
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors scheduled jobs on MSSQL databases. The following
@@ -41,6 +41,5 @@ description:
 item:
  The job name (optional), separated by {{.}}
 
-inventory:
+discovery:
  A seperate service is created for each job.
-

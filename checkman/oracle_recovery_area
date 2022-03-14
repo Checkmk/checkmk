@@ -1,7 +1,7 @@
 title: Oracle Database: Recovery Area
 agents: linux, solaris, hpux
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the used space in the recovery area of an Oracle database. Reclaimable
@@ -11,5 +11,5 @@ description:
 item:
  The ORACLE_SID
 
-inventory:
+discovery:
  One service is created for each database.

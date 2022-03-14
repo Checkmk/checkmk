@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output:
-#<<<aix_multipath>>>
-#<<<aix_multipath>>>
-#hdisk0 vscsi0 Available Enabled
-#hdisk1 vscsi0 Available Enabled
-#hdisk2 vscsi0 Available Enabled
+# <<<aix_multipath>>>
+# <<<aix_multipath>>>
+# hdisk0 vscsi0 Available Enabled
+# hdisk1 vscsi0 Available Enabled
+# hdisk2 vscsi0 Available Enabled
 
 
 def inventory_aix_multipath(info):
@@ -19,7 +19,7 @@ def inventory_aix_multipath(info):
         # too, but those have incomplete status => false positives
         if disk.startswith("hdisk"):
             disks[disk] = disks.get(disk, 0) + 1
-    return [(disk, {'paths': p}) for disk, p in disks.items()]
+    return [(disk, {"paths": p}) for disk, p in disks.items()]
 
 
 def check_aix_multipath(item, params, info):
@@ -28,26 +28,26 @@ def check_aix_multipath(item, params, info):
     message = []
     state_count = 0
 
-    #Collecting all paths and there states
+    # Collecting all paths and there states
     for disk, _controller, status in info:
         if disk == item:
             path_count += 1
-            if status != 'Enabled':
+            if status != "Enabled":
                 state_count += 1
 
-    #How many Paths are not enabled
+    # How many Paths are not enabled
     if state_count != 0 and (100.0 / path_count * state_count) < 50:
         state = 1
-        message.append('%d paths not enabled (!)' % (state_count))
+        message.append("%d paths not enabled (!)" % (state_count))
     elif state_count != 0:
         state = 2
-        message.append('%d paths not enabled (!!)' % (state_count))
+        message.append("%d paths not enabled (!!)" % (state_count))
 
-    #Are some paths missing?
+    # Are some paths missing?
     path_message = "%d paths total" % path_count
-    if path_count != params['paths']:
+    if path_count != params["paths"]:
         state = max(state, 1)
-        message.append(path_message + ' (should be: %d (!))' % (params['paths']))
+        message.append(path_message + " (should be: %d (!))" % (params["paths"]))
     else:
         message.append(path_message)
 

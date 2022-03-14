@@ -1,0 +1,13 @@
+Title: livestatus_status: add cluster functionality
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1618912564
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The check plugin <i>livestatus_status</i> is now ready to
+handle clustered data (failover cluster).

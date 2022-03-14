@@ -1,7 +1,7 @@
 title: Postfix: Mailqueue Status
 agents: linux
 catalog: app/postfix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of postfix mail instances on linux hosts.
@@ -11,5 +11,5 @@ description:
 item:
  The name of the queue if multi instance is configured.
 
-inventory:
+discovery:
  One service is created for each instance.

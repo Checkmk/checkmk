@@ -5,53 +5,55 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    DropdownChoice,
-    ListOf,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, ListOf, TextInput, Tuple
 
 
 def _item_spec_inotify():
-    return TextAscii(title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),)
+    return TextInput(
+        title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),
+    )
 
 
 def _parameter_valuespec_inotify():
     return Dictionary(
-        help=_("This rule allows you to set levels for specific Inotify changes. "
-               "Keep in mind that you can only monitor operations which are actually "
-               "enabled in the Inotify plugin. So it might be a good idea to cross check "
-               "these levels here with the configuration rule in the agent bakery. "),
+        help=_(
+            "This rule allows you to set levels for specific Inotify changes. "
+            "Keep in mind that you can only monitor operations which are actually "
+            "enabled in the Inotify plugin. So it might be a good idea to cross check "
+            "these levels here with the configuration rule in the agent bakery. "
+        ),
         elements=[
-            ('age_last_operation',
-             ListOf(Tuple(elements=[
-                 DropdownChoice(
-                     title=_("INotify Operation"),
-                     choices=[
-                         ("create", _("Create")),
-                         ("delete", _("Delete")),
-                         ("open", _("Open")),
-                         ("modify", _("Modify")),
-                         ("access", _("Access")),
-                         ("movedfrom", _("Moved from")),
-                         ("movedto", _("Moved to")),
-                         ("moveself", _("Move self")),
-                     ],
-                 ),
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ],),
+            (
+                "age_last_operation",
+                ListOf(
+                    valuespec=Tuple(
+                        elements=[
+                            DropdownChoice(
+                                title=_("INotify Operation"),
+                                choices=[
+                                    ("create", _("Create")),
+                                    ("delete", _("Delete")),
+                                    ("open", _("Open")),
+                                    ("modify", _("Modify")),
+                                    ("access", _("Access")),
+                                    ("movedfrom", _("Moved from")),
+                                    ("movedto", _("Moved to")),
+                                    ("moveself", _("Move self")),
+                                ],
+                            ),
+                            Age(title=_("Warning at")),
+                            Age(title=_("Critical at")),
+                        ],
+                    ),
                     title=_("Age of last operation"),
-                    movable=False)),
+                    movable=False,
+                ),
+            ),
         ],
         optional_keys=False,
     )
@@ -65,4 +67,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_inotify,
         title=lambda: _("INotify Levels"),
-    ))
+    )
+)

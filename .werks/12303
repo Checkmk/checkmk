@@ -1,0 +1,15 @@
+Title: Fix cache miss on discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624348056
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This fixes a problem with the cache invalidation of the
+discovery data.  This could have two consequences:
+a performance problem where the hosts would be unnecessarily
+queries; or the opposite where the data would not
+be refreshed.

@@ -15,10 +15,12 @@
 #include "tools/_tgt.h"
 #include "upgrade.h"
 
+namespace fs = std::filesystem;
+
 namespace cma::cfg::upgrade {
 
 extern std::filesystem::path G_LegacyAgentPresetPath;
-void SetLegacyAgentPath(const std::filesystem::path& path);
+void SetLegacyAgentPath(const std::filesystem::path &path);
 
 const std::string ini_expected = "b53c5b77c595ba7e";
 const std::string ini_name = "check_mk.hash.ini";
@@ -31,199 +33,96 @@ const std::string dat_name = "checkmk.hash.dat";
 const std::string dat_defa_name = "checkmk.defa.hash.dat";
 
 TEST(UpgradeTest, GetHash) {
-    namespace fs = std::filesystem;
-    fs::path dir = cma::cfg::GetUserDir();
-    auto ini = dir / ini_name;
-    auto state = dir / state_name;
-    ASSERT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
-    ASSERT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
+    auto ini = tst::MakePathToUnitTestFiles() / ini_name;
+    auto state = tst::MakePathToUnitTestFiles() / state_name;
+    EXPECT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
+    EXPECT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
 
-    ASSERT_EQ(GetOldHashFromIni(ini), ini_expected);
-    ASSERT_EQ(GetOldHashFromState(state), state_expected);
+    EXPECT_EQ(GetOldHashFromIni(ini), ini_expected);
+    EXPECT_EQ(GetOldHashFromState(state), state_expected);
 }
 
 TEST(UpgradeTest, GetDefaHash) {
-    namespace fs = std::filesystem;
-    fs::path dir = cma::cfg::GetUserDir();
-    auto dat = dir / dat_defa_name;
+    auto dat = tst::MakePathToUnitTestFiles() / dat_defa_name;
     auto new_hash = GetNewHash(dat);
-    ASSERT_TRUE(new_hash.empty());
-    ASSERT_NO_THROW(GetNewHash("<GTEST>"));
+    EXPECT_TRUE(new_hash.empty());
+    EXPECT_NO_THROW(GetNewHash("<GTEST>"));
     auto new_weird_hash = GetNewHash("<GTEST>");
-    ASSERT_TRUE(new_weird_hash.empty());
+    EXPECT_TRUE(new_weird_hash.empty());
 }
 
-TEST(UpgradeTest, Integration) {
+TEST(UpgradeTest, PatchOldFilesWithDatHash) {
     ASSERT_TRUE(G_LegacyAgentPresetPath.empty());
-    tst::SafeCleanTempDir();
-    auto [legacy, target] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-    SetLegacyAgentPath(legacy);
+
+    tst::TempFolder tmp("PatchOldFilesWithDatHash");
+    SetLegacyAgentPath(tmp.path());
     ON_OUT_OF_SCOPE(SetLegacyAgentPath(""););
 
-    namespace fs = std::filesystem;
-    std::error_code ec;
-    auto state_dir = legacy / dirs::kAuStateLocation;
-    fs::create_directories(state_dir, ec);
-    ASSERT_EQ(ec.value(), 0);
-    fs::path dir = cma::cfg::GetUserDir();
+    auto state_dir = tmp.path() / dirs::kAuStateLocation;
+    fs::create_directories(state_dir);
+    fs::path dir = tst::MakePathToUnitTestFiles();
     auto ini = dir / ini_name;
-    fs::copy_file(ini, legacy / files::kIniFile,
-                  fs::copy_options::overwrite_existing, ec);
+    fs::copy_file(ini, tmp.path() / files::kIniFile);
     auto state = dir / state_name;
-    fs::copy_file(state, legacy / dirs::kAuStateLocation / files::kAuStateFile,
-                  fs::copy_options::overwrite_existing, ec);
+    fs::copy_file(state,
+                  tmp.path() / dirs::kAuStateLocation / files::kAuStateFile);
 
-    // complicated preparation to testing
-    auto dat = FindOwnDatFile();
     auto expected_dat_file = ConstructDatFileName();
-    auto dat_save = dat.u8string() + ".sav";
-    ON_OUT_OF_SCOPE({
-        if (dat.empty())
-            fs::remove(expected_dat_file, ec);
-        else
-            fs::rename(dat_save, dat);
-    });
-    fs::path test_dat = cma::cfg::GetUserDir();
-    if (dat.empty()) {
-        // create file
-        fs::copy_file(test_dat / dat_name, expected_dat_file,
-                      fs::copy_options::overwrite_existing, ec);
-
-    } else {
-        // backup
-        fs::copy_file(dat, dat_save, fs::copy_options::overwrite_existing, ec);
-        // overwrite
-        fs::copy_file(test_dat / dat_name, dat,
-                      fs::copy_options::overwrite_existing, ec);
-    }
-
-#if 0
-    fs::path install_ini = cma::cfg::GetFileInstallDir();
-    std::error_code ec;
-    fs::create_directories(install_ini, ec);
-    install_ini /= files::kIniFile;
-
-    auto backup_file = install_ini;
-    backup_file.replace_extension("in_");
-    fs::remove(backup_file, ec);
-    fs::copy_file(install_ini, backup_file, ec);
-    ON_OUT_OF_SCOPE(fs::rename(backup_file, install_ini, ec);)
-#endif
+    fs::create_directories(expected_dat_file.parent_path());
+    // create file
+    fs::copy_file(tst::MakePathToUnitTestFiles() / dat_name, expected_dat_file);
 
     ASSERT_TRUE(PatchOldFilesWithDatHash());
-    {
-        auto state_hash = GetOldHashFromState(legacy / dirs::kAuStateLocation /
-                                              files::kAuStateFile);
-        EXPECT_EQ(state_hash, new_expected);
-    }
-    {
-        auto ini_hash = GetOldHashFromIni(legacy / files::kIniFile);
-        EXPECT_EQ(ini_hash, new_expected);
-    }
+
+    auto state_hash = GetOldHashFromState(tmp.path() / dirs::kAuStateLocation /
+                                          files::kAuStateFile);
+    EXPECT_EQ(state_hash, new_expected);
+
+    auto ini_hash = GetOldHashFromIni(tmp.path() / files::kIniFile);
+    EXPECT_EQ(ini_hash, new_expected);
 }
 
 TEST(UpgradeTest, PatchIniHash) {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-    {
-        fs::path dir = cma::cfg::GetUserDir();
-        auto ini = dir / ini_name;
-        auto old_hash = GetOldHashFromIni(ini);
-        ASSERT_TRUE(!old_hash.empty());
-        ASSERT_EQ(old_hash, ini_expected);
+    auto ini = tst::MakePathToUnitTestFiles() / ini_name;
+    auto old_hash = GetOldHashFromIni(ini);
+    ASSERT_TRUE(!old_hash.empty());
+    EXPECT_EQ(old_hash, ini_expected);
 
-        auto dat = dir / dat_name;
-        auto new_hash = GetNewHash(dat);
-        ASSERT_TRUE(!new_hash.empty());
-        ASSERT_EQ(new_hash, new_expected);
-    }
-
-    tst::SafeCleanTempDir();
-    auto [source, target] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-    fs::path dir = cma::cfg::GetUserDir();
-    auto dat = dir / dat_name;
+    auto dat = tst::MakePathToUnitTestFiles() / dat_name;
     auto new_hash = GetNewHash(dat);
-    {
-        auto ini = dir / ini_name;
+    ASSERT_TRUE(!new_hash.empty());
+    EXPECT_EQ(new_hash, new_expected);
 
-        fs::copy_file(ini, target / ini_name,
-                      fs::copy_options::overwrite_existing, ec);
-        fs::copy_file(dat, target / dat_name,
-                      fs::copy_options::overwrite_existing, ec);
-    }
-    {
-        auto ret = PatchIniHash(target / ini_name, new_hash);
-        EXPECT_TRUE(ret);
+    tst::TempFolder tmp("PatchIniHash");
 
-        auto old_hash = GetOldHashFromIni(target / ini_name);
-        ASSERT_TRUE(!old_hash.empty());
-        ASSERT_EQ(old_hash, new_expected);
-    }
+    fs::copy_file(ini, tmp.path() / ini_name);
+    fs::copy_file(dat, tmp.path() / dat_name);
 
-#if 0
-    //
-    auto ini = FindOldIni();
-    std::error_code ec;
-    ASSERT_FALSE(ini.empty() || !fs::exists(ini, ec))
-        << "legacy agent must be installed";
+    EXPECT_TRUE(PatchIniHash(tmp.path() / ini_name, new_hash));
 
-#endif
-    // std::string GetNewHash();
-    // bool InjectHashIntoIni(std::filesystem::path ini, std::string hash);
+    old_hash = GetOldHashFromIni(tmp.path() / ini_name);
+    EXPECT_EQ(old_hash, new_expected);
 }
 TEST(UpgradeTest, PatchStateHash) {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-    fs::path dir = cma::cfg::GetUserDir();
-    {
-        auto state = dir / state_name;
-        auto old_hash = GetOldHashFromState(state);
-        ASSERT_TRUE(!old_hash.empty());
-        ASSERT_EQ(old_hash, state_expected);
+    auto state = tst::MakePathToUnitTestFiles() / state_name;
+    auto old_hash = GetOldHashFromState(state);
+    ASSERT_TRUE(!old_hash.empty());
+    EXPECT_EQ(old_hash, state_expected);
 
-        auto dat = dir / dat_name;
-        auto new_hash = GetNewHash(dat);
-        ASSERT_TRUE(!new_hash.empty());
-        ASSERT_EQ(new_hash, new_expected);
-    }
-
-    tst::SafeCleanTempDir();
-    auto [source, target] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-    auto dat = dir / dat_name;
+    auto dat = tst::MakePathToUnitTestFiles() / dat_name;
     auto new_hash = GetNewHash(dat);
-    {
-        fs::path dir = cma::cfg::GetUserDir();
-        auto state = dir / state_name;
+    ASSERT_TRUE(!new_hash.empty());
+    EXPECT_EQ(new_hash, new_expected);
 
-        fs::copy_file(state, target / state_name,
-                      fs::copy_options::overwrite_existing, ec);
-        fs::copy_file(dat, target / dat_name,
-                      fs::copy_options::overwrite_existing, ec);
-    }
-    {
-        auto ret = PatchStateHash(target / state_name, new_hash);
-        EXPECT_TRUE(ret);
+    tst::TempFolder tmp("PatchStateHash");
 
-        auto old_hash = GetOldHashFromState(target / state_name);
-        ASSERT_TRUE(!old_hash.empty());
-        ASSERT_EQ(old_hash, new_expected);
-    }
+    fs::copy_file(state, tmp.path() / state_name);
+    fs::copy_file(dat, tmp.path() / dat_name);
+    EXPECT_TRUE(PatchStateHash(tmp.path() / state_name, new_hash));
 
-#if 0
-    //
-    auto ini = FindOldIni();
-    std::error_code ec;
-    ASSERT_FALSE(ini.empty() || !fs::exists(ini, ec))
-        << "legacy agent must be installed";
-
-#endif
-    // std::string GetNewHash();
-    // bool InjectHashIntoIni(std::filesystem::path ini, std::string hash);
+    old_hash = GetOldHashFromState(tmp.path() / state_name);
+    EXPECT_TRUE(!old_hash.empty());
+    EXPECT_EQ(old_hash, new_expected);
 }
 
 std::string nullfile = "";
@@ -377,7 +276,7 @@ TEST(UpgradeTest, CreateProtocol) {
     auto f = cma::tools::ReadFileInVector(protocol_file);
     ASSERT_TRUE(f.has_value());
     auto file_content = f.value();
-    std::string str((const char*)file_content.data(), file_content.size());
+    std::string str((const char *)file_content.data(), file_content.size());
     auto table = cma::tools::SplitString(str, "\n");
     EXPECT_EQ(table.size(), 3);
 }
@@ -402,26 +301,20 @@ static std::string for_patch =
 
 TEST(UpgradeTest, PatchRelativePath) {
     auto yaml = YAML::Load(for_patch);
-    auto ret = PatchRelativePath(yaml, groups::kLocal, vars::kPluginsExecution,
-                                 vars::kPluginPattern,
-                                 cma::cfg::vars::kPluginUserFolder);
-    EXPECT_FALSE(ret);
+    EXPECT_FALSE(PatchRelativePath(
+        yaml, groups::kLocal, vars::kPluginsExecution, vars::kPluginPattern,
+        cma::cfg::vars::kPluginUserFolder));
+    EXPECT_FALSE(PatchRelativePath(
+        yaml, groups::kPlugins, vars::kPluginAsyncStart, vars::kPluginPattern,
+        cma::cfg::vars::kPluginUserFolder));
+    EXPECT_TRUE(PatchRelativePath(yaml, groups::kPlugins,
+                                  vars::kPluginsExecution, vars::kPluginRetry,
+                                  cma::cfg::vars::kPluginUserFolder))
+        << "invalid subkey is allowed";
 
-    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginAsyncStart,
-                            vars::kPluginPattern,
-                            cma::cfg::vars::kPluginUserFolder);
-    EXPECT_FALSE(ret);
-
-    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginsExecution,
-                            vars::kPluginRetry,
-                            cma::cfg::vars::kPluginUserFolder);
-
-    EXPECT_TRUE(ret) << "invalid subkey is allowed";
-
-    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginsExecution,
-                            vars::kPluginPattern,
-                            cma::cfg::vars::kPluginUserFolder);
-    ASSERT_TRUE(ret);
+    ASSERT_TRUE(PatchRelativePath(yaml, groups::kPlugins,
+                                  vars::kPluginsExecution, vars::kPluginPattern,
+                                  cma::cfg::vars::kPluginUserFolder));
     auto seq = yaml[groups::kPlugins][vars::kPluginsExecution];
     ASSERT_TRUE(seq.IsSequence());
     ASSERT_EQ(seq.size(), 4);
@@ -433,10 +326,9 @@ TEST(UpgradeTest, PatchRelativePath) {
     EXPECT_EQ(seq[2][vars::kPluginPattern].as<std::string>(), "\\test2");
     EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
 
-    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginsExecution,
-                            vars::kPluginPattern,
-                            cma::cfg::vars::kPluginUserFolder);
-    ASSERT_TRUE(ret);
+    ASSERT_TRUE(PatchRelativePath(yaml, groups::kPlugins,
+                                  vars::kPluginsExecution, vars::kPluginPattern,
+                                  cma::cfg::vars::kPluginUserFolder));
     seq = yaml[groups::kPlugins][vars::kPluginsExecution];
     ASSERT_TRUE(seq.IsSequence());
     ASSERT_EQ(seq.size(), 4);
@@ -462,8 +354,6 @@ std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
 }
 
 TEST(UpgradeTest, LoggingSupport) {
-    using namespace cma::cfg;
-    namespace fs = std::filesystem;
     cma::OnStartTest();
     auto temp_fs{tst::TempCfgFs::Create()};
 
@@ -507,13 +397,9 @@ TEST(UpgradeTest, LoggingSupport) {
 }
 
 TEST(UpgradeTest, UserIniPackagedAgent) {
-    using namespace cma::cfg;
-    namespace fs = std::filesystem;
-
     cma::OnStartTest();
     auto temp_fs{tst::TempCfgFs::Create()};
 
-    // #TODO (sk): make an API in TempCfgFs
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
     ASSERT_TRUE(temp_fs->createRootFile(
@@ -628,9 +514,8 @@ TEST(UpgradeTest, UserIniPackagedAgent) {
     }
 }
 
-void SimulateWatoInstall(const std::filesystem::path& lwa,
-                         const std::filesystem::path& pd_dir) {
-    namespace fs = std::filesystem;
+void SimulateWatoInstall(const std::filesystem::path &lwa,
+                         const std::filesystem::path &pd_dir) {
     auto bakery_yaml = ConstructBakeryYmlPath(pd_dir);
     auto user_yaml = ConstructUserYmlPath(pd_dir);
     std::error_code ec;
@@ -641,8 +526,6 @@ void SimulateWatoInstall(const std::filesystem::path& lwa,
 }
 
 TEST(UpgradeTest, UserIniWatoAgent) {
-    using namespace cma::cfg;
-    namespace fs = std::filesystem;
     // make temporary filesystem
     auto temp_fs{tst::TempCfgFs::Create()};
     // simulate WATO installation
@@ -751,7 +634,6 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 }
 
 TEST(UpgradeTest, LoadIni) {
-    namespace fs = std::filesystem;
     cma::OnStartTest();
 
     auto temp_fs{tst::TempCfgFs::Create()};
@@ -1034,11 +916,12 @@ TEST(UpgradeTest, TopLevelApi_Long) {
     EXPECT_TRUE(FindStopDeactivateLegacyAgent());
 }
 
-TEST(UpgradeTest, StopStartStopOhm) {
-    namespace fs = std::filesystem;
+TEST(UpgradeTest, StopStartStopOhmIntegration) {
     auto lwa_path = FindLegacyAgent();
-    ASSERT_TRUE(!lwa_path.empty())
-        << "Legacy Agent is absent. Either install it or simulate it";
+    if (!lwa_path.empty()) {
+        GTEST_SKIP()
+            << "Legacy Agent is absent. Either install it or simulate it";
+    }
 
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
@@ -1089,8 +972,10 @@ TEST(UpgradeTest, FindLwa_Long) {
     }
 
     auto lwa_path = FindLegacyAgent();
-    ASSERT_TRUE(!lwa_path.empty())
-        << "Legacy Agent is absent. Either install it or simulate it";
+    if (!lwa_path.empty()) {
+        GTEST_SKIP()
+            << "Legacy Agent is absent. Either install it or simulate it";
+    }
 
     EXPECT_TRUE(ActivateLegacyAgent());
     EXPECT_TRUE(IsLegacyAgentActive())

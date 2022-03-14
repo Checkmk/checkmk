@@ -1,0 +1,23 @@
+Title: Permitted HW/SW inventory paths: Make explicit fields for single values, table columns or categories
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1625565106
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Previously there was only a {{path}} and {{attributes}} field which was used
+for an extension of the HW/SW Inventory which will allow adding single values,
+table columns or categories to one single path.
+
+Now there are three different input fields for single values, table columns or
+categories. In order to stay compatible with previously configured settings,
+the value of the {{attributes}} field is now used for single values and table
+columns. This won't lead to unexpected filtered trees because the HW/SW
+Inventory tree has either {{single values}} or {{tables}} below a given path
+but not both.
+
+We recommend cleaning up the transformed permitted paths because in the future
+the tree structure may have single values and tables side-by-side below a path.

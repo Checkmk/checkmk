@@ -1,0 +1,18 @@
+Title: Host tags: Take tag groups into account when matching against rule conditions
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621500153
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+Up to now, the matching of host tags against rule conditions was based solely on
+on the tag ids. The ids of the tag groups were not taken into account. However,
+tag ids are not required to be unique across different tag groups. Therefore,
+if the same tag ids occur in multiple tag groups, ignoring the group ids can lead
+to wrong results.
+
+This werk fixes this issue. Tag group ids are now taken into account when checking
+if a rule applies to a host, both for normal monitoring rules and BI aggregations.

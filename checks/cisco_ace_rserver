@@ -24,9 +24,9 @@ def parse_framework_mib_inet_address(ip_address_type, ip_address):
 def inventory_cisco_ace_rserver(info):
     for name, ip_address_type, ip_address, descr, _admin_status, _oper_status, _conns in info:
         ip = parse_framework_mib_inet_address(int(ip_address_type), ip_address)
-        if name != '':
+        if name != "":
             item = name
-        elif descr != '':
+        elif descr != "":
             item = descr
         else:
             item = ip
@@ -67,14 +67,16 @@ def check_cisco_ace_rserver(item, _no_params, info):
             state, state_txt = oper_stati[oper_status]
             if admin_status == "2" and state == 2:
                 state = 1  # max state is WARN if real server out of service
-            infotext = "Operational State: %s, Administrative State: %s, Current Connections: %s" % \
-                                (state_txt, admin_state, conns)
+            infotext = (
+                "Operational State: %s, Administrative State: %s, Current Connections: %s"
+                % (state_txt, admin_state, conns)
+            )
             perfdata = [("connections", int(conns))]
 
             return state, infotext, perfdata
 
 
-check_info['cisco_ace_rserver'] = {
+check_info["cisco_ace_rserver"] = {
     "inventory_function": inventory_cisco_ace_rserver,
     "check_function": check_cisco_ace_rserver,
     "service_description": "ACE RServer %s",
@@ -88,7 +90,8 @@ check_info['cisco_ace_rserver'] = {
             "12",  # cesRserverAdminStatus
             "13",  # cesRserverOperStatus
             "19",  # cesRserverCurrConns
-        ]),
+        ],
+    ),
     "has_perfdata": True,
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.9.1.824",
 }

@@ -1,7 +1,7 @@
 title: Hyper-V Server: State of VMs
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks queries a Microsoft Hyper-V Server via an agent plugin (hyperv_vms.ps1) and
@@ -69,6 +69,5 @@ description:
 item:
  Name of the virtual machine
 
-inventory:
+discovery:
  One service is created for each system.
-

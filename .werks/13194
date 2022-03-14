@@ -1,0 +1,18 @@
+Title: Add several security HTTP headers
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1633943019
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk adds the following security headers:
+
+LI:<tt>X-Frame-Options: sameorigin</tt> Only websites hosted on the same domain are allowed to include CMK as an frame. The <i>Content-Security-Policy</i> already constrains this.
+LI:<tt>X-XSS-Protection: 1; mode=block</tt> Enables the browser buitin XSS protection.
+LI:<tt>X-Permitted-Cross-Domain-Policies: none</tt> We do not ship cross-domain policies so we disable them with this header.
+LI:<tt>Referrer-Policy: origin-when-cross-origin</tt> Only send the origin as Referer to other sites.
+
+You can overwrite these settings in the Apache config if you need to.

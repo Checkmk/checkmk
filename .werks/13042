@@ -1,0 +1,16 @@
+Title: check_mail_loop: respect --debug
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632388591
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The <tt>--debug</tt> flag for <tt>check_mail_loop</tt> did not affect all
+possible exceptions.
+
+Now all catched exceptions should be raised with their full stack trace if
+<tt>--debug</tt> is provided on the commandline.

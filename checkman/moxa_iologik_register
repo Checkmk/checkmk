@@ -1,7 +1,7 @@
 title: Moxa IOLogik: Register Check
 agents: snmp
 catalog: hw/network/moxa
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of registers found on the moxa iologik e2000
@@ -15,5 +15,5 @@ description:
 item:
  The channel dio index
 
-inventory:
+discovery:
  One service is created for each register found on the device.

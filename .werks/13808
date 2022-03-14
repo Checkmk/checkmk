@@ -1,0 +1,14 @@
+Title: KUBE kube_replicas change replicas desired count from status to spec
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646298474
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In the previous version, the desired replicas count was based upon Kubernetes'
+reported status count number. This number could differ from the specified
+replicas count depending on the conditions of the deployment. This werk, therefore,
+changes the desired replicas count to rely on the spec value.

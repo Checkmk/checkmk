@@ -15,7 +15,7 @@
 
 
 def inventory_esx_vsphere_vm_mem(section):
-    if 'summary.quickStats.guestMemoryUsage' in section:
+    if "summary.quickStats.guestMemoryUsage" in section:
         return [(None, {})]
 
 
@@ -26,22 +26,26 @@ def check_esx_vsphere_vm_mem(_no_item, params, section):
         raise MKCounterWrapped("VM is %s, skipping this check" % powerstate)
 
     try:
-        #consumed host memory
-        host_memory_usage = savefloat(
-            section["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
-        #active guest memory
-        guest_memory_usage = savefloat(
-            section["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
-        #size of the balloon driver in the VM
+        # consumed host memory
+        host_memory_usage = (
+            savefloat(section["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
+        )
+        # active guest memory
+        guest_memory_usage = (
+            savefloat(section["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
+        )
+        # size of the balloon driver in the VM
         ballooned_memory = savefloat(section["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
-        #The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
+        # The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
         shared_memory = savefloat(section["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
-        #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
-        private_memory = savefloat(section.get("summary.quickStats.privateMemory",
-                                               [0])[0]) * 1024 * 1024
+        # The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
+        private_memory = (
+            savefloat(section.get("summary.quickStats.privateMemory", [0])[0]) * 1024 * 1024
+        )
     except:
         raise MKCounterWrapped(
-            "Hostsystem did not provide memory information (reason may be high load)")
+            "Hostsystem did not provide memory information (reason may be high load)"
+        )
 
     for perfname, value in [
         ("host", host_memory_usage),
@@ -50,14 +54,16 @@ def check_esx_vsphere_vm_mem(_no_item, params, section):
         ("private", private_memory),
         ("shared", shared_memory),
     ]:
-        yield check_levels(value,
-                           perfname,
-                           params=params.get(perfname),
-                           infoname=perfname.title(),
-                           human_readable_func=get_bytes_human_readable)
+        yield check_levels(
+            value,
+            perfname,
+            params=params.get(perfname),
+            infoname=perfname.title(),
+            human_readable_func=get_bytes_human_readable,
+        )
 
 
-check_info['esx_vsphere_vm.mem_usage'] = {
+check_info["esx_vsphere_vm.mem_usage"] = {
     "inventory_function": inventory_esx_vsphere_vm_mem,
     "check_function": check_esx_vsphere_vm_mem,
     "service_description": "ESX Memory",
@@ -65,7 +71,7 @@ check_info['esx_vsphere_vm.mem_usage'] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--Name----------------------------------------------------------------.
 #   |                     _   _                                            |
 #   |                    | \ | | __ _ _ __ ___   ___                       |
@@ -77,23 +83,23 @@ check_info['esx_vsphere_vm.mem_usage'] = {
 
 
 def inventory_esx_vsphere_vm_name(section):
-    if 'name' in section:
+    if "name" in section:
         return [(None, None)]
 
 
 def check_esx_vsphere_vm_name(_no_item, _no_params, section):
-    name = section.get('name')
+    name = section.get("name")
     if name:
         return 0, " ".join(name)
 
 
-check_info['esx_vsphere_vm.name'] = {
+check_info["esx_vsphere_vm.name"] = {
     "inventory_function": inventory_esx_vsphere_vm_name,
     "check_function": check_esx_vsphere_vm_name,
     "service_description": "ESX Name",
 }
 
-#.
+# .
 #   .--Runtime Host--------------------------------------------------------.
 #   |    ____              _   _                  _   _           _        |
 #   |   |  _ \ _   _ _ __ | |_(_)_ __ ___   ___  | | | | ___  ___| |_      |
@@ -107,7 +113,7 @@ check_info['esx_vsphere_vm.name'] = {
 
 
 def inventory_esx_vsphere_vm_running_on(section):
-    if 'runtime.host' in section:
+    if "runtime.host" in section:
         yield None, None
 
 
@@ -119,13 +125,13 @@ def check_esx_vsphere_vm_running_on(no_item, no_params, section):
     return 0, "Running on %s" % running_on[0]
 
 
-check_info['esx_vsphere_vm.running_on'] = {
+check_info["esx_vsphere_vm.running_on"] = {
     "inventory_function": inventory_esx_vsphere_vm_running_on,
     "check_function": check_esx_vsphere_vm_running_on,
     "service_description": "ESX Hostsystem",
 }
 
-#.
+# .
 #   .--VM Datastores--------------------------------------------------------.
 #   |    __     ____  __   ____        _            _                      |
 #   |    \ \   / /  \/  | |  _ \  __ _| |_ __ _ ___| |_ ___  _ __ ___      |
@@ -140,7 +146,7 @@ check_info['esx_vsphere_vm.running_on'] = {
 
 def inventory_esx_vsphere_vm_datastores(section):
     # Right now we only handle one datastore per vm
-    if 'config.datastoreUrl' in section:
+    if "config.datastoreUrl" in section:
         return [(None, None)]
 
 
@@ -155,7 +161,7 @@ def check_esx_vsphere_vm_datastores(no_item, no_params, section):
         output_store = []
 
         # datastore_url looks like
-        #['url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa',
+        # ['url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa',
         # 'uncommitted 51973812224',
         # 'name zmucvm99-lds',
         # 'type VMFS',
@@ -172,21 +178,22 @@ def check_esx_vsphere_vm_datastores(no_item, no_params, section):
         else:
             free_perc = 0.0
 
-        output_store = "Stored on %s (%s/%0.1f%% free)" %\
-                             (datastore_dict.get("name"),
-                              get_bytes_human_readable(capacity),
-                              free_perc)
+        output_store = "Stored on %s (%s/%0.1f%% free)" % (
+            datastore_dict.get("name"),
+            get_bytes_human_readable(capacity),
+            free_perc,
+        )
         output.append(output_store)
     return 0, ", ".join(output)
 
 
-check_info['esx_vsphere_vm.datastores'] = {
+check_info["esx_vsphere_vm.datastores"] = {
     "inventory_function": inventory_esx_vsphere_vm_datastores,
     "check_function": check_esx_vsphere_vm_datastores,
     "service_description": "ESX Datastores",
 }
 
-#.
+# .
 #   .--GuestTools----------------------------------------------------------.
 #   |            ____                 _  _____           _                 |
 #   |           / ___|_   _  ___  ___| ||_   _|__   ___ | |___             |
@@ -200,13 +207,13 @@ check_info['esx_vsphere_vm.datastores'] = {
 
 
 def inventory_esx_vsphere_vm_guest_tools(section):
-    if 'guest.toolsVersionStatus' in section:
+    if "guest.toolsVersionStatus" in section:
         return [(None, {})]
 
 
 def check_esx_vsphere_vm_guest_tools(_no_item, params, section):
     try:
-        vm_status = section['guest.toolsVersionStatus'][0]
+        vm_status = section["guest.toolsVersionStatus"][0]
     except KeyError:
         return
 
@@ -214,7 +221,7 @@ def check_esx_vsphere_vm_guest_tools(_no_item, params, section):
         "guestToolsCurrent": (0, "VMware Tools are installed and the version is current"),
         "guestToolsNeedUpgrade": (1, "VMware Tools are installed, but the version is not current"),
         "guestToolsNotInstalled": (2, "VMware Tools are not installed"),
-        "guestToolsUnmanaged": (0, "VMware Tools are installed, but are not managed by VMWare")
+        "guestToolsUnmanaged": (0, "VMware Tools are installed, but are not managed by VMWare"),
     }
     state, info = guest_tools_map.get(vm_status, (3, "Unknown status for VMware Tools"))
 
@@ -224,14 +231,14 @@ def check_esx_vsphere_vm_guest_tools(_no_item, params, section):
     return state, info
 
 
-check_info['esx_vsphere_vm.guest_tools'] = {
+check_info["esx_vsphere_vm.guest_tools"] = {
     "inventory_function": inventory_esx_vsphere_vm_guest_tools,
     "check_function": check_esx_vsphere_vm_guest_tools,
     "service_description": "ESX Guest Tools",
-    "group": "vm_guest_tools"
+    "group": "vm_guest_tools",
 }
 
-#.
+# .
 #   .--Heartbeat-----------------------------------------------------------.
 #   |           _   _                 _   _                _               |
 #   |          | | | | ___  __ _ _ __| |_| |__   ___  __ _| |_             |
@@ -249,43 +256,43 @@ check_info['esx_vsphere_vm.guest_tools'] = {
 #    green - Guest operating system is responding normally.
 #
 def inventory_esx_vsphere_vm_hb_status(section):
-    if 'guestHeartbeatStatus' in section:
+    if "guestHeartbeatStatus" in section:
         return [(None, {})]
 
 
 def check_esx_vsphere_vm_hb_status(_no_item, params, section):
-    if section.get('guestHeartbeatStatus') is None:
+    if section.get("guestHeartbeatStatus") is None:
         return
 
-    vm_status = section['guestHeartbeatStatus'][0]
+    vm_status = section["guestHeartbeatStatus"][0]
     state = 3
 
     vm_heartbeat_map = {
         "gray": (1, "heartbeat_no_tools"),
         "green": (0, "heartbeat_ok"),
         "red": (2, "heartbeat_missing"),
-        "yellow": (1, "heartbeat_intermittend")
+        "yellow": (1, "heartbeat_intermittend"),
     }
     if vm_status in vm_heartbeat_map:
         if params:
             state = params.get(vm_heartbeat_map.get(vm_status)[1], 3)
         else:
             state = vm_heartbeat_map.get(vm_status)[0]
-        if vm_status == 'gray':
+        if vm_status == "gray":
             return state, "No VMWare Tools installed, outdated or not running"
         return state, "Heartbeat status is %s" % vm_status
     else:
         return 3, "Unknown heartbeat status %s" % vm_status
 
 
-check_info['esx_vsphere_vm.heartbeat'] = {
+check_info["esx_vsphere_vm.heartbeat"] = {
     "inventory_function": inventory_esx_vsphere_vm_hb_status,
     "check_function": check_esx_vsphere_vm_hb_status,
     "service_description": "ESX Heartbeat",
-    "group": "vm_heartbeat"
+    "group": "vm_heartbeat",
 }
 
-#.
+# .
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |
@@ -304,29 +311,32 @@ check_info['esx_vsphere_vm.heartbeat'] = {
 
 
 def inventory_esx_vsphere_vm_cpu(section):
-    if 'summary.quickStats.overallCpuUsage' in section:
+    if "summary.quickStats.overallCpuUsage" in section:
         return [(None, None)]
 
 
 def check_esx_vsphere_vm_cpu(_no_item, _no_params, section):
     # VMs that are currently down do not have this entry
-    if 'summary.quickStats.overallCpuUsage' not in section:
+    if "summary.quickStats.overallCpuUsage" not in section:
         raise MKCounterWrapped("No information about CPU usage. VM is probably powered off.")
 
-    usage_mhz = int(section['summary.quickStats.overallCpuUsage'][0])
-    cpus = int(section['config.hardware.numCPU'][0])
-    return 0, "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus), [("demand",
-                                                                                    usage_mhz)]
+    usage_mhz = int(section["summary.quickStats.overallCpuUsage"][0])
+    cpus = int(section["config.hardware.numCPU"][0])
+    return (
+        0,
+        "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus),
+        [("demand", usage_mhz)],
+    )
 
 
-check_info['esx_vsphere_vm.cpu'] = {
+check_info["esx_vsphere_vm.cpu"] = {
     "inventory_function": inventory_esx_vsphere_vm_cpu,
     "check_function": check_esx_vsphere_vm_cpu,
     "service_description": "ESX CPU",
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--VM devices----------------------------------------------------------.
 #   |         __     ____  __       _            _                         |
 #   |         \ \   / /  \/  |   __| | _____   _(_) ___ ___  ___           |
@@ -359,20 +369,20 @@ def inventory_esx_vsphere_vm_mounted_devices(section):
 
 
 def check_esx_vsphere_vm_mounted_devices(item, params, section):
-    device_types = ['VirtualCdrom', 'VirtualFloppy']
+    device_types = ["VirtualCdrom", "VirtualFloppy"]
     mounted_devices = []
     for device_name, attrs in parse_esx_vsphere_vm_mounted_devices(section).items():
-        if attrs['virtualDeviceType'] in device_types and \
-           attrs['connected'] == 'true':
+        if attrs["virtualDeviceType"] in device_types and attrs["connected"] == "true":
             mounted_devices.append(device_name)
 
     if mounted_devices:
-        return 1, "HA functionality not guaranteed, Mounted devices: %s" % \
-                  ", ".join(mounted_devices)
+        return 1, "HA functionality not guaranteed, Mounted devices: %s" % ", ".join(
+            mounted_devices
+        )
     return 0, "HA functionality guaranteed"
 
 
-check_info['esx_vsphere_vm.mounted_devices'] = {
+check_info["esx_vsphere_vm.mounted_devices"] = {
     "inventory_function": inventory_esx_vsphere_vm_mounted_devices,
     "check_function": check_esx_vsphere_vm_mounted_devices,
     "service_description": "ESX Mounted Devices",

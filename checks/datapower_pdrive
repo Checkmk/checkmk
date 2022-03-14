@@ -53,15 +53,21 @@ def check_datapower_pdrive(item, _no_params, info):
                 progress_txt = " - Progress: %s%%" % progress
             else:
                 progress_txt = ""
-            infotext = "%s%s, Position: %s, Logical Drive: %s, Product: %s %s"\
-                    % (state_txt, progress_txt, position_txt, member_of_ldrive, vendor, product)
+            infotext = "%s%s, Position: %s, Logical Drive: %s, Product: %s %s" % (
+                state_txt,
+                progress_txt,
+                position_txt,
+                member_of_ldrive,
+                vendor,
+                product,
+            )
             yield state, infotext
 
             if fail:
                 yield datapower_pdrive_fail[fail]
 
 
-check_info['datapower_pdrive'] = {
+check_info["datapower_pdrive"] = {
     "inventory_function": inventory_datapower_pdrive,
     "check_function": check_datapower_pdrive,
     "service_description": "Physical Drive %s",
@@ -77,6 +83,7 @@ check_info['datapower_pdrive'] = {
             "14",  # dpStatusRaidPhysicaldrivetatusVendorID
             "15",  # dpStatusRaidPhysicaldrivetatusProductID
             "18",  # dpStatusRaidPhysicaldrivetatusFailure
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
 }

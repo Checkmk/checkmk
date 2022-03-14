@@ -7,8 +7,7 @@
 import re
 from typing import Any, Dict
 
-from cmk.base.check_api import regex
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped, regex
 
 
 def parse_runmqsc_display_output(info, group_by_object):
@@ -58,7 +57,7 @@ def parse_runmqsc_display_output(info, group_by_object):
             qmname = intro_line.group(1)
             qmstatus = intro_line.group(2)
             now = intro_line.group(3)
-            parsed[qmname] = {'STATUS': qmstatus, 'NOW': now}
+            parsed[qmname] = {"STATUS": qmstatus, "NOW": now}
             continue
         if re_group.match(line) or not has_more:
             if attributes:
@@ -85,7 +84,7 @@ def is_ibm_mq_service_vanished(item, parsed):
     if item in parsed:
         return False
 
-    qmgr_name = item.split(':', 1)[0]
+    qmgr_name = item.split(":", 1)[0]
     qmgr_status = "RUNNING"
     if qmgr_name in parsed:
         qmgr_status = parsed[qmgr_name]["STATUS"]
@@ -97,14 +96,15 @@ def is_ibm_mq_service_vanished(item, parsed):
 
 def ibm_mq_check_version(actual_version, params, label):
     """
-        >>> ibm_mq_check_version(
-        ...    "2.0.0b4",
-        ...     {"version": (("at_least", "2.0.0p2"), 2)},
-        ...     "Doc test",
-        ... )
-        (2, 'Doc test: 2.0.0b4 (should be at least 2.0.0p2)')
+    >>> ibm_mq_check_version(
+    ...    "2.0.0b4",
+    ...     {"version": (("at_least", "2.0.0p2"), 2)},
+    ...     "Doc test",
+    ... )
+    (2, 'Doc test: 2.0.0b4 (should be at least 2.0.0p2)')
 
     """
+
     def tokenize(version):
         _map_chars = {"p": 2, "b": 1, "i": 0}
         if not set("0123456789.pbi").issuperset(version):

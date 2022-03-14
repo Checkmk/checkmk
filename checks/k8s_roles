@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 
 
 def inventory_k8s_roles(parsed):
@@ -17,40 +16,40 @@ def inventory_k8s_roles(parsed):
 
 
 def check_k8s_roles(item, params, parsed):
-    cluster_roles = len(parsed['cluster_roles'])
-    roles = len(parsed['roles'])
+    cluster_roles = len(parsed["cluster_roles"])
+    roles = len(parsed["roles"])
 
     yield check_levels(
         cluster_roles + roles,
-        'k8s_total_roles',
-        params.get('total'),
-        infoname='Total',
+        "k8s_total_roles",
+        params.get("total"),
+        infoname="Total",
         human_readable_func=int,
         boundaries=(0, None),
     )
     yield check_levels(
         cluster_roles,
-        'k8s_cluster_roles',
-        params.get('cluster_roles'),
-        infoname='Cluster roles',
+        "k8s_cluster_roles",
+        params.get("cluster_roles"),
+        infoname="Cluster roles",
         human_readable_func=int,
         boundaries=(0, None),
     )
     yield check_levels(
         roles,
-        'k8s_roles',
-        params.get('roles'),
-        infoname='Roles',
+        "k8s_roles",
+        params.get("roles"),
+        infoname="Roles",
         human_readable_func=int,
         boundaries=(0, None),
     )
 
 
-check_info['k8s_roles'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_roles,
-    'check_function': check_k8s_roles,
-    'service_description': 'Roles',
-    'group': 'k8s_roles',
-    'has_perfdata': True,
+check_info["k8s_roles"] = {
+    # section is already migrated!
+    "inventory_function": inventory_k8s_roles,
+    "check_function": check_k8s_roles,
+    "service_description": "Roles",
+    "group": "k8s_roles",
+    "has_perfdata": True,
 }

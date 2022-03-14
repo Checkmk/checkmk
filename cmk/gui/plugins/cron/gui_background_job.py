@@ -5,11 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.background_job
-
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.cron import register_job
 from cmk.gui.log import logger
-
-from cmk.gui.plugins.cron import register_job
 
 
 def housekeeping() -> None:

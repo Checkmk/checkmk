@@ -1,0 +1,11 @@
+Title: Add service detection for Cisco WLC C9800
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1639403088
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

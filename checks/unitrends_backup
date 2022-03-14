@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Header: Schedule Name, Application Name, Schedule Description, Failures
-#<<<unitrends_backup:sep(124)>>>
-#HEADER|DMZ-SR01|Hyper-V 2012|DMZ-HV01|0
-#rodc2|18761|Incremental|Successful
-#rodc2|18761|Incremental|Successful
-#owncloud-test|18762|Incremental|Successful
+# <<<unitrends_backup:sep(124)>>>
+# HEADER|DMZ-SR01|Hyper-V 2012|DMZ-HV01|0
+# rodc2|18761|Incremental|Successful
+# rodc2|18761|Incremental|Successful
+# owncloud-test|18762|Incremental|Successful
 
 
 def inventory_unitrends_backup(info):
@@ -31,19 +31,23 @@ def check_unitrends_backup(item, _no_params, info):
         if found is True:
             # Collection Backup deatils
             app_type, bid, backup_type, status = line
-            details.append("Application Type: %s (%s), %s: %s" % \
-            ( app_type, bid, backup_type, status))
+            details.append(
+                "Application Type: %s (%s), %s: %s" % (app_type, bid, backup_type, status)
+            )
             continue
 
         if line[0] == "HEADER" and line[1] == item:
             found = True
             _head, _sched_name, app_name, sched_desc, failures = line
-            message = "%s Errors in last 24/h for Application %s (%s) " % \
-            ( failures, app_name, sched_desc )
+            message = "%s Errors in last 24/h for Application %s (%s) " % (
+                failures,
+                app_name,
+                sched_desc,
+            )
 
     if found is True:
         message += "\n" + "\n".join(details)
-        if failures == '0':
+        if failures == "0":
             return 0, message
         return 2, message
     return 3, "Schedule not found in Agent Output"

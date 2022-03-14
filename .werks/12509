@@ -1,0 +1,14 @@
+Title: cmk_site_statistics: add cluster functionality
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618999783
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The check plugin <i>cmk_site_statistics</i> is now ready to
+handle clustered data (failover cluster).
+

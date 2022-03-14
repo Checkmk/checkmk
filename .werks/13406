@@ -1,0 +1,17 @@
+Title: agent_vsphere: KeyError: runtime.host
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643709158
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this werk the special agent <tt>agent_vsphere</tt> crashed when it was
+executed while a virtual machine is cloned. The freshly cloned virtual machine
+is not assigned to any vmware host, and thus can not be reporetd.
+
+If a virtual machine is reported to have no vmware host, the virtual machine is
+now ignored and a message is printed to stderr.

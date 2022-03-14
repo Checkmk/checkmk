@@ -1,12 +1,12 @@
 title: Liebert: System Events
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of certain system events. If the status of
  one event is not "inactive event", the state will change to {CRIT} and the
  event will displayed in the service output.
 
-inventory:
+discovery:
  One service is created.

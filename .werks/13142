@@ -1,0 +1,23 @@
+Title: Add check plugins for Aruba 2930M switches
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1630495040
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Add check plugins for Aruba 2930M switches.
+
+The following is monitored via SNMP:
+<ul>
+<li>Fan status</li>
+<li>Chassis temperature</li>
+<li>PSU status</li>
+<li>PSU temperature</li>
+<li>PSU wattage</li>
+</ul>
+
+For further details about the check plugins have
+a look at the respective manpages.

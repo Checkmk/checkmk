@@ -1,0 +1,14 @@
+Title: Liveproxyd: Fix default connection parameters
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1635336349
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Changing the default connection parameters of the liveproxy daemon
+(Global Settings > Livestatus Proxy default connection parameters)
+could lead to a loss of connection with the remote sites using
+these default parameters.

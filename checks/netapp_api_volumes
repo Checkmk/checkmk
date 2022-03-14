@@ -11,10 +11,19 @@ import time
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.plugins.agent_based.utils.df import (
+    FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
+)
 from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
 
 # <<<netapp_api_volumes:sep(9)>>>
 # volume vol0 size-available 556613632    state online    files-total 25876   files-used 8646 size-total 848203776    fcp_write_data 0    fcp_read_data 0cifs_write_data 0    iscsi_read_latency 0    iscsi_write_data 0  read_data 201265528798  nfs_write_latency 977623886 san_write_latency 0 san_write_data 0read_latency 1529821621 cifs_read_latency 0 fcp_write_latency 0 fcp_read_latency 0  iscsi_write_latency 0   nfs_read_latency 1491050012 iscsi_read_data 0   instance_name vol0  cifs_read_data 0    nfs_read_data 197072260981  write_latency 1528780977    san_read_data 0 san_read_latency 0  write_data 13926719804  nfs_write_data 2789744628   cifs_write_latency 0
+
+
+factory_settings["netapp_api_volumes_default_levels"] = {
+    k: v for k, v in _FILESYSTEM_DEFAULT_LEVELS.items() if k not in ("show_levels", "show_reserved")
+}
 
 
 def parse_netapp_api_volumes(info):
@@ -39,6 +48,10 @@ def parse_netapp_api_volumes(info):
     return volumes
 
 
+def discovery_netapp_api_volumes(parsed):
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), parsed)
+
+
 def _create_key(protocol, mode, field):
     if protocol:
         return "_".join([protocol, mode, field])
@@ -58,7 +71,7 @@ def _check_single_netapp_api_volume(item, params, volume):
         params,
     )
 
-    yield 0, '', list(_generate_volume_metrics(params, volume))
+    yield 0, "", list(_generate_volume_metrics(params, volume))
 
 
 def _generate_volume_metrics(
@@ -67,7 +80,7 @@ def _generate_volume_metrics(
 ):
     now = time.time()
     base = {}
-    metrics_map = {'write_ops': 'write_ops_s'}
+    metrics_map = {"write_ops": "write_ops_s"}
 
     for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
@@ -119,11 +132,16 @@ def _generate_volume_metrics(
                         divisor = 1.0
                     else:
                         divisor = 1000.0
-                    delta /= divisor * base[_create_key(
-                        protocol,
-                        mode,
-                        "ops",
-                    )]  # fixed: true-division
+                    delta /= (
+                        divisor
+                        * base[
+                            _create_key(
+                                protocol,
+                                mode,
+                                "ops",
+                            )
+                        ]
+                    )  # fixed: true-division
 
                 yield metrics_map.get(key, key), delta
 
@@ -148,7 +166,7 @@ def _combine_netapp_api_volumes(volumes_in_group, parsed):
     n_vols_online = len(volumes_in_group) - len(volumes_not_online)
     if n_vols_online:
         for k, v in combined_volume.items():
-            if k.endswith('latency'):
+            if k.endswith("latency"):
                 combined_volume[k] = float(v) / n_vols_online
 
     return combined_volume, volumes_not_online
@@ -157,7 +175,7 @@ def _combine_netapp_api_volumes(volumes_in_group, parsed):
 # Cannot use decorator get_parsed_item_data for this check function due to the
 # specific error message for legacy checks with a UUID as item
 def check_netapp_api_volumes(item, params, parsed):
-    if 'patterns' in params:
+    if "patterns" in params:
 
         volumes_in_group = mountpoints_in_group(parsed, *params["patterns"])
         if not volumes_in_group:
@@ -194,11 +212,11 @@ def check_netapp_api_volumes(item, params, parsed):
 
 
 check_info["netapp_api_volumes"] = {
-    'check_function': check_netapp_api_volumes,
-    'inventory_function': df_inventory,
-    'parse_function': parse_netapp_api_volumes,
-    'service_description': 'Volume %s',
-    'has_perfdata': True,
-    'group': "netapp_volumes",
-    "default_levels_variable": "filesystem_default_levels",
+    "check_function": check_netapp_api_volumes,
+    "inventory_function": discovery_netapp_api_volumes,
+    "parse_function": parse_netapp_api_volumes,
+    "service_description": "Volume %s",
+    "has_perfdata": True,
+    "group": "netapp_volumes",
+    "default_levels_variable": "netapp_api_volumes_default_levels",
 }

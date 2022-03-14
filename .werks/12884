@@ -1,0 +1,24 @@
+Title: User interface available in additional languages
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1622108375
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The user interface of Checkmk is now available in following
+additional languages:
+<ul>
+<li>Dutch</li>
+<li>French</li>
+<li>Italian</li>
+<li>Japanese</li>
+<li>Portuguese (Portugal)</li>
+<li>Spanish</li>
+</ul>
+
+Except for Japanese, all of the above listed translations
+are machine-supported translations. Feel free to contribute
+to them on <a href=https://translate.checkmk.com>Weblate</a>.

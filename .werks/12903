@@ -1,0 +1,18 @@
+Title: Management boards: cache DNS lookup
+Class: fix
+Compatible: compat
+Component: core
+Date: 1625162472
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If the management board address of a host has been provided
+as a name (not an IP address) Checkmks DNS lookup cache has
+not been effective, leading to a lot of DNS lookups.
+
+This is fixed now. In the rare case your management board
+has a dynamic IP address, you must configure the entire host
+to use dynamic lookup using the WATO rule
+"Hosts with dynamic DNS lookup".

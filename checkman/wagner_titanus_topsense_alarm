@@ -1,7 +1,7 @@
 title: Wagner Titanus Top Sens: Alarms Triggered
 agents: snmp
 catalog: hw/environment/wagner
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks if alarms have been triggered on an Wagner Titanus Top Sens device.
@@ -13,6 +13,6 @@ description:
 item:
  One of the two numbers {{1}} or {{2}}
 
-inventory:
+discovery:
  Two services are created for each Top Sens device.
  One service for every detector on each device.

@@ -27,15 +27,14 @@ def check_qlogic_sanbox_fabric_element(item, _no_params, info):
 
     return 3, "No Fabric Element %s found" % item
 
+
 check_info["qlogic_sanbox_fabric_element"] = {
-    "check_function"        : check_qlogic_sanbox_fabric_element,
-    "inventory_function"    : inventory_qlogic_sanbox_fabric_element,
-    "service_description"   : "Fabric Element %s",
-    "snmp_info"             : (".1.3.6.1.2.1.75.1.1.4.1", [4, # fcFeModuleOperStatus
-                                                           OID_END]),
+    "check_function": check_qlogic_sanbox_fabric_element,
+    "inventory_function": inventory_qlogic_sanbox_fabric_element,
+    "service_description": "Fabric Element %s",
+    "snmp_info": (".1.3.6.1.2.1.75.1.1.4.1", [4, OID_END]),  # fcFeModuleOperStatus
     # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
     # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
-    'snmp_scan_function'    : lambda oid: \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14") \
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
 }

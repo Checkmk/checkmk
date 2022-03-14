@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example for contents of info
 #           description         degree unit status low_crit low_warn high_warn high_crit degreeraw online
 # ["Port 8 Temperatur CL Lager", "20", "C",   "5",   "10",    "20",    "30",     "40",      "0",     1]
@@ -40,6 +42,7 @@ check_info["akcp_exp_temp"] = {
             12,  # SPAGENT-MIB::sensorTemperatureHighCritical
             19,  # SPAGENT-MIB::sensorTemperatureRaw
             8,  # SPAGENT-MIB::sensorTemperatureGoOffline
-        ]),
+        ],
+    ),
     "group": "temperature",
 }

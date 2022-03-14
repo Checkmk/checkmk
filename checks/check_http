@@ -62,7 +62,9 @@ def _get_host(params):
     if address is None:
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
-    HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family", "virtual"))
+    HostSettings = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "HostSettings", ("address", "port", "family", "virtual")
+    )
     return HostSettings(address, host.get("port"), family, host.get("virthost"))
 
 
@@ -76,7 +78,9 @@ def _get_proxy(params):
     if auth:
         auth = passwordstore_get_cmdline("%s:%%s" % auth[0], auth[1])
 
-    ProxySettings = collections.namedtuple("ProxySettings", ("address", "port", "auth"))
+    ProxySettings = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "ProxySettings", ("address", "port", "auth")
+    )
     return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
 
 
@@ -189,7 +193,7 @@ def _host_name(host, proxy, params):
         return host.address
     if host.virtual:
         return host.virtual
-    if params['mode'][0] == 'cert':
+    if params["mode"][0] == "cert":
         return host.address
     # Don't return the address in this case, because check_http would
     # automatically set the HTTP Host header and use HTTP/1.1 instead of

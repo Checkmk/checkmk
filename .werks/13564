@@ -1,0 +1,14 @@
+Title: oracle_processes: crashed when used with 1.6 agent plugin for solaris
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646081230
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The plugin for Oracle processes, "oracle_processes", carshed when it processed
+the output of the 1.6 agent plugin for solaris with the error message
+"ValueError (invalid literal for int() with base 10: 'Message:')". This has
+been fixed.

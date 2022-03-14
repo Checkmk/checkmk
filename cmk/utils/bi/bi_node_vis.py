@@ -14,20 +14,15 @@
 #   +----------------------------------------------------------------------+
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
-from cmk.utils.bi.bi_lib import (
-    ReqConstant,
-    ReqBoolean,
-    ReqInteger,
-    ReqString,
-    ReqNested,
-)
+
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqConstant, ReqInteger, ReqNested, ReqString
 from cmk.utils.bi.bi_schema import Schema
 
 
 class BIAggregationVisualizationSchema(Schema):
-    ignore_rule_styles = ReqBoolean(default=False, example=False)
-    layout_id = ReqString(default="builtin_default", example="radial_layout2")
-    line_style = ReqString(default="round", example="round")
+    ignore_rule_styles = ReqBoolean(dump_default=False, example=False)
+    layout_id = ReqString(dump_default="builtin_default", example="radial_layout2")
+    line_style = ReqString(dump_default="round", example="round")
 
 
 class BINodeVisNoneStyleSchema(Schema):
@@ -45,9 +40,9 @@ class BINodeVisForceStyleSchema(Schema):
 #                                   'radius': 25,
 #                                   'rotation': 270},
 class BINodeVisRadialStyleConfigSchema(Schema):
-    degree = ReqInteger(default=80)
-    radius = ReqInteger(default=25)
-    rotation = ReqInteger(default=270)
+    degree = ReqInteger(dump_default=80)
+    radius = ReqInteger(dump_default=25)
+    rotation = ReqInteger(dump_default=270)
 
 
 class BINodeVisRadialStyleSchema(Schema):
@@ -60,9 +55,9 @@ class BINodeVisRadialStyleSchema(Schema):
 #                                   'node_size': 25,
 #                                   'rotation': 270},
 class BINodeVisHierarchyStyleConfigSchema(Schema):
-    layer_height = ReqInteger(default=80, example=85)
-    node_size = ReqInteger(default=25, example=40)
-    rotation = ReqInteger(default=270, example=180)
+    layer_height = ReqInteger(dump_default=80, example=85)
+    node_size = ReqInteger(dump_default=25, example=40)
+    rotation = ReqInteger(dump_default=270, example=180)
 
 
 class BINodeVisHierarchyStyleSchema(Schema):

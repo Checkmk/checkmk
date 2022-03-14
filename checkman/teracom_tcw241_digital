@@ -1,7 +1,7 @@
 title: Teracom Ethernet IO Module TCW241: Digital Inputs
 agents: snmp
 catalog: hw/environment/teracom
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -10,5 +10,5 @@ description:
 item:
  The index of the module
 
-inventory:
+discovery:
  One service is created for each sensor.

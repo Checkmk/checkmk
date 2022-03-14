@@ -1,7 +1,7 @@
 title: Redis: Server Info
 agents: linux
 catalog: app/redis
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  With this check you can monitor Redis instances. The check gets input from
@@ -16,5 +16,5 @@ description:
 item:
  The item is the name of the Redis instance.
 
-inventory:
+discovery:
  One service is created for each instance {"Redis MY_REDIS Server Info"}.

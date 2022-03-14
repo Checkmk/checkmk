@@ -26,7 +26,7 @@ def parse_bluenet_meter(info):
 
 check_info["bluenet_meter"] = {
     "parse_function": parse_bluenet_meter,
-    "inventory_function": inventory_elphase,
+    "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "Powermeter %s",
     "group": "ups_outphase",
@@ -39,6 +39,7 @@ check_info["bluenet_meter"] = {
             7,  # e3lpmPowerS
             8,  # e3lpmUrms
             9,  # e3lpmIrms
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.21695.1",
 }

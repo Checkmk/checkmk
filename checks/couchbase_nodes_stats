@@ -9,48 +9,51 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['couchbase_nodes_stats'] = {
-    'parse_function': parse_couchbase_lines,
+
+check_info["couchbase_nodes_stats"] = {
+    "parse_function": parse_couchbase_lines,
 }
 
 
 @get_parsed_item_data
 def check_couchbase_nodes_cpu_util(_item, params, data):
     try:
-        return check_cpu_util(float(data['cpu_utilization_rate']), params)
+        return check_cpu_util(float(data["cpu_utilization_rate"]), params)
     except (ValueError, KeyError):
         pass
 
 
-check_info['couchbase_nodes_stats.cpu_util'] = {
-    'inventory_function': discover(),
-    'check_function': check_couchbase_nodes_cpu_util,
-    'service_description': 'Couchbase %s CPU utilization',
-    'group': "cpu_utilization_multiitem",
-    'has_perfdata': True,
+check_info["couchbase_nodes_stats.cpu_util"] = {
+    "inventory_function": discover(),
+    "check_function": check_couchbase_nodes_cpu_util,
+    "service_description": "Couchbase %s CPU utilization",
+    "group": "cpu_utilization_multiitem",
+    "has_perfdata": True,
 }
 
-factory_settings["memory_default_levels"] = {"levels": (150.0, 200.0)}
+factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
 
 
 @get_parsed_item_data
 def check_couchbase_nodes_mem(_item, params, data):
 
     try:
-        mem_total = data['mem_total']
-        mem_free = data['mem_free']
-        swap_total = data['swap_total']
-        swap_used = data['swap_used']
+        mem_total = data["mem_total"]
+        mem_free = data["mem_free"]
+        swap_total = data["swap_total"]
+        swap_used = data["swap_used"]
     except KeyError:
         return None
 
@@ -74,11 +77,11 @@ def check_couchbase_nodes_mem(_item, params, data):
     )
 
 
-check_info['couchbase_nodes_stats.mem'] = {
-    'inventory_function': discover(),
-    'check_function': check_couchbase_nodes_mem,
-    'service_description': 'Couchbase %s Memory',
-    'group': 'memory_multiitem',
-    'has_perfdata': True,
-    'default_levels_variable': 'memory_default_levels',
+check_info["couchbase_nodes_stats.mem"] = {
+    "inventory_function": discover(),
+    "check_function": check_couchbase_nodes_mem,
+    "service_description": "Couchbase %s Memory",
+    "group": "memory_multiitem",
+    "has_perfdata": True,
+    "default_levels_variable": "memory_default_levels",
 }

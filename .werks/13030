@@ -1,0 +1,15 @@
+Title: check_mk_agent terminates ntpd via timedatectl
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627282569
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Executing <tt>timedatectl timesync-status</tt> terminates the ntp daemon on
+certain debian versions. This werk adds two more safeguards to make sure
+<tt>timedatectl timesync-status</tt> is only executed on systems running
+systemd-timesyncd.

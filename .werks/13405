@@ -1,0 +1,20 @@
+Title: Allow to disable thread levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643187115
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The rule "Number of threads" can set both relative and absolute levels for the
+number of threads. Up until this Werk it was not possible to remove said levels
+completely once they where set.
+
+Now this is possible. For example you can define a base rule matching all hosts
+to check for absolute levels and add another rule matching a single host
+removing the absolute levels from the base rule and only check for relative
+levels. To accomplish that choose "No levels" for the absolute levels on the
+single host.

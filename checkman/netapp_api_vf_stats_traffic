@@ -1,7 +1,7 @@
 title: NetApp Filer: vFiler Traffic
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the traffic of vFilers on the NetApp filer. The check is always
@@ -11,6 +11,5 @@ description:
 item:
  Name of the vFiler.
 
-inventory:
+discovery:
  One service is created for each vFiler.
-

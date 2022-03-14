@@ -1,0 +1,32 @@
+title: FortiGate WiFi Access Points: Connection
+agents: snmp
+catalog: hw/network/fortinet
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the connection of FortiGate WiFi Access Points to
+ the controller (AC). The mapping of the connection state
+ (fgWcWtpSessionConnectionState) to a monitoring state is as follows
+ (not configurable):
+
+ offLine - WARN
+
+ onLine - OK
+
+ downloadingImage - OK
+
+ connectedImage - OK
+
+ standby - OK
+
+ other - UNKNOWN
+
+ Additionally, the check reports the number of connected clients
+ (fgWcWtpSessionWtpStationCount) as a metric.
+
+item:
+ Name of the access point (OID fgWcWtpConfigWtpName).
+
+discovery:
+ One service is created per access point. Access points with empty names
+ are skipped.

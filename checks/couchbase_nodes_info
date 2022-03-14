@@ -14,39 +14,39 @@ from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildca
 @get_parsed_item_data
 def check_couchbase_nodes_status(_item, params, data):
 
-    health = data.get('status')
+    health = data.get("status")
     if health is not None:
         status = 0
-        if health == 'warmup':
-            status = params.get('warmup_state', 0)
-        if health == 'unhealthy':
-            status = params.get('unhealthy_state', 2)
-        yield status, 'Health: %s' % health
+        if health == "warmup":
+            status = params.get("warmup_state", 0)
+        if health == "unhealthy":
+            status = params.get("unhealthy_state", 2)
+        yield status, "Health: %s" % health
 
     for key, label in (
-        ('otpNode', 'One-time-password node'),
-        ('recoveryType', 'Recovery type'),
-        ('version', 'Version'),
-        ('clusterCompatibility', 'Cluster compatibility'),
+        ("otpNode", "One-time-password node"),
+        ("recoveryType", "Recovery type"),
+        ("version", "Version"),
+        ("clusterCompatibility", "Cluster compatibility"),
     ):
         yield 0, "%s: %s" % (label, data.get(key, "unknown"))
 
-    membership = data.get('clusterMembership')
+    membership = data.get("clusterMembership")
     if membership is None:
         return
 
     status = 0
-    if membership == 'inactiveAdded':
-        status = params.get('inactive_added_state', 1)
-    elif membership == 'inactiveFailed':
-        status = params.get('inactive_added_state', 2)
-    yield status, 'Cluster membership: %s' % membership
+    if membership == "inactiveAdded":
+        status = params.get("inactive_added_state", 1)
+    elif membership == "inactiveFailed":
+        status = params.get("inactive_added_state", 2)
+    yield status, "Cluster membership: %s" % membership
 
 
-check_info['couchbase_nodes_info'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(),
-    'check_function': check_couchbase_nodes_status,
-    'service_description': 'Couchbase %s Info',
-    'group': 'couchbase_status',
+check_info["couchbase_nodes_info"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(),
+    "check_function": check_couchbase_nodes_status,
+    "service_description": "Couchbase %s Info",
+    "group": "couchbase_status",
 }

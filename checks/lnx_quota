@@ -5,24 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from old agent until version 1.2.6
-#<<<lnx_quota>>>
-#[[[/home]]]
-#root      -- 62743228       0       0      0  137561     0     0      0
-#proxy     --   288648       0       0      0   14370     0     0      0
-#http      --      208       0       0      0      53     0     0      0
-#mysql     --  7915856       0       0      0     173     0     0      0
+# <<<lnx_quota>>>
+# [[[/home]]]
+# root      -- 62743228       0       0      0  137561     0     0      0
+# proxy     --   288648       0       0      0   14370     0     0      0
+# http      --      208       0       0      0      53     0     0      0
+# mysql     --  7915856       0       0      0     173     0     0      0
 
 # Example output from new agent since version 1.2.8
-#[[[usr:/home]]]
-#root      -- 62743228       0       0      0  137561     0     0      0
-#proxy     --   288648       0       0      0   14370     0     0      0
-#http      --      208       0       0      0      53     0     0      0
-#mysql     --  7915856       0       0      0     173     0     0      0
-#[[[grp:/home]]]
-#root      -- 62743228       0       0      0  137561     0     0      0
-#proxy     --   288648       0       0      0   14370     0     0      0
-#http      --      208       0       0      0      53     0     0      0
-#mysql     --  7915856       0       0      0     173     0     0      0
+# [[[usr:/home]]]
+# root      -- 62743228       0       0      0  137561     0     0      0
+# proxy     --   288648       0       0      0   14370     0     0      0
+# http      --      208       0       0      0      53     0     0      0
+# mysql     --  7915856       0       0      0     173     0     0      0
+# [[[grp:/home]]]
+# root      -- 62743228       0       0      0  137561     0     0      0
+# proxy     --   288648       0       0      0   14370     0     0      0
+# http      --      208       0       0      0      53     0     0      0
+# mysql     --  7915856       0       0      0     173     0     0      0
 
 
 def parse_lnx_quota(info):
@@ -31,14 +31,14 @@ def parse_lnx_quota(info):
     filesys = None
 
     for line in info:
-        if line[0].startswith('[[['):
+        if line[0].startswith("[[["):
             # new filesystem detected
-            parts = line[0][3:-3].split(':')
+            parts = line[0][3:-3].split(":")
 
             # compatible check for old format
             # was changed in version 1.2.8
             if len(parts) == 1:
-                mode = 'usr'
+                mode = "usr"
                 filesys = line[0][3:-3]
             elif len(parts) == 2:
                 # new format for check data
@@ -50,55 +50,55 @@ def parse_lnx_quota(info):
 
         elif filesys and mode and len(line) == 10:
             # new table entry for quota
-            parsed[filesys][mode][line[0]] = [int(x) * 1024 for x in line[2:5]
-                                             ] + [int(x) for x in line[5:]]
+            parsed[filesys][mode][line[0]] = [int(x) * 1024 for x in line[2:5]] + [
+                int(x) for x in line[5:]
+            ]
 
     return parsed
 
 
 def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
-    fmt = lambda value, what: what == 'files' and '%d' % value \
-                                or get_bytes_human_readable(value)
+    fmt = lambda value, what: what == "files" and "%d" % value or get_bytes_human_readable(value)
 
-    if mode == 'usr':
-        txt = 'User %s' % user
-    elif mode == 'grp':
-        txt = 'Group %s' % user
+    if mode == "usr":
+        txt = "User %s" % user
+    elif mode == "grp":
+        txt = "Group %s" % user
 
     if used > hard:
         # check, if hard limit is exceeded
         state = 2
-        if what == 'blocks':
-            txt += ' exceeded space hard limit %s/%s' % (fmt(used, what), fmt(hard, what))
-        elif what == 'files':
-            txt += ' exceeded file hard limit %s/%s' % (fmt(used, what), fmt(hard, what))
+        if what == "blocks":
+            txt += " exceeded space hard limit %s/%s" % (fmt(used, what), fmt(hard, what))
+        elif what == "files":
+            txt += " exceeded file hard limit %s/%s" % (fmt(used, what), fmt(hard, what))
     elif soft != 0 and used > soft:
         # check, if soft limit is exceeded
         state = 1
-        if what == 'blocks':
-            txt += ' exceeded space soft limit %s/%s' % (fmt(used, what), fmt(soft, what))
-        elif what == 'files':
-            txt += ' exceeded file soft limit %s/%s' % (fmt(used, what), fmt(soft, what))
+        if what == "blocks":
+            txt += " exceeded space soft limit %s/%s" % (fmt(used, what), fmt(soft, what))
+        elif what == "files":
+            txt += " exceeded file soft limit %s/%s" % (fmt(used, what), fmt(soft, what))
 
         if grace != 0:
             # check, if grace time is specified
             if grace <= time.time():
                 # check, if it was in grace time
                 state = 2
-                txt += ', grace time exceeded'
+                txt += ", grace time exceeded"
             else:
                 # check, if it is in grace time
                 state = 1
-                txt += ', within grace time'
+                txt += ", within grace time"
     else:
         state = 0
-        txt = ''
+        txt = ""
     return state, txt
 
 
 def inventory_lnx_quota(parsed):
     for item, data in parsed.items():
-        yield item, {'user': 'usr' in data, 'group': 'grp' in data}
+        yield item, {"user": "usr" in data, "group": "grp" in data}
 
 
 @get_parsed_item_data
@@ -107,15 +107,15 @@ def check_lnx_quota(_item, params, data):
     if not params:
         # old discovery until version 1.2.6
         # params were empty dictionary and enabled by standard user checking
-        params = {'user': True}
+        params = {"user": True}
 
-    for param_key, mode, name in [('user', 'usr', 'users'), ('group', 'grp', 'groups')]:
+    for param_key, mode, name in [("user", "usr", "users"), ("group", "grp", "groups")]:
         if params.get(param_key) is True:
             at_least_one_problematic = False
             for user, values in data[mode].items():
                 for what, (used, soft, hard, grace) in [
-                    ('blocks', values[:4]),
-                    ('files', values[4:]),
+                    ("blocks", values[:4]),
+                    ("files", values[4:]),
                 ]:
 
                     if soft == 0 and hard == 0:
@@ -126,20 +126,20 @@ def check_lnx_quota(_item, params, data):
                     if txt:
                         at_least_one_problematic = True
                     if state != 0 or txt:
-                        yield state, txt or ''
+                        yield state, txt or ""
 
             if not at_least_one_problematic:
-                yield 0, 'All %s within quota limits' % name
+                yield 0, "All %s within quota limits" % name
 
-    if params.get('user') is False and params.get('group') is False:
-        yield 0, 'Disabled quota checking'
+    if params.get("user") is False and params.get("group") is False:
+        yield 0, "Disabled quota checking"
 
 
-check_info['lnx_quota'] = {
-    'parse_function': parse_lnx_quota,
-    'check_function': check_lnx_quota,
-    'inventory_function': inventory_lnx_quota,
-    'service_description': 'Quota %s',
-    'has_perfdata': False,
-    'group': 'lnx_quota',
+check_info["lnx_quota"] = {
+    "parse_function": parse_lnx_quota,
+    "check_function": check_lnx_quota,
+    "inventory_function": inventory_lnx_quota,
+    "service_description": "Quota %s",
+    "has_perfdata": False,
+    "group": "lnx_quota",
 }

@@ -1,7 +1,7 @@
 title: F5 Big-IP: Power Supplies
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the
@@ -13,6 +13,5 @@ description:
 item:
  Name of the power supply
 
-inventory:
+discovery:
  One service is created for each power supply (PSU) on a system.
-

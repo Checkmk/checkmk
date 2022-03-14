@@ -1,0 +1,12 @@
+Title: Update openssl to 1.1.1k
+Class: security
+Compatible: compat
+Component: packages
+Date: 1618217154
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Updating openssl because of security fixes.

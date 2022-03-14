@@ -6,14 +6,8 @@
 from .agent_based_api.v1 import register
 from .utils import container_cgroupv2
 
-register.agent_section(name="docker_container_cpu_cgroupv2",
-                       parse_function=container_cgroupv2.parse_cpu)
-
-register.check_plugin(
+register.agent_section(
     name="docker_container_cpu_cgroupv2",
-    service_name="CPU utilization",
-    discovery_function=container_cgroupv2.discover_cpu,
-    check_function=container_cgroupv2.check_cpu,
-    check_default_parameters={},
-    check_ruleset_name="cpu_utilization_os",
+    parsed_section_name="cpu_utilization_os",
+    parse_function=container_cgroupv2.parse_cpu,
 )

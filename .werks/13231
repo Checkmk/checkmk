@@ -1,0 +1,17 @@
+Title: Fix source of painter "Docker node"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1630511939
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The painter, used in views like e.g. "Docker containers", used host labels as
+its source. That could lead to wrong results, if the container is already
+running on another node but the host label was not updated yet.
+
+We now take the service "Docker container status" to determine the current node
+of a container.

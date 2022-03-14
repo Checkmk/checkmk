@@ -4,36 +4,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import ast
-import pytest  # type: ignore[import]
+import time
 
-from testlib import on_time
+import pytest
+from pytest_mock import MockerFixture
+
+from tests.testlib import on_time
+
+from livestatus import SiteId
 
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.htmllib import HTML
-from cmk.gui.watolib.changes import (AuditLogStore, SiteChanges, log_audit, make_diff_text,
-                                     ObjectRef, ObjectRefType)
+from cmk.gui.watolib.changes import (
+    ActivateChangesWriter,
+    add_change,
+    AuditLogStore,
+    log_audit,
+    make_diff_text,
+    ObjectRef,
+    ObjectRefType,
+    SiteChanges,
+)
 
 
 class TestObjectRef:
     def test_serialize(self):
         ty = ObjectRefType.Host
         ident = "node1"
-        assert ObjectRef(ty, ident).serialize() == {'ident': 'node1', 'object_type': 'Host'}
+        assert ObjectRef(ty, ident).serialize() == {"ident": "node1", "object_type": "Host"}
 
     def test_serialization_with_labels(self):
         ty = ObjectRefType.Host
         ident = "node1"
-        assert ObjectRef(ty, ident, {
-            "a": "b"
-        }).serialize() == {
-            'ident': 'node1',
-            'object_type': 'Host',
-            'labels': {
-                'a': 'b'
-            }
+        assert ObjectRef(ty, ident, {"a": "b"}).serialize() == {
+            "ident": "node1",
+            "object_type": "Host",
+            "labels": {"a": "b"},
         }
 
     def test_serialize_represented_as_native_types(self):
@@ -83,9 +91,10 @@ class TestAuditLogStore:
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
-    def test_transport_html(self, store, register_builtin_html):
-        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action",
-                                    HTML("Mäss<b>ädsch</b>"), None)
+    def test_transport_html(self, store, request_context):
+        entry = AuditLogStore.Entry(
+            int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
+        )
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -113,8 +122,9 @@ class TestAuditLogStore:
             for archive_num in range(n + 1):
                 archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
                 if archive_num != 0:
-                    archive_path = archive_path.with_name(archive_path.name + "-%d" %
-                                                          (archive_num + 1))
+                    archive_path = archive_path.with_name(
+                        archive_path.name + "-%d" % (archive_num + 1)
+                    )
 
                 assert archive_path.exists()
 
@@ -127,15 +137,15 @@ class TestSiteChanges:
     @pytest.fixture(name="entry")
     def fixture_entry(self):
         return {
-            'id': 'd60ca3d4-7201-4a89-b66f-2f156192cad2',
-            'action_name': 'create-host',
-            'text': 'Created new host node1.',
-            'object': ObjectRef(ObjectRefType.Host, "node1"),
-            'user_id': 'cmkadmin',
-            'domains': ['check_mk'],
-            'time': 1605461248.786142,
-            'need_sync': True,
-            'need_restart': True,
+            "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
+            "action_name": "create-host",
+            "text": "Created new host node1.",
+            "object": ObjectRef(ObjectRefType.Host, "node1"),
+            "user_id": "cmkadmin",
+            "domains": ["check_mk"],
+            "time": 1605461248.786142,
+            "need_sync": True,
+            "need_restart": True,
         }
 
     def test_read_not_existing(self, store):
@@ -167,31 +177,38 @@ class TestSiteChanges:
         store.clear()
         assert list(store.read()) == []
 
-    @pytest.mark.parametrize("old_type,ref_type", [
-        ("CREHost", ObjectRefType.Host),
-        ("CMEHost", ObjectRefType.Host),
-        ("CREFolder", ObjectRefType.Folder),
-        ("CMEFolder", ObjectRefType.Folder),
-    ])
+    @pytest.mark.parametrize(
+        "old_type,ref_type",
+        [
+            ("CREHost", ObjectRefType.Host),
+            ("CMEHost", ObjectRefType.Host),
+            ("CREFolder", ObjectRefType.Folder),
+            ("CMEFolder", ObjectRefType.Folder),
+        ],
+    )
     def test_read_pre_20_host_change(self, store, old_type, ref_type):
         with store._path.open("wb") as f:
             f.write(
-                repr({
-                    'id': 'd60ca3d4-7201-4a89-b66f-2f156192cad2',
-                    'action_name': 'create-host',
-                    'text': 'Created new host node1.',
-                    'object': (old_type, 'node1'),
-                    'user_id': 'cmkadmin',
-                    'domains': ['check_mk'],
-                    'time': 1605461248.786142,
-                    'need_sync': True,
-                    'need_restart': True,
-                }).encode("utf-8") + b"\0")
+                repr(
+                    {
+                        "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
+                        "action_name": "create-host",
+                        "text": "Created new host node1.",
+                        "object": (old_type, "node1"),
+                        "user_id": "cmkadmin",
+                        "domains": ["check_mk"],
+                        "time": 1605461248.786142,
+                        "need_sync": True,
+                        "need_restart": True,
+                    }
+                ).encode("utf-8")
+                + b"\0"
+            )
 
-        assert store.read()[0]["object"] == ObjectRef(ref_type, 'node1')
+        assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
 
 
-def test_log_audit_with_object_diff():
+def test_log_audit_with_object_diff(request_context):
     old = {
         "a": "b",
         "b": "c",
@@ -200,7 +217,7 @@ def test_log_audit_with_object_diff():
         "b": "c",
     }
 
-    with on_time('2018-04-15 16:50', 'CET'):
+    with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,
             action="bla",
@@ -214,19 +231,19 @@ def test_log_audit_with_object_diff():
         AuditLogStore.Entry(
             time=1523811000,
             object_ref=None,
-            user_id='calvin',
-            action='bla',
-            text='Message',
+            user_id="calvin",
+            action="bla",
+            text="Message",
             diff_text='Attribute "a" with value "b" removed.',
         ),
     ]
 
 
-def test_log_audit_with_html_message(register_builtin_html):
-    with on_time('2018-04-15 16:50', 'CET'):
+def test_log_audit_with_html_message(request_context):
+    with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,
-            user_id=UserId('calvin'),
+            user_id=UserId("calvin"),
             action="bla",
             message=HTML("Message <b>bla</b>"),
         )
@@ -236,9 +253,25 @@ def test_log_audit_with_html_message(register_builtin_html):
         AuditLogStore.Entry(
             time=1523811000,
             object_ref=None,
-            user_id='calvin',
-            action='bla',
+            user_id="calvin",
+            action="bla",
             text=HTML("Message <b>bla</b>"),
             diff_text=None,
         ),
     ]
+
+
+def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
+    add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
+
+    add_change("ding", "dong", sites=[SiteId("a")])
+    add_to_site_mock.assert_called_once()
+    add_to_site_mock.reset_mock()
+
+    with ActivateChangesWriter.disable():
+        add_change("ding", "dong", sites=[SiteId("a")])
+    add_to_site_mock.assert_not_called()
+    add_to_site_mock.reset_mock()
+
+    add_change("ding", "dong", sites=[SiteId("a")])
+    add_to_site_mock.assert_called_once()

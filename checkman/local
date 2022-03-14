@@ -1,7 +1,7 @@
 title: Local: Integrate Custom Checks via Arbitrary Scripts on the Agent
 agents: linux, windows, aix, solaris, freebsd, netbsd, openbsd
 catalog: generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check type processes the output of the checks the
@@ -15,9 +15,5 @@ item:
  within all checks of the host. It is the second word in
  the line output by the agent.
 
-inventory:
+discovery:
  One service is created for each line in agent output.
-
-cluster:
-  The outcome on a cluster can be configured to be either the worst, or the
-  best state encountered for every job.

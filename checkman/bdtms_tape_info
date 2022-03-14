@@ -1,13 +1,12 @@
 title: BDTMS Tape Library: Information
 agents: snmp
 catalog: hw/storagehw/bdt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows information about the tape library like the
  vendor, product ID, serial number, and software revision.
  The check always returns the status {OK}.
 
-inventory:
+discovery:
  One service is created for each host.
-

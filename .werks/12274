@@ -1,0 +1,14 @@
+Title: API: removing etag requirement in delete endpoints
+Class: feature
+Compatible: compat
+Component: core
+Date: 1614783931
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The delete endpoint for host_config, service_group, host_group and
+contact_group required an etag to perform the action. This requirement
+is removed to be consistent with the other delete endpoints.

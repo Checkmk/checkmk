@@ -1,7 +1,7 @@
 title: Ceph Storage: Health Status
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health status and epoch
@@ -14,5 +14,5 @@ description:
  Epoch levels are configurable. Default levels are 1 and 3
  for a timerange of 30 minutes.
 
-inventory:
+discovery:
  One service is created.

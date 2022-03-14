@@ -1,0 +1,14 @@
+Title: Windows agent ps section uses tab to separate arguments
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645178898
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously Windows agent used the space, thus making 
+problems for monitoring.
+
+With this release the problem has been solved.

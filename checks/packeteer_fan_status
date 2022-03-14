@@ -7,17 +7,17 @@
 
 def inventory_packeteer_fan_status(info):
     for nr, fan_status in enumerate(info[0]):
-        if fan_status in [u"1", u"2"]:
+        if fan_status in ["1", "2"]:
             yield ("%d" % nr, None)
 
 
 def check_packeteer_fan_status(item, _no_params, info):
     fan_status = info[0][int(item)]
-    if fan_status == u"1":
+    if fan_status == "1":
         return 0, "OK"
-    elif fan_status == u"2":
+    elif fan_status == "2":
         return 2, "Not OK"
-    elif fan_status == u"3":
+    elif fan_status == "3":
         return 2, "Not present"
 
 

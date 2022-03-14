@@ -1,7 +1,7 @@
 title: Genua: VPN State
 agents: snmp
 catalog: hw/network/genua
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the VPN state on genuscreen VPN appliance (version 5.1).
@@ -9,7 +9,7 @@ description:
 item:
  The VPN ID.
 
-inventory:
+discovery:
  One service is created for each VPN
  if the VPN
 

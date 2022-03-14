@@ -42,9 +42,9 @@ def check_3ware_units(item, _no_params, info):
             except ValueError:
                 size = float(line[5])
 
-            complete_txt = ''
-            if complete != '-':
-                complete_txt = ' complete: %s%%' % complete
+            complete_txt = ""
+            if complete != "-":
+                complete_txt = " complete: %s%%" % complete
 
             infotext = "%s (type: %s, size: %sGB%s)" % (status, unit_type, size, complete_txt)
 
@@ -59,8 +59,8 @@ def check_3ware_units(item, _no_params, info):
 # declare the check to Checkmk
 
 check_info["3ware_units"] = {
-    'check_function': check_3ware_units,
-    'inventory_function': inventory_3ware_units,
-    'service_description': 'RAID 3ware unit %s',
-    'group': 'raid',
+    "check_function": check_3ware_units,
+    "inventory_function": inventory_3ware_units,
+    "service_description": "RAID 3ware unit %s",
+    "group": "raid",
 }

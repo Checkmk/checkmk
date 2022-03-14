@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -28,11 +29,11 @@ def parse_ucd_diskio(info):
         index, name, read_size, write_size, read, write = line
         try:
             parsed[name] = {
-                'index': index,
-                'read_throughput': int(read_size),
-                'write_throughput': int(write_size),
-                'read_ios': int(read),
-                'write_ios': int(write)
+                "index": index,
+                "read_throughput": int(read_size),
+                "write_throughput": int(write_size),
+                "read_ios": int(read),
+                "write_ios": int(write),
             }
         except ValueError:
             pass
@@ -49,7 +50,7 @@ def check_ucd_diskio(item, params, entry):
             continue
         disk_data[key] = get_rate("ucd_disk_io_%s.%s" % (key, item), now, value)
 
-    yield 0, '[%s]' % entry['index']
+    yield 0, "[%s]" % entry["index"]
 
     for state, infotext, perfdata in check_diskstat_dict(item, params, {item: disk_data}):
         yield state, infotext, perfdata
@@ -69,7 +70,8 @@ check_info["ucd_diskio"] = {
             "4",  # diskIONWritten
             "5",  # diskIOReads
             "6",  # diskIOWrites
-        ]),
+        ],
+    ),
     "snmp_scan_function": is_ucd,
     "has_perfdata": True,
     "group": "diskstat",

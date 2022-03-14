@@ -18,23 +18,25 @@ all that this file deals with are inventory export hooks, which should be
 handeled somewhere else entirely.
 """
 import os
+from pathlib import Path
 from typing import Any, Callable, Dict, Sequence, Set
 
-import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.paths
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.check_utils
-
+import cmk.base.config as config
 from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
-    create_inventory_plugin_from_legacy,)
+    create_inventory_plugin_from_legacy,
+)
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    create_snmp_section_plugin_from_legacy,)
+    create_snmp_section_plugin_from_legacy,
+)
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 InventoryInfo = Dict[str, Any]
@@ -65,12 +67,12 @@ def load_legacy_inventory_plugins(
     get_check_api_context: config.GetCheckApiContext,
     get_inventory_context: GetInventoryApiContext,
 ) -> Sequence[str]:
-    """load all old-school inventory plugins into the modern agent based registry
-    """
+    """load all old-school inventory plugins into the modern agent based registry"""
     errors = []
     loaded_files: Set[str] = set()
-    file_list = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
-                                        cmk.utils.paths.inventory_dir)
+    file_list = config.get_plugin_paths(
+        str(cmk.utils.paths.local_inventory_dir), cmk.utils.paths.inventory_dir
+    )
 
     for f in file_list:
         if f[0] == "." or f[-1] == "~":
@@ -85,7 +87,7 @@ def load_legacy_inventory_plugins(
 
             _load_plugin_includes(f, plugin_context)
 
-            exec(open(f).read(), plugin_context)  # yapf: disable
+            exec(Path(f).read_text(), plugin_context)
             loaded_files.add(file_name)
         except Exception as exc:
             errors.append(f"Error in inventory plugin file {f}: {exc}\n")
@@ -110,30 +112,33 @@ def _extract_snmp_sections(
 ) -> Sequence[str]:
     errors = []
     for plugin_name, plugin_info in sorted(inv_info.items()):
-        if 'snmp_info' not in plugin_info:
+        if "snmp_info" not in plugin_info:
             continue
         section_name = section_name_of(plugin_name)
-        if isinstance(agent_based_register.get_section_plugin(SectionName(section_name)),
-                      SNMPSectionPlugin):
+        if isinstance(
+            agent_based_register.get_section_plugin(SectionName(section_name)), SNMPSectionPlugin
+        ):
             continue
 
-        fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +
-                          [plugin_file_lookup[plugin_name]])
+        fallback_files = [_include_file_path(i) for i in plugin_info.get("includes", [])] + [
+            plugin_file_lookup[plugin_name]
+        ]
 
         try:
             agent_based_register.add_section_plugin(
                 create_snmp_section_plugin_from_legacy(
                     section_name,
                     {},
-                    plugin_info['snmp_scan_function'],
-                    plugin_info['snmp_info'],
+                    plugin_info["snmp_scan_function"],
+                    plugin_info["snmp_info"],
                     scan_function_fallback_files=fallback_files,
                     # We have to validate, because we read inventory plugin files
                     # directly, and do not know whether they changed.
                     validate_creation_kwargs=True,
-                ))
+                )
+            )
         except (NotImplementedError, KeyError, AssertionError, ValueError):
-            msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
+            msg = config.AUTO_MIGRATION_ERR_MSG % ("section", plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
             errors.append(msg)
@@ -141,7 +146,9 @@ def _extract_snmp_sections(
     return errors
 
 
-def _extract_inventory_plugins(inv_info: Dict[str, InventoryInfo],) -> Sequence[str]:
+def _extract_inventory_plugins(
+    inv_info: Dict[str, InventoryInfo],
+) -> Sequence[str]:
     errors = []
     for plugin_name, plugin_info in sorted(inv_info.items()):
         try:
@@ -149,9 +156,10 @@ def _extract_inventory_plugins(inv_info: Dict[str, InventoryInfo],) -> Sequence[
                 create_inventory_plugin_from_legacy(
                     plugin_name,
                     plugin_info,
-                ))
+                )
+            )
         except NotImplementedError:
-            msg = config.AUTO_MIGRATION_ERR_MSG % ('inventory', plugin_name)
+            msg = config.AUTO_MIGRATION_ERR_MSG % ("inventory", plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
             errors.append(msg)
@@ -184,7 +192,7 @@ def _load_plugin_includes(check_file_path: str, plugin_context: Dict) -> None:
     for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
-            exec(open(path).read(), plugin_context)  # yapf: disable
+            exec(Path(path).read_text(), plugin_context)
         except Exception as e:
             console.error("Error in include file %s: %s\n", path, e)
             if cmk.utils.debug.enabled():

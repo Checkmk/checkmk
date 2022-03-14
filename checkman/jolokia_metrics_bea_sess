@@ -1,7 +1,7 @@
 title: BEA Weblogic: Number of JVM Sessions
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows to monitor the number of current connections to
@@ -19,8 +19,6 @@ item:
  I.e. webservices webservices jolokia
  This name is probably dependant on running a loadbalanced install or not.
 
-inventory:
+discovery:
  One service is created for each selvet running inside a weblogic
  instance sent by the agent.
-
-

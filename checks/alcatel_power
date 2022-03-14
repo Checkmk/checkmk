@@ -9,7 +9,6 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['alcatel_temp'] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 alcatel_power_operstate_map = {
     "1": "up",
@@ -30,10 +29,13 @@ alcatel_power_type_map = {
     "2": "DC",
 }
 
-AlcatelPowerEntry = collections.namedtuple("AlcatelPowerEntry", [
-    "oper_state_readable",
-    "power_type",
-])
+AlcatelPowerEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "AlcatelPowerEntry",
+    [
+        "oper_state_readable",
+        "power_type",
+    ],
+)
 
 
 def parse_alcatel_power(info):
@@ -42,21 +44,24 @@ def parse_alcatel_power(info):
         parsed.setdefault(
             oidend,
             AlcatelPowerEntry(
-                alcatel_power_operstate_map.get(status, 'unknown[%s]' % status),
+                alcatel_power_operstate_map.get(status, "unknown[%s]" % status),
                 alcatel_power_type_map.get(power_type, alcatel_power_no_power_supply_info),
-            ))
+            ),
+        )
     return parsed
 
 
 @discover
 def inventory_alcatel_power(_oidend, device):
-    return (device.power_type != alcatel_power_no_power_supply_info and
-            device.oper_state_readable != 'not present')
+    return (
+        device.power_type != alcatel_power_no_power_supply_info
+        and device.oper_state_readable != "not present"
+    )
 
 
 @get_parsed_item_data
 def check_alcatel_power(item, _no_params, device):
-    if device.oper_state_readable == 'up':
+    if device.oper_state_readable == "up":
         state = 0
     else:
         state = 2
@@ -78,5 +83,6 @@ check_info["alcatel_power"] = {
             #     secondary(5), notPresent(6), unpowered(7), master(9)
             36,  # MIB object "chasEntPhysPowerType":
             #     0 no power supply, 1 ac, 2 dc (not available on old devices)
-        ]),
+        ],
+    ),
 }

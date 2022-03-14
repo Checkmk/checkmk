@@ -1,0 +1,12 @@
+Title: cmciii_temp_in_out: fix crash of plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620045309
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

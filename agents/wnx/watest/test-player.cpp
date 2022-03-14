@@ -17,6 +17,7 @@
 #include "common/wtools.h"
 #include "player.h"
 #include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
@@ -50,10 +51,10 @@ public:
 
 static TestStorage S_Storage;
 
-bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                     void* Context) {
+bool MailboxCallback(const cma::MailSlot *Slot, const void *Data, int Len,
+                     void *Context) {
     using namespace std::chrono;
-    auto storage = (TestStorage*)Context;
+    auto storage = (TestStorage *)Context;
     if (!storage) {
         xlog::l("error in param\n");
         return false;
@@ -64,7 +65,7 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 
     auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
+    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
@@ -78,7 +79,7 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
             {
                 nanoseconds duration_since_epoch(dt->answerId());
                 time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
                 S_Storage.buffer_ = vectorized_data;
@@ -166,7 +167,7 @@ TEST(PlayerTest, ConfigFolders) {
     }
 }
 
-static void CreateFileInTemp(const std::filesystem::path& Path) {
+static void CreateFileInTemp(const std::filesystem::path &Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -177,9 +178,9 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
     ofs << Path.u8string() << std::endl;
 }
 
-constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
+constexpr const char *SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 
-static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
+static void CreatePluginInTemp(const std::filesystem::path &Path, int Timeout,
                                std::string Name) {
     std::ofstream ofs(Path.u8string());
 
@@ -195,14 +196,14 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
         << "@echo " << SecondLine << "\n";
 }
 
-static void RemoveFolder(const std::filesystem::path& Path) {
+static void RemoveFolder(const std::filesystem::path &Path) {
     namespace fs = std::filesystem;
     fs::path top = Path;
     fs::path dir_path;
 
     cma::PathVector directories;
     std::error_code ec;
-    for (auto& p : fs::recursive_directory_iterator(top, ec)) {
+    for (auto &p : fs::recursive_directory_iterator(top, ec)) {
         dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
@@ -233,7 +234,7 @@ static cma::PathVector GetFolderStructure() {
         return {};
     }
     PathVector pv;
-    for (auto& folder : {"a", "b", "c"}) {
+    for (auto &folder : {"a", "b", "c"}) {
         auto dir = tmp / folder;
         pv.emplace_back(dir);
     }
@@ -242,37 +243,34 @@ static cma::PathVector GetFolderStructure() {
 
 TEST(PlayerTest, All) {
     using namespace std::chrono;
-    using namespace std;
-    using tst::G_ProjectPath;
-    using tst::G_TestPath;
 
-    vector<wstring> exe;
-    auto unit_test_path = G_TestPath;
-    exe.push_back(G_ProjectPath / L"a.exe");
-    exe.push_back(G_ProjectPath / L"b.cmd");
-    exe.push_back(G_ProjectPath / L"B.cmd");
+    std::vector<std::wstring> exe;
+    auto unit_test_path = tst::GetUnitTestFilesRoot();
+    exe.push_back(unit_test_path / L"a.exe");
+    exe.push_back(unit_test_path / L"b.cmd");
+    exe.push_back(unit_test_path / L"B.cmd");
     int expected = 0;
-    exe.push_back(G_TestPath / L"test_plugin.cmd");
+    exe.push_back(unit_test_path / L"test_plugin.cmd");
     expected++;
-    exe.push_back(G_TestPath / L"tESt_plugin.cmd");
-    exe.push_back(G_TestPath / L"TEst_plugin2.bat");
+    exe.push_back(unit_test_path / L"tESt_plugin.cmd");
+    exe.push_back(unit_test_path / L"TEst_plugin2.bat");
     expected++;
-    exe.push_back(G_TestPath / L"debug_print.exe");
-    exe.push_back(G_TestPath);
+    exe.push_back(unit_test_path / L"debug_print.exe");
+    exe.push_back(unit_test_path);
     expected = 3;
 
     auto test_plugin_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"test_plugin.output").wstring().c_str());
+        (unit_test_path / L"test_plugin.output").wstring().c_str());
     EXPECT_TRUE(test_plugin_output);
     if (test_plugin_output) EXPECT_EQ(test_plugin_output->size(), 36);
 
     auto test_plugin2_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"test_plugin2.output").wstring().c_str());
+        (unit_test_path / L"test_plugin2.output").wstring().c_str());
     EXPECT_TRUE(test_plugin2_output);
     if (test_plugin2_output) EXPECT_EQ(test_plugin2_output->size(), 56);
 
     auto summary_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"summary.output").wstring().c_str());
+        (unit_test_path / L"summary.output").wstring().c_str());
     EXPECT_TRUE(summary_output);
     if (summary_output) EXPECT_EQ(summary_output->size(), 92);
 
@@ -280,7 +278,7 @@ TEST(PlayerTest, All) {
     auto x = box.start(L"id", exe);
     box.waitForAllProcesses(10000ms, true);
 
-    vector<char> accu;
+    std::vector<char> accu;
     int count = 0;
 
     bool test_size_ok = false;
@@ -288,7 +286,7 @@ TEST(PlayerTest, All) {
     bool test2_size_ok = false;
     bool test2_content_ok = false;
     box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data) {
+                           uint32_t Code, const std::vector<char> &Data) {
         auto data = Data;
         if (data.size() == test_plugin_output->size()) {
             test_size_ok = true;
@@ -362,14 +360,14 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     int count = 0;
 
     box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data) {
+                           uint32_t Code, const std::vector<char> &Data) {
         // we check for the UNICODE output(see msdn 0xFFFE, -xFEFF etc.)
         bool convert_required =
             Data.data()[0] == '\xFF' && Data.data()[1] == '\xFE';
 
         std::string data;
         if (convert_required) {
-            auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
+            auto raw_data = reinterpret_cast<const wchar_t *>(Data.data() + 2);
             wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
             if (wdata.back() != 0) wdata += L'\0';
             data = wtools::ToUtf8(wdata);

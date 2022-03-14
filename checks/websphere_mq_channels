@@ -16,11 +16,8 @@
 # 0   CHANNEL(C000052.SV2098742.T1)  5000  Unknown
 
 factory_settings["websphere_mq_channels_default_levels"] = {
-    'message_count': (900, 1000),
-    'status': {
-        'RUNNING': 0,
-        'STOPPED': 1
-    }
+    "message_count": (900, 1000),
+    "status": {"RUNNING": 0, "STOPPED": 1},
 }
 
 
@@ -39,11 +36,14 @@ def parse_websphere_mq_channels(info):
         else:
             continue
 
-        parsed.setdefault(channel_name, {
-            "messages": messages,
-            "max_messages": max_messages,
-            "channel_status": channel_status,
-        })
+        parsed.setdefault(
+            channel_name,
+            {
+                "messages": messages,
+                "max_messages": max_messages,
+                "channel_status": channel_status,
+            },
+        )
     return parsed
 
 
@@ -55,11 +55,11 @@ def inventory_websphere_mq_channels(parsed):
 def check_websphere_mq_channels(item, params, parsed):
     if isinstance(params, tuple):
         params = {
-            'message_count': params,
-            'status': {
-                'RUNNING': 0,
-                'STOPPED': 1,
-            }
+            "message_count": params,
+            "status": {
+                "RUNNING": 0,
+                "STOPPED": 1,
+            },
         }
 
     if item in parsed:
@@ -68,13 +68,13 @@ def check_websphere_mq_channels(item, params, parsed):
         max_messages = data["max_messages"]
         channel_status = data["channel_status"]
 
-        state = params['status'].get(channel_status, params['status'].get('other', 2))
+        state = params["status"].get(channel_status, params["status"].get("other", 2))
         yield state, "Channel status: %s" % channel_status, []
 
         infotext = "%d/%d messages" % (messages, max_messages)
         state = 0
-        if params['message_count']:
-            warn, crit = params['message_count']
+        if params["message_count"]:
+            warn, crit = params["message_count"]
             if messages >= crit:
                 state = 2
             elif messages >= warn:
@@ -84,7 +84,7 @@ def check_websphere_mq_channels(item, params, parsed):
         else:
             warn, crit = None, None
 
-        yield state, infotext, [('messages', messages, warn, crit, 0, max_messages)]
+        yield state, infotext, [("messages", messages, warn, crit, 0, max_messages)]
 
         if params.get("message_count_perc") and max_messages > 0:
             warn, crit = params["message_count_perc"]
@@ -97,8 +97,10 @@ def check_websphere_mq_channels(item, params, parsed):
             elif messages_perc >= warn:
                 state = 1
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                                       get_percent_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (
+                    get_percent_human_readable(warn),
+                    get_percent_human_readable(crit),
+                )
 
             yield state, infotext
 

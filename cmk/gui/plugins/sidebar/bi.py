@@ -4,19 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import cmk.gui.bi as bi
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
-
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    bulletlink,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar.utils import bulletlink, SidebarSnapin, snapin_registry
+from cmk.gui.utils.urls import makeuri_contextless, urlencode
 
 
 @snapin_registry.register
@@ -35,8 +31,8 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
     def show(self) -> None:
         html.open_ul()
-        for group in bi.get_aggregation_group_trees():
-            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % html.urlencode(group))
+        for _ident, group in bi.aggregation_group_choices():
+            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % urlencode(group))
         html.close_ul()
 
 
@@ -66,34 +62,36 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
         child = parent.setdefault(this_node, {"__path__": path})
         children = group[1:]
         if children:
-            child = child.setdefault('__children__', {})
+            child = child.setdefault("__children__", {})
             self._build_tree(children, child, path)
 
     def _render_tree(self, tree):
         for group, attrs in tree.items():
+            aggr_group_tree = "/".join(attrs["__path__"])
             fetch_url = makeuri_contextless(
                 request,
                 [
                     ("view_name", "aggr_all"),
-                    ("aggr_group_tree", "/".join(attrs["__path__"])),
+                    ("aggr_group_tree", aggr_group_tree),
                 ],
                 filename="view.py",
             )
 
-            if attrs.get('__children__'):
-                html.begin_foldable_container(
-                    "bi_aggregation_group_trees",
-                    group,
-                    False,
-                    HTML(html.render_a(
-                        group,
-                        href=fetch_url,
-                        target="main",
-                    )),
+            if attrs.get("__children__"):
+                with foldable_container(
+                    treename="bi_aggregation_group_trees",
+                    id_=aggr_group_tree,
+                    isopen=False,
+                    title=HTML(
+                        html.render_a(
+                            group,
+                            href=fetch_url,
+                            target="main",
+                        )
+                    ),
                     icon="foldable_sidebar",
-                )
-                self._render_tree(attrs['__children__'])
-                html.end_foldable_container()
+                ):
+                    self._render_tree(attrs["__children__"])
             else:
                 html.open_ul()
                 bulletlink(group, fetch_url)

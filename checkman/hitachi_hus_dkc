@@ -1,7 +1,7 @@
 title: Hitachi HUS DKC: Hardware State
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -17,7 +17,7 @@ description:
  {WARN} if some of the components are in the states "moderate" or "service"
  and {CRIT} if some of the components are in the states "acute" or "serious".
 
-inventory:
+discovery:
  One service is created for each DKC chassis.
 
 item:

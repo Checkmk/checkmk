@@ -25,7 +25,6 @@ set)
         if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
             ln -sfn ../../pnp4nagios/nagios_npcdmod.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
         fi
-        ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
         if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
             sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
         fi
@@ -34,7 +33,6 @@ set)
         if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
             ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
         fi
-        ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
         if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
             sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
         fi
@@ -43,16 +41,15 @@ set)
         if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
             ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
         fi
-        ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
         pnp4nagios_enabled="True"
     else
         rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-        rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
         if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
             sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
         fi
         pnp4nagios_enabled="False"
     fi
+    rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
     cat <<EOF >$OMD_ROOT/etc/check_mk/conf.d/pnp4nagios.mk
 # Set by OMD hook PNP4NAGIOS, do not change here!
 pnp4nagios_enabled = $pnp4nagios_enabled

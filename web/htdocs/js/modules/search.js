@@ -59,7 +59,7 @@ class Search {
 
         const more_button = document.getElementById(this.more_id);
         if (more_button) {
-            remove_class(more_button, "hidden");
+            remove_class(more_button.parentNode, "hidden");
         }
         remove_class(document.getElementById(this.content_id), "hidden");
     }
@@ -71,7 +71,7 @@ class Search {
         // search in case it is available.
         const more_button = document.getElementById(this.more_id);
         if (more_button) {
-            add_class(more_button, "hidden");
+            add_class(more_button.parentNode, "hidden");
         }
         add_class(document.getElementById(this.content_id), "hidden");
     }
@@ -109,16 +109,40 @@ export function on_input_search(id) {
         }
         current_search.previous_timeout_id = setTimeout(function () {
             current_search.execute_search();
+            resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
         }, 300);
+        remove_class(document.getElementById("content_inner_" + id + "_search"), "extended_topic");
     }
 }
 
-export function on_click_show_all_results(topic) {
-    let topic_results = document.getElementById(topic).getElementsByTagName("li");
-    add_class(window.event.target, "hidden");
+export function on_click_show_all_topics(topic) {
+    let current_topic = document.getElementById(topic);
+    let topic_results = current_topic.getElementsByTagName("li");
+    remove_class(current_topic, "extended");
+    add_class(current_topic, "extendable");
+    remove_class(current_topic.closest(".content, .inner, .search"), "extended_topic");
     topic_results.forEach(li => {
-        li.className == "hidden" && remove_class(li, "hidden");
+        if (li.dataset.extended == "true") {
+            li.dataset.extended = "false";
+            add_class(li, "hidden");
+        }
     });
+    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
+}
+
+export function on_click_show_all_results(topic, popup_menu_id) {
+    let current_topic = document.getElementById(topic);
+    let topic_results = current_topic.getElementsByTagName("li");
+    remove_class(current_topic, "extendable");
+    add_class(current_topic, "extended");
+    add_class(current_topic.closest(".content, .inner, .search"), "extended_topic");
+    topic_results.forEach(li => {
+        if (li.dataset.extended == "false") {
+            li.dataset.extended = "true";
+            remove_class(li, "hidden");
+        }
+    });
+    resize_mega_menu_popup(document.getElementById(popup_menu_id));
 }
 
 function get_current_search(id) {
@@ -145,6 +169,7 @@ export function on_click_reset(id) {
         current_search.display_menu_items();
         remove_class(document.getElementById(current_search.clear_id), "clearable");
     }
+    remove_class(document.getElementById("content_inner_" + id + "_search"), "extended_topic");
     resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
 export function on_key_down(id) {
@@ -219,7 +244,7 @@ function move_current_search_position(step, current_search) {
     if (current_search.current_search_position > result_list.length - 1)
         current_search.current_search_position = 0;
 
-    result_list.forEach((value, idx) => {
+    Array.from(result_list).forEach((value, idx) => {
         idx == current_search.current_search_position
             ? add_class(value.childNodes[0], "active")
             : remove_class(value.childNodes[0], "active");

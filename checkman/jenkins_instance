@@ -1,12 +1,12 @@
 title: Jenkins: Instance
 agents: jenkins
 catalog: app/jenkins
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the queried jenkins instance. It outputs the
  quieting down state (prevents any new builds from taking place if enabled) and
  if security is used (as configured within Jenkins "Configure Global Security").
 
-inventory:
+discovery:
  One service is created ({"Jenkins Instance"}).

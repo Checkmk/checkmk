@@ -1,0 +1,24 @@
+Title: No longer adapt service names to the agent package name
+Class: feature
+Compatible: incomp
+Component: packages
+Date: 1638876570
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The configuration setting "Name of agent packages (Linux, UNIX)" no longer affects the service units names <b>included</b> in the package.
+
+This werk only affects users who have configured a non-standard package name for the Checkmk agent packages created by the agent bakery.
+
+The option was originally implemented to allow for different DEB or RPM packages to be distributed by a local package repository without conflicting.
+
+However, this parameter also changed the names of the created systemd, xinetd or inetd units.
+This will no longer be the case.
+
+While the previous behaviour <b>in theory</b> allowed you to deploy multiple agent versions on the same host, that was never supported and is highly discouraged.
+Trying to do so lead to inconsistent or downright wrong monitoring data in the past.
+
+With the introduction of the new component <tt>cmk-agent-ctl</tt> support for multiple agent versions would become even more error prone and expensive (both in development and in maintenance).
+By fixing the services name we no longer suggest that this would be feasable.

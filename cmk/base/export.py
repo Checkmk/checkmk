@@ -9,10 +9,16 @@ of Check_MK. The GUI is e.g. accessing this module for gathering things
 from the configuration.
 """
 
-from typing import Dict
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, Item, CheckPluginNameStr, CheckPluginName, ServiceName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    CheckPluginNameStr,
+    HostName,
+    Item,
+    Labels,
+    ServiceName,
+)
 
 import cmk.base.config as config
 
@@ -32,8 +38,9 @@ def reset_config() -> None:
     _config_loaded = False
 
 
-def service_description(hostname: HostName, check_plugin_name: CheckPluginNameStr,
-                        item: Item) -> str:
+def service_description(
+    hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
+) -> str:
     _load_config()
     return config.service_description(hostname, CheckPluginName(check_plugin_name), item)
 
@@ -44,23 +51,25 @@ def get_ruleset_matcher() -> RulesetMatcher:
     return config.get_config_cache().ruleset_matcher
 
 
-def ruleset_match_object_of_service(hostname: HostName,
-                                    svc_desc: ServiceName) -> RulesetMatchObject:
+def ruleset_match_object_of_service(
+    hostname: HostName, svc_desc: ServiceName
+) -> RulesetMatchObject:
     """Construct the object that is needed to match service rulesets"""
     _load_config()
     config_cache = config.get_config_cache()
     return config_cache.ruleset_match_object_of_service(hostname, svc_desc)
 
 
-def ruleset_match_object_for_checkgroup_parameters(hostname: HostName, item: Item,
-                                                   svc_desc: ServiceName) -> RulesetMatchObject:
+def ruleset_match_object_for_checkgroup_parameters(
+    hostname: HostName, item: Item, svc_desc: ServiceName
+) -> RulesetMatchObject:
     """Construct the object that is needed to match checkgroup parameter rulesets"""
     _load_config()
     config_cache = config.get_config_cache()
     return config_cache.ruleset_match_object_for_checkgroup_parameters(hostname, item, svc_desc)
 
 
-def get_host_labels(hostname: HostName) -> Dict[str, str]:
+def get_host_labels(hostname: HostName) -> Labels:
     _load_config()
     config_cache = config.get_config_cache()
     return config_cache.get_host_config(hostname).labels

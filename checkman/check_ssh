@@ -1,7 +1,7 @@
 title: SSH Service (Ping)
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -15,4 +15,3 @@ description:
  Returns {CRIT} if the connection isn't possible.
 
  This check can be configured by Wato.
-

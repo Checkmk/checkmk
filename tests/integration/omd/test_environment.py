@@ -6,15 +6,21 @@
 
 import subprocess
 
+from tests.testlib.site import Site
 
-def test_locales(site):
+from cmk.utils.paths import mkbackup_lock_dir
+
+
+def test_backup_dir(site: Site):
+    backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
+    assert backup_permission_mask == "0770"
+    assert mkbackup_lock_dir.group() == "omd"
+
+
+def test_locales(site: Site):
     p = site.execute(["locale"], stdout=subprocess.PIPE)
     output = p.communicate()[0]
 
-    assert "LANG=C.UTF-8" in output \
-        or "LANG=C.utf8" in output \
-        or "LANG=en_US.utf8" in output
+    assert "LANG=C.UTF-8" in output or "LANG=C.utf8" in output or "LANG=en_US.utf8" in output
 
-    assert "LC_ALL=C.UTF-8" in output \
-        or "LC_ALL=C.utf8" in output \
-        or "LC_ALL=en_US.utf8" in output
+    assert "LC_ALL=C.UTF-8" in output or "LC_ALL=C.utf8" in output or "LC_ALL=en_US.utf8" in output

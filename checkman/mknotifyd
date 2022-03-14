@@ -1,7 +1,7 @@
 title: Checkmk Notification Spooler: Status
 agents: linux
-catalog: app/checkmk
-license: GPL
+catalog: app/cmk
+license: GPLv2
 distribution: checkmk
 description:
  This check checks the status of Checkmk Notification Spooler. It will warn
@@ -12,5 +12,5 @@ description:
 item:
  The name of the site.
 
-inventory:
+discovery:
  One sevice is created for each site.

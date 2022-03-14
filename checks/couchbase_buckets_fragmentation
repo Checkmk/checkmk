@@ -14,28 +14,32 @@ from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildca
 @get_parsed_item_data
 def check_couchbase_buckets_fragmentation(_item, params, data):
 
-    docs_fragmentation = data.get('couch_docs_fragmentation')
+    docs_fragmentation = data.get("couch_docs_fragmentation")
     if docs_fragmentation is not None:
-        yield check_levels(docs_fragmentation,
-                           'docs_fragmentation',
-                           params.get('docs'),
-                           infoname="Documents fragmentation",
-                           human_readable_func=get_percent_human_readable)
+        yield check_levels(
+            docs_fragmentation,
+            "docs_fragmentation",
+            params.get("docs"),
+            infoname="Documents fragmentation",
+            human_readable_func=get_percent_human_readable,
+        )
 
-    views_fragmentation = data.get('couch_views_fragmentation')
+    views_fragmentation = data.get("couch_views_fragmentation")
     if views_fragmentation is not None:
-        yield check_levels(views_fragmentation,
-                           'views_fragmentation',
-                           params.get('views'),
-                           infoname="Views fragmentation",
-                           human_readable_func=get_percent_human_readable)
+        yield check_levels(
+            views_fragmentation,
+            "views_fragmentation",
+            params.get("views"),
+            infoname="Views fragmentation",
+            human_readable_func=get_percent_human_readable,
+        )
 
 
-check_info['couchbase_buckets_fragmentation'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda _k, v: 'couch_docs_fragmentation' in v),
-    'check_function': check_couchbase_buckets_fragmentation,
-    'service_description': 'Couchbase Bucket %s Fragmentation',
-    'group': 'couchbase_fragmentation',
-    'has_perfdata': True
+check_info["couchbase_buckets_fragmentation"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda _k, v: "couch_docs_fragmentation" in v),
+    "check_function": check_couchbase_buckets_fragmentation,
+    "service_description": "Couchbase Bucket %s Fragmentation",
+    "group": "couchbase_fragmentation",
+    "has_perfdata": True,
 }

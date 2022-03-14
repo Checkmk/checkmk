@@ -1,11 +1,11 @@
 title: Bluecat Adonis: Number of Threads
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the number of currently running threads on a Blucat Adonis
  device. Per default the levels for warning and critical are 2000 and 4000 threads.
 
-inventory:
+discovery:
  One service is created.

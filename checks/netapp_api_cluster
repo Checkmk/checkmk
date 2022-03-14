@@ -18,8 +18,7 @@
 def inventory_netapp_api_cluster(info):
     data = dict([line for line in info if len(line) == 2])
     # non_ha is standalone
-    if data.get("current-mode", "").lower() != "non_ha" and \
-       data.get("partner") is not None:
+    if data.get("current-mode", "").lower() != "non_ha" and data.get("partner") is not None:
         return [(data.get("partner"), {"state": data.get("state", "").lower()})]
 
 
@@ -56,8 +55,9 @@ def check_netapp_api_cluster(item, params, info):
         yield 1, "Cluster takeover"
     elif state == "takeover_failed":
         had_errors = True
-        yield 2, "Takeover failed. Reason: %s" % data.get("takeover-failure-reason",
-                                                          "None available")
+        yield 2, "Takeover failed. Reason: %s" % data.get(
+            "takeover-failure-reason", "None available"
+        )
     elif state != params["state"]:
         had_errors = True
         yield 1, "Cluster state is %s. (%s expected)" % (state, params.get("state"))
@@ -79,7 +79,7 @@ def check_netapp_api_cluster(item, params, info):
 
 
 check_info["netapp_api_cluster"] = {
-    'check_function': check_netapp_api_cluster,
-    'inventory_function': inventory_netapp_api_cluster,
-    'service_description': 'Cluster with %s',
+    "check_function": check_netapp_api_cluster,
+    "inventory_function": inventory_netapp_api_cluster,
+    "service_description": "Cluster with %s",
 }

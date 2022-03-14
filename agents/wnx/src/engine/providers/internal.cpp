@@ -33,7 +33,7 @@ namespace {
 /// Separates string by first space
 // "word left over" => ["word", "left over"]
 std::pair<std::string, std::string> SplitStringBySpace(
-    const std::string& line) {
+    const std::string &line) {
     auto end = line.find_first_of(' ');
     if (end == std::string::npos) {
         return {line, {}};
@@ -46,7 +46,7 @@ std::pair<std::string, std::string> SplitStringBySpace(
 /// returns tuple with parsed command line
 // {marker of Answer, First, Leftover}
 std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
-    const std::string& line) noexcept {
+    const std::string &line) noexcept {
     uint64_t marker = 0;
     try {
         auto [marker_str, leftover] = SplitStringBySpace(line);
@@ -62,7 +62,7 @@ std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
             // make valid return
             return {marker, section_name_str, leftover_last};
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Command line '{}' is not valid, exception: '{}'", line,
                 e.what());
         marker = 0;
@@ -71,9 +71,9 @@ std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
     return {marker, std::string(section::kUseEmbeddedName), ""};
 }
 
-void Basic::registerOwner(cma::srv::ServiceProcessor* sp) { host_sp_ = sp; }
+void Basic::registerOwner(cma::srv::ServiceProcessor *sp) { host_sp_ = sp; }
 
-std::string Basic::generateContent(const std::string_view& section_name,
+std::string Basic::generateContent(std::string_view section_name,
                                    bool force_generation) {
     auto real_name =
         section_name == section::kUseEmbeddedName ? uniq_name_ : section_name;
@@ -94,7 +94,7 @@ std::string Basic::generateContent(const std::string_view& section_name,
         if (headerless_) return section_body;
         // print header with default or commanded section name
         return makeHeader(section_name) + section_body;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit("Exception {} in {}", e.what(), uniq_name_);
     } catch (...) {
         XLOG::l.crit("Exception UNKNOWN in {}", uniq_name_);
@@ -117,7 +117,7 @@ void Basic::loadStandardConfig() {
     timeout_ = cfg::GetVal(uniq_name_, cfg::vars::kTimeout, 0);
 }
 
-void Basic::registerCommandLine(const std::string& command_line) {
+void Basic::registerCommandLine(const std::string &command_line) {
     auto [ip, leftover] = SplitStringBySpace(command_line);
     ip_ = ip;
 }
@@ -125,9 +125,9 @@ void Basic::registerCommandLine(const std::string& command_line) {
 void Basic::setupDelayOnFail() noexcept {
     // setup delay on fail
     try {
-        const auto& delay_in_seconds = g_delays_on_fail[uniq_name_];
+        const auto &delay_in_seconds = g_delays_on_fail[uniq_name_];
         delay_on_fail_ = delay_in_seconds;
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         // do nothing here
     }
 }
@@ -150,7 +150,7 @@ void Basic::disableSectionTemporary() {
 }
 
 // returns true when data exist.
-bool Basic::sendGatheredData(const std::string& command_line) {
+bool Basic::sendGatheredData(const std::string &command_line) {
     // command line parser
     auto [marker, section_name, leftover] = ParseCommandLine(command_line);
 
@@ -171,26 +171,26 @@ bool Basic::sendGatheredData(const std::string& command_line) {
 }
 
 bool Synchronous::startExecution(
-    const std::string& internal_port,  // format "type:value", where type:
+    const std::string &internal_port,  // format "type:value", where type:
                                        // mail - for mail slot
                                        // asio - for TCP
                                        // grpc - for GRPC
                                        // rest - for Rest
-    const std::string& command_line    // format "id name whatever"
+    const std::string &command_line    // format "id name whatever"
 ) {
     try {
         carrier_.establishCommunication(internal_port);
         sendGatheredData(command_line);
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " - unexpected exception {}", e.what());
     }
     carrier_.shutdownCommunication();
     return true;
 }
 
-bool Asynchronous::startExecution(const std::string& internal_port,
-                                  const std::string& command_line) {
+bool Asynchronous::startExecution(const std::string &internal_port,
+                                  const std::string &command_line) {
     using namespace std::chrono_literals;
     if (thread_.joinable()) {
         XLOG::l.crit("Attempt to start service twice, no way!");
@@ -215,8 +215,8 @@ bool Asynchronous::stop(bool wait) {
 }
 
 void Asynchronous::threadProc(
-    const std::string& internal_port,  // address to send data
-    const std::string& command_line,   // "Marker SectionName LeftOver"
+    const std::string &internal_port,  // address to send data
+    const std::string &command_line,   // "Marker SectionName LeftOver"
     std::chrono::milliseconds period)  // for infinite running(FUTURE!)
 {
     using namespace std::chrono_literals;
@@ -241,7 +241,7 @@ void Asynchronous::threadProc(
                 break;
             }
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " - unexpected exception {}", e.what());
     }
     carrier_.shutdownCommunication();

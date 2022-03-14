@@ -1,7 +1,7 @@
 title: Oracle Clusterware: Version Information
 agents: linux, aix, solaris, hpux
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check needs the agent pluing mk_oracle_crs from our plugin directory.
@@ -10,5 +10,5 @@ description:
 
  This check is always OK or stale when no data is found from agent.
 
-inventory:
+discovery:
  One service is created for each host

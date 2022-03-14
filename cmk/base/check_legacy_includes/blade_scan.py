@@ -8,12 +8,15 @@
 
 
 def scan_blade_modules(oid):
-    return ("BladeCenter Management Module" in oid(".1.3.6.1.2.1.1.1.0") or
-            "BladeCenter Advanced Management Module" in oid(".1.3.6.1.2.1.1.1.0") or
-            "IBM Flex Chassis Management Module" in oid(".1.3.6.1.2.1.1.1.0") or
-            "Lenovo Flex Chassis Management Module" in oid(".1.3.6.1.2.1.1.1.0"))
+    return (
+        "BladeCenter Management Module" in oid(".1.3.6.1.2.1.1.1.0")
+        or "BladeCenter Advanced Management Module" in oid(".1.3.6.1.2.1.1.1.0")
+        or "IBM Flex Chassis Management Module" in oid(".1.3.6.1.2.1.1.1.0")
+        or "Lenovo Flex Chassis Management Module" in oid(".1.3.6.1.2.1.1.1.0")
+    )
 
 
 def scan_blade_power_modules(oid):
-    return ("BladeCenter Management Module" in oid(".1.3.6.1.2.1.1.1.0") or
-            "BladeCenter Advanced Management Module" in oid(".1.3.6.1.2.1.1.1.0"))
+    return "BladeCenter Management Module" in oid(
+        ".1.3.6.1.2.1.1.1.0"
+    ) or "BladeCenter Advanced Management Module" in oid(".1.3.6.1.2.1.1.1.0")

@@ -1,0 +1,12 @@
+Title: mknotifyd: Fix missing environment variables
+Class: fix
+Compatible: incompat
+Component: notifications
+Date: 1616684074
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Not all environment variables where available on mknotifyd startup, resulting
+in missing variables in the notification context.

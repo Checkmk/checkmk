@@ -29,7 +29,7 @@ def check_ldap_arguments(params):
 
     if "authentication" in settings:
         binddn, password = settings["authentication"]
-        args += ["-D", binddn, "-P", password]
+        args += ["-D", binddn, "-P", passwordstore_get_cmdline("%s", password)]
 
     if "port" in settings:
         args += ["-p", settings["port"]]

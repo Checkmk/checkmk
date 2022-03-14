@@ -1,7 +1,7 @@
 title: IBM Lotus Domino: Count of Tasks
 agents: snmp
 catalog: app/lotusnotes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses snmp to extract the list of currently running tasks
@@ -14,7 +14,7 @@ item:
  within each host.  Changing the description will make Nagios think that it
  is another service.
 
-inventory:
+discovery:
  One service is created for each task if one entry matches.
  Each entry found on target host processes is tried to be matched.
  The match configuration is done via {inv_domino_tasks_rules}.
@@ -22,3 +22,6 @@ inventory:
 cluster:
  On a cluster all processes are accumulated, along with the information
  on which node they are running.
+ The percentual memory displayed is the quotient of the accumulated memory
+ use of the processes and the accumulated total memory of every node the
+ processes are running on.

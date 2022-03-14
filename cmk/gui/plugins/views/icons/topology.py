@@ -6,7 +6,7 @@
 
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -29,7 +29,7 @@ class ShowParentChildTopology(Icon):
     def render(self, what, row, tags, custom_vars):
         url = makeuri_contextless(
             request,
-            [("host_regex", "^%s$" % row["host_name"])],
+            [("host_name", row["host_name"])],
             filename="parent_child_topology.py",
         )
         return "aggr", _("Host Parent/Child topology"), url

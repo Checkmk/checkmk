@@ -1,7 +1,7 @@
 title: Rittal CMC-TC LCP: Temperature
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check polls the state of temperature sensors of a Rittal LCP.
@@ -9,13 +9,12 @@ description:
  are configured. In this case if the value is
  above or below these levels, the service state
  will be critical.
- If parameters are configured in WATO then they will be prefered.
+ If parameters are configured in WATO then they will be preferred.
 
 item:
  A descriptive name of the sensor, followed by " - ", followed by
  the combination of IO unit number (3-6) and sensors index (1-4).
  Example: {"3.2"} for first IO unit and second sensor.
 
-inventory:
+discovery:
  One service is created for each available temperature sensor.
-

@@ -6,7 +6,7 @@ Date: 1614850646
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you used the example configuration mentioned in werk #11078, the DCD
 connection could not be established. The error message "Failed to get the

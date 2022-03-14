@@ -1,7 +1,7 @@
 title: Cisco ASA: IPSEC and Remote Access VPN-Tunnels
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check tests for the existence of inventorized IPSEC and remote access VPN
@@ -10,9 +10,8 @@ description:
  tunnels can be configured.
  The check has been tested with a cisco model ASA 5510.
 
-inventory:
+discovery:
  One service is created for each IPSEC and remote access tunnel.
 
 item:
  Check item is the ip address of the remote tunnel endpoint
-

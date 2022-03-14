@@ -9,10 +9,11 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.huawei_osn import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # The dBm should not get too low. So we check only for lower levels
-factory_settings['huawei_osn_laser_default_levels'] = {
-    'levels_low_in': (-160.0, -180.0),
-    'levels_low_out': (-35.0, -40.0)
+factory_settings["huawei_osn_laser_default_levels"] = {
+    "levels_low_in": (-160.0, -180.0),
+    "levels_low_out": (-35.0, -40.0),
 }
 
 
@@ -40,17 +41,19 @@ def check_huawei_osn_laser(item, params, info):
             dbm_in = float(line[2]) / 10
             dbm_out = float(line[1]) / 10
 
-            warn_in, crit_in = params['levels_low_in']
-            warn_out, crit_out = params['levels_low_out']
+            warn_in, crit_in = params["levels_low_in"]
+            warn_out, crit_out = params["levels_low_out"]
 
             # In
-            yield 0, "In: %.1f dBm" % dbm_in, \
-                     [ ("input_signal_power_dBm", dbm_in, warn_in, crit_in), ]
+            yield 0, "In: %.1f dBm" % dbm_in, [
+                ("input_signal_power_dBm", dbm_in, warn_in, crit_in),
+            ]
             yield check_state(dbm_in, (warn_in, crit_in))
 
             # And out
-            yield 0, "Out: %.1f dBm" % dbm_out, \
-                     [ ("output_signal_power_dBm", dbm_out, warn_out, crit_out) ]
+            yield 0, "Out: %.1f dBm" % dbm_out, [
+                ("output_signal_power_dBm", dbm_out, warn_out, crit_out)
+            ]
             yield check_state(dbm_out, (warn_out, crit_out))
 
             # FEC Correction
@@ -60,21 +63,22 @@ def check_huawei_osn_laser(item, params, info):
                 yield 0, "FEC Correction before/after: %s/%s" % (fec_before, fec_after)
 
 
-check_info['huawei_osn_laser'] = {
-    'inventory_function': inventory_huawei_osn_laser,
-    'check_function': check_huawei_osn_laser,
-    'service_description': 'Laser %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1',
+check_info["huawei_osn_laser"] = {
+    "inventory_function": inventory_huawei_osn_laser,
+    "check_function": check_huawei_osn_laser,
+    "service_description": "Laser %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",
         [
             "6.200",  # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurPara.w32LaserOutputOfPowerCurrent
             "2.200",  # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.w32LaserOutputOfPowerCurrent
             "2.203",  # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.w32LaserInputOfPowerCurrent
             "2.252",  # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.beforeFECCorrectErrorRatio
             "2.253",  # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.afterFECCorrectErrorRatio
-        ]),
-    'snmp_scan_function': huawei_osn_scan_function,
-    'has_perfdata': True,
-    'default_levels_variable': 'huawei_osn_laser_default_levels',
-    'group': 'huawei_osn_laser',
+        ],
+    ),
+    "snmp_scan_function": huawei_osn_scan_function,
+    "has_perfdata": True,
+    "default_levels_variable": "huawei_osn_laser_default_levels",
+    "group": "huawei_osn_laser",
 }

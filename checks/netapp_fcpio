@@ -13,44 +13,47 @@ def check_netapp_fcpio(item, params, info):
     avg_read = get_rate("netapp_fcpio.read", this_time, read)
     avg_write = get_rate("netapp_fcpio.write", this_time, write)
 
-    read_warn, read_crit = params['read']
-    write_warn, write_crit = params['write']
+    read_warn, read_crit = params["read"]
+    write_warn, write_crit = params["write"]
 
     perfdata = [
         ("write", avg_write, write_warn, write_crit),
         ("read", avg_read, read_warn, read_crit),
     ]
     state = 0
-    read_msg = ''
-    write_msg = ''
+    read_msg = ""
+    write_msg = ""
     if read_warn is not None and read_warn >= read:
         state = 1
-        read_msg = ' (!)'
+        read_msg = " (!)"
     if read_crit is not None and read_crit >= read:
         state = 2
-        read_msg = ' (!!)'
+        read_msg = " (!!)"
 
     if write_warn is not None and write_warn >= write:
         state = max(state, 1)
-        write_msg = ' (!)'
+        write_msg = " (!)"
     if write_crit is not None and write_crit >= write:
         state = 2
-        write_msg = ' (!!)'
+        write_msg = " (!!)"
 
-
-    infotext = "%s read%s, %s write%s" % (get_bytes_human_readable(avg_read), \
-    read_msg, get_bytes_human_readable(avg_write), write_msg)
+    infotext = "%s read%s, %s write%s" % (
+        get_bytes_human_readable(avg_read),
+        read_msg,
+        get_bytes_human_readable(avg_write),
+        write_msg,
+    )
 
     return (state, infotext, perfdata)
 
 
 check_info["netapp_fcpio"] = {
-    "check_function"        : check_netapp_fcpio,
-    "inventory_function"    : lambda info: [(None, "netapp_fcpio_default_levels")],
-    "service_description"   : "FCP I/O",
-    "has_perfdata"          : True,
-    "group"                 : "netapp_fcportio",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith('NetApp Release') \
-                                          and oid(".1.3.6.1.4.1.789.1.17.20.0"),
-    "snmp_info"                    : ( ".1.3.6.1.4.1.789.1.17", [ 20, 21 ]),
+    "check_function": check_netapp_fcpio,
+    "inventory_function": lambda info: [(None, "netapp_fcpio_default_levels")],
+    "service_description": "FCP I/O",
+    "has_perfdata": True,
+    "group": "netapp_fcportio",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("NetApp Release")
+    and oid(".1.3.6.1.4.1.789.1.17.20.0"),
+    "snmp_info": (".1.3.6.1.4.1.789.1.17", [20, 21]),
 }

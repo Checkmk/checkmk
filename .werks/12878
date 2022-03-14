@@ -1,0 +1,13 @@
+Title: <tt>systemd_units</tt>: Handle "●" as marker for broken units correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1629873802
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>systemd_units</tt>, which monitors systemd units, did
+not handle "●" as a marker for broken units correctly. This marker is used
+when <tt>LC_ALL="C.UTF-8"</tt>, which is set by the Checkmk linux agent.

@@ -1,0 +1,21 @@
+Title: Fix "A negative value is not valid." in "Problem notification" Main Dashboard
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1619790187
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Chromium based browsers showed an error message in the developer tools:
+
+<tt>Error: &lt;rect&gt; attribute width: A negative value is not valid.</tt>
+
+This error was provoked by a broken windowing function in the python
+implementation and is now fixed.
+
+Furthermore the calculation of the windowing function was adapted:
+Before the first and last Bar was not a full sized window based on the
+current time. Now all time windows have the same duration.

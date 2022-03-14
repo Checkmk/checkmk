@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<jolokia_metrics>>>
 # 8080 NonHeapMemoryUsage 101078952
@@ -27,9 +29,6 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 # 8080 Uptime 572011375
 # 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
 
-# MB warn, crit
-# jolokia_metrics_mem_default_levels = (2000, 3000)
-
 # Number of threads warn, crit
 jolokia_metrics_threads_default_levels = (80, 100)
 
@@ -41,7 +40,7 @@ jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
 
 jolokia_metrics_queue_default_levels = (20, 50)
 
-#.
+# .
 #   .--Arcane helpers------------------------------------------------------.
 #   |                     _                                                |
 #   |                    / \   _ __ ___ __ _ _ __   ___                    |
@@ -66,22 +65,21 @@ def jolokia_metrics_app(info, split_item):
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") is None:
         raise MKCounterWrapped("No information from Jolokia agent")
-    if not inst in parsed \
-       or not app in parsed[inst].get('apps', {}):
+    if not inst in parsed or not app in parsed[inst].get("apps", {}):
         return None
-    return parsed[inst]['apps'][app]
+    return parsed[inst]["apps"][app]
 
 
 # This bisects info from BEA and passes on to jolokia_metrics_app
 def jolokia_metrics_serv(info, split_item):
     inst, app, serv = split_item
     app = jolokia_metrics_app(info, (inst, app))
-    if not app or not serv in app.get('servlets', {}):
+    if not app or not serv in app.get("servlets", {}):
         return None
-    return app['servlets'][serv]
+    return app["servlets"][serv]
 
 
-#.
+# .
 #   .--Number of Requests--------------------------------------------------.
 #   |               ____                            _                      |
 #   |              |  _ \ ___  __ _ _   _  ___  ___| |_ ___                |
@@ -96,54 +94,54 @@ def inventory_jolokia_metrics_serv(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
     levels = None
-    levels = 'jolokia_metrics_serv_req_default_levels'
+    levels = "jolokia_metrics_serv_req_default_levels"
     needed_key = "Requests"
     for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
-        for app, val in vals.get('apps', {}).items():
-            for serv, servinfo in val.get('servlets', {}).items():
+        for app, val in vals.get("apps", {}).items():
+            for serv, servinfo in val.get("servlets", {}).items():
                 if needed_key in servinfo:
-                    inv.append(('%s %s %s' % (inst, app, serv), levels))
+                    inv.append(("%s %s %s" % (inst, app, serv), levels))
     return inv
 
 
 def check_jolokia_metrics_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     serv = jolokia_metrics_serv(info, item.split())
-    if not serv or not 'Requests' in serv:
+    if not serv or not "Requests" in serv:
         return (3, "data not found in agent output")
-    req = saveint(serv['Requests'])
+    req = saveint(serv["Requests"])
 
     status = 0
-    status_txt = ''
+    status_txt = ""
     if lo_crit is not None and req <= lo_crit:
         status = 2
-        status_txt = ' (Below or equal %d)' % lo_crit
+        status_txt = " (Below or equal %d)" % lo_crit
     elif lo_warn is not None and req <= lo_warn:
         status = 1
-        status_txt = ' (Below or equal %d)' % lo_warn
+        status_txt = " (Below or equal %d)" % lo_warn
     elif hi_crit is not None and req >= hi_crit:
         status = 2
-        status_txt = ' (Above or equal %d)' % hi_crit
+        status_txt = " (Above or equal %d)" % hi_crit
     elif hi_warn is not None and req >= hi_warn:
         status = 1
-        status_txt = ' (Above or equal %d)' % hi_warn
+        status_txt = " (Above or equal %d)" % hi_warn
 
-    output = ['Requests: %d%s' % (req, status_txt)]
-    perfdata = [('Requests', req, hi_warn, hi_crit)]
+    output = ["Requests: %d%s" % (req, status_txt)]
+    perfdata = [("Requests", req, hi_warn, hi_crit)]
     wrapped = False
     this_time = time.time()
     try:
         rate = get_rate("jolokia_metrics.serv_req.%s" % item, this_time, req)
-        output.append('RequestRate: %0.2f' % rate)
-        perfdata.append(('RequestRate', rate))
+        output.append("RequestRate: %0.2f" % rate)
+        perfdata.append(("RequestRate", rate))
     except MKCounterWrapped:
         wrapped = True
 
     if wrapped:
-        return (status, ', '.join(output))
-    return (status, ', '.join(output), perfdata)
+        return (status, ", ".join(output))
+    return (status, ", ".join(output), perfdata)
 
 
 check_info["jolokia_metrics.serv_req"] = {
@@ -154,7 +152,7 @@ check_info["jolokia_metrics.serv_req"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--App state-----------------------------------------------------------.
 #   |                _                      _        _                     |
 #   |               / \   _ __  _ __    ___| |_ __ _| |_ ___               |
@@ -171,24 +169,24 @@ def check_jolokia_metrics_app_state(item, _unused, info):
 
     # FIXME: this could be nicer.
     if app and "Running" in app:
-        if app['Running'] == '1':
+        if app["Running"] == "1":
             app_state = 0
         else:
             app_state = 2
     # wenn in app statename steht
     elif app and "stateName" in app:
-        if app['stateName'] == 'STARTED':
+        if app["stateName"] == "STARTED":
             app_state = 0
         else:
             app_state = 2
     if app_state == 3:
         return (3, "data not found in agent output")
     elif app_state == 0:
-        return (0, 'application is running')
+        return (0, "application is running")
     elif app_state == 2:
-        return (2, 'application is not running (Running: %s)')
+        return (2, "application is not running (Running: %s)")
 
-    return (3, 'error in agent output')
+    return (3, "error in agent output")
 
 
 check_info["jolokia_metrics.app_state"] = {
@@ -198,7 +196,7 @@ check_info["jolokia_metrics.app_state"] = {
     "has_perfdata": False,
 }
 
-#.
+# .
 #   .--Unsorted------------------------------------------------------------.
 #   |              _   _                      _           _                |
 #   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
@@ -217,32 +215,33 @@ def check_jolokia_metrics_app_sess(item, params, info):
         app = jolokia_metrics_app(info, item.split())
     if not app:
         return (3, "application not found")
-    sessions = app.get('Sessions', app.get('activeSessions', app.get('OpenSessionsCurrentCount')))
+    sessions = app.get("Sessions", app.get("activeSessions", app.get("OpenSessionsCurrentCount")))
     if sessions is None:
         return (3, "data not found in agent output")
     sess = saveint(sessions)
     maxActive = saveint(
-        app.get('Sessions', app.get('maxActiveSessions', app.get('OpenSessionsCurrentCount'))))
+        app.get("Sessions", app.get("maxActiveSessions", app.get("OpenSessionsCurrentCount")))
+    )
 
     status = 0
-    status_txt = ''
+    status_txt = ""
     if lo_crit is not None and sess <= lo_crit:
         status = 2
-        status_txt = ' (Below or equal %d)' % lo_crit
+        status_txt = " (Below or equal %d)" % lo_crit
     elif lo_warn is not None and sess <= lo_warn:
         status = 1
-        status_txt = ' (Below or equal %d)' % lo_warn
+        status_txt = " (Below or equal %d)" % lo_warn
     elif hi_crit is not None and sess >= hi_crit:
         status = 2
-        status_txt = ' (Above or equal %d)' % hi_crit
+        status_txt = " (Above or equal %d)" % hi_crit
     elif hi_warn is not None and sess >= hi_warn:
         status = 1
-        status_txt = ' (Above or equal %d)' % hi_warn
+        status_txt = " (Above or equal %d)" % hi_warn
 
     if maxActive and maxActive > 0:
         status_txt += " (max active sessions: %d)" % maxActive
 
-    return (status, '%d Sessions%s' % (sess, status_txt), [('sessions', sess, hi_warn, hi_crit)])
+    return (status, "%d Sessions%s" % (sess, status_txt), [("sessions", sess, hi_warn, hi_crit)])
 
 
 def check_jolokia_metrics_bea_queue(item, params, info):
@@ -251,7 +250,7 @@ def check_jolokia_metrics_bea_queue(item, params, info):
         return (3, "application not found")
     if "QueueLength" not in app:
         return (3, "data not found in agent output")
-    queuelength = int(app['QueueLength'])
+    queuelength = int(app["QueueLength"])
 
     status = 0
     warn, crit = params
@@ -259,7 +258,7 @@ def check_jolokia_metrics_bea_queue(item, params, info):
         status = 2
     elif queuelength >= warn:
         status = 1
-    return (status, 'queue length is %d' % queuelength, [("length", queuelength, warn, crit)])
+    return (status, "queue length is %d" % queuelength, [("length", queuelength, warn, crit)])
 
 
 # FIXME: This check could work with any JVM
@@ -286,8 +285,12 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 
     perfdata = []
     infos = []
-    for varname, title in [("ExecuteThreadTotalCount", "total"), ("ExecuteThreadIdleCount", "idle"),
-                           ("StandbyThreadCount", "standby"), ("HoggingThreadCount", "hogging")]:
+    for varname, title in [
+        ("ExecuteThreadTotalCount", "total"),
+        ("ExecuteThreadIdleCount", "idle"),
+        ("StandbyThreadCount", "standby"),
+        ("HoggingThreadCount", "hogging"),
+    ]:
         value = int(app[varname])
         perfdata.append((varname, value))
         infos.append("%s: %d" % (title, value))
@@ -401,56 +404,77 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
 check_info["jolokia_metrics.cache_hits"] = {
     "service_description": "JVM %s Cache Usage",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed),
+        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed
+    ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info),
+        "cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
+    ),
     "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.in_memory"] = {
     "service_description": "JVM %s In Memory",
-    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
-        "InMemoryHitPercentage", "MemoryStoreObjectCount"
-    ], ["InMemoryHits", "InMemoryMisses"], item, params, parsed),
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
+        ["InMemoryHitPercentage", "MemoryStoreObjectCount"],
+        ["InMemoryHits", "InMemoryMisses"],
+        item,
+        params,
+        parsed,
+    ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits", [
-            "InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"
-        ], info),
+        "cache_hits",
+        ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
+        info,
+    ),
     "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.on_disk"] = {
     "service_description": "JVM %s On Disk",
-    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
-        "OnDiskHitPercentage", "DiskStoreObjectCount"
-    ], ["OnDiskHits", "OnDiskMisses"], item, params, parsed),
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
+        ["OnDiskHitPercentage", "DiskStoreObjectCount"],
+        ["OnDiskHits", "OnDiskMisses"],
+        item,
+        params,
+        parsed,
+    ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits", ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
-        info),
+        "cache_hits",
+        ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
+        info,
+    ),
     "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.off_heap"] = {
     "service_description": "JVM %s Off Heap",
-    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
-        "OffHeapHitPercentage", "OffHeapStoreObjectCount"
-    ], ["OffHeapHits", "OffHeapMisses"], item, params, parsed),
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
+        ["OffHeapHitPercentage", "OffHeapStoreObjectCount"],
+        ["OffHeapHits", "OffHeapMisses"],
+        item,
+        params,
+        parsed,
+    ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
         "cache_hits",
-        ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"], info),
+        ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
+        info,
+    ),
     "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.writer"] = {
     "service_description": "JVM %s Cache Writer",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
-        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed),
+        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed
+    ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info),
+        "cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info
+    ),
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--Deprecated Checks----------------------------------------.
 #   |     ____                                _           _     |
 #   |    |  _ \  ___ _ __  _ __ ___  ___ __ _| |_ ___  __| |    |
@@ -489,188 +513,30 @@ check_info["jolokia_metrics.threads"] = {
     "inventory_function": lambda i: None,
 }
 
-
-def discover_jolokia_metrics_mem(info):
-    '''DEPRECATED.
-
-    This service has been replaced by the
-    'jolokia_jvm_memory' plugin in checkmk verison 1.7.0
-    '''
-    parsed = jolokia_metrics_parse(info)
-
-    required_keys = ("HeapMemoryUsage", "NonHeapMemoryUsage", "HeapMemoryMax", "NonHeapMemoryMax")
-
-    for instance, data in parsed.items():
-        # don't add memory check if we don't have the necessary data
-        if data and all(key in data for key in required_keys):
-            yield instance, {}
-
-
-def check_jolokia_metrics_mem(item, params, info):
-    parsed = jolokia_metrics_parse(info)
-
-    if parsed.get(item, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-
-    if item not in parsed:
-        return
-
-    # convert old parameter version ( warn, crit )
-    # represented levels of total heap
-    if isinstance(params, tuple):
-        params = {"total": params}
-
-    # rename totalheap to total
-    # this block can be removed in the future (today 22.02.13)
-    if "totalheap" in params:
-        params = params.copy()
-        params["total"] = params["totalheap"]
-        del params["totalheap"]
-
-    d = parsed[item]
-    mb = 1024 * 1024.0
-
-    if "HeapMemoryUsage" not in d or "NonHeapMemoryUsage" not in d\
-        or "HeapMemoryMax" not in d or "NonHeapMemoryMax" not in d:
-        return 3, "data in agent output incomplete"
-
-    heap = saveint(d["HeapMemoryUsage"]) / mb  # fixed: true-division
-    heapmax = saveint(d.get("HeapMemoryMax", -1)) / mb  # fixed: true-division
-    nonheap = saveint(d["NonHeapMemoryUsage"]) / mb  # fixed: true-division
-    nonheapmax = saveint(d.get("NonHeapMemoryMax", -1)) / mb  # fixed: true-division
-    total = heap + nonheap
-    if heapmax > 0 and nonheapmax > 0:
-        totalmax = heapmax + nonheapmax
-    else:
-        totalmax = 0
-        heapmax = max(0, heapmax)
-        nonheapmax = max(0, nonheapmax)
-
-    worst_state = 0
-    perfdata = []
-    info_list = []
-
-    for what, value, value_max in [
-        ("heap", heap, heapmax),
-        ("nonheap", nonheap, nonheapmax),
-        ("total", total, totalmax),
-    ]:
-        param_state = 0
-        level_info = ""
-        used_info = ""
-        if params.get(what):
-            warn_level = 0
-            crit_level = 0
-            if isinstance(params[what][0], int):
-                if value_max:
-                    warn_level = value_max - params[what][0]
-                    crit_level = value_max - params[what][1]
-
-                if what != "total":
-                    perfdata.append((what, value, warn_level, crit_level, None, value_max))
-
-                if not value_max:
-                    param_state = 0
-                elif value >= crit_level:
-                    param_state = 2
-                    level_info = "%s(crit at %sMB free)" % (state_markers[2], params[what][1])
-                elif value >= warn_level:
-                    param_state = 1
-                    level_info = "%s(warn at %sMB free)" % (state_markers[1], params[what][0])
-            else:
-                if value_max:
-                    warn_level = value_max * params[what][0] / 100.0
-                    crit_level = value_max * params[what][1] / 100.0
-
-                if what != "total":
-                    perfdata.append((what, value, warn_level, crit_level, None, value_max))
-
-                if not value_max:
-                    param_state = 0
-                elif value >= crit_level:
-                    param_state = 2
-                    level_info = "%s(crit at %s%%)" % (state_markers[2], params[what][1])
-                elif value >= warn_level:
-                    param_state = 1
-                    level_info = "%s(warn at %s%%)" % (state_markers[1], params[what][0])
-        else:
-            if what != "total":
-                perfdata.append((what, value, None, None, None, value_max))
-
-        if value_max:
-            used_info = "/%.1f%% used" % (value / value_max * 100)
-        info_list.append("%s: %0.fMB%s%s" % (what.title(), value, used_info, level_info))
-        worst_state = max(param_state, worst_state)
-
-    return (worst_state, ', '.join(info_list), perfdata)
-
-
 check_info["jolokia_metrics.mem"] = {
     "service_description": "JVM %s Memory",
-    "check_function": check_jolokia_metrics_mem,
-    "inventory_function": discover_jolokia_metrics_mem,
-    "has_perfdata": True,
-    "group": "jvm_memory",
-    "default_levels_variable": "jolokia_metrics_mem_default_levels"
+    "check_function": check_deprecated,
+    "inventory_function": lambda i: None,
 }
 
+# This variable needs to stay here s.t. the autocheck files for jolokia_metrics.perm_gen can still
+# be loaded, since the actual discovery function had
+# yield ..., "jolokia_metrics_perm_gen_default_levels"
 jolokia_metrics_perm_gen_default_levels = {"perm": (80.0, 100.0)}
-
-
-def inventory_jolokia_metrics_perm_gen(info):
-    '''DEPRECATED.
-
-    This service has been replaced by the
-    'jolokia_jvm_memory.pools' plugin in checkmk verison 1.7.0
-    '''
-    parsed = jolokia_metrics_parse(info)
-    for instance, values in parsed.items():
-        if values and "PermGenUsage" in values:
-            yield instance, "jolokia_metrics_perm_gen_default_levels"
-
-
-def check_jolokia_metrics_perm_gen(item, params, info):
-    parsed = jolokia_metrics_parse(info)
-    if parsed.get(item, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-    values = parsed.get(item)
-    if values:
-        warn, crit = params['perm']
-        usage_bytes = int(values['PermGenUsage'])
-        size_bytes = int(values['PermGenMax'])
-        usage_perc = 100.0 / size_bytes * usage_bytes
-        warn_bytes = size_bytes / 100.0 * warn
-        crit_bytes = size_bytes / 100.0 * crit
-        perfdata = [("mem_perm_used", usage_bytes, warn_bytes, crit_bytes, 0, size_bytes)]
-        state = 0
-        if usage_perc >= crit:
-            state = 2
-        elif usage_perc >= warn:
-            state = 1
-        if state != 0:
-            levels = "(warn/crit at %2.f/%.2f %%)" % (warn, crit)
-        else:
-            levels = ""
-        return state, "Usage: %.2f %% (%s of %s used) %s" % \
-          ( usage_perc, get_bytes_human_readable(usage_bytes), get_bytes_human_readable(size_bytes), levels ), \
-          perfdata
-
 
 check_info["jolokia_metrics.perm_gen"] = {
     "service_description": "JVM %s PermGen Usage",
-    "check_function": check_jolokia_metrics_perm_gen,
-    "inventory_function": inventory_jolokia_metrics_perm_gen,
-    "group": "jvm_memory",
-    "has_perfdata": True,
+    "check_function": check_deprecated,
+    "inventory_function": lambda i: None,
 }
 
 
 def discover_jolokia_metrics_uptime(info):
-    '''DEPRECATED.
+    """DEPRECATED.
 
     This service has been replaced by the
-    'jolokia_jvm_uptime' plugin in checkmk verison 1.7.0
-    '''
+    'jolokia_jvm_uptime' plugin in checkmk version 2.0.0
+    """
     parsed = jolokia_metrics_parse(info)
     for instance, data in parsed.items():
         if data and "Uptime" in data:
@@ -683,7 +549,7 @@ def check_jolokia_metrics_uptime(item, params, info):
         raise MKCounterWrapped("No information from Jolokia agent")
     if item in parsed:
         if "Uptime" in parsed[item]:
-            uptime = int(int(parsed[item]['Uptime']) / 1000)
+            uptime = int(int(parsed[item]["Uptime"]) / 1000)
             return check_uptime_seconds(params, uptime)
 
 
@@ -697,17 +563,17 @@ check_info["jolokia_metrics.uptime"] = {
 
 
 def inventory_jolokia_metrics_gc(info):
-    '''DEPRECATED.
+    """DEPRECATED.
 
     This service has been replaced by the
-    'jolokia_jvm_uptime' plugin in checkmk verison 1.7.0
-    '''
+    'jolokia_jvm_uptime' plugin in checkmk version 2.0.0
+    """
     inv = []
     parsed = jolokia_metrics_parse(info)
     for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
-        for gc in vals.get('gc', {}):
+        for gc in vals.get("gc", {}):
             inv.append(("%s GC %s" % (inst, gc), {}))
     return inv
 
@@ -718,10 +584,9 @@ def jolokia_metrics_gc(info, split_item):
     if parsed.get(inst, "") is None:
         raise MKCounterWrapped("No information from Jolokia agent")
 
-    if not inst in parsed \
-       or not gc in parsed[inst].get('gc', {}):
+    if not inst in parsed or not gc in parsed[inst].get("gc", {}):
         return None
-    return parsed[inst]['gc'][gc]
+    return parsed[inst]["gc"][gc]
 
 
 def _transform_invers(params):
@@ -745,13 +610,12 @@ def check_jolokia_metrics_gc(item, params, info):
 
     params = _transform_invers(params)
 
-    crate = get_rate("jvm.gc.count.%s" % (item), \
-                     time.time(), int(gc['CollectionCount']))
+    crate = get_rate("jvm.gc.count.%s" % (item), time.time(), int(gc["CollectionCount"]))
     crate = crate * 60.0
 
-    ctext = ''
+    ctext = ""
     status = 0
-    cwarn, ccrit = params.get('CollectionCount', (None, None))
+    cwarn, ccrit = params.get("CollectionCount", (None, None))
     if cwarn is not None and ccrit is not None:
         if crate >= int(ccrit):
             status = 2
@@ -760,16 +624,16 @@ def check_jolokia_metrics_gc(item, params, info):
             status = 1
             ctext = " (Level %s) " % cwarn
 
-    yield status, "%.2f GC Count/minute%s" % (crate, ctext), \
-                    [('CollectionCount', crate, cwarn, ccrit)]
+    yield status, "%.2f GC Count/minute%s" % (crate, ctext), [
+        ("CollectionCount", crate, cwarn, ccrit)
+    ]
 
-    if 'CollectionTime' in gc:
-        twarn, tcrit = params.get('CollectionTime', (None, None))
-        trate = get_rate("jvm.gc.time.%s" % (item), \
-                         time.time(), int(gc['CollectionTime']))
+    if "CollectionTime" in gc:
+        twarn, tcrit = params.get("CollectionTime", (None, None))
+        trate = get_rate("jvm.gc.time.%s" % (item), time.time(), int(gc["CollectionTime"]))
         trate = trate * 60.0
 
-        ttext = ''
+        ttext = ""
         status = 0
         if twarn is not None and tcrit is not None:
             if trate >= int(tcrit):
@@ -779,8 +643,9 @@ def check_jolokia_metrics_gc(item, params, info):
                 status = 1
                 ttext = "(Level %s) " % twarn
 
-        yield status, "%.2f GC ms/minute%s" % (trate, ttext), \
-                            [('CollectionTime', trate, twarn, tcrit)]
+        yield status, "%.2f GC ms/minute%s" % (trate, ttext), [
+            ("CollectionTime", trate, twarn, tcrit)
+        ]
 
 
 check_info["jolokia_metrics.gc"] = {

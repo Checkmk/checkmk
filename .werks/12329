@@ -1,0 +1,12 @@
+Title: db2_mem rulespec is correctly processed by bakery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631867597
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously it was not possible to add db2_mem agent plugin to linux agent 
+installer. With this release the problem has been solved

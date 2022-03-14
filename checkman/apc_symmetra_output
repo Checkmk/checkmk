@@ -1,7 +1,7 @@
 title: APC Symmetra UPS: Output Voltage, Current and Load
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors
@@ -21,5 +21,5 @@ description:
 item:
  The current phase containing the device state, voltage and current.
 
-inventory:
+discovery:
  One service is created.

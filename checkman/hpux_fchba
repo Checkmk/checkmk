@@ -1,7 +1,7 @@
 title: HP-UX: Fibrechannel HBAs
 agents: hpux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is intended to alert you of problems in a servers SAN
@@ -20,9 +20,8 @@ item:
  The name of the adapter, i.e. "fcd0"
 
 
-inventory:
+discovery:
  One service is created for each HBA using the {"fcd"} driver with an
  active SAN connection.
  Older {"td"} / {"fcms"} based HBAs are not reported from the
  agent per default.
-

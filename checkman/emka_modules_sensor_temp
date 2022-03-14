@@ -1,7 +1,7 @@
 title: EMKA Electronic Locking & Monitoring: Temperature Sensor
 agents: snmp
 catalog: hw/environment/emka
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature sensors of EMKA devices which
@@ -13,5 +13,5 @@ description:
 item:
  The sensor name.
 
-inventory:
+discovery:
  One service is created for each sensor.

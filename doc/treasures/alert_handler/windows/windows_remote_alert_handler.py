@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
+from cmk.gui.valuespec import (
+    Dictionary,
+    TextInput,
+)
+from cmk.gui.plugins.wato.utils import PasswordFromStore
+
+from cmk.gui.cee.plugins.wato.alert_handling import register_alert_handler_parameters
+
 register_alert_handler_parameters(
     "windows_remote",
     Dictionary(
@@ -15,7 +25,7 @@ register_alert_handler_parameters(
                  "WMI access, the credentials might be used to execute arbitrary commands on "
                  "the remote system. Use with caution!"),
         elements = [
-            ("runas", TextAscii(
+            ("runas", TextInput(
                   title = _("User to run handler as"),
                   allow_empty = False,
                   regex = re.compile('^[a-zA-Z_][-/a-zA-Z0-9_\\\\]*$'),
@@ -26,7 +36,7 @@ register_alert_handler_parameters(
                   title = _("Password of the user"),
                   allow_empty = False,
             )),
-            ("command", TextAscii(
+            ("command", TextInput(
                 title = _("Command to execute"),
                 allow_empty = False,
             )),

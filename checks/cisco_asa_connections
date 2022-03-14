@@ -35,16 +35,21 @@ def check_cisco_asa_connections(_no_item, params, info):
     return state, "%s, Max. since system startup: %s" % (infotext, overall_used_conns), perfdata
 
 
-check_info['cisco_asa_connections'] = {
-    'inventory_function'    : inventory_cisco_asa_connections,
-    'check_function'        : check_cisco_asa_connections,
-    'service_description'   : 'Connections',
-    'snmp_info'             : ('.1.3.6.1.4.1.9.9.147.1.2.2.2.1', [
-                                '5', # CISCO-FIREWALL-MIB::cfwConnectionStatValue
-                              ]),
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security") \
-                                          or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services") \
-                                          or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "group"                 : "cisco_fw_connections",
-    "has_perfdata"          : True,
+check_info["cisco_asa_connections"] = {
+    "inventory_function": inventory_cisco_asa_connections,
+    "check_function": check_cisco_asa_connections,
+    "service_description": "Connections",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.147.1.2.2.2.1",
+        [
+            "5",  # CISCO-FIREWALL-MIB::cfwConnectionStatValue
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0")
+    .lower()
+    .startswith("cisco adaptive security")
+    or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services")
+    or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "group": "cisco_fw_connections",
+    "has_perfdata": True,
 }

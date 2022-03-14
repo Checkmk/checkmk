@@ -1,12 +1,11 @@
 title: IBM Lotus Domino: Domino Users
 agents: snmp
 catalog: app/lotusnotes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses snmp to extract the number of users on a Lotus Domino Server.
  Warning and critical upper limits can be set to the number of users.
 
-inventory:
+discovery:
  One service is created for each Lotus Domino Server.
-

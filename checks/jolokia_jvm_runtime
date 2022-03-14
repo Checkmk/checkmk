@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -22,10 +23,10 @@ def parse_jolokia_jvm_runtime(info):
 
 @get_parsed_item_data
 def check_jolokia_jvm_runtime_uptime(_item, params, data):
-    uptime = data.get("Uptime")
-    if uptime is None:
+    milli_uptime = data.get("Uptime")
+    if milli_uptime is None:
         return
-    return check_uptime_seconds(params, uptime)
+    return check_uptime_seconds(params, milli_uptime / 1000.0)
 
 
 check_info["jolokia_jvm_runtime"] = {

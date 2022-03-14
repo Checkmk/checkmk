@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.7779.3.1.1.2.1.15.0 X.X.X.X --> IB-PLATFORMONE-MIB::ibGridMasterVIP.0
 # .1.3.6.1.4.1.7779.3.1.1.2.1.16.0 ONLINE --> IB-PLATFORMONE-MIB::ibGridReplicationState.0
 
@@ -28,15 +29,16 @@ def check_infoblox_grid_status(_no_item, _no_params, info):
     return state, "Status: %s, Master virtual IP: %s" % (status_readable, master_vip)
 
 
-check_info['infoblox_grid_status'] = {
-    'inventory_function': inventory_infoblox_grid_status,
-    'check_function': check_infoblox_grid_status,
-    'service_description': 'Grid replication',
-    'snmp_info': (
+check_info["infoblox_grid_status"] = {
+    "inventory_function": inventory_infoblox_grid_status,
+    "check_function": check_infoblox_grid_status,
+    "service_description": "Grid replication",
+    "snmp_info": (
         ".1.3.6.1.4.1.7779.3.1.1.2.1",
         [
             "15",  # IB-PLATFORMONE-MIB::ibGridMasterVIP
             "16",  # IB-PLATFORMONE-MIB::ibGridReplicationState
-        ]),
-    'snmp_scan_function': scan_infoblox,
+        ],
+    ),
+    "snmp_scan_function": scan_infoblox,
 }

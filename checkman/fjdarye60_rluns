@@ -1,7 +1,7 @@
 title: Fujitsu ETERNUS DX Storage Systems: RLUNs
 agents: snmp
 catalog: hw/storagehw/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of an RLUN in
@@ -19,6 +19,5 @@ item:
  The index of the RLUN in the SNMP table (integer). The first RLUN usually
  has index {1}.
 
-inventory:
+discovery:
  One service is created for each present RLUN.
-

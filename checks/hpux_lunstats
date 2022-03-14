@@ -35,7 +35,7 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 
 # Convert info to output needed for generic diskstat check
 def parse_hpux_lunstats(info):
-    #TODO use 'check_diskstat_dict' which needs the following format
+    # TODO use 'check_diskstat_dict' which needs the following format
     # disks = { "sda" : {
     #       'node'                       : None,
     #       'average_read_request_size'  : 0.0,
@@ -59,11 +59,11 @@ def parse_hpux_lunstats(info):
         if len(line) == 2:
             left = line[0].strip()
             right = line[1].strip()
-            if left == 'STATISTICS FOR LUN':
+            if left == "STATISTICS FOR LUN":
                 lun = right
-            elif left == 'Bytes read':
+            elif left == "Bytes read":
                 bytes_read = int(right) // 512
-            elif left == 'Bytes written':
+            elif left == "Bytes written":
                 bytes_written = int(right) // 512
                 luns.append((None, lun, bytes_read, bytes_written))
     return luns
@@ -74,10 +74,10 @@ def check_hpux_lunstats(item, params, parsed):
 
 
 check_info["hpux_lunstats"] = {
-    'parse_function': parse_hpux_lunstats,
-    'check_function': check_hpux_lunstats,
-    'inventory_function': inventory_diskstat_generic,
-    'service_description': 'Disk IO %s',
-    'has_perfdata': True,
-    'group': 'disk_io',
+    "parse_function": parse_hpux_lunstats,
+    "check_function": check_hpux_lunstats,
+    "inventory_function": inventory_diskstat_generic,
+    "service_description": "Disk IO %s",
+    "has_perfdata": True,
+    "group": "disk_io",
 }

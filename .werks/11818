@@ -1,0 +1,12 @@
+Title: DNS Names in ntop integration
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1634049460
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+An exception in the host details of an ntopng host may have been raised in case DNS over TLS is used.
+This is fixed now.

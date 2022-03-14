@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
+
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 
 
@@ -20,7 +21,7 @@ def check_ucs_c_rack_server_faultinst(
 
     states = [
         ucs_bladecenter.UCS_FAULTINST_SEVERITY_TO_STATE.get(severity, 3)
-        for severity in parsed['Severity']
+        for severity in parsed["Severity"]
     ]
     if 2 in states:
         overall_state = 2
@@ -28,24 +29,28 @@ def check_ucs_c_rack_server_faultinst(
         overall_state = max(states)
 
     # report overall state and summary of fault instances
-    severity_counter = collections.Counter(parsed['Severity'])
-    yield overall_state, "Found faults: " + ", ".join([
-        "%s with severity '%s'" % (severity_counter[severity], severity)
-        for severity in sorted(severity_counter.keys())
-    ])
+    severity_counter = collections.Counter(parsed["Severity"])
+    yield overall_state, "Found faults: " + ", ".join(
+        [
+            "%s with severity '%s'" % (severity_counter[severity], severity)
+            for severity in sorted(severity_counter.keys())
+        ]
+    )
 
     # report individual faults sorted by monitoring state
     start_str = "\n\nIndividual faults:\n"
     for index in sorted(range(len(states)), key=lambda idx: states[idx]):
-        yield states[index], start_str + ', '.join([
-            '%s: %s' % (key, parsed[key][index])
-            for key in ['Severity', 'Description', 'Cause', 'Code', 'Affected DN']
-        ])
+        yield states[index], start_str + ", ".join(
+            [
+                "%s: %s" % (key, parsed[key][index])
+                for key in ["Severity", "Description", "Cause", "Code", "Affected DN"]
+            ]
+        )
         start_str = ""
 
 
-check_info['ucs_c_rack_server_faultinst'] = {
-    'inventory_function': lambda p: [(None, {})],
-    'check_function': check_ucs_c_rack_server_faultinst,
-    'service_description': 'Fault Instances',
+check_info["ucs_c_rack_server_faultinst"] = {
+    "inventory_function": lambda p: [(None, {})],
+    "check_function": check_ucs_c_rack_server_faultinst,
+    "service_description": "Fault Instances Rack",
 }

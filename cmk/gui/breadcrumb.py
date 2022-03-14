@@ -8,18 +8,20 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from typing import NamedTuple, MutableSequence, List, Iterable, Optional, TYPE_CHECKING
+from typing import Iterable, List, MutableSequence, NamedTuple, Optional, TYPE_CHECKING, Union
 
 from cmk.gui.globals import html
 from cmk.gui.type_defs import MegaMenu
+from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.speaklater import LazyString
 
 if TYPE_CHECKING:
     from cmk.gui.pagetypes import PagetypeTopics
 
-BreadcrumbItem = NamedTuple("BreadcrumbItem", [
-    ("title", str),
-    ("url", Optional[str]),
-])
+
+class BreadcrumbItem(NamedTuple):
+    title: Union[str, LazyString]
+    url: Optional[str]
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-ancestors
@@ -52,9 +54,9 @@ class BreadcrumbRenderer:
 
         for item in breadcrumb:
             if item.url:
-                html.a(item.title, href=item.url)
+                html.a(escape_to_html(str(item.title)), href=item.url)
             else:
-                html.span(item.title)
+                html.span(escape_to_html(str(item.title)))
 
         html.close_div()
 
@@ -85,17 +87,23 @@ def make_topic_breadcrumb(menu: MegaMenu, topic: "PagetypeTopics") -> Breadcrumb
     breadcrumb = make_main_menu_breadcrumb(menu)
 
     # 2. Topic level
-    breadcrumb.append(BreadcrumbItem(
-        title=topic.title(),
-        url=None,
-    ))
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=topic.title(),
+            url=None,
+        )
+    )
 
     return breadcrumb
 
 
 def make_main_menu_breadcrumb(menu: MegaMenu) -> Breadcrumb:
     """Create a breadcrumb for the main menu level"""
-    return Breadcrumb([BreadcrumbItem(
-        title=menu.title,
-        url=None,
-    )])
+    return Breadcrumb(
+        [
+            BreadcrumbItem(
+                title=menu.title,
+                url=None,
+            )
+        ]
+    )

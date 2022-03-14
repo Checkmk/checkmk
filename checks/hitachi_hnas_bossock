@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 hitachi_hnas_bossock_default_levels = (250, 350)
 
 
 def inventory_hitachi_hnas_bossock(info):
     for clusternode, _fibers in info:
-        yield clusternode, 'hitachi_hnas_bossock_default_levels'
+        yield clusternode, "hitachi_hnas_bossock_default_levels"
 
 
 def check_hitachi_hnas_bossock(item, params, info):
@@ -46,6 +47,7 @@ check_info["hitachi_hnas_bossock"] = {
         [
             1,  # clusterNodeStatsCnID
             2,  # runningBossockFibers
-        ]),
+        ],
+    ),
     "snmp_scan_function": hitachin_hnas_scan_function,
 }

@@ -1,7 +1,7 @@
 title: NetApp Filer: FANs
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the state of the shelfes FAN sensors for a NetApp filer.
@@ -10,5 +10,5 @@ description:
 item:
  Name of the fan
 
-inventory:
+discovery:
  One service is created for each fan.

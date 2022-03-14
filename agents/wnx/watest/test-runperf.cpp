@@ -26,7 +26,7 @@
 #include "test_tools.h"
 #include "tools/_raii.h"
 
-constexpr const wchar_t* kUniqueTestId = L"0345246";
+constexpr const wchar_t *kUniqueTestId = L"0345246";
 struct TestStorage {
     std::vector<uint8_t> buffer_;
     bool delivered_;
@@ -37,10 +37,10 @@ struct TestStorage {
 static TestStorage g_mailslot_storage;
 
 // testing callback
-bool MailboxCallbackPerfTest(const cma::MailSlot* Slot, const void* Data,
-                             int Len, void* Context) {
+bool MailboxCallbackPerfTest(const cma::MailSlot *Slot, const void *Data,
+                             int Len, void *Context) {
     using namespace std::chrono;
-    auto storage = (TestStorage*)Context;
+    auto storage = (TestStorage *)Context;
     if (!storage) {
         XLOG::l.bp("error in param");
         return false;
@@ -51,13 +51,13 @@ bool MailboxCallbackPerfTest(const cma::MailSlot* Slot, const void* Data,
 
     auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
+    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             XLOG::l(XLOG::kNoPrefix)(  // command to out to file
-                "{} : {}", dt->providerId(), (const char*)dt->data());
+                "{} : {}", dt->providerId(), (const char *)dt->data());
             break;
 
         case cma::carrier::DataType::kSegment:
@@ -66,7 +66,7 @@ bool MailboxCallbackPerfTest(const cma::MailSlot* Slot, const void* Data,
             {
                 nanoseconds duration_since_epoch(dt->answerId());
                 time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
                 g_mailslot_storage.buffer_ = vectorized_data;
@@ -116,7 +116,7 @@ TEST(SectionPerf, Runner) {
         auto table = cma::tools::SplitString(accu, "\n");
 
         int headers_count = 0;
-        for (const auto& line : table)
+        for (const auto &line : table)
             if (line.find("<<<") != std::string::npos) headers_count++;
 
         EXPECT_EQ(headers_count, 3);
@@ -139,7 +139,7 @@ TEST(SectionPerf, Runner) {
         auto table = cma::tools::SplitString(accu, "\n");
 
         int headers_count = 0;
-        for (const auto& line : table)
+        for (const auto &line : table)
             if (line.find("<<<") != std::string::npos) headers_count++;
 
         EXPECT_EQ(headers_count, 3);

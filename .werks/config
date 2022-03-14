@@ -1,7 +1,8 @@
 editions = [
     ( "cre",          "Raw Edition" ),
     ( "cee",          "Enterprise Edition" ),
-    ( "cme",          "Managed Service Edition" ),
+    ( "cme",          "Managed Services Edition" ),
+    ( "cpe",          "Plus Edition" ),
 ]
 
 components = [
@@ -24,6 +25,7 @@ components = [
    ( "nagvis",        "NagVis" ),
    ( "packages",      "Other Components" ),
    ( "distros",       "Linux Distributions" ),
+   ( "rest-api",      "REST API"),
 ]
 
 edition_components = {

@@ -1,0 +1,21 @@
+Title: Fix possible core restart of remote sites on every activating of changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1631187329
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you used local plugins within
+"~/local/lib/python3/cmk/base/plugins/agent_based/", the folder "__pycache__"
+was always synchronized from the central to the remote site. This caused
+problems if the timestamps of the plugins differed on central and remote site.
+The remote site would than need a core restart on every activating of changes.
+Therefore, this folder is not synched anymore.
+
+Workaround was, to delete the files located within
+"~/local/lib/python3/cmk/base/plugins/agent_based/" on the affected site, do a
+dummy change for that site on the central site and activate changes again.

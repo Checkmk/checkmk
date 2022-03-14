@@ -1,7 +1,7 @@
 title: AIX lparstat: CPU Utilization and Assignment for LPARs
 agents: aix
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check executes the {lparstat} command on AIX and reports different
@@ -10,5 +10,5 @@ description:
 
  The check always returns {OK} state.
 
-inventory:
+discovery:
  One service is created on each LPAR.

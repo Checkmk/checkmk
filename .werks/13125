@@ -1,0 +1,30 @@
+Title: <tt>zertificon_mail_queues</tt>: Monitor mail queue lengths of Zertificon mail encryption appliances
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1629974690
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The new check plugin <tt>zertificon_mail_queues</tt> monitors the mail
+queue lengths of Zertificon mail encryption appliances via SNMP. The
+following seven queues are monitored (OIDs
+.1.3.6.1.4.1.2021.8.1.100.{5-10, 17}):
+<ul>
+<li>Total Postfix queue</li>
+<li>Incoming queue</li>
+<li>Active queue</li>
+<li>Deferred queue</li>
+<li>Hold queue</li>
+<li>Maildrop queue</li>
+<li>Z1 Messenger queue</li>
+</ul>
+The check goes WARN / CRIT if the length of any of these queues exceeds
+configurable levels. Per default, there are no upper levels.
+
+This plugin is only available as an enforced service to avoid discovering
+this service for non-Zertificon devices. This is necessary because
+Zertificon appliances cannot be decisively identified based on their SNMP
+data.

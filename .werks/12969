@@ -1,0 +1,14 @@
+Title: Fix missing selection in bulk host import service discovery
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624628102
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If bulk host import was performed with option "Perform automatic service
+discovery", the error "You have selected 0 hosts for bulk discovery"
+occurred on the bulk discovery page.

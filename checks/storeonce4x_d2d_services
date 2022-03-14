@@ -19,13 +19,16 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
         healthLevelString = service_data["healthLevelString"]
         healthString = service_data["healthString"]
         subsystemState = service_data["subsystemState"]
-        yield health_map.get(healthLevelString,
-                             3), "%s: %s (%s)" % (service_name, healthString, subsystemState)
+        yield health_map.get(healthLevelString, 3), "%s: %s (%s)" % (
+            service_name,
+            healthString,
+            subsystemState,
+        )
 
 
-check_info['storeonce4x_d2d_services'] = {
-    'parse_function': parse_storeonce4x_d2d_services,
-    'inventory_function': discover_single,
-    'check_function': check_storeonce4x_d2d_services,
-    'service_description': 'D2D Services',
+check_info["storeonce4x_d2d_services"] = {
+    "parse_function": parse_storeonce4x_d2d_services,
+    "inventory_function": discover_single,
+    "check_function": check_storeonce4x_d2d_services,
+    "service_description": "D2D Services",
 }

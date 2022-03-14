@@ -1,7 +1,7 @@
 title: Dell PowerEdge Server: State of Network Devices
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the network devices of Dell PowerEdge Servers.
@@ -25,7 +25,5 @@ description:
 item:
  The name of the fqdd variable for the device
 
-inventory:
+discovery:
  One service is created for each network device.
-
-

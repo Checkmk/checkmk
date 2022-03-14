@@ -1,0 +1,16 @@
+Title: Commandlets of active checks and special agents may be passed None as IP address
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1639854933
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk only affects users who have implemented their own plugins for active checks or special agents (the ones commonly named <tt>checks/check_*</tt> and <tt>checks/agent_*</tt>).
+
+The functions implemented in those plugins have to a accept the IP address of the host as an argument.
+For hosts without an IP address they used to get passed <tt>"0.0.0.0"</tt> or <tt>"::0"</tt>.
+This has been changed to `None`.
+Since most of these functions simply pass it on in a list, this should not make any difference.

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # sample agent output:
 #
 # <<<omreport_vdisk>>>
@@ -42,9 +43,12 @@ def check_dell_om_vdisks(item, params, parsed):
         if parsed[item]["State"] != "Ready":
             status = 2
 
-        return status, "Device: %s, Status: %s, State: %s, Layout: %s" %\
-             (parsed[item]["Device Name"], parsed[item]["Status"],
-              parsed[item]["State"], parsed[item]["Layout"])
+        return status, "Device: %s, Status: %s, State: %s, Layout: %s" % (
+            parsed[item]["Device Name"],
+            parsed[item]["Status"],
+            parsed[item]["State"],
+            parsed[item]["Layout"],
+        )
 
 
 check_info["dell_om_vdisks"] = {

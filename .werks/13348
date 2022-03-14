@@ -1,0 +1,24 @@
+Title: <tt>windows_if.ps1</tt>: Use <tt>Get-NetAdapter</tt> if possible
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1633096605
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Windows agent plugin <tt>windows_if.ps1</tt>, deployed via the bakery
+ruleset 'Network interfaces on Windows', collects additional data about
+network interfaces, such as aliasses and MAC addresses. Up to now, the
+plugin used <tt>Get-WmiObject Win32_NetworkAdapter</tt> to collect this
+information. However, <tt>Win32_NetworkAdapter</tt> is deprecated and
+might return wrong aliasses for certain network adapters.
+
+Now, the plugin attempts to use <tt>Get-NetAdapter</tt> instead. If this
+is not available, it falls back to <tt>Win32_NetworkAdapter</tt>.
+
+For most interfaces, this change should be compatible, since
+<tt>Win32_NetworkAdapter</tt> and <tt>Get-NetAdapter</tt> produce mostly
+identical output. However, as mentioned earlier, there might be interfaces
+for which e.g. the alias changes.

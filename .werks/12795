@@ -1,0 +1,15 @@
+Title: Add dashlets to display host or service states
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1625037106
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Two new dashlets are added:
+<ol>
+<li>display the state of a single service</li>
+<li>display the state of a single host</li>
+</ol>

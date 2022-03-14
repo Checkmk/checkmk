@@ -4,12 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Mapping
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    SNMPTree,
-    type_defs,
-)
+
+from .agent_based_api.v1 import register, Service, SNMPTree, type_defs
 from .utils.bluecat import (
     check_bluecat_operational_state,
     CHECK_DEFAULT_PARAMETERS,
@@ -21,17 +17,15 @@ from .utils.bluecat import (
 )
 
 register.snmp_section(
-    name='bluecat_dhcp',
+    name="bluecat_dhcp",
     parse_function=parse_bluecat,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.13315.3.1.1.2.1",
-            oids=[
-                "1",  # dhcpOperState
-                "3",  # dhcpLeaseStatsSuccess
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.13315.3.1.1.2.1",
+        oids=[
+            "1",  # dhcpOperState
+            "3",  # dhcpLeaseStatsSuccess
+        ],
+    ),
     detect=DETECT_BLUECAT,
 )
 
@@ -43,7 +37,7 @@ def discover_bluecat_dhcp(section: Section) -> type_defs.DiscoveryResult:
     >>> list(discover_bluecat_dhcp({'oper_state': 2, 'leases': 2}))
     []
     """
-    if section['oper_state'] != 2:
+    if section["oper_state"] != 2:
         yield Service()
 
 
@@ -68,10 +62,10 @@ def cluster_check_bluecat_dhcp(
 
 
 register.check_plugin(
-    name='bluecat_dhcp',
-    service_name='DHCP',
+    name="bluecat_dhcp",
+    service_name="DHCP",
     discovery_function=discover_bluecat_dhcp,
-    check_ruleset_name='bluecat_dhcp',
+    check_ruleset_name="bluecat_dhcp",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_bluecat_dhcp,
     cluster_check_function=cluster_check_bluecat_dhcp,

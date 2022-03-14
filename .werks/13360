@@ -1,0 +1,22 @@
+Title: No longer allow semicolon in service descriptions
+Class: fix
+Compatible: compat
+Component: core
+Date: 1635239215
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When having a semicolon in service description the metric
+system would break i.e. metrics for this service would not be displayed.
+
+Having a semicolon in service description was not allowed before 2.0 but
+this restriction has been removed with Werk #12799.
+From now on the semicolon will again be removed from service descriptions.
+
+With this change all services containing a semicolon will be renamed after
+the next "Activate changes"
+
+Notice: You are only affected by this issue if you are using the Checkmk Microcore

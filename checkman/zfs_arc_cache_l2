@@ -1,13 +1,13 @@
 title: ZFS Arc L2 Cache: Hit Ratio and Size
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the L2 cache hit ratio and the L2 cache size of ZFS.
 
  This check is only for reporting and always returns {OK}.
 
-inventory:
+discovery:
  One service is created on every machine having an L2 cache,
  that means reporting an l2_size greater than 0.

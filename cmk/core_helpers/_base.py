@@ -7,24 +7,24 @@
 import abc
 import logging
 from types import TracebackType
-from typing import Any, Dict, final, Final, Generic, Literal, Optional, Tuple, Type, TypeVar
+from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
-import cmk.utils
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
+    MKAgentError,
+    MKEmptyAgentData,
     MKFetcherError,
     MKIPAddressLookupError,
-    MKEmptyAgentData,
-    MKAgentError,
     MKSNMPError,
     MKTimeout,
 )
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ExitSpec, HostAddress, result, ServiceDetails, ServiceState, state_markers
+from cmk.utils.type_defs import ExitSpec, HostAddress, result
 
 from cmk.snmplib.type_defs import TRawData
 
 from .cache import FileCache
-from .host_sections import THostSections
+from .host_sections import HostSections, TRawDataSection
 from .type_defs import Mode, SectionNameCollection
 
 __all__ = ["Fetcher", "verify_ipaddress"]
@@ -32,42 +32,46 @@ __all__ = ["Fetcher", "verify_ipaddress"]
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
 
-class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
+class Fetcher(Generic[TRawData], abc.ABC):
     """Interface to the data fetchers."""
-    def __init__(self, file_cache: FileCache, logger: logging.Logger) -> None:
+
+    def __init__(
+        self,
+        file_cache: FileCache,
+        logger: logging.Logger,
+    ) -> None:
         super().__init__()
         self.file_cache: Final[FileCache[TRawData]] = file_cache
         self._logger = logger
 
     @final
     @classmethod
-    def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
+    def from_json(cls: Type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
-        try:
-            return cls._from_json(serialized)
-        except (LookupError, TypeError, ValueError) as exc:
-            raise ValueError(serialized) from exc
+        return cls._from_json(serialized)
 
     @classmethod
     @abc.abstractmethod
-    def _from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
+    def _from_json(cls: Type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         """Serialize to JSON."""
         raise NotImplementedError()
 
     @final
-    def __enter__(self) -> 'Fetcher':
-        """Prepare the data source."""
+    def __enter__(self) -> "Fetcher":
+        """Prepare the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return self
+
         try:
             self.open()
         except MKFetcherError:
             raise
         except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
             raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
         return self
 
@@ -78,7 +82,10 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> Literal[False]:
-        """Destroy the data source."""
+        """Destroy the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return False
         self.close()
         return False
 
@@ -96,36 +103,22 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         try:
             return result.OK(self._fetch(mode))
         except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
             return result.Error(exc)
 
-    @abc.abstractmethod
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        """Decide whether to try to read data from cache"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        """Decide whether to write data to cache"""
-        raise NotImplementedError()
-
     def _fetch(self, mode: Mode) -> TRawData:
-        self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
-                           self.__class__.__name__, self.file_cache,
-                           self._is_cache_read_enabled(mode))
-
-        # TODO(ml): EAFP would significantly simplify the code.
-        if self.file_cache.simulation or self._is_cache_read_enabled(mode):
-            raw_data = self._fetch_from_cache()
-            if raw_data:
-                self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
-                return raw_data
+        self._logger.debug(
+            "[%s] Fetch with cache settings: %r",
+            self.__class__.__name__,
+            self.file_cache,
+        )
+        raw_data = self.file_cache.read(mode)
+        if raw_data:
+            self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
+            return raw_data
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
         raw_data = self._fetch_from_io(mode)
-        if self._is_cache_write_enabled(mode):
-            self.file_cache.write(raw_data)
+        self.file_cache.write(raw_data, mode)
         return raw_data
 
     @abc.abstractmethod
@@ -133,18 +126,19 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         """Override this method to contact the source and return the raw data."""
         raise NotImplementedError()
 
-    def _fetch_from_cache(self) -> Optional[TRawData]:
-        return self.file_cache.read()
 
-
-class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
     """Parse raw data into host sections."""
+
     @abc.abstractmethod
-    def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
+    def parse(
+        self, raw_data: TRawData, *, selection: SectionNameCollection
+    ) -> HostSections[TRawDataSection]:
         raise NotImplementedError
 
 
-class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
+# TODO: the last remaining use of host_sections in summarize_success is gone; this can be simplified
+class Summarizer(Generic[TRawDataSection], abc.ABC):
     """Class to summarize parsed data into a ServiceCheckResult.
 
     Note:
@@ -152,6 +146,7 @@ class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         that derive this class.
 
     """
+
     def __init__(self, exit_spec: ExitSpec) -> None:
         super().__init__()
         self.exit_spec: Final[ExitSpec] = exit_spec
@@ -159,10 +154,10 @@ class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def summarize_success(
         self,
-        host_sections: THostSections,
+        host_sections: HostSections[TRawDataSection],
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         raise NotImplementedError
 
     def summarize_failure(
@@ -170,19 +165,21 @@ class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         exc: Exception,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
-        status = self._extract_status(exc)
-        return status, str(exc) + state_markers[status]
+    ) -> Sequence[ActiveCheckResult]:
+        return [ActiveCheckResult(self._extract_status(exc), str(exc))]
 
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):
             return self.exit_spec.get("empty_output", 2)
-        if isinstance(exc, (
+        if isinstance(
+            exc,
+            (
                 MKAgentError,
                 MKFetcherError,
                 MKIPAddressLookupError,
                 MKSNMPError,
-        )):
+            ),
+        ):
             return self.exit_spec.get("connection", 2)
         if isinstance(exc, MKTimeout):
             return self.exit_spec.get("timeout", 2)
@@ -195,4 +192,5 @@ def verify_ipaddress(address: Optional[HostAddress]) -> None:
 
     if address in ["0.0.0.0", "::"]:
         raise MKIPAddressLookupError(
-            "Failed to lookup IP address and no explicit IP address configured")
+            "Failed to lookup IP address and no explicit IP address configured"
+        )

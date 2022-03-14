@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "Row.h"
@@ -21,44 +22,13 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-TEST(TimeColumn, ConstantTime) {
-    const auto v = Clock::now();
-    const auto tz = 1h;
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = TimeColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-}
-
-TEST(TimeColumn, ConstantDefaultRow) {
-    const auto v = Clock::now();
-    const auto tz = 1h;
-    const auto row = DummyRow{nullptr};
-    const auto col = TimeColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-}
-
-TEST(TimeColumn, Reference) {
-    auto v = Clock::now();
-    const auto tz = 1h;
-    const auto row = DummyRow{nullptr};
-    const auto col = TimeColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-
-    v += 1h;
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-}
-
 TEST(TimeColumn, GetValueLambda) {
     const auto v = Clock::now();
     const auto tz = 1h;
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = TimeColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+    const auto col = TimeColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
@@ -69,11 +39,11 @@ TEST(TimeColumn, GetValueDefault) {
     const auto v = Clock::now();
     const auto tz = 1h;
     const auto row = DummyRow{nullptr};
-    const auto col = TimeColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+    const auto col = TimeColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
     EXPECT_NE(v + tz, col.getValue(row, tz));
-    EXPECT_EQ(TimeColumn::column_type{} + tz, col.getValue(row, tz));
+    EXPECT_EQ(TimeColumn<DummyRow>::value_type{} + tz, col.getValue(row, tz));
 }

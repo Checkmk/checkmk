@@ -16,16 +16,17 @@ def check_apc_ats_status(_no_item, source, info):
     state = 0
     messages = []
 
-    #current source of power
+    # current source of power
     sources = {1: "A", 2: "B"}
     if source != selected_source:
         state = 2
-        messages.append("Power source Changed from %s to %s(!!)" % \
-        (sources[source], sources[selected_source]))
+        messages.append(
+            "Power source Changed from %s to %s(!!)" % (sources[source], sources[selected_source])
+        )
     else:
         messages.append("Power source %s selected" % sources[source])
 
-    #current communication status of the Automatic Transfer Switch.
+    # current communication status of the Automatic Transfer Switch.
     if comstatus == 1:
         state = max(1, state)
         messages.append("Communication Status: never Discovered(!)")
@@ -78,5 +79,6 @@ check_info["apc_ats_status"] = {
             "4.0",  # atsStatusOverCurrentState
             "5.0",  # atsStatus5VPowerSupply
             "6.0",  # atsStatus24VPowerSupply
-        ]),
+        ],
+    ),
 }

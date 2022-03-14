@@ -1,0 +1,17 @@
+Title: <tt>oracle_recovery_status</tt>: Stop ignoring offline datafiles (12.1+)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624260978
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Oracle agent plugin (both Linux and Windows) ignored offline datafiles
+for version 12.1 and above. This affected environments with physical standby
+databases. Instead of CRIT, the corresponding check plugin
+<tt>oracle_recovery_status</tt> went stale. This has been fixed.
+
+For this werk to come into effect, you have to update the Oracle agent plugin
+on affected hosts.

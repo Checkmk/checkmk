@@ -1,0 +1,14 @@
+Title: API: WATO change message fix for remove password endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614349714
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, removing the password through the
+endpoint call resulted in the same change message as for the
+edit call. This is now fixed displaying the correct remove message.

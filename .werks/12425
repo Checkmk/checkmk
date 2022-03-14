@@ -1,0 +1,14 @@
+Title: Service discovery: Handle vanished services correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617288623
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+The <tt>Full service scan</tt> functionality on the service discovery page of
+hosts showed vanished services as still monitored. The same applied to the
+service <tt>Check_MK Discovery</tt>, which monitors the discovered services of
+a hosts. This has been fixed.

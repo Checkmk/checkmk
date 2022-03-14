@@ -67,8 +67,12 @@ def parse_arcserve_backup(info):
                 backup_id = backup_id[0:-1]
                 backup = {}
                 parsed[backup_id] = backup
-        elif len(line) > 5 and line[1] == "Verzeichnis(se)" and line[3] == "Datei(en)" \
-            and line[5][-1] == ")":
+        elif (
+            len(line) > 5
+            and line[1] == "Verzeichnis(se)"
+            and line[3] == "Datei(en)"
+            and line[5][-1] == ")"
+        ):
             dirs = int(line[0].replace(".", ""))
             files = int(line[2].replace(".", ""))
             unit = line[5].replace(")", "").lower()

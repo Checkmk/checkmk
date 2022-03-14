@@ -1,0 +1,17 @@
+Title: Disable link to availability if required context information is missing
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1623229312
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The page menu link "Availability" was also shown if required context
+information were missing in a view. This lead to an error message on the
+availability view.
+
+The page menu link will now be disabled if not all required context
+informations are available.

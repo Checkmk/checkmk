@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -19,10 +20,10 @@ from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard
 def parse_raritan_pdu_inlet_summary(info):
     summary = {}
     for sensor_type, decimal_digits, availability, sensor_state, value in info:
-        if availability == '1':
+        if availability == "1":
             if sensor_type in raritan_map_type:  # handled sensor types
                 key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include
-                value = float(value) / 10**int(decimal_digits)
+                value = float(value) / 10 ** int(decimal_digits)
                 state, state_info = raritan_map_state[sensor_state]
 
                 if state > 0:
@@ -33,9 +34,9 @@ def parse_raritan_pdu_inlet_summary(info):
     return {"Summary": summary}
 
 
-check_info['raritan_pdu_inlet_summary'] = {
+check_info["raritan_pdu_inlet_summary"] = {
     "parse_function": parse_raritan_pdu_inlet_summary,
-    "inventory_function": inventory_elphase,
+    "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "Input %s",
     "has_perfdata": True,
@@ -48,6 +49,7 @@ check_info['raritan_pdu_inlet_summary'] = {
             "5.2.3.1.2.1.1",  # inlet sensor availability
             "5.2.3.1.3.1.1",  # inlet sensor state
             "5.2.3.1.4.1.1",  # inlet sensor value
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
 }

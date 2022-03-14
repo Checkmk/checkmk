@@ -1,12 +1,12 @@
 title: IBM Blade Center: Summary Health State
 agents: snmp
 catalog: hw/server/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the summary health state of an IBM blade center.
  It's just one simple check saying OK, WARN or CRIT and does not
  show any details.
 
-inventory:
+discovery:
  One service is created for each blade center.

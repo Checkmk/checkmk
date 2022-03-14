@@ -1,0 +1,17 @@
+Title: mtr agent plugin: fix multiple issues
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632233612
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Multiple issues prohibited running mtr agent plugin with a minimal config:
+
+A already running mtr process was not detected correctly.
+
+Default Values where not applied correlty, instead a empty string was used
+for multiple missing values.

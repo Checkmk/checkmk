@@ -7,26 +7,28 @@
 # pylint: disable=redefined-outer-name
 
 import time
-import pytest  # type: ignore[import]
+from typing import List, Optional
 
-import cmk.gui.config as config
+import pytest
+
+from cmk.utils.type_defs import UserId
+
 import cmk.gui.http as http
-from cmk.gui.globals import html
+from cmk.gui.globals import transactions
+from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 
 @pytest.fixture()
 def tm():
     request = http.Request({"wsgi.input": "", "SCRIPT_NAME": ""})
-    return TransactionManager(request)
+    return TransactionManager(request, MockLoggedInUser())
 
 
-def test_htmllib_integration(register_builtin_html):
-    assert html.transaction_manager
-
-    getattr(html, "transaction_valid")
-    getattr(html, "is_transaction")
-    getattr(html, "check_transaction")
+def test_request_context_integration(request_context):
+    assert callable(transactions.transaction_valid)
+    assert callable(transactions.is_transaction)
+    assert callable(transactions.check_transaction)
 
 
 def test_transaction_new_id(tm):
@@ -36,31 +38,38 @@ def test_transaction_new_id(tm):
     assert tm._new_transids == [trans_id]
 
 
-class MockLoggedInUser:
-    def __init__(self, ids):
-        self._ids = ids
+class MockLoggedInUser(LoggedInUser):
+    def __init__(self):
+        super().__init__(None)
+        self._ids = []
 
     def transids(self, lock=False):
         return self._ids
 
-    def save_transids(self, ids):
+    def save_transids(self, transids: List[str]) -> None:
         pass
 
+    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
+        return []
 
-@pytest.mark.parametrize("transid,ignore_transids,result,is_existing", [
-    (None, False, False, False),
-    (None, True, False, False),
-    ("", False, False, False),
-    ("", True, True, False),
-    ("abc", False, False, False),
-    ("abc", True, False, False),
-    ("-1", False, False, False),
-    ("-1", True, True, False),
-    ("123/abc", False, False, False),
-    ("123/abc", True, False, False),
-    ("%d/abc" % time.time(), False, False, False),
-    ("%d/abc" % time.time(), False, True, True),
-])
+
+@pytest.mark.parametrize(
+    "transid,ignore_transids,result,is_existing",
+    [
+        (None, False, False, False),
+        (None, True, False, False),
+        ("", False, False, False),
+        ("", True, True, False),
+        ("abc", False, False, False),
+        ("abc", True, False, False),
+        ("-1", False, False, False),
+        ("-1", True, True, False),
+        ("123/abc", False, False, False),
+        ("123/abc", True, False, False),
+        ("%d/abc" % time.time(), False, False, False),
+        ("%d/abc" % time.time(), False, True, True),
+    ],
+)
 def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing):
     assert tm._ignore_transids is False
     if ignore_transids:
@@ -74,9 +83,7 @@ def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_exis
         assert tm._request.var("_transid") == transid
 
     if is_existing:
-        mocker.patch.object(config, "user", MockLoggedInUser([transid]))
-    else:
-        mocker.patch.object(config, "user", MockLoggedInUser([]))
+        tm._user._ids = [transid]
 
     assert tm.transaction_valid() == result
 
@@ -94,8 +101,7 @@ def test_check_transaction_invalid(tm, monkeypatch):
 def test_check_transaction_valid(tm, monkeypatch, mocker):
     valid_transid = "%d/abc" % time.time()
     tm._request.set_var("_transid", valid_transid)
-
-    mocker.patch.object(config, "user", MockLoggedInUser([valid_transid]))
+    tm._user._ids = [valid_transid]
 
     invalidate = mocker.patch.object(tm, "_invalidate")
     assert tm.check_transaction() is True

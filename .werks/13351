@@ -1,0 +1,16 @@
+Title: IPMI Sensors via Freeipmi: Bugfixes in configuration flags
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634647258
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+There were two bugs in the configuration of the special agent for IPMI sensors
+via freeipmi: The flags "Sensor threshold" and "Suppress not available
+sensors" were interchanged (i.e., activating one in the GUI activated
+the other one on the command line). Furthermore, unticking a configuration
+flag no effect, i.e., the corresponding command line argument was still
+active.

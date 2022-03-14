@@ -6,6 +6,7 @@
 """Check_MK vSphere Special Agent"""
 
 import sys
+
 from cmk.special_agents.agent_vsphere import main
 
 if __name__ == "__main__":

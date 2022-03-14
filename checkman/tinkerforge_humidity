@@ -1,7 +1,7 @@
 title: Tinkerforge Sensor Bricklet: Humidity
 agents: special
 catalog: hw/environment/tinkerforge
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors humidity sensor bricklets on any tinkerforge stack.
@@ -10,5 +10,5 @@ description:
 item:
  The bricks position inside the stack.
 
-inventory:
+discovery:
  One service is created for each humidity bricklet.

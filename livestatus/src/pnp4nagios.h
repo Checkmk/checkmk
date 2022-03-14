@@ -15,11 +15,11 @@ class MonitoringCore;
 
 inline std::string dummy_service_description() { return "_HOST_"; }
 
-std::string pnp_cleanup(const std::string& name);
+std::string pnp_cleanup(const std::string &name);
 
 #ifndef CMC
-int pnpgraph_present(MonitoringCore* mc, const std::string& host,
-                     const std::string& service);
+int pnpgraph_present(MonitoringCore *mc, const std::string &host,
+                     const std::string &service);
 #endif
 
 #endif  // pnp4nagios_h

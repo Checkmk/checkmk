@@ -1,7 +1,7 @@
 title: Security Master: Temperature
 agents: snmp
 catalog: hw/environment/maykg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors temperature sensors of a security master device.
@@ -12,5 +12,5 @@ description:
 item:
  The ID and name of the sensor.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.

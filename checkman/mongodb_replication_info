@@ -1,12 +1,12 @@
 title: MongoDB: Replication Info
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays replication operation log (oplog) statistics.
 
  The oplog is a special capped collection that keeps a rolling record of all operations that modify the data stored in databases.
 
-inventory:
+discovery:
  One service is created named 'MongoDB Replication Info'.

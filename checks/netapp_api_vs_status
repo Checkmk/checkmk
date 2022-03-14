@@ -18,7 +18,7 @@ def parse_netapp_api_vs_status(info):
         if len(line) == 2:
             # pre v1.6.0 agent output
             name, state = line
-            parsed[name] = {'state': state}
+            parsed[name] = {"state": state}
         else:
             parsed[line[0]] = dict(zip(line[1::2], line[2::2]))
     return parsed
@@ -26,13 +26,13 @@ def parse_netapp_api_vs_status(info):
 
 @get_parsed_item_data
 def check_netapp_api_vs_status(item, _no_params, data):
-    server_state = data.get('state')
+    server_state = data.get("state")
     if not server_state:
         return
-    subtype = data.get('vserver-subtype')
-    if server_state == 'running':
+    subtype = data.get("vserver-subtype")
+    if server_state == "running":
         state = 0
-    elif server_state == 'stopped' and subtype == 'dp_destination':
+    elif server_state == "stopped" and subtype == "dp_destination":
         state = 0
     else:
         state = 2
@@ -42,8 +42,8 @@ def check_netapp_api_vs_status(item, _no_params, data):
 
 
 check_info["netapp_api_vs_status"] = {
-    'parse_function': parse_netapp_api_vs_status,
-    'inventory_function': discover(lambda k, values: 'state' in values),
-    'check_function': check_netapp_api_vs_status,
-    'service_description': 'vServer Status %s',
+    "parse_function": parse_netapp_api_vs_status,
+    "inventory_function": discover(lambda k, values: "state" in values),
+    "check_function": check_netapp_api_vs_status,
+    "service_description": "vServer Status %s",
 }

@@ -6,7 +6,7 @@ Date: 1613753968
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 You had to use the "Show more items" button once on dropdowns with show more
 items, even if "Default to show more" or "Enforce show more" was configured.

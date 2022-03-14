@@ -1,7 +1,7 @@
 title: APC Symmetra UPS: Self Test
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors two OIDs of APC Symmetra UPS devices:
@@ -19,5 +19,5 @@ description:
 
  This check uses the PowerNet-MIB.
 
-inventory:
+discovery:
  One service is created.

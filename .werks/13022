@@ -1,0 +1,19 @@
+Title: Fix adding temperature graph to graph collections
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1625657774
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this werk it was not possible to add a "Temperature Zone N" graph to a
+graph collection. There was no error message visible, it was simply not added
+to the collection.
+
+The function used to receive the graph definition was only expecting ascii
+characters, although the graph definition contained a degree symbol.
+
+Now a unicode compatible function is used to receive the graph definition.

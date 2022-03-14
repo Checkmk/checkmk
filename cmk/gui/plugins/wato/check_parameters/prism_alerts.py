@@ -5,23 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, Checkbox
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary
 
 
 def _parameter_valuespec_prism_alerts():
     return Dictionary(
         elements=[
-            ("prism_central_only",
-             Checkbox(
-                 title=_("Consider alerts for Prism Central only"),
-                 label=_("Activate (off: consider all alerts)"),
-                 default_value=True,
-             )),
+            (
+                "prism_central_only",
+                Checkbox(
+                    title=_("Consider alerts for Prism Central only"),
+                    label=_("Activate (off: consider all alerts)"),
+                    default_value=True,
+                ),
+            ),
         ],
         required_keys=[],
     )
@@ -34,4 +36,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_prism_alerts,
         title=lambda: _("Nutanix Prism Alerts"),
-    ))
+    )
+)

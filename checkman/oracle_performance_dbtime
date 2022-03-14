@@ -1,7 +1,7 @@
 title: ORACLE tablespaces: perfomance data for DB time
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This subcheck is active if configured in the WATO rules 'Oracle performance discovery'.
@@ -13,5 +13,5 @@ description:
 item:
  The SID identifier.
 
-inventory:
+discovery:
  One service per SID is created.

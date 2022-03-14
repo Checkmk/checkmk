@@ -5,40 +5,43 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_graylog_failures():
-    return Dictionary(elements=[
-        ("failures",
-         Tuple(
-             title=_("Total index failure count upper levels"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ],
-         )),
-        ("failures_last",
-         Tuple(
-             title=_("Index failure in the defined timerange upper levels"),
-             help=_("Here you can set levels on failures in the timerange "
-                    "specified in the datasource (default: 30m)."),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "failures",
+                Tuple(
+                    title=_("Total index failure count upper levels"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "failures_last",
+                Tuple(
+                    title=_("Index failure in the defined timerange upper levels"),
+                    help=_(
+                        "Here you can set levels on failures in the timerange "
+                        "specified in the datasource (default: 30m)."
+                    ),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -48,4 +51,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_failures,
         title=lambda: _("Graylog index failures"),
-    ))
+    )
+)

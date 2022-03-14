@@ -1,13 +1,12 @@
 title: Cisco Switches: State of Virtual Switches
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of Virtual Switches formed by two Cisco Catalyst
  45XX or 65XX switches. It makes sure that both switches are not in standalone
  mode and that all configured VSL links are up.
 
-inventory:
+discovery:
  One service is created if at least one chassis is in standby or active mode.
-

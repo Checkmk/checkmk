@@ -1,7 +1,7 @@
 title: EMC Isilon: NodeHealth
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the NodeHealth (Overall Status) of an EMC Isilon Storage
@@ -10,6 +10,5 @@ description:
  Returns {OK} on status ok, {CRIT} on status attn, down or invalid
  and {UNKN} on every other status.
 
-inventory:
+discovery:
  One service is created for each EMC Isilon Node, named Node Health.
-

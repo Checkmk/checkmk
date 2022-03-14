@@ -22,13 +22,15 @@
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma {  // to become friendly for wtools classes
 constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
 
-constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
+constexpr const char *SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 namespace {
-void CreatePluginInTemp(const std::filesystem::path& filename, int timeout,
+
+void CreatePluginInTemp(const std::filesystem::path &filename, int timeout,
                         std::string_view plugin_name) {
     std::ofstream ofs(filename.u8string());
 
@@ -44,7 +46,7 @@ void CreatePluginInTemp(const std::filesystem::path& filename, int timeout,
         << "@echo " << SecondLine << "\n";
 }
 
-void CreateVbsPluginInTemp(const std::filesystem::path& Path,
+void CreateVbsPluginInTemp(const std::filesystem::path &Path,
                            std::string Name) {
     std::ofstream ofs(Path.u8string());
 
@@ -62,7 +64,7 @@ void CreateVbsPluginInTemp(const std::filesystem::path& Path,
                "45678912345678912345678912345678912345678912345678912345678912345aa\"\n";
 }
 
-void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
+void CreateComplicatedPluginInTemp(const std::filesystem::path &Path,
                                    std::string Name) {
     std::ofstream ofs(Path.u8string());
 
@@ -82,7 +84,7 @@ void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
         << "@echo " << SecondLine << "\n";
 }
 
-void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
+void CreatePluginInTemp(const std::filesystem::path &Path, int Timeout,
                         std::string Name, std::string_view code,
                         cma::provider::PluginType type) {
     std::ofstream ofs(Path.u8string());
@@ -100,14 +102,14 @@ void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     ofs << code << "\n";
 }
 
-void RemoveFolder(const std::filesystem::path& Path) {
+void RemoveFolder(const std::filesystem::path &Path) {
     namespace fs = std::filesystem;
     fs::path top = Path;
     fs::path dir_path;
 
     cma::PathVector directories;
     std::error_code ec;
-    for (auto& p : fs::recursive_directory_iterator(top, ec)) {
+    for (auto &p : fs::recursive_directory_iterator(top, ec)) {
         dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
@@ -126,19 +128,13 @@ void RemoveFolder(const std::filesystem::path& Path) {
 
 // because PluginMap is relative complicated(PluginEntry is not trivial)
 // we will use special method to insert artificial data in map
-void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
+void InsertEntry(PluginMap &pm, const std::string &name, int timeout,
                  bool async, int cache_age) {
-    namespace fs = std::filesystem;
-    fs::path p = name;
-    pm.emplace(std::make_pair(name, p));
+    pm.emplace(std::make_pair(name, fs::path{name}));
     auto it = pm.find(name);
-    if (async || cache_age) {
-        cma::cfg::PluginInfo e = {timeout, cache_age, 1};
-        it->second.applyConfigUnit(e, false);
-    } else {
-        cma::cfg::PluginInfo e = {timeout, 1};
-        it->second.applyConfigUnit(e, false);
-    }
+    cma::cfg::PluginInfo e{
+        timeout, async || cache_age ? cache_age : std::optional<int>{}, 1};
+    it->second.applyConfigUnit(e, false);
 }
 }  // namespace
 
@@ -187,7 +183,7 @@ TEST(PluginTest, TimeoutCalc) {
         PluginMap pm;
         InsertEntry(pm, "a1", 5, true, 0);
         {
-            auto& e = pm.at("a1");
+            auto &e = pm.at("a1");
             EXPECT_TRUE(e.defined());
             EXPECT_TRUE(e.async());
         }
@@ -208,14 +204,14 @@ TEST(PluginTest, TimeoutCalc) {
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
         {
-            auto& e = pm.at("a4");
+            auto &e = pm.at("a4");
             EXPECT_TRUE(e.defined());
             EXPECT_TRUE(e.async());
         }
 
         InsertEntry(pm, "a4", 100, false, 0);  // sync
         {
-            auto& e = pm.at("a4");
+            auto &e = pm.at("a4");
             EXPECT_TRUE(e.defined());
             EXPECT_FALSE(e.async());
         }
@@ -238,7 +234,7 @@ TEST(PluginTest, TimeoutCalc) {
 
         InsertEntry(pm, "a3", 25, false, 100);
         {
-            auto& e = pm.at("a3");
+            auto &e = pm.at("a3");
             EXPECT_TRUE(e.defined());
             EXPECT_TRUE(e.async());
         }
@@ -303,111 +299,99 @@ TEST(PluginTest, Extensions) {
     EXPECT_EQ(p, p_expected);
 }
 
+namespace {
+std::string MarkerReplacer(std::string_view marker) {
+    std::string s(marker);
+    return cfg::ReplacePredefinedMarkers(s + "\\");
+}
+}  // namespace
 TEST(PluginTest, ConfigFolders) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    cma::OnStart(cma::AppType::test);
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
-    {
-        std::string s(yml_var::kCore);
-        s += "\\";
-        auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
-    }
-
-    {
-        std::string s(yml_var::kBuiltinPlugins);
-        s += "\\";
-        auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
-    }
-
-    {
-        std::string s(yml_var::kUserPlugins);
-        s += "\\";
-        auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ToUtf8(GetUserPluginsDir()) + "\\");
-    }
-
-    {
-        std::string s(yml_var::kAgent);
-        s += "\\";
-        auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ToUtf8(GetUserDir()) + "\\");
-    }
-
-    {
-        std::string s(yml_var::kLocal);
-        s += "\\";
-        auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ToUtf8(GetLocalDir()) + "\\");
-    }
-
-    {
-        std::string s = "user\\";
-        auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, s);
-    }
+    EXPECT_EQ(MarkerReplacer(cfg::yml_var::kCore),
+              wtools::ToUtf8(cfg::GetSystemPluginsDir()) + "\\");
+    EXPECT_EQ(MarkerReplacer(cfg::yml_var::kBuiltinPlugins),
+              wtools::ToUtf8(cfg::GetSystemPluginsDir()) + "\\");
+    EXPECT_EQ(MarkerReplacer(cfg::yml_var::kUserPlugins),
+              wtools::ToUtf8(cfg::GetUserPluginsDir()) + "\\");
+    EXPECT_EQ(MarkerReplacer(cfg::yml_var::kAgent),
+              wtools::ToUtf8(cfg::GetUserDir()) + "\\");
+    EXPECT_EQ(MarkerReplacer(cfg::yml_var::kLocal),
+              wtools::ToUtf8(cfg::GetLocalDir()) + "\\");
+    EXPECT_EQ(MarkerReplacer("user"), "user\\");
 }
 
 namespace cfg {
-TEST(PluginTest, PluginInfoCheck) {
-    cma::cfg::PluginInfo e_empty;
-    EXPECT_EQ(e_empty.async(), false);
+TEST(PluginTest, PluginInfoEmpty) {
+    PluginInfo e_empty;
+    EXPECT_FALSE(e_empty.async());
     EXPECT_EQ(e_empty.timeout(), kDefaultPluginTimeout);
     EXPECT_EQ(e_empty.retry(), 0);
     EXPECT_FALSE(e_empty.defined());
     EXPECT_EQ(e_empty.cacheAge(), 0);
     EXPECT_TRUE(e_empty.user().empty());
     EXPECT_TRUE(e_empty.group().empty());
+}
 
-    cma::cfg::PluginInfo e(10, 2, 1);
+TEST(PluginTest, PluginInfoStandard) {
+    PluginInfo e(10, 2, 1);
     EXPECT_TRUE(e.defined());
-    EXPECT_EQ(e.async_, true);
-    EXPECT_EQ(e.timeout_, 10);
-    EXPECT_EQ(e.retry_, 1);
-    EXPECT_EQ(e.cache_age_, 2);
-
-    EXPECT_EQ(e.async(), true);
+    EXPECT_TRUE(e.async());
     EXPECT_EQ(e.timeout(), 10);
     EXPECT_EQ(e.retry(), 1);
     EXPECT_EQ(e.cacheAge(), 2);
-    EXPECT_TRUE(e_empty.user().empty());
-    EXPECT_TRUE(e_empty.group().empty());
+}
 
+TEST(PluginTest, PluginInfoExtend) {
+    PluginInfo e(10, 2, 1);
     e.extend("g", "u");
     EXPECT_EQ(e.user(), "u");
     EXPECT_EQ(e.group(), "g");
-    EXPECT_EQ(e.user_, "u");
-    EXPECT_EQ(e.group_, "g");
 }
 }  // namespace cfg
+
+namespace {
+void AssignGroupUser(PluginEntry &pe, std::string_view group,
+                     std::string_view user) {
+    cfg::PluginInfo e;
+    e.extend(group, user);
+    pe.applyConfigUnit(e, false);
+}
+}  // namespace
+
+TEST(PluginTest, ApplyGroupUser_Integration) {
+    auto group_name =
+        wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
+    cma::PluginEntry pe("c:\\a\\x.cmd");
+    auto get_usr = [ptr_pe = &pe]() -> auto { return ptr_pe->getUser().first; };
+    auto get_pwd = [ptr_pe = &pe]() -> auto {
+        return ptr_pe->getUser().second;
+    };
+    ASSERT_TRUE(get_usr().empty());
+    ASSERT_TRUE(get_pwd().empty());
+
+    AssignGroupUser(pe, {}, {});
+    ASSERT_TRUE(get_usr().empty());
+    ASSERT_TRUE(get_pwd().empty());
+
+    AssignGroupUser(pe, group_name, {});
+    ASSERT_TRUE(!get_usr().empty());
+    ASSERT_TRUE(!get_pwd().empty());
+
+    AssignGroupUser(pe, {}, {});
+    ASSERT_TRUE(get_usr().empty());
+    ASSERT_TRUE(get_pwd().empty());
+
+    AssignGroupUser(pe, group_name, "u p");
+    EXPECT_EQ(wtools::ToUtf8(get_usr()), "cmk_TST_"s + group_name);
+    EXPECT_TRUE(!get_pwd().empty());
+
+    AssignGroupUser(pe, {}, "u p");
+    EXPECT_EQ(get_usr(), L"u");
+    EXPECT_EQ(get_pwd(), L"p");
+}
 TEST(PluginTest, ApplyConfig) {
-    {
-        cma::PluginEntry pe("c:\\a\\x.cmd");
-        ASSERT_TRUE(pe.iu_.first.empty());
-        ASSERT_TRUE(pe.iu_.second.empty());
-        pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first.empty());
-        ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ = "Users";
-        pe.fillInternalUser();
-        ASSERT_TRUE(!pe.iu_.first.empty());
-        ASSERT_TRUE(!pe.iu_.second.empty());
-        pe.group_.clear();
-        pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first.empty());
-        ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ = "Users";
-        pe.user_ = "u p";
-        pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first == L"cmk_TST_Users");
-        ASSERT_TRUE(!pe.iu_.second.empty());
-        pe.group_.clear();
-        pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first == L"u");
-        ASSERT_TRUE(pe.iu_.second == L"p");
-    }
     cma::PluginEntry pe("c:\\a\\x.cmd");
     EXPECT_EQ(pe.failures(), 0);
     pe.failures_ = 2;
@@ -443,7 +427,7 @@ TEST(PluginTest, ApplyConfig) {
         pe.data_.resize(10);
         pe.failures_ = 5;
         EXPECT_EQ(pe.data().size(), 10);
-        cma::cfg::PluginInfo e = {10, 11};
+        cma::cfg::PluginInfo e{10, {}, 11};
         pe.applyConfigUnit(e, true);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), false);
@@ -455,7 +439,7 @@ TEST(PluginTest, ApplyConfig) {
     }
 }
 
-static void CreateFileInTemp(const std::filesystem::path& Path) {
+static void CreateFileInTemp(const std::filesystem::path &Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -469,7 +453,6 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
 // returns folder where
 static cma::PathVector GetFolderStructure() {
     using namespace cma::cfg;
-    namespace fs = std::filesystem;
     fs::path tmp = cma::cfg::GetTempDir();
     if (!fs::exists(tmp) || !fs::is_directory(tmp) ||
         tmp.u8string().find("\\tmp") == 0 ||
@@ -480,7 +463,7 @@ static cma::PathVector GetFolderStructure() {
         return {};
     }
     PathVector pv;
-    for (auto& folder : {"a", "b", "c"}) {
+    for (auto &folder : {"a", "b", "c"}) {
         auto dir = tmp / folder;
         pv.emplace_back(dir);
     }
@@ -489,8 +472,7 @@ static cma::PathVector GetFolderStructure() {
 
 static void MakeFolderStructure(cma::PathVector Paths) {
     using namespace cma::cfg;
-    namespace fs = std::filesystem;
-    for (auto& dir : Paths) {
+    for (auto &dir : Paths) {
         std::error_code ec;
         fs::create_directory(dir, ec);
         if (ec.value() != 0) {
@@ -510,49 +492,31 @@ static void MakeFolderStructure(cma::PathVector Paths) {
 
 static void RemoveFolderStructure(cma::PathVector Pv) {
     using namespace cma::cfg;
-    for (auto& folder : Pv) {
+    for (auto &folder : Pv) {
         RemoveFolder(folder);
     }
 }
 
-TEST(PluginTest, ExeUnitCtor) {
-    using namespace cma::cfg;
+TEST(PluginTest, ExeUnitSyncCtor) {
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, {}, 2, true);
+    EXPECT_EQ(e.async(), false);
+    EXPECT_EQ(e.retry(), 2);
+    EXPECT_EQ(e.timeout(), 1);
+    EXPECT_EQ(e.cacheAge(), 0);
+    EXPECT_EQ(e.run(), true);
+}
 
-    // valid
-    {
-        bool as = false;
-        int tout = 1;
-        int age = 0;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", tout, retr, true);
-        EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.retry(), retr);
-        EXPECT_EQ(e.timeout(), tout);
-        EXPECT_EQ(e.cacheAge(), age);
-        EXPECT_EQ(e.run(), true);
-    }
+TEST(PluginTest, ExeUnitAsyncCtor) {
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, 120, 2, true);
+    EXPECT_EQ(e.async(), true);
+    EXPECT_EQ(e.cacheAge(), 120);
+}
 
-    // valid async
-    {
-        bool as = true;
-        int tout = 1;
-        int age = 120;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", tout, age, retr, true);
-        EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.cacheAge(), age);
-    }
-
-    // valid async but low cache
-    {
-        bool as = true;
-        int tout = 1;
-        int age = cma::cfg::kMinimumCacheAge - 1;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", tout, age, retr, true);
-        EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
-    }
+TEST(PluginTest, ExeUnitAsyncCtorNotSoValid) {
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, cma::cfg::kMinimumCacheAge - 1, 2,
+                                 true);
+    EXPECT_EQ(e.async(), true);
+    EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
 }
 
 TEST(PluginTest, HackPlugin) {
@@ -663,27 +627,24 @@ TEST(PluginTest, HackPluginWithPiggyBack) {
                                   //
                                   ));
 
-    {
-        std::vector<char> out;
-        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
-        auto ret =
-            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
-        ASSERT_TRUE(ret);
-        std::string out_string(out.data(), out.size());
-        std::string exp_string(
-            //
-            "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
-            "<<<<a>>>>\n"
-            "aaaaa\r\n"
-            "<<<<a>>>>\n"
-            "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
-            "<<<<>>>>\n"
-            "<<<<>>>>\n"
-            "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
-            //
-        );
-        EXPECT_EQ(out_string, exp_string);
-    }
+    std::vector<char> out;
+    auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+    auto ret = cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
+    ASSERT_TRUE(ret);
+    std::string out_string(out.data(), out.size());
+    std::string exp_string(
+        //
+        "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
+        "<<<<a>>>>\n"
+        "aaaaa\r\n"
+        "<<<<a>>>>\n"
+        "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
+        "<<<<>>>>\n"
+        "<<<<>>>>\n"
+        "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
+        //
+    );
+    EXPECT_EQ(out_string, exp_string);
 }
 
 TEST(PluginTest, RemoveForbiddenNames) {
@@ -703,25 +664,20 @@ TEST(PluginTest, RemoveForbiddenNames) {
 TEST(PluginTest, FilesAndFoldersIntegration) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
     cma::OnStartTest();
     {
-        EXPECT_EQ(groups::localGroup.foldersCount(), 1);
-        EXPECT_EQ(groups::plugins.foldersCount(), 2);
         PathVector pv;
-        for (auto& folder : groups::plugins.folders()) {
+        for (auto &folder : groups::plugins.folders()) {
             pv.emplace_back(folder);
         }
         auto files = cma::GatherAllFiles(pv);
         if (files.size() < 10) {
-            auto f = groups::plugins.folders();
-            XLOG::l(XLOG::kStdio | XLOG::kInfo)(
-                "\n\nTEST IS SKIPPED> YOU HAVE NO PLUGINS {} {} {} {}\n\n\n ",
-                wtools::ToUtf8(f[0]), wtools::ToUtf8(f[1]),
-                wtools::ToUtf8(f[2]), wtools::ToUtf8(f[3]));
+            GTEST_SKIP() << "TEST IS SKIPPED> YOU HAVE NO PLUGINS";
             return;
         }
 
+        EXPECT_EQ(groups::localGroup.foldersCount(), 1);
+        EXPECT_EQ(groups::plugins.foldersCount(), 2);
         EXPECT_TRUE(files.size() > 20);
 
         auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
@@ -748,7 +704,7 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
     {
         EXPECT_EQ(groups::localGroup.foldersCount(), 1);
         PathVector pv;
-        for (auto& folder : groups::localGroup.folders()) {
+        for (auto &folder : groups::localGroup.folders()) {
             pv.emplace_back(folder);
         }
         auto files = cma::GatherAllFiles(pv);
@@ -862,187 +818,182 @@ static const cma::PathVector pv_short = {
 TEST(PluginTest, GeneratePluginEntry) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    cma::OnStart(cma::AppType::test);
+
     {
-        {
-            auto pv = FilterPathVector(pv_main, exe_units_base, false);
-            EXPECT_EQ(pv.size(), 3);
-            EXPECT_EQ(pv[0], pv_main[0]);
-            EXPECT_EQ(pv[1], pv_main[3]);
-            EXPECT_EQ(pv[2], pv_main[5]);
-        }
+        auto pv = FilterPathVector(pv_main, exe_units_base, false);
+        EXPECT_EQ(pv.size(), 3);
+        EXPECT_EQ(pv[0], pv_main[0]);
+        EXPECT_EQ(pv[1], pv_main[3]);
+        EXPECT_EQ(pv[2], pv_main[5]);
+    }
 
-        {
-            auto pv = FilterPathVector(pv_main, x2_sync, false);
-            EXPECT_EQ(pv.size(), 1);
-            EXPECT_EQ(pv[0], pv_main[0]);
-        }
+    {
+        auto pv = FilterPathVector(pv_main, x2_sync, false);
+        EXPECT_EQ(pv.size(), 1);
+        EXPECT_EQ(pv[0], pv_main[0]);
+    }
 
-        {
-            auto pv = FilterPathVector(pv_main, x4_all, false);
-            EXPECT_EQ(pv.size(),
-                      pv_main.size() - 2);  // two coms are excluded
-        }
+    {
+        auto pv = FilterPathVector(pv_main, x4_all, false);
+        EXPECT_EQ(pv.size(),
+                  pv_main.size() - 2);  // two coms are excluded
+    }
 
-        {
-            auto pv = FilterPathVector(pv_main, x4_all, true);
-            EXPECT_EQ(pv.size(), 0);  // nothing
-        }
+    {
+        auto pv = FilterPathVector(pv_main, x4_all, true);
+        EXPECT_EQ(pv.size(), 0);  // nothing
+    }
 
-        // Filter and Insert
-        {
-            PluginMap pm;
-            InsertInPluginMap(pm, {});
-            EXPECT_EQ(pm.size(), 0);
-
-            auto pv = FilterPathVector(pv_main, exe_units_base, false);
-            InsertInPluginMap(pm, pv);
-            EXPECT_EQ(pm.size(), pv.size());
-            for (auto& f : pv) {
-                EXPECT_FALSE(nullptr == GetEntrySafe(pm, f.u8string()));
-            }
-
-            InsertInPluginMap(pm, pv);  // no changes(the same)
-            EXPECT_EQ(pm.size(), pv.size());
-
-            pv.pop_back();
-            FilterPluginMap(pm, pv);
-            EXPECT_EQ(pm.size(), pv.size());
-
-            FilterPluginMap(pm, {});
-            EXPECT_EQ(pm.size(), 0);
-
-            InsertInPluginMap(pm, pv_main);
-            EXPECT_EQ(pm.size(), pv_main.size());
-            ApplyExeUnitToPluginMap(pm, exe_units_base, true);
-            {
-                int indexes[] = {0, 3, 5};
-                for (auto i : indexes) {
-                    auto e_5 = GetEntrySafe(pm, pv_main[i].u8string());
-                    ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
-                    EXPECT_FALSE(e_5->path().empty())
-                        << "bad at index " << i << "\n";
-                    EXPECT_EQ(e_5->local(), TRUE)
-                        << "bad at index " << i << "\n";
-                }
-            }
-            {
-                // bad files
-                int indexes[] = {1, 2, 4};
-                for (auto i : indexes) {
-                    auto e_5 = GetEntrySafe(pm, pv_main[i].u8string());
-                    ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
-                    EXPECT_TRUE(e_5->path().empty())
-                        << "bad at index " << i << "\n";
-                    EXPECT_EQ(e_5->local(), false)
-                        << "bad at index " << i << "\n";
-                }
-            }
-        }
-
+    // Filter and Insert
+    {
         PluginMap pm;
-        UpdatePluginMap(pm, false, pv_main, exe_units_base);
+        InsertInPluginMap(pm, {});
         EXPECT_EQ(pm.size(), 0);
 
-        UpdatePluginMap(pm, false, pv_main, exe_units_base, true);
+        auto pv = FilterPathVector(pv_main, exe_units_base, false);
+        InsertInPluginMap(pm, pv);
+        EXPECT_EQ(pm.size(), pv.size());
+        for (auto &f : pv) {
+            EXPECT_FALSE(nullptr == GetEntrySafe(pm, f.u8string()));
+        }
+
+        InsertInPluginMap(pm, pv);  // no changes(the same)
+        EXPECT_EQ(pm.size(), pv.size());
+
+        pv.pop_back();
+        FilterPluginMap(pm, pv);
+        EXPECT_EQ(pm.size(), pv.size());
+
+        FilterPluginMap(pm, {});
         EXPECT_EQ(pm.size(), 0);
-        UpdatePluginMap(pm, false, pv_main, exe_units_base, false);
-        EXPECT_EQ(pm.size(), 3);  // 1 ps1 and 2 cmd
 
-        auto e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
-        ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), 10);
-        EXPECT_EQ(e->cacheAge(), 0);
-        EXPECT_EQ(e->retry(), 5);
+        InsertInPluginMap(pm, pv_main);
+        EXPECT_EQ(pm.size(), pv_main.size());
+        ApplyExeUnitToPluginMap(pm, exe_units_base, true);
+        {
+            int indexes[] = {0, 3, 5};
+            for (auto i : indexes) {
+                auto e_5 = GetEntrySafe(pm, pv_main[i].u8string());
+                ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
+                EXPECT_FALSE(e_5->path().empty())
+                    << "bad at index " << i << "\n";
+                EXPECT_EQ(e_5->local(), TRUE) << "bad at index " << i << "\n";
+            }
+        }
+        {
+            // bad files
+            int indexes[] = {1, 2, 4};
+            for (auto i : indexes) {
+                auto e_5 = GetEntrySafe(pm, pv_main[i].u8string());
+                ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
+                EXPECT_TRUE(e_5->path().empty())
+                    << "bad at index " << i << "\n";
+                EXPECT_EQ(e_5->local(), false) << "bad at index " << i << "\n";
+            }
+        }
+    }
 
-        e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.cmd");
-        ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.cmd");
-        EXPECT_EQ(e->timeout(), 12);
-        EXPECT_EQ(e->cacheAge(), 500);
-        EXPECT_EQ(e->retry(), 3);
+    PluginMap pm;
+    UpdatePluginMap(pm, false, pv_main, exe_units_base);
+    EXPECT_EQ(pm.size(), 0);
 
-        e = GetEntrySafe(pm, "c:\\z\\x\\asd-d.cmd");
-        ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd-d.cmd");
-        EXPECT_EQ(e->timeout(), 12);
-        EXPECT_EQ(e->cacheAge(), 500);
-        EXPECT_EQ(e->retry(), 3);
+    UpdatePluginMap(pm, false, pv_main, exe_units_base, true);
+    EXPECT_EQ(pm.size(), 0);
+    UpdatePluginMap(pm, false, pv_main, exe_units_base, false);
+    EXPECT_EQ(pm.size(), 3);  // 1 ps1 and 2 cmd
 
-        // Update
-        UpdatePluginMap(pm, false, pv_main, x2_sync, false);
-        EXPECT_EQ(pm.size(), 1);
-        e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
+    auto e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), true);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
+    EXPECT_EQ(e->timeout(), 10);
+    EXPECT_EQ(e->cacheAge(), 0);
+    EXPECT_EQ(e->retry(), 5);
+
+    e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.cmd");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), true);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.cmd");
+    EXPECT_EQ(e->timeout(), 12);
+    EXPECT_EQ(e->cacheAge(), 500);
+    EXPECT_EQ(e->retry(), 3);
+
+    e = GetEntrySafe(pm, "c:\\z\\x\\asd-d.cmd");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), true);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd-d.cmd");
+    EXPECT_EQ(e->timeout(), 12);
+    EXPECT_EQ(e->cacheAge(), 500);
+    EXPECT_EQ(e->retry(), 3);
+
+    // Update
+    UpdatePluginMap(pm, false, pv_main, x2_sync, false);
+    EXPECT_EQ(pm.size(), 1);
+    e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), false);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
+    EXPECT_EQ(e->timeout(), 13);
+    EXPECT_EQ(e->cacheAge(), 0);
+    EXPECT_EQ(e->retry(), 9);
+
+    // Update, async+0
+    UpdatePluginMap(pm, false, pv_main, x2_async_0_cache_age, false);
+    EXPECT_EQ(pm.size(), 1);
+    e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), true);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
+    EXPECT_EQ(e->timeout(), 13);
+    EXPECT_EQ(e->cacheAge(), 0);
+    EXPECT_EQ(e->retry(), 9);
+
+    // Update, async+119
+    UpdatePluginMap(pm, false, pv_main, x2_async_low_cache_age, false);
+    EXPECT_EQ(pm.size(), 1);
+    e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), true);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
+    EXPECT_EQ(e->timeout(), 13);
+    EXPECT_EQ(e->cacheAge(), kMinimumCacheAge);
+    EXPECT_EQ(e->retry(), 9);
+
+    // Update
+    UpdatePluginMap(pm, false, pv_short, x3_cmd_with_group_user, false);
+    EXPECT_EQ(pm.size(), 1);
+    e = GetEntrySafe(pm, "c:\\z\\x\\asd-d.cmd");
+    ASSERT_NE(nullptr, e);
+    EXPECT_EQ(e->async(), true);
+    EXPECT_EQ(e->path(), "c:\\z\\x\\asd-d.cmd");
+    EXPECT_EQ(e->timeout(), 10);
+    EXPECT_EQ(e->cacheAge(), 0);
+    EXPECT_EQ(e->retry(), 5);
+    EXPECT_EQ(e->user(), "u");
+    EXPECT_EQ(e->group(), "g");
+
+    UpdatePluginMap(pm, false, pv_main, x4_all, false);
+    EXPECT_EQ(pm.size(), 4);
+
+    // two files are dropped
+    e = GetEntrySafe(pm, pv_main[3].u8string());
+    ASSERT_EQ(nullptr, e);
+    e = GetEntrySafe(pm, pv_main[5].u8string());
+    ASSERT_EQ(nullptr, e);
+
+    // four files a left
+    ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[0].u8string()));
+    ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[1].u8string()));
+    ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[2].u8string()));
+    ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[4].u8string()));
+    for (auto i : {0, 1, 2, 4}) {
+        e = GetEntrySafe(pm, pv_main[i].u8string());
         ASSERT_NE(nullptr, e);
         EXPECT_EQ(e->async(), false);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), 13);
+        EXPECT_EQ(e->path(), pv_main[i].u8string());
+        EXPECT_EQ(e->timeout(), cma::cfg::kDefaultPluginTimeout);
         EXPECT_EQ(e->cacheAge(), 0);
-        EXPECT_EQ(e->retry(), 9);
-
-        // Update, async+0
-        UpdatePluginMap(pm, false, pv_main, x2_async_0_cache_age, false);
-        EXPECT_EQ(pm.size(), 1);
-        e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
-        ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), 13);
-        EXPECT_EQ(e->cacheAge(), 0);
-        EXPECT_EQ(e->retry(), 9);
-
-        // Update, async+119
-        UpdatePluginMap(pm, false, pv_main, x2_async_low_cache_age, false);
-        EXPECT_EQ(pm.size(), 1);
-        e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
-        ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), 13);
-        EXPECT_EQ(e->cacheAge(), kMinimumCacheAge);
-        EXPECT_EQ(e->retry(), 9);
-
-        // Update
-        UpdatePluginMap(pm, false, pv_short, x3_cmd_with_group_user, false);
-        EXPECT_EQ(pm.size(), 1);
-        e = GetEntrySafe(pm, "c:\\z\\x\\asd-d.cmd");
-        ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
-        EXPECT_EQ(e->path(), "c:\\z\\x\\asd-d.cmd");
-        EXPECT_EQ(e->timeout(), 10);
-        EXPECT_EQ(e->cacheAge(), 0);
-        EXPECT_EQ(e->retry(), 5);
-        EXPECT_EQ(e->user(), "u");
-        EXPECT_EQ(e->group(), "g");
-
-        UpdatePluginMap(pm, false, pv_main, x4_all, false);
-        EXPECT_EQ(pm.size(), 4);
-
-        // two files are dropped
-        e = GetEntrySafe(pm, pv_main[3].u8string());
-        ASSERT_EQ(nullptr, e);
-        e = GetEntrySafe(pm, pv_main[5].u8string());
-        ASSERT_EQ(nullptr, e);
-
-        // four files a left
-        ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[0].u8string()));
-        ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[1].u8string()));
-        ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[2].u8string()));
-        ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[4].u8string()));
-        for (auto i : {0, 1, 2, 4}) {
-            e = GetEntrySafe(pm, pv_main[i].u8string());
-            ASSERT_NE(nullptr, e);
-            EXPECT_EQ(e->async(), false);
-            EXPECT_EQ(e->path(), pv_main[i].u8string());
-            EXPECT_EQ(e->timeout(), cma::cfg::kDefaultPluginTimeout);
-            EXPECT_EQ(e->cacheAge(), 0);
-            EXPECT_EQ(e->retry(), 0);
-        }
+        EXPECT_EQ(e->retry(), 0);
     }
 }
 
@@ -1131,7 +1082,7 @@ static const cma::PathVector many_files = {
 };
 
 TEST(PluginTest, CtorWithSource) {
-    for (const auto& e : many_exe_units) {
+    for (const auto &e : many_exe_units) {
         EXPECT_TRUE(e.source().IsMap());
         EXPECT_FALSE(e.sourceText().empty());
     }
@@ -1152,7 +1103,7 @@ TEST(PluginTest, ApplyEverything) {
         {
             int valid_entries[] = {0, 1, 3};
             int index = 0;
-            for (auto& entry : pm) {
+            for (auto &entry : pm) {
                 auto expected_index = valid_entries[index++];
                 auto end_path = entry.second.path();
                 auto expected_path = typical_files[expected_index];
@@ -1167,7 +1118,7 @@ TEST(PluginTest, ApplyEverything) {
         {
             int valid_entries[] = {2, 7};
             int index = 0;
-            for (auto& entry : pm) {
+            for (auto &entry : pm) {
                 auto expected_index = valid_entries[index++];
                 auto end_path = entry.second.path();
                 auto expected_path = typical_files[expected_index];
@@ -1186,7 +1137,7 @@ TEST(PluginTest, ApplyEverything) {
         {
             int valid_entries[] = {2, 7, 0, 1, 3};
             int index = 0;
-            for (auto& [name, unit] : pm) {
+            for (auto &[name, unit] : pm) {
                 auto expected_index = valid_entries[index++];
                 auto end_path = unit.path();
                 auto expected_path = typical_files[expected_index];
@@ -1211,7 +1162,7 @@ TEST(PluginTest, ApplyEverything) {
             {
                 int valid_entries[] = {0, 1, 3, 6};
                 int index = 0;
-                for (auto& [name, unit] : pm) {
+                for (auto &[name, unit] : pm) {
                     auto expected_index = valid_entries[index++];
                     auto end_path = unit.path();
                     auto expected_path = many_files[expected_index];
@@ -1228,8 +1179,6 @@ TEST(PluginTest, ApplyEverything) {
 }
 
 TEST(PluginTest, DuplicatedFileRemove) {
-    namespace fs = std::filesystem;
-    //
     {
         std::vector<fs::path> found_files = {
             "c:\\t\\A.exe", "c:\\r\\a.exe", "c:\\v\\x\\a.exe",
@@ -1252,7 +1201,7 @@ TEST(PluginTest, DuplicatedFileRemove) {
 TEST(PluginTest, DuplicatedUnitsRemove) {
     namespace fs = std::filesystem;
     UnitMap um;
-    const char* const paths[] = {
+    const char *const paths[] = {
         "c:\\t\\1b\\abC", "c:\\t\\2b\\xxx", "c:\\t\\3b\\abc", "c:\\t\\4b\\XXX",
         "c:\\t\\5b\\abc", "c:\\t\\6b\\abc", "c:\\t\\7b\\ccc", "c:\\t\\8b\\abc"};
 
@@ -1266,23 +1215,20 @@ TEST(PluginTest, DuplicatedUnitsRemove) {
     EXPECT_FALSE(um[paths[6]].pattern().empty());
 }
 
-TEST(PluginTest, SyncStartSimulationFuture_Long) {
+TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     std::vector<Plugins::ExeUnit> exe_units = {
-        //
-        {"*.cmd", false, 10, 0, 3, true},  //
-        {"*", true, 10, 0, 3, false},      //
+        {"*.cmd", 10, {}, 3, true},  //
+        {"*", 10, 0, 3, false},      //
     };
 
     fs::path temp_folder = cma::cfg::GetTempDir();
 
-    CreatePluginInTemp(temp_folder / "a.cmd", 5, "a");
+    CreatePluginInTemp(temp_folder / "a.cmd", 2, "a");
     CreatePluginInTemp(temp_folder / "b.cmd", 0, "b");
-    CreatePluginInTemp(temp_folder / "c.cmd", 3, "c");
+    CreatePluginInTemp(temp_folder / "c.cmd", 1, "c");
     CreatePluginInTemp(temp_folder / "d.cmd", 120, "d");
 
     PathVector vp = {
@@ -1299,7 +1245,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Long) {
         "<<<d>>>",  // not delivered!
     };
 
-    ON_OUT_OF_SCOPE(for (auto& f : vp) fs::remove(f););
+    ON_OUT_OF_SCOPE(for (auto &f : vp) fs::remove(f););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, vp, exe_units, false);
@@ -1311,35 +1257,35 @@ TEST(PluginTest, SyncStartSimulationFuture_Long) {
     int requested_count = 0;
 
     // sync part
-    for (auto& entry_pair : pm) {
-        auto& entry_name = entry_pair.first;
-        auto& entry = entry_pair.second;
+    for (auto &entry_pair : pm) {
+        auto &entry_name = entry_pair.first;
+        auto &entry = entry_pair.second;
 
         // C++ async black magic
         results.emplace_back(std::async(
             std::launch::async,  // first param
 
-            [](cma::PluginEntry* Entry) -> DataBlock {  // lambda
+            [](cma::PluginEntry *Entry) -> DataBlock {  // lambda
                 if (!Entry) return {};
-                return Entry->getResultsSync(Entry->path().wstring());
+                return Entry->getResultsSync(Entry->path().wstring(), 5);
             },  // lambda end
 
             &entry  // lambda parameter
             ));
         requested_count++;
     }
-    EXPECT_TRUE(requested_count == 4);
+    EXPECT_EQ(requested_count, 4);
 
     DataBlock out;
     int delivered_count = 0;
-    for (auto& r : results) {
+    for (auto &r : results) {
         auto result = r.get();
         if (result.size()) {
             ++delivered_count;
             cma::tools::AddVector(out, result);
         }
     }
-    EXPECT_TRUE(delivered_count == 3);
+    EXPECT_EQ(delivered_count, 3);
 
     int found_headers = 0;
     std::string_view str(out.data(), out.size());
@@ -1349,8 +1295,8 @@ TEST(PluginTest, SyncStartSimulationFuture_Long) {
     EXPECT_EQ(found_headers, 3);
 }
 
-static auto GenerateCachedHeader(const std::string& UsualHeader,
-                                 const cma::PluginEntry* Ready) {
+static auto GenerateCachedHeader(const std::string &UsualHeader,
+                                 const cma::PluginEntry *Ready) {
     std::vector<char> out;
     std::vector<char> in;
     cma::tools::AddVector(in, UsualHeader);
@@ -1365,7 +1311,7 @@ static auto GenerateCachedHeader(const std::string& UsualHeader,
     return std::string();
 }
 
-static auto ParsePluginOut(const std::vector<char>& Data) {
+static auto ParsePluginOut(const std::vector<char> &Data) {
     std::string out(Data.begin(), Data.end());
     auto table = cma::tools::SplitString(out, G_EndOfString);
     auto sz = table.size();
@@ -1407,8 +1353,8 @@ std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC = {
 
 struct PluginDesc {
     int timeout_;
-    const char* file_name_;
-    const char* section_name;
+    const char *file_name_;
+    const char *section_name;
 };
 
 using PluginDescVector = std::vector<PluginDesc>;
@@ -1419,14 +1365,14 @@ void PrepareStructures() {
     as_files.clear();
     struct PluginDesc {
         int timeout_;
-        const char* file_name_;
-        const char* section_name;
+        const char *file_name_;
+        const char *section_name;
     } plugin_desc_arr[2] = {
         {2, "async2.cmd", "async2"},
         {30, "async30.cmd", "async30"},
     };
 
-    for (auto& pd : plugin_desc_arr) {
+    for (auto &pd : plugin_desc_arr) {
         as_files.push_back(temp_folder / pd.file_name_);
         CreatePluginInTemp(as_files.back(), pd.timeout_, pd.section_name);
         as_vp.push_back(as_files.back());
@@ -1439,14 +1385,14 @@ void PrepareFastStructures() {
     as_files.clear();
     struct PluginDesc {
         int timeout_;
-        const char* file_name_;
-        const char* section_name;
+        const char *file_name_;
+        const char *section_name;
     } plugin_desc_arr[2] = {
         {2, "async2.cmd", "async2"},
         {3, "async3.cmd", "async3"},
     };
 
-    for (auto& pd : plugin_desc_arr) {
+    for (auto &pd : plugin_desc_arr) {
         as_files.push_back(temp_folder / pd.file_name_);
         CreatePluginInTemp(as_files.back(), pd.timeout_, pd.section_name);
         as_vp.push_back(as_files.back());
@@ -1456,11 +1402,11 @@ void PrepareFastStructures() {
 PluginDescVector async0_files = {{2, "async2.cmd", "async0"}};
 
 [[nodiscard]] PathVector PrepareFilesAndStructures(
-    const PluginDescVector& plugin_desc_arr, std::string_view code,
+    const PluginDescVector &plugin_desc_arr, std::string_view code,
     cma::provider::PluginType type) {
     std::filesystem::path temp_folder = cma::cfg::GetTempDir();
     PathVector pv;
-    for (auto& pd : plugin_desc_arr) {
+    for (auto &pd : plugin_desc_arr) {
         pv.emplace_back(temp_folder / pd.file_name_);
         CreatePluginInTemp(pv.back(), pd.timeout_, pd.section_name, code, type);
     }
@@ -1495,16 +1441,12 @@ TEST(PluginTest, RemoveDuplicatedPlugins) {
     EXPECT_TRUE(x.size() == 3);
 }
 
-TEST(PluginTest, AsyncStartSimulation_0) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
+TEST(PluginTest, AsyncStartSimulation_Integration) {
     cma::OnStart(cma::AppType::test);
     PrepareFastStructures();
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : as_vp) fs::remove(f, ec););
+    ON_OUT_OF_SCOPE(for (auto &f : as_vp) fs::remove(f, ec););
     {
         auto as_vp_0 = as_vp[0].u8string();
         auto as_vp_1 = as_vp[1].u8string();
@@ -1531,9 +1473,9 @@ TEST(PluginTest, AsyncStartSimulation_0) {
     UpdatePluginMap(pm, false, as_vp, exe_units_async_0, false);
 
     // async to sync part
-    for (auto& entry_pair : pm) {
-        auto& entry_name = entry_pair.first;
-        auto& entry = entry_pair.second;
+    for (auto &entry_pair : pm) {
+        auto &entry_name = entry_pair.first;
+        auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -1545,24 +1487,93 @@ TEST(PluginTest, AsyncStartSimulation_0) {
     }
 }
 
+class PluginExecuteFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        files_ = prepareFilesAndStructures(plugins_, R"(@echo xxx&& exit 0)");
+        UpdatePluginMap(pm_, false, files_, exes_, true);
+        for (const auto &f : files_) {
+            auto ready = GetEntrySafe(pm_, f.u8string());
+            ready->getResultsAsync(true);
+        }
+    }
+    void TearDown() override {}
+    PluginMap pm_;
+    PathVector files_;
+
+    bool waitForAllProcesses(std::chrono::milliseconds) {
+        constexpr std::chrono::milliseconds wait_max{5000ms};
+        std::chrono::milliseconds waiting{0ms};
+        for (const auto &f : files_) {
+            auto ready = GetEntrySafe(pm_, f.u8string());
+            while (ready->running()) {
+                std::this_thread::sleep_for(50ms);
+                waiting += 50ms;
+                if (waiting > wait_max) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+private:
+    [[nodiscard]] PathVector prepareFilesAndStructures(
+        const PluginDescVector &plugin_desc_arr, std::string_view code) {
+        fs::path temp_folder =
+            tst::GetTempDir() /
+            ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        fs::create_directories(temp_folder);
+        PathVector pv;
+        for (auto &pd : plugin_desc_arr) {
+            pv.emplace_back(temp_folder / pd.file_name_);
+            std::ofstream ofs(pv.back().u8string());
+            ofs << code << "\n";
+        }
+        return pv;
+    }
+    inline static PluginDescVector plugins_{{1, "async_1.cmd", "async"}};
+
+    inline static std::vector<cma::cfg::Plugins::ExeUnit> exes_{
+        {"*.cmd",
+         "async: yes\ntimeout: 10\ncache_age: 120\nretry_count: 0\nrun: yes\n"},
+        {"*", "run: no"},
+    };
+    PathVector pv_;
+};
+
+TEST_F(PluginExecuteFixture, AsyncPluginSingle) {
+    ASSERT_TRUE(waitForAllProcesses(2000ms));
+    // async part should provide nothing
+    for (const auto &f : files_) {
+        auto ready = GetEntrySafe(pm_, f.u8string());
+        ASSERT_NE(nullptr, ready);
+
+        auto accu = ready->getResultsAsync(false);
+        auto a = std::string(accu.begin(), accu.end());
+        ASSERT_TRUE(!a.empty());
+
+        auto base_table = tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 1);
+        EXPECT_EQ(base_table[0], "xxx");
+    }
+}
 TEST(PluginTest, AsyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     PrepareStructures();
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : as_vp) fs::remove(f, ec););
+    ON_OUT_OF_SCOPE(for (auto &f : as_vp) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, as_vp, exe_units_async_121, false);
 
     // async part
-    for (auto& entry_pair : pm) {
-        auto& entry_name = entry_pair.first;
-        auto& entry = entry_pair.second;
+    for (auto &entry_pair : pm) {
+        auto &entry_name = entry_pair.first;
+        auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -1762,14 +1773,19 @@ struct TestDateTime {
     uint32_t msec = 0;
 };
 
-TestDateTime StringToTime(const std::string& text) {
+TestDateTime StringToTime(const std::string &text) {
     TestDateTime tdt;
 
     auto table = cma::tools::SplitString(text, ":");
     if (table.size() != 3) return tdt;
 
     auto sec_table = cma::tools::SplitString(table[2], ".");
-    if (sec_table.size() != 2) return tdt;
+    if (sec_table.size() != 2) {
+        sec_table = cma::tools::SplitString(table[2], ",");
+    }
+    if (sec_table.size() != 2) {
+        return tdt;
+    }
 
     tdt.hour = std::atoi(table[0].c_str());
     tdt.min = std::atoi(table[1].c_str());
@@ -1819,25 +1835,23 @@ std::string TestConvertToString(std::vector<char> accu) {
     return str;
 }
 
-TEST(PluginTest, Async0DataPickup) {
+TEST(PluginTest, AsyncDataPickup_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     auto files = PrepareFilesAndStructures(async0_files, R"(echo %time%)",
                                            provider::PluginType::normal);
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
+    ON_OUT_OF_SCOPE(for (auto &f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, files, exe_units_async_0, false);
 
     // async part should provide nothing
-    for (auto& entry_pair : pm) {
-        auto& name = entry_pair.first;
-        auto& entry = entry_pair.second;
+    for (auto &entry_pair : pm) {
+        auto &name = entry_pair.first;
+        auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -1912,7 +1926,7 @@ std::vector<cma::cfg::Plugins::ExeUnit> local_units_sync = {
     // clang-format on
 };
 
-static std::pair<uint64_t, uint64_t> ParseCached(const std::string& data) {
+static std::pair<uint64_t, uint64_t> ParseCached(const std::string &data) {
     // parse this string:
     //                  "cached(123456,1200) text anything here"
     // to get those two fields:
@@ -1924,7 +1938,7 @@ static std::pair<uint64_t, uint64_t> ParseCached(const std::string& data) {
         auto cache_age = std::regex_replace(
             data, pattern, "$2", std::regex_constants::format_no_copy);
         return {std::stoull(time_now), std::stoull(cache_age)};
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::SendStringToStdio(
             std::string("Exception during tests: ") + e.what(),
             XLOG::Colors::red);
@@ -1938,11 +1952,9 @@ PluginDescVector local_files_async = {{1, "local0.cmd", "local0"},
 PluginDescVector local_files_sync = {{1, "local0_s.cmd", "local0_s"},
                                      {1, "local1_s.cmd", "local1_s"}};
 
-TEST(PluginTest, AsyncLocal) {
+TEST(PluginTest, AsyncLocal_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     auto files = PrepareFilesAndStructures(local_files_async,
                                            R"(echo 1 name %time%)"
@@ -1951,15 +1963,15 @@ TEST(PluginTest, AsyncLocal) {
                                            provider::PluginType::local);
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
+    ON_OUT_OF_SCOPE(for (auto &f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, true, files, local_units_async, false);
 
     // async part should provide nothing
-    for (auto& entry_pair : pm) {
-        auto& name = entry_pair.first;
-        auto& entry = entry_pair.second;
+    for (auto &entry_pair : pm) {
+        auto &name = entry_pair.first;
+        auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -1969,7 +1981,7 @@ TEST(PluginTest, AsyncLocal) {
     }
 
     cma::TestDateTime tdt[2];
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         auto ready = GetEntrySafe(pm, f.u8string());
         ASSERT_NE(nullptr, ready);
 
@@ -1987,7 +1999,7 @@ TEST(PluginTest, AsyncLocal) {
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);
         int i = 0;
-        for (auto& bt : base_table) {
+        for (auto &bt : base_table) {
             auto table = cma::tools::SplitString(bt, " ", 1);
 
             ASSERT_TRUE(table.size() == 2);
@@ -2001,14 +2013,14 @@ TEST(PluginTest, AsyncLocal) {
             i++;
         }
     }
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         // this is a bit artificial
         auto ready = GetEntrySafe(pm, f.u8string());
         ASSERT_NE(nullptr, ready);
         ready->resetData();
     }
 
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         // this is a bit artificial
         auto ready = GetEntrySafe(pm, f.u8string());
         ASSERT_NE(nullptr, ready);
@@ -2026,7 +2038,7 @@ TEST(PluginTest, AsyncLocal) {
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);
         int i = 0;
-        for (auto& bt : base_table) {
+        for (auto &bt : base_table) {
             auto table = cma::tools::SplitString(bt, " ", 1);
 
             ASSERT_TRUE(table.size() == 2);
@@ -2043,11 +2055,9 @@ TEST(PluginTest, AsyncLocal) {
     }
 }  // namespace cma
 
-TEST(PluginTest, SyncLocal) {
+TEST(PluginTest, SyncLocal_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     auto files = PrepareFilesAndStructures(local_files_sync,
                                            R"(echo 1 name %time%)"
@@ -2056,14 +2066,14 @@ TEST(PluginTest, SyncLocal) {
                                            provider::PluginType::local);
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
+    ON_OUT_OF_SCOPE(for (auto &f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, true, files, local_units_sync, false);
 
     // async part should provide nothing
     cma::TestDateTime tdt[2];
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         auto ready = GetEntrySafe(pm, f.u8string());
         ASSERT_NE(nullptr, ready);
 
@@ -2077,7 +2087,7 @@ TEST(PluginTest, SyncLocal) {
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);
         int i = 0;
-        for (auto& bt : base_table) {
+        for (auto &bt : base_table) {
             auto table = cma::tools::SplitString(bt, " ", 2);
 
             ASSERT_TRUE(table.size() == 3);
@@ -2089,12 +2099,12 @@ TEST(PluginTest, SyncLocal) {
     }
 
     // this is a bit artificial
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         auto ready = GetEntrySafe(pm, f.u8string());
         ready->resetData();
     }
 
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         auto ready = GetEntrySafe(pm, f.u8string());
         auto accu = ready->getResultsSync(L"");
 
@@ -2105,7 +2115,7 @@ TEST(PluginTest, SyncLocal) {
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);
         int i = 0;
-        for (auto& bt : base_table) {
+        for (auto &bt : base_table) {
             auto table = cma::tools::SplitString(bt, " ", 2);
 
             auto tdt_2 = StringToTime(table[2]);
@@ -2123,32 +2133,31 @@ PluginDescVector plugins_file_group = {{1, "local0_s.cmd", "local0_s"}};
 
 std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
     //       Async  Timeout CacheAge              Retry  Run
-    // clang-format off
     {"*.cmd",
-     "async: no\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\ngroup: Users\n"},
-    {"*",     "run: no"},
-    // clang-format on
+     fmt::format(
+         "async: no\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\ngroup: {}\n",
+         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup)))},
+    {"*", "run: no"},
 };
 
 // Check that plugin is started from the valid user in group
-TEST(PluginTest, SyncPluginsGroup) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
-    cma::OnStart(cma::AppType::test);
+TEST(PluginTest, SyncPluginsGroupIntegration) {
+    auto test_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(test_fs->loadFactoryConfig());
+    test_fs->allowUserAccess();
     auto files = PrepareFilesAndStructures(plugins_file_group,
                                            R"(@echo 2 name %username%)",
                                            provider::PluginType::normal);
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, true, files, plugins_file_group_param, false);
+    auto group_name =
+        wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
 
     // async part should provide nothing
-    for (const auto& f : files) {
+    for (const auto &f : files) {
         auto ready = GetEntrySafe(pm, f.u8string());
         ASSERT_NE(nullptr, ready);
 
@@ -2161,15 +2170,13 @@ TEST(PluginTest, SyncPluginsGroup) {
 
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);
-        ASSERT_TRUE(base_table[1] == "2 name cmk_TST_Users");
+        EXPECT_EQ(base_table[1], "2 name cmk_TST_"s + group_name);
     }
 }
 
 TEST(PluginTest, EmptyPlugins) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
@@ -2271,8 +2278,6 @@ TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
 TEST(PluginTest, SyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     std::vector<Plugins::ExeUnit> exe_units = {
         //
@@ -2302,7 +2307,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
         "<<<d>>>",  //
     };
 
-    ON_OUT_OF_SCOPE(for (auto& f : vp) fs::remove(f););
+    ON_OUT_OF_SCOPE(for (auto &f : vp) fs::remove(f););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, vp, exe_units, false);
@@ -2314,7 +2319,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
 
         UpdatePluginMap(pm_1, false, vp_1, exe_units, false);
         auto f = pm_1.begin();
-        auto& entry = f->second;
+        auto &entry = f->second;
 
         for (int i = 0; i < entry.retry(); ++i) {
             auto accu = entry.getResultsSync(L"id", 0);
@@ -2330,9 +2335,9 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     }
 
     // sync part
-    for (auto& entry_pair : pm) {
-        auto& entry_name = entry_pair.first;
-        auto& entry = entry_pair.second;
+    for (auto &entry_pair : pm) {
+        auto &entry_name = entry_pair.first;
+        auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -2372,16 +2377,15 @@ TEST(CmaMain, Config) {
     EXPECT_EQ(TheMiniBox::StartMode::job, GetStartMode("abc.exe"));
     std::filesystem::path path = ".";
 
-    EXPECT_EQ(TheMiniBox::StartMode::updater,
+    EXPECT_EQ(TheMiniBox::StartMode::detached,
               GetStartMode(path / cma::cfg::files::kAgentUpdaterPython));
     auto str = (path / cma::cfg::files::kAgentUpdaterPython).wstring();
     cma::tools::WideUpper(str);
 
-    EXPECT_EQ(TheMiniBox::StartMode::updater, GetStartMode(str));
+    EXPECT_EQ(TheMiniBox::StartMode::detached, GetStartMode(str));
 }
 
 TEST(CmaMain, MiniBoxStartMode) {
-    namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     auto [source, target] = tst::CreateInOut();
     auto path = target / "a.bat";
@@ -2389,7 +2393,7 @@ TEST(CmaMain, MiniBoxStartMode) {
     CreatePluginInTemp(path, 0, "aaa");
 
     for (auto mode :
-         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::updater}) {
+         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::detached}) {
         TheMiniBox mb;
 
         auto started = mb.startStd(L"x", path, mode);
@@ -2401,7 +2405,7 @@ TEST(CmaMain, MiniBoxStartMode) {
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
         mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char>& Data) {
+                              uint32_t Code, const std::vector<char> &Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
 
             cma::tools::AddVector(accu, data);
@@ -2412,7 +2416,6 @@ TEST(CmaMain, MiniBoxStartMode) {
 }
 
 TEST(CmaMain, MiniBoxStartModeDeep) {
-    namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
     auto [source, target] = tst::CreateInOut();
@@ -2433,7 +2436,7 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
         mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char>& Data) {
+                              uint32_t Code, const std::vector<char> &Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
 
             cma::tools::AddVector(accu, data);
@@ -2444,7 +2447,7 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
     }
 
     // this code is for testing vbs scripts, not usable
-    if (1) {
+    {
         auto file = target / "a.vbs";
         CreateVbsPluginInTemp(file, "aaa");
         auto exec = ConstructCommandToExec(file);
@@ -2459,7 +2462,7 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
         mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char>& Data) {
+                              uint32_t Code, const std::vector<char> &Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
 
             cma::tools::AddVector(accu, data);
@@ -2482,7 +2485,7 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         EXPECT_FALSE(success);
         // we have probably data, try to get and and store
         mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char>& Data) {
+                              uint32_t Code, const std::vector<char> &Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
 
             cma::tools::AddVector(accu, data);
@@ -2491,70 +2494,13 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         EXPECT_TRUE(accu.size() < 200);  // 200 is from complicated plugin
     }
 }
-#if 0
-static std::string s_user_config =
-    "global:\n"
-    "  enabled: true\n"
-    "  async_script_execution: parallel\n"
-    "  encrypted: yes\n"
-    "  realtime:\n"
-    "    encrypted: yes\n"
-    "  passphrase: XXXXXXXXXX\n"
-    "  port: 6556\n"
-    "local:\n"
-    "  enabled: true\n"
-    "  execution:\n"
-    "    - pattern: \"*\"\n"
-    "      async: yes\n"
-    "plugins:\n"
-    "  enabled: true\n"
-    "  execution:\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\*\n"
-    "      async: yes\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\mssql.vbs\n"
-    "      retry_count: 3\n"
-    "      timeout: 45\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\mk_mysql.vbs\n"
-    "      retry_count: 1\n"
-    "      timeout: 45\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\msexch_database.ps1\n"
-    "      retry_count: 1\n"
-    "      timeout: 120\n";
 
-TEST(PluginTest, CheckRules) {
-    namespace fs = std::filesystem;
-
-    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
-    tst::SafeCleanTmpxDir();
-    {
-        fs::path root = tst::very_temp;
-        std::error_code ec;
-        fs::create_directory(root, ec);
-        tst::CreateTextFile(root / cma::cfg::files::kDefaultMainConfig,
-                           s_user_config);
-        cma::tools::win::WithEnv we(std::wstring(kTemporaryRoot),
-                                    root.wstring());
-        cma::OnStart(AppType::exe);
-        EXPECT_TRUE(false);
-    }
-}
-#endif
-TEST(PluginTest, DebugInit) {
-    std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC_local = {
-        //       Async  Timeout CacheAge              Retry  Run
-        // clang-format off
-    {"*.cmd", false, 10,     0, 3,     true},
-    {"*",     false, 10,     0, 3,     false},
-        // clang-format on
-    };
-    EXPECT_EQ(0, exe_units_valid_SYNC_local[0].cacheAge());
-    EXPECT_FALSE(exe_units_valid_SYNC_local[0].async());
-}
-
-static std::string MakeHeader(std::string_view left, std::string_view rght,
-                              std::string_view name) {
+namespace {
+std::string MakeHeader(std::string_view left, std::string_view rght,
+                       std::string_view name) {
     return std::string(left) + name.data() + rght.data();
 }
+}  // namespace
 
 TEST(PluginTest, HackingPiggyBack) {
     using namespace cma::section;
@@ -2563,7 +2509,7 @@ TEST(PluginTest, HackingPiggyBack) {
         EXPECT_EQ(kFooter4Right, ">>>>");
     }
 
-    const std::string_view name = "Name";
+    constexpr std::string_view name{"Name"};
 
     {
         const auto normal = MakeHeader(kLeftBracket, kRightBracket, name);
@@ -2613,23 +2559,23 @@ TEST(PluginTest, HackingPiggyBack) {
 }
 
 TEST(PluginTest, Hacking) {
-    using namespace cma::section;
-
     {
-        EXPECT_EQ(kFooter4Left, "<<<<");
-        EXPECT_EQ(kFooter4Right, ">>>>");
+        EXPECT_EQ(section::kFooter4Left, "<<<<");
+        EXPECT_EQ(section::kFooter4Right, ">>>>");
     }
 
     const std::string_view name = "Name";
     const std::string cached_info = ":cached(12344545, 600)";
 
-    const auto normal = MakeHeader(kLeftBracket, kRightBracket, name);
+    const auto normal =
+        MakeHeader(section::kLeftBracket, section::kRightBracket, name);
 
     const auto normal_empty =
-        MakeHeader(cma::section::kLeftBracket, kRightBracket, "");
+        MakeHeader(section::kLeftBracket, section::kRightBracket, "");
 
-    const auto normal_cached = MakeHeader(kLeftBracket, kRightBracket,
-                                          std::string(name) + cached_info);
+    const auto normal_cached =
+        MakeHeader(section::kLeftBracket, section::kRightBracket,
+                   std::string(name) + cached_info);
     {
         auto a = normal;
         auto success = cma::TryToHackStringWithCachedInfo(a, cached_info);
@@ -2641,10 +2587,11 @@ TEST(PluginTest, Hacking) {
         auto x = normal_empty;
         auto success = cma::TryToHackStringWithCachedInfo(x, cached_info);
         EXPECT_TRUE(success);
-        EXPECT_EQ(x, MakeHeader(kLeftBracket, kRightBracket, cached_info));
+        EXPECT_EQ(x, MakeHeader(section::kLeftBracket, section::kRightBracket,
+                                cached_info));
 
         std::string arr[] = {"<<a>>>", "<<<a>>", "<<>>>", "<<<", "", ">>>"};
-        for (auto& a : arr)
+        for (auto &a : arr)
             EXPECT_FALSE(cma::TryToHackStringWithCachedInfo(a, cached_info));
     }
 }
@@ -2654,15 +2601,11 @@ TEST(PluginTest, Hacking) {
 namespace cma::provider {
 
 // this test is primitive and check only reset of cmdline to empty string
-// can be tested only with intergration tests
+// can be tested only with integration tests
 TEST(PluginTest, ModulesCmdLine) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    namespace fs = std::filesystem;
-
     auto test_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
-    std::vector<Plugins::ExeUnit> exe_units = {
+    std::vector<cfg::Plugins::ExeUnit> exe_units = {
         //
         {"*.cmd",
          "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
@@ -2684,54 +2627,71 @@ TEST(PluginTest, ModulesCmdLine) {
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, vp, exe_units, false);
     ASSERT_EQ(pm.size(), 2);
-    for (auto& [name, entry] : pm) {
+    for (auto &[name, entry] : pm) {
         EXPECT_TRUE(entry.cmdLine().empty());
         entry.setCmdLine(L"111");
     }
     cma::srv::ServiceProcessor sp;
-    auto& mc = sp.getModuleCommander();
+    auto &mc = sp.getModuleCommander();
     mc.LoadDefault();
     ASSERT_TRUE(mc.isModuleScript("this.py"))
         << "we should have configured python module";
 
     PluginsProvider::UpdatePluginMapCmdLine(pm, &sp);
 
-    for (auto& [name, entry] : pm) {
+    for (auto &[name, entry] : pm) {
         EXPECT_TRUE(entry.cmdLine().empty());
     }
 }
-TEST(PluginTest, AllowedExtensions) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    namespace fs = std::filesystem;
 
-    auto temp_fs{tst::TempCfgFs::Create()};
-    auto yaml = cma::cfg::GetLoadedConfig();
-    yaml = YAML::Load(
-        "global:\n"
-        "  enabled: yes\n"
-        "  execute: ['x', 'y']\n"
-        "modules:\n"
-        "  enabled: yes\n"
-        "  table:\n"
-        "    - name: aaaa\n"
-        "      exts: ['.a.x', 'b']\n"
-        "      exec: zzz\n"
+namespace {
+constexpr std::string_view cfg_with_extension{
+    "global:\n"
+    "  enabled: yes\n"
+    "  execute: ['x', 'y']\n"};
+constexpr std::string_view cfg_with_module{
+    "modules:\n"
+    "  enabled: yes\n"
+    "  table:\n"
+    "    - name: aaaa\n"
+    "      exts: ['.a.x', 'b']\n"
+    "      exec: zzz\n"};
 
-    );
+}  // namespace
 
-    cma::srv::ServiceProcessor sp;
-    auto& mc = sp.getModuleCommander();
-    mc.LoadDefault();
-    PluginsProvider pp;
-    pp.registerOwner(&sp);
-    auto exts = pp.gatherAllowedExtensions();
-    std::vector<std::string> expected = {"a.x", "b", "x", "y"};
-    EXPECT_EQ(exts, expected);
+class PluginTestFixture : public ::testing::Test {
+public:
+    void SetUp() override {}
+    void TearDown() override {}
 
-    PluginsProvider pp2;
-    exts = pp2.gatherAllowedExtensions();
-    expected = {"x", "y"};
-    EXPECT_EQ(exts, expected);
+    void loadContent(std::string_view content) {
+        ASSERT_TRUE(temp_fs_->loadContent(content));
+    }
+
+    void registerModule() {
+        sp_ = std::make_unique<srv::ServiceProcessor>();
+        auto &mc = sp_->getModuleCommander();
+        mc.LoadDefault();
+
+        pp_.registerOwner(sp_.get());
+    }
+
+    tst::TempCfgFs::ptr temp_fs_{tst::TempCfgFs::CreateNoIo()};
+    PluginsProvider pp_;
+    std::unique_ptr<srv::ServiceProcessor> sp_;
+};
+TEST_F(PluginTestFixture, AllowedExtensionsBase) {
+    loadContent(cfg_with_extension);
+
+    std::vector<std::string> expected{"x", "y"};
+    EXPECT_EQ(pp_.gatherAllowedExtensions(), expected);
+}
+
+TEST_F(PluginTestFixture, AllowedExtensionsModule) {
+    loadContent(std::string(cfg_with_extension).append(cfg_with_module));
+
+    registerModule();
+    std::vector<std::string> expected{"a.x", "b", "x", "y"};
+    EXPECT_EQ(pp_.gatherAllowedExtensions(), expected);
 }
 }  // namespace cma::provider

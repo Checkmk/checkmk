@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_wafv2_limits_default_levels'] = {
-    'web_acls': (None, 80.0, 90.0),
-    'rule_groups': (None, 80.0, 90.0),
-    'ip_sets': (None, 80.0, 90.0),
-    'regex_pattern_sets': (None, 80.0, 90.0),
-    'web_acl_capacity_units': (None, 80.0, 90.0),
+
+factory_settings["aws_wafv2_limits_default_levels"] = {
+    "web_acls": (None, 80.0, 90.0),
+    "rule_groups": (None, 80.0, 90.0),
+    "ip_sets": (None, 80.0, 90.0),
+    "regex_pattern_sets": (None, 80.0, 90.0),
+    "web_acl_capacity_units": (None, 80.0, 90.0),
 }
 
 
@@ -23,12 +24,12 @@ def check_aws_wafv2_limits(item, params, region_data):
     return check_aws_limits("wafv2", params, region_data)
 
 
-check_info['aws_wafv2_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_wafv2_limits,
-    'service_description': 'AWS/WAFV2 Limits %s',
-    'group': 'aws_wafv2_limits',
-    'default_levels_variable': 'aws_wafv2_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_wafv2_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_wafv2_limits,
+    "service_description": "AWS/WAFV2 Limits %s",
+    "group": "aws_wafv2_limits",
+    "default_levels_variable": "aws_wafv2_limits_default_levels",
+    "has_perfdata": True,
 }

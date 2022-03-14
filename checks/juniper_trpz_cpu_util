@@ -58,5 +58,6 @@ check_info["juniper_trpz_cpu_util"] = {
             1,  # trpzSysCpuInstantLoad
             2,  # trpzSysCpuLastMinuteLoad
             3,  # trpzSysCpuLast5MinutesLoad
-        ])
+        ],
+    ),
 }

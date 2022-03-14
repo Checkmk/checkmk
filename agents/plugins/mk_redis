@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380
@@ -57,16 +57,16 @@ redis_args() {
     fi
 
     if [[ "${!PORT}" == "unix-socket" ]]; then
-        REDIS_ARGS="-s ${!HOST}"
+        REDIS_ARGS=("-s" "${!HOST}")
     else
-        REDIS_ARGS="-h ${!HOST} -p ${!PORT}"
+        REDIS_ARGS=("-h" "${!HOST}" "-p" "${!PORT}")
     fi
 
     if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_ARGS+=" -a ${!PASSWORD}"
+        REDIS_ARGS+=("-a" "${!PASSWORD}")
     fi
 
-    REDIS_ARGS+=" info"
+    REDIS_ARGS+=("info")
 }
 
 load_config
@@ -90,7 +90,7 @@ if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
             declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
 
             # append instance to array
-            REDIS_INSTANCES+=($REDIS_NAME)
+            REDIS_INSTANCES+=("${REDIS_NAME}")
         done
     done
 fi
@@ -103,11 +103,11 @@ else
 fi
 
 for INSTANCE in ${REDIS_INSTANCES[*]}; do
-    redis_args $INSTANCE
+    redis_args "${INSTANCE}"
     # print server section
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
-    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS
+    $WAITMAX_CMD 3 "${REDIS_CLI_CMD}" "${REDIS_ARGS[@]}" || true
     echo
 done

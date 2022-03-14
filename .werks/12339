@@ -1,0 +1,17 @@
+Title: REST API folder_config host_config sub resource
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615327901
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously the host_config sub-resource on folder_config which
+take the form of /objects/folder_config/~folder_name/collections/host_config
+always returned a 500 Internal Server Error. This is now fixed,
+and the endpoint behaves according to the documentation.
+
+No further actions are neccessary.

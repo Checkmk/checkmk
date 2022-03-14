@@ -1,0 +1,15 @@
+Title: Translation of custom localizable texts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1630488769
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Texts with support for custom localizations would not
+get translated when no custom localization was available.
+
+Now the text is translated to the current selected language if
+no custom localization is found.

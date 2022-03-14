@@ -1,7 +1,7 @@
 title: HP Proliant Servers: FANs
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
@@ -15,5 +15,5 @@ description:
 item:
  The index of the fan followed by th label of the fan in brackets
 
-inventory:
+discovery:
  One service is created for each FAN sensor.

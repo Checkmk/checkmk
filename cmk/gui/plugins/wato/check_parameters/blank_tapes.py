@@ -5,22 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Integer, Tuple
 
 
 def _parameter_valuespec_blank_tapes():
-    return Tuple(elements=[
-        Integer(title=_("Warning below"), default_value=5),
-        Integer(title=_("Critical below"), default_value=1),
-    ],)
+    return Tuple(
+        elements=[
+            Integer(title=_("Warning below"), default_value=5),
+            Integer(title=_("Critical below"), default_value=1),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -29,4 +28,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         parameter_valuespec=_parameter_valuespec_blank_tapes,
         title=lambda: _("DIVA CSM: remaining blank tapes"),
-    ))
+    )
+)

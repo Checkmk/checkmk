@@ -1,0 +1,20 @@
+Title: REST API: convert known host attributes to well defined structure
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1622623227
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+Previously the outbound structure of host and folder attributes was not defined. The internal
+structure of the values were directly passed through. This was confusing because the inbound
+structure of these attributes was already defined, leading to 2 distinct structures of the same
+thing.
+
+This is no longer the case. This werk introduces documentation and validation/conversion of outbound
+host and folder attributes.
+
+Some attribute values may now be different due to this change. Please check your scripts.

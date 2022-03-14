@@ -4,57 +4,73 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from typing import Iterator
 
-from cmk.gui.globals import html
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+
 import cmk.gui.main
-import cmk.gui.config
+from cmk.gui.globals import config, html, local, user
+
+RequestContextFixture = Iterator[None]
 
 
-def test_get_start_url_default(register_builtin_html):
+def test_get_start_url_default(request_context: RequestContextFixture) -> None:
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 
 
-def test_get_start_url_default_config(monkeypatch, register_builtin_html):
-    monkeypatch.setattr(cmk.gui.config, "start_url", "bla.py")
+def test_get_start_url_default_config(
+    request_context: RequestContextFixture, monkeypatch: MonkeyPatch
+) -> None:
+    monkeypatch.setattr(config, "start_url", "bla.py")
     assert cmk.gui.main._get_start_url() == "bla.py"
 
 
-def test_get_start_url_user_config(monkeypatch, module_wide_request_context):
-    monkeypatch.setattr(cmk.gui.config, "start_url", "bla.py")
+def test_get_start_url_user_config(
+    monkeypatch: MonkeyPatch, request_context: RequestContextFixture
+) -> None:
+    monkeypatch.setattr(config, "start_url", "bla.py")
 
     class MockUser:
         @property
-        def start_url(self):
+        def start_url(self) -> str:
             return "user_url.py"
 
-    monkeypatch.setattr(cmk.gui.config, "user", MockUser())
+    monkeypatch.setattr(local, "user", MockUser())
 
     assert cmk.gui.main._get_start_url() == "user_url.py"
 
 
-def test_get_start_url(register_builtin_html):
+def test_get_start_url(request_context: RequestContextFixture) -> None:
     start_url = "dashboard.py?name=mein_dashboard"
     html.request.set_var("start_url", start_url)
 
     assert cmk.gui.main._get_start_url() == start_url
 
 
-@pytest.mark.parametrize("invalid_url", [
-    "http://localhost/",
-    "://localhost",
-    "javascript:alert(1)",
-    "javAscRiPt:alert(1)",
-    "localhost:80/bla",
-])
-def test_get_start_url_invalid(module_wide_request_context, invalid_url):
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        "http://localhost/",
+        "javascript:alert(1)",
+        "javAscRiPt:alert(1)",
+        "localhost:80/bla",
+    ],
+)
+def test_get_start_url_invalid(request_context: RequestContextFixture, invalid_url: str) -> None:
     html.request.set_var("start_url", invalid_url)
 
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 
 
-def test_get_start_url_invalid_config(monkeypatch, module_wide_request_context):
-    monkeypatch.setattr(cmk.gui.config.user, "_attributes", {
-        "start_url": "http://asdasd/",
-    })
+def test_get_start_url_invalid_config(
+    monkeypatch: MonkeyPatch, request_context: RequestContextFixture
+) -> None:
+    monkeypatch.setattr(
+        user,
+        "_attributes",
+        {
+            "start_url": "http://asdasd/",
+        },
+    )
     assert cmk.gui.main._get_start_url() == "dashboard.py"

@@ -1,7 +1,7 @@
 title: CBL Airlaser: Powerup Status
 agents: snmp
 catalog: hw/network/cbl
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check can be used to monitor the CBL AirLaser Powerup status.
@@ -28,8 +28,6 @@ description:
  (4)anything failed:   {CRIT}
 
 
-inventory:
+discovery:
  One service is created for each remote device
  if the CBL-AIRLASOR-IP1000 MIB is supported.
-
-

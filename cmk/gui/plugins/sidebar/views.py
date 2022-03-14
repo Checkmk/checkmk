@@ -7,26 +7,29 @@
 from typing import List, Tuple
 
 import cmk.utils.version as cmk_version
-import cmk.gui.config as config
-import cmk.gui.views as views
+
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
+import cmk.gui.views as views
+from cmk.gui.globals import config
+
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
 else:
     reporting = None  # type: ignore[assignment]
+from cmk.gui.globals import user
+from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
+from cmk.gui.node_visualization import ParentChildTopologyPage
+from cmk.gui.plugins.sidebar import search
+from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    search,
+    SidebarSnapin,
+    snapin_registry,
 )
-from cmk.gui.i18n import _, _l
-from cmk.gui.node_visualization import ParentChildTopologyPage
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 
 
 @snapin_registry.register
@@ -47,7 +50,7 @@ class Views(SidebarSnapin):
         show_topic_menu(treename="views", menu=get_view_menu_items())
 
         links = []
-        if config.user.may("general.edit_views"):
+        if user.may("general.edit_views"):
             if config.debug:
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
@@ -72,10 +75,12 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
                 page_type_items.append((page_type.type_name(), (page.name(), visual)))
 
     # Apply some view specific filters
-    views_to_show = [(name, view)
-                     for name, view in views.get_permitted_views().items()
-                     if (not config.visible_views or name in config.visible_views) and
-                     (not config.hidden_views or name not in config.hidden_views)]
+    views_to_show = [
+        (name, view)
+        for name, view in views.get_permitted_views().items()
+        if (not config.visible_views or name in config.visible_views)
+        and (not config.hidden_views or name not in config.hidden_views)
+    ]
 
     network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
     pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
@@ -100,4 +105,5 @@ mega_menu_registry.register(
         sort_index=5,
         topics=get_view_menu_items,
         search=search.MonitoringSearch("monitoring_search"),
-    ))
+    )
+)

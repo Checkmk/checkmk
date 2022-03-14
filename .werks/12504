@@ -1,0 +1,13 @@
+Title: dell_powerconnect_cpu: remove illegal character from metric name
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618320735
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Spaces are not allowed in metric names. In this case this lead to a crash reporting
+<i>"invalid character(s) in metric name: ' '"</i>.

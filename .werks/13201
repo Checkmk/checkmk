@@ -1,0 +1,12 @@
+Title: <tt>omd cleanup</tt>: Skip default version
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1630423479
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The command <tt>omd cleanup</tt> used to also remove the default OMD
+version if it was currently unused. This has been fixed.

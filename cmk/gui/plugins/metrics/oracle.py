@@ -4,22 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    indexed_color,
-)
 from cmk.utils.oracle_constants import (
-    oracle_iofiles,
     oracle_io_sizes,
     oracle_io_types,
+    oracle_iofiles,
     oracle_sga_fields,
     oracle_waitclasses,
 )
 
-#.
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, metric_info
+
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -70,8 +66,7 @@ def register_oracle_metrics():
                 metric_info["oracle_ios_f_%s_%s_%s" % (iofile_id, size_code, io_code)] = {
                     "title": _("ORACLE %s %s %s") % (iofile_name, size_text, io_text),
                     "unit": unit,
-                    "color": indexed_color(color_index,
-                                           len(oracle_iofiles) * len(oracle_io_sizes)),
+                    "color": indexed_color(color_index, len(oracle_iofiles) * len(oracle_io_sizes)),
                 }
 
     # iofiles totals
@@ -167,7 +162,7 @@ def register_oracle_metrics():
 
 register_oracle_metrics()
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -186,14 +181,14 @@ def register_oracle_graphs():
         "metrics": [
             ("oracle_physical_reads", "area"),
             ("oracle_physical_writes", "-area"),
-        ]
+        ],
     }
     graph_info["oracle_hit_ratio"] = {
         "title": _("ORACLE hit ratio"),
         "metrics": [
             ("oracle_buffer_hit_ratio", "area"),
             ("oracle_library_cache_hit_ratio", "-area"),
-        ]
+        ],
     }
     graph_info["oracle_db_time_statistics"] = {
         "title": _("ORACLE DB time statistics"),
@@ -265,10 +260,10 @@ def register_oracle_graphs():
     graph_info["oracle_iostat_total_bytes"] = {
         "title": _("ORACLE IOSTAT Total Bytes"),
         "metrics": [
-            "oracle_ios_f_total_s_rb",
-            "oracle_ios_f_total_s_wb",
-            "oracle_ios_f_total_l_rb",
-            "oracle_ios_f_total_l_wb",
+            ("oracle_ios_f_total_s_rb", "line"),
+            ("oracle_ios_f_total_s_wb", "-line"),
+            ("oracle_ios_f_total_l_rb", "line"),
+            ("oracle_ios_f_total_l_wb", "-line"),
         ],
     }
     graph_info["oracle_iostat_ios"] = {
@@ -279,22 +274,23 @@ def register_oracle_graphs():
     graph_info["oracle_iostat_total_ios"] = {
         "title": _("ORACLE IOSTAT Total IOs"),
         "metrics": [
-            "oracle_ios_f_total_s_r",
-            "oracle_ios_f_total_s_w",
-            "oracle_ios_f_total_l_r",
-            "oracle_ios_f_total_l_w",
+            ("oracle_ios_f_total_s_r", "line"),
+            ("oracle_ios_f_total_s_w", "-line"),
+            ("oracle_ios_f_total_l_r", "line"),
+            ("oracle_ios_f_total_l_w", "-line"),
         ],
     }
     graph_info["oracle_wait_class"] = {
         "title": _("ORACLE Wait Class (FG lines are downside)"),
-        "metrics": [("oracle_wait_class_total", "line")] +
-                   [(waitclass.metric, "line") for waitclass in oracle_waitclasses] +
-                   #######################################################
-                   [("oracle_wait_class_total_fg", "-line")] +
-                   [(waitclass.metric_fg, "-line") for waitclass in oracle_waitclasses],
+        "metrics": [("oracle_wait_class_total", "line")]
+        + [(waitclass.metric, "line") for waitclass in oracle_waitclasses]
+        +
+        #######################################################
+        [("oracle_wait_class_total_fg", "-line")]
+        + [(waitclass.metric_fg, "-line") for waitclass in oracle_waitclasses],
         "omit_zero_metrics": True,
-        "optional_metrics": [waitclass.metric for waitclass in oracle_waitclasses] +
-                            [waitclass.metric_fg for waitclass in oracle_waitclasses],
+        "optional_metrics": [waitclass.metric for waitclass in oracle_waitclasses]
+        + [waitclass.metric_fg for waitclass in oracle_waitclasses],
     }
     graph_info["oracle_pga_memory_info"] = {
         "title": _("ORACLE PGA memory statistics"),
@@ -303,7 +299,7 @@ def register_oracle_graphs():
             ("oracle_pga_total_pga_inuse", "area"),
             ("oracle_pga_total_freeable_pga_memory", "area"),
         ],
-        "optional_metrics": ["oracle_pga_total_freeable_pga_memory"]
+        "optional_metrics": ["oracle_pga_total_freeable_pga_memory"],
     }
 
 

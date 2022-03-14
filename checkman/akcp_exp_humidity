@@ -1,7 +1,7 @@
 title: AKCP securityProbe: Humidity
 agents: snmp
 catalog: hw/environment/akcp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors all online humidity sensors on AKCP securityProbe
@@ -12,6 +12,5 @@ description:
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
-inventory:
+discovery:
  One service is created for each humidity sensor if the the sensor is online.
-

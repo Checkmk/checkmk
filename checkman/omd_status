@@ -1,7 +1,7 @@
 title: Checkmk: Site Status
 agents: linux
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the status of OMD sites found on the system.
@@ -18,7 +18,7 @@ description:
 item:
  The name of the site.
 
-inventory:
+discovery:
  One service is create for each site where {AUTOSTART} is
  set to {on}, regardless of the current state of the site.
 

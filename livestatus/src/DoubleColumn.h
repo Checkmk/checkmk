@@ -24,80 +24,52 @@
 #include "contact_fwd.h"
 #include "opids.h"
 
+// NOTE: The C++ spec explicitly disallows doubles as non-type template
+// parameters. We could add an int or perhaps even some std::ratio if we want.
+// Currently the default is hardwired to zero.
+// TODO(ml, sp): C++-20 should let us use double as default template parameter
+// (see P0732).
+template <class T>
 class DoubleColumn : public Column {
 public:
-    class Constant;
-    class Reference;
-    template <class T>
-    class Callback;
-    using Column::Column;
-    ~DoubleColumn() override = default;
+    using value_type = double;
+    using function_type = std::function<value_type(const T &)>;
 
-    [[nodiscard]] virtual double getValue(Row row) const = 0;
-    void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
-                std::chrono::seconds /*timezone_offset*/) const override {
-        r.output(getValue(row));
-    }
+    DoubleColumn(const std::string &name, const std::string &description,
+                 const ColumnOffsets &offsets, const function_type &f)
+        : Column{name, description, offsets}, f_{f} {}
+
     [[nodiscard]] ColumnType type() const override {
         return ColumnType::double_;
     }
+
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        r.output(getValue(row));
+    }
+
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
+        const std::string &value) const override {
         return std::make_unique<DoubleFilter>(
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
     }
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<DoubleAggregator>(
             factory, [this](Row row) { return this->getValue(row); });
     }
-};
 
-// NOTE: The C++ spec explicitly disallows doubles as non-type template
-// parameters. We could add an int or perhaps even some std::ratio if we want.
-// Currently the default is hardwired to zero.
-// TODO(ml, sp): C++-20 should let us use double as default
-// template parameter (see P0732).
-template <class T>
-class DoubleColumn::Callback : public DoubleColumn {
-public:
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets,
-             const std::function<double(const T&)>& f)
-        : DoubleColumn{name, description, offsets}, f_{f} {}
-    ~Callback() override = default;
-    [[nodiscard]] double getValue(Row row) const override {
-        const T* data = columnData<T>(row);
+    [[nodiscard]] value_type getValue(Row row) const {
+        const T *data = columnData<T>(row);
         return data == nullptr ? 0.0 : f_(*data);
     }
 
 private:
-    const std::function<double(const T&)> f_;
-};
-
-class DoubleColumn::Constant : public DoubleColumn {
-public:
-    Constant(const std::string& name, const std::string& description, double x)
-        : DoubleColumn{name, description, {}}, x_{x} {}
-    ~Constant() override = default;
-    double getValue(Row /*row*/) const override { return x_; }
-
-private:
-    const double x_;
-};
-
-class DoubleColumn::Reference : public DoubleColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              double& x)
-        : DoubleColumn{name, description, {}}, x_{x} {}
-    ~Reference() override = default;
-    double getValue(Row /*row*/) const override { return x_; }
-
-private:
-    const double& x_;
+    const value_type Default{};
+    const function_type f_;
 };
 
 #endif  // DoubleColumn_h

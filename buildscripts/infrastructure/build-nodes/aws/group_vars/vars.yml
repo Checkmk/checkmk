@@ -1,0 +1,33 @@
+---
+ansible_ssh_user: ubuntu  # EC2 login User. Determined by ubuntu AMI
+ec2_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+ec2_secret_key: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+ec2_key: "{{ lookup('env', 'EC2_KEY') }}"
+ansible_ssh_private_key_file: "{{ lookup('env', 'ANSIBLE_SSH_PRIVATE_KEY_FILE') }}"
+cmkadmin_pass: "{{ lookup('env', 'CMKADMIN_PASS') }}"
+package_dir: "{{ lookup('env', 'PACKAGE_DIR') }}"
+ami_cleanup_age_in_days: 7
+
+# AWS EC2 Global config
+ec2_auto_shutdown: 30  # Autoshutdown/terminate after x min, if 0 then disable
+ec2_region: eu-central-1  # EC2 region
+ec2_security_group_vms:  amit-toolchainsec  # EC2 generate securitygroup
+ec2_vpc_subnet_id: subnet-0b097bf61fe0763a1  # EC2 subnet default
+ami_id: ami-05f7491af5eef733a  # EC2 instance template (ubuntu20.04)
+distro: focal
+
+cmk_edition: "{{ lookup('env', 'EDITION') }}"
+cmk_version: "{{ lookup('env', 'CMK_VERS') }}"
+
+cmkadmin: cmk
+cmk_site: cmk
+api_entrypoint: "http://localhost/{{ cmk_site }}/check_mk/api/1.0"
+
+# AWS deploy EC2
+servers:
+   checkmk:
+      count: 1
+      cmk_site: "{{ cmk_site }}"
+      vpc_subnet_id: subnet-1680ce6b
+      instance_type: t2.medium
+      disk_volume: 8

@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from typing import Sequence, TypedDict
+
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-import json
 
 
 class VM(TypedDict):
@@ -41,7 +42,7 @@ def inventory_esx_vsphere_virtual_machines(section: Section) -> InventoryResult:
                 "hostsystem": vm["hostsystem"],
                 "vm_name": vm["vm_name"],
                 "guest_os": vm["guest_os"],
-                "compatibility": vm["compatibility"]
+                "compatibility": vm["compatibility"],
             },
         )
 

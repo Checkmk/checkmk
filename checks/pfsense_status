@@ -31,6 +31,7 @@ check_info["pfsense_status"] = {
             #  "1.2", # pfStatusRuntime
             #  "1.3", # pfStatusDebug
             #  "1.4", # pfStatusHostId
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

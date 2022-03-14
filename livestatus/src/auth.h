@@ -10,27 +10,47 @@
 
 #ifdef CMC
 #include "contact_fwd.h"
+class Host;  // IWYU pragma: keep
+using host = Host;
+class Service;  // IWYU pragma: keep
+using service = Service;
+// IWYU pragma: no_include "ObjectGroup.h"
+template <typename T>
+class ObjectGroup;  // IWYU pragma: keep
+using hostgroup = ObjectGroup<Host>;
+using servicegroup = ObjectGroup<Service>;
 #else
 #include "nagios.h"
 #endif
 
-enum class AuthorizationKind { loose = 0, strict = 1 };
+enum class ServiceAuthorization {
+    loose = 0,   // contacts for hosts see all services
+    strict = 1,  // must be explicit contact of a service
+};
 
-#ifdef CMC
+enum class GroupAuthorization {
+    loose = 0,   // sufficient to be contact for one member
+    strict = 1,  // must be contact of all members
+
+};
+
+inline contact *no_auth_user() { return nullptr; }
+
 inline contact *unknown_auth_user() {
     return reinterpret_cast<contact *>(0xdeadbeaf);
 }
-#else
-contact *unknown_auth_user();
-bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
-                       const host *hst, const service *svc);
-bool is_authorized_for_host_group(AuthorizationKind group_auth,
-                                  AuthorizationKind service_auth,
+
+// NOTE: Although technically not necessary (C functions in Nagios vs. C++
+// functions with mangled names), we avoid name clashes with the Nagios API
+// here to avoid confusion.
+bool is_authorized_for_hst(const contact *ctc, const host *hst);
+bool is_authorized_for_svc(ServiceAuthorization service_auth,
+                           const contact *ctc, const service *svc);
+bool is_authorized_for_host_group(GroupAuthorization group_auth,
                                   const hostgroup *hg, const contact *ctc);
-bool is_authorized_for_service_group(AuthorizationKind group_auth,
-                                     AuthorizationKind service_auth,
+bool is_authorized_for_service_group(GroupAuthorization group_auth,
+                                     ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc);
-#endif
 
 #endif  // auth_h

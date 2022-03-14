@@ -5,21 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Callable, Dict, List, Optional, overload, Union
+from typing import Callable, List, Optional, overload, Union
 
+from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
-from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    DiscoveryFunction,
-)
-
-from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
     add_discovery_ruleset,
@@ -29,10 +18,18 @@ from cmk.base.api.agent_based.register import (
     is_registered_inventory_plugin,
     is_registered_section_plugin,
 )
+from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
+from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
+    ParametersTypeAlias,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
@@ -52,7 +49,7 @@ def agent_section(
     parse_function: Optional[AgentParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -126,7 +123,7 @@ def snmp_section(
     parse_function: Optional[SimpleSNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -143,7 +140,7 @@ def snmp_section(
     parse_function: Optional[SNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -159,7 +156,7 @@ def snmp_section(
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -245,11 +242,11 @@ def check_plugin(
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: DiscoveryFunction,
-    discovery_default_parameters: Optional[Dict[str, Any]] = None,
+    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
     discovery_ruleset_name: Optional[str] = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: CheckFunction,
-    check_default_parameters: Optional[Dict[str, Any]] = None,
+    check_default_parameters: Optional[ParametersTypeAlias] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
 ) -> None:
@@ -334,7 +331,7 @@ def inventory_plugin(
     name: str,
     sections: Optional[List[str]] = None,
     inventory_function: InventoryFunction,
-    inventory_default_parameters: Optional[Dict[str, Any]] = None,
+    inventory_default_parameters: Optional[ParametersTypeAlias] = None,
     inventory_ruleset_name: Optional[str] = None,
 ) -> None:
     """Register an inventory plugin to checkmk.

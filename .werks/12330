@@ -1,0 +1,12 @@
+Title: Disable Windows agent mail API tracing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632307940
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+With this release Windows agent writes no more information in 
+<tt>Users\Public\cmc_mail.log</tt>.

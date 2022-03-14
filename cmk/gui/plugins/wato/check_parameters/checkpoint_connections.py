@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
@@ -15,13 +15,15 @@ from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple
 
 def _parameter_valuespec_checkpoint_connections() -> Transform:
     return Transform(
-        Dictionary(
-            [
+        valuespec=Dictionary(
+            elements=[
                 (
                     "levels",
                     Tuple(
-                        help=_("This rule sets limits to the current number of connections through "
-                               "a Checkpoint firewall."),
+                        help=_(
+                            "This rule sets limits to the current number of connections through "
+                            "a Checkpoint firewall."
+                        ),
                         title=_("Maximum number of firewall connections"),
                         elements=[
                             Integer(
@@ -52,4 +54,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_checkpoint_connections,
         title=lambda: _("Checkpoint Firewall Connections"),
-    ))
+    )
+)

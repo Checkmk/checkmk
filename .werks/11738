@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 We have added a new functionality to the mk_filestats agent plugin: it is now
 possible to group files within a file group further into subgroups. Subgroups

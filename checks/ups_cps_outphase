@@ -33,15 +33,17 @@ check_info["ups_cps_outphase"] = {
     "inventory_function": inventory_ups_cps_outphase,
     "check_function": check_elphase,
     "service_description": "UPS Output Phase %s",
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"
-                                                                          ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.3808.1.1.1"
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.3808.1.1.1.4.2",
         [
-            "1",  #upsAdvanceOutputVoltage "in 1/10 VAC"
-            "2",  #upsAdvanceOutputFrequency "in 1/10 Hz"
-            "3",  #upsAdvanceOutputLoad "in percentage"
-            "4",  #upsAdvanceOutputCurrent "in Ampère"
-        ]),
+            "1",  # upsAdvanceOutputVoltage "in 1/10 VAC"
+            "2",  # upsAdvanceOutputFrequency "in 1/10 Hz"
+            "3",  # upsAdvanceOutputLoad "in percentage"
+            "4",  # upsAdvanceOutputCurrent "in Ampère"
+        ],
+    ),
     "group": "ups_outphase",
 }

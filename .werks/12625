@@ -1,0 +1,13 @@
+Title: Fix invalidation of session on logout
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1617888630
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If the global setting "Limit login to single session at a time" was used, the
+session was not correctly invalidated on logout. The user was not able to do a
+login again until the configured session timeout was met.

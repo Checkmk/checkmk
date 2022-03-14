@@ -1,0 +1,13 @@
+Title: Views: Fix overriding hard coded filters using filter form
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1617000825
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The filters that may be hard coded in a view could not be overridden
+using the filter form of the views.

@@ -1,7 +1,7 @@
 title: F5 Big-IP: Load Balancing Pools
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic
@@ -21,7 +21,6 @@ description:
 item:
  Name of the pool
 
-inventory:
+discovery:
  One service is created for each pool defined on a system,
  even if the pool is not enabled, as this is considered a temporary state.
-

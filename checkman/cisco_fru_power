@@ -1,7 +1,7 @@
 title: Cisco Nexus Switches: State of FRU Power Supplies
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the administrative and operational status of field
@@ -15,6 +15,6 @@ item:
  The index of the power supply from the list of OIDs for the device, usually
  starting with {1}.
 
-inventory:
+discovery:
  One service is created for each FRU power supply unit. Units are only included
  if they are not in the operational state {offEnvOther} and {offEnvPower}.

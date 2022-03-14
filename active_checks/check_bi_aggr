@@ -4,19 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import getopt
 import os
+import subprocess
 import sys
 import time
 import traceback
 import urllib.parse
-import ast
-import subprocess
 from pathlib import Path
 
 import requests
-from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 import urllib3  # type: ignore[import]
+from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 
 import cmk.utils.password_store
 
@@ -26,13 +26,14 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {
-    'http': None,
-    'https': None,
+    "http": None,
+    "https": None,
 }
 
 
 def usage():
-    sys.stderr.write("""
+    sys.stderr.write(
+        """
 USAGE: check_bi_aggr -b <BASE_URL> -a <AGGR_NAME> -u <USER> -s <SECRET>
                      [-m <AUTH_MODE>] [-r] [-n <HOSTNAME>] [-t <TIMEOUT>] [-d]
 
@@ -59,10 +60,11 @@ OPTIONS:
   -d                    Enable debug mode
   -h, --help            Show this help message and exit
 
-""")
+"""
+    )
 
 
-short_options = 'b:a:u:s:m:t:n:dhr'
+short_options = "b:a:u:s:m:t:n:dhr"
 long_options = ["help", "in-downtime=", "acknowledged=", "use-automation-user"]
 
 try:
@@ -78,7 +80,7 @@ username = None
 password = None
 use_automation_user = False
 
-auth_mode = 'cookie'
+auth_mode = "cookie"
 timeout = 60
 debug = False
 opt_in_downtime = None
@@ -87,41 +89,41 @@ track_downtime = False
 hostname = None
 
 for o, a in opts:
-    if o in ['-h', '--help']:
+    if o in ["-h", "--help"]:
         usage()
         sys.exit(0)
-    elif o == '-b':
+    elif o == "-b":
         base_url = a
-    elif o == '-a':
+    elif o == "-a":
         aggr_name = a
-    elif o == '-u':
+    elif o == "-u":
         username = a
-    elif o == '-s':
+    elif o == "-s":
         password = a
-    elif o == '-m':
+    elif o == "-m":
         auth_mode = a
-    elif o == '-t':
+    elif o == "-t":
         timeout = int(a)
-    elif o == '-r':
+    elif o == "-r":
         track_downtime = True
-    elif o == '-n':
+    elif o == "-n":
         hostname = a
-    elif o == '-d':
+    elif o == "-d":
         debug = True
-    elif o == '--in-downtime':
+    elif o == "--in-downtime":
         opt_in_downtime = a
-    elif o == '--acknowledged':
+    elif o == "--acknowledged":
         opt_acknowledged = a
-    elif o == '--use-automation-user':
+    elif o == "--use-automation-user":
         use_automation_user = True
 
 if not base_url:
-    sys.stderr.write('Please provide the URL to the monitoring instance.\n')
+    sys.stderr.write("Please provide the URL to the monitoring instance.\n")
     usage()
     sys.exit(1)
 
 if not aggr_name:
-    sys.stderr.write('Please provide the name of the aggregation.\n')
+    sys.stderr.write("Please provide the name of the aggregation.\n")
     usage()
     sys.exit(1)
 
@@ -136,12 +138,12 @@ if use_automation_user:
         sys.exit(1)
 
 if not username or not password:
-    sys.stderr.write('Please provide valid user credentials.\n')
+    sys.stderr.write("Please provide valid user credentials.\n")
     usage()
     sys.exit(1)
 
 if track_downtime and not hostname:
-    sys.stderr.write('Please provide a hostname when using downtime tracking.\n')
+    sys.stderr.write("Please provide a hostname when using downtime tracking.\n")
     usage()
     sys.exit(1)
 
@@ -149,56 +151,59 @@ if track_downtime and not hostname:
 def init_auth():
     if not username or not password:
         return None
-    if auth_mode == 'kerberos':
-        kinit = subprocess.Popen(
+    if auth_mode == "kerberos":
+        kinit_completed = subprocess.run(
             ["kinit", username],
-            stdin=subprocess.PIPE,
+            input="%s\n" % password,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
+            check=False,
         )
-        stdout, stderr = kinit.communicate(input=("%s\n" % password))
-        kinit.wait()
-        if kinit.returncode or stderr:
+        if kinit_completed.returncode or kinit_completed.stderr:
             sys.stderr.write("Error getting Kerberos Ticket:\n")
-            sys.stderr.write("stdout: %s\nstderr: %s\nrc: %s" % (stdout, stderr, kinit.returncode))
+            sys.stderr.write(
+                "stdout: %s\nstderr: %s\nrc: %s"
+                % (kinit_completed.stdout, kinit_completed.stderr, kinit_completed.returncode)
+            )
             sys.exit(1)
         return HTTPKerberosAuth(principal=username)
-    if auth_mode == 'digest':
+    if auth_mode == "digest":
         return requests.auth.HTTPDigestAuth(username, password)
-    if auth_mode == 'basic':
+    if auth_mode == "basic":
         return requests.auth.HTTPBasicAuth(username, password)
-    raise Exception('invalid auth_mode %s' % auth_mode)
+    raise Exception("invalid auth_mode %s" % auth_mode)
 
 
-url = "%s/check_mk/view.py" \
-      "?view_name=aggr_single_api" \
-      "&aggr_name=%s&output_format=python" % \
-      (base_url.rstrip('/'), urllib.parse.quote(aggr_name))
+url = (
+    "%s/check_mk/view.py"
+    "?view_name=aggr_single_api"
+    "&aggr_name=%s&output_format=python" % (base_url.rstrip("/"), urllib.parse.quote(aggr_name))
+)
 
 auth = None
-if auth_mode in ['basic', 'digest', 'kerberos']:
+if auth_mode in ["basic", "digest", "kerberos"]:
     auth = init_auth()
 else:
-    url += "&_username=%s&_secret=%s" % \
-        (username, password)
+    url += "&_username=%s&_secret=%s" % (username, password)
 
 if debug:
-    sys.stderr.write('URL: %s\n' % url)
+    sys.stderr.write("URL: %s\n" % url)
 
 try:
     r = requests.get(url, timeout=timeout, auth=auth, proxies=proxies)
     r.raise_for_status()
     raw_response = r.text
 except requests.Timeout:
-    sys.stdout.write('ERROR: Socket timeout while opening URL: %s\n' % (url))
+    sys.stdout.write("ERROR: Socket timeout while opening URL: %s\n" % (url))
     sys.exit(3)
 except requests.URLRequired as e:
     sys.stdout.write("UNKNOWN: %s\n" % e)
     sys.exit(3)
 except Exception as e:
-    sys.stdout.write('ERROR: Exception while opening URL: %s - %s\n%s' %
-                     (url, e, traceback.format_exc()))
+    sys.stdout.write(
+        "ERROR: Exception while opening URL: %s - %s\n%s" % (url, e, traceback.format_exc())
+    )
     sys.exit(3)
 
 if raw_response.startswith("ERROR:"):
@@ -208,16 +213,17 @@ if raw_response.startswith("ERROR:"):
 try:
     obj = ast.literal_eval(raw_response)
 except Exception as e:
-    sys.stdout.write('ERROR: Invalid response (%s): %s\n' % (e, raw_response))
+    sys.stdout.write("ERROR: Invalid response (%s): %s\n" % (e, raw_response))
     sys.exit(3)
 
 if len(obj) == 1:
-    sys.stdout.write('ERROR: Aggregation "%s" does not exist or user is not permitted\n' %
-                     aggr_name)
+    sys.stdout.write(
+        'ERROR: Aggregation "%s" does not exist or user is not permitted\n' % aggr_name
+    )
     sys.exit(3)
 
 if not (isinstance(obj, list) and isinstance(obj[0], list) and isinstance(obj[1], list)):
-    sys.stdout.write('ERROR: Invalid response: %s\n' % (raw_response.replace("\n", "")))
+    sys.stdout.write("ERROR: Invalid response: %s\n" % (raw_response.replace("\n", "")))
     sys.exit(3)
 
 headers = obj[0]
@@ -229,11 +235,11 @@ aggr_state = int(row["aggr_state_num"])
 if aggr_state == -1:
     aggr_state = 3
 
-if aggr_output == '':
-    aggr_output = 'Aggregation state is %s' % ['OK', 'WARN', 'CRIT', 'UNKNOWN'][aggr_state]
+if aggr_output == "":
+    aggr_output = "Aggregation state is %s" % ["OK", "WARN", "CRIT", "UNKNOWN"][aggr_state]
 
 # Handle downtimes and acknowledgements
-if opt_in_downtime and row["aggr_in_downtime"] == '1':
+if opt_in_downtime and row["aggr_in_downtime"] == "1":
     aggr_output += ", currently in downtime"
     if opt_in_downtime == "ok":
         aggr_state = 0
@@ -245,38 +251,47 @@ if track_downtime:
     try:
         import livestatus
     except ImportError:
-        sys.stderr.write('The python livestatus api module is missing. Please install from\n'
-                         'Check_MK livestatus sources to a python import path.\n')
+        sys.stderr.write(
+            "The python livestatus api module is missing. Please install from\n"
+            "Check_MK livestatus sources to a python import path.\n"
+        )
         sys.exit(1)
 
-    socket_path = os.environ['OMD_ROOT'] + '/tmp/run/live'
+    socket_path = os.environ["OMD_ROOT"] + "/tmp/run/live"
 
-    conn = livestatus.SingleSiteConnection('unix:' + socket_path)
+    conn = livestatus.SingleSiteConnection("unix:" + socket_path)
 
     now = time.time()
     # find out if, according to previous tracking, there already is a downtime
-    ids = conn.query_table(("GET downtimes\n"
-                            "Columns: id\n"
-                            "Filter: service_description = Aggr Host %s\n"
-                            "Filter: author = tracking\n"
-                            "Filter: end_time > %d") % (hostname, now))
+    ids = conn.query_table(
+        (
+            "GET downtimes\n"
+            "Columns: id\n"
+            "Filter: service_description = Aggr Host %s\n"
+            "Filter: author = tracking\n"
+            "Filter: end_time > %d"
+        )
+        % (hostname, now)
+    )
     downtime_tracked = len(ids) > 0
-    if downtime_tracked != (row["aggr_in_downtime"] == '1'):
+    if downtime_tracked != (row["aggr_in_downtime"] == "1"):
         # there is a discrepance between tracked downtime state and the real state
-        if row["aggr_in_downtime"] == '1':
+        if row["aggr_in_downtime"] == "1":
             # need to track downtime
-            conn.command("[%d] SCHEDULE_SVC_DOWNTIME;%s;Aggr Host %s;%d;%d;1;0;0;"
-                         "tracking;Automatic downtime" % (now, hostname, hostname, now, 2147483647))
+            conn.command(
+                "[%d] SCHEDULE_SVC_DOWNTIME;%s;Aggr Host %s;%d;%d;1;0;0;"
+                "tracking;Automatic downtime" % (now, hostname, hostname, now, 2147483647)
+            )
         else:
             for dt_id in ids:
                 conn.command("[%d] DEL_SVC_DOWNTIME;%d" % (now, dt_id[0]))
 
-if opt_acknowledged and row["aggr_acknowledged"] == '1':
+if opt_acknowledged and row["aggr_acknowledged"] == "1":
     aggr_output += ", is acknowledged"
     if opt_acknowledged == "ok":
         aggr_state = 0
     else:  # "warn"
         aggr_state = min(aggr_state, 1)
 
-sys.stdout.write('%s\n' % aggr_output)
+sys.stdout.write("%s\n" % aggr_output)
 sys.exit(aggr_state)

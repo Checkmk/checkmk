@@ -17,18 +17,24 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.4.0
+      rev: v4.0.1
       hooks:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
           - id: check-yaml
           - id: end-of-file-fixer
+            exclude: .werks/.*
     - repo: local
       hooks:
-          - id: yapf
-            name: Check yapf
-            entry: scripts/check-yapf -i
+          - id: isort
+            name: Run isort
+            entry: scripts/run-isort
+            language: script
+            types: [file, python]
+          - id: black
+            name: Run black
+            entry: scripts/run-black
             language: script
             types: [file, python]
           - id: omd-python-modules
@@ -66,6 +72,12 @@ repos:
           - id: flake8
             name: Check flake8
             entry: scripts/check-flake8
+            language: script
+            types: [file, python]
+            verbose: true
+          - id: unittest
+            name: unittests
+            entry: scripts/run-unittests
             language: script
             types: [file, python]
             verbose: true

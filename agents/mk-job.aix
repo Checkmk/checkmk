@@ -29,7 +29,7 @@ TMP_FILE="/tmp/$IDENT.$$running"
 shift
 
 if [ ! -d "$OUTPUT_PATH" ]; then
-    if [ "$MYSELF" = root ] ; then
+    if [ "$MYSELF" = root ]; then
         mkdir -p "$OUTPUT_PATH"
     else
         echo "ERROR: Missing output directory $OUTPUT_PATH for non-root user '$MYSELF'." >&2
@@ -37,26 +37,25 @@ if [ ! -d "$OUTPUT_PATH" ]; then
     fi
 fi
 
-if ! type $1 >/dev/null 2>&1; then
+if ! type "$1" >/dev/null 2>&1; then
     echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
     help >&2
     exit 1
 fi
 
-echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
+echo "start_time $(perl -e 'print time')" >"$RUNNING_FILE"
 
-/usr/bin/time -p "$@" 2>$TMP_FILE                # execute the command
-RC=$?                                            # save return code
-echo "exit_code $RC" >> "$RUNNING_FILE"          # then add the return code
-                                                 # and finally add the output of /usr/bin/time
-egrep  '^real   |^user   |^sys    ' $TMP_FILE | sed \
-       -e 's/,/\./g' \
-       -e 's/^real  /real_time/g' \
-       -e 's/^user  /user_time/g' \
-       -e 's/^sys   /system_time/g' \
-       >> "$RUNNING_FILE"
+/usr/bin/time -p "$@" 2>"$TMP_FILE"    # execute the command
+RC=$?                                  # save return code
+echo "exit_code $RC" >>"$RUNNING_FILE" # then add the return code
+# and finally add the output of /usr/bin/time
+grep -E '^real   |^user   |^sys    ' "$TMP_FILE" | sed \
+    -e 's/,/\./g' \
+    -e 's/^real  /real_time/g' \
+    -e 's/^user  /user_time/g' \
+    -e 's/^sys   /system_time/g' \
+    >>"$RUNNING_FILE"
 
 mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
-rm $TMP_FILE
+rm "$TMP_FILE"
 exit $RC
-

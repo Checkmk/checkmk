@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.13742.4.1.2.2.1.1.1 1 --> PDU-MIB::outletIndex.1
 # .1.3.6.1.4.1.13742.4.1.2.2.1.1.3 3 --> PDU-MIB::outletIndex.3
 # .1.3.6.1.4.1.13742.4.1.2.2.1.1.4 4 --> PDU-MIB::outletIndex.4
@@ -43,8 +44,7 @@ def parse_raritan_px_outlets(info):
         "2": (0, "cycling"),
     }
     parsed = {}
-    for index, state, current_str, voltage_str, \
-        power_str, appower_str, energy_str in info:
+    for index, state, current_str, voltage_str, power_str, appower_str, energy_str in info:
         parsed[index] = {
             "state": map_state.get(state, (3, "unknown")),
             "current": float(current_str) / 1000,
@@ -69,13 +69,13 @@ def check_raritan_px_outlets(item, params, parsed):
             yield result
 
 
-check_info['raritan_px_outlets'] = {
-    'parse_function': parse_raritan_px_outlets,
-    'inventory_function': inventory_raritan_px_outlets,
-    'check_function': check_raritan_px_outlets,
-    'service_description': 'Outlet %s',
-    'has_perfdata': True,
-    'snmp_info': (
+check_info["raritan_px_outlets"] = {
+    "parse_function": parse_raritan_px_outlets,
+    "inventory_function": inventory_raritan_px_outlets,
+    "check_function": check_raritan_px_outlets,
+    "service_description": "Outlet %s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.13742.4.1.2.2.1",
         [
             "1",  # outletIndex
@@ -85,7 +85,8 @@ check_info['raritan_px_outlets'] = {
             "7",  # outletActivePower
             "8",  # outletApparentPower
             "31",  # outletWattHours
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.4",
-    'group': "el_inphase",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.4",
+    "group": "el_inphase",
 }

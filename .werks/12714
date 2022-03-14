@@ -1,0 +1,17 @@
+Title: hr_mem: don't crash on invalid SNMP values for `hrStorageType`
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619524511
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+`hrStorageType` defines the type of information provided via SNMP handled by `hr_mem`. Very often
+invalid values for `hrStorageType` are being provided, which leads to unhandled ValueError()
+exceptions.
+This change makes the plugin not crash on invalid values but instead return a special string
+"unknown" as value for `hr_type` which then can be handled properly by the checks which handle
+the data provided by `hr_mem`.

@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_fortimail_queue():
@@ -19,7 +19,7 @@ def _parameter_valuespec_fortimail_queue():
             (
                 "queue_length",
                 Tuple(
-                    [
+                    elements=[
                         Integer(
                             title=_("Warning at"),
                             unit=_("mails"),
@@ -44,7 +44,10 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fortimail_queue",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Queue Name"),),
+        item_spec=lambda: TextInput(
+            title=_("Queue Name"),
+        ),
         parameter_valuespec=_parameter_valuespec_fortimail_queue,
         title=lambda: _("Fortinet FortiMail queue length"),
-    ))
+    )
+)

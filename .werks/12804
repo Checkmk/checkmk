@@ -1,0 +1,14 @@
+Title: Make PasswordStore available for LDAP connections
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1625815061
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+You can now choose to select a password from PasswordStore for
+the Bind credentials when creating an LDAP connection.
+

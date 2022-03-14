@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# Start only if at least on xinetd based service
-# is activated
+# Start only if at least one xinetd-based service is activated.
 
-test "$(ls -A ###ROOT###/etc/xinetd.d/)" || exit 5
+test "$(ls -A ${OMD_ROOT}/etc/xinetd.d/)" || exit 5
 
-PIDFILE=###ROOT###/tmp/run/xinetd.pid
-DAEMON=/usr/sbin/xinetd
-OPTS="-pidfile ###ROOT###/tmp/run/xinetd.pid -filelog ###ROOT###/var/log/xinetd.log -f ###ROOT###/etc/xinetd.conf"
+PIDFILE=${OMD_ROOT}/tmp/run/xinetd.pid
+
+# For SLES we ship our own xinetd. Prefer the one shipped with OMD in case it
+# is available
+if [ -e "$OMD_ROOT/bin/xinetd" ]; then
+    DAEMON=$OMD_ROOT/bin/xinetd
+else
+    DAEMON=/usr/sbin/xinetd
+fi
+
+OPTS="-pidfile ${OMD_ROOT}/tmp/run/xinetd.pid -filelog ${OMD_ROOT}/var/log/xinetd.log -f ${OMD_ROOT}/etc/xinetd.conf"
 
 case "$1" in
     start)

@@ -1,0 +1,17 @@
+Title: REST API ETag handling
+Class: fix
+Compatible: compat
+Component: core
+Date: 1624512507
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In 2.0.0p6, the viewing of a host through the REST API might fail
+due to missing "modification time" information on the host. This led
+to a HTTP 500 error. Also, the calculation of the ETag was sometimes
+based on stale cached values, resulting in subsequent HTTP 412
+"precondition failed" errors. This werk fixes both of these bug.
+

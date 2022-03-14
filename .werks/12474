@@ -1,0 +1,13 @@
+Title: Fixed Availability/SLA computation for BI
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1625130729
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Availability and SLA calculations for BI failed and showed <tt>N/A</tt> if the
+hosts themselves were not also present in the aggregation.

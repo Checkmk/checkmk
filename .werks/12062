@@ -6,7 +6,7 @@ Date: 1612956740
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If an exsiting report had no icon, the rendering of the gui was broken.
 Such reports will now get a default icon.

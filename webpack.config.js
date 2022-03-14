@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 const path = require("path");
-const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
+const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
@@ -23,9 +23,9 @@ module.exports = {
         ],
     },
     entry: {
-        main: "./web/htdocs/js/index.js",
-        mobile: "./web/htdocs/js/mobile.js",
-        side: "./web/htdocs/js/side_index.js",
+        main: "./web/htdocs/js/index.ts",
+        mobile: "./web/htdocs/js/mobile.ts",
+        side: "./web/htdocs/js/side_index.ts",
         facelift: "./web/htdocs/themes/facelift/theme.scss",
         modern_dark: "./web/htdocs/themes/modern-dark/theme.scss",
         cma: "./web/htdocs/themes/facelift/cma_facelift.scss",
@@ -55,6 +55,8 @@ module.exports = {
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/ntop"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/license_usage"),
         ],
+        // added this because otherwise it won't find any imported ts files inside of a js file
+        extensions: [".ts", ".js"],
     },
     module: {
         rules: [
@@ -116,25 +118,15 @@ module.exports = {
         ],
     },
     plugins: [
-        new FixStyleOnlyEntriesPlugin(),
+        new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
     ],
 };
-
-if (process.env.WEBPACK_MODE === "quick") {
-    console.log(
-        "not using Babel in Webpack mode '" +
-            process.env.WEBPACK_MODE +
-            "', let's hope you know what your're doing..."
-    );
-} else {
-    console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
-    let babel_loader = {
-        test: /\.js$/,
+let babel_loader = {
         // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
+        exclude: /node_modules/,
         include: [
             path.resolve(__dirname, "web/htdocs/js"),
-            path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
             path.resolve(__dirname, "node_modules/d3"),
             path.resolve(__dirname, "node_modules/d3-flextree"),
             path.resolve(__dirname, "node_modules/d3-sankey"),
@@ -147,6 +139,30 @@ if (process.env.WEBPACK_MODE === "quick") {
             loader: "babel-loader",
             options: {
                 presets: [
+                    "@babel/typescript"
+                ],
+                plugins: ["@babel/plugin-transform-parameters",
+                          "@babel/proposal-class-properties",
+                          "@babel/proposal-object-rest-spread"
+                          ],
+            },
+        },
+    };
+
+
+
+if (process.env.WEBPACK_MODE === "quick") {
+    console.log(
+        "not using Babel in Webpack mode '" +
+            process.env.WEBPACK_MODE +
+            "', let's hope you know what your're doing..."
+
+    );
+    babel_loader["test"]=  /\.ts?$/;
+} else {
+    console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
+    babel_loader["test"]=  /\.(ts|js)?$/;
+    babel_loader["use"]["options"]["presets"].unshift(
                     [
                         "@babel/preset-env",
                         {
@@ -156,11 +172,8 @@ if (process.env.WEBPACK_MODE === "quick") {
                             useBuiltIns: "usage",
                             corejs: 3,
                         },
-                    ],
-                ],
-                plugins: ["@babel/plugin-transform-parameters"],
-            },
-        },
-    };
-    module.exports.module.rules.unshift(babel_loader);
+
+                    ]
+                )
 }
+module.exports.module.rules.unshift(babel_loader);

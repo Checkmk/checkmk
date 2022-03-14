@@ -22,12 +22,15 @@ def check_solaris_prtdiag_status(_no_item, _no_params, info):
     # 1 Failures or errors are detected in the system.
     if int(info[0][0]) == 0:
         return 0, "No failures or errors are reported"
-    return 2, "Failures or errors are reported by the system. " \
-              "Please check the output of \"prtdiag -v\" for details."
+    return (
+        2,
+        "Failures or errors are reported by the system. "
+        'Please check the output of "prtdiag -v" for details.',
+    )
 
 
-check_info['solaris_prtdiag_status'] = {
+check_info["solaris_prtdiag_status"] = {
     "inventory_function": inventory_solaris_prtdiag_status,
     "check_function": check_solaris_prtdiag_status,
-    "service_description": "Hardware Overall State"
+    "service_description": "Hardware Overall State",
 }

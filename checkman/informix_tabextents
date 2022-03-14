@@ -1,7 +1,7 @@
 title: Informix DB: Table Extents
 agents: linux
 catalog: app/informix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors table extents of
@@ -14,5 +14,5 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each instance.

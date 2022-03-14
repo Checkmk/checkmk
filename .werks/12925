@@ -1,0 +1,13 @@
+Title: sap_hana_memrate: Fix graph for memory used
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625563541
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Graph for memory used didn't have units displayed.
+Now, units are displayed and the title is nicer.

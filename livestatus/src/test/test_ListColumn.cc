@@ -4,11 +4,11 @@
 // source code package.
 
 #include <chrono>
-#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "Row.h"
 #include "gtest/gtest.h"
 
@@ -21,41 +21,14 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-TEST(ListColumn, ConstantList) {
-    const auto v = ListColumn::column_type{"hello"s, "world"s};
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = ListColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-}
-
-TEST(ListColumn, ConstantDefaultRow) {
-    const auto v = ListColumn::column_type{"hello"s, "world"s};
-    const auto row = DummyRow{nullptr};
-    const auto col = ListColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-}
-
-TEST(ListColumn, Reference) {
-    auto v = ListColumn::column_type{"hello"s, "world"s};
-    const auto row = DummyRow{nullptr};
-    const auto col = ListColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-
-    v.emplace_back("good morning"s);
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-}
-
 TEST(ListColumn, GetValueLambda) {
-    auto v = ListColumn::column_type{"hello"s, "world"s};
+    using value_type = ListColumn<DummyRow>::value_type;
+    value_type v{"hello"s, "world"s};
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = ListColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+    const auto col = ListColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
@@ -63,14 +36,15 @@ TEST(ListColumn, GetValueLambda) {
 }
 
 TEST(ListColumn, GetValueDefault) {
-    auto v = ListColumn::column_type{"hello"s, "world"s};
+    using value_type = ListColumn<DummyRow>::value_type;
+    value_type v{"hello"s, "world"s};
 
     const auto row = DummyRow{nullptr};
-    const auto col = ListColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+    const auto col = ListColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
     EXPECT_NE(v, col.getValue(row, nullptr, 0s));
-    EXPECT_EQ(ListColumn::column_type{}, col.getValue(row, nullptr, 0s));
+    EXPECT_EQ(value_type{}, col.getValue(row, nullptr, 0s));
 }

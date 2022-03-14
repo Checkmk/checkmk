@@ -10,15 +10,15 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void NullColumn::output(Row /* row */, RowRenderer& r,
-                        const contact* /* auth_user */,
+void NullColumn::output(Row /* row */, RowRenderer &r,
+                        const contact * /* auth_user */,
                         std::chrono::seconds /*timezone_offset*/) const {
     r.output(Null());
 }
 
 std::unique_ptr<Filter> NullColumn::createFilter(
     Filter::Kind /*unused*/, RelationalOperator /*unused*/,
-    const std::string& /*unused*/) const {
+    const std::string & /*unused*/) const {
     throw std::runtime_error("filtering on null column not supported");
 }
 

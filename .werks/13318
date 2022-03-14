@@ -1,0 +1,18 @@
+Title: Special agent modules can now be loaded from local hierarchy
+Class: feature
+Compatible: compat
+Component: core
+Date: 1637308120
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+To make packaging of special agents easier we now support the special agents
+python modules to be located at <tt>local/lib/python3/cmk/special_agents</tt>.
+This is analog to the shipped special agent path at
+<tt>lib/python3/cmk/special_agents</tt>.
+
+The modules from the new path can then be imported as usual: <tt>import
+cmk.special_agent.your_name</tt>.

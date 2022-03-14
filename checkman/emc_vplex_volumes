@@ -1,7 +1,7 @@
 title: EMC VPLEX: Volume Diskstat
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -28,11 +28,10 @@ item:
  Either {"SUMMARY"} for a summarized check of all disks or the name of the
  disk device, e.g. {"VPZ-B-S-L323_vol"}.
 
-inventory:
+discovery:
   One service is created for all directors if the configuration
   is set to {["summary"]} (default).
   If the configuration is set to {["physical"]} one service is created
   for each director.
   You can also set {["summary", "physical"]} to create both variants.
   The configuration is set via the {diskstat_inventory} rule.
-

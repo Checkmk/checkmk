@@ -1,0 +1,17 @@
+Title: Fix NotADirectoryError on user profile cleanup background job
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1629820777
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If LDAP connections were used, the file "ldap_MYCONNECTION_sync_time.mk" could
+cause error entries in ~/var/log/web.log, because the file was treated as
+directory.
+
+From now on, files in ~/var/check_mk/web will be ignored on cleanup because we
+only want to cleanup abandoned user directories.

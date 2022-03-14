@@ -1,0 +1,20 @@
+Title: Fix wrong converting of disabled service rules with negate on update
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1634893661
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Since version 2.0.0, if disabled service rules with negated service condition were used, these
+rules were wrongly converted with the next 2.0.0p update.
+The negate condition was empty after updating, leading to missfunctional rules.
+
+This also happens while updating from 1.6.0 to 2.0.0.
+
+If you used such rules, you have to set the service condition with negate again.
+
+

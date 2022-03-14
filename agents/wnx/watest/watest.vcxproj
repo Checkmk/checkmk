@@ -29,7 +29,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
     <EnableASAN>true</EnableASAN>
@@ -37,26 +37,28 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
-    <EnableASAN>true</EnableASAN>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -77,7 +79,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <OutDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
     <CustomBuildBeforeTargets>
@@ -90,7 +92,7 @@
     <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <OutDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
     <CustomBuildBeforeTargets>
@@ -162,8 +164,9 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -201,8 +204,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -242,8 +246,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -283,8 +288,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -305,6 +311,7 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="test-agent_controller.cpp" />
     <ClCompile Include="test-cap.cpp" />
     <ClCompile Include="test-carrier.cpp" />
     <ClCompile Include="test-cfg.cpp" />

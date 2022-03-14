@@ -1,0 +1,17 @@
+Title: Views: Improve loading speed with a large number of users
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1620299539
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The speed of status view loads has been improved with a larger number of users.
+Previous Checkmk versions were scanning the user profile directories multiple
+times for loading different types of custom elements (views, dashboards,
+reports, ...). Some of them were loaded multiple times which increased the
+overall load time of views especially with a larger number of users. We have
+now removed these redundancies.

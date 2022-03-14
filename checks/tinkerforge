@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<tinkerforge:sep(44)>>>
 # temperature,6QHSgJ.a.tiq,2181
 # humidity,6QHSgJ.c.ugg,250
@@ -59,8 +61,9 @@ def parse_tinkerforge(info):
     res = {}
     for brick_type, bricks in temp.items():
         counter = 1
-        for brick in sorted(bricks,
-                            key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, ' ')):
+        for brick in sorted(
+            bricks, key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, " ")
+        ):
             name = str(counter)
             if brick[2]:
                 name = "%s %s" % (brick[2], counter)
@@ -81,33 +84,33 @@ def inventory_tinkerforge(brick_type, parsed):
 
 
 def check_tinkerforge_master(item, params, parsed):
-    if 'master' in parsed and item in parsed['master']:
+    if "master" in parsed and item in parsed["master"]:
         try:
-            voltage, current, chip_temp = parsed['master'][item]
+            voltage, current, chip_temp = parsed["master"][item]
             yield 0, "%.1f mV" % float(voltage)
             yield 0, "%.1f mA" % float(current)
             yield check_temperature(float(chip_temp) / 10.0, params, "tinkerforge_%s" % item)
         except Exception:
-            yield 2, parsed['master'][item][0], []
+            yield 2, parsed["master"][item][0], []
 
 
 def check_tinkerforge_temperature(item, params, parsed):
-    if 'temperature' in parsed and item in parsed['temperature']:
-        reading = float(parsed['temperature'][item][0]) / 100.0
+    if "temperature" in parsed and item in parsed["temperature"]:
+        reading = float(parsed["temperature"][item][0]) / 100.0
         return check_temperature(reading, params, "tinkerforge_%s" % item)
 
 
 def check_tinkerforge_ambient(item, params, parsed):
-    if 'ambient' in parsed and item in parsed['ambient']:
-        reading = float(parsed['ambient'][item][0]) / 100.0
+    if "ambient" in parsed and item in parsed["ambient"]:
+        reading = float(parsed["ambient"][item][0]) / 100.0
         if not params:
             params = None
-        return check_levels(reading, 'brightness', params, unit="lx", infoname="Brightness")
+        return check_levels(reading, "brightness", params, unit="lx", infoname="Brightness")
 
 
 def check_tinkerforge_humidity(item, params, parsed):
-    if 'humidity' in parsed and item in parsed['humidity']:
-        return check_humidity(float(parsed['humidity'][item][0]) / 10.0, params)
+    if "humidity" in parsed and item in parsed["humidity"]:
+        return check_humidity(float(parsed["humidity"][item][0]) / 10.0, params)
 
 
 def check_tinkerforge_motion(item, params, parsed):
@@ -121,54 +124,54 @@ def check_tinkerforge_motion(item, params, parsed):
         return False
 
     weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-    if 'motion' in parsed and item in parsed['motion']:
+    if "motion" in parsed and item in parsed["motion"]:
         today = time.localtime()
-        if 'time_periods' in params:
-            periods = params['time_periods'][weekdays[today.tm_wday]]
+        if "time_periods" in params:
+            periods = params["time_periods"][weekdays[today.tm_wday]]
         else:
             periods = [((0, 0), (24, 0))]
-        reading = int(parsed['motion'][item][0])
+        reading = int(parsed["motion"][item][0])
         if reading == 1:
             status = 1 if test_in_period((today.tm_hour, today.tm_min), periods) else 0
-            return status, "Motion detected", [('motion', reading)]
-        return 0, "No motion detected", [('motion', reading)]
+            return status, "Motion detected", [("motion", reading)]
+        return 0, "No motion detected", [("motion", reading)]
 
 
-check_info['tinkerforge'] = {
-    'inventory_function': lambda parsed: inventory_tinkerforge('master', parsed),
-    'check_function': check_tinkerforge_master,
-    'parse_function': parse_tinkerforge,
-    'service_description': "Master %s"
+check_info["tinkerforge"] = {
+    "inventory_function": lambda parsed: inventory_tinkerforge("master", parsed),
+    "check_function": check_tinkerforge_master,
+    "parse_function": parse_tinkerforge,
+    "service_description": "Master %s",
 }
 
-check_info['tinkerforge.temperature'] = {
-    'inventory_function': lambda parsed: inventory_tinkerforge('temperature', parsed),
-    'check_function': check_tinkerforge_temperature,
-    'has_perfdata': True,
-    'service_description': "Temperature %s",
-    'group': 'temperature',
+check_info["tinkerforge.temperature"] = {
+    "inventory_function": lambda parsed: inventory_tinkerforge("temperature", parsed),
+    "check_function": check_tinkerforge_temperature,
+    "has_perfdata": True,
+    "service_description": "Temperature %s",
+    "group": "temperature",
 }
 
-check_info['tinkerforge.ambient'] = {
-    'inventory_function': lambda parsed: inventory_tinkerforge('ambient', parsed),
-    'check_function': check_tinkerforge_ambient,
-    'has_perfdata': True,
-    'group': 'brightness',
-    'service_description': "Ambient Light %s"
+check_info["tinkerforge.ambient"] = {
+    "inventory_function": lambda parsed: inventory_tinkerforge("ambient", parsed),
+    "check_function": check_tinkerforge_ambient,
+    "has_perfdata": True,
+    "group": "brightness",
+    "service_description": "Ambient Light %s",
 }
 
-check_info['tinkerforge.humidity'] = {
-    'inventory_function': lambda parsed: inventory_tinkerforge('humidity', parsed),
-    'check_function': check_tinkerforge_humidity,
-    'has_perfdata': True,
-    'group': 'humidity',
-    'service_description': "Humidity %s",
+check_info["tinkerforge.humidity"] = {
+    "inventory_function": lambda parsed: inventory_tinkerforge("humidity", parsed),
+    "check_function": check_tinkerforge_humidity,
+    "has_perfdata": True,
+    "group": "humidity",
+    "service_description": "Humidity %s",
 }
 
-check_info['tinkerforge.motion'] = {
-    'inventory_function': lambda parsed: inventory_tinkerforge('motion', parsed),
-    'check_function': check_tinkerforge_motion,
-    'has_perfdata': True,
-    'group': 'motion',
-    'service_description': "Motion Detector %s",
+check_info["tinkerforge.motion"] = {
+    "inventory_function": lambda parsed: inventory_tinkerforge("motion", parsed),
+    "check_function": check_tinkerforge_motion,
+    "has_perfdata": True,
+    "group": "motion",
+    "service_description": "Motion Detector %s",
 }

@@ -7,7 +7,8 @@
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .humidity import check_humidity
 from .temperature import check_temperature
-#.
+
+# .
 #   .--parse functions-----------------------------------------------------.
 #   |                                                                      |
 #   |                      _ __   __ _ _ __ ___  ___                       |
@@ -152,16 +153,21 @@ def parse_enviromux(info):
 
         sensor_type = sensor_type_names.get(line[1], "unknown")
         sensor_status = sensor_status_names.get(line[8], "unknown")
-        # Observed in the wild: "power" may actually be a voltage m(
-        if sensor_type in ["temperature", "power", "current"]:
-            # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
-            sensor_value = int(line[5]) / 10.0
-            sensor_min = int(line[9]) / 10.0
-            sensor_max = int(line[10]) / 10.0
-        else:
+        try:
             sensor_value = int(line[5])
             sensor_min = int(line[9])
             sensor_max = int(line[10])
+            # Sensors without value have "Not configured" and can't be int casted
+            # skip the parse
+        except ValueError:
+            continue
+
+        # Observed in the wild: "power" may actually be a voltage m(
+        if sensor_type in ["temperature", "power", "current"]:
+            # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
+            sensor_value /= 10.0
+            sensor_min /= 10.0
+            sensor_max /= 10.0
 
         parsed[item] = {
             "sensor_type": sensor_type,
@@ -279,7 +285,7 @@ def parse_enviromux_sems_digital(info):
     return parsed
 
 
-#.
+# .
 #   .--inventory functions-------------------------------------------------.
 #   |             _                      _                                 |
 #   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
@@ -316,7 +322,7 @@ def inventory_enviromux_humidity(parsed):
             yield item, {}
 
 
-#.
+# .
 #   .--scan functions------------------------------------------------------.
 #   |                         __                  _   _                    |
 #   |  ___  ___ __ _ _ __    / _|_   _ _ __   ___| |_(_) ___  _ __  ___    |
@@ -337,7 +343,7 @@ def enviromux_sems_scan_function(oid):
     return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3699.1.1.2")
 
 
-#.
+# .
 #   .--check functions-----------------------------------------------------.
 #   |                           _               _                          |
 #   |                       ___| |__   ___  ___| | __                      |
@@ -357,23 +363,25 @@ def enviromux_sems_scan_function(oid):
 
 
 def check_enviromux_temperature(item, params, parsed):
-    dev_levels_lower = (parsed[item]['sensor_min'], parsed[item]['sensor_min'])
-    dev_levels = (parsed[item]['sensor_max'], parsed[item]['sensor_max'])
-    return check_temperature(parsed[item]['sensor_value'],
-                             params,
-                             item,
-                             dev_levels_lower=dev_levels_lower,
-                             dev_levels=dev_levels)
+    dev_levels_lower = (parsed[item]["sensor_min"], parsed[item]["sensor_min"])
+    dev_levels = (parsed[item]["sensor_max"], parsed[item]["sensor_max"])
+    return check_temperature(
+        parsed[item]["sensor_value"],
+        params,
+        item,
+        dev_levels_lower=dev_levels_lower,
+        dev_levels=dev_levels,
+    )
 
 
 def check_enviromux_voltage(item, params, parsed):
-    sensor_value = parsed[item]['sensor_value']
+    sensor_value = parsed[item]["sensor_value"]
     perf = [("voltage", sensor_value)]
     infotext = "Input Voltage is %.1f V" % sensor_value
-    min_warn = params['levels_lower'][0]
-    min_crit = params['levels_lower'][1]
-    max_warn = params['levels'][0]
-    max_crit = params['levels'][1]
+    min_warn = params["levels_lower"][0]
+    min_crit = params["levels_lower"][1]
+    max_warn = params["levels"][0]
+    max_crit = params["levels"][1]
     levelstext_lower = " (warn/crit below %s/%s)" % (min_warn, min_crit)
     levelstext_upper = " (warn/crit at %s/%s)" % (max_warn, max_crit)
     levelstext = ""
@@ -397,4 +405,4 @@ def check_enviromux_voltage(item, params, parsed):
 
 
 def check_enviromux_humidity(item, params, parsed):
-    return check_humidity(parsed[item]['sensor_value'], params)
+    return check_humidity(parsed[item]["sensor_value"], params)

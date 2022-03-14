@@ -1,0 +1,34 @@
+title: SAP HANA: Age, Size and Count of a Group of Files
+agents: linux
+catalog: app/sap_hana
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the size, age and the count of a group of files
+ in the target host's filesystem.  You can set lower and upper
+ limits for each: size of files, age of oldest, the newest file
+ and for the total count of files.
+
+ This check needs some configuration in the agent, as the agent needs to
+ know the information about which files need to be sent.  Please refer to
+ fileinfo's manpage for information about setting up the agent.
+
+ The check also needs a configured file grouping pattern.  The name of the
+ file group is referenced in the check configuration as the item.
+
+ File grouping patterns combine a simple pattern based on {*} and {?} to
+ join a subset of the file names send by the agent into a file group. In
+ addition an {exclude} pattern may be defined to exclude certain filenames.
+
+ Furthermore, the current time/date in a configurable format may be
+ included in the pattern. The syntax is as follows: {$DATE:format-spec$},
+ where {format-spec} is a list of time format directives of the unix date
+ command.  Example: {$DATE:%Y%m%d$} is todays date, e.g. 20140127. A pattern
+ of {/var/tmp/backups/$DATE:%Y%m%d$.txt} would search for .txt files with
+ todays date as name in the directory /var/tmp/backups.
+
+item:
+ Configured name of the file group
+
+inventory:
+ One service is created for each fileinfo group.

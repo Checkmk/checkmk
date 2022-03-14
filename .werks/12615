@@ -1,0 +1,13 @@
+Title: Fix modification of existing entries while cloning
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616756604
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you tried to clone e.g. "Bookmark lists", "Custom sidebar elements" or, in
+CEE, "Graph tunings" or "Service Level Agreements", the existing entry was
+renamed, no clone was created.

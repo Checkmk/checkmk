@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
 # have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
@@ -27,7 +28,7 @@ factory_settings["hp_procurve_mem_default_levels"] = {"levels": ("perc_used", (8
 
 def inventory_hp_procurve_mem(info):
     if len(info) == 1 and int(info[0][0]) >= 0:
-        return [("", 'hp_procurve_mem_default_levels')]
+        return [("", "hp_procurve_mem_default_levels")]
 
 
 def check_hp_procurve_mem(item, params, info):
@@ -47,13 +48,13 @@ def check_hp_procurve_mem(item, params, info):
 
 
 check_info["hp_procurve_mem"] = {
-    'check_function': check_hp_procurve_mem,
-    'inventory_function': inventory_hp_procurve_mem,
-    'service_description': 'Memory',
-    'group': 'memory_simple',
-    'default_levels_variable': 'hp_procurve_mem_default_levels',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1', ['5', '7']),
-    'snmp_scan_function': lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0") or ".11.2.3.7.8"
-                          in oid(".1.3.6.1.2.1.1.2.0"),
+    "check_function": check_hp_procurve_mem,
+    "inventory_function": inventory_hp_procurve_mem,
+    "service_description": "Memory",
+    "group": "memory_simple",
+    "default_levels_variable": "hp_procurve_mem_default_levels",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1", ["5", "7"]),
+    "snmp_scan_function": lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0")
+    or ".11.2.3.7.8" in oid(".1.3.6.1.2.1.1.2.0"),
 }

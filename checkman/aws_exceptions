@@ -1,7 +1,7 @@
 title: AWS: Exceptions
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check collects all exceptions during the execution of the
@@ -10,5 +10,5 @@ description:
  The service is {OK} if no exceptions occur
  otherwise it goes {CRIT}.
 
-inventory:
+discovery:
  One service is created.

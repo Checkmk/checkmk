@@ -1,7 +1,7 @@
 title: Extreme Networks Switch: CPU Utilization
 agents: snmp
 catalog: hw/network/netextreme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization of a Extreme Networks Switch
@@ -9,5 +9,5 @@ description:
 
  Default levels are 80, 90 percent. These are configurable.
 
-inventory:
+discovery:
  One service is created.

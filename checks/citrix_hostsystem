@@ -53,7 +53,7 @@ check_info["citrix_hostsystem.vms"] = {
     "service_description": "Citrix VMs",
 }
 
-#.
+# .
 #   .--Host Info-----------------------------------------------------------.
 #   |              _   _           _     ___        __                     |
 #   |             | | | | ___  ___| |_  |_ _|_ __  / _| ___                |

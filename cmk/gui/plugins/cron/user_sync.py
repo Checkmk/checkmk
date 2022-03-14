@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.userdb as userdb
-from cmk.gui.plugins.cron import register_job
+from cmk.gui.cron import register_job
 
 register_job(userdb.execute_userdb_job)
+register_job(userdb.execute_user_profile_cleanup_job)

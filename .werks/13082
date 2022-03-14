@@ -1,0 +1,22 @@
+Title: scheduling host downtimes with REST API from read-only sites
+Class: fix
+Compatible: compat
+Component: core
+Date: 1643128873
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This Werk fixes a bug which was introduced in Werk 13080.
+
+When a site was used as "read-only", (or any other setup which allows
+only access to Livestatus but doesn't have a config) setting downtimes
+was not possible.
+
+This Werk fixes this. Setting downtimes is now also possible:
+
+* on sites with no configuration
+* for hosts which have already been deleted in the configuration, but the change has not been activated yet.
+
+No user intervention is necessary to make this work.

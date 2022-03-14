@@ -1,0 +1,13 @@
+Our gcc version does not yet support implicit-fallthrough.
+
+--- a/configure	2022-02-07 09:30:39.191634511 +0100
++++ b/configure	2021-05-26 00:19:35.000000000 +0200
+@@ -16862,7 +16862,7 @@
+     #
+     netsnmp_save_CFLAGS="$CFLAGS"
+     for opt in -Wall -Wextra -Wstrict-prototypes -Wwrite-strings -Wcast-qual \
+-        -Wimplicit-fallthrough=2 -Wlogical-op                                \
++        -Wno-fallthrough -Wlogical-op                                \
+         -Wno-format-truncation -Wno-missing-field-initializers               \
+         -Wno-sign-compare -Wno-unused-parameter
+     do

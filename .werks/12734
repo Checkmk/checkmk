@@ -1,0 +1,14 @@
+Title: Apache ActiveMQ queues special agent: Parse protocol argument
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620114013
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When configuring the special agent for monitoring Apache ActiveMQ
+queues, users select the protocol to be used (HTTP/HTTPS). However,
+the special agent did not parse this argument correctly, leading to
+a crash. This has been fixed.

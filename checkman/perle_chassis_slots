@@ -1,7 +1,7 @@
 title: Perle Mediaconverter: Chassis Slots Diagnostic Status
 agents: snmp
 catalog: hw/network/perle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the diagnostic result and alarms of modules connected
@@ -16,5 +16,5 @@ description:
 item:
  The index of the slot
 
-inventory:
+discovery:
  One service is created for each module.

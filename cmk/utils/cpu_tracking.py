@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import os
 import posix
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable
+from typing import Any, Iterable, Mapping
 
 from cmk.utils.log import console
 
@@ -32,28 +34,31 @@ class Snapshot:
         return cls(times_result((0.0, 0.0, 0.0, 0.0, 0.0)))
 
     @classmethod
-    def take(cls) -> "Snapshot":
+    def take(cls) -> Snapshot:
         return cls(os.times())
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "Snapshot":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> Snapshot:
         try:
             return cls(times_result(serialized["process"]))
         except LookupError as exc:
             raise ValueError(serialized) from exc
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         return {"process": tuple(self.process)}
 
-    def __add__(self, other: "Snapshot") -> "Snapshot":
+    def __add__(self, other: Snapshot) -> Snapshot:
         if not isinstance(other, Snapshot):
             return NotImplemented
         return Snapshot(times_result(t0 + t1 for t0, t1 in zip(self.process, other.process)))
 
-    def __sub__(self, other: "Snapshot") -> "Snapshot":
+    def __sub__(self, other: Snapshot) -> Snapshot:
         if not isinstance(other, Snapshot):
             return NotImplemented
         return Snapshot(times_result(t0 - t1 for t0, t1 in zip(self.process, other.process)))
+
+    def __bool__(self) -> bool:
+        return self != Snapshot.null()
 
 
 class CPUTracker:

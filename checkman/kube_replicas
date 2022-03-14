@@ -1,0 +1,21 @@
+title: Kubernetes: Replicas
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of Kubernetes replicas.
+
+ In the event that the number of ready or up-to-date replicas is below the
+ number of desired replicas, the check shows a WARN and CRIT state if this
+ persists for more than 5 minutes and 10 minutes respectively.
+
+ It is possible to configure the grace period for each state using the
+ "Kubernetes: Replicas" ruleset.
+
+ Please note that replicas may temporarily be in a not ready or out-of-date
+ state during the process of an update. It is therefore advised to always have a
+ grace period configured.
+
+discovery:
+ One service is created for each Kubernetes object which supports replicas.

@@ -8,6 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -15,7 +16,9 @@
 #include "LogCache.h"
 #include "Logfile.h"
 #include "Table.h"
+#include "contact_fwd.h"
 class Column;
+class ColumnOffsets;
 class Filter;
 class HostServiceState;
 class LogEntry;
@@ -23,15 +26,11 @@ class MonitoringCore;
 class Query;
 class Row;
 
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "contact_fwd.h"
-#endif
-
 class TableStateHistory : public Table {
 public:
     TableStateHistory(MonitoringCore *mc, LogCache *log_cache);
+    static void addColumns(Table *table, const std::string &prefix,
+                           const ColumnOffsets &offsets);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
@@ -41,29 +40,29 @@ public:
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
-protected:
-    bool _abort_query;
-
 private:
     LogCache *_log_cache;
+    bool _abort_query;
 
-    int _query_timeframe;
-    int _since;
-    int _until;
+    enum class ModificationStatus { unchanged, changed };
 
-    // Notification periods information, name: active(1)/inactive(0)
-    std::map<std::string, int> _notification_periods;
-
-    // Helper functions to traverse through logfiles
-    logfiles_t::const_iterator _it_logs;
-    const logfile_entries_t *_entries;
-    logfile_entries_t::const_iterator _it_entries;
-
-    void getPreviousLogentry();
-    LogEntry *getNextLogentry();
-    void process(Query *query, HostServiceState *hs_state);
-    int updateHostServiceState(Query *query, const LogEntry *entry,
-                               HostServiceState *hs_state, bool only_update);
+    void answerQueryInternal(Query *query, const LogFiles &log_files);
+    const Logfile::map_type *getEntries(Logfile *logfile);
+    void getPreviousLogentry(const LogFiles &log_files,
+                             LogFiles::const_iterator &it_logs,
+                             const Logfile::map_type *&entries,
+                             Logfile::const_iterator &it_entries);
+    LogEntry *getNextLogentry(const LogFiles &log_files,
+                              LogFiles::const_iterator &it_logs,
+                              const Logfile::map_type *&entries,
+                              Logfile::const_iterator &it_entries);
+    void process(Query *query,
+                 std::chrono::system_clock::duration query_timeframe,
+                 HostServiceState *hs_state);
+    ModificationStatus updateHostServiceState(
+        Query *query, std::chrono::system_clock::duration query_timeframe,
+        const LogEntry *entry, HostServiceState *hs_state, bool only_update,
+        const std::map<std::string, int> &notification_periods);
 };
 
 #endif  // TableStateHistory_h

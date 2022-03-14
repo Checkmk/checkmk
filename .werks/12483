@@ -1,0 +1,18 @@
+Title: Event rates in graphs can be of very small magnitude
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1617800717
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Event rates were displayed with at most a presision of 2 decimals on the
+graphs, and was generally a good format. Yet, there are some cases when
+monitoring very sporadic events, graphs would show a scale containing only
+zeros.
+
+After this werk, event rates follow the same scientific notation used on
+other metrics like floating point numbers, counts and percent. This allows
+to appropiately display numbers regardless of their domain range.

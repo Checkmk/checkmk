@@ -8,17 +8,17 @@ import logging
 import random
 import time
 from datetime import datetime, timedelta
-from typing import Optional, NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.license_usage.samples import (
-    LicenseUsageSample,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,
+    LicenseUsageSample,
     rot47,
 )
 
@@ -46,8 +46,9 @@ def try_history_update() -> None:
         _try_history_update()
     except Exception as e:
         crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        logger.error("Error during license usage history update (Crash ID: %s): %s",
-                     crash.ident_to_text(), e)
+        logger.error(
+            "Error during license usage history update (Crash ID: %s): %s", crash.ident_to_text(), e
+        )
         crash_reporting.CrashReportStore().save(crash)
 
 
@@ -109,7 +110,7 @@ def _create_or_update_history_dump() -> LicenseUsageHistoryDump:
 def _load_history_dump() -> LicenseUsageHistoryDump:
     raw_history_dump = store.load_bytes_from_file(
         history_filepath,
-        default=b'{}',
+        default=b"{}",
     )
     return LicenseUsageHistoryDump.deserialize(raw_history_dump)
 
@@ -118,15 +119,19 @@ def _create_sample() -> Optional[LicenseUsageSample]:
     hosts_counter = _get_hosts_counter()
     services_counter = _get_services_counter()
 
-    if (hosts_counter.included == 0 and hosts_counter.excluded == 0 and
-            services_counter.included == 0 and services_counter.excluded == 0):
+    if (
+        hosts_counter.included == 0
+        and hosts_counter.excluded == 0
+        and services_counter.included == 0
+        and services_counter.excluded == 0
+    ):
         return None
 
     general_infos = cmk_version.get_general_version_infos()
     return LicenseUsageSample(
         version=cmk_version.omd_version(),
-        edition=general_infos['edition'],
-        platform=general_infos['os'],
+        edition=general_infos["edition"],
+        platform=general_infos["os"],
         is_cma=cmk_version.is_cma(),
         num_hosts=hosts_counter.included,
         num_hosts_excluded=hosts_counter.excluded,
@@ -142,25 +147,27 @@ def _get_extensions():
     with store.locked(extensions_filepath):
         raw_extensions = store.load_bytes_from_file(
             extensions_filepath,
-            default=b'{}',
+            default=b"{}",
         )
     return LicenseUsageExtensions.deserialize(raw_extensions)
 
 
-EntityCounter = NamedTuple("EntityCounter", [
-    ("included", int),
-    ("excluded", int),
-])
+class EntityCounter(NamedTuple):
+    included: int
+    excluded: int
 
 
 def _get_hosts_counter() -> EntityCounter:
     included_num_hosts, excluded_num_hosts = _get_stats_from_livestatus(
-        ("GET hosts\n"
-         "Stats: host_labels != '{label_name}' '{label_value}'\n"
-         "Stats: host_labels = '{label_name}' '{label_value}'\n").format(
-             label_name=_LICENSE_LABEL_NAME,
-             label_value=_LICENSE_LABEL_EXCLUDE,
-         ))
+        (
+            "GET hosts\n"
+            "Stats: host_labels != '{label_name}' '{label_value}'\n"
+            "Stats: host_labels = '{label_name}' '{label_value}'\n"
+        ).format(
+            label_name=_LICENSE_LABEL_NAME,
+            label_value=_LICENSE_LABEL_EXCLUDE,
+        )
+    )
 
     return EntityCounter(
         included=included_num_hosts,
@@ -170,16 +177,19 @@ def _get_hosts_counter() -> EntityCounter:
 
 def _get_services_counter() -> EntityCounter:
     included_num_services, excluded_num_services = _get_stats_from_livestatus(
-        ("GET services\n"
-         "Stats: host_labels != '{label_name}' '{label_value}'\n"
-         "Stats: service_labels != '{label_name}' '{label_value}'\n"
-         "StatsAnd: 2\n"
-         "Stats: host_labels = '{label_name}' '{label_value}'\n"
-         "Stats: service_labels = '{label_name}' '{label_value}'\n"
-         "StatsOr: 2\n").format(
-             label_name=_LICENSE_LABEL_NAME,
-             label_value=_LICENSE_LABEL_EXCLUDE,
-         ))
+        (
+            "GET services\n"
+            "Stats: host_labels != '{label_name}' '{label_value}'\n"
+            "Stats: service_labels != '{label_name}' '{label_value}'\n"
+            "StatsAnd: 2\n"
+            "Stats: host_labels = '{label_name}' '{label_value}'\n"
+            "Stats: service_labels = '{label_name}' '{label_value}'\n"
+            "StatsOr: 2\n"
+        ).format(
+            label_name=_LICENSE_LABEL_NAME,
+            label_value=_LICENSE_LABEL_EXCLUDE,
+        )
+    )
 
     return EntityCounter(
         included=included_num_services,

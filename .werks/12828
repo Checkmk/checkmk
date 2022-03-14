@@ -1,0 +1,30 @@
+Title: Distributed setup: Fix parallel activations breaking remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1620070755
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+Previous 2.0.0 versions could break the Checkmk configuration on remote sites
+when two users tried to activate changes for a single remote site at the same
+time.
+
+This was a race condition between both processes. While the first activation
+performed the synchronization to the remote site, the second activation could
+modify the files that are currently being synchronized by the first process.
+This could lead to incomplete configurations on the remote site.
+
+Since the first activation did not know anything about this inconsistency, it
+tried to activate the incomplete configuration on the remote site after the
+sychronization which could fail with different error messages depending on
+which files were not transfered.
+
+This issue only affected the configuration of remote sites. No configuration
+was lost on the central site.
+
+If you want to prevent this issue with previous 2.0.0 releases, you need to
+ensure that you don't start two activations for a site at the same time.

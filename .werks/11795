@@ -1,0 +1,13 @@
+Title: Unknown services in the discovery page
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1616767482
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Services for checks that need access to the host name, like
+e.g. logwatch, were shown as unknown in the service discovery
+page. This is fixed.

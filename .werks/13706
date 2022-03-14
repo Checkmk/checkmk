@@ -1,0 +1,14 @@
+Title: <tt>esx_vsphere_counters_diskio</tt>: Fix summarized read and write latency
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643106044
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In summary mode, the check plugin <tt>esx_vsphere_counters_diskio</tt> reported
+inconsistent read and write latencies. The overall latency is averaged across
+the individual disks but the read and write latencies were summed up instead of
+averaged. As of this werk, they are averaged instead.

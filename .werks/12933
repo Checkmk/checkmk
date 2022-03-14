@@ -1,0 +1,13 @@
+Title: <tt>sap_hana_backup</tt>: WARN state if there is no backup
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1631718967
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+If SAP HANA database doesn't have any backups, one service will be discovered and
+it's state will go to WARN. In the previous version, no services would be discovered for this case.
+

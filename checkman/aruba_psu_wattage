@@ -1,0 +1,26 @@
+title: Aruba 2930M: Power Supply Wattage
+agents: snmp
+catalog: hw/network/aruba
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the power supply wattage of Aruba 2930M devices.
+
+ Per default the service goes {WARN}/{CRIT} if it exceeds the upper levels or falls
+ below the lower levels configured.
+
+ You can either configure absolute levels and percentage levels for both upper and lower levels.
+
+ The default absolute upper levels are: {WARN}: 500.0W, {CRIT}: 600.0W
+ The default absolute lower levels are: {WARN}: 0.0W, {CRIT}: 0.0W
+
+ The default percentage upper levels are: {WARN}: 80.0%, {CRIT}: 90.0%
+ The default percentage lower levels are: {WARN}: 0.0%, {CRIT}: 0.0%
+
+ The check uses the hpicfDcPower-MIB.
+
+item:
+ The model name combined with the index of the power supply.
+
+discovery:
+ One service is created for each power supply not in state NotPresent or NotPlugged.

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -31,26 +32,26 @@ def check_statgrab_cpu(_no_item, params, info):
     idle = 0
     iowait = 0
     for var, value in info:
-        if var == 'user':
+        if var == "user":
             user = int(value)
-        elif var == 'nice':
+        elif var == "nice":
             nice = int(value)
-        elif var == 'kernel':
+        elif var == "kernel":
             system = int(value)
-        elif var == 'idle':
+        elif var == "idle":
             idle = int(value)
-        elif var == 'iowait':
+        elif var == "iowait":
             iowait = int(value)
 
-    values = CPUInfo('cpu', user, nice, system, idle, iowait)
+    values = CPUInfo("cpu", user, nice, system, idle, iowait)
 
     return check_cpu_util_unix(values, params)
 
 
 check_info["statgrab_cpu"] = {
-    'check_function': check_statgrab_cpu,
-    'inventory_function': inventory_statgrab_cpu,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'group': 'cpu_iowait',
+    "check_function": check_statgrab_cpu,
+    "inventory_function": inventory_statgrab_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "group": "cpu_iowait",
 }

@@ -1,7 +1,7 @@
 title: Cisco Adaptive Security Appliance: Memory
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -12,5 +12,5 @@ description:
  that this check only monitors the System memory and MEMPOOL_DMA pools. The reason is a
  bug in the ASA firmware: http://www.cisco.com/c/en/us/support/docs/security/asa-5500-x-series-next-generation-firewalls/116423-troubleshoot-asa-snmp.html
 
-inventory:
+discovery:
  One service is created for the I/O pool and one for the CPU pool.

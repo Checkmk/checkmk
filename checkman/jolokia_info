@@ -1,7 +1,7 @@
 title: Java Application Servers: Type and Version
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  monitor the uptime of a Java application server like
@@ -10,5 +10,5 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-inventory:
+discovery:
  One service is created for each Jolokia instance sent by the agent.

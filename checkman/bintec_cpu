@@ -1,12 +1,12 @@
 title: Bintec Devices: CPU Utilization
 agents: snmp
 catalog: hw/network/bintec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check cycle. Levels can
  be set on the total utilization. Additionally levels can be set for a high
  utilization over an extended period of time.
 
-inventory:
+discovery:
  One service is created for each host.

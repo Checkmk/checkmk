@@ -29,14 +29,18 @@ def parse_ucs_c_rack_server_power(info):
     # string. Handles invalid values provided by the XML API which cannot be
     # casted by setting corresponding values to None.
     for _, dn, power, current, voltage in info:
-        motherboard = dn.replace("dn ", "").replace("sys/",
-                                                    "").replace("rack-unit-", "Rack Unit ").replace(
-                                                        "/board", "").replace("/power-stats", "")
+        motherboard = (
+            dn.replace("dn ", "")
+            .replace("sys/", "")
+            .replace("rack-unit-", "Rack Unit ")
+            .replace("/board", "")
+            .replace("/power-stats", "")
+        )
         parsed.setdefault(motherboard, {})
         for ds_key, ds, cast_function in (
-            ('consumedPower', power, int),
-            ('inputCurrent', current, float),
-            ('inputVoltage', voltage, float),
+            ("consumedPower", power, float),  # consumedPower is no longer int but float instead!!
+            ("inputCurrent", current, float),
+            ("inputVoltage", voltage, float),
         ):
             try:
                 # Power values are of type int. Current and voltage values are of type float but
@@ -51,21 +55,19 @@ def parse_ucs_c_rack_server_power(info):
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_power(item, params, data):
-    yield check_levels(data["consumedPower"],
-                       'power',
-                       params['power_upper_levels'],
-                       unit='W',
-                       infoname='Power')
+    yield check_levels(
+        data["consumedPower"], "power", params["power_upper_levels"], unit="W", infoname="Power"
+    )
     yield 0, "Current: %s A" % data["inputCurrent"]
     yield 0, "Voltage: %s V" % data["inputVoltage"]
 
 
 check_info["ucs_c_rack_server_power"] = {
-    'parse_function': parse_ucs_c_rack_server_power,
-    'inventory_function': discover(),
-    'check_function': check_ucs_c_rack_server_power,
-    'group': 'power_multiitem',
-    'service_description': 'Motherboard Power Statistics %s',
-    'default_levels_variable': 'ucs_c_rack_server_util_power_default_levels',
-    'has_perfdata': True,
+    "parse_function": parse_ucs_c_rack_server_power,
+    "inventory_function": discover(),
+    "check_function": check_ucs_c_rack_server_power,
+    "group": "power_multiitem",
+    "service_description": "Motherboard Power Statistics %s",
+    "default_levels_variable": "ucs_c_rack_server_util_power_default_levels",
+    "has_perfdata": True,
 }

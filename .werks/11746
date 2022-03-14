@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The mssql_counters.file_sizes check allows the user to configure upper
 warn/crit levels for database log files in percent: "MSSQL Log and Data File

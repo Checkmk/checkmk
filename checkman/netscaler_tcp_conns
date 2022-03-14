@@ -1,7 +1,7 @@
 title: Citrix Netscaler: TCP Connections
 agents: snmp
 catalog: app/netscaler
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -14,6 +14,5 @@ description:
 
  Warning and critical levels can be configured for these values.
 
-inventory:
+discovery:
  One service is created for each loadbalancer device.
-

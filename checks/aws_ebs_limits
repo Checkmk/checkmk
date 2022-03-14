@@ -9,14 +9,15 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_ebs_limits_default_levels'] = {
-    'block_store_snapshots': (None, 80.0, 90.0),
-    'block_store_space_standard': (None, 80.0, 90.0),
-    'block_store_space_io1': (None, 80.0, 90.0),
-    'block_store_iops_io1': (None, 80.0, 90.0),
-    'block_store_space_gp2': (None, 80.0, 90.0),
-    'block_store_space_sc1': (None, 80.0, 90.0),
-    'block_store_space_st1': (None, 80.0, 90.0),
+
+factory_settings["aws_ebs_limits_default_levels"] = {
+    "block_store_snapshots": (None, 80.0, 90.0),
+    "block_store_space_standard": (None, 80.0, 90.0),
+    "block_store_space_io1": (None, 80.0, 90.0),
+    "block_store_iops_io1": (None, 80.0, 90.0),
+    "block_store_space_gp2": (None, 80.0, 90.0),
+    "block_store_space_sc1": (None, 80.0, 90.0),
+    "block_store_space_st1": (None, 80.0, 90.0),
 }
 
 
@@ -26,11 +27,11 @@ def parse_aws_ebs_limits(info):
         resource_key, resource_title, limit, amount, region = line
 
         if resource_key in [
-                "block_store_space_standard",
-                "block_store_space_io1",
-                "block_store_space_gp2",
-                "block_store_space_sc1",
-                "block_store_space_st1",
+            "block_store_space_standard",
+            "block_store_space_io1",
+            "block_store_space_gp2",
+            "block_store_space_sc1",
+            "block_store_space_st1",
         ]:
             # Limit has unit TiB, amount is measured in GiB
             limit *= 1024**4
@@ -41,7 +42,8 @@ def parse_aws_ebs_limits(info):
         else:
             human_readable_func = int
         limits_by_region.setdefault(region, []).append(
-            [resource_key, resource_title, limit, amount, human_readable_func])
+            [resource_key, resource_title, limit, amount, human_readable_func]
+        )
     return limits_by_region
 
 
@@ -50,12 +52,12 @@ def check_aws_ebs_limits(item, params, parsed):
     return check_aws_limits("ebs", params, parsed)
 
 
-check_info['aws_ebs_limits'] = {
-    'parse_function': parse_aws_ebs_limits,
-    'inventory_function': discover(),
-    'check_function': check_aws_ebs_limits,
-    'service_description': 'AWS/EBS Limits %s',
-    'group': 'aws_ebs_limits',
-    'default_levels_variable': 'aws_ebs_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_ebs_limits"] = {
+    "parse_function": parse_aws_ebs_limits,
+    "inventory_function": discover(),
+    "check_function": check_aws_ebs_limits,
+    "service_description": "AWS/EBS Limits %s",
+    "group": "aws_ebs_limits",
+    "default_levels_variable": "aws_ebs_limits_default_levels",
+    "has_perfdata": True,
 }

@@ -1,0 +1,16 @@
+title: WuT Web-IO: Digital Input Channels
+agents: snmp
+catalog: hw/environment/wut
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the digital input channels of
+ a WuT (Wiesemann & Theis) Web-IO (currently 577xxEA2x2 and 577xxEA12x12 are supported)
+ The evaluation of the input state can be configured via the rule "W&T WebIO".
+ The default behaviour results in {CRIT} if an input is in state "Off".
+
+item:
+ The user definable string of the WebIO device and its input description.
+
+discovery:
+ For every input of the WebIO, one service is created.

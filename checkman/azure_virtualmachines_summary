@@ -1,7 +1,7 @@
 title: Microsoft Azure: Summary of VMs
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about VMs configured in the Microsoft Azure cloud.
@@ -11,7 +11,7 @@ description:
  The service state resulting from the different counts can be configured using the
  rule "Azure Virtual Machines Summary".
 
-inventory:
+discovery:
  One service is created on every Checkmk host that receives information
  about the VMs via the piggyback mechanism.
  To configure which those are, see the configuration of the Azure agent.

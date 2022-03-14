@@ -1,7 +1,7 @@
 title: ACME Devices: Power Supplies
 agents: snmp
 catalog: hw/environment/acme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the power supplies of ACME devices.
@@ -21,5 +21,5 @@ description:
 item:
  Name of the power supply.
 
-inventory:
+discovery:
  One service is created for each power supply.

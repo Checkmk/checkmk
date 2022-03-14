@@ -1,7 +1,7 @@
 title: Raritan EMX Devices: Door States
 agents: snmp
 catalog: hw/environment/raritan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Shows Sensor information Door States
@@ -11,6 +11,5 @@ description:
 item:
  The fixed statement {{Rack}} followed by the Rack ID, the sensor type and the name of the sensor
 
-inventory:
+discovery:
  One service is created for each sensor.
-

@@ -1,0 +1,12 @@
+Title: jolokia_jvm_runtime: Uptime was off by a factor of 1000
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619587820
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

@@ -1,12 +1,11 @@
 title: Climaveneta: Alarm States
 agents: snmp
 catalog: hw/environment/climaveneta
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays all Alarm states on Climaveneta mc01_o4cv devices.
  No configuration is necessary.
 
-inventory:
+discovery:
  One service is created.
-

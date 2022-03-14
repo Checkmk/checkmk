@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _item_spec_ibm_svc_mdisk():
-    return TextAscii(
+    return TextInput(
         title=_("IBM SVC disk"),
         help=_("Name of the disk, e.g. mdisk0"),
     )
@@ -97,4 +92,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_mdisk,
         title=lambda: _("IBM SVC Disk"),
-    ))
+    )
+)

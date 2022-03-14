@@ -1,7 +1,7 @@
 title: SNMP HOST-RESOURCES-MIB: CPU Utilization
 agents: snmp
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The {HOST-RESOURCES-MIB} is a standardized MIB provided by many
@@ -11,6 +11,5 @@ description:
  the usage during the complete check interval but is just a snapshot
  of the current usage.
 
-inventory:
+discovery:
  One service is created if at least one CPU entry is found.
-

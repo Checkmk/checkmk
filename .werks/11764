@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Event Console is used as data source for Event Console
 related views. Since it is a dedicated process, it may be unreachable

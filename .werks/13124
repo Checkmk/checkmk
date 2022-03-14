@@ -1,0 +1,27 @@
+Title: Improve usability of single systemd services discovery ruleset
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1629877388
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The ruleset "Systemd single services discovery" allows for configuring
+the discovery of single systemd services. This ruleset has been slightly
+reworked to improve its usability. However, users do not need to take
+any immediate action, since current configurations will continue working.
+
+In particular, it is not possible any more to configure empty conditions
+on the systemd service descriptions, unit names or states. When editing
+a previously configured rule with empty conditions, users must untick
+these empty conditions in order to be able to save the changes. Also,
+any regular expressions are now checked for validity before saving.
+
+Furthermore, we have added a default restriction on the unit names. This
+restriction excludes the volatile systemd services check-mk-agent@.service
+used by the Checkmk agent from being discovered. These services appear and
+disappaer frequently, constantly resulting in vanished and undiscovered
+services. Therefore, they are never discovered, indepedently of the user
+configuration. See also werk #12907.

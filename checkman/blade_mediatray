@@ -1,11 +1,11 @@
 title: IBM Blade Center: Media Trays
 agents: snmp
 catalog: hw/server/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors whether a (the) media tray is present and
  comminicating with the monitoring unit.
 
-inventory:
+discovery:
  One service is created for each blade center if a media tray is present.

@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Free Capacity in RAID Groups
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Usage of RAID Groups in an EMC VNX storage system.
@@ -16,5 +16,5 @@ description:
 item:
  The RAID Group ID.
 
-inventory:
+discovery:
  One service is created for each RAID Group listed in the agent output.

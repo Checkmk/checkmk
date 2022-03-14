@@ -27,15 +27,16 @@ def check_checkpoint_powersupply(item, params, info):
             return status, dev_status
 
 
-check_info['checkpoint_powersupply'] = {
-    'check_function': check_checkpoint_powersupply,
-    'inventory_function': inventory_checkpoint_powersupply,
-    'service_description': "Power Supply %s",
-    'snmp_scan_function': scan_checkpoint,
-    'snmp_info': (
-        '.1.3.6.1.4.1.2620.1.6.7.9.1.1',
+check_info["checkpoint_powersupply"] = {
+    "check_function": check_checkpoint_powersupply,
+    "inventory_function": inventory_checkpoint_powersupply,
+    "service_description": "Power Supply %s",
+    "snmp_scan_function": scan_checkpoint,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2620.1.6.7.9.1.1",
         [
             1,  # powerSupplyIndex
             2,  # powersupplyStatus
-        ]),
+        ],
+    ),
 }

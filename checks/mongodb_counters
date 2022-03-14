@@ -4,29 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<mongodb_counters>>>
-# opcounters getmore 477157
-# opcounters insert 133537
-# opcounters update 325682
-# opcounters command 4600490
-# opcounters query 875935
-# opcounters delete 105560
-# opcountersRepl getmore 0
-# opcountersRepl insert 32595
-# opcountersRepl update 1147
-# opcountersRepl command 1
-# opcountersRepl query 0
-# opcountersRepl delete 31786
-
-
-def parse_mongodb_counters(info):
-    parsed = {}
-    for line in info:
-        what, name, value = line
-        parsed.setdefault(what, {})
-        parsed[what][name] = int(value)
-    return parsed
-
 
 def inventory_mongodb_counters(parsed):
     yield "Operations", None
@@ -47,8 +24,7 @@ def check_mongodb_counters(item, _no_params, parsed):
         yield 0, "%s: %.2f/s" % (what.title(), what_rate), [("%s_ops" % what, what_rate)]
 
 
-check_info['mongodb_counters'] = {
-    "parse_function": parse_mongodb_counters,
+check_info["mongodb_counters"] = {
     "inventory_function": inventory_mongodb_counters,
     "check_function": check_mongodb_counters,
     "service_description": "MongoDB Counters %s",

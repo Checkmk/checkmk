@@ -1,7 +1,7 @@
 title: Juniper Devices: Radios Data and Sessions of Online Access Points
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Shows the status of an access point and the radios on this access point:
@@ -18,7 +18,7 @@ description:
 item:
  Status of the access point
 
-inventory:
+discovery:
  One service is created for each access point.
 
 cluster:

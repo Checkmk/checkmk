@@ -4,51 +4,80 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # comNET GmbH, Fabian Binder - 2018-05-07
 
-# .1.3.6.1.4.1.9.9.719.1.45.4.1.9  cucsStorageLocalDiskOperability
-# .1.3.6.1.4.1.9.9.719.1.45.4.1.6  cucsStorageLocalDiskId
-# .1.3.6.1.4.1.9.9.719.1.45.4.1.7  cucsStorageLocalDiskModel
-# .1.3.6.1.4.1.9.9.719.1.45.4.1.14 cucsStorageLocalDiskVendor
-# .1.3.6.1.4.1.9.9.719.1.45.4.1.13 cucsStorageLocalDiskSize
-# .1.3.6.1.4.1.9.9.719.1.45.4.1.12 cucsStorageLocalDiskSerial
+from typing import Final, Mapping, NamedTuple
+
+from cmk.base.check_legacy_includes.cisco_ucs import map_operability, scan_cisco_ucs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+_HOT_SPARE_VALUES: Final = {3, 4}
 
 
-def inventory_cisco_ucs_hdd(info):
-    for status, ident, _model, _vendor, _size, _serial in info:
-        if status != '6':  # do not discover removed HDDs
-            yield ident, None
+class HDD(NamedTuple):
+    disk_id: str
+    model: str
+    state: int
+    operability: str
+    serial: str
+    size: int
+    vendor: str
+    drive_status: int
 
 
-def check_cisco_ucs_hdd(item, _no_params, info):
-    for status, ident, model, vendor, size, serial in info:
-        if ident == item:
-            state, state_readable = map_operability.get(status,
-                                                        (3, "Unknown, status code %s" % status))
-            size_readable = get_bytes_human_readable(int(size) * 1024 *
-                                                     1024)  # size is returned in MB
-            return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % \
-                (state_readable, size_readable, model, vendor, serial)
+Section = Mapping[str, HDD]
+
+
+def parse_cisco_ucs_hdd(string_table) -> Section:
+    return {
+        disk_id: HDD(
+            disk_id,
+            model,
+            *map_operability[r_operability],
+            serial,
+            int(r_size or 0) * 1024**2,
+            vendor,
+            int(drive_status),
+        )
+        for disk_id, model, r_operability, serial, r_size, vendor, drive_status in string_table
+    }
+
+
+def discover_cisco_ucs_hdd(section: Section):
+    yield from ((hdd.disk_id, {}) for hdd in section.values() if hdd.operability != "removed")
+
+
+def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
+    hdd = section.get(item)
+    if hdd is None:
+        return
+
+    yield (
+        0,
+        f"Status: {hdd.operability} (hot spare)",
+    ) if hdd.drive_status in _HOT_SPARE_VALUES else (hdd.state, f"Status: {hdd.operability}")
+    yield 0, f"Size: {render.disksize(hdd.size)}"
+    yield 0, f"Model: {hdd.model}"
+    yield 0, f"Vendor: {hdd.vendor}"
+    yield 0, f"Serial number: {hdd.serial}"
 
 
 check_info["cisco_ucs_hdd"] = {
+    "parse_function": parse_cisco_ucs_hdd,
+    "inventory_function": discover_cisco_ucs_hdd,
     "check_function": check_cisco_ucs_hdd,
-    "inventory_function": inventory_cisco_ucs_hdd,
     "service_description": "HDD %s",
     "snmp_scan_function": scan_cisco_ucs,
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.45.4.1",
         [
-            "9",  # cucsStorageLocalDiskOperability
             "6",  # cucsStorageLocalDiskId
             "7",  # cucsStorageLocalDiskModel
-            "14",  # cucsStorageLocalDiskVendor
-            "13",  # cucsStorageLocalDiskSize
+            "9",  # cucsStorageLocalDiskOperability
             "12",  # cucsStorageLocalDiskSerial
-        ]),
+            "13",  # cucsStorageLocalDiskSize
+            "14",  # cucsStorageLocalDiskVendor
+            "18",  # cucsStoragePDriveStatus
+        ],
+    ),
 }

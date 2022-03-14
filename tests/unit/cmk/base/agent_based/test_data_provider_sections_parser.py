@@ -6,16 +6,20 @@
 
 from typing import Callable
 
-import pytest  # type: ignore[import]
+import pytest
 
+import cmk.utils.debug
 from cmk.utils.type_defs import SectionName
 
-from cmk.base.sources.agent import AgentHostSections
+from cmk.core_helpers.host_sections import HostSections
+
+from cmk.base import crash_reporting
 from cmk.base.agent_based.data_provider import SectionsParser
 from cmk.base.api.agent_based.register.section_plugins import (
     AgentSectionPlugin,
     trivial_section_factory,
 )
+from cmk.base.sources.agent import AgentRawDataSection
 
 
 def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:
@@ -27,10 +31,14 @@ def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:
 class TestSectionsParser:
     @pytest.fixture
     def sections_parser(self) -> SectionsParser:
-        return SectionsParser(host_sections=AgentHostSections(sections={
-            SectionName("one"): [],
-            SectionName("two"): [],
-        }))
+        return SectionsParser(
+            host_sections=HostSections[AgentRawDataSection](
+                sections={
+                    SectionName("one"): [],
+                    SectionName("two"): [],
+                }
+            )
+        )
 
     @staticmethod
     def test_parse_function_called_once(sections_parser: SectionsParser) -> None:
@@ -42,6 +50,24 @@ class TestSectionsParser:
 
         assert parsing_result is not None
         assert parsing_result.data == 1
+
+    @staticmethod
+    def test_parsing_errors(monkeypatch, sections_parser: SectionsParser) -> None:
+
+        monkeypatch.setattr(
+            crash_reporting,
+            "create_section_crash_dump",
+            lambda **kw: "crash dump msg",
+        )
+        # Debug mode raises instead of creating the crash report that we want here.
+        cmk.utils.debug.disable()
+        section = _section("one", lambda x: 1 / 0)
+
+        assert sections_parser.parse(section) is None
+        assert len(sections_parser.parsing_errors) == 1
+        assert sections_parser.parsing_errors[0].startswith(
+            "Parsing of section one failed - please submit a crash report! (Crash-ID: "
+        )
 
     @staticmethod
     def test_parse(sections_parser: SectionsParser) -> None:

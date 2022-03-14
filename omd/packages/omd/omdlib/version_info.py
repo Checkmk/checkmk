@@ -23,13 +23,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
+
+from pathlib import Path
 from typing import Dict
+
 import omdlib
 
 
 class VersionInfo:
     """Provides OMD version/platform specific infos"""
+
     def __init__(self, version: str) -> None:
         self._version = version
 
@@ -52,26 +55,28 @@ class VersionInfo:
 
     def _read_info(self) -> Dict[str, str]:
         info: Dict[str, str] = {}
-        info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
-        for f in os.listdir(info_dir):
-            if f.endswith(".info"):
-                for line in open(info_dir + "/" + f):
-                    try:
-                        line = line.strip()
-                        # Skip comment and empty lines
-                        if line.startswith('#') or line == '':
-                            continue
-                        # Remove everything after the first comment sign
-                        if '#' in line:
-                            line = line[:line.index('#')].strip()
-                        var, value = line.split('=')
-                        value = value.strip()
-                        if var.endswith("+"):
-                            var = var[:-1]  # remove +
-                            info[var.strip()] += " " + value
-                        else:
-                            info[var.strip()] = value
-                    except Exception:
-                        raise Exception('Unable to parse line "%s" in file "%s"' %
-                                        (line, info_dir + "/" + f))
+        info_dir = Path("/omd", "versions", omdlib.__version__, "share", "omd")
+        for f in info_dir.iterdir():
+            if f.suffix == ".info":
+                with f.open() as opened_file:
+                    for line in opened_file:
+                        try:
+                            line = line.strip()
+                            # Skip comment and empty lines
+                            if line.startswith("#") or line == "":
+                                continue
+                            # Remove everything after the first comment sign
+                            if "#" in line:
+                                line = line[: line.index("#")].strip()
+                            var, value = line.split("=")
+                            value = value.strip()
+                            if var.endswith("+"):
+                                var = var[:-1]  # remove +
+                                info[var.strip()] += " " + value
+                            else:
+                                info[var.strip()] = value
+                        except Exception:
+                            raise Exception(
+                                'Unable to parse line "%s" in file "%s"' % (line, info_dir / f)
+                            )
         return info

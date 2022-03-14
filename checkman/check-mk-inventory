@@ -1,7 +1,7 @@
 title: Checkmk: Discovery Procedure
 agents: aix, freebsd, hpux, linux, macosx, netbsd, openwbsd, openwrt, solaris
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   This check is set up automatically on new instances. It informs
@@ -13,5 +13,5 @@ description:
   Checkmk configuration based on the found services using the
   ruleset mentioned before.
 
-inventory:
+discovery:
   One service will be created for each host supporting this check.

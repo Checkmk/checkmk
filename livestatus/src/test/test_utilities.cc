@@ -6,7 +6,10 @@
 #include "test_utilities.h"
 
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
+
+#include "nagios.h"
 
 char *cc(const char *str) { return const_cast<char *>(str); }
 
@@ -26,11 +29,7 @@ TestHost::TestHost(const Attributes &cust_vars) : cust_vars_(cust_vars) {
     display_name = cc("the display name");
     alias = cc("the alias");
     address = cc("the address");
-#ifdef NAGIOS4
-    check_command = cc("the host check command");
-#else
-    host_check_command = cc("the host check command");
-#endif
+    nagios_compat_host_check_command(*this) = cc("the host check command");
     custom_variables = cust_vars_.start();
     plugin_output = cc("the plugin output");
     long_plugin_output = cc("the long plugin output");
@@ -41,11 +40,7 @@ TestService::TestService(host *h, const Attributes &cust_vars)
     : cust_vars_(cust_vars) {
     description = cc("muppet_show");
     display_name = cc("The Muppet Show");
-#ifdef NAGIOS4
-    check_command = cc("check_fozzie_bear");
-#else
-    service_check_command = cc("check_fozzie_bear");
-#endif
+    nagios_compat_service_check_command(*this) = cc("check_fozzie_bear");
     custom_variables = cust_vars_.start();
     plugin_output = cc("plug");
     long_plugin_output = cc("long plug");

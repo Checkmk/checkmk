@@ -1,0 +1,20 @@
+Title: esx multipath: Skip devices without LUN ID
+Class: fix
+Compatible: incompat
+Component: checks
+Date: 1627562198
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+ESX vsphere may return multipath devices without LUN ID (e.g. "local marvel processor").
+This led to mixed-up service items for esx_vsphere_hostsystem.multipath as the parsing continued without an Exception.
+As a user you may notice this, when you see a path as service item (instead of a LUN).
+
+Devices without a LUN ID are now skipped and the parsing is fixed.
+
+As the discovery may discovered false items, you may need to perform a
+rediscovery in case you're affetcted by this issue.
+
+SUP-7220

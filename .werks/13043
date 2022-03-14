@@ -1,0 +1,16 @@
+Title: F5-Cluster: Interpretation of failover cluster states
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632838857
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Using the "Cluster status" Rule and activating the option "Interpretation of
+failover cluster state" resulted in a crash of the Checks "BIG-IP Cluster
+Status" and "Big-IP vCMP Guest Failover Status".
+
+The Error Message was: <tt>ValueError (not enough values to unpack (expected 2, got 1))</tt>

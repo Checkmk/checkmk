@@ -1,0 +1,16 @@
+Title: XSS in report editing
+Class: security
+Compatible: compat
+Component: reporting
+Date: 1632465155
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+It was possible to Inject HTML code in various Content elments. This could also be used in shared reports.
+
+CVSS: CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H 9.0
+Affected Versions: all below
+Workarounds: Disallow users to customize reports (Set 'General Permissions' &gt; 'Customize reports and use them' to no)
+Exploit detections: Check `var/check_mk/web/*/user_reports.mk` for html specialchars.

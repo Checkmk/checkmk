@@ -1,0 +1,13 @@
+Title: KUBE kube_collector_info fix url representation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646312561
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In the previous version, the url icon swallowed the trailing ")" of
+the detailed message which led to an invalid url. This werk fixes
+this behaviour.

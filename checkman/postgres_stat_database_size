@@ -1,7 +1,7 @@
 title: PostgreSQL: Size
 agents: linux
 catalog: app/postgresql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check tracks the space used by a PostgreSQL database
@@ -13,6 +13,5 @@ description:
 item:
  Name of the category and the name of the database
 
-inventory:
+discovery:
  One service is created for each database.
-

@@ -5,9 +5,10 @@
 
 @import "~select2/dist/css/select2";
 @import "~@yaireo/tagify/dist/tagify";
-@import "~dc/web/css/dc";
+@import "~dc/dist/style/dc";
 @import "~simplebar/dist/simplebar";
 
+@import "scss/_variables_common.scss";
 @import "scss/_variables.scss";
 @import "scss/_main.scss";
 @import "scss/_pages.scss";
@@ -28,7 +29,7 @@
 @import "scss/_page_menu.scss";
 @import "scss/_more.scss";
 @import "scss/_graphs.scss";
-@import "scss/_release_notes.scss";
+@import "scss/_info.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this

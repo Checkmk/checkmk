@@ -1,0 +1,17 @@
+Title: check plugin register: raise error on duplicate plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617110778
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This change is only relevant for customers who develop and maintain their own
+checks.
+In the event that the same check plugin exists in both check API paths (checks
+and cmk/base/plugins/agent_based), the legacy check plugin overrides the new
+plugin without generating an error or a warning. With this change, the API raises
+an error in the event that the check plugin has been duplicated.

@@ -6,5 +6,5 @@
 
 from cmk.special_agents.agent_storeonce4x import main
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

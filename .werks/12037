@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since werk #11972 (2.0.0b5) some dynamic configuration connections in
 distributed setups were only executing phase 1 of the dynamic configuration.

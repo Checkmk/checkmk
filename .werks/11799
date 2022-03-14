@@ -1,0 +1,14 @@
+Title: Do not discover disabled MSSQL instances
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617794256
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, the agent plugin discovered *all* MSSQL instances in case
+the default instance "MSSQLSERVER" was running during discovery.
+This is now fixed.

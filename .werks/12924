@@ -1,0 +1,12 @@
+Title: SAP HANA: Services go to STALE if connection to database failed
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1625559636
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Previously, service state would become UNKNOWN if connection to a database is lost.
+Now it becomes STALE.

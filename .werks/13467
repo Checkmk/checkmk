@@ -1,0 +1,16 @@
+Title: Allow to configure additional IP addresses regardless of the IP address family
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1634825893
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In the host configuration you can now configure "Additional IPv6 addresses" even if the "IP address family" is set to "IPv4" and vice versa.
+
+The configured additional IP addresses can be used by active checks (such as ICMP ping).
+They can be IPv4 and/or IPv6 addresses, regardless whether the host is contacted by the monitoring backend via IPv4, IPv6 or both.
+
+By making these options available independently of the IP address family, the behaviour of the GUI matches that of the REST API, which already allows this kind of configuration.

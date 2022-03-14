@@ -1,7 +1,7 @@
 title: McData FibreChannel Switches: Traffic and Status of Ports
 agents: snmp
 catalog: hw/storagehw/mcdata
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, frame counts,
@@ -14,7 +14,7 @@ item:
  and its alias. For this check, these three are the same, namely a two-digit string
  starting from "01".
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type

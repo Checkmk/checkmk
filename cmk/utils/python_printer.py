@@ -7,18 +7,17 @@
 main change is that all strings get a prefix. Basically a dumbed-down version
 of Python's own pprint module plus the prefix change."""
 
-from io import StringIO as StrIO
 import sys
-from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
-from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
+from io import StringIO as StrIO
+from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple
 
 from cmk.utils.type_defs import EvalableFloat
 
 _bytes = bytes
 _str = str
 _long = int
-_bytes_prefix_to_add = ''
-_str_prefix_to_add = 'u'
+_bytes_prefix_to_add = ""
+_str_prefix_to_add = "u"
 
 
 def pprint(obj, stream=None):
@@ -35,7 +34,7 @@ class PythonPrinter:
 
     def pprint(self, obj: object) -> None:
         self._format(obj)
-        self._write('\n')
+        self._write("\n")
 
     def _write(self, s: str) -> None:
         self._stream.write(s)
@@ -53,7 +52,7 @@ class PythonPrinter:
 
 
 def _format_unhandled_type(printer: PythonPrinter, obj: object) -> None:
-    raise ValueError('unhandled type %r' % type(obj))
+    raise ValueError("unhandled type %r" % type(obj))
 
 
 def _format_via_repr(printer: PythonPrinter, obj: object) -> None:
@@ -79,8 +78,10 @@ def _format_unicode_string(printer: PythonPrinter, obj: _str) -> None:
     # a repr-string where non ascii characters are hex escaped as Python 2 usually does.
     chars: List[str] = []
     for c in obj:
-        if ord(c) > 127:
-            chars.append('\\x{:02x}'.format(ord(c)))
+        if 127 < (unicode_code := ord(c)) < 256:
+            chars.append("\\x{:02x}".format(unicode_code))
+        elif unicode_code >= 256:
+            chars.append("\\u{:04x}".format(unicode_code))
         elif c.isalpha():
             chars.append(str(c))
         elif c in quotes:
@@ -93,50 +94,50 @@ def _format_unicode_string(printer: PythonPrinter, obj: _str) -> None:
 
 def _format_tuple(printer: PythonPrinter, obj: tuple) -> None:
     if len(obj) == 1:
-        printer._write('(')
+        printer._write("(")
         printer._format(obj[0])
-        printer._write(',)')
+        printer._write(",)")
     else:
-        _format_sequence(printer, obj, _format_object, '(', ')')
+        _format_sequence(printer, obj, _format_object, "(", ")")
 
 
 def _format_list(printer: PythonPrinter, obj: list) -> None:
-    _format_sequence(printer, obj, _format_object, '[', ']')
+    _format_sequence(printer, obj, _format_object, "[", "]")
 
 
 def _format_set(printer: PythonPrinter, obj: set) -> None:
     if obj:
-        _format_sequence(printer, sorted(obj, key=_safe_key), _format_object, '{', '}')
+        _format_sequence(printer, sorted(obj, key=_safe_key), _format_object, "{", "}")
     else:
-        printer._write('set()')
+        printer._write("set()")
 
 
 def _format_dict(printer: PythonPrinter, obj: dict) -> None:
-    _format_sequence(printer, sorted(obj.items(), key=_safe_tuple), _format_dict_item, '{', '}')
+    _format_sequence(printer, sorted(obj.items(), key=_safe_tuple), _format_dict_item, "{", "}")
 
 
 def _format_object(printer: PythonPrinter, obj: object) -> None:
     printer._format(obj)
 
 
-def _format_snmp_backend(printer: PythonPrinter, obj: SNMPBackendEnum) -> None:
-    printer._format(obj.value)
-
-
 def _format_dict_item(printer: PythonPrinter, item: Tuple[object, object]) -> None:
     printer._format(item[0])
-    printer._write(': ')
+    printer._write(": ")
     printer._format(item[1])
 
 
-def _format_sequence(printer: PythonPrinter, seq: Iterable[object],
-                     format_element: Callable[[PythonPrinter, Any],
-                                              None], open_str: str, close_str: str) -> None:
+def _format_sequence(
+    printer: PythonPrinter,
+    seq: Iterable[object],
+    format_element: Callable[[PythonPrinter, Any], None],
+    open_str: str,
+    close_str: str,
+) -> None:
     printer._write(open_str)
-    separator = ''
+    separator = ""
     for obj in seq:
         printer._write(separator)
-        separator = ', '
+        separator = ", "
         format_element(printer, obj)
     printer._write(close_str)
 
@@ -156,13 +157,12 @@ _dispatch: Dict[Any, Any] = {
     _str: _format_unicode_string,
     tuple: _format_tuple,
     type(None): _format_via_repr,
-    SNMPBackendEnum: _format_snmp_backend,
 }
 
 
 # Python 3 is a bit picky about comparing objects of different types.
 class _safe_key:
-    __slots__ = ['obj']
+    __slots__ = ["obj"]
 
     def __init__(self, obj):
         self.obj = obj

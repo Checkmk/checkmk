@@ -1,7 +1,7 @@
 title: Fujitsu Workstations: Memory
 agents: linux
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reads the memory module status information from IPMI on
@@ -30,6 +30,6 @@ description:
 item:
  This is the sensor name as reported by {ipmi-sensors} command e.g. {DIMM-1A}
 
-inventory:
+discovery:
  One service is created for each memory module
  which has an attached module.

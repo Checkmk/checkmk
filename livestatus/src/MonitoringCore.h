@@ -22,11 +22,13 @@
 enum class Encoding;
 class Logger;
 
+// Livestatus view onto a command definition, regardless of the monitoring core
 struct Command {
     std::string _name;
     std::string _command_line;
 };
 
+// Livestatus view onto a downtime, regardless of the monitoring core
 struct DowntimeData {
     unsigned long _id;
     std::string _author;
@@ -36,16 +38,17 @@ struct DowntimeData {
     std::chrono::system_clock::time_point _start_time;
     std::chrono::system_clock::time_point _end_time;
     bool _fixed;
-    std::chrono::seconds _duration;
+    std::chrono::nanoseconds _duration;
     int32_t _recurring;
     bool _pending;
 };
 
+// Livestatus view onto a comment, regardless of the monitoring core
 struct CommentData {
     unsigned long _id;
     std::string _author;
     std::string _comment;
-    uint32_t _entry_type;  // TODO(sp) Move Comment::Type here
+    uint32_t _entry_type;  // CMC: Comment::Type
     std::chrono::system_clock::time_point _entry_time;
 };
 
@@ -96,13 +99,10 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    virtual std::vector<DowntimeData> downtimes_for_host(
-        const Host *) const = 0;
-    virtual std::vector<DowntimeData> downtimes_for_service(
-        const Service *) const = 0;
-    virtual std::vector<CommentData> comments_for_host(const Host *) const = 0;
-    virtual std::vector<CommentData> comments_for_service(
-        const Service *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const Host *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const Service *) const = 0;
+    virtual std::vector<CommentData> comments(const Host *) const = 0;
+    virtual std::vector<CommentData> comments(const Service *) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 
@@ -111,6 +111,7 @@ public:
     [[nodiscard]] virtual std::filesystem::path mkInventoryPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
         const = 0;
+    [[nodiscard]] virtual std::filesystem::path robotMkVarPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path licenseUsageHistoryPath()
         const = 0;
@@ -123,8 +124,8 @@ public:
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
 
-    [[nodiscard]] virtual AuthorizationKind serviceAuthorization() const = 0;
-    [[nodiscard]] virtual AuthorizationKind groupAuthorization() const = 0;
+    [[nodiscard]] virtual ServiceAuthorization serviceAuthorization() const = 0;
+    [[nodiscard]] virtual GroupAuthorization groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
     virtual Logger *loggerRRD() = 0;

@@ -1,0 +1,31 @@
+Title: Linux Agent/real-time checks: Set $REMOTE variable when invoking via systemd
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617281168
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Linux agent provides a $REMOTE variable, that holds the IP address
+of the calling Checkmk site, that is evaluated by some plugins and
+mechanisms, namely:
+<ul>
+<li>Real-time checks</li>
+<li>mk_logwatch plugin</li>
+<li>mk_inventory plugin</li>
+<li>sap_hana plugin</li>
+</ul>
+
+Until now, this variable was provided when calling the agent via xinetd
+or ssh, but was missing when calling via systemd.
+
+While the above mentioned plugins use this variable to maintain internal
+states, and fall back to a single state file, if $REMOTE is missing,
+the real-time checks won't work at all (as they then have no target to
+send the UDP data to).
+
+In order to apply this change, the Linux agents on the affected machines
+have to be replaced. If you have automatic agent updates activated, this
+will be done automatically.

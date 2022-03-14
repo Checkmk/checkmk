@@ -8,8 +8,8 @@ Knowledge: doc
 Level: 2
 Version: 2.0.0i1
 
-With this fix some deirectories used by windows Agent are protected from 
-any access of Windows Standart User:
+With this fix some directories used by windows Agent are protected from
+any access of Windows Standard User:
 Program Files (x86)\checkmk\service
 ProgramData\checkmk\agent\backup
 ProgramData\checkmk\agent\config

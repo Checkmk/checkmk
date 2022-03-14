@@ -21,12 +21,12 @@ def parse_sshd_config(info):
     identity = lambda x: x
 
     def map_permit_root_login(value):
-        if value in [u"prohibit-password", u"without-password"]:
-            return u"key-based"
+        if value in ["prohibit-password", "without-password"]:
+            return "key-based"
         return value
 
     relevant_options = {
-        #option                             parse function
+        # option                             parse function
         "Protocol": lambda x: ",".join(sorted(x.split(","))),
         # Port can be defined multiple times in sshd_config.
         # Therefore we use a list of ints.

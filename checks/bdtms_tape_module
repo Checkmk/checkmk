@@ -13,7 +13,7 @@ def inventory_bdtms_tape_module(info):
 
 def check_bdtms_tape_module(item, _no_params, info):
     def state(status):
-        return 0 if status.lower() == 'ok' else 2
+        return 0 if status.lower() == "ok" else 2
 
     for device in info:
         device_id, module_status, board_status, power_status = device
@@ -25,17 +25,18 @@ def check_bdtms_tape_module(item, _no_params, info):
         yield state(power_status), "Power supply: %s" % power_status.lower()
 
 
-check_info['bdtms_tape_module'] = {
-    'inventory_function': inventory_bdtms_tape_module,
-    'check_function': check_bdtms_tape_module,
-    'service_description': "Tape Library Module %s",
-    'snmp_scan_function': lambda oid: ('.1.3.6.1.4.1.20884.77.83.1' in oid('.1.3.6.1.2.1.1.2.0')),
-    'snmp_info': (
-        '.1.3.6.1.4.1.20884.2.4.1',
+check_info["bdtms_tape_module"] = {
+    "inventory_function": inventory_bdtms_tape_module,
+    "check_function": check_bdtms_tape_module,
+    "service_description": "Tape Library Module %s",
+    "snmp_scan_function": lambda oid: (".1.3.6.1.4.1.20884.77.83.1" in oid(".1.3.6.1.2.1.1.2.0")),
+    "snmp_info": (
+        ".1.3.6.1.4.1.20884.2.4.1",
         [
             OID_END,
-            '4',  # bdtDeviceStatModEntryDPwr1
-            '5',  # bdtDeviceStatModEntryDPwr2
-            '6',  # bdtDeviceStatModEntryPwrSupply
-        ]),
+            "4",  # bdtDeviceStatModEntryDPwr1
+            "5",  # bdtDeviceStatModEntryDPwr2
+            "6",  # bdtDeviceStatModEntryPwrSupply
+        ],
+    ),
 }

@@ -1,0 +1,14 @@
+Title: Automatically resize search window after every search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1619085791
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This fixes an issue where after searching something and
+removing the query with Strg+A and Delete or Backspace
+not all results would be displayed.

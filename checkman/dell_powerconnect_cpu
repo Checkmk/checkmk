@@ -1,7 +1,7 @@
 title: Dell PowerConnect Switches: CPU Load
 agents: snmp
 catalog: hw/network/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU load on Dell PowerConnect Switches which support the
@@ -25,6 +25,5 @@ description:
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
  however the service check may work with other models.
 
-inventory:
+discovery:
  One service is created for the CPU if the MIB defined above is supported on the switch.
-

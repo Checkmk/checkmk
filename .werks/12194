@@ -1,0 +1,13 @@
+Title: dell_compellent_folder: Fix discovery error when data missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617881749
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Discovery of dell_compellent_folder failed when data was missing.
+Service with missing data is no longer discovered.

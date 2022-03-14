@@ -47,7 +47,8 @@ def parse_rabbitmq_queues(info):
             if queue_name is not None:
 
                 parsed.setdefault(
-                    queue_name, {
+                    queue_name,
+                    {
                         "type": queue.get("type"),
                         "state": queue.get("state"),
                         "node": queue.get("node"),
@@ -56,9 +57,11 @@ def parse_rabbitmq_queues(info):
                         "messages_unacknowledged": queue.get("messages_unacknowledged"),
                         "memory": queue.get("memory"),
                         "messages_publish": queue.get("message_stats", {}).get("publish"),
-                        "messages_publish_rate": queue.get("message_stats", {}).get(
-                            "publish_details", {}).get("rate"),
-                    })
+                        "messages_publish_rate": queue.get("message_stats", {})
+                        .get("publish_details", {})
+                        .get("rate"),
+                    },
+                )
 
     return parsed
 
@@ -78,7 +81,8 @@ def check_rabbitmq_queues(item, params, parsed):
         if not queue_state:
             state = 2
         yield state, "Is running: %s" % str(queue_state).replace("True", "yes").replace(
-            "False", "no")
+            "False", "no"
+        )
 
     queue_node = parsed.get("node")
     if queue_node is not None:
@@ -100,8 +104,8 @@ def check_rabbitmq_queues(item, params, parsed):
         if "rate" in msg_key:
             unit = "1/s"
 
-        msg_levels_upper = params.get('%s_upper' % param_key, (None, None))
-        msg_levels_lower = params.get('%s_lower' % param_key, (None, None))
+        msg_levels_upper = params.get("%s_upper" % param_key, (None, None))
+        msg_levels_lower = params.get("%s_lower" % param_key, (None, None))
 
         yield check_levels(
             msg_value,

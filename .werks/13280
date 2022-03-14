@@ -1,0 +1,12 @@
+Title: Customer Sites now only receive their respective BI configuration
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1633957478
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Due to a filename naming error, remote site always received the complete BI configuration for all customers.

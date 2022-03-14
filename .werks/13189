@@ -1,0 +1,15 @@
+Title: ps: irregular line continuation in Windows agent output leads to crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637773020
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In some cases, the agent output of the ps section contains processes that have
+a newline character in the process description, which caused the ps check to
+crash. This has been observed when an executable is run with parameters, e.g.
+<tt>myscript.exe -param1 val1 -param2 val2</tt>. This has been fixed

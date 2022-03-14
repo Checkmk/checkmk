@@ -1,12 +1,11 @@
 title: Brocade VDX Switches: Status
 catalog: hw/network/brocade
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the operational state of the switch. Also the current firmware version
  will be returned as information.
 
-inventory:
+discovery:
  One service is created
-

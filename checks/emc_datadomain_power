@@ -43,6 +43,7 @@ check_info["emc_datadomain_power"] = {
             2,  # powerModuleIndex
             3,  # powerModuleDescription
             4,  # powerModuleStatus
-        ]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS")
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS"),
 }

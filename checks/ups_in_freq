@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 ups_in_freq_default_levels = (45, 40)  # warning / critical
 
 
@@ -45,7 +46,7 @@ def check_ups_in_freq(item, params, parsed):
     return state, infotext, [("in_freq", freq, warn, crit, 30, 70)]
 
 
-check_info['ups_in_freq'] = {
+check_info["ups_in_freq"] = {
     "parse_function": parse_ups_in_freq,
     "inventory_function": inventory_ups_in_freq,
     "check_function": check_ups_in_freq,
@@ -57,6 +58,7 @@ check_info['ups_in_freq'] = {
         [
             0,
             2,  # UPS-MIB.txt::upsInputFrequency
-        ]),
+        ],
+    ),
     "snmp_scan_function": ups_generic_scan_function,
 }

@@ -33,8 +33,10 @@ def check_storeonce4x_cat_stores(item, params, parsed):
     user_bytes = store["userBytes"]
     num_items = store["numItems"]
 
-    yield from df_check_filesystem_list_coroutine(
-        item, params, [(item, size_available_mb, size_available_mb - size_used_mb, 0)])
+    if store.get("sizeOnDiskQuotaEnabled", False):
+        yield from df_check_filesystem_list_coroutine(
+            item, params, [(item, size_available_mb, size_available_mb - size_used_mb, 0)]
+        )
 
     yield 0 if store_status == 2 else 2, "Status: %s" % store_status_str
 
@@ -45,10 +47,10 @@ def check_storeonce4x_cat_stores(item, params, parsed):
 
 
 check_info["storeonce4x_cat_stores"] = {
-    'parse_function': parse_storeonce4x_cat_stores,
-    'inventory_function': discovery_storeonce4x_cat_stores,
-    'check_function': check_storeonce4x_cat_stores,
-    'service_description': 'Catalyst Stores %s',
-    'group': "filesystem",
-    'has_perfdata': True,
+    "parse_function": parse_storeonce4x_cat_stores,
+    "inventory_function": discovery_storeonce4x_cat_stores,
+    "check_function": check_storeonce4x_cat_stores,
+    "service_description": "Catalyst Stores %s",
+    "group": "filesystem",
+    "has_perfdata": True,
 }

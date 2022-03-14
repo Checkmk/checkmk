@@ -1,7 +1,7 @@
 title: EMC VNX Storage: iSCSI Traffic on HBAs
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the traffic on iSCSI HBAs in an EMC VNX storage system.
@@ -16,5 +16,5 @@ item:
  Consists of the SP Name and the SP Port ID as returned by the agent.
  E. g. "SP A Port 0"
 
-inventory:
+discovery:
  One service is created for each HBA listed in the agent output.

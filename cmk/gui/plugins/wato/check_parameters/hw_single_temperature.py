@@ -5,24 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Integer, Tuple
 
 
 def _parameter_valuespec_hw_single_temperature():
-    return Tuple(help=_("Temperature levels for hardware devices with "
-                        "a single temperature sensor."),
-                 elements=[
-                     Integer(title=_("warning at"), unit=u"°C", default_value=35),
-                     Integer(title=_("critical at"), unit=u"°C", default_value=40),
-                 ])
+    return Tuple(
+        help=_("Temperature levels for hardware devices with " "a single temperature sensor."),
+        elements=[
+            Integer(title=_("warning at"), unit="°C", default_value=35),
+            Integer(title=_("critical at"), unit="°C", default_value=40),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -32,4 +30,5 @@ rulespec_registry.register(
         is_deprecated=True,
         parameter_valuespec=_parameter_valuespec_hw_single_temperature,
         title=lambda: _("Host/Device temperature"),
-    ))
+    )
+)

@@ -28,27 +28,27 @@ def check_fortigate_sensors(item, params, info):
 
     state = 0
     if sensors_in_alarm:
-        infotexts.append("%s with alarm: %s" % \
-                         (len(sensors_in_alarm),
-                          ", ".join(sensors_in_alarm)))
+        infotexts.append("%s with alarm: %s" % (len(sensors_in_alarm), ", ".join(sensors_in_alarm)))
         state = 2
 
     return state, " - ".join(infotexts)
 
 
-check_info['fortigate_sensors'] = {
-    'inventory_function': inventory_fortigate_sensors,
-    'check_function': check_fortigate_sensors,
-    'service_description': 'Sensor Summary',
-    'snmp_info': (
-        '.1.3.6.1.4.1.12356.101.4.3.2.1',
+check_info["fortigate_sensors"] = {
+    "inventory_function": inventory_fortigate_sensors,
+    "check_function": check_fortigate_sensors,
+    "service_description": "Sensor Summary",
+    "snmp_info": (
+        ".1.3.6.1.4.1.12356.101.4.3.2.1",
         [
-            '2',  # FORTINET-FORTIGATE-MIB::fgHwSensorEntName
-            '3',  # FORTINET-FORTIGATE-MIB::fgHwSensorEntValue
-            '4',  # FORTINET-FORTIGATE-MIB::fgHwSensorEntAlarmStatus
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [
-        '.1.3.6.1.4.1.12356.101.1.5004',
-        '.1.3.6.1.4.1.12356.101.1.10004',
+            "2",  # FORTINET-FORTIGATE-MIB::fgHwSensorEntName
+            "3",  # FORTINET-FORTIGATE-MIB::fgHwSensorEntValue
+            "4",  # FORTINET-FORTIGATE-MIB::fgHwSensorEntAlarmStatus
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
+    in [
+        ".1.3.6.1.4.1.12356.101.1.5004",
+        ".1.3.6.1.4.1.12356.101.1.10004",
     ],
 }

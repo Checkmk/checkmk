@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 wagner_titanus_topsense_info = [
     (
         ".1.3.6.1.2.1.1",
@@ -18,7 +19,8 @@ wagner_titanus_topsense_info = [
             4,  # sysContact          2
             5,  # sysName             3
             6,  # sysLocation         4
-        ]),
+        ],
+    ),
     # topsens LSN
     (
         ".1.3.6.1.4.1.34187.21501.1.1",
@@ -33,7 +35,8 @@ wagner_titanus_topsense_info = [
             1004,  # pswPreAlarmD2       7
             1005,  # pswInfAlarmD2       8
             1006,  # pswFailureDisplayOn 9
-        ]),  # off(0), on(1)
+        ],
+    ),  # off(0), on(1)
     (
         ".1.3.6.1.4.1.34187.21501.2.1",
         [
@@ -47,7 +50,8 @@ wagner_titanus_topsense_info = [
             246110000,  # tsD2AirTemperatureString
             24584008,  # tsLSNbusOnline      0
             # offline(0),online(1)
-        ]),
+        ],
+    ),
     # topsens non-LSN
     (
         ".1.3.6.1.4.1.34187.74195.1.1",
@@ -62,7 +66,8 @@ wagner_titanus_topsense_info = [
             1004,  # pswPreAlarmD2       7
             1005,  # pswInfAlarmD2       8
             1006,  # pswFailureDisplayOn 9
-        ]),  # off(0), on(1)
+        ],
+    ),  # off(0), on(1)
     (
         ".1.3.6.1.4.1.34187.74195.2.1",
         [
@@ -74,7 +79,8 @@ wagner_titanus_topsense_info = [
             246070000,  # tsD2AirFlowDeviationString
             245960000,  # tsD1AirTemperatureString
             246080000,  # tsD2AirTemperatureString
-        ]),
+        ],
+    ),
 ]
 
 
@@ -131,10 +137,10 @@ check_info["wagner_titanus_topsense.info"] = {
     "inventory_function": inventory_wagner_titanus_topsense_info,
     "service_description": "Topsense Info",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan
+    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .
 #   .--overall status------------------------------------------------------.
 #   |                               _ _       _        _                   |
 #   |       _____   _____ _ __ __ _| | |  ___| |_ __ _| |_ _   _ ___       |
@@ -167,10 +173,10 @@ check_info["wagner_titanus_topsense.overall_status"] = {
     "inventory_function": inventory_wagner_titanus_topsense_overall_status,
     "service_description": "Overall Status",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan
+    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .
 #   .--alarm---------------------------------------------------------------.
 #   |                          _                                           |
 #   |                     __ _| | __ _ _ __ _ __ ___                       |
@@ -218,10 +224,10 @@ check_info["wagner_titanus_topsense.alarm"] = {
     "inventory_function": inventory_wagner_titanus_topsense_alarm,
     "service_description": "Alarm Detector %s",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan
+    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .
 #   .--smoke percent-------------------------------------------------------.
 #   |                      _                                        _      |
 #   |  ___ _ __ ___   ___ | | _____   _ __   ___ _ __ ___ ___ _ __ | |_    |
@@ -262,10 +268,10 @@ check_info["wagner_titanus_topsense.smoke"] = {
     "service_description": "Smoke Detector %s",
     "has_perfdata": True,
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan
+    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .
 #   .--chamber deviation---------------------------------------------------.
 #   |         _                     _                     _                |
 #   |     ___| |__   __ _ _ __ ___ | |__   ___ _ __    __| | _____   __    |
@@ -300,10 +306,10 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = {
     "service_description": "Chamber Deviation Detector %s",
     "has_perfdata": True,
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan
+    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .
 #   .--air flow deviation--------------------------------------------------.
 #   |              _         __ _                     _                    |
 #   |         __ _(_)_ __   / _| | _____      __   __| | _____   __        |
@@ -317,8 +323,10 @@ wagner_titanus_topsense_airflow_deviation_default_values = (-20.0, -20.0, 20.0, 
 
 
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
-    return [("1", "wagner_titanus_topsense_airflow_deviation_default_values"),
-            ("2", "wagner_titanus_topsense_airflow_deviation_default_values")]
+    return [
+        ("1", "wagner_titanus_topsense_airflow_deviation_default_values"),
+        ("2", "wagner_titanus_topsense_airflow_deviation_default_values"),
+    ]
 
 
 def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
@@ -349,10 +357,10 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = {
     "has_perfdata": True,
     "group": "airflow_deviation",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan
+    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .
 #   .--air temp------------------------------------------------------------.
 #   |                     _        _                                       |
 #   |                __ _(_)_ __  | |_ ___ _ __ ___  _ __                  |
@@ -397,4 +405,4 @@ check_info["wagner_titanus_topsense.temp"] = {
     "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
-#.
+# .

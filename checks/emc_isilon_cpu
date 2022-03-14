@@ -18,22 +18,29 @@ def check_emc_isilon_cpu_utilization(item, params, info):
         user_perc = (int(line[0]) + int(line[1])) * 0.1
         system_perc = int(line[2]) * 0.1
         interrupt_perc = int(line[3]) * 0.1
-        total_perc = (user_perc + system_perc + interrupt_perc)
+        total_perc = user_perc + system_perc + interrupt_perc
 
-        for utype, value in (("user", user_perc), ("system", system_perc), ("interrupt",
-                                                                            interrupt_perc)):
-            yield check_levels(value,
-                               utype,
-                               None,
-                               human_readable_func=get_percent_human_readable,
-                               infoname=utype.title())
+        for utype, value in (
+            ("user", user_perc),
+            ("system", system_perc),
+            ("interrupt", interrupt_perc),
+        ):
+            yield check_levels(
+                value,
+                utype,
+                None,
+                human_readable_func=get_percent_human_readable,
+                infoname=utype.title(),
+            )
 
         levels = params if not isinstance(params, dict) else params.get("util")
-        yield check_levels(total_perc,
-                           None,
-                           levels,
-                           human_readable_func=get_percent_human_readable,
-                           infoname="Total")
+        yield check_levels(
+            total_perc,
+            None,
+            levels,
+            human_readable_func=get_percent_human_readable,
+            infoname="Total",
+        )
 
 
 check_info["emc_isilon_cpu"] = {
@@ -44,11 +51,12 @@ check_info["emc_isilon_cpu"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.12124.2.2.3",
         [
-            1,  #nodeCPUUser
-            2,  #nodeCPUNice
-            3,  #nodeCPUSystem
-            4,  #nodeCPUInterrupt
-        ]),
+            1,  # nodeCPUUser
+            2,  # nodeCPUNice
+            3,  # nodeCPUSystem
+            4,  # nodeCPUInterrupt
+        ],
+    ),
     "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "cpu_utilization",
 }

@@ -5,25 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Integer,
-    TextAscii,
-    Transform,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Transform, Tuple
 
 
 def _item_spec_mtr():
-    return TextAscii(title=_("MTR destination"),
-                     help=_("Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"),
-                     allow_empty=False)
+    return TextInput(
+        title=_("MTR destination"),
+        help=_("Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"),
+        allow_empty=False,
+    )
 
 
 def _transform_mtr_params(p):
@@ -38,53 +33,66 @@ def _transform_mtr_params(p):
 
 def _parameter_valuespec_mtr():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This ruleset can be used to change MTR's (Matt's traceroute) warning and crit levels for packet loss, average "
-                "roundtrip and standard deviation."),
+                "roundtrip and standard deviation."
+            ),
             elements=[
-                ("rta",
-                 Tuple(
-                     title=_("Average roundtrip time in ms"),
-                     elements=[
-                         Integer(title=_("Warning at"), default_value=150, unit=_("ms"),
-                                 minvalue=0),
-                         Integer(title=_("Critical at"),
-                                 default_value=250,
-                                 unit=_("ms"),
-                                 minvalue=0),
-                     ],
-                     help=_(
-                         "The maximum average roundtrip time in ms before this service goes into warning/critical. "
-                         "This alarm only applies to the target host, not the hops in between."),
-                 )),
-                ("rtstddev",
-                 Tuple(
-                     title=_("Standard deviation of roundtrip times in ms"),
-                     elements=[
-                         Integer(title=_("Warning at"), default_value=150, unit=_("ms"),
-                                 minvalue=0),
-                         Integer(title=_("Critical at"),
-                                 default_value=250,
-                                 unit=_("ms"),
-                                 minvalue=0),
-                     ],
-                     help=
-                     _("The maximum standard deviation on the roundtrip time in ms before this service goes into"
-                       "warning/critical. This alarm only applies to the target host, not the hops in between."
-                      ),
-                 )),
-                ("pl",
-                 Tuple(
-                     title=_("Packet loss in percentage"),
-                     elements=[
-                         Integer(title=_("Warning at"), default_value=10, unit=_("%"), minvalue=0),
-                         Integer(title=_("Critical at"), default_value=25, unit=_("%"), minvalue=0),
-                     ],
-                     help=_(
-                         "The maximum allowed percentage of packet loss to the destination before this service "
-                         "goes into warning/critical."),
-                 )),
+                (
+                    "rta",
+                    Tuple(
+                        title=_("Average roundtrip time in ms"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0
+                            ),
+                            Integer(
+                                title=_("Critical at"), default_value=250, unit=_("ms"), minvalue=0
+                            ),
+                        ],
+                        help=_(
+                            "The maximum average roundtrip time in ms before this service goes into warning/critical. "
+                            "This alarm only applies to the target host, not the hops in between."
+                        ),
+                    ),
+                ),
+                (
+                    "rtstddev",
+                    Tuple(
+                        title=_("Standard deviation of roundtrip times in ms"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0
+                            ),
+                            Integer(
+                                title=_("Critical at"), default_value=250, unit=_("ms"), minvalue=0
+                            ),
+                        ],
+                        help=_(
+                            "The maximum standard deviation on the roundtrip time in ms before this service goes into"
+                            "warning/critical. This alarm only applies to the target host, not the hops in between."
+                        ),
+                    ),
+                ),
+                (
+                    "pl",
+                    Tuple(
+                        title=_("Packet loss in percentage"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"), default_value=10, unit=_("%"), minvalue=0
+                            ),
+                            Integer(
+                                title=_("Critical at"), default_value=25, unit=_("%"), minvalue=0
+                            ),
+                        ],
+                        help=_(
+                            "The maximum allowed percentage of packet loss to the destination before this service "
+                            "goes into warning/critical."
+                        ),
+                    ),
+                ),
             ],
             optional_keys=False,
         ),
@@ -100,4 +108,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mtr,
         title=lambda: _("Traceroute with MTR"),
-    ))
+    )
+)

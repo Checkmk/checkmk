@@ -1,7 +1,7 @@
 title: cAdvisor Pods/Containers: CPU Utilisation
 agents: prometheus
 catalog: containerization/cadvisor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -11,5 +11,5 @@ description:
  generation of cAdvisor related CPU services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
 
-inventory:
+discovery:
  One service is created for each CPU.

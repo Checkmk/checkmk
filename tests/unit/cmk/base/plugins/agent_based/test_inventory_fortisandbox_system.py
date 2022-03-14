@@ -7,13 +7,19 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_fortisandbox_system import inventory_fortisandbox_system
 
+from .utils_inventory import sort_inventory_result
+
 
 def test_inventory_fortisandbox_system():
-    assert list(inventory_fortisandbox_system(['v2.52-build0340 (GA)'])) == [
-        Attributes(
-            path=['software', 'os'],
-            inventory_attributes={
-                'Version': 'v2.52-build0340 (GA)',
-            },
-        ),
-    ]
+    assert sort_inventory_result(
+        inventory_fortisandbox_system(["v2.52-build0340 (GA)"])
+    ) == sort_inventory_result(
+        [
+            Attributes(
+                path=["software", "os"],
+                inventory_attributes={
+                    "Version": "v2.52-build0340 (GA)",
+                },
+            ),
+        ]
+    )

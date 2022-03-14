@@ -29,5 +29,5 @@ std::string TableEventConsoleReplication::namePrefix() const {
 }
 
 void TableEventConsoleReplication::answerQuery(Query *query) {
-    query->processDataset(Row(nullptr));
+    query->processDataset(Row(this));
 }

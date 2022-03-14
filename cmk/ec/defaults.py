@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Defaults for rule pack and configuration"""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Iterable
 
 from cmk.utils.i18n import _
 
+from .config import ConfigFromWATO, Rule, SNMPCredential
 
-def default_rule_pack(rules: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+def default_rule_pack(rules: Iterable[Rule]) -> dict[str, Any]:
     """Returns the default rule pack"""
     return {
         "id": "default",
@@ -21,15 +22,15 @@ def default_rule_pack(rules: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def default_config() -> Dict[str, Any]:
+def default_config() -> ConfigFromWATO:
     """Returns the default configuration"""
-    v1_v2_credential = {
+    v1_v2_credential: SNMPCredential = {
         "description": '"public" default for receiving SNMPv1/v2 traps',
         "credentials": "public",
     }
     return {
         "rules": [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
-        "rule_packs": [],  # new format with rule packages
+        "rule_packs": [],  # new format with rule packs
         "mkp_rule_packs": {},  # rule packs provided by MKPs and referenced in rule_packs
         "actions": [],
         "debug_rules": False,
@@ -59,17 +60,14 @@ def default_config() -> Dict[str, Any]:
         "translate_snmptraps": False,
         "snmp_credentials": [v1_v2_credential],
         "event_limit": {
-            'by_host': {
-                'action': 'stop_overflow_notify',
-                'limit': 1000,
+            "by_host": {
+                "action": "stop_overflow_notify",
+                "limit": 1000,
             },
-            'by_rule': {
-                'action': 'stop_overflow_notify',
-                'limit': 1000,
+            "by_rule": {
+                "action": "stop_overflow_notify",
+                "limit": 1000,
             },
-            'overall': {
-                'action': 'stop_overflow_notify',
-                'limit': 10000
-            },
+            "overall": {"action": "stop_overflow_notify", "limit": 10000},
         },
     }

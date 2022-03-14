@@ -1,0 +1,17 @@
+Title: mk_docker.py: Improve error reporting when executed asynchronously
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632217348
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The agent plugin is expected to transport some errors to the Checkmk server to
+make them visible on the service discovery page. E.g. when the docker python is
+missing on the target system, this should be displayed to the user.
+
+However, when the plugin is executed in asynchronous mode, the error reporting
+of the plugin told the agent to drop the error messages in previous versions.

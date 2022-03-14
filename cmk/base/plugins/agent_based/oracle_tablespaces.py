@@ -4,33 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    Tuple,
-    Optional,
-    Mapping,
-)
-from .utils import (
-    oracle,
-    db,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    DiscoveryResult,
-    CheckResult,
-)
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import (
-    State as state,
-    Service,
-    Result,
+    check_levels,
+    IgnoreResultsError,
     Metric,
     register,
-    IgnoreResultsError,
     render,
-    check_levels,
+    Result,
+    Service,
 )
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import TableRow
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .utils import db, oracle
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -90,9 +78,21 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
         if len(line) not in (13, 14, 15):
             continue
 
-        sid, datafile_name, ts_name, datafile_status, autoextensible, \
-        filesize_blocks, max_filesize_blocks, used_blocks, increment_size, \
-        file_online_status, block_size, ts_status, free_space = line[:13]
+        (
+            sid,
+            datafile_name,
+            ts_name,
+            datafile_status,
+            autoextensible,
+            filesize_blocks,
+            max_filesize_blocks,
+            used_blocks,
+            increment_size,
+            file_online_status,
+            block_size,
+            ts_status,
+            free_space,
+        ) = line[:13]
 
         db_version = 0
 
@@ -100,20 +100,22 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
             ts_type = line[13]
         else:
             # old behavior is all Tablespaces are treated as PERMANENT
-            ts_type = 'PERMANENT'
+            ts_type = "PERMANENT"
 
         if len(line) == 15:
-            db_version = int(line[14].split('.')[0])
+            db_version = int(line[14].split(".")[0])
 
         tablespaces.setdefault(
-            (sid, ts_name), {
-                'amount_missing_filenames': 0,
-                'autoextensible': False,
-                'datafiles': [],
-                'db_version': db_version,
-                'status': ts_status,
-                'type': ts_type,
-            })
+            (sid, ts_name),
+            {
+                "amount_missing_filenames": 0,
+                "autoextensible": False,
+                "datafiles": [],
+                "db_version": db_version,
+                "status": ts_status,
+                "type": ts_type,
+            },
+        )
 
         datafiles: oracle.DataFiles = {
             "name": datafile_name,
@@ -132,22 +134,24 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
 
         try:
             bs = int(block_size)
-            datafiles.update({
-                "block_size": bs,
-                "size": int(filesize_blocks) * bs,
-                "max_size": int(max_filesize_blocks) * bs,
-                "used_size": int(used_blocks) * bs,
-                "free_space": int(free_space) * bs,
-                "increment_size": int(increment_size) * bs,
-            })
+            datafiles.update(
+                {
+                    "block_size": bs,
+                    "size": int(filesize_blocks) * bs,
+                    "max_size": int(max_filesize_blocks) * bs,
+                    "used_size": int(used_blocks) * bs,
+                    "free_space": int(free_space) * bs,
+                    "increment_size": int(increment_size) * bs,
+                }
+            )
 
         except ValueError:
             pass
-        tablespaces[(sid, ts_name)]['datafiles'].append(datafiles)
+        tablespaces[(sid, ts_name)]["datafiles"].append(datafiles)
 
     for v in tablespaces.values():
-        v["amount_missing_filenames"] = len([df for df in v['datafiles'] if df['name'] == ''])
-        v["autoextensible"] = any(df['autoextensible'] for df in v['datafiles'])
+        v["amount_missing_filenames"] = len([df for df in v["datafiles"] if df["name"] == ""])
+        v["autoextensible"] = any(df["autoextensible"] for df in v["datafiles"])
 
     return {"error_sids": error_sids, "tablespaces": tablespaces}
 
@@ -162,8 +166,10 @@ def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Discover
 
     for (sid, ts_name), tablespace in section["tablespaces"].items():
         if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
-            yield Service(item="%s.%s" % (sid, ts_name),
-                          parameters={"autoextend": tablespace["autoextensible"]})
+            yield Service(
+                item="%s.%s" % (sid, ts_name),
+                parameters={"autoextend": tablespace["autoextensible"]},
+            )
 
 
 def check_oracle_tablespaces(
@@ -172,14 +178,14 @@ def check_oracle_tablespaces(
     section: oracle.SectionTableSpaces,
 ) -> CheckResult:
     try:
-        if item.count('.') == 2:
+        if item.count(".") == 2:
             # Pluggable Database: item = <CDB>.<PDB>.<Tablespace>
-            cdb, pdb, ts_name = item.split('.')
+            cdb, pdb, ts_name = item.split(".")
             sid = cdb + "." + pdb
         else:
-            sid, ts_name = item.split('.', 1)
+            sid, ts_name = item.split(".", 1)
     except ValueError:
-        yield Result(state=state.UNKNOWN, summary='Invalid check item (must be <SID>.<tablespace>)')
+        yield Result(state=state.UNKNOWN, summary="Invalid check item (must be <SID>.<tablespace>)")
         return
 
     if sid in section["error_sids"]:
@@ -202,7 +208,7 @@ def check_oracle_tablespaces(
 
     # Conversion of old autochecks params
     if isinstance(params, tuple):
-        params = Mapping[str, Any]({"autoextend": params[0], "levels": params[1:]})
+        params = {"autoextend": params[0], "levels": params[1:]}
 
     autoext = params.get("autoextend", None)
     uses_default_increment = False
@@ -211,11 +217,12 @@ def check_oracle_tablespaces(
     # of controlfiles in temporary Tablespaces
     # => CRIT, because we are not able to calculate used/free space in Tablespace
     #          in most cases the temporary Tablespace is empty
-    if tablespace['amount_missing_filenames'] > 0:
+    if tablespace["amount_missing_filenames"] > 0:
         yield Result(
             state=state.CRIT,
             summary="%d files with missing filename in %s Tablespace, space calculation not possible"
-            % (tablespace['amount_missing_filenames'], ts_type))
+            % (tablespace["amount_missing_filenames"], ts_type),
+        )
         return
 
     try:
@@ -242,20 +249,29 @@ def check_oracle_tablespaces(
         yield Result(state=state.CRIT, summary=str(exc))
         return
 
-    yield Result(state=state.OK,
-                 summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" %
-                 (ts_status, ts_type, render.bytes(current_size),
-                  render.percent(100.0 * used_size / max_size), render.bytes(used_size),
-                  render.bytes(max_size), render.bytes(free_space)))
+    yield Result(
+        state=state.OK,
+        summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s"
+        % (
+            ts_status,
+            ts_type,
+            render.bytes(current_size),
+            render.percent(100.0 * used_size / max_size),
+            render.bytes(used_size),
+            render.bytes(max_size),
+            render.bytes(free_space),
+        ),
+    )
 
     if num_extensible > 0 and db_version <= 10:
         # only display the number of remaining extents in Databases <= 10g
-        yield Result(state=state.OK,
-                     summary="%d increments (%s)" % (num_increments, render.bytes(increment_size)))
+        yield Result(
+            state=state.OK,
+            summary="%d increments (%s)" % (num_increments, render.bytes(increment_size)),
+        )
 
     if ts_status != "READONLY":
-        warn, crit, _as_perc, _info_text = \
-            db.get_tablespace_levels_in_bytes(max_size, params)
+        warn, crit, _as_perc, _info_text = db.get_tablespace_levels_in_bytes(max_size, params)
 
         yield Metric(
             name="size",
@@ -300,35 +316,42 @@ def check_oracle_tablespaces(
     # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
     # old plugins without v$tempseg_usage info send TEMP as type.
     # => Impossible to monitor old plugin with TEMP instead TEMPORARY
-    if ts_status != "READONLY" and \
-       (ts_type == 'PERMANENT' or (ts_type == 'TEMPORARY' and params.get("temptablespace"))):
+    if ts_status != "READONLY" and (
+        ts_type == "PERMANENT" or (ts_type == "TEMPORARY" and params.get("temptablespace"))
+    ):
 
-        yield from check_levels(free_space,
-                                levels_lower=(warn, crit),
-                                render_func=render.bytes,
-                                label="Space left")
+        yield from check_levels(
+            free_space, levels_lower=(warn, crit), render_func=render.bytes, label="Space left"
+        )
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
-        yield Result(state=state.OK,
-                     summary="%d data files (%d avail, %d autoext)" %
-                     (num_files, num_avail, num_extensible))
+        yield Result(
+            state=state.OK,
+            summary="%d data files (%d avail, %d autoext)" % (num_files, num_avail, num_extensible),
+        )
 
     for file_online_state, attrs in file_online_states.items():
         this_state = attrs["state"]
-        yield Result(state=state(this_state),
-                     summary="Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"])))
+        yield Result(
+            state=state(this_state),
+            summary="Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"])),
+        )
 
 
 def cluster_check_oracle_tablespaces(
-        item, params, section: Mapping[str, oracle.SectionTableSpaces]) -> CheckResult:
+    item, params, section: Mapping[str, Optional[oracle.SectionTableSpaces]]
+) -> CheckResult:
     selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
 
     # If there are more than one nodes per tablespace, then we select the node with the
     # most data files
     for tablespaces_per_node in section.values():
+        if tablespaces_per_node is None:
+            continue
+
         for (sid, ts_name), tablespace in tablespaces_per_node["tablespaces"].items():
-            if (sid,
-                    ts_name) not in selected_tablespaces or len(selected_tablespaces["tablespaces"][
-                        (sid, ts_name)]["datafiles"]) < len(tablespace["datafiles"]):
+            if (sid, ts_name) not in selected_tablespaces or len(
+                selected_tablespaces["tablespaces"][(sid, ts_name)]["datafiles"]
+            ) < len(tablespace["datafiles"]):
                 selected_tablespaces["tablespaces"][(sid, ts_name)] = tablespace
             selected_tablespaces["error_sids"].update(tablespaces_per_node["error_sids"])
 
@@ -342,4 +365,81 @@ register.check_plugin(
     check_function=check_oracle_tablespaces,
     check_default_parameters=ORACLE_TABLESPACES_DEFAULTS,
     check_ruleset_name="oracle_tablespaces",
+    cluster_check_function=cluster_check_oracle_tablespaces,
+)
+
+# AIMSTGD1|/u01/oradata/aimstgd1/temp0104.dbf|TEMP01|ONLINE|YES|90112|3276800|90048|8192|TEMP|32768|ONLINE|0|TEMPORARY
+# AIMSTGD1|/u01/oradata/aimstgd1/temp0105.dbf|TEMP01|ONLINE|YES|90112|3276800|90048|8192|TEMP|32768|ONLINE|0|TEMPORARY
+# AIMSTGD1|/u01/oradata/aimstgd1/temp0106.dbf|TEMP01|ONLINE|YES|90112|3276800|90048|8192|TEMP|32768|ONLINE|4544|TEMPORARY
+# AIMCONS1|/u01/oradata/aimcons1/temp01.dbf|TEMP|ONLINE|YES|262144|2621440|262016|32768|TEMP|8192|ONLINE|258560|TEMPORARY
+# AIMCONS1|/u01/oradata/aimcons1/temp02.dbf|TEMP|ONLINE|YES|262144|2621440|262016|32768|TEMP|8192|ONLINE|258688|TEMPORARY
+
+# Order of columns (it is a table of data files, so table spaces appear multiple times)
+# 0  database SID
+# 1  data file name
+# 2  table space name
+# 3  status of the data file
+# 4  whether the file is auto extensible
+# 5  current size of data file in blocks
+# 6  maximum size of data file in blocks (if auto extensible)
+# 7  currently number of blocks used by user data
+# 8  size of next increment in blocks (if auto extensible)
+# 9  wheter the file is in use (online)
+# 10 block size in bytes
+# 11 status of the table space
+# 12 free space in the datafile
+# 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
+
+
+def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
+    path_tablespaces = ["software", "applications", "oracle", "tablespaces"]
+    tablespaces = section["tablespaces"]
+    for tablespace in tablespaces:
+        sid, name = tablespace
+        attrs = tablespaces[tablespace]
+        db_version = attrs["db_version"]
+
+        (
+            current_size,
+            used_size,
+            max_size,
+            free_space,
+            num_increments,
+            increment_size,
+            _,
+            _,
+            _,
+            _,
+            _,
+        ) = oracle.analyze_datafiles(
+            attrs["datafiles"],
+            db_version,
+            sid,
+        )
+        yield TableRow(
+            path=path_tablespaces,
+            key_columns={
+                "sid": sid,
+                "name": name,
+            },
+            inventory_columns={
+                "version": db_version or "",
+                "type": attrs["type"],
+                "autoextensible": attrs["autoextensible"] and "YES" or "NO",
+            },
+            status_columns={
+                "current_size": current_size,
+                "max_size": max_size,
+                "used_size": used_size,
+                "num_increments": num_increments,
+                "increment_size": increment_size,
+                "free_space": free_space,
+            },
+        )
+
+
+register.inventory_plugin(
+    name="oracle_tablespaces",
+    inventory_function=inventory_oracle_tablespaces,
+    sections=["oracle_tablespaces"],
 )

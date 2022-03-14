@@ -14,8 +14,8 @@ from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildca
 @get_parsed_item_data
 def check_couchbase_nodes_cache(item, params, data):
 
-    misses = data.get('ep_bg_fetched')
-    hits = data.get('get_hits')
+    misses = data.get("ep_bg_fetched")
+    hits = data.get("get_hits")
     if None in (misses, hits):
         return
     total = misses + hits
@@ -24,8 +24,8 @@ def check_couchbase_nodes_cache(item, params, data):
 
     yield check_levels(
         miss_rate,
-        'cache_misses_rate',
-        params.get('cache_misses'),
+        "cache_misses_rate",
+        params.get("cache_misses"),
         human_readable_func=str,
         unit="/s",
         infoname="Cache misses",
@@ -33,19 +33,19 @@ def check_couchbase_nodes_cache(item, params, data):
 
     yield check_levels(
         hit_perc,
-        'cache_hit_ratio',
-        (None, None) + params.get('cache_hits', (None, None)),
+        "cache_hit_ratio",
+        (None, None) + params.get("cache_hits", (None, None)),
         human_readable_func=get_percent_human_readable,
-        infoname='Cache hits',
+        infoname="Cache hits",
         boundaries=(0, 100),
     )
 
 
-check_info['couchbase_nodes_cache'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda k, v: 'get_hits' in v and 'ep_bg_fetched' in v),
-    'check_function': check_couchbase_nodes_cache,
-    'service_description': 'Couchbase %s Cache',
-    'group': 'couchbase_cache',
-    'has_perfdata': True
+check_info["couchbase_nodes_cache"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda k, v: "get_hits" in v and "ep_bg_fetched" in v),
+    "check_function": check_couchbase_nodes_cache,
+    "service_description": "Couchbase %s Cache",
+    "group": "couchbase_cache",
+    "has_perfdata": True,
 }

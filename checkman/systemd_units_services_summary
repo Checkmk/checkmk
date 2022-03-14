@@ -1,7 +1,7 @@
 title: Systemd Service Summary
 agents: linux
 catalog: os/ps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives a summary of the linux services provided by
@@ -14,5 +14,5 @@ description:
 item:
  The fixed statement {{Summary}}
 
-inventory:
+discovery:
  One summary service is created.

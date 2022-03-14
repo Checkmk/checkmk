@@ -70,15 +70,13 @@ def inventory_pvecm_status(parsed):
 
 
 def check_pvecm_status(_no_item, _no_params, parsed):
-    if "cman_tool" in parsed and \
-       "cannot open connection to cman" in parsed["cman_tool"]:
+    if "cman_tool" in parsed and "cannot open connection to cman" in parsed["cman_tool"]:
         yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
 
     else:
         name = parsed.get("cluster name", parsed.get("quorum provider", "unknown"))
 
-        yield 0, "Name: %s, Nodes: %s" % \
-                 (name, parsed["nodes"])
+        yield 0, "Name: %s, Nodes: %s" % (name, parsed["nodes"])
 
         if "activity blocked" in parsed["quorum"]:
             yield 2, "Quorum: %s" % parsed["quorum"]
@@ -86,13 +84,15 @@ def check_pvecm_status(_no_item, _no_params, parsed):
         if int(parsed["expected votes"]) == int(parsed["total votes"]):
             yield 0, "No faults"
         else:
-            yield 2, "Expected votes: %s, Total votes: %s" % \
-                     (parsed["expected votes"], parsed["total votes"])
+            yield 2, "Expected votes: %s, Total votes: %s" % (
+                parsed["expected votes"],
+                parsed["total votes"],
+            )
 
 
-check_info['pvecm_status'] = {
-    'parse_function': parse_pvecm_status,
-    'inventory_function': inventory_pvecm_status,
-    'check_function': check_pvecm_status,
-    'service_description': 'PVE Cluster State',
+check_info["pvecm_status"] = {
+    "parse_function": parse_pvecm_status,
+    "inventory_function": inventory_pvecm_status,
+    "check_function": check_pvecm_status,
+    "service_description": "PVE Cluster State",
 }

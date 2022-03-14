@@ -1,0 +1,23 @@
+Title: kubernetes: nodes: fix labelling
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1621604184
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this werk, the host fetching the data via the special agent was
+labeled <tt>cmk/kubernetes_object:master</tt>.
+
+After this werk kubernetes nodes are labeled with either
+<tt>cmk/kubernetes_object:worker_node</tt>, or
+<tt>cmk/kubernetes_object:control-plane_node</tt>. The host fetching the
+data via the special agent is labeled
+<tt>cmk/kubernetes_object:cluster</tt>.
+
+If you have rules that use the <tt>cmk/kubernetes_object:master</tt> label you
+have to update your rules to use the new labels.
+

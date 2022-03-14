@@ -1,7 +1,7 @@
 title: NetApp API Connection
 agents: vsphere
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check simply shows any connection problems with the netapp filer.
@@ -9,6 +9,5 @@ description:
  These problems are shown as warnings in the plugin output. A WATO rule allows you
  to down- or upgrade this warning to a different state.
 
-inventory:
+discovery:
   One service is created.
-

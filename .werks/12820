@@ -1,0 +1,13 @@
+Title: mk_postgres: fixed user detection: use default user "postgres" in case of error
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626953257
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This werk fixes the user detection for postgresql docker images.
+If the user could no be determined the fallback user "postgres" is used.
+

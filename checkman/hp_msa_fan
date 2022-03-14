@@ -1,7 +1,7 @@
 title: HP MSA 2040: Fan Speed and Status
 agents: hp_msa
 catalog: hw/storagehw/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the fan speed and status a HP MSA 2040 storage system.
@@ -14,5 +14,5 @@ description:
 item:
  The fan identifier.
 
-inventory:
+discovery:
  One service is created for each fan.

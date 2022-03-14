@@ -18,4 +18,4 @@ info = [
 
 discovery = {'': [(u'POSTGRES', {})]}
 
-checks = {'': [(u'POSTGRES', {}, [(2, u'Instance POSTGRES not running', [])])]}
+checks = {'': [(u'POSTGRES', {}, [(2, u'Instance POSTGRES not running or postgres DATADIR name is not identical with instance name.', [])])]}

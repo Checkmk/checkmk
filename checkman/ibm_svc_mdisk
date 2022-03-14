@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Status and Mode of MDisks
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status and mode of MDisks in an IBM SVC / Storwize V3700 / V7000
@@ -18,6 +18,5 @@ description:
 item:
  The name of the MDisk.
 
-inventory:
+discovery:
  One service is created for each MDisk.
-

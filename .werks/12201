@@ -1,0 +1,13 @@
+Title: esx_vsphere_vm_snapshots: Check crashes if there are snapshots from the future
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619704419
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Now, if any of the snapshots has a creation time in the future, the following message is displayed:
+"Snapshot with a creation time in future found. Please check your network time synchronisation."

@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from tests.testlib.site import Site
+
 import cmk.utils.werks
 
 
-def test_load(site):
+def test_load(site: Site):
     werks = cmk.utils.werks.load()
     assert len(werks) > 1000
 
 
-def test_regular_werks(site):
+def test_regular_werks(site: Site):
     werks = cmk.utils.werks.load()
 
     regular_werks = [werk for werk in werks.values() if werk["edition"] == "cre"]
@@ -20,7 +22,7 @@ def test_regular_werks(site):
     assert len(regular_werks) > 1000
 
 
-def test_enterprise_werks(site):
+def test_enterprise_werks(site: Site):
     werks = cmk.utils.werks.load()
 
     enterprise_werks = [werk for werk in werks.values() if werk["edition"] == "cee"]
@@ -31,7 +33,7 @@ def test_enterprise_werks(site):
         assert enterprise_werks
 
 
-def test_managed_werks(site):
+def test_managed_werks(site: Site):
     werks = cmk.utils.werks.load()
 
     managed_werks = [werk for werk in werks.values() if werk["edition"] == "cme"]

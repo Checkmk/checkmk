@@ -1,0 +1,25 @@
+Title: agent_kubernetes: inaccurate timestamp conversion
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1620919300
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The special agent for Kubernetes did not convert date and time strings received
+from the Kubernetes cluster correctly to timestamps. This has been fixed.
+
+Please note that the changing timestamp may temporarily affect the k8s_stats_fs
+check's calculated average used for trend computation, which takes time to
+smooth out.
+
+If your host is affected and you would like to improve the averages it
+produces, you can shorten the timespan for the calculated average: Setup ->
+Services -> Service monitoring rules -> Filesystems (used space and growth).
+Decrease the value of the parameter "Time range for trend computation".
+
+Alternatively, you can reset the host's counters by removing the file
+~/tmp/check_mk/counters/HOST. This means trend computations are started from
+scratch.

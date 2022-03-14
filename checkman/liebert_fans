@@ -1,7 +1,7 @@
 title: Liebert: Fans
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the fan speed in percent.
@@ -9,5 +9,5 @@ description:
 item:
  The item will be the data label of the OID
 
-inventory:
+discovery:
  One service is created for each fan.

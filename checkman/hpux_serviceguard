@@ -1,7 +1,7 @@
 title: HP-UX Serviceguard: General Information
 agents: hpux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the summary states of HP-UX Serviceguard: the overal
@@ -15,7 +15,6 @@ item:
  state of the node {hgs-sd1-srv1} and {"package:ADBP"} for the
  package {ADBP}.
 
-inventory:
+discovery:
  One service is created for the overall state, for each node
  and for each package.
-

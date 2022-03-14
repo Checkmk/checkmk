@@ -6,23 +6,16 @@
 """Classes used by the API for check plugins
 """
 import enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    overload,
-    Tuple,
-    Union,
-)
+from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel, RuleSetTypeName
+from cmk.base.api.agent_based.type_defs import (
+    ParametersTypeAlias,
+    PluginSuppliedLabel,
+    RuleSetTypeName,
+)
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
@@ -40,11 +33,15 @@ class ServiceLabel(PluginSuppliedLabel):
 
 
 class Service(
-        NamedTuple("_ServiceTuple", [
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "_ServiceTuple",
+        [
             ("item", Optional[str]),
-            ("parameters", Dict[str, Any]),
+            ("parameters", ParametersTypeAlias),
             ("labels", List[ServiceLabel]),
-        ])):
+        ],
+    )
+):
     """Class representing services that the discover function yields
 
     Args:
@@ -60,13 +57,14 @@ class Service(
         ... )
 
     """
+
     def __new__(
         cls,
         *,
         item: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[ParametersTypeAlias] = None,
         labels: Optional[List[ServiceLabel]] = None,
-    ) -> 'Service':
+    ) -> "Service":
         return super().__new__(
             cls,
             item=cls._parse_item(item),
@@ -78,12 +76,12 @@ class Service(
     def _parse_item(item: Optional[str]) -> Optional[str]:
         if item is None:
             return None
-        if (item and isinstance(item, str)):
+        if item and isinstance(item, str):
             return item
         raise TypeError("'item' must be a non empty string or ommited entirely, got %r" % (item,))
 
     @staticmethod
-    def _parse_parameters(parameters: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _parse_parameters(parameters: Optional[ParametersTypeAlias]) -> ParametersTypeAlias:
         if parameters is None:
             return {}
         if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):
@@ -99,18 +97,22 @@ class Service(
         raise TypeError("'labels' must be list of ServiceLabels or None, got %r" % (labels,))
 
     def __repr__(self) -> str:
-        args = ", ".join(f"{k}={v!r}" for k, v in (
-            ("item", self.item),
-            ("parameters", self.parameters),
-            ("labels", self.labels),
-        ) if v)
+        args = ", ".join(
+            f"{k}={v!r}"
+            for k, v in (
+                ("item", self.item),
+                ("parameters", self.parameters),
+                ("labels", self.labels),
+            )
+            if v
+        )
         return f"{self.__class__.__name__}({args})"
 
 
 @enum.unique
 class State(enum.Enum):
-    """States of check results
-    """
+    """States of check results"""
+
     # Don't use IntEnum to prevent "state.CRIT < state.UNKNOWN" from evaluating to True.
     OK = 0
     WARN = 1
@@ -121,7 +123,7 @@ class State(enum.Enum):
         return int(self.value)
 
     @classmethod
-    def best(cls, *args: Union['State', int]) -> 'State':
+    def best(cls, *args: Union["State", int]) -> "State":
         """Returns the best of all passed states
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -157,7 +159,7 @@ class State(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: Union['State', int]) -> 'State':
+    def worst(cls, *args: Union["State", int]) -> "State":
         """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -183,19 +185,23 @@ class State(enum.Enum):
 
 
 class Metric(
-        NamedTuple("_MetricTuple", [
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "_MetricTuple",
+        [
             ("name", str),
             ("value", EvalableFloat),
             ("levels", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
             ("boundaries", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
-        ])):
+        ],
+    )
+):
     """Create a metric for a service
 
     Args:
         name:       The name of the metric.
         value:      The measured value.
-        levels:     A tuple of upper levels. This information is only used for visualization
-                    by the graphing system. It does not affect the service state.
+        levels:     A pair of upper levels, ie. warn and crit. This information is only used
+                    for visualization by the graphing system. It does not affect the service state.
         boundaries: Additional information on the value domain for the graphing system.
 
     If you create a Metric in this way, you may want to consider using :func:`check_levels`.
@@ -205,6 +211,7 @@ class Metric(
         >>> my_metric = Metric("used_slots_percent", 23.0, levels=(80, 90), boundaries=(0, 100))
 
     """
+
     def __new__(
         cls,
         name: str,
@@ -212,7 +219,7 @@ class Metric(
         *,
         levels: _OptionalPair = None,
         boundaries: _OptionalPair = None,
-    ) -> 'Metric':
+    ) -> "Metric":
         cls._validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -222,8 +229,8 @@ class Metric(
             cls,
             name=name,
             value=EvalableFloat(value),
-            levels=cls._sanitize_optionals('levels', levels),
-            boundaries=cls._sanitize_optionals('boundaries', boundaries),
+            levels=cls._sanitize_optionals("levels", levels),
+            boundaries=cls._sanitize_optionals("boundaries", boundaries),
         )
 
     @staticmethod
@@ -234,7 +241,7 @@ class Metric(
         # this is not very elegant, but it ensures consistency to cmk.utils.misc.pnp_cleanup
         pnp_name = quote_pnp_string(metric_name)
         if metric_name != pnp_name:
-            offenders = ''.join(set(metric_name) - set(pnp_name))
+            offenders = "".join(set(metric_name) - set(pnp_name))
             raise TypeError("invalid character(s) in metric name: %r" % offenders)
 
     @staticmethod
@@ -264,18 +271,28 @@ class Metric(
 
     def __repr__(self) -> str:
         levels = "" if self.levels == (None, None) else ", levels=%r" % (self.levels,)
-        boundaries = "" if self.boundaries == (None,
-                                               None) else ", boundaries=%r" % (self.boundaries,)
-        return "%s(%r, %r%s%s)" % (self.__class__.__name__, self.name, self.value, levels,
-                                   boundaries)
+        boundaries = (
+            "" if self.boundaries == (None, None) else ", boundaries=%r" % (self.boundaries,)
+        )
+        return "%s(%r, %r%s%s)" % (
+            self.__class__.__name__,
+            self.name,
+            self.value,
+            levels,
+            boundaries,
+        )
 
 
 class Result(
-        NamedTuple("_ResultTuple", [
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "_ResultTuple",
+        [
             ("state", State),
             ("summary", str),
             ("details", str),
-        ]),):
+        ],
+    ),
+):
     """A result to be yielded by check functions
 
     This is the class responsible for creating service output and setting the state of a service.
@@ -322,6 +339,7 @@ class Result(
     probably should be using :func:`check_levels`!
 
     """
+
     @overload
     def __new__(
         cls,
@@ -329,7 +347,7 @@ class Result(
         state: State,
         summary: str,
         details: Optional[str] = None,
-    ) -> 'Result':
+    ) -> "Result":
         pass
 
     @overload
@@ -339,15 +357,15 @@ class Result(
         state: State,
         notice: str,
         details: Optional[str] = None,
-    ) -> 'Result':
+    ) -> "Result":
         pass
 
     def __new__(
         cls,
         **kwargs,
-    ) -> 'Result':
+    ) -> "Result":
         state, summary, details = _create_result_fields(**kwargs)
-        return super(Result, cls).__new__(
+        return super().__new__(
             cls,
             state=state,
             summary=summary,
@@ -389,12 +407,12 @@ def _create_result_fields(
     if summary:
         if notice:
             raise TypeError("'summary' and 'notice' are mutually exclusive arguments")
-        if '\n' in summary:
+        if "\n" in summary:
             raise ValueError("'\\n' not allowed in 'summary'")
         return state, summary, details or summary
 
     if notice:
-        summary = notice.replace('\n', ', ') if state != State.OK else ""
+        summary = notice.replace("\n", ", ") if state != State.OK else ""
         return state, summary, details or notice
 
     raise TypeError("at least 'summary' or 'notice' is required")
@@ -436,6 +454,7 @@ class IgnoreResults:
     This is useful for instance if you want to initialize all counters, before
     returning.
     """
+
     def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
@@ -460,11 +479,11 @@ class CheckPlugin(NamedTuple):
     sections: List[ParsedSectionName]
     service_name: str
     discovery_function: DiscoveryFunction
-    discovery_default_parameters: Optional[Dict[str, Any]]
+    discovery_default_parameters: Optional[ParametersTypeAlias]
     discovery_ruleset_name: Optional[RuleSetName]
     discovery_ruleset_type: RuleSetTypeName
     check_function: CheckFunction
-    check_default_parameters: Optional[Dict[str, Any]]
+    check_default_parameters: Optional[ParametersTypeAlias]
     check_ruleset_name: Optional[RuleSetName]
-    cluster_check_function: CheckFunction
+    cluster_check_function: Optional[CheckFunction]
     module: Optional[str]  # not available for auto migrated plugins.

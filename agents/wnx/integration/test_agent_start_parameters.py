@@ -4,54 +4,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from builtins import range
-from builtins import object
-
-import sys
 import os
 import platform
+import sys
+from builtins import range
 from typing import List
+
 import pytest  # type: ignore
-from local import (make_yaml_config, local_test, run_subprocess, write_config, main_exe)
+
+from .local import local_test, main_exe, run_subprocess
 
 
-class Globals(object):
+class Globals:
     param: List[str] = []
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(make_yaml_config):
-    if Globals.param[0] == 'showconfig':
-        make_yaml_config['zzz'] = {
-            'enabled': 'yes',
-            'timeout': 60,
+@pytest.fixture(name="testconfig")
+def testconfig_engine(make_yaml_config):
+    if Globals.param[0] == "showconfig":
+        make_yaml_config["zzz"] = {
+            "enabled": "yes",
+            "timeout": 60,
         }
-        make_yaml_config['_xxx'] = {
-            'enabled': 'yes',
-            'timeout': 60,
+        make_yaml_config["_xxx"] = {
+            "enabled": "yes",
+            "timeout": 60,
         }
     return make_yaml_config
 
 
-@pytest.fixture
-def actual_output(request, write_config):
-    if platform.system() == 'Windows':
+@pytest.fixture(name="actual_output")
+def actual_output_engine(request, write_config):
+    if platform.system() == "Windows":
         # Run agent and yield its output.
         try:
-            exit_code, _stdout, _stderr = run_subprocess([main_exe] + Globals.param)
+            exit_code, _stdout, _stderr = run_subprocess([str(main_exe)] + Globals.param)
             if _stdout:
-                sys.stdout.write(_stdout.decode(encoding='cp1252'))
+                sys.stdout.write(_stdout.decode(encoding="cp1252"))
             if _stderr:
-                sys.stderr.write(_stderr.decode(encoding='cp1252'))
-            expected_code = 13 if Globals.param[0] == 'bad' else 0
+                sys.stderr.write(_stderr.decode(encoding="cp1252"))
+            expected_code = 13 if Globals.param[0] == "bad" else 0
             assert expected_code == exit_code
             # Usage is written to stderr, actual cmd output to stdout.
-            work_load = _stdout.decode(encoding='cp1252')
+            work_load = _stdout.decode(encoding="cp1252")
             yield work_load.splitlines()
         finally:
             pass
@@ -62,8 +62,8 @@ def actual_output(request, write_config):
 
 def output_usage():
     return [
-        r'Normal Usage:',
-        r'\.?',
+        r"Normal Usage:",
+        r"\.?",
     ]
 
 
@@ -73,74 +73,75 @@ def output_bad_usage():
     return r
 
 
-@pytest.fixture
-def expected_output(request, testconfig):
+@pytest.fixture(name="expected_output")
+def expected_output_engine(request, testconfig):
     return {
-        'version': [r'Check_MK Agent version \d+\.\d+\.\d+([bi]\d+)?(p\d+)?'],
-        'showconfig': [
-            r'# Environment Variables:',
-            r'# MK_LOCALDIR=\.?',
-            r'# MK_STATEDIR=\.?',
-            r'# MK_PLUGINSDIR=\.?',
-            r'# MK_TEMPDIR=\.?',
-            r'# MK_LOGDIR=\.?',
-            r'# MK_CONFDIR=\.?',
-            r'# MK_SPOOLDIR=\.?',
-            r'# MK_INSTALLDIR=\.?',
-            r'# MK_MSI_PATH=\.?',
-            r'# MK_MODULESDIR=\.?',
-            r'# Loaded Config Files:',
-            r'# system: \.?',
-            r'# bakery: \.?',
-            r'# user  : \.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
-            r'\.?',
+        "version": [r"Check_MK Agent version \d+\.\d+\.\d+([bi]\d+)?(p\d+)?"],
+        "showconfig": [
+            r"# Environment Variables:",
+            r"# MK_LOCALDIR=\.?",
+            r"# MK_STATEDIR=\.?",
+            r"# MK_PLUGINSDIR=\.?",
+            r"# MK_TEMPDIR=\.?",
+            r"# MK_LOGDIR=\.?",
+            r"# MK_CONFDIR=\.?",
+            r"# MK_SPOOLDIR=\.?",
+            r"# MK_INSTALLDIR=\.?",
+            r"# MK_MSI_PATH=\.?",
+            r"# MK_MODULESDIR=\.?",
+            r"# Loaded Config Files:",
+            r"# system: \.?",
+            r"# bakery: \.?",
+            r"# user  : \.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
+            r"\.?",
         ],
-        'help': output_usage(),
-        'bad': output_bad_usage()
+        "help": output_usage(),
+        "bad": output_bad_usage(),
     }[Globals.param[0]]
 
 
 @pytest.fixture(
     # Note: param 'adhoc' is tested in all section tests
     #       params 'test' and 'debug' are tested in section check_mk tests
-    params=[['version'], ['showconfig'], ['help'], ["bad"]],
-    ids=['version', 'showconfig', 'help', 'bad'],
-    autouse=True)
+    params=[["version"], ["showconfig"], ["help"], ["bad"]],
+    ids=["version", "showconfig", "help", "bad"],
+    autouse=True,
+)
 def pre_test(request):
     Globals.param = request.param
     yield
@@ -156,5 +157,5 @@ def test_agent_start_parameters(request, testconfig, expected_output, actual_out
     expected_work = expected_output
     if len(expected_work) < len(actual_output):
         missing = len(actual_output) - len(expected_work)
-        expected_work.extend([r'\.?' for i in range(missing)])
+        expected_work.extend([r"\.?" for i in range(missing)])
     local_test(expected_output, actual_output, testfile, request.node.name)

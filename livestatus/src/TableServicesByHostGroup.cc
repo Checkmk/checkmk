@@ -7,7 +7,6 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"
@@ -16,9 +15,9 @@
 #include "nagios.h"
 
 namespace {
-struct servicebyhostgroup {
+struct service_and_group {
     const service *svc;
-    const hostgroup *host_group;
+    const hostgroup *group;
 };
 }  // namespace
 
@@ -26,11 +25,11 @@ TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
     ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<servicebyhostgroup>()->svc;
+        return r.rawData<service_and_group>()->svc;
     }),
                               true);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
-        return r.rawData<servicebyhostgroup>()->host_group;
+        return r.rawData<service_and_group>()->group;
     }));
 }
 
@@ -41,13 +40,13 @@ std::string TableServicesByHostGroup::name() const {
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query *query) {
-    for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        for (const hostsmember *mem = hg->members; mem != nullptr;
-             mem = mem->next) {
-            for (const servicesmember *smem = mem->host_ptr->services;
-                 smem != nullptr; smem = smem->next) {
-                servicebyhostgroup sbhg{smem->service_ptr, hg};
-                if (!query->processDataset(Row(&sbhg))) {
+    for (const auto *group = hostgroup_list; group != nullptr;
+         group = group->next) {
+        for (const auto *hm = group->members; hm != nullptr; hm = hm->next) {
+            for (const auto *sm = hm->host_ptr->services; sm != nullptr;
+                 sm = sm->next) {
+                service_and_group sag{sm->service_ptr, group};
+                if (!query->processDataset(Row(&sag))) {
                     return;
                 }
             }
@@ -56,7 +55,6 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
 }
 
 bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
-    const auto *svc = rowData<servicebyhostgroup>(row)->svc;
-    return is_authorized_for(core()->serviceAuthorization(), ctc, svc->host_ptr,
-                             svc);
+    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                 rowData<service_and_group>(row)->svc);
 }

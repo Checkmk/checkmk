@@ -1,7 +1,7 @@
 title: AWS S3: Requests
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the total number of requests and the
@@ -21,6 +21,6 @@ description:
 item:
  Name of the bucket
 
-inventory:
+discovery:
  One service is created for each bucket if all required metrics
  (AllRequests) are given.

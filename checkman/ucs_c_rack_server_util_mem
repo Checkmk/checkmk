@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: Memory Utilization
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about the memory utilization of an UCS C-Series Rack Servers racks.
@@ -40,7 +40,7 @@ description:
  The default value for the {warn} level is 90.0%. The default value for the {crit} level is 95.0%.
  The {warn} and {crit} level are configurable via WATO rule {Device Component Memory Utilization}.
 
-inventory:
+discovery:
  One service is created for each server rack included in the agent plugin output.
 
 item:

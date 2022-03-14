@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.redis import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<redis_info>>>
 # [[[MY_FIRST_REDIS|127.0.0.1|6380]]]
 # ...
@@ -123,7 +125,7 @@ check_info["redis_info"] = {
     "has_perfdata": True,
     "group": "redis_info",
 }
-#.
+# .
 #   .--Persistence---------------------------------------------------------.
 #   |           ____               _     _                                 |
 #   |          |  _ \ ___ _ __ ___(_)___| |_ ___ _ __   ___ ___            |
@@ -172,7 +174,7 @@ check_info["redis_info"] = {
 # aof_last_write_status - Status of the last write operation to the AOF
 # aof_last_cow_size - The size in bytes of copy-on-write allocations during the last AOF rewrite operation
 
-factory_settings['redis_info_persistence_default_levels'] = {
+factory_settings["redis_info_persistence_default_levels"] = {
     "rdb_last_bgsave": 1,
     "aof_last_rewrite": 1,
 }
@@ -225,7 +227,7 @@ check_info["redis_info.persistence"] = {
     "group": "redis_info_persistence",
     "default_levels_variable": "redis_info_persistence_default_levels",
 }
-#.
+# .
 #   .--Clients-------------------------------------------------------------.
 #   |                     ____ _ _            _                            |
 #   |                    / ___| (_) ___ _ __ | |_ ___                      |
@@ -286,4 +288,4 @@ check_info["redis_info.clients"] = {
     "has_perfdata": True,
     "group": "redis_info_clients",
 }
-#.
+# .

@@ -1,0 +1,13 @@
+Title: Checkmk Dockerfile: Enable authentication for relay_host
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1641987046
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk adds the package libsasl2-modules to the docker dependencies
+to enable authentication for relay_host.
+

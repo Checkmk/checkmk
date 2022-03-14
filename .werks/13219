@@ -1,0 +1,14 @@
+Title: Wrongfully applied rules for logwatch reclassify patterns
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632207136
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+From Checkmk version 2.0.0i1 to 2.0.0p11 all "Logwatch patters" rules
+matching the host were applied to the service, regardles of the item
+condition.

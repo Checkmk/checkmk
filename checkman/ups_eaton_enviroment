@@ -1,12 +1,11 @@
 title: Eaton UPS Devices: Temperature and Humidity Sensors
 agents: snmp
 catalog: hw/environment/eaton
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Shows Sensor information for Temperature, External Temperature an Humidity for
  Eaton UPS devices
 
-inventory:
+discovery:
  One service is created.
-

@@ -14,34 +14,39 @@ namespace cma {
 
 enum class AppType { automatic = 99, srv = 0, test, exe, failed };
 enum class YamlCacheOp { nothing, update };
-constexpr const wchar_t* kTemporaryRoot = L"CMA_TEST_DIR";
-constexpr const wchar_t* kRemoteMachine = L"REMOTE_MACHINE";
-constexpr const wchar_t* kAutoReload = L"CMA_AUTO_RELOAD";
+namespace env {
+constexpr const std::wstring_view test_integration_root{
+    L"WNX_TEST_I_ROOT"};  // integration
+constexpr const std::wstring_view test_root{L"WNX_TEST_ROOT"};
+constexpr const std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
+}  // namespace env
 
 AppType AppDefaultType();  // defined by main
 
-// must be called on start
-bool OnStart(AppType Type = AppType::automatic,
-             const std::wstring& ConfigFile = L"");
+bool OnStart(AppType type, const std::wstring &config_file);
+inline bool OnStart() { return OnStart(AppType::automatic, L""); }
+inline bool OnStart(AppType type) { return OnStart(type, L""); }
 
-bool LoadConfig(AppType Type, const std::wstring& ConfigFile);
+bool LoadConfigFull(const std::wstring &ConfigFile);
+bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
+                    YamlCacheOp cache_op);
 bool ReloadConfig();
 inline bool OnStartApp() { return OnStart(AppType::automatic); }
 
 inline bool OnStartTest() { return OnStart(AppType::test); }
 
-// recommended to be called on exit. BUT, PLEASE WAIT FOR ALL THREADS/ ASYNC
-void OnExit();  // #VIP will stop WMI and all services(in the future)
+/// Must be called on exit to stop WMI and all services if possible
+void OnExit();
 
 bool ConfigLoaded();
 
 class UninstallAlert {
 public:
     UninstallAlert() = default;
-    UninstallAlert(const UninstallAlert&) = delete;
-    UninstallAlert(UninstallAlert&&) = delete;
-    UninstallAlert& operator=(const UninstallAlert&) = delete;
-    UninstallAlert& operator=(UninstallAlert&&) = delete;
+    UninstallAlert(const UninstallAlert &) = delete;
+    UninstallAlert(UninstallAlert &&) = delete;
+    UninstallAlert &operator=(const UninstallAlert &) = delete;
+    UninstallAlert &operator=(UninstallAlert &&) = delete;
     bool isSet() const noexcept {
         return set_;
     }                       // check during exit from the service
@@ -55,6 +60,6 @@ private:
 extern UninstallAlert g_uninstall_alert;
 
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
-    std::wstring_view environment_variable);
+    AppType app_type);
 
 }  // namespace cma

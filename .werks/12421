@@ -1,0 +1,20 @@
+Title: Notification history: links for multiple contacts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616515352
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The views showing the notification histories of hosts and/or services
+("Notifications of host", "Notifications of host & services") display the
+contacts to which the notifications were sent. These contacts are linked
+to the view showing only the notifications sent to these contacts. However,
+in case a notification was sent to more than one contact, the individual
+contacts listed in the notification history were not clickable individually,
+as one would expect. Instead, only the entire list of all contacts was
+clickable and the target page showed the notifications which were sent to all
+of the contacts. Now, each contact is clickable on its own and the target page
+shows only the notifications which were sent to this particular contact.

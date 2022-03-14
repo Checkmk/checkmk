@@ -1,0 +1,12 @@
+Title: cmciii_can_current: levels of the current metric are now given in ampere
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624459802
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The metric was reported in A and the levels in mA. Now they are both
+reported in A.

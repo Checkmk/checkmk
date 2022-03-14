@@ -9,30 +9,32 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.11.5.1.9.0 0
 
-factory_settings['active_vm_levels'] = {'vms': (100, 120)}
+factory_settings["active_vm_levels"] = {"vms": (100, 120)}
 
 
 def check_fireeye_active_vms(no_item, params, info):
     value = int(info[0][0])
-    infotext = 'Active VMs: %d' % value
-    perf_counter = 'active_vms'
-    warn, crit = params.get('vms')
+    infotext = "Active VMs: %d" % value
+    perf_counter = "active_vms"
+    warn, crit = params.get("vms")
     return fireeye_check_generic(infotext, perf_counter, value, warn, crit)
 
 
-check_info['fireeye_active_vms'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_active_vms,
-    'service_description': 'Active VMs',
-    'default_levels_variable': 'active_vm_levels',
-    'group': 'fireeye_active_vms',
-    'snmp_info': (
-        '.1.3.6.1.4.1.25597.11.5.1.9',
+check_info["fireeye_active_vms"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_active_vms,
+    "service_description": "Active VMs",
+    "default_levels_variable": "active_vm_levels",
+    "group": "fireeye_active_vms",
+    "snmp_info": (
+        ".1.3.6.1.4.1.25597.11.5.1.9",
         [
-            '0',  # FE-FIREEYE-MIB::feActiveVMs
-        ]),
-    'snmp_scan_function': scan_fireeye,
-    'has_perfdata': True,
+            "0",  # FE-FIREEYE-MIB::feActiveVMs
+        ],
+    ),
+    "snmp_scan_function": scan_fireeye,
+    "has_perfdata": True,
 }

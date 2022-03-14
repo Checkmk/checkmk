@@ -1,7 +1,7 @@
 title: AWS Glacier: Summary
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors all AWS Glacier vaults and reports
@@ -13,5 +13,5 @@ description:
  There are no default levels set for the total vault size.
  Upper levels are configurable.
 
-inventory:
+discovery:
  One service is created.

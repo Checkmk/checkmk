@@ -1,7 +1,7 @@
 title: FireEye Appliances: Disk Status
 agents: snmp
 catalog: hw/network/fireeye
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the disks in a RAID configuration
@@ -13,5 +13,5 @@ description:
 item:
  Name of the disk
 
-inventory:
+discovery:
  One service is created for each disk.

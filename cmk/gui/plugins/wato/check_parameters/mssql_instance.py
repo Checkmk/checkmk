@@ -5,30 +5,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_mssql_instance():
-    return Dictionary(elements=[("map_connection_state",
-                                 MonitoringState(title=_("Connection status"), default_value=2))],)
+    return Dictionary(
+        elements=[
+            ("map_connection_state", MonitoringState(title=_("Connection status"), default_value=2))
+        ],
+    )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_instance",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Instance identifier"),),
+        item_spec=lambda: TextInput(
+            title=_("Instance identifier"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_instance,
         title=lambda: _("MSSQL Instance"),
-    ))
+    )
+)

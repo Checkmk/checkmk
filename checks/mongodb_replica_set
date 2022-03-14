@@ -7,8 +7,8 @@
 # <<<mongodb_replica_status>>>
 # <json>
 
-import json
 import datetime
+import json
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 factory_settings["mongodb_replica_set_levels"] = {"levels_mongdb_replication_lag": (10, 60, 3600)}
@@ -21,7 +21,7 @@ def parse_mongodb_replica_set(info):
     """
     if info:
         return json.loads(str(info[0][0]))
-    return dict()
+    return {}
 
 
 #   .--replication lag-----------------------------------------------------.
@@ -32,7 +32,7 @@ def parse_mongodb_replica_set(info):
 #   |  |_|  \___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_| |_|\__,_|\__, |    |
 #   |           |_|                                              |___/     |
 #   +----------------------------------------------------------------------+
-#.
+# .
 
 
 class ReplicaState(enum.IntEnum):
@@ -69,20 +69,29 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
         if member.get("optime", {}).get("ts", {}).get("$timestamp", {}).get("t", None):
             # calculate replication lag
             member_optime_date = member.get("optimeDate", {}).get("$date", 0)
-            replication_lag_sec = _calculate_replication_lag(start_operation_timestamp,
-                                                             member_optime_date)
+            replication_lag_sec = _calculate_replication_lag(
+                start_operation_timestamp, member_optime_date
+            )
 
             # check it
-            yield _check_lag_over_time(time.time(), member_name, name, replication_lag_sec,
-                                       params.get("levels_mongdb_replication_lag"))
+            yield _check_lag_over_time(
+                time.time(),
+                member_name,
+                name,
+                replication_lag_sec,
+                params.get("levels_mongdb_replication_lag"),
+            )
 
             # add to long output
             long_output.append(
-                _get_long_output(member_name, member_optime_date, replication_lag_sec, name))
+                _get_long_output(member_name, member_optime_date, replication_lag_sec, name)
+            )
         else:
             # no info available yet
-            yield 0, "%s: no replication info yet, State: %d" % (member_name, member.get(
-                "state", 0))
+            yield 0, "%s: no replication info yet, State: %d" % (
+                member_name,
+                member.get("state", 0),
+            )
 
     yield 0, "\n" + "\n".join(long_output)
 
@@ -90,13 +99,16 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
 def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
     member_state_name = "mongodb.replica.set.lag.%s" % member_name
     if lag_in_sec > levels[0]:
-        last_timestamp = get_item_state(member_state_name, ZERO)
-        lag_duration = (new_timestamp - last_timestamp)
-        state, infotext, _ = check_levels(lag_duration,
-                                          None,
-                                          levels[1:],
-                                          human_readable_func=get_age_human_readable,
-                                          infoname="%s is behind %s for" % (member_name, name))
+        # I don't think getting zero by default is the right thing to do here.
+        last_timestamp = get_item_state(member_state_name, 0.0)
+        lag_duration = new_timestamp - last_timestamp
+        state, infotext, _ = check_levels(
+            lag_duration,
+            None,
+            levels[1:],
+            human_readable_func=get_age_human_readable,
+            infoname="%s is behind %s for" % (member_name, name),
+        )
 
         if last_timestamp == 0:
             set_item_state(member_state_name, new_timestamp)
@@ -105,18 +117,27 @@ def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
 
         return 0, "", []
 
-    clear_item_state(member_state_name)
+    # zero? see above!
+    set_item_state(member_state_name, 0.0)
+
     return 0, "", []
 
 
 def _get_long_output(member_name, member_optime_date, replication_lag_sec, name):
     log = []
     log.append("source: %s" % member_name)
-    log.append("syncedTo: %s (UTC)" % (datetime.datetime.fromtimestamp(
-        member_optime_date / 1000.0).strftime('%Y-%m-%d %H:%M:%S')))
-    log.append("member (%s) is %ds (%dh) behind %s" %
-               (member_name, round(replication_lag_sec), round(
-                   (replication_lag_sec / 36) / 100.0), name))
+    log.append(
+        "syncedTo: %s (UTC)"
+        % (
+            datetime.datetime.fromtimestamp(member_optime_date / 1000.0).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        )
+    )
+    log.append(
+        "member (%s) is %ds (%dh) behind %s"
+        % (member_name, round(replication_lag_sec), round((replication_lag_sec / 36) / 100.0), name)
+    )
     log.append("")
     return "\n".join(log)
 
@@ -140,7 +161,8 @@ def _get_start_timestamp(primary, secondaries):
             if member.get("optimeDate", {}).get("$date", 0) > start_operation_timestamp:
                 start_operation_timestamp = member.get("optimeDate", {}).get("$date", 0)
                 name = "freshest member (%s, no primary available at the moment)" % member.get(
-                    "name")
+                    "name"
+                )
                 index_to_delete = index
 
         # remove member from the list to avoid comparing to itself later
@@ -184,7 +206,7 @@ check_info["mongodb_replica_set"] = {
 #   |                 \___|_|\___|\___|\__|_|\___/|_| |_|                  |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#.
+# .
 
 
 def check_mongodb_primary_election(_item, _params, status_dict):
@@ -216,25 +238,35 @@ def check_mongodb_primary_election(_item, _params, status_dict):
     last_primary_dict = get_item_state("mongodb_primary_election", {})
 
     # check if primary or election date has changed between checks
-    primary_name_changed = True if last_primary_dict and last_primary_dict.get(
-        "name", primary_name) != primary_name else False
-    election_date_changed = True if last_primary_dict and last_primary_dict.get(
-        "election_time", primary_election_time) != primary_election_time else False
+    primary_name_changed = (
+        True
+        if last_primary_dict and last_primary_dict.get("name", primary_name) != primary_name
+        else False
+    )
+    election_date_changed = (
+        True
+        if last_primary_dict
+        and last_primary_dict.get("election_time", primary_election_time) != primary_election_time
+        else False
+    )
 
     # warning if primary has changed
     if last_primary_dict and (primary_name_changed or election_date_changed):
         yield 1, "New primary '%s' elected %s %s" % (
-            primary_name, get_timestamp_human_readable(primary_election_time), "(%s)" %
-            ("node changed" if primary_name_changed else "election date changed"))
+            primary_name,
+            get_timestamp_human_readable(primary_election_time),
+            "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
+        )
     else:
-        yield 0, "Primary '%s' elected %s" % (primary_name,
-                                              get_timestamp_human_readable(primary_election_time))
+        yield 0, "Primary '%s' elected %s" % (
+            primary_name,
+            get_timestamp_human_readable(primary_election_time),
+        )
 
     # update primary information
-    set_item_state("mongodb_primary_election", {
-        "name": primary_name,
-        "election_time": primary_election_time
-    })
+    set_item_state(
+        "mongodb_primary_election", {"name": primary_name, "election_time": primary_election_time}
+    )
 
 
 def _get_primary_election_time(primary):

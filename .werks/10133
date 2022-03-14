@@ -6,7 +6,7 @@ Date: 1612784785
 Edition: cee
 Knowledge: doc
 Level: 3
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The CMC always reported all comments as coming from an "external" source,
 even acknowledgements.  Nagios considers the latter as "internal", so we do

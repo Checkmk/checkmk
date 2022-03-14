@@ -1,0 +1,22 @@
+protoc:
+  version: 3.12.4
+  includes:
+      - enterprise/protocols/checkmk/cmc/
+lint:
+  group: uber2
+  rules:
+    remove:
+      # We need better comments!
+      - ENUMS_HAVE_SENTENCE_COMMENTS
+      - MESSAGES_HAVE_SENTENCE_COMMENTS_EXCEPT_REQUEST_RESPONSE_TYPES
+      # We can fix these when we use the respective languages.
+      - FILE_OPTIONS_REQUIRE_CSHARP_NAMESPACE
+      - FILE_OPTIONS_REQUIRE_GO_PACKAGE
+      - FILE_OPTIONS_REQUIRE_JAVA_MULTIPLE_FILES
+      - FILE_OPTIONS_REQUIRE_JAVA_OUTER_CLASSNAME
+      - FILE_OPTIONS_REQUIRE_JAVA_PACKAGE
+      - FILE_OPTIONS_REQUIRE_OBJC_CLASS_PREFIX
+      - FILE_OPTIONS_REQUIRE_PHP_NAMESPACE
+      # Results in questionable names. What we really want is configurable suffixes, including "_delay" etc.
+      - WKT_DURATION_SUFFIX
+      - WKT_TIMESTAMP_SUFFIX

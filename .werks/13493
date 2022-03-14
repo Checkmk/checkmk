@@ -1,0 +1,16 @@
+Title: MTR agent plugin: Run also under systemd
+Class: fix
+Compatible: compat
+Component: nagvis
+Date: 1636713210
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The MTR agent plugin spawns multiple subprocesses (one per
+target address). When running under systemd, these subprocesses
+were terminated before they could produce MTR data. Therefore,
+the MTR plugin can now only be deployed asynchronously via
+the agent bakery. This allows these subprocesses to terminate
+properly. Users have to update the agent on affected hosts.

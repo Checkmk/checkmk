@@ -41,7 +41,7 @@ def check_ups_socomec_out_source(_no_item, _no_params, info):
     return ups_socomec_source_states[int(info[0][0])]
 
 
-check_info['ups_socomec_out_source'] = {
+check_info["ups_socomec_out_source"] = {
     "inventory_function": inventory_ups_socomec_out_source,
     "check_function": check_ups_socomec_out_source,
     "service_description": "Output Source",

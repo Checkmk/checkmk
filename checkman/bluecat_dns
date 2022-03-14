@@ -1,16 +1,15 @@
 title: Bluecat Adonis: DNS State
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the OperState of the DNS Service on bluecat adonis devices.
  The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
 
-inventory:
+discovery:
  One service is created.
 
 cluster:
   On an cluster this service will be {OK}, if at least one node is {OK}. Otherwise it will
   assume the worst encountered state.
-

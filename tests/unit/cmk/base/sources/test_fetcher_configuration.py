@@ -4,69 +4,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
-import json
+import pytest
 
-import pytest  # type: ignore[import]
-
-from testlib.base import Scenario  # type: ignore[import]
+from tests.testlib.base import Scenario
 
 from cmk.core_helpers import FetcherType
 
+import cmk.base.config as config
 from cmk.base.sources import fetcher_configuration
 
 
-def make_scenario(hostname, tags):
-    return Scenario().add_host(hostname, tags=tags)
+def make_scenario(hostname, tags) -> Scenario:
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    return ts
 
 
-@pytest.fixture(name="file")
-def file_fixture():
-    return io.StringIO()
-
-
-@pytest.mark.parametrize("hostname, tags, fetchers", [
-    ("agent-host", {}, [FetcherType.TCP, FetcherType.PIGGYBACK]),
-    (
-        "ping-host",
-        {
-            "agent": "no-agent"
-        },
-        [FetcherType.PIGGYBACK],
-    ),
-    (
-        "snmp-host",
-        {
-            "agent": "no-agent",
-            "snmp_ds": "snmp-v2"
-        },
-        [FetcherType.SNMP, FetcherType.PIGGYBACK],
-    ),
-    (
-        "dual-host",
-        {
-            "agent": "cmk-agent",
-            "snmp_ds": "snmp-v2"
-        },
-        [FetcherType.TCP, FetcherType.SNMP, FetcherType.PIGGYBACK],
-    ),
-    (
-        "all-agents-host",
-        {
-            "agent": "all-agents"
-        },
-        [FetcherType.TCP, FetcherType.PIGGYBACK],
-    ),
-    (
-        "all-special-host",
-        {
-            "agent": "special-agents"
-        },
-        [FetcherType.PIGGYBACK],
-    ),
-])
-def test_generates_correct_sections(file, hostname, tags, fetchers, monkeypatch):
+@pytest.mark.parametrize(
+    "hostname, tags, fetchers",
+    [
+        ("agent-host", {}, [FetcherType.TCP, FetcherType.PIGGYBACK]),
+        (
+            "ping-host",
+            {"agent": "no-agent"},
+            [FetcherType.PIGGYBACK],
+        ),
+        (
+            "snmp-host",
+            {"agent": "no-agent", "snmp_ds": "snmp-v2"},
+            [FetcherType.SNMP, FetcherType.PIGGYBACK],
+        ),
+        (
+            "dual-host",
+            {"agent": "cmk-agent", "snmp_ds": "snmp-v2"},
+            [FetcherType.TCP, FetcherType.SNMP, FetcherType.PIGGYBACK],
+        ),
+        (
+            "all-agents-host",
+            {"agent": "all-agents"},
+            [FetcherType.TCP, FetcherType.PIGGYBACK],
+        ),
+        (
+            "all-special-host",
+            {"agent": "special-agents"},
+            [FetcherType.PIGGYBACK],
+        ),
+    ],
+)
+def test_generates_correct_sections(hostname, tags, fetchers, monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
-    fetcher_configuration.dump(hostname, "1.2.3.4", file)
-    file.seek(0)
-    assert [FetcherType[f["fetcher_type"]] for f in json.load(file)["fetchers"]] == fetchers
+    conf = fetcher_configuration.fetchers(config.HostConfig.make_host_config(hostname))
+    assert [FetcherType[f["fetcher_type"]] for f in conf["fetchers"]] == fetchers

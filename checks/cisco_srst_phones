@@ -20,11 +20,11 @@ def check_cisco_srst_phones(_no_item, _no_params, info):
     yield 0, "%d phones registered" % phones, [("registered_phones", phones)]
 
 
-check_info['cisco_srst_phones'] = {
-    'inventory_function': inventory_cisco_srst_phones,
-    'check_function': check_cisco_srst_phones,
-    'service_description': 'SRST Phones',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.9.9.441.1.3", ["2"]),
-    'snmp_scan_function': cisco_srst_scan_function,
+check_info["cisco_srst_phones"] = {
+    "inventory_function": inventory_cisco_srst_phones,
+    "check_function": check_cisco_srst_phones,
+    "service_description": "SRST Phones",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.9.9.441.1.3", ["2"]),
+    "snmp_scan_function": cisco_srst_scan_function,
 }

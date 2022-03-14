@@ -1,7 +1,7 @@
 title: HPE StoreOnce REST API 4.x: D2D Services
 agents: storeonce4x
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the D2D services of a HP storeonce system.
@@ -10,5 +10,5 @@ description:
 item:
  The fixed statement {{D2D Service}}.
 
-inventory:
+discovery:
  One service is created.

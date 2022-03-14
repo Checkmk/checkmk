@@ -1,0 +1,29 @@
+Title: custom_files: Fix permissions of custom deployed agent plugins
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1639409177
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This Werk fixes a regression that was introduced with Checkmk 2.0.0. Only agent installations that need
+to call agent plugins with a non-root user are affected.
+
+When deploying custom files with the "Deploy custom files with agent" agent rule, one would
+expect files placed under <tt>pkgname/lib/plugins/</tt> to be deployed as plugin files.
+
+This only partially held true before, because files placed under the <tt>plugins</tt>
+subfolder weren't recognized as actual plugins. While <tt>lib</tt> files are deployed
+with a permissions of <tt>0640</tt>, plugin files are to be deployed with permissions
+of <tt>0755</tt>, which was not done for custom deployed files.
+
+However, as the executable flag of all custom files is maintained during deployment, the plugins
+are (if placed as executable on the Checkmk site) still executable on the hosts, but
+without being accessible to non-root users. Hence, it was not possible to use the agent rule
+"Plugins, local checks and MRPE for non-root users" or other techniques that need to call
+plugins with a non-root user in combination with custom deployed plugin files.
+
+Files under <tt>pkgname/lib/plugins</tt> now are deployed permissions of <tt>0755</tt>,
+regardless of the initial permissions when placed at the custom files directory on the site.

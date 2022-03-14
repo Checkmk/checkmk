@@ -1,0 +1,26 @@
+Title: Dashboards: Unify handling of dashboard-wide filters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616512907
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+There are two ways to define dashboard-wide filters:
+<ol>
+  <li>In the dashboard configuration, these filters are persisted.</li>
+  <li>Using the filter menu, these filters are not persisted.</li>
+</ol>
+
+This werk allows users to consistenly overwrite filters defined via option 1
+with filters defined via option 2. Previously, this was only possible for some
+dashlets. Note that this overwrite is of course only temporary. Once the
+page showing the dashboard is closed, any filters defined via option 2 are
+gone.
+
+Note that filters defined on the dashlet level still have the highest priority,
+as was the case before this werk. This means that any filter defined via option 1
+or 2 from above will not overwrite a filter defined in the configuration of an
+individual dashlet.

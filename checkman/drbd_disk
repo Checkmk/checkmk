@@ -1,7 +1,7 @@
 title: DR:BD Devices: Disk Read and Writes
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the contents of {/proc/drbd} as sent by the Checkmk linux
@@ -12,7 +12,6 @@ description:
 item:
  The name of the DRBD device e.g. drbd0
 
-inventory:
+discovery:
  One service is created for each configured DRBD device.
  All devices with the connection state "Unconfigured" are skipped.
-

@@ -1,7 +1,7 @@
 title: Jenkins: Nodes
 agents: jenkins
 catalog: app/jenkins
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of jenkins nodes. The service output gives
@@ -15,5 +15,5 @@ description:
 item:
  The display name of the node
 
-inventory:
+discovery:
  One service is created for each node ({"Jenkins Node"}).

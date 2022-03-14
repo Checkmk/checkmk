@@ -1,0 +1,14 @@
+Title: Diskspace cleanup: Fix <tt>RuntimeError: dictionary changed size during iteration</tt>
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1618209988
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The diskspace cleanup script, which can be activated in the global settings,
+crashed with the following error under certain conditions:
+<tt>RuntimeError: dictionary changed size during iteration</tt>
+This has been fixed.

@@ -25,11 +25,11 @@
 """Wrapper functions for interactive dialogs using the dialog cmd tool"""
 
 import os
-import sys
 import subprocess
+import sys
 import termios
 from tty import setraw
-from typing import TYPE_CHECKING, Tuple, Pattern, Optional, List
+from typing import List, Optional, Pattern, Tuple, TYPE_CHECKING
 
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
@@ -40,8 +40,14 @@ if TYPE_CHECKING:
 DialogResult = Tuple[bool, str]
 
 
-def dialog_menu(title: str, text: str, choices: List[Tuple[str, str]], defvalue: Optional[str],
-                oktext: str, canceltext: str) -> DialogResult:
+def dialog_menu(
+    title: str,
+    text: str,
+    choices: List[Tuple[str, str]],
+    defvalue: Optional[str],
+    oktext: str,
+    canceltext: str,
+) -> DialogResult:
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
     if defvalue is not None:
         args += ["--default-item", defvalue]
@@ -51,12 +57,22 @@ def dialog_menu(title: str, text: str, choices: List[Tuple[str, str]], defvalue:
     return _run_dialog(args)
 
 
-def dialog_regex(title: str, text: str, regex: Pattern, value: str, oktext: str,
-                 canceltext: str) -> DialogResult:
+def dialog_regex(
+    title: str, text: str, regex: Pattern, value: str, oktext: str, canceltext: str
+) -> DialogResult:
     while True:
         args = [
-            "--ok-label", oktext, "--cancel-label", canceltext, "--title", title, "--inputbox",
-            text, "0", "0", value
+            "--ok-label",
+            oktext,
+            "--cancel-label",
+            canceltext,
+            "--title",
+            title,
+            "--inputbox",
+            text,
+            "0",
+            "0",
+            value,
         ]
         change, new_value = _run_dialog(args)
         if not change:
@@ -70,7 +86,8 @@ def dialog_regex(title: str, text: str, regex: Pattern, value: str, oktext: str,
 
 def dialog_yesno(text: str, yeslabel: str = "yes", nolabel: str = "no") -> bool:
     state, _response = _run_dialog(
-        ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
+        ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"]
+    )
     return state
 
 
@@ -84,18 +101,27 @@ def _run_dialog(args: List[str]) -> DialogResult:
         # TODO: Why de_DE?
         "LANG": "de_DE.UTF-8",
     }
-    p = subprocess.Popen(["dialog", "--shadow"] + args,
-                         env=dialog_env,
-                         stderr=subprocess.PIPE,
-                         encoding="utf-8")
-    if p.stderr is None:
-        raise Exception()
-    response = p.stderr.read()
-    return os.waitpid(p.pid, 0)[1] == 0, response
+    completed_process = subprocess.run(
+        ["dialog", "--shadow"] + args,
+        env=dialog_env,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
+        check=False,
+    )
+    return completed_process.returncode == 0, completed_process.stderr
 
 
-def user_confirms(site: 'SiteContext', conflict_mode: str, title: str, message: str, relpath: str,
-                  yes_choice: str, yes_text: str, no_choice: str, no_text: str) -> bool:
+def user_confirms(
+    site: "SiteContext",
+    conflict_mode: str,
+    title: str,
+    message: str,
+    relpath: str,
+    yes_choice: str,
+    yes_text: str,
+    no_choice: str,
+    no_text: str,
+) -> bool:
     # Handle non-interactive mode
     if conflict_mode == "abort":
         raise MKTerminate("Update aborted.")
@@ -105,9 +131,12 @@ def user_confirms(site: 'SiteContext', conflict_mode: str, title: str, message: 
         return True
 
     user_path = site.dir + "/" + relpath
-    options = [(yes_choice, yes_text), (no_choice, no_text),
-               ("shell", "Open a shell for looking around"),
-               ("abort", "Stop here and abort update!")]
+    options = [
+        (yes_choice, yes_text),
+        (no_choice, no_text),
+        ("shell", "Open a shell for looking around"),
+        ("abort", "Stop here and abort update!"),
+    ]
     while True:
         choice = ask_user_choices(title, message, options)
         if choice == "abort":
@@ -116,7 +145,7 @@ def user_confirms(site: 'SiteContext', conflict_mode: str, title: str, message: 
         if choice == "shell":
             thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            subprocess.Popen(["bash", "-i"], cwd=thedir).wait()
+            subprocess.run(["bash", "-i"], cwd=thedir, check=False)
         else:
             return choice == yes_choice
 
@@ -130,17 +159,17 @@ def _wrap_text(text: str, width: int) -> List[str]:
 
     def justify(line: str, width: int) -> str:
         need_spaces = float(width - len(line))
-        spaces = float(line.count(' '))
+        spaces = float(line.count(" "))
         newline = ""
         x = 0.0
         s = 0.0
         words = line.split()
         newline = words[0]
         for word in words[1:]:
-            newline += ' '
+            newline += " "
             x += 1.0
             if s / x < need_spaces / spaces:  # fixed: true-division
-                newline += ' '
+                newline += " "
                 s += 1
             newline += word
         return newline
@@ -155,7 +184,7 @@ def _wrap_text(text: str, width: int) -> List[str]:
             col = 0
             line = ""
         if line != "":
-            line += ' '
+            line += " "
             col += 1
         line += word
         col += netto
@@ -196,19 +225,30 @@ def ask_user_choices(title: str, message: str, choices: List[Tuple[str, str]]) -
     empty_line = " %s%-78s%s\n" % (tty.bgblue + tty.white, "", tty.normal)
     sys.stdout.write(empty_line)
     for choice, choice_title in choices:
-        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" %
-                         (tty.bgblue + tty.white, tty.bold, choice[0], tty.normal + tty.bgblue +
-                          tty.white, choice[1:], choice_title, tty.normal))
+        sys.stdout.write(
+            " %s %s%s%s%-10s %-65s%s\n"
+            % (
+                tty.bgblue + tty.white,
+                tty.bold,
+                choice[0],
+                tty.normal + tty.bgblue + tty.white,
+                choice[1:],
+                choice_title,
+                tty.normal,
+            )
+        )
         for c in choice:
             if c.lower() not in chars:
                 chars.append(c)
                 break
     sys.stdout.write(empty_line)
 
-    choicetxt = (tty.bold + tty.magenta + "/").join([
-        (tty.bold + tty.white + char + tty.normal + tty.bgmagenta)
-        for (char, _c) in zip(chars, choices)
-    ])
+    choicetxt = (tty.bold + tty.magenta + "/").join(
+        [
+            (tty.bold + tty.white + char + tty.normal + tty.bgmagenta)
+            for (char, _c) in zip(chars, choices)
+        ]
+    )
     l = len(choices) * 2 - 1
     sys.stdout.write(" %s %s" % (tty.bgmagenta, choicetxt))
     sys.stdout.write(" ==> %s   %s" % (tty.bgred, tty.bgmagenta))

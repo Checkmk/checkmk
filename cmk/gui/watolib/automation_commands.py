@@ -6,14 +6,15 @@
 """Managing the available automation calls"""
 
 import abc
-from typing import Dict, Type, Any
+from typing import Any, Dict, Type
 
-import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
+import cmk.utils.version as cmk_version
 
 
-class AutomationCommand(metaclass=abc.ABCMeta):
+class AutomationCommand(abc.ABC):
     """Abstract base class for all automation commands"""
+
     @abc.abstractmethod
     def command_name(self) -> str:
         raise NotImplementedError()
@@ -27,7 +28,7 @@ class AutomationCommand(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, request: Any) -> Any:
+    def execute(self, api_request: Any) -> Any:
         raise NotImplementedError()
 
 
@@ -50,5 +51,5 @@ class AutomationPing(AutomationCommand):
     def execute(self, _unused_request: None) -> Dict[str, str]:
         return {
             "version": cmk_version.__version__,
-            "edition": cmk_version.edition_short(),
+            "edition": cmk_version.edition().short,
         }

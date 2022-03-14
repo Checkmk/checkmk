@@ -6,7 +6,7 @@ Date: 1612256914
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The indicator popup that is shown if you hover above a graph was missing after
 the regularly page reload.

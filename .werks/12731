@@ -1,0 +1,16 @@
+Title: Cisco FXOS (Firepower): Monitoring of fan and power supply sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1619079382
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Checkmk is now capable of monitoring the fan and power supply sensors of
+Cisco FXOS (Firepower) appliances via the already existing check plugins
+<tt>entity_sensors_fan</tt> and <tt>entity_sensors_power_presence</tt>.
+
+Note that the temperature sensors are already monitored by
+<tt>cisco_temperature</tt> and <tt>cisco_temperature_dom</tt>.

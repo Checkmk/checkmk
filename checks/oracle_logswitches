@@ -9,13 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.oracle import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<oracle_logswitches>>>
 # pengt  15
 # hirni  22
 
 factory_settings["oracle_logswitches_default_levels"] = {
-    'levels': (50, 100),
-    'levels_lower': (-1, -1),
+    "levels": (50, 100),
+    "levels_lower": (-1, -1),
 }
 
 
@@ -28,8 +29,8 @@ def check_oracle_logswitches(item, params, info):
 
     if isinstance(params, tuple):
         params = {
-            'levels': (params[2], params[3]),
-            'levels_lower': (params[0], params[1]),
+            "levels": (params[2], params[3]),
+            "levels_lower": (params[0], params[1]),
         }
 
     for line in info:
@@ -42,11 +43,13 @@ def check_oracle_logswitches(item, params, info):
             if len(line) != 2:
                 continue
 
-            lowarn, locrit = params['levels_lower']
-            warn, crit = params['levels']
+            lowarn, locrit = params["levels_lower"]
+            warn, crit = params["levels"]
             logswitches = int(line[1])
-            infotext = "%d log switches in the last 60 minutes (warn/crit below %d/%d) (warn/crit at %d/%d)" \
+            infotext = (
+                "%d log switches in the last 60 minutes (warn/crit below %d/%d) (warn/crit at %d/%d)"
                 % (logswitches, locrit, lowarn, warn, crit)
+            )
             perfdata = [("logswitches", logswitches, warn, crit, 0, None)]
             if logswitches >= crit or logswitches <= locrit:
                 return (2, infotext, perfdata)
@@ -61,10 +64,10 @@ def check_oracle_logswitches(item, params, info):
 
 
 check_info["oracle_logswitches"] = {
-    'check_function': check_oracle_logswitches,
-    'inventory_function': inventory_oracle_logswitches,
-    'service_description': 'ORA %s Logswitches',
-    'has_perfdata': True,
-    'group': 'oracle_logswitches',
-    'default_levels_variable': 'oracle_logswitches_default_levels',
+    "check_function": check_oracle_logswitches,
+    "inventory_function": inventory_oracle_logswitches,
+    "service_description": "ORA %s Logswitches",
+    "has_perfdata": True,
+    "group": "oracle_logswitches",
+    "default_levels_variable": "oracle_logswitches_default_levels",
 }

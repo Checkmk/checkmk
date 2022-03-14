@@ -1,0 +1,15 @@
+Title: Fix CRE update-config for intallations with CEE-MKPs installed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621929782
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+CRE istallations with MKPs installed that included files specific to
+enterprise editions (bakery plugins, for instance) would fail to
+convert the RRD names during `cmk-update-config`, reporting
+<i>"AttributeError: module ‘cmk.base.cee’ has no attribute ‘rrd’"</i>.

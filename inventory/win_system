@@ -33,6 +33,6 @@ def inv_win_system(info):
             node["family"] = value
 
 
-inv_info['win_system'] = {
+inv_info["win_system"] = {
     "inv_function": inv_win_system,
 }

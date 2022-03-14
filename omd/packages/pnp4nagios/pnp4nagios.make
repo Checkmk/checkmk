@@ -73,15 +73,8 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/spool
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/tmp/pnp4nagios/run
 
-	# Install the facelift theme for pnp4nagios
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
-	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift
-	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
-
-	# Install the modern-dark theme for pnp4nagios
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-modern-dark/images
-	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-modern-dark/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-modern-dark
-	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-modern-dark/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-modern-dark/images
+	# We don't use the GUI anymore - remove it.
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios
 
 	# Install Hooks
 	install -m 755 $(PACKAGE_DIR)/$(PNP4NAGIOS)/PNP4NAGIOS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

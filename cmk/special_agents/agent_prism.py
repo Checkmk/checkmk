@@ -4,23 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Tuple, Generator, Optional, Sequence
-import sys
 import csv
 import logging
+import sys
+from typing import Any, Generator, Optional, Sequence, Tuple
 
-from cmk.special_agents.utils.agent_common import (
-    special_agent_main,
-    SectionWriter,
-)
-from cmk.special_agents.utils.argument_parsing import (
-    Args,
-    create_default_argument_parser,
-)
-from cmk.special_agents.utils.request_helper import (
-    Requester,
-    HTTPSAuthRequester,
-)
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.request_helper import HTTPSAuthRequester, Requester
 
 SectionLine = Tuple[Any, ...]
 
@@ -44,26 +35,22 @@ def write_title(section: str) -> None:
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--timeout",
-                        type=int,
-                        default=10,
-                        help="Timeout in seconds for network connects (default=10)")
-    parser.add_argument("--server",
-                        type=str,
-                        required=True,
-                        metavar="ADDRESS",
-                        help="host to connect to")
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=10,
+        help="Timeout in seconds for network connects (default=10)",
+    )
+    parser.add_argument(
+        "--server", type=str, required=True, metavar="ADDRESS", help="host to connect to"
+    )
     parser.add_argument("--port", type=int, metavar="PORT", default=9440)
-    parser.add_argument("--username",
-                        type=str,
-                        required=True,
-                        metavar="USER",
-                        help="user account on prism")
-    parser.add_argument("--password",
-                        type=str,
-                        required=True,
-                        metavar="PASSWORD",
-                        help="password for that account")
+    parser.add_argument(
+        "--username", type=str, required=True, metavar="USER", help="user account on prism"
+    )
+    parser.add_argument(
+        "--password", type=str, required=True, metavar="PASSWORD", help="password for that account"
+    )
 
     return parser.parse_args(argv)
 
@@ -77,33 +64,33 @@ def output_containers(requester: Requester) -> None:
     write_title("containers")
     writer = gen_csv_writer()
     writer.writerow(["name", "usage", "capacity"])
-    for entity in obj['entities']:
-        writer.writerow([
-            entity['name'], entity['usageStats']['storage.user_usage_bytes'],
-            entity['usageStats']['storage.user_capacity_bytes']
-        ])
+    for entity in obj["entities"]:
+        writer.writerow(
+            [
+                entity["name"],
+                entity["usageStats"]["storage.user_usage_bytes"],
+                entity["usageStats"]["storage.user_capacity_bytes"],
+            ]
+        )
 
 
 def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
-    needed_context_keys = {'vm_type'}
+    needed_context_keys = {"vm_type"}
 
     LOGGING.debug("do request..")
     obj = requester.get(
         "alerts",
-        parameters={
-            'resolved': "false",
-            'acknowledged': "false"
-        },
+        parameters={"resolved": "false", "acknowledged": "false"},
     )
     LOGGING.debug("got %d alerts", len(obj["entities"]))
 
     yield ("timestamp", "severity", "message", "context")
 
-    for entity in obj['entities']:
+    for entity in obj["entities"]:
         # The message is stored as a pattern with placeholders, the
         # actual values are stored in context_values, the keys in
         # context_types
-        full_context = dict(zip(entity['contextTypes'], entity['contextValues']))
+        full_context = dict(zip(entity["contextTypes"], entity["contextValues"]))
 
         # create a thinned out context we can provide together with the alert data in order to
         # provide more sophisticated checks in the future (this could be made a cli option, too)
@@ -114,11 +101,13 @@ def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
         # In this case the keys have no values so we can not assign it to the message
         # To handle this, we output a message without assigning the keys
         try:
-            message = entity['message'].format(**full_context)
+            message = entity["message"].format(**full_context)
         except KeyError:
-            message = entity['message']
+            message = entity["message"]
 
-        yield (entity['createdTimeStampInUsecs'], entity['severity'], message, thin_context)
+        # message can contain line breaks which confuses the parser.
+        message = message.replace("\n", r"\n")
+        yield (entity["createdTimeStampInUsecs"], entity["severity"], message, thin_context)
 
 
 # TODO: get rid of CSV and write JSON
@@ -130,7 +119,7 @@ def output_cluster(requester: Requester) -> None:
     write_title("info")
     writer = gen_csv_writer()
     writer.writerow(["name", "version"])
-    writer.writerow([obj['name'], obj['version']])
+    writer.writerow([obj["name"], obj["version"]])
 
 
 # TODO: get rid of CSV and write JSON
@@ -144,11 +133,13 @@ def output_storage_pools(requester: Requester) -> None:
     writer.writerow(["name", "usage", "capacity"])
 
     for entity in obj["entities"]:
-        writer.writerow([
-            entity["name"],
-            entity["usageStats"]["storage.usage_bytes"],
-            entity["usageStats"]["storage.capacity_bytes"],
-        ])
+        writer.writerow(
+            [
+                entity["name"],
+                entity["usageStats"]["storage.usage_bytes"],
+                entity["usageStats"]["storage.capacity_bytes"],
+            ]
+        )
 
 
 def agent_prism_main(args: Args) -> None:
@@ -180,7 +171,7 @@ def agent_prism_main(args: Args) -> None:
 
 
 def main() -> None:
-    """Main entry point to be used """
+    """Main entry point to be used"""
     special_agent_main(parse_arguments, agent_prism_main)
 
 

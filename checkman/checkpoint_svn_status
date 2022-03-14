@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: Secure Virtual Network Status
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the secure virtual network (svn) in
@@ -11,6 +11,5 @@ description:
  and will be {CRIT} for all not-yet-observed status codes (which is
  everything except 0)
 
-inventory:
+discovery:
  One service is created.
-

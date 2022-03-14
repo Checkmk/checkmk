@@ -48,7 +48,9 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
                 state = 1
 
             if state:
-                infotext_format = " (warn/crit below " + text_format + "/" + text_format + unit + ")"
+                infotext_format = (
+                    " (warn/crit below " + text_format + "/" + text_format + unit + ")"
+                )
                 infotext += infotext_format % (warn, crit)
 
         else:
@@ -58,5 +60,6 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
         yield state, infotext, [("%s_dhcp_leases" % what, value_abs, warn_abs, crit_abs, 0, size)]
 
     if pending is not None:
-        yield 0, "%d leases pending" % pending, [("pending_dhcp_leases", pending, None, None, 0,
-                                                  size)]
+        yield 0, "%d leases pending" % pending, [
+            ("pending_dhcp_leases", pending, None, None, 0, size)
+        ]

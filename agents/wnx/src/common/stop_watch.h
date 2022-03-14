@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // wtools.h
 //
@@ -23,19 +24,19 @@ namespace wtools {
 class StopWatch {
 public:
     StopWatch() = default;
-    StopWatch(const StopWatch& sw) {
+    StopWatch(const StopWatch &sw) {
         auto [c, t] = sw.get();
         counter_ = c;
         time_ = t;
         started_ = false;
     }
-    StopWatch(StopWatch&& sw) {
+    StopWatch(StopWatch &&sw) {
         auto [c, t] = sw.getAndReset();
         counter_ = c;
         time_ = t;
         started_ = false;
     }
-    StopWatch& operator=(const StopWatch& sw) {
+    StopWatch &operator=(const StopWatch &sw) {
         std::lock_guard lk(lock_);
         auto [c, t] = sw.get();
         counter_ = c;
@@ -43,7 +44,7 @@ public:
         started_ = false;
         return *this;
     }
-    StopWatch& operator=(StopWatch&& sw) {
+    StopWatch &operator=(StopWatch &&sw) {
         std::lock_guard lk(lock_);
         auto [c, t] = sw.getAndReset();
         counter_ = c;

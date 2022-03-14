@@ -1,0 +1,11 @@
+Title: Fix section sql_performance of mk_oracle.ps1
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638276165
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This removed a double qoute which caused sql_performance to fail.

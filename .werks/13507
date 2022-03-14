@@ -1,0 +1,21 @@
+Title: Fix simulation mode in service discovery and connection tests
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1639394783
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Werk #13505 fixed the simulation mode for already existing hosts with existing cache.
+
+If a host has no cache, like new added hosts, the "Check_MK Discovery" service
+will now show an informational output "Got no data (Simulation mode enabled
+and no cachefile present)", like in previous 1.6 versions. Furthermore, no
+service discovery will be processed.
+
+While executing connection tests in simulation mode, the "Agent" section will
+use the cache file, if present, or is showing the above mentioned message. The
+SNMP datasources will not be contacted any more if simulation mode is enabled.

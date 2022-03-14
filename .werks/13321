@@ -1,0 +1,23 @@
+Title: NagVis: Updated to 1.9.29 (Fix possible deletion of arbitrary files)
+Class: security
+Compatible: compat
+Component: packages
+Date: 1639234248
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Fix possible deletion of arbitrary files (CVE-2021-33178).
+
+An authenticated user with enough permissions to access the NagVis.
+ManageBackgrounds endpoint, such as admin, can delete arbitrary files on the
+server limited by the rights of the Apache system user. In Checkmk, this is
+limited to files owned by the site user.
+
+CVSS 3.1 base score: 4.5 (medium)
+CVSS 3.1 vector: CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:N/I:N/A:H/E:P/RL:O/RC:C
+
+https://www.first.org/cvss/calculator/3.1#CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:N/I:N/A:H/E:P/RL:O/RC:C
+https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-33178

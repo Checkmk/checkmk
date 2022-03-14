@@ -4,26 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Type, Optional, Any, List, Set
+from typing import Any, Dict, List, Optional, Set, Type
 
 from cmk.utils.bi.bi_lib import (
-    String,
-    ReqString,
+    ABCBISearcher,
+    BIAggregationComputationOptions,
+    BIAggregationGroups,
     create_nested_schema,
     create_nested_schema_for_class,
+    ReqString,
+    String,
 )
-
-from cmk.utils.bi.bi_lib import (
-    BIAggregationGroups,
-    BIAggregationComputationOptions,
-    ABCBISearcher,
-)
-
+from cmk.utils.bi.bi_node_generator import BINodeGenerator
+from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
 from cmk.utils.bi.bi_rule import BIRule
 from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
-from cmk.utils.bi.bi_node_generator import BINodeGenerator
-from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
 from cmk.utils.bi.type_defs import AggrConfigDict
 
 # TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
@@ -48,12 +44,14 @@ class BIAggregation:
             aggr_config = self.schema()().dump({})
         self.id = aggr_config["id"]
 
+        self.comment = aggr_config.get("comment", "")
         self.customer = aggr_config.get("customer")
         self.pack_id = pack_id
         self.node = BINodeGenerator(aggr_config["node"])
         self.groups = BIAggregationGroups(aggr_config["groups"])
         self.computation_options = BIAggregationComputationOptions(
-            aggr_config["computation_options"])
+            aggr_config["computation_options"]
+        )
         self.aggregation_visualization = aggr_config["aggregation_visualization"]
 
     @classmethod
@@ -63,6 +61,7 @@ class BIAggregation:
     def serialize(self):
         return {
             "id": self.id,
+            "comment": self.comment,
             "customer": self.customer,
             "groups": self.groups.serialize(),
             "node": self.node.serialize(),
@@ -111,15 +110,25 @@ class BIAggregation:
         computation_options = BIAggregationComputationOptions(schema_config["computation_options"])
         aggregation_visualization = schema_config["aggregation_visualization"]
         groups = BIAggregationGroups(schema_config["groups"])
-        return BICompiledAggregation(aggregation_id, branches, computation_options,
-                                     aggregation_visualization, groups)
+        return BICompiledAggregation(
+            aggregation_id, branches, computation_options, aggregation_visualization, groups
+        )
 
 
 class BIAggregationSchema(Schema):
     class Meta:
         ordered = True
 
-    id = ReqString(default="", example="aggr1")
+    id = ReqString(
+        dump_default="",
+        example="aggr1",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+    comment = String(
+        description="An optional comment that may be used to explain the purpose of this object.",
+        allow_none=True,
+        example="Rule comment",
+    )
     customer = String(
         description="CME Edition only: The customer id for this aggregation.",
         allow_none=True,
@@ -129,7 +138,7 @@ class BIAggregationSchema(Schema):
         BIAggregationGroups,
         example_config={
             "names": ["groupA", "groupB"],
-            "paths": [["path", "group", "a"], ["path", "group", "b"]]
+            "paths": [["path", "group", "a"], ["path", "group", "b"]],
         },
     )
     node = create_nested_schema_for_class(BINodeGenerator)

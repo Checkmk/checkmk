@@ -17,7 +17,7 @@ def check_hp_webmgmt_status(item, _no_params, info):
         "3": (0, "ok"),
         "4": (1, "warning"),
         "5": (2, "critical"),
-        "6": (2, "non-recoverable")
+        "6": (2, "non-recoverable"),
     }
 
     device_model = info[1][0][0]
@@ -31,20 +31,15 @@ def check_hp_webmgmt_status(item, _no_params, info):
             return status, infotext
 
 
-check_info['hp_webmgmt_status'] = {
-    'check_function': check_hp_webmgmt_status,
-    'inventory_function': inventory_hp_webmgmt_status,
-    'service_description': "Status %s",
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11") and
-                          oid(".1.3.6.1.4.1.11.2.36.1.1.5.1.1.*"),
-    'snmp_info': [
-        (
-            '.1.3.6.1.4.1.11.2.36.1.1.5.1.1',
-            [
-                1,  # hpHttpMgDeviceIndex
-                3  # hpHttpMgDeviceHealth
-            ]),
-        ('.1.3.6.1.4.1.11.2.36.1.1.5.1.1.9', [1]),  # Device Model
-        ('.1.3.6.1.4.1.11.2.36.1.1.5.1.1.10', [1]),  # Device Serial Number
-    ]
+check_info["hp_webmgmt_status"] = {
+    "check_function": check_hp_webmgmt_status,
+    "inventory_function": inventory_hp_webmgmt_status,
+    "service_description": "Status %s",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11")
+    and oid(".1.3.6.1.4.1.11.2.36.1.1.5.1.1.*"),
+    "snmp_info": [
+        (".1.3.6.1.4.1.11.2.36.1.1.5.1.1", [1, 3]),  # hpHttpMgDeviceIndex  # hpHttpMgDeviceHealth
+        (".1.3.6.1.4.1.11.2.36.1.1.5.1.1.9", [1]),  # Device Model
+        (".1.3.6.1.4.1.11.2.36.1.1.5.1.1.10", [1]),  # Device Serial Number
+    ],
 }

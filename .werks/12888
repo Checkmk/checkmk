@@ -1,0 +1,14 @@
+Title: Adjusting discards to accept Float instead Integer levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1622636921
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+For some checks based on the interfaces valuespecs, integers did not provide
+the necessary granularity to set thresholds. In consequence, this change changes
+the levels to float types.

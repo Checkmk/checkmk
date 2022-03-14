@@ -1,0 +1,14 @@
+Title: Relax UPS check-plugin new device scan function
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1639402598
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+
+Phoenixtec UPS for example have a longer sysObjectID than the general UPS and
+would not be recognized. This relaxes the scan function check to include more
+devices with similar SNMP information.

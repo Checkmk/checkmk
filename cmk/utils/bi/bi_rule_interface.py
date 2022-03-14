@@ -5,28 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List, Dict, Any, Type, Sequence
+from typing import Any, Dict, List, Sequence, Type
+
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
     ABCBISearcher,
+    ABCWithSchema,
+    ActionArgument,
     BIParams,
-    ReqString,
     ReqBoolean,
     ReqDict,
-    ABCWithSchema,
+    ReqString,
 )
-
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
 from cmk.utils.bi.bi_schema import Schema
 
 
 class BIRulePropertiesSchema(Schema):
-    title = ReqString(default="", example="Rule title")
-    comment = ReqString(default="", example="Rule comment")
-    docu_url = ReqString(default="", example="Rule documentation")
-    icon = ReqString(default="", example="icon1.png")
-    state_messages = ReqDict(default={}, example={})
+    title = ReqString(dump_default="", example="Rule title")
+    comment = ReqString(dump_default="", example="Rule comment")
+    docu_url = ReqString(dump_default="", example="Rule documentation")
+    icon = ReqString(dump_default="", example="icon1.png")
+    state_messages = ReqDict(dump_default={}, example={})
 
 
 class BIRuleProperties(ABCWithSchema):
@@ -53,7 +54,7 @@ class BIRuleProperties(ABCWithSchema):
 
 
 class BIRuleComputationOptionsSchema(Schema):
-    disabled = ReqBoolean(default=False, example=False)
+    disabled = ReqBoolean(dump_default=False, example=False)
 
 
 class BIRuleComputationOptions(ABCWithSchema):
@@ -75,15 +76,18 @@ class ABCBIRule(ABCWithSchema):
     def __init__(self):
         self.id = ""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def params(self) -> BIParams:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def properties(self) -> BIRuleProperties:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
@@ -105,8 +109,9 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: List[str],
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(
+        self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod

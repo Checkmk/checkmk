@@ -38,14 +38,13 @@
 import copy
 from pathlib import Path
 
-from six import ensure_str
-
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 
-import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import config
+from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups import load_contact_group_information
 
 
@@ -55,24 +54,29 @@ def _auth_php():
 
 # TODO: Fix copy-n-paste with cmk.gui.watolib.tags.
 def _format_php(data, lvl=1):
-    s = ''
+    s = ""
     if isinstance(data, (list, tuple)):
-        s += 'array(\n'
+        s += "array(\n"
         for item in data:
-            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
+            s += "    " * lvl + _format_php(item, lvl + 1) + ",\n"
+        s += "    " * (lvl - 1) + ")"
     elif isinstance(data, dict):
-        s += 'array(\n'
+        s += "array(\n"
         for key, val in data.items():
-            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
-                                                                                 lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
+            s += (
+                "    " * lvl
+                + _format_php(key, lvl + 1)
+                + " => "
+                + _format_php(val, lvl + 1)
+                + ",\n"
+            )
+        s += "    " * (lvl - 1) + ")"
     elif isinstance(data, str):
-        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
+        s += "'%s'" % data.replace("'", "\\'")
     elif isinstance(data, bool):
-        s += data and 'true' or 'false'
+        s += data and "true" or "false"
     elif data is None:
-        s += 'null'
+        s += "null"
     else:
         s += str(data)
 
@@ -84,10 +88,10 @@ def _create_php_file(callee, users, role_permissions, groups):
     nagvis_users = copy.deepcopy(users)
 
     for user in nagvis_users.values():
-        user.setdefault('language', config.default_language)  # Set a language for all users
-        user.pop('session_info', None)  # remove the SessionInfo object
+        user.setdefault("language", config.default_language)  # Set a language for all users
+        user.pop("session_info", None)  # remove the SessionInfo object
 
-    content = u'''<?php
+    content = """<?php
 // Created by Multisite UserDB Hook (%s)
 global $mk_users, $mk_roles, $mk_groups;
 $mk_users   = %s;
@@ -191,7 +195,12 @@ function permitted_maps($username) {
 }
 
 ?>
-''' % (callee, _format_php(nagvis_users), _format_php(role_permissions), _format_php(groups))
+""" % (
+        callee,
+        _format_php(nagvis_users),
+        _format_php(role_permissions),
+        _format_php(groups),
+    )
 
     store.makedirs(_auth_php().parent)
     store.save_text_to_file(_auth_php(), content)
@@ -204,10 +213,10 @@ def _create_auth_file(callee, users=None):
     contactgroups = load_contact_group_information()
     groups = {}
     for gid, group in contactgroups.items():
-        if 'nagvis_maps' in group and group['nagvis_maps']:
-            groups[gid] = group['nagvis_maps']
+        if "nagvis_maps" in group and group["nagvis_maps"]:
+            groups[gid] = group["nagvis_maps"]
 
-    _create_php_file(callee, users, config.get_role_permissions(), groups)
+    _create_php_file(callee, users, get_role_permissions(), groups)
 
 
 def _on_userdb_job():
@@ -219,8 +228,8 @@ def _on_userdb_job():
 
 
 # TODO: Should we not execute this hook also when folders are modified?
-hooks.register_builtin('userdb-job', _on_userdb_job)
-hooks.register_builtin('users-saved', lambda users: _create_auth_file("users-saved", users))
-hooks.register_builtin('roles-saved', lambda x: _create_auth_file("roles-saved"))
-hooks.register_builtin('contactgroups-saved', lambda x: _create_auth_file("contactgroups-saved"))
-hooks.register_builtin('activate-changes', lambda x: _create_auth_file("activate-changes"))
+hooks.register_builtin("userdb-job", _on_userdb_job)
+hooks.register_builtin("users-saved", lambda users: _create_auth_file("users-saved", users))
+hooks.register_builtin("roles-saved", lambda x: _create_auth_file("roles-saved"))
+hooks.register_builtin("contactgroups-saved", lambda x: _create_auth_file("contactgroups-saved"))
+hooks.register_builtin("activate-changes", lambda x: _create_auth_file("activate-changes"))

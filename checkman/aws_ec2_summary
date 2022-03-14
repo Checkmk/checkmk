@@ -1,7 +1,7 @@
 title: AWS EC2: Instances Summary
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors all AWS EC2 instances and reports
@@ -14,5 +14,5 @@ description:
 
  Otherwise the service is {OK}.
 
-inventory:
+discovery:
  One service is created.

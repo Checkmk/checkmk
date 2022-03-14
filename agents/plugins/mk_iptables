@@ -9,14 +9,12 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # iptables
-if type iptables-save > /dev/null
-then
-        echo "<<<iptables>>>"
-        # output filter configuration without table name, comments and
-        # status data, i.e. lines beginning with '*', '#' or ':'.
-        iptables-save -t filter | sed '/^[#*:]/d'
+if type iptables-save >/dev/null; then
+    echo "<<<iptables>>>"
+    # output filter configuration without table name, comments and
+    # status data, i.e. lines beginning with '*', '#' or ':'.
+    iptables-save -t filter | sed '/^[#*:]/d'
 fi
-

@@ -19,12 +19,14 @@ def inventory_cisco_sys_mem(info):
 def check_cisco_sys_mem(_no_item, params, info):
     if info[0][0]:
         mem_used_percent = float(info[0][0])
-        return check_levels(mem_used_percent,
-                            "mem_used_percent",
-                            params,
-                            human_readable_func=get_percent_human_readable,
-                            infoname="Supervisor Memory used",
-                            boundaries=(0, 100))
+        return check_levels(
+            mem_used_percent,
+            "mem_used_percent",
+            params,
+            human_readable_func=get_percent_human_readable,
+            infoname="Supervisor Memory used",
+            boundaries=(0, 100),
+        )
 
 
 check_info["cisco_sys_mem"] = {

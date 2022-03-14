@@ -1,7 +1,7 @@
 title: Plesk: FTP Backups
 agents: linux
 catalog: app/plesk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Plesk is a commercial webhosting management software. It allows you to
@@ -17,6 +17,5 @@ description:
 item:
   The domain name of the domain backuped.
 
-inventory:
+discovery:
  One service is created for each plesk domain.
-

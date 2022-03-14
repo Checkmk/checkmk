@@ -8,25 +8,20 @@
 from typing import Optional, Type
 
 import cmk.utils.paths
+from cmk.utils.site import omd_site
 
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.backup as backup
+import cmk.gui.watolib as watolib
+from cmk.gui.globals import request, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato.utils import mode_registry, SiteBackupJobs, WatoMode
 from cmk.gui.valuespec import Checkbox
-from cmk.gui.pages import page_registry, AjaxPage
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    SiteBackupJobs,
-)
 
 
 class SiteBackupTargets(backup.Targets):
     def __init__(self):
-        super(SiteBackupTargets, self).__init__(backup.site_config_path())
+        super().__init__(backup.site_config_path())
 
 
 @mode_registry.register
@@ -77,8 +72,9 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
     def page(self):
         self.targets().show_list()
-        backup.SystemBackupTargetsReadOnly().show_list(editable=False,
-                                                       title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(
+            editable=False, title=_("System global targets")
+        )
 
 
 @mode_registry.register
@@ -146,15 +142,18 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
     def custom_job_attributes(self):
         return [
-            ("no_history",
-             Checkbox(
-                 title=_("Do not backup historical data"),
-                 help=_(
-                     "You may use this option to create a much smaller partial backup of the site."
-                 ),
-                 label=_(
-                     "Do not backup metric data (RRD files), the monitoring history and log files"),
-             )),
+            (
+                "no_history",
+                Checkbox(
+                    title=_("Do not backup historical data"),
+                    help=_(
+                        "You may use this option to create a much smaller partial backup of the site."
+                    ),
+                    label=_(
+                        "Do not backup metric data (RRD files), the monitoring history and log files"
+                    ),
+                ),
+            ),
         ]
 
 
@@ -184,8 +183,8 @@ class ModeAjaxBackupJobState(AjaxPage):
         self._handle_exc(self.page)
 
     def page(self):
-        config.user.need_permission("wato.backups")
-        if html.request.var("job") == "restore":
+        user.need_permission("wato.backups")
+        if request.var("job") == "restore":
             page: backup.PageAbstractBackupJobState = backup.PageBackupRestoreState()
         else:
             page = ModeBackupJobState()
@@ -194,8 +193,7 @@ class ModeAjaxBackupJobState(AjaxPage):
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
-        super(SiteBackupKeypairStore,
-              self).__init__(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
+        super().__init__(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 
 @mode_registry.register
@@ -247,7 +245,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
 
     def _upload_key(self, key_file, value):
         watolib.log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
-        super(ModeBackupUploadKey, self)._upload_key(key_file, value)
+        super()._upload_key(key_file, value)
 
 
 @mode_registry.register
@@ -265,7 +263,7 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
         return ModeBackupKeyManagement
 
     def _file_name(self, key_id, key):
-        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
+        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), omd_site(), key_id)
 
 
 @mode_registry.register
@@ -300,9 +298,10 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
             return backup.SystemBackupTargetsReadOnly().get(target_ident)
 
     def _show_target_list(self) -> None:
-        super(ModeBackupRestore, self)._show_target_list()
-        backup.SystemBackupTargetsReadOnly().show_list(editable=False,
-                                                       title=_("System global targets"))
+        super()._show_target_list()
+        backup.SystemBackupTargetsReadOnly().show_list(
+            editable=False, title=_("System global targets")
+        )
 
     def _show_backup_list(self) -> None:
         assert self._target is not None

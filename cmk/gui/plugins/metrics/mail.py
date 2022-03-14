@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -80,7 +76,19 @@ metric_info["mail_received_rate"] = {
     "color": "31/a",
 }
 
-#.
+metric_info["mail_queue_postfix_total"] = {
+    "title": _("Total length of Postfix queue"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+metric_info["mail_queue_z1_messenger"] = {
+    "title": _("Length of Z1 messenger mail queue"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -98,6 +106,7 @@ graph_info["amount_of_mails_in_queues"] = {
         ("mail_queue_deferred_length", "stack"),
         ("mail_queue_active_length", "stack"),
     ],
+    "conflicting_metrics": ["mail_queue_postfix_total", "mail_queue_z1_messenger"],
 }
 
 graph_info["size_of_mails_in_queues"] = {
@@ -106,13 +115,15 @@ graph_info["size_of_mails_in_queues"] = {
         ("mail_queue_deferred_size", "stack"),
         ("mail_queue_active_size", "stack"),
     ],
+    "conflicting_metrics": ["mail_queue_postfix_total", "mail_queue_z1_messenger"],
 }
 
-graph_info['amount_of_mails_in_secondary_queues'] = {
-    'title': _('Amount of mails in queues'),
-    'metrics': [
-        ('mail_queue_hold_length', 'stack'),
-        ('mail_queue_incoming_length', 'stack'),
-        ('mail_queue_drop_length', 'stack'),
+graph_info["amount_of_mails_in_secondary_queues"] = {
+    "title": _("Amount of mails in queues"),
+    "metrics": [
+        ("mail_queue_hold_length", "stack"),
+        ("mail_queue_incoming_length", "stack"),
+        ("mail_queue_drop_length", "stack"),
     ],
+    "conflicting_metrics": ["mail_queue_postfix_total", "mail_queue_z1_messenger"],
 }

@@ -1,7 +1,7 @@
 title: Network Interfaces on Linux: Link - DEPRECATED
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is deprecated. Please use {lnx_if} instead.
@@ -9,5 +9,5 @@ description:
 item:
  Name of the interface
 
-inventory:
+discovery:
  One service is created for each network interface.

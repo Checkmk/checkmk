@@ -1,0 +1,11 @@
+Title: Fix BI aggregation work tree
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1623913225
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Sometimes several trees were opened when a single tree was clicked to open.

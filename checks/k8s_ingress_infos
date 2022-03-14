@@ -8,6 +8,11 @@ import itertools
 
 _flatten = itertools.chain.from_iterable
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def _has_tls(path, hosts):
     """Return True if path is available over TLS, otherwise return False."""
@@ -16,7 +21,7 @@ def _has_tls(path, hosts):
 
 def _iter_backends(parsed):
     for data in sorted(parsed.values()):
-        for backend in data['backends']:
+        for backend in data["backends"]:
             yield backend, data
 
 
@@ -30,15 +35,15 @@ def check_k8s_ingress_infos(item, params, parsed):
         if backend[0] != item:
             continue
         ports = [backend[-1]]
-        if _has_tls(backend[0], data['hosts']):
+        if _has_tls(backend[0], data["hosts"]):
             ports.append(443)
-        yield 0, u"Ports: %s" % ", ".join(map(str, ports))
-        yield 0, u"Service: %s:%s" % (backend[1], backend[2])
+        yield 0, "Ports: %s" % ", ".join(map(str, ports))
+        yield 0, "Service: %s:%s" % (backend[1], backend[2])
 
 
-check_info['k8s_ingress_infos'] = {
+check_info["k8s_ingress_infos"] = {
     # section is already migrated
-    'inventory_function': inventory_k8s_ingress_infos,
-    'check_function': check_k8s_ingress_infos,
-    'service_description': "Ingress %s",
+    "inventory_function": inventory_k8s_ingress_infos,
+    "check_function": check_k8s_ingress_infos,
+    "service_description": "Ingress %s",
 }

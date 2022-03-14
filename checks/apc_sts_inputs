@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.705.2.3.2.1.2.1 3997 --> MG-SNMP-STS-MIB::stsmgSource1PhasePhaseVoltage.1
 # .1.3.6.1.4.1.705.2.3.2.1.2.2 4017 --> MG-SNMP-STS-MIB::stsmgSource1PhasePhaseVoltage.2
 # .1.3.6.1.4.1.705.2.3.2.1.2.3 4012 --> MG-SNMP-STS-MIB::stsmgSource1PhasePhaseVoltage.3
@@ -33,16 +34,16 @@ from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard
 # .1.3.6.1.4.1.705.2.4.2.1.4.3 3300 --> MG-SNMP-STS-MIB::stsmgSource2ActivePower.3
 # .1.3.6.1.4.1.705.2.4.16.0 499 --> MG-SNMP-STS-MIB::stsmgSource2Frequency.0
 
-factory_settings['apc_sts_inputs_default_levels'] = {}
+factory_settings["apc_sts_inputs_default_levels"] = {}
 
 
 def parse_apc_sts_inputs(info):
     parsed = {}
     phase = 1
     for voltage, current, power in info:
-        source = int(voltage.split('.')[0]) - 2
+        source = int(voltage.split(".")[0]) - 2
         parsed["Source %d Phase %d" % (source, phase)] = {
-            "voltage": int(voltage.split('.')[1]) / 10.0,
+            "voltage": int(voltage.split(".")[1]) / 10.0,
             "current": int(current) / 10.0,
             "power": int(power),
         }
@@ -53,12 +54,12 @@ def parse_apc_sts_inputs(info):
 
 
 check_info["apc_sts_inputs"] = {
-    'parse_function': parse_apc_sts_inputs,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': 'Input %s',
-    'default_levels_variable': 'apc_sts_inputs_default_levels',
-    'group': 'el_inphase',
+    "parse_function": parse_apc_sts_inputs,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "Input %s",
+    "default_levels_variable": "apc_sts_inputs_default_levels",
+    "group": "el_inphase",
     "has_perfdata": True,
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.705.2.2" in oid(".1.3.6.1.2.1.1.2.0"),
     "snmp_info": (
@@ -68,5 +69,6 @@ check_info["apc_sts_inputs"] = {
             "2.1.2",  # Phase Voltage
             "2.1.3",  # Current
             "2.1.4",  # Active Power
-        ]),
+        ],
+    ),
 }

@@ -64,8 +64,10 @@ def check_splunk_health(no_item, params, parsed):
 
         for name in sorted(parsed[key]["feature"]):
             if name != "Overall state":
-                long_output += "%s - State: %s\n" % (name.replace(
-                    "_", " "), parsed[key]["feature"][name])
+                long_output += "%s - State: %s\n" % (
+                    name.replace("_", " "),
+                    parsed[key]["feature"][name],
+                )
 
     yield 0, "\n%s" % long_output
 

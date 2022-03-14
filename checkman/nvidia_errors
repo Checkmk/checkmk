@@ -1,13 +1,12 @@
 title: NVIDIA Graphics Card: GPU Errors
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks uses the output of {nvidia-settings} in order to
  check for GPU errors on an NVIDIA graphics card. The check
  (more precisely the agent) needs access to the display {:0}.
 
-inventory:
+discovery:
  One service is created if the agent sends any output about {GPUErrors}.
-

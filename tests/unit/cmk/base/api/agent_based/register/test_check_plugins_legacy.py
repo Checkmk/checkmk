@@ -7,20 +7,18 @@
 # pylint: disable=protected-access
 
 import inspect
-
 from typing import List
 
-from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-from cmk.base.check_api import Service as OldService
 import cmk.base.config as config
+from cmk.base.check_api import Service as OldService
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
-    return
-    yield  # pylint: disable=unreachable
+    yield from ()
 
 
 MINIMAL_CHECK_INFO = {
@@ -34,9 +32,9 @@ def test_create_discovery_function(monkeypatch):
     def insane_discovery(info):
         """Completely crazy discovery function:
 
-            * wrong arg name
-            * is not a generator
-            * returns all kinds of stuff
+        * wrong arg name
+        * is not a generator
+        * returns all kinds of stuff
         """
         assert info == ["info"]
         return [
@@ -46,12 +44,9 @@ def test_create_discovery_function(monkeypatch):
             OldService("bar", {"P": "O"}),
         ]
 
-    monkeypatch.setattr(config, "_check_contexts",
-                        {"norris": {
-                            "params_string": {
-                                "levels": "default"
-                            }
-                        }})
+    monkeypatch.setattr(
+        config, "_check_contexts", {"norris": {"params_string": {"levels": "default"}}}
+    )
     new_function = check_plugins_legacy._create_discovery_function(
         "norris",
         {"inventory_function": insane_discovery},
@@ -99,8 +94,11 @@ def test_create_check_function():
     assert [tuple(r) for r in results] == [
         (checking_classes.State.OK, "Main info", "Main info"),  # Result
         ("metric1", 23.0, (2.0, 3.0), (None, None)),  # Metric
-        (checking_classes.State.WARN, "still main, but very long",
-         "still main, but very long\nadditional1"),
+        (
+            checking_classes.State.WARN,
+            "still main, but very long",
+            "still main, but very long\nadditional1",
+        ),
         ("metric2", 23.0, (None, None), (0.0, None)),
         (checking_classes.State.CRIT, "", "additional2\nadditional3"),
         ("metric3", 23.0, (None, None), (None, None)),
@@ -120,13 +118,13 @@ def test_create_check_plugin_from_legacy_wo_params():
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
     assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
-    assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
+    assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
-    assert plugin.check_function.__name__ == 'check_migration_wrapper'
+    assert plugin.check_function.__name__ == "check_migration_wrapper"
     assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
-    assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
+    assert plugin.cluster_check_function is None
 
 
 def test_create_check_plugin_from_legacy_with_params():
@@ -139,61 +137,50 @@ def test_create_check_plugin_from_legacy_with_params():
             "default_levels_variable": "norris_default_levels",
         },
         [],
-        {"norris_default_levels": {
-            "levels": (23, 42)
-        }},
-        lambda _x: {"norris_default_levels": {
-            "levels_lower": (1, 2)
-        }},
+        {"norris_default_levels": {"levels": (23, 42)}},
+        lambda _x: {"norris_default_levels": {"levels_lower": (1, 2)}},
     )
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
     assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
-    assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
+    assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
-    assert plugin.check_function.__name__ == 'check_migration_wrapper'
+    assert plugin.check_function.__name__ == "check_migration_wrapper"
     assert plugin.check_default_parameters == {
         "levels": (23, 42),
         "levels_lower": (1, 2),
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
-    assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
+    assert plugin.cluster_check_function is None
 
 
 def test_get_default_params_clean_case():
     # with params
     assert check_plugins_legacy._get_default_parameters(
         check_legacy_info={"default_levels_variable": "foo"},
-        factory_settings={"foo": {
-            "levels": (23, 42)
-        }},
+        factory_settings={"foo": {"levels": (23, 42)}},
         check_context={},
-    ) == {
-        "levels": (23, 42)
-    }
+    ) == {"levels": (23, 42)}
 
     # without params
-    assert check_plugins_legacy._get_default_parameters(
-        check_legacy_info={},
-        factory_settings={},
-        check_context={},
-    ) is None
+    assert (
+        check_plugins_legacy._get_default_parameters(
+            check_legacy_info={},
+            factory_settings={},
+            check_context={},
+        )
+        is None
+    )
 
 
 def test_get_default_params_with_user_update():
     # with params
     assert check_plugins_legacy._get_default_parameters(
         check_legacy_info={"default_levels_variable": "foo"},
-        factory_settings={"foo": {
-            "levels": (23, 42),
-            "overwrite_this": None
-        }},
-        check_context={"foo": {
-            "overwrite_this": 3.14,
-            "more": "is better!"
-        }},
+        factory_settings={"foo": {"levels": (23, 42), "overwrite_this": None}},
+        check_context={"foo": {"overwrite_this": 3.14, "more": "is better!"}},
     ) == {
         "levels": (23, 42),
         "overwrite_this": 3.14,
@@ -203,8 +190,11 @@ def test_get_default_params_with_user_update():
 
 def test_get_default_params_ignore_user_defined_tuple():
     # with params
-    assert check_plugins_legacy._get_default_parameters(
-        check_legacy_info={"default_levels_variable": "foo"},
-        factory_settings={},
-        check_context={"foo": (23, 42)},
-    ) == {}
+    assert (
+        check_plugins_legacy._get_default_parameters(
+            check_legacy_info={"default_levels_variable": "foo"},
+            factory_settings={},
+            check_context={"foo": (23, 42)},
+        )
+        == {}
+    )

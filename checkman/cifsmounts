@@ -1,7 +1,7 @@
 title: Health of CIFS Mounts Mounted on UNIX/ Linux
 agents: linux, aix
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check probes the availability of CIFS mounts. The agent sends the
@@ -25,8 +25,7 @@ description:
 item:
  The mount point.
 
-inventory:
+discovery:
   One service is created for each CIFS mount.
   This is doneby scanning {/proc/mounts} (linux) or using the mount command (aix).
   The file {/etc/fstab} is irrelevant.
-

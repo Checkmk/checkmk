@@ -6,7 +6,7 @@ FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
 def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'
     def ARTIFACTS = ''
-    if (args.TARGET == "test_integration") {
+    if (args.TARGET == "test_integration" || args.TARGET == "test_unit") {
         download_artifacts("${FOLDER_ID}/windows-agent-build", ARTIFACTS_DIR)
     }
 
@@ -17,10 +17,17 @@ def build(Map args) {
             try {
                 if (args.TARGET == "cached") {
                     bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
-                    ARTIFACTS = 'python-3.8.zip,python-3.4.zip'
-                } else if (args.TARGET == "agent") {
+                    ARTIFACTS = 'python-3.cab,python-3.4.cab'
+                } else if (args.TARGET == "agent_with_sign") {
+                    bat 'cd agents\\wnx && call build_release.cmd tribe29.pfx ' + args.PASSWORD
+                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
+                } else if (args.TARGET == "agent_no_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd'
-                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml"
+                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
+                } else if (args.TARGET == "cmk_agent_ctl_no_sign") {
+                    bat 'cd agents\\cmk-agent-ctl && call cargo_build.cmd'
+                } else if (args.TARGET == "test_unit") {
+                    bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
                 } else if (args.TARGET == "test_integration") {
                     bat 'cd agents\\wnx && call call_integration_tests.cmd'
                 } else {

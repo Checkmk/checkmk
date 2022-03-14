@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_sort_overflow>>>
 # [[[test:datenbank1]]]
 # Total sorts 100
@@ -34,11 +35,9 @@ def check_db2_sort_overflow(item, params, parsed):
         overflow_perc = 0.0
     warn, crit = params.get("levels_perc")
     if overflow_perc >= crit:
-        yield 2, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % \
-            (overflow_perc, warn, crit)
+        yield 2, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % (overflow_perc, warn, crit)
     elif overflow_perc >= warn:
-        yield 1, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % \
-            (overflow_perc, warn, crit)
+        yield 1, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % (overflow_perc, warn, crit)
     else:
         yield 0, "%.1f%% sort overflow" % overflow_perc
 
@@ -46,7 +45,7 @@ def check_db2_sort_overflow(item, params, parsed):
     yield 0, "Total sorts: %d" % total, [("sort_overflow", overflow_perc, warn, crit, 0, 100)]
 
 
-check_info['db2_sort_overflow'] = {
+check_info["db2_sort_overflow"] = {
     "parse_function": parse_db2_dbs,
     "service_description": "DB2 Sort Overflow %s",
     "check_function": check_db2_sort_overflow,

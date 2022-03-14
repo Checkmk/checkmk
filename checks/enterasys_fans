@@ -6,7 +6,7 @@
 
 
 def inventory_enterasys_fans(info):
-    return [(x[0], None) for x in info if x[1] != '2']
+    return [(x[0], None) for x in info if x[1] != "2"]
 
 
 def check_enterasys_fans(item, _no_params, info):
@@ -27,10 +27,10 @@ def check_enterasys_fans(item, _no_params, info):
 
 
 check_info["enterasys_fans"] = {
-    "check_function"        : check_enterasys_fans,
-    "inventory_function"    : inventory_enterasys_fans,
-    "service_description"   : "FAN %s",
-    "snmp_info"             : ( ".1.3.6.1.4.1.52.4.3.1.3.1.1", [ OID_END, 2 ]),
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1") \
-                                        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.2"),
+    "check_function": check_enterasys_fans,
+    "inventory_function": inventory_enterasys_fans,
+    "service_description": "FAN %s",
+    "snmp_info": (".1.3.6.1.4.1.52.4.3.1.3.1.1", [OID_END, 2]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.2"),
 }

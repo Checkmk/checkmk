@@ -6,7 +6,7 @@ Date: 1609151104
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 An exception has been raised, because of recent refactorings. Because of that
 the context has not been submitted correct to the generic Rest API wrapper.

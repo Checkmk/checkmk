@@ -1,7 +1,7 @@
 title: Riverbed Steelhead: Overall Status
 agents: snmp
 catalog: hw/network/riverbed
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This is a simple check which checks the current health state and
@@ -9,5 +9,5 @@ description:
  and {running}, the result will be {OK}. In all other cases
  it is {critical}.
 
-inventory:
+discovery:
  One service is created for each Riverbed Steelhead appliance.

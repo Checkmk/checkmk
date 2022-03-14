@@ -1,7 +1,7 @@
 title: Etherbox / MessPC: Sensor Smoke
 catalog: hw/environment/betternet
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the etherbox smoke sensor
@@ -11,7 +11,5 @@ item:
 
  Example: "2.6" A smoke sensor(type 6) on port 2
 
-inventory:
+discovery:
  One service is created for each smoke sensor.
-
-

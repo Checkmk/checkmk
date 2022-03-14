@@ -2,7 +2,7 @@ title: Sansymphony: Pool
 catalog: app/sansymphony
 agents: windows
 distribution: check_mk
-license: GPL
+license: GPLv2
 description:
 
  This check measures if the dynamic pool is running, if the cache is in ReadWrite mode and the filling rate of the reported pool allocation.
@@ -18,5 +18,5 @@ Performance data:
 item:
  Name of the pool
 
-inventory:
+discovery:
  One service is created.

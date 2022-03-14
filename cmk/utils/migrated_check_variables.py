@@ -32,6 +32,12 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
 
+ruckus_spot_ap_default_levels: dict = {}
+
+fortigate_memory_base_default_levels = {
+    "levels": (70.0, 80.0),
+}
+
 # hp_proliant_power: see werk 10857
 hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
 
@@ -78,3 +84,45 @@ cpu_threads_default_levels = {"levels": (2000, 4000)}
 
 # checkpoint_connections
 checkpoint_connections_default_levels = (40000, 50000)
+
+# esx_vsphere_hostsystem_mem_usage
+esx_host_mem_default_levels = (80.0, 90.0)
+
+# pdu_gude
+pdu_gude_default_levels = {
+    "V": (220, 210),
+    "A": (15, 16),
+    "W": (3500, 3600),
+}
+
+# jenkins_jobs
+
+MAP_JOB_STATES = {
+    "aborted": {"state": 0, "info": "Aborted"},
+    "blue": {"state": 0, "info": "Success"},
+    "disabled": {"state": 0, "info": "Disabled"},
+    "notbuilt": {"state": 0, "info": "Not built"},
+    "red": {"state": 2, "info": "Failed"},
+    "yellow": {"state": 1, "info": "Unstable"},
+}
+
+MAP_BUILD_STATES = {
+    "success": 0,  # no errors
+    "unstable": 1,  # some errors but not fatal
+    "failure": 2,  # fatal error
+    "aborted": 0,  # manually aborted
+    "null": 1,  # module was not built
+    "none": 0,  # running
+}
+
+# ucd_cpu_load, hpux_cpu, statgrab_load
+cpuload_default_levels = (5.0, 10.0)
+
+# blade_bx_load
+blade_bx_cpuload_default_levels = (5, 20)
+
+# mcafee_emailgateway_cpuload
+mcafee_emailgateway_cpuload_default_levels = (5.0, 10.0)
+
+# arbor_peakflow_sp, arbor_peakflow_tms, arbor_pravail
+arbor_cpuload_default_levels = (5.0, 10.0)

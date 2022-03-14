@@ -6,7 +6,7 @@ Date: 1611917530
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On (automatic) agent update on Linux, the update process includes the reload of
 the xinetd process, if running. This is done by the DEB maintainer scripts or

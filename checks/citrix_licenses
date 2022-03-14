@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from plugin:
 # <<<citrix_licenses>>>
 # PVS_STD_CCS 80 0
@@ -48,10 +49,10 @@ def check_citrix_licenses(item, params, data):
 
 
 check_info["citrix_licenses"] = {
-    'parse_function': parse_citrix_licenses,
-    'check_function': check_citrix_licenses,
-    'inventory_function': inventory_citrix_licenses,
-    'service_description': 'Citrix Licenses %s',
-    'has_perfdata': True,
-    'group': "citrix_licenses",
+    "parse_function": parse_citrix_licenses,
+    "check_function": check_citrix_licenses,
+    "inventory_function": inventory_citrix_licenses,
+    "service_description": "Citrix Licenses %s",
+    "has_perfdata": True,
+    "group": "citrix_licenses",
 }

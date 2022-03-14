@@ -1,0 +1,494 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-counts
+  response:
+    body:
+      string: <info pos='23' t0='15.04.2021 04:00' t7='15.04.2021 11:00'><c x='0'
+        s='0' i='00' m='00000000' n='CPU'/><c x='1' s='0' i='00' m='00000000' n='CPU-R'/><c
+        x='2' s='0' i='00' m='00000000' n='MEM'/><c x='3' s='0' i='00' m='00000000'
+        n='TEMP'/><c x='4' s='0' i='00' m='00000000' n='PRI1'/><c x='5' s='0' i='00'
+        m='00000000' n='PRI2'/><c x='6' s='0' i='00' m='00000000' n='TEL'/><c x='7'
+        s='0' i='00' m='00000000' n='ETH0'/><c x='8' s='0' i='00' m='00000000' n='ETH1'/><c
+        x='9' s='0' i='00' m='00000000' n='ETH2'/><c x='10' s='0' i='00' m='00000000'
+        n='PING1'/><c x='11' s='0' i='00' m='00000000' n='PING2'/><c x='12' s='0'
+        i='00' m='00000000' n='CONF'/><c x='13' s='0' i='00' m='00000000' n='CONF-R'/></info>
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '702'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=0
+  response:
+    body:
+      string: <info x='0' i='00' n='CPU' m='00000000' s='100' t='100%' l='0' t0='15.04.2021
+        04:00' t7='15.04.2021 11:00'><h><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='6'/><m c='6'/><m
+        c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m
+        c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='4'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/></h><h><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='6'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='4'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='2'/><m c='4'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/></h><h><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m
+        c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m
+        c='5'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='4'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m
+        c='6'/><m c='6'/><m c='5'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m
+        c='6'/><m c='6'/><m c='6'/><m c='7'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m
+        c='6'/></h><h><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='6'/><m c='5'/><m
+        c='7'/><m c='7'/><m c='7'/><m c='7'/><m c='8'/><m c='8'/><m c='7'/><m c='7'/><m
+        c='8'/><m c='9'/><m c='7'/><m c='8'/><m c='7'/><m c='8'/><m c='8'/><m c='7'/><m
+        c='8'/><m c='8'/><m c='6'/><m c='8'/><m c='8'/><m c='7'/><m c='7'/><m c='10'/><m
+        c='11'/><m c='10'/><m c='10'/><m c='10'/><m c='11'/><m c='10'/><m c='10'/><m
+        c='10'/><m c='11'/><m c='12'/><m c='12'/><m c='12'/><m c='13'/><m c='9'/><m
+        c='11'/><m c='13'/><m c='14'/><m c='13'/><m c='12'/><m c='11'/><m c='11'/><m
+        c='11'/><m c='11'/><m c='11'/><m c='11'/><m c='12'/><m c='11'/><m c='11'/><m
+        c='11'/><m c='11'/></h><h><m c='11'/><m c='12'/><m c='12'/><m c='12'/><m c='13'/><m
+        c='13'/><m c='14'/><m c='17'/><m c='19'/><m c='18'/><m c='19'/><m c='20'/><m
+        c='20'/><m c='22'/><m c='21'/><m c='21'/><m c='20'/><m c='20'/><m c='20'/><m
+        c='18'/><m c='20'/><m c='22'/><m c='21'/><m c='22'/><m c='23'/><m c='23'/><m
+        c='23'/><m c='22'/><m c='20'/><m c='20'/><m c='22'/><m c='20'/><m c='19'/><m
+        c='20'/><m c='19'/><m c='20'/><m c='19'/><m c='20'/><m c='19'/><m c='19'/><m
+        c='21'/><m c='23'/><m c='19'/><m c='19'/><m c='21'/><m c='24'/><m c='24'/><m
+        c='23'/><m c='25'/><m c='24'/><m c='24'/><m c='25'/><m c='23'/><m c='25'/><m
+        c='26'/><m c='28'/><m c='28'/><m c='27'/><m c='28'/><m c='29'/></h><h><m c='29'/><m
+        c='30'/><m c='31'/><m c='29'/><m c='31'/><m c='30'/><m c='29'/><m c='29'/><m
+        c='30'/><m c='28'/><m c='28'/><m c='28'/><m c='27'/><m c='28'/><m c='28'/><m
+        c='28'/><m c='27'/><m c='28'/><m c='29'/><m c='29'/><m c='28'/><m c='28'/><m
+        c='27'/><m c='25'/><m c='24'/><m c='25'/><m c='28'/><m c='29'/><m c='29'/><m
+        c='30'/><m c='28'/><m c='28'/><m c='28'/><m c='30'/><m c='33'/><m c='33'/><m
+        c='32'/><m c='31'/><m c='28'/><m c='27'/><m c='29'/><m c='29'/><m c='29'/><m
+        c='31'/><m c='33'/><m c='33'/><m c='31'/><m c='29'/><m c='30'/><m c='31'/><m
+        c='31'/><m c='33'/><m c='31'/><m c='33'/><m c='27'/><m c='28'/><m c='30'/><m
+        c='28'/><m c='28'/><m c='28'/></h><h><m c='28'/><m c='28'/><m c='27'/><m c='27'/><m
+        c='28'/><m c='29'/><m c='27'/><m c='27'/><m c='26'/><m c='28'/><m c='27'/><m
+        c='27'/><m c='26'/><m c='25'/><m c='28'/><m c='27'/><m c='29'/><m c='30'/><m
+        c='28'/><m c='29'/><m c='28'/><m c='28'/><m c='28'/><m c='26'/><m c='27'/><m
+        c='27'/><m c='26'/><m c='24'/><m c='26'/><m c='26'/><m c='25'/><m c='24'/><m
+        c='22'/><m c='22'/><m c='25'/><m c='23'/><m c='25'/><m c='26'/><m c='25'/><m
+        c='26'/><m c='24'/><m c='24'/><m c='23'/><m c='24'/><m c='23'/><m c='20'/><m
+        c='21'/><m c='19'/><m c='22'/><m c='22'/><m c='22'/><m c='23'/><m c='22'/><m
+        c='22'/><m c='21'/><m c='22'/><m c='21'/><m c='22'/><m c='22'/><m c='21'/></h><h><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/></h></info>
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '4820'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=2
+  response:
+    body:
+      string: <info x='2' i='00' n='MEM' m='00000000' s='244501' t='244501kB' l='0'
+        t0='15.04.2021 04:00' t7='15.04.2021 11:00'><h><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/></h><h><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/></h><h><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/></h><h><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/></h><h><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/></h><h><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/></h><h><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m
+        c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/><m c='5'/></h><h><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/></h></info>
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '4617'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=3
+  response:
+    body:
+      string: "<info x='3' i='00' n='TEMP' m='00000000' s='100' t='\xB0C' l='0' t0='15.04.2021\
+        \ 04:00' t7='15.04.2021 11:00'><h><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/></h><h><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='35'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='35'/><m c='36'/><m c='36'/></h><h><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='35'/><m c='35'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/></h><h><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='35'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/></h><h><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/></h><h><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='35'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='35'/><m\
+        \ c='36'/><m c='36'/></h><h><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m\
+        \ c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m\
+        \ c='35'/><m c='36'/><m c='35'/><m c='36'/><m c='35'/><m c='35'/><m c='35'/><m\
+        \ c='35'/><m c='36'/><m c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m\
+        \ c='35'/><m c='36'/><m c='35'/><m c='35'/><m c='35'/><m c='36'/><m c='36'/><m\
+        \ c='35'/><m c='35'/><m c='35'/><m c='36'/><m c='35'/><m c='35'/><m c='36'/><m\
+        \ c='35'/><m c='36'/><m c='36'/><m c='36'/><m c='36'/><m c='35'/><m c='35'/><m\
+        \ c='36'/><m c='36'/><m c='35'/><m c='35'/><m c='35'/><m c='35'/><m c='35'/></h><h><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/><m/></h></info>"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '5030'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/PRI1/mod_cmd.xml
+  response:
+    body:
+      string: <info mode="isdn" if="pri" userlevel="1" ch-numbering="" chi-type=""
+        cr-len="" prot="EDSS1" tei="x" physical="Up" link="Up"><ch-numbering><option
+        value="" text="Default" selected="true"/><option value="numbers" text="Numbers(1-30)"/><option
+        value="timeslots" text="Timeslots(1-15,17-31)"/></ch-numbering><chi-type><option
+        value="" text="Default" selected="true"/><option value="BRI" text="BRI"/><option
+        value="PRI" text="PRI"/></chi-type><cr-len><option value="" text="Default"
+        selected="true"/><option value="1" text="1"/><option value="2" text="2"/></cr-len><prot><option
+        value="EDSS1" text="EDSS1" selected="true"/><option value="QSIG-ECMA1" text="QSIG-ECMA1"/><option
+        value="QSIG-ECMA2" text="QSIG-ECMA2"/><option value="NI" text="NI"/><option
+        value="5ESS" text="5ESS"/><option value="DMS100" text="DMS100"/></prot><tei><option
+        value="x" text="Point to Multipoint" selected="true"/><option value="0" text="Point
+        to Point"/></tei><ch no="1" state="Active"/><ch no="2" state="Active"/><ch
+        no="3" state="Active"/><ch no="4" state="Active"/><ch no="5" state="Active"/><ch
+        no="6" state="Active"/><ch no="7" state="Active"/><ch no="8" state="Active"/><ch
+        no="9" state="Delivered"/><ch no="10" state="Active"/><ch no="11" state="Active"/><ch
+        no="12" state="Active"/><ch no="13" state="Active"/><ch no="14" state="Active"/><ch
+        no="15" state="Active"/><ch no="16" state="D-Channel"/><ch no="17" state="Active"/><ch
+        no="18" state="Active"/><ch no="19" state="Idle"/><ch no="20" state="Idle"/><ch
+        no="21" state="Active"/><ch no="22" state="Active"/><ch no="23" state="Idle"/><ch
+        no="24" state="Active"/><ch no="25" state="Active"/><ch no="26" state="Idle"/><ch
+        no="27" state="Idle"/><ch no="28" state="Idle"/><ch no="29" state="Idle"/><ch
+        no="30" state="Idle"/><ch no="31" state="Active"/></info>
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '1789'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/PRI2/mod_cmd.xml
+  response:
+    body:
+      string: <info mode="isdn" if="pri" userlevel="1" ch-numbering="" chi-type=""
+        cr-len="" prot="EDSS1" tei="x" physical="Up" link="Up"><ch-numbering><option
+        value="" text="Default" selected="true"/><option value="numbers" text="Numbers(1-30)"/><option
+        value="timeslots" text="Timeslots(1-15,17-31)"/></ch-numbering><chi-type><option
+        value="" text="Default" selected="true"/><option value="BRI" text="BRI"/><option
+        value="PRI" text="PRI"/></chi-type><cr-len><option value="" text="Default"
+        selected="true"/><option value="1" text="1"/><option value="2" text="2"/></cr-len><prot><option
+        value="EDSS1" text="EDSS1" selected="true"/><option value="QSIG-ECMA1" text="QSIG-ECMA1"/><option
+        value="QSIG-ECMA2" text="QSIG-ECMA2"/><option value="NI" text="NI"/><option
+        value="5ESS" text="5ESS"/><option value="DMS100" text="DMS100"/></prot><tei><option
+        value="x" text="Point to Multipoint" selected="true"/><option value="0" text="Point
+        to Point"/></tei><ch no="1" state="Active"/><ch no="2" state="Active"/><ch
+        no="3" state="Active"/><ch no="4" state="Active"/><ch no="5" state="Active"/><ch
+        no="6" state="Active"/><ch no="7" state="Active"/><ch no="8" state="Active"/><ch
+        no="9" state="Active"/><ch no="10" state="Active"/><ch no="11" state="Active"/><ch
+        no="12" state="Idle"/><ch no="13" state="Active"/><ch no="14" state="Idle"/><ch
+        no="15" state="Idle"/><ch no="16" state="D-Channel"/><ch no="17" state="Active"/><ch
+        no="18" state="Active"/><ch no="19" state="Idle"/><ch no="20" state="Idle"/><ch
+        no="21" state="Active"/><ch no="22" state="Idle"/><ch no="23" state="Idle"/><ch
+        no="24" state="Active"/><ch no="25" state="Active"/><ch no="26" state="Idle"/><ch
+        no="27" state="Idle"/><ch no="28" state="Active"/><ch no="29" state="Idle"/><ch
+        no="30" state="Idle"/><ch no="31" state="Idle"/></info>
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '1778'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/PRI3/mod_cmd.xml
+  response:
+    body:
+      string: "?\r\n"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-store
+      Content-length:
+      - '3'
+      Content-type:
+      - text/xml
+      Pragma:
+      - no-cache
+      expires:
+      - Friday, 25-Jul-97 00:00:00 GMT
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+      authorization:
+      - '****'
+    method: GET
+    uri: https://192.168.178.10/PBX0/ADMIN/mod_cmd_login.xml
+  response:
+    body:
+      string: '<HTML><HEAD><TITLE>401 Unauthorized</TITLE></HEAD>
+
+        <BODY><H1>401 Unauthorized</H1>
+
+        The requested URL was not authorized.
+
+        </BODY></HTML>'
+    headers:
+      Content-length:
+      - '135'
+      WWW-Authenticate:
+      - Basic realm="IP1060-aa-bb-cc"
+    status:
+      code: 401
+      message: Unauthorized
+version: 1

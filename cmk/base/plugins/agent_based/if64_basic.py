@@ -6,6 +6,7 @@
 
 import time
 from typing import Any, Mapping
+
 from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 

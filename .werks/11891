@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Checkmk versions 1.6 to 2.0.0b4 the DCD connections where not always correctly synced.
 

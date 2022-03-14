@@ -18,85 +18,36 @@
 #include "tools/_process.h"
 #include "tools/_tgt.h"
 
-namespace cma::cfg::details {  // to become friendly for cma::cfg classes
+namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
-static std::filesystem::path CreateYamlnInTemp(const std::string& Name,
-                                               const std::string& Text) {
-    namespace fs = std::filesystem;
-
-    fs::path temp_folder = cma::cfg::GetTempDir();
-    auto path = temp_folder / Name;
-
+namespace cma::cfg::details {
+namespace {
+fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
+    fs::path temp_folder{GetTempDir()};
+    auto path = temp_folder / name;
     std::ofstream ofs(path.u8string());
-
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
     }
-
-    ofs << Text << " \n";
+    ofs << text << " \n";
     return path;
 }
 
-static std::filesystem::path CreateTestFile(const std::filesystem::path& Name,
-                                            const std::string& Text) {
-    namespace fs = std::filesystem;
-
-    auto path = Name;
-
+static fs::path CreateTestFile(const fs::path &name, const std::string &text) {
+    auto path = name;
     std::ofstream ofs(path.u8string(), std::ios::binary);
-
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
     }
-
-    ofs << Text << "\n";
+    ofs << text << "\n";
     return path;
 }
 
-#if 0
-// memory tester
-TEST(AgentConfig, MemoryLeaks) {
-    for (auto i = 0; i < 100; i++) {
-        OnStart(AppType::test);
-        cma::provider::MrpeProvider m;
-        m.generateContent(cma::section::kUseEmbeddedName);
-        cma::tools::sleep(5000);
-    }
-}
-#endif
-
-TEST(AgentConfig, Folders) {
-    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
-    cma::tools::win::SetEnv(std::wstring(kTemporaryRoot), std::wstring(L"."));
-    cma::OnStart(AppType::exe);
-    EXPECT_EQ(GetCfg().getRootDir().u8string(), ".");
-    EXPECT_EQ(GetCfg().getUserDir().u8string(), "ProgramData\\checkmk\\agent");
-}
-
-TEST(AgentConfig, MainYaml) {
-    if (!cma::ConfigLoaded()) cma::OnStartTest();
-    auto root_dir = GetCfg().getRootDir();
-    root_dir /= files::kDefaultMainConfig;
-    auto load = YAML::LoadFile(root_dir.u8string());
-    EXPECT_TRUE(load.IsMap());
-    EXPECT_TRUE(load[groups::kGlobal].IsMap());
-    EXPECT_TRUE(load[groups::kFileInfo].IsMap());
-    EXPECT_TRUE(load[groups::kLocal].IsMap());
-    EXPECT_FALSE(load[groups::kLogFiles].IsDefined()) << "logfiles"
-                                                         " not supported";
-    EXPECT_TRUE(load[groups::kLogWatchEvent].IsMap());
-    EXPECT_TRUE(load[groups::kMrpe].IsMap());
-    EXPECT_TRUE(load[groups::kPlugins].IsMap());
-    EXPECT_TRUE(load[groups::kPs].IsMap());
-    EXPECT_TRUE(load[groups::kWinPerf].IsMap());
-}
-
-// test helper, in fact calls MergeStringSequence
-static std::string TestMergerSeq(const std::string& target,
-                                 const std::string& source,
-                                 const std::string& name) {
+std::string TestMergerSeq(const std::string &target, const std::string &source,
+                          const std::string &name) {
     auto user = YAML::Load(target);
     auto bakery = YAML::Load(source);
     MergeStringSequence(user, bakery, name);
@@ -106,48 +57,45 @@ static std::string TestMergerSeq(const std::string& target,
     return emit.c_str();
 }
 
-// test helper, in fact calls MergeMapSequence
-static YAML::Node TestMergerMap(const std::string& target,
-                                const std::string& source,
-                                const std::string& name,
-                                const std::string& key) {
+YAML::Node TestMergerMap(const std::string &target, const std::string &source,
+                         const std::string &name, const std::string &key) {
     auto user = YAML::Load(target);
     auto bakery = YAML::Load(source);
 
     MergeMapSequence(user, bakery, name, key);
     return user;
 }
+}  // namespace
 
 TEST(AgentConfig, AggregateSeq) {
+    // artificial but realistic data
+    std::string empty = "plugins:\n  enabled: yes\n";
+    std::string filled = "plugins:\n  folders: [a, b, c]";
+
     {
-        // artificial but realistic data
-        std::string empty = "plugins:\n  enabled: yes\n";
-        std::string filled = "plugins:\n  folders: [a, b, c]";
-
-        {
-            YAML::Node target = YAML::Load(empty);
-            YAML::Node source = YAML::Load(filled);
-            auto source_size =
-                source[groups::kPlugins][vars::kPluginsFolders].size();
-            EXPECT_EQ(source_size, 3);
-            EXPECT_TRUE(MergeStringSequence(target[groups::kPlugins],
-                                            source[groups::kPlugins],
-                                            vars::kPluginsFolders));
-            EXPECT_EQ(target[groups::kPlugins][vars::kPluginsFolders].size(),
-                      source_size)
-                << "should have same size after merge";
-        }
-
-        {
-            YAML::Node target = YAML::Load(filled);
-            YAML::Node source = YAML::Load(empty);
-            EXPECT_TRUE(MergeStringSequence(target[groups::kPlugins],
-                                            source[groups::kPlugins],
-                                            vars::kPluginsFolders));
-            EXPECT_EQ(target[groups::kPlugins][vars::kPluginsFolders].size(), 3)
-                << "should have same size after merge";
-        }
+        YAML::Node target = YAML::Load(empty);
+        YAML::Node source = YAML::Load(filled);
+        auto source_size =
+            source[groups::kPlugins][vars::kPluginsFolders].size();
+        EXPECT_EQ(source_size, 3);
+        EXPECT_TRUE(MergeStringSequence(target[groups::kPlugins],
+                                        source[groups::kPlugins],
+                                        vars::kPluginsFolders));
+        EXPECT_EQ(target[groups::kPlugins][vars::kPluginsFolders].size(),
+                  source_size)
+            << "should have same size after merge";
     }
+
+    {
+        YAML::Node target = YAML::Load(filled);
+        YAML::Node source = YAML::Load(empty);
+        EXPECT_TRUE(MergeStringSequence(target[groups::kPlugins],
+                                        source[groups::kPlugins],
+                                        vars::kPluginsFolders));
+        EXPECT_EQ(target[groups::kPlugins][vars::kPluginsFolders].size(), 3)
+            << "should have same size after merge";
+    }
+
     {
         std::string tgt = "folders: [a, b, c, d]";
         std::string src = "folders: [b, c, e]";
@@ -171,58 +119,46 @@ TEST(AgentConfig, AggregateSeq) {
     }
 }
 
+TEST(AgentConfig, AggregateMapEmpty) {
+    YAML::Node in;
+    YAML::Node add;
+    EXPECT_TRUE(MergeMapSequence(in, add, "a", "b"));
+}
 TEST(AgentConfig, AggregateMap) {
+    std::string empty =
+        "plugins:\n"
+        "  enabled: yes\n";
+
+    std::string filled =
+        "plugins:\n"
+        "  execution:\n"
+        "    - pattern: '$CUSTOM_PLUGINS_PATH$\\*.*'\n"
+        "      timeout: 60\n"
+        "      run: yes\n"
+        "    - pattern: '$BUILTIN_PLUGINS_PATH$\\*.*'\n"
+        "      timeout: 60\n"
+        "      run: no\n"
+        "    - pattern: '*'\n"
+        "      timeout: 60\n"
+        "      run: no\n";
     {
-        // check for invalid nodes
-        YAML::Node in;
-        YAML::Node add;
-        EXPECT_TRUE(MergeMapSequence(in, add, "a", "b"));
+        YAML::Node target = YAML::Load(empty);
+        YAML::Node source = YAML::Load(filled);
+        EXPECT_TRUE(
+            MergeMapSequence(target[groups::kPlugins], source[groups::kPlugins],
+                             vars::kPluginsExecution, vars::kPluginPattern));
+        EXPECT_EQ(target[groups::kPlugins][vars::kPluginsExecution].size(), 3)
+            << "should be filled!";
     }
 
     {
-        // artificial but realistic data
-        std::string empty =
-            "plugins:\n"
-            "  enabled: yes\n";
-
-        std::string filled =
-            "plugins:\n"
-            "  execution:\n"
-            "    - pattern: '$CUSTOM_PLUGINS_PATH$\\*.*'\n"
-            "      timeout: 60\n"
-            "      run: yes\n"
-            "    - pattern: '$BUILTIN_PLUGINS_PATH$\\*.*'\n"
-            "      timeout: 60\n"
-            "      run: no\n"
-            "    - pattern: '*'\n"
-            "      timeout: 60\n"
-            "      run: no\n";
-        {
-            // individual testing
-        }
-
-        {
-            YAML::Node target = YAML::Load(empty);
-            YAML::Node source = YAML::Load(filled);
-            EXPECT_TRUE(MergeMapSequence(
-                target[groups::kPlugins], source[groups::kPlugins],
-                vars::kPluginsExecution, vars::kPluginPattern));
-            EXPECT_EQ(target[groups::kPlugins][vars::kPluginsExecution].size(),
-                      3)
-                << "should be filled!";
-        }
-
-        {
-            YAML::Node target = YAML::Load(filled);
-            YAML::Node source = YAML::Load(empty);
-            EXPECT_EQ(target[groups::kPlugins][vars::kPluginsExecution].size(),
-                      3);
-            EXPECT_TRUE(MergeMapSequence(
-                target[groups::kPlugins], source[groups::kPlugins],
-                vars::kPluginsExecution, vars::kPluginPattern));
-            EXPECT_EQ(target[groups::kPlugins][vars::kPluginsExecution].size(),
-                      3);
-        }
+        YAML::Node target = YAML::Load(filled);
+        YAML::Node source = YAML::Load(empty);
+        EXPECT_EQ(target[groups::kPlugins][vars::kPluginsExecution].size(), 3);
+        EXPECT_TRUE(
+            MergeMapSequence(target[groups::kPlugins], source[groups::kPlugins],
+                             vars::kPluginsExecution, vars::kPluginPattern));
+        EXPECT_EQ(target[groups::kPlugins][vars::kPluginsExecution].size(), 3);
     }
 
     {
@@ -253,7 +189,7 @@ TEST(AgentConfig, AggregateMap) {
         auto merged_yaml = full_yaml[vars::kPluginsExecution];
 
         auto select = [merged_yaml](int index,
-                                    const std::string& name) -> auto {
+                                    const std::string &name) -> auto {
             return merged_yaml[index][name].as<std::string>();
         };
 
@@ -275,7 +211,8 @@ TEST(AgentConfig, AggregateMap) {
 }
 
 TEST(AgentConfig, SmartMerge) {
-    namespace fs = std::filesystem;
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
     fs::path cfgs[] = {GetCfg().getRootDir() / temporary_name,
@@ -284,22 +221,15 @@ TEST(AgentConfig, SmartMerge) {
     cfgs[1].replace_extension("bakery.yml");
     cfgs[2].replace_extension("user.yml");
 
-    std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : cfgs) fs::remove(f, ec););
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
-
-    for (auto& f : cfgs) fs::remove(f, ec);
     auto root_file = fs::path(GetCfg().getRootYamlPath());
     auto ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kAllFailed);
     // previous state must be preserved
     EXPECT_FALSE(GetCfg().isBakeryLoaded());
     EXPECT_TRUE(GetCfg().isUserLoaded() ==
-                fs::exists(GetCfg().getUserYamlPath(), ec));
+                fs::exists(GetCfg().getUserYamlPath()));
 
-    fs::copy_file(root_file, cfgs[0], ec);
-    ASSERT_EQ(ec.value(), 0);
-    // testing merging
+    ASSERT_TRUE(fs::copy_file(root_file, cfgs[0]));
     {
         CreateTestFile(cfgs[1],
                        "global:\n"
@@ -381,7 +311,8 @@ TEST(AgentConfig, SmartMerge) {
 }
 
 TEST(AgentConfig, Aggregate) {
-    namespace fs = std::filesystem;
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
     fs::path cfgs[] = {GetCfg().getRootDir() / temporary_name,
@@ -391,17 +322,13 @@ TEST(AgentConfig, Aggregate) {
     cfgs[2].replace_extension("user.yml");
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : cfgs) fs::remove(f, ec););
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
-    for (auto& f : cfgs) fs::remove(f, ec);
     auto root_file = fs::path(GetCfg().getRootYamlPath());
     auto ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kAllFailed);
     // previous state must be preserved
     EXPECT_FALSE(GetCfg().isBakeryLoaded());
-    EXPECT_TRUE(GetCfg().isUserLoaded() ==
-                fs::exists(GetCfg().getUserYamlPath(), ec));
+    EXPECT_FALSE(GetCfg().isUserLoaded());
 
     fs::copy_file(root_file, cfgs[0], ec);
     ASSERT_EQ(ec.value(), 0);
@@ -474,7 +401,7 @@ TEST(AgentConfig, Aggregate) {
 
     ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kFileLoaded);
-    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml = GetLoadedConfig();
     EXPECT_TRUE(GetCfg().isBakeryLoaded());
     EXPECT_FALSE(GetCfg().isUserLoaded());
 
@@ -490,7 +417,7 @@ TEST(AgentConfig, Aggregate) {
 
     ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kFileLoaded);
-    yaml = cma::cfg::GetLoadedConfig();
+    yaml = GetLoadedConfig();
     ASSERT_EQ(yaml["bakery"]["status"].as<std::string>(), "loaded");
     ASSERT_EQ(yaml["user"]["status"].as<std::string>(), "loaded");
     ASSERT_EQ(yaml["global"]["enabled"].as<bool>(), false);
@@ -504,8 +431,6 @@ TEST(AgentConfig, Aggregate) {
 }
 
 TEST(AgentConfig, ReloadWithTimestamp) {
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStartTest();
 
     ON_OUT_OF_SCOPE(cma::OnStartTest());
@@ -552,7 +477,7 @@ TEST(AgentConfig, ReloadWithTimestamp) {
 }
 
 TEST(AgentConfig, GetValueTest) {
-    std::wstring key_path = L"System\\CurrentControlSet\\services\\";
+    std::wstring key_path{L"System\\CurrentControlSet\\services\\"};
     key_path += L"Ntfs";
     auto type = wtools::GetRegistryValue(key_path, L"Type", 0);
     EXPECT_EQ(type, 2);
@@ -565,9 +490,7 @@ TEST(AgentConfig, GetValueTest) {
     EXPECT_EQ(group, L"--");
 }
 
-// #TODO improve this for better coverage
 TEST(AgentConfig, FoldersTest) {
-    namespace fs = std::filesystem;
     fs::path value = SOLUTION_DIR;
     value /= L"test_files\\work";
     {
@@ -576,20 +499,16 @@ TEST(AgentConfig, FoldersTest) {
 
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
-                                          Folders::Protection::no);
+        folders.createDataFolderStructure(L"", Folders::Protection::no);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
-                                             L"",
-                                             Folders::CreateMode::with_path,
-                                             Folders::Protection::no));
-    }  // namespace fs=std::filesystem;
+                                             L"", Folders::Protection::no));
+    }
 
     {
         Folders folders;
         auto ret = folders.setRoot(L"WinDefend", L"");  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
-                                          Folders::Protection::no);
+        folders.createDataFolderStructure(L"", Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -598,8 +517,7 @@ TEST(AgentConfig, FoldersTest) {
     {
         Folders folders;
         auto ret = folders.setRoot(L"", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
-                                          Folders::Protection::no);
+        folders.createDataFolderStructure(L"", Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -609,15 +527,12 @@ TEST(AgentConfig, FoldersTest) {
         Folders folders;
         auto ret =
             folders.setRoot(L"WinDefend", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
-                                          Folders::Protection::no);
+        folders.createDataFolderStructure(L"", Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
         EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
-                                             L"",
-                                             Folders::CreateMode::with_path,
-                                             Folders::Protection::no));
+                                             L"", Folders::Protection::no));
     }
 }
 }  // namespace cma::cfg::details
@@ -625,15 +540,12 @@ TEST(AgentConfig, FoldersTest) {
 namespace cma::cfg {  // to become friendly for cma::cfg classes
 
 TEST(AgentConfig, LogFile) {
-    auto fname = cma::cfg::GetCurrentLogFileName();
+    auto fname = GetCurrentLogFileName();
     EXPECT_TRUE(fname.size() != 0);
-    // #TODO: better testing need
 }
 
 TEST(AgentConfig, YamlRead) {
-    namespace fs = std::filesystem;
-    auto file = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
-                cma::cfg::files::kDefaultDevMinimum;
+    auto file = tst::MakePathToConfigTestFiles() / files::kDefaultDevMinimum;
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
 
@@ -648,7 +560,7 @@ TEST(AgentConfig, YamlRead) {
 
 TEST(AgentConfig, InternalArray) {
     const std::string key = "sections";
-    auto create_yaml = [key](const std::string& text) -> YAML::Node {
+    auto create_yaml = [key](const std::string &text) -> YAML::Node {
         return YAML::Load(key + ": " + text + "\n");
     };
 
@@ -721,19 +633,13 @@ TEST(AgentConfig, InternalArray) {
 }
 
 TEST(AgentConfig, WorkConfig) {
-    namespace fs = std::filesystem;
-    using namespace std;
-    using namespace cma::cfg;
-
     auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
-    const auto cfg = cma::cfg::GetLoadedConfig();
+    const auto cfg = GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
 
     auto sz = cfg.size();
     EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
-    using namespace cma::cfg;
-
     auto port = GetVal(groups::kGlobal, vars::kPort, -1);
     EXPECT_TRUE(port != -1);
 
@@ -766,12 +672,6 @@ TEST(AgentConfig, WorkConfig) {
     auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
     EXPECT_TRUE(only_from.size() == 0);
 
-#if 0
-    // should not supported
-    auto host = GetArray<string>(groups::kGlobal, vars::kHost);
-    EXPECT_TRUE(host.size() == 1);
-#endif
-
     {
         auto sections_enabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
@@ -790,7 +690,7 @@ TEST(AgentConfig, WorkConfig) {
         EXPECT_TRUE(!encrypt);
 
         auto rt_port = GetVal(realtime, vars::kRtPort, 111);
-        EXPECT_EQ(rt_port, cma::cfg::kDefaultRealtimePort);
+        EXPECT_EQ(rt_port, kDefaultRealtimePort);
 
         auto passphrase =
             GetVal(realtime, vars::kGlobalPassword, std::string());
@@ -829,7 +729,7 @@ TEST(AgentConfig, WorkConfig) {
         auto winperf_counters =
             GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
         EXPECT_EQ(winperf_counters.size(), 3);
-        for (const auto& counter : winperf_counters) {
+        for (const auto &counter : winperf_counters) {
             auto id = counter.first;
             EXPECT_TRUE(id != "");
 
@@ -867,7 +767,7 @@ TEST(AgentConfig, WorkConfig) {
 
     // modules values
     {
-        EXPECT_TRUE(
+        EXPECT_FALSE(
             cfg[groups::kModules][vars::kModulesQuickReinstall].as<bool>());
     }
 
@@ -924,24 +824,15 @@ TEST(AgentConfig, WorkConfig) {
 }
 
 TEST(AgentConfig, UTF16LE) {
-    using namespace std::filesystem;
-    using namespace std;
-    using namespace cma::cfg;
-
     // ************************************
     // Typical load scenario
     // ************************************
-    auto loader = [](const auto&... Str) -> bool {
-        using namespace std;
-        using namespace cma::cfg;
-
+    auto loader = [](const auto &...Str) -> bool {
         auto cfg_files = cma::tools::ConstructVectorWstring(Str...);
-
-        // loading itself
         auto ret = InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
-        if (!ret) return false;
-
-        // verification
+        if (!ret) {
+            return false;
+        }
         auto cfg = GetLoadedConfig();
         auto sz = cfg.size();
         return cfg.IsMap();  // minimum has ONE section
@@ -949,8 +840,8 @@ TEST(AgentConfig, UTF16LE) {
 
     details::KillDefaultConfig();
 
-    auto file_utf16 = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
-                      files::kDefaultDevConfigUTF16;
+    auto file_utf16 =
+        tst::MakePathToConfigTestFiles() / files::kDefaultDevConfigUTF16;
     bool success = loader(file_utf16.wstring());
     EXPECT_TRUE(success);
 
@@ -971,80 +862,41 @@ TEST(AgentConfig, UTF16LE) {
 }
 
 TEST(AgentConfig, FailScenario_Long) {
-    using namespace std::filesystem;
-    using namespace std;
-    using namespace cma::cfg;
+    auto loader = [](auto &...str) -> bool {
+        auto cfg_files = cma::tools::ConstructVectorWstring(str...);
 
-    // ************************************
-    // Typical load scenario
-    // ************************************
-    auto loader = [](auto&... Str) -> bool {
-        using namespace std;
-        using namespace cma::cfg;
-
-        auto cfg_files = cma::tools::ConstructVectorWstring(Str...);
-
-        // loading itself
         auto ret = InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
-        if (!ret) return false;
-
-        // verification
-        auto cfg = cma::cfg::GetLoadedConfig();
-        cfg = cma::cfg::GetLoadedConfig();
-        auto sz = cfg.size();
-        return cfg.IsMap();  // minimum has ONE section
+        if (!ret) {
+            return false;
+        }
+        auto cfg = GetLoadedConfig();
+        return cfg.IsMap();
     };
 
     details::KillDefaultConfig();
 
-    bool success = loader(L"StranegName.yml");
-    EXPECT_FALSE(success);
-    {
-        auto port = GetVal(groups::kGlobal, vars::kPort, -1);
-        EXPECT_TRUE(port == -1);
-    }
+    EXPECT_FALSE(loader(L"StranegName.yml"));
+    EXPECT_EQ(GetVal(groups::kGlobal, vars::kPort, -1), -1);
 
-    auto test_config_path = tst::MakePathToConfigTestFiles(tst::G_SolutionPath);
+    auto test_config_path = tst::MakePathToConfigTestFiles();
 
     auto file_1 = (test_config_path / files::kDefaultMainConfig).wstring();
     auto file_2 = (test_config_path / files::kDefaultDevMinimum).wstring();
 
-    success = loader(file_1, file_2);
-    EXPECT_TRUE(success);
+    EXPECT_TRUE(loader(file_1, file_2));
+    EXPECT_FALSE(loader(L"StrangeName<GTEST>.yml"));
+    EXPECT_EQ(GetVal(groups::kGlobal, vars::kPort, -1), -1);
+    EXPECT_FALSE(GetVal(groups::kGlobal, "xxx", false));
+    EXPECT_EQ(GetVal(groups::kGlobal, "xxx", 13), 13);
+    EXPECT_EQ(GetVal(groups::kGlobal, "xxx", std::string("string")), "string");
 
-    success =
-        loader(L"StrangeName<GTEST>.yml");  // <GTEST> to decrease warning level
-                                            // in windows debugger window
-    EXPECT_FALSE(success);
-    // ************************************
-
-    using namespace cma::cfg;
-
-    auto port = GetVal(groups::kGlobal, vars::kPort, -1);
-    EXPECT_EQ(port, -1);
-    auto no_bool = GetVal(groups::kGlobal, "xxx", false);
-    EXPECT_FALSE(no_bool);
-    auto no_int = GetVal(groups::kGlobal, "xxx", 13);
-    EXPECT_TRUE(no_int == 13);
-    auto no_string = GetVal(groups::kGlobal, "xxx", std::string("string"));
-    EXPECT_TRUE(no_string == "string");
-
-    /*
-    auto no_wstring = GetVal(groups::kGlobal, "xxx", std::wstring(L"string"));
-    EXPECT_TRUE(no_wstring == L"string");
-        auto no_array = GetArray<string>(groups::kGlobal, "xxx");
-        EXPECT_TRUE(no_array.empty());
-    */
-    using namespace YAML;
     auto node = GetNode(groups::kGlobal, "xxx2");
     EXPECT_TRUE(node.IsNull() || !node.IsDefined());
-    cma::OnStart(cma::AppType::test);
-    success = loader(L"StranegName.yml");
-    EXPECT_FALSE(success);
+    OnStart(AppType::test);
+    EXPECT_FALSE(loader(L"StranegName.yml"));
 }
 
 TEST(AgentConfig, CacheApi) {
-    namespace fs = std::filesystem;
     auto name = StoreFileToCache("i am not a file");
     EXPECT_TRUE(name.empty());
     auto source_name = GetCfg().getTempDir() / "test";
@@ -1063,93 +915,57 @@ TEST(AgentConfig, CacheApi) {
     EXPECT_TRUE(0 == memcmp(x->data(), (src + "\n").data(), src.size() + 1));
 }
 
-TEST(AgentConfig, FunctionalityCheck) {
-    namespace fs = std::filesystem;
-    using namespace std;
-    using namespace cma::cfg;
-    using namespace cma::cfg::groups;
-
-    // ************************************
-    // Typical load scenario
-    // ************************************
-
-    details::KillDefaultConfig();
-    EXPECT_NE(global.enabledSections().size(), 0);
-    EXPECT_EQ(global.disabledSections().size(), 0);
-    details::LoadGlobal();
-    EXPECT_TRUE(global.enabledSections().size() == 0);
-    EXPECT_TRUE(global.disabledSections().size() == 0);
-
-    // set false parameters
-    XLOG::setup::ChangeLogFileName("b.log");
-    XLOG::setup::EnableDebugLog(true);
-    XLOG::setup::EnableWinDbg(false);
-    OnStart(cma::AppType::test);
-    auto fname = std::string(XLOG::l.getLogParam().filename());
-    EXPECT_TRUE(fname != "b.log");
-    fs::path p = fname;
-    auto final_name = p.filename();
-    EXPECT_TRUE(final_name.u8string() ==
-                std::string(cma::cfg::kDefaultLogFileName));
-
-    EXPECT_TRUE(global.enabledSections().size() != 0);
-    EXPECT_TRUE(global.disabledSections().size() == 0);
-
-    EXPECT_TRUE(global.realtimePort() == cma::cfg::kDefaultRealtimePort);
-    EXPECT_TRUE(global.realtimeTimeout() == cma::cfg::kDefaultRealtimeTimeout);
-    EXPECT_FALSE(global.realtimeEncrypt());
-    EXPECT_FALSE(global.realtimeEnabled());
+TEST(AgentConfig, BackupCheck) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     // caching USER
     fs::path source_name = GetCfg().getUserYamlPath();
-    fs::path file_to_delete;
-    bool delete_required = false;
     if (source_name.empty() ||       // should not happen
         !GetCfg().isUserLoaded()) {  // bad user file
-        XLOG::stdio("\nI am generating user yml!\n");
         fs::path user_f = GetCfg().getUserDir();
         user_f /= files::kDefaultMainConfig;
         user_f.replace_extension(files::kDefaultUserExt);
         details::CreateTestFile(
             user_f, "user:\n  status: 'loaded'\nglobal:\n  port: 111");
-        delete_required = true;
-        file_to_delete = user_f;
     }
-    OnStart(AppType::test);
+    ASSERT_TRUE(temp_fs->reloadConfig());
     auto expected_name = GetCfg().getCacheDir() / source_name.filename();
-    std::error_code ec;
 
-    {
-        std::error_code ec;
-        EXPECT_TRUE(fs::exists(expected_name, ec))
-            << "no cache made by OnStart";
-        fs::remove(expected_name);
-        auto ret = cma::cfg::StoreUserYamlToCache();
-        EXPECT_TRUE(ret);
-        EXPECT_TRUE(fs::exists(expected_name, ec))
-            << "no cache made by StoreUserYaml";
-    }
-
-    // ************************************
-    if (delete_required) {
-        fs::remove(file_to_delete, ec);  // clean user folder
-        fs::remove(expected_name, ec);   // clean cache folder
-    }
-    cma::OnStart(cma::AppType::test);
+    EXPECT_TRUE(fs::exists(expected_name));
+    fs::remove(expected_name);
+    EXPECT_TRUE(cfg::StoreUserYamlToCache());
+    EXPECT_TRUE(fs::exists(expected_name));
 }
 
-TEST(AgentConfig, SectionLoader) {
-    using namespace std::filesystem;
-    using namespace std;
-    using namespace cma::cfg;
+TEST(AgentConfig, LoadingCheck) {
+    XLOG::setup::ChangeLogFileName("b.log");
+    XLOG::setup::EnableDebugLog(false);
+    XLOG::setup::EnableWinDbg(false);
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
-    vector<wstring> cfg_files;
-    cfg_files.emplace_back(files::kDefaultMainConfig);
+    auto fname = std::string(XLOG::l.getLogParam().filename());
+    EXPECT_TRUE(fs::path{fname}.filename().u8string() ==
+                std::string{kDefaultLogFileName});
+    EXPECT_TRUE(XLOG::d.isFileDbg());
+    EXPECT_TRUE(XLOG::d.isWinDbg());
+    EXPECT_TRUE(XLOG::l.isFileDbg());
+    EXPECT_TRUE(XLOG::l.isWinDbg());
 
-    auto ret = cma::cfg::InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
-    ASSERT_EQ(ret, true);
-    auto cfg = cma::cfg::GetLoadedConfig();
-    EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
+    EXPECT_TRUE(groups::global.enabledSections().size() != 0);
+    EXPECT_TRUE(groups::global.disabledSections().size() == 0);
+
+    EXPECT_TRUE(groups::global.realtimePort() == cfg::kDefaultRealtimePort);
+    EXPECT_TRUE(groups::global.realtimeTimeout() ==
+                cfg::kDefaultRealtimeTimeout);
+    EXPECT_FALSE(groups::global.realtimeEncrypt());
+    EXPECT_FALSE(groups::global.realtimeEnabled());
+}
+
+TEST(AgentConfig, FactoryConfig) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     Global g;
     g.loadFromMainConfig();
@@ -1163,7 +979,6 @@ TEST(AgentConfig, SectionLoader) {
 
     Plugins p;
     p.loadFromMainConfig(groups::kPlugins);
-    EXPECT_NO_THROW(tst::PrintNode(cfg["plugins"], "plugins"));
     EXPECT_TRUE(p.enabledInConfig());
     EXPECT_TRUE(p.existInConfig());
     EXPECT_EQ(p.unitsCount(), 4);
@@ -1178,9 +993,8 @@ TEST(AgentConfig, SectionLoader) {
 }
 
 TEST(AgentConfig, GlobalTest) {
-    namespace fs = std::filesystem;
-    using namespace std;
-    using namespace cma::cfg;
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     Global g;
     g.loadFromMainConfig();
@@ -1221,23 +1035,23 @@ TEST(AgentConfig, GlobalTest) {
     g.setLogFolder(p / dirs::kLog);
     g.setupLogEnvironment();
     fname = g.fullLogFileNameAsString();
-    std::filesystem::path dir = GetUserDir();
+    fs::path dir = GetUserDir();
     dir /= dirs::kLog;
     EXPECT_TRUE(
-        cma::tools::IsEqual(fname, (dir / kDefaultLogFileName).u8string()));
+        tools::IsEqual(fname, (dir / cfg::kDefaultLogFileName).u8string()));
 
-    EXPECT_TRUE(groups::global.allowedSection("check_mk"));
-    EXPECT_TRUE(groups::global.allowedSection("winperf"));
-    EXPECT_TRUE(groups::global.allowedSection("uptime"));
-    EXPECT_TRUE(groups::global.allowedSection("systemtime"));
-    EXPECT_TRUE(groups::global.allowedSection("df"));
-    EXPECT_TRUE(groups::global.allowedSection("mem"));
-    EXPECT_TRUE(groups::global.allowedSection("services"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("check_mk"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("winperf"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("uptime"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("systemtime"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("df"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("mem"));
+    EXPECT_TRUE(cfg::groups::global.allowedSection("services"));
 
-    EXPECT_TRUE(!groups::global.isSectionDisabled("winperf_any"));
-    EXPECT_TRUE(!groups::global.allowedSection("_logfiles"));
+    EXPECT_TRUE(!cfg::groups::global.isSectionDisabled("winperf_any"));
+    EXPECT_TRUE(!cfg::groups::global.allowedSection("_logfiles"));
 
-    auto val = groups::global.getWmiTimeout();
+    auto val = cfg::groups::global.getWmiTimeout();
     EXPECT_TRUE((val >= 1) && (val < 100));
 }
 
@@ -1272,9 +1086,8 @@ TEST(AgentConfig, MergeSeqCombineExpected) {
 TEST(AgentConfig, MergeSeqCombineValue) {
     YAML::Node user = YAML::Load(lw_user);
     YAML::Node target = YAML::Load(lw_root);
-    cma::cfg::details::CombineSequence("name", target["logfile"],
-                                       user["logfile"],
-                                       details::Combine::merge_value);
+    details::CombineSequence("name", target["logfile"], user["logfile"],
+                             details::Combine::merge_value);
     YAML::Emitter emit;
     emit << target["logfile"];
     auto result = emit.c_str();
@@ -1288,8 +1101,8 @@ TEST(AgentConfig, MergeSeqCombineValue) {
 TEST(AgentConfig, MergeSeqCombine) {
     YAML::Node user = YAML::Load(lw_user);
     YAML::Node target = YAML::Load(lw_root);
-    cma::cfg::details::CombineSequence(
-        "name", target["logfile"], user["logfile"], details::Combine::merge);
+    details::CombineSequence("name", target["logfile"], user["logfile"],
+                             details::Combine::merge);
     YAML::Emitter emit;
     emit << target["logfile"];
     auto result = emit.c_str();
@@ -1303,9 +1116,8 @@ TEST(AgentConfig, MergeSeqCombine) {
 TEST(AgentConfig, MergeSeqOverride) {
     YAML::Node user = YAML::Load(lw_user);
     YAML::Node target = YAML::Load(lw_root);
-    cma::cfg::details::CombineSequence("name", target["logfile"],
-                                       user["logfile"],
-                                       details::Combine::overwrite);
+    details::CombineSequence("name", target["logfile"], user["logfile"],
+                             details::Combine::overwrite);
     YAML::Emitter emit;
     emit << target["logfile"];
     auto result = emit.c_str();
@@ -1368,10 +1180,10 @@ static std::string node_ok =
 
     ;
 
-static YAML::Node generateTestNode(const std::string& node_text) {
+static YAML::Node generateTestNode(const std::string &node_text) {
     try {
         return YAML::Load(node_text);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("exception '{}'", e.what());
     }
 
@@ -1398,6 +1210,7 @@ TEST(AgentConfig, NodeCleanup) {
         EXPECT_EQ(expected_count, 0);
     }
 }
+
 static std::string node_plugins_execution =
     "plugins:\n"
     "  execution:\n"  // expected clean
@@ -1422,50 +1235,46 @@ static std::string node_plugins_execution =
     ;
 
 TEST(AgentConfig, PluginsExecutionParams) {
-    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
-    {
-        const auto node_base = generateTestNode(node_plugins_execution);
-        auto node = YAML::Clone(node_base);
-        ASSERT_TRUE(node.IsMap());
-        auto node_plugins = node["plugins"];
-        ASSERT_TRUE(node.IsMap());
-        ASSERT_TRUE(node_plugins[vars::kPluginsExecution].IsSequence());
+    const auto node_base = generateTestNode(node_plugins_execution);
+    auto node = YAML::Clone(node_base);
+    ASSERT_TRUE(node.IsMap());
+    auto node_plugins = node["plugins"];
+    ASSERT_TRUE(node.IsMap());
+    ASSERT_TRUE(node_plugins[vars::kPluginsExecution].IsSequence());
 
-        auto units =
-            GetArray<YAML::Node>(node_plugins[vars::kPluginsExecution]);
+    auto units = GetArray<YAML::Node>(node_plugins[vars::kPluginsExecution]);
 
-        std::vector<Plugins::ExeUnit> exe_units;
-        LoadExeUnitsFromYaml(exe_units, units);
-        EXPECT_EQ(exe_units.size(), 5);
+    std::vector<Plugins::ExeUnit> exe_units;
+    LoadExeUnitsFromYaml(exe_units, units);
+    EXPECT_EQ(exe_units.size(), 5);
 
-        EXPECT_EQ(exe_units[0].pattern(), "a_1");
-        EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
-        EXPECT_EQ(exe_units[0].async(), true);
-        for (auto e : exe_units) {
-            EXPECT_TRUE(e.source().IsMap());
-            EXPECT_TRUE(e.sourceText().empty());
-        }
-
-        EXPECT_EQ(exe_units[1].pattern(), "a_0");
-        EXPECT_EQ(exe_units[1].cacheAge(), 0);
-        EXPECT_EQ(exe_units[1].async(), true);
-
-        EXPECT_EQ(exe_units[2].pattern(), "a_2600");
-        EXPECT_EQ(exe_units[2].cacheAge(), 2600);
-        EXPECT_EQ(exe_units[2].async(), true);
-        for (int i = 0; i < 4; i++) {
-            EXPECT_TRUE(exe_units[2].run());
-            EXPECT_EQ(exe_units[2].retry(), 0);
-        }
-
-        EXPECT_EQ(exe_units[3].pattern(), "s_eq_a_2600");
-        EXPECT_EQ(exe_units[3].cacheAge(), 2600);
-        EXPECT_EQ(exe_units[3].async(), true);
-
-        EXPECT_EQ(exe_units[4].pattern(), "s_2");
-        EXPECT_EQ(exe_units[4].run(), false);
-        EXPECT_EQ(exe_units[4].retry(), 1);
+    EXPECT_EQ(exe_units[0].pattern(), "a_1");
+    EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
+    EXPECT_EQ(exe_units[0].async(), true);
+    for (auto e : exe_units) {
+        EXPECT_TRUE(e.source().IsMap());
+        EXPECT_TRUE(e.sourceText().empty());
     }
+
+    EXPECT_EQ(exe_units[1].pattern(), "a_0");
+    EXPECT_EQ(exe_units[1].cacheAge(), 0);
+    EXPECT_EQ(exe_units[1].async(), true);
+
+    EXPECT_EQ(exe_units[2].pattern(), "a_2600");
+    EXPECT_EQ(exe_units[2].cacheAge(), 2600);
+    EXPECT_EQ(exe_units[2].async(), true);
+    for (int i = 0; i < 4; i++) {
+        EXPECT_TRUE(exe_units[2].run());
+        EXPECT_EQ(exe_units[2].retry(), 0);
+    }
+
+    EXPECT_EQ(exe_units[3].pattern(), "s_eq_a_2600");
+    EXPECT_EQ(exe_units[3].cacheAge(), 2600);
+    EXPECT_EQ(exe_units[3].async(), true);
+
+    EXPECT_EQ(exe_units[4].pattern(), "s_2");
+    EXPECT_EQ(exe_units[4].run(), false);
+    EXPECT_EQ(exe_units[4].retry(), 1);
 }
 
 TEST(AgentConfig, ApplyValueIfScalar) {
@@ -1486,7 +1295,7 @@ TEST(AgentConfig, ApplyValueIfScalar) {
     bool run = true;
     bool async = false;
     int cache_age = 0;
-    int timeout = cma::cfg::kDefaultPluginTimeout;
+    int timeout = kDefaultPluginTimeout;
     int retry = 0;
     EXPECT_NO_THROW(ApplyValueIfScalar(YAML::Node(), run, ""));
     EXPECT_NO_THROW(ApplyValueIfScalar(e, run, ""));
@@ -1500,12 +1309,11 @@ TEST(AgentConfig, ApplyValueIfScalar) {
     EXPECT_NO_THROW(ApplyValueIfScalar(e_, retry, vars::kPluginRetry));
     EXPECT_EQ(retry, 0);
     EXPECT_NO_THROW(ApplyValueIfScalar(e_, timeout, vars::kPluginTimeout));
-    EXPECT_EQ(timeout, cma::cfg::kDefaultPluginTimeout);
+    EXPECT_EQ(timeout, kDefaultPluginTimeout);
     EXPECT_NO_THROW(ApplyValueIfScalar(e_, cache_age, vars::kPluginCacheAge));
     EXPECT_EQ(cache_age, 0);
 
     // values should BE changed here
-    tst::PrintNode(e, "a");
     EXPECT_NO_THROW(ApplyValueIfScalar(e, run, vars::kPluginRun));
     EXPECT_FALSE(run);
     EXPECT_NO_THROW(ApplyValueIfScalar(e, async, vars::kPluginAsync));
@@ -1523,7 +1331,7 @@ TEST(AgentConfig, ExeUnitTest) {
     Plugins::ExeUnit e2;
     EXPECT_EQ(e.async(), false);
     EXPECT_EQ(e.run(), true);
-    EXPECT_EQ(e.timeout(), cma::cfg::kDefaultPluginTimeout);
+    EXPECT_EQ(e.timeout(), kDefaultPluginTimeout);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.retry(), 0);
     EXPECT_TRUE(e.group().empty());
@@ -1549,7 +1357,7 @@ TEST(AgentConfig, ExeUnitTest) {
     e.resetConfig();
     EXPECT_EQ(e.async(), false);
     EXPECT_EQ(e.run(), true);
-    EXPECT_EQ(e.timeout(), cma::cfg::kDefaultPluginTimeout);
+    EXPECT_EQ(e.timeout(), kDefaultPluginTimeout);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.retry(), 0);
 
@@ -1558,8 +1366,6 @@ TEST(AgentConfig, ExeUnitTest) {
 }
 
 TEST(AgentConfig, ExeUnitTestYaml) {
-    using namespace cma::cfg;
-
     std::vector<Plugins::ExeUnit> exe_units;
     auto execution_yaml = YAML::Load(
         "execution:\n"
@@ -1572,7 +1378,7 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         "  run         : no\n"
         "\n"
         "- pattern     : '3'\n"
-        "  group       : Users\n"
+        "  group       : SomeUsers\n"
         "\n"
         "- pattern     : '4'\n"
         "  retry_count : 4\n"
@@ -1604,13 +1410,13 @@ TEST(AgentConfig, ExeUnitTestYaml) {
     } data[5] = {
         {"1", false, true, 1, 0, 0, "", ""},
         {"2", false, false, 2, 0, 0, "", ""},
-        {"3", false, true, kDefaultPluginTimeout, 0, 0, "Users", ""},
+        {"3", false, true, kDefaultPluginTimeout, 0, 0, "SomeUsers", ""},
         {"4", false, true, kDefaultPluginTimeout, 0, 4, "", "users_"},
         {"5", true, false, kDefaultPluginTimeout, 120, 0, "a a a ", ""},
     };
 
     int i = 0;
-    for (const auto& d : data) {
+    for (const auto &d : data) {
         EXPECT_EQ(exe_units[i].pattern(), d.p);
         EXPECT_EQ(exe_units[i].async(), d.async);
         EXPECT_EQ(exe_units[i].run(), d.run);
@@ -1623,45 +1429,22 @@ TEST(AgentConfig, ExeUnitTestYaml) {
     }
 }
 
-#if 0
-TEST(AgentConfig, LoadUtf8) {
-    // disabled code to check how valid is unicode files
-    cma::OnStart(AppType::test);
-    std::filesystem::path d = GetCfg().getUserDir().u8string();
-    auto load = YAML::LoadFile((d / "test_utf8.escaped.yml").u8string());
-    //auto load = YAML::LoadFile((d / "test_utf8.unicode.yml").u8string());
-    EXPECT_TRUE(load.size() > 0);
-    YAML::Emitter e;
-    e << load;
-    std::cout << e.c_str();
-    auto z = e.c_str();
-    std::filesystem::path n = d / "test.yml";
-    std::ofstream ofs(n.u8string());
-
-    ofs << z << " \n";
-}
-#endif
-
 static void SetCfgMode(YAML::Node cfg, std::string_view name,
                        std::string_view mode) {
-    using namespace cma::cfg;
-    cfg[groups::kSystem] = YAML::Load(fmt::format("{}: {}\n", name, mode));
+    cfg[cfg::groups::kSystem] = YAML::Load(fmt::format("{}: {}\n", name, mode));
 }
 
 TEST(AgentConfig, CleanupUninstall) {
-    using namespace cma::cfg;
-    OnStartTest();
-    ON_OUT_OF_SCOPE(OnStartTest());
-    auto cfg = cma::cfg::GetLoadedConfig();
-    constexpr std::wstring_view app_name = L"test.exe.exe";
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    auto cfg = GetLoadedConfig();
 
-    // remove all from the Firewall
     std::pair<std::string_view, details::CleanMode> fixtures[] = {
         {values::kCleanupNone, details::CleanMode::none},
         {values::kCleanupSmart, details::CleanMode::smart},
         {values::kCleanupAll, details::CleanMode::all}};
 
-    for (auto& [n, v] : fixtures) {
+    for (auto &[n, v] : fixtures) {
         SetCfgMode(cfg, vars::kCleanupUninstall, n);
         EXPECT_EQ(details::GetCleanDataFolderMode(), v);
     }

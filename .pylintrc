@@ -8,35 +8,35 @@
 # accessing pylint's innards. Not nice, but there is not much we can do about
 # this until pylint offers the API requested in the post above. Furthermore,
 # note that layout/indentation doesn't work too well in the hook below.
-
+#
+# Please note:
+# - repo path is added to be able to import tests.conftest
+# - tests.conftest is again extending the sys.path to add the required paths
 init-hook=
-    import inspect, os, sys
+    import inspect
+    import os
+    import sys
     config_file = inspect.stack()[2][0].f_locals["linter"].config_file
-    tests_dir2 = os.path.join(os.path.dirname(config_file), "tests")
-    tests_dir3 = os.path.join(os.path.dirname(config_file), "tests")
-    tests_dir = tests_dir3 if sys.version.split('.')[0] == '3' else tests_dir2
-    sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
-    import conftest
+    sys.path.insert(0, os.path.dirname(config_file))
+    import tests.conftest
 load-plugins=
-    testlib.pylint_cmk,
-    testlib.pylint_checker_localization,
-    testlib.pylint_checker_cmk_module_layers,
+    tests.testlib.pylint_cmk,
+    tests.testlib.pylint_checker_localization,
+    tests.testlib.pylint_checker_forbidden_objects,
+    tests.testlib.pylint_checker_cmk_module_layers,
     pylint.extensions.bad_builtin
 jobs=0
-# TODO: Why do we need persistence?
-persistent=yes
-extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
+# pickle collected data for later comparisons. Not used in our CI and makes runs faster
+persistent=no
+extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic
 bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
+
+signature-mutators=cmk.utils.store.with_lock_dict
 
 [MESSAGES CONTROL]
 disable=
     # Use local suppressions or (even better) refactor the code.
     import-outside-toplevel,
-    #---------------------------------------------------------------------------
-    # Enabling this would be very desirable, but currently highly broken, see
-    # https://github.com/PyCQA/pylint/issues/3507. The pylint people seem to
-    # ignore mypy stuff as much as they can, it seems... :-/
-    isinstance-second-argument-not-valid-type,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
@@ -77,8 +77,8 @@ disable=
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
     #---------------------------------------------------------------------------
-    # Enable these would improve readability, but currently there are quite a
-    # few places to fix.
+    # isort and pylint disagree about the order when some "normal" code is
+    # interspersed with imports.
     wrong-import-position,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
@@ -88,7 +88,6 @@ disable=
     # Alas, these maintenance/security nightmares are still part of our base
     # "technology"... :-/ Nevertheless, reducing their usage is a very worthy
     # goal.
-    eval-used,
     exec-used,
     global-statement,
     #---------------------------------------------------------------------------
@@ -117,9 +116,8 @@ disable=
     # them might be a good idea some day...
     fixme,
     #---------------------------------------------------------------------------
-    # The warnigns below will probably fixed by YAPF.
-    bad-continuation,
-    bad-whitespace,
+    # Black doesn't split long strings, we'll have to this by ourselves, see
+    # https://github.com/psf/black/issues/1331
     line-too-long,
     #---------------------------------------------------------------------------
     # We are light years away from enabling this...
@@ -138,36 +136,44 @@ disable=
     # https://github.com/PyCQA/pylint/issues/3162.
     no-member,
     #---------------------------------------------------------------------------
-    # This one got introduced with pylint 2.6.0
-    # TODO: Evaluate
+    # Lots of warning due to this, but we should really go through them one by
+    # one, this might drastically improve the usefulness of our backtraces.
     raise-missing-from,
     #---------------------------------------------------------------------------
-    # Many occurences of this one, to be fixed
-    super-with-arguments,
-    #---------------------------------------------------------------------------
-    # To be evaluated
+    # Only a handful of findings, this should be fixed.
     wrong-import-order,
     #---------------------------------------------------------------------------
-    # pylint 2.7.[012] has totally screwed this up... :-/
+    # pylint 2.7.[012] has totally screwed this up... :-/ Takes ages, too.
     duplicate-code,
     R0801,
-
-enable=
     #---------------------------------------------------------------------------
-    # The checks below are from --py3k, and they can sometimes be annoying.
-    # Nevertheless, they found quite a few bugs, so it makes sense to keep them
-    # enabled.
-    comprehension-escape,
-    dict-items-not-iterating,
-    dict-keys-not-iterating,
-    dict-values-not-iterating,
-    exception-escape,
-    exception-message-attribute,
-    filter-builtin-not-iterating,
-    isinstance-second-argument-not-valid-type,
-    map-builtin-not-iterating,
-    range-builtin-not-iterating,
-    zip-builtin-not-iterating,
+    # werkzeug's LocalProxy uses slots, so this check doesn't really blend well
+    # with out cmk.gui.globals.
+    assigning-non-slot,
+    #---------------------------------------------------------------------------
+    # Lots of findings, but these should *really* be fixed!
+    #consider-using-with,
+    #---------------------------------------------------------------------------
+    # Useful, but quite a few findings.
+    use-implicit-booleaness-not-comparison,
+    #---------------------------------------------------------------------------
+    # A stylistic thing only, many findings, but all fixes are mechanical.
+    consider-using-from-import,
+    #---------------------------------------------------------------------------
+    # A good idea in general, but each of the many findings has to be looked at:
+    # We often mutate a dictionary while iterating over it, which is :-P
+    consider-using-dict-items,
+    #---------------------------------------------------------------------------
+    # Purely mechanical & aesthetical, lots of findings.
+    redundant-u-string-prefix,
+    #---------------------------------------------------------------------------
+    # Fixing this is URGENT: There are potentially lots of encoding problems
+    # sleeping in our code when we are not explicit in open().
+    unspecified-encoding,
+    #---------------------------------------------------------------------------
+    # Tons of findings, we fix this incrementally, f-strings are much more
+    # performant than old-skool string splicing/formatting.
+    consider-using-f-string
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

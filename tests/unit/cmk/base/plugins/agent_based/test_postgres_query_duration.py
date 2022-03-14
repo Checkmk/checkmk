@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Result, State, Metric
-
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Result, State
 from cmk.base.plugins.agent_based.postgres_query_duration import (
     check_postgres_query_duration,
     cluster_check_postgres_query_duration,
@@ -13,14 +12,14 @@ from cmk.base.plugins.agent_based.postgres_query_duration import (
 
 
 # TODO: a named tuple would be nice
-def Query(seconds='', pid='', current_query='', usename='', client_addr='', state=''):
+def Query(seconds="", pid="", current_query="", usename="", client_addr="", state=""):
     return {
-        'seconds': seconds,
-        'pid': pid,
-        'current_query': current_query,
-        'usename': usename,
-        'client_addr': client_addr,
-        'state': state,
+        "seconds": seconds,
+        "pid": pid,
+        "current_query": current_query,
+        "usename": usename,
+        "client_addr": client_addr,
+        "state": state,
     }
 
 
@@ -39,8 +38,8 @@ def test_check_postgres_query_duration_no_queries():
 def test_check_postgres_query_duration_basic():
     section = {
         "item": [
-            Query(seconds='2'),  # not used
-            Query(seconds='23', pid='4242', current_query="Where is Waldo", state='anxious'),
+            Query(seconds="2"),  # not used
+            Query(seconds="23", pid="4242", current_query="Where is Waldo", state="anxious"),
         ]
     }
     assert list(check_postgres_query_duration("item", section)) == [
@@ -53,10 +52,14 @@ def test_check_postgres_query_duration_basic():
 
 def test_cluster_check_postgres_query_duration_basic():
     node1_section = {
-        "item": [Query(seconds='23', pid='4242', current_query="Where is Hugo", state='amused'),]
+        "item": [
+            Query(seconds="23", pid="4242", current_query="Where is Hugo", state="amused"),
+        ]
     }
     node2_section = {
-        "item": [Query(seconds='22', pid='4242', current_query="Where is Waldo", state='anxious'),]
+        "item": [
+            Query(seconds="22", pid="4242", current_query="Where is Waldo", state="anxious"),
+        ]
     }
 
     clustered_sections = {

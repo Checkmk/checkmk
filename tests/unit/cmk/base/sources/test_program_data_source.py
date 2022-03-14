@@ -7,21 +7,18 @@
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-
-from cmk.core_helpers.type_defs import Mode
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
-fun_args_stdin: Tuple[  #
-    Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
-] = (  #
+fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
     (SpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
@@ -40,43 +37,35 @@ fun_args_stdin: Tuple[  #
 )  # type: ignore[assignment]
 
 
-@pytest.fixture(name="mode", params=Mode)
-def mode_fixture(request):
-    return request.param
-
-
 class TestDSProgramChecker:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_attribute_defaults(self, ipaddress, mode, monkeypatch):
+    def test_attribute_defaults(self, ipaddress, monkeypatch):
         template = ""
-        hostname = "testhost"
-        Scenario().add_host(hostname).apply(monkeypatch)
+        hostname = HostName("testhost")
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
         source = DSProgramSource(
             hostname,
             ipaddress,
-            mode=mode,
             template=template,
         )
         assert source.hostname == hostname
         assert source.ipaddress == ipaddress
-        assert source.mode is mode
         assert source.cmdline == ""
         assert source.stdin is None
         assert source.description == "Program: "
         assert source.id == "agent"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_template_translation(self, ipaddress, mode, monkeypatch):
+    def test_template_translation(self, ipaddress, monkeypatch):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
-        hostname = "testhost"
-        Scenario().add_host(hostname).apply(monkeypatch)
-        source = DSProgramSource(
-            hostname,
-            ipaddress,
-            mode=mode,
-            template=template,
-        )
+        hostname = HostName("testhost")
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
+        source = DSProgramSource(hostname, ipaddress, template=template)
 
         assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
             ipaddress if ipaddress is not None else "",
@@ -119,29 +108,29 @@ class TestSpecialAgentChecker:
         self,
         special_agent_id,
         ipaddress,
-        mode,
         agent_dir,
         expected_args,
         expected_stdin,
         monkeypatch,
     ):
-        hostname = "testhost"
+        hostname = HostName("testhost")
         params: Dict[Any, Any] = {}
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
         # end of setup
 
         source = SpecialAgentSource(
             hostname,
             ipaddress,
-            mode=mode,
             special_agent_id=special_agent_id,
             params=params,
         )
         assert source.hostname == hostname
         assert source.ipaddress == ipaddress
-        assert source.mode is mode
         assert source.cmdline == (  #
-            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
+            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args
+        )
         assert source.stdin == expected_stdin
         assert source.id == "special_%s" % special_agent_id

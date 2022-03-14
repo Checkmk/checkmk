@@ -4,14 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import ActiveCheck  # type: ignore[import]
+import pytest
+
+from tests.testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [(("foo", 60, ()), ["-r", 60]),
-                                                  (("foo", 60, (20, 50)), ["-r", 60])])
+@pytest.mark.parametrize(
+    "params,expected_args", [(("foo", 60, ()), ["-r", 60]), (("foo", 60, (20, 50)), ["-r", 60])]
+)
 def test_check_notify_count_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_notify_count")

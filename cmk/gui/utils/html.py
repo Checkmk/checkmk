@@ -4,9 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union, Any, Iterable
+from __future__ import annotations
 
-HTMLInput = Union["HTML", int, float, None, str]
+import html
+from typing import Any, Iterable, Optional, Union
+
+HTMLInput = Union["HTML", str]
 
 
 # TODO: In case one tries to __add__ or __iadd__ a str to a HTML object, this should fail by default
@@ -22,35 +25,47 @@ class HTML:
     This way we can implement escaping while still allowing HTML code. This is useful when one needs
     to print out HTML tables in messages or help texts.
     """
+
     def __init__(self, value: HTMLInput = "") -> None:
-        super(HTML, self).__init__()
-        self.value = self._ensure_str(value)
+        # Type hints are not used everywhere. So better be sure that we really have
+        # the types we want.
+        assert value is not None
+        assert not isinstance(value, (float, int))
+        self.value = value if isinstance(value, str) else str(value)
 
     def _ensure_str(self, value: HTMLInput) -> str:
-        return value if isinstance(value, str) else str(value)
+        """return escaped string or HTML as str
 
-    def __html__(self) -> str:
-        return "%s" % self
+        >>> HTML()._ensure_str("foo<b>bar</b>")
+        'foo&lt;b&gt;bar&lt;/b&gt;'
+        >>> HTML()._ensure_str(HTML("foo<b>bar</b>"))
+        'foo<b>bar</b>'
+        """
+        return html.escape(value) if isinstance(value, str) else str(value)
 
     def __str__(self) -> str:
         return self.value
 
     def __repr__(self) -> str:
-        return "HTML(\"%s\")" % self.value
+        return 'HTML("%s")' % self.value
+
+    def __hash__(self) -> int:
+        return hash(self.value)
 
     def to_json(self) -> str:
         return self.value
 
-    def __add__(self, other: HTMLInput) -> 'HTML':
+    def __add__(self, other: HTMLInput) -> HTML:
         return HTML(self.value + self._ensure_str(other))
 
-    def __iadd__(self, other: HTMLInput) -> 'HTML':
+    def __iadd__(self, other: HTMLInput) -> HTML:
         return self.__add__(other)
 
-    def __radd__(self, other: HTMLInput) -> 'HTML':
+    def __radd__(self, other: HTMLInput) -> HTML:
         return HTML(self._ensure_str(other) + self.value)
 
-    def join(self, iterable: Iterable[HTMLInput]) -> 'HTML':
+    def join(self, iterable: Iterable[HTMLInput]) -> HTML:
+        """add to the HTML object but escape if str"""
         return HTML(self.value.join(map(self._ensure_str, iterable)))
 
     def __eq__(self, other: Any) -> bool:
@@ -62,35 +77,38 @@ class HTML:
     def __len__(self) -> int:
         return len(self.value)
 
-    def __getitem__(self, index: int) -> 'HTML':
+    def __getitem__(self, index: int) -> HTML:
         return HTML(self.value[index])
 
     def __contains__(self, item: HTMLInput) -> bool:
         return self._ensure_str(item) in self.value
 
-    def count(self, sub, *args):
-        return self.value.count(self._ensure_str(sub), *args)
+    def count(
+        self, x: HTMLInput, __start: Optional[int] = None, __end: Optional[int] = None
+    ) -> int:
+        return self.value.count(self._ensure_str(x), __start, __end)
 
-    def index(self, sub, *args):
-        return self.value.index(self._ensure_str(sub), *args)
+    def index(
+        self, sub: HTMLInput, __start: Optional[int] = None, __end: Optional[int] = None
+    ) -> int:
+        return self.value.index(self._ensure_str(sub), __start, __end)
 
-    def lstrip(self, *args):
-        args = tuple(map(self._ensure_str, args[:1])) + args[1:]
-        return HTML(self.value.lstrip(*args))
+    def lstrip(self, chars: Optional[HTMLInput] = None) -> HTML:
+        return HTML(self.value.lstrip(self._ensure_str(chars) if chars is not None else None))
 
-    def rstrip(self, *args):
-        args = tuple(map(self._ensure_str, args[:1])) + args[1:]
-        return HTML(self.value.rstrip(*args))
+    def rstrip(self, chars: Optional[HTMLInput] = None) -> HTML:
+        return HTML(self.value.rstrip(self._ensure_str(chars) if chars is not None else None))
 
-    def strip(self, *args):
-        args = tuple(map(self._ensure_str, args[:1])) + args[1:]
-        return HTML(self.value.strip(*args))
+    def strip(self, chars: Optional[HTMLInput] = None) -> HTML:
+        return HTML(self.value.strip(self._ensure_str(chars) if chars is not None else None))
 
-    def lower(self) -> 'HTML':
+    def lower(self) -> HTML:
         return HTML(self.value.lower())
 
-    def upper(self) -> 'HTML':
+    def upper(self) -> HTML:
         return HTML(self.value.upper())
 
-    def startswith(self, prefix, *args):
-        return self.value.startswith(self._ensure_str(prefix), *args)
+    def startswith(
+        self, prefix: HTMLInput, start: Optional[int] = None, end: Optional[int] = None
+    ) -> bool:
+        return self.value.startswith(self._ensure_str(prefix), start, end)

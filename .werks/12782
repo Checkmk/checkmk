@@ -1,0 +1,34 @@
+Title: Activate inventory for kubernetes objects
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1619095631
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+A host is created for each kubernetes endpoint. On a checkmk site with disabled
+inventory (the default) the endpoint host does not have any services.
+
+As Hosts without services are invalid, checkmk automatically adds a ping
+service which fails, because the endpoint host is created from piggyback data
+and ist not reachable. The error message looks like:
+"check_icmp: No hosts to check"
+
+This werk adds the label "cmk/kubernetes:yes" to kubernetes related hosts, so
+the issue can now be fixed by creating an inventory rule that activates the
+inventory on kubernetes endpoint hosts:
+
+Go to "Setup" &rarr; "HW/SW inventory rules" &rarr; "Do hardware/software
+inventory" &rarr; "Create rule in folder":
+
+<ul>
+<li>"Status data inventory" &rarr; "Do status data inventory"</li>
+<li>"Host labels" &rarr; "has" &rarr; "cmk/kubernetes:yes"</li>
+
+&rarr; Save
+
+This werk alters the default configuration. Sites created with checkmk 2.0.0p4
+or later automatically enable the inventory for kubernetes objects.

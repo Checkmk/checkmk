@@ -1,7 +1,7 @@
 title: Ricoh Printer: Remaining Filling Level
 agents: snmp
 catalog: hw/printer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the remaining filling level in percent of a printers
@@ -12,6 +12,5 @@ description:
 item:
  Name of the printer
 
-inventory:
+discovery:
  One service is created for each supply unit with a unique name.
-

@@ -1,0 +1,14 @@
+Title: df: Add level for decreasing disk usage
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1625652695
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+
+It is now possible to configure
+thresholds in the rulesets 'Filesystems (used space and growth)'
+to detect negative disk usage trends (e.g. loss of data).

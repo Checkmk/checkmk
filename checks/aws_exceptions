@@ -20,12 +20,12 @@ def check_aws_exceptions(item, params, parsed):
         if errors:
             yield 2, "%s %s" % (title, ", ".join(errors))
         else:
-            yield 0, '%s %s' % (title, AWSNoExceptionsText)
+            yield 0, "%s %s" % (title, AWSNoExceptionsText)
 
 
-check_info['aws_exceptions'] = {
-    'parse_function': parse_aws_exceptions,
-    'inventory_function': discover_single,
-    'check_function': check_aws_exceptions,
-    'service_description': 'AWS Exceptions',
+check_info["aws_exceptions"] = {
+    "parse_function": parse_aws_exceptions,
+    "inventory_function": discover_single,
+    "check_function": check_aws_exceptions,
+    "service_description": "AWS Exceptions",
 }

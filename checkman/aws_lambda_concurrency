@@ -1,0 +1,37 @@
+title: AWS Lambda: Concurrency
+agents: aws
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors (provisioned) concurrency metrics of AWS Lambda Services:
+
+ - concurrent executions: Measures the concurrent executions for a Lambda function.
+   The default levels for this metric are measured in percent from the AWS Lambda region limit.
+   The service goes WARN/CRIT if the concurrent executions are above the default level percentage of AWS Lambda region limit or
+   the concurrent executions are above the configured levels.
+
+ - unreserved concurrent executions:
+   The default levels for this metric are measured in percent from the AWS Lambda region limit.
+   The service goes WARN/CRIT if the unreserved concurrent executions are above the default level percentage of AWS Lambda region limit or
+   the unreserved concurrent executions are above the configured levels.
+
+ - provisioned concurrent executions: Measures the average number of events that are being processed on provisioned concurrency.
+   There are no default levels for this metric.
+   The service goes WARN/CRIT if the number of concurrent executions per second is higher that the configured levels.
+
+ - provisioned concurrency invocations: Measures the number of invocations that are run on provisioned concurrency.
+   There are no default levels for this metric.
+   The service goes WARN/CRIT if the number of concurrent invocations per second is higher that the configured levels.
+
+ - provisioned concurrency spillover invocations: Measures the number of invocations that are run on non-provisioned concurrency when all provisioned concurrency is in use.
+   The service goes CRIT if at least one spillover invocation occurs during the last check time.
+
+ - provisioned concurrency utilization: Measures the average in percent of provisioned concurrency that is in use for a given Lambda function.
+   The service goes WARN/CRIT if the utilization is close to 100 percent during the last check time.
+
+ To make this checkplugin work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+item:
+ Name of the region, AWS Lambda function name, AWS Lambda alias or version for function if available

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_poweredge import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["dell_poweredge_amperage.power"] = {
     "check_function": check_dell_poweredge_amperage,
     "inventory_function": inventory_dell_poweredge_amperage_power,
@@ -25,16 +26,17 @@ check_info["dell_poweredge_amperage.power"] = {
             "6",  # amperageProbeReading
             "7",  # amperageProbeType
             "8",  # amperageProbeLocationName
-            #"9", # amperageProbeUpperNonRecoverableThreshold
+            # "9", # amperageProbeUpperNonRecoverableThreshold
             "10",  # amperageProbeUpperCriticalThreshold
             "11",  # amperageProbeUpperNonCriticalThreshold
-            #"12", # amperageProbeLowerNonCriticalThreshold
-            #"13", # amperageProbeLowerCriticalThreshold
-            #"14", # amperageProbeLowerNonRecoverableThreshold
-            #"15", # amperageProbeCapabilities
-            #"16", # amperageProbeDiscreteReading
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
+            # "12", # amperageProbeLowerNonCriticalThreshold
+            # "13", # amperageProbeLowerCriticalThreshold
+            # "14", # amperageProbeLowerNonRecoverableThreshold
+            # "15", # amperageProbeCapabilities
+            # "16", # amperageProbeDiscreteReading
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.5",
     "management_board": HOST_ONLY,
 }
 

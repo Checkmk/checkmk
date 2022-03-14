@@ -1,0 +1,13 @@
+Title: Fix error on editing downtimes without specifying a new downtime start
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1617283443
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you edited a downtime and used the option "Change downtime end" without also
+specifying "Change downtime start", an internal error "'<' not supported
+between instances of 'NoneType' and 'int'" occurred.

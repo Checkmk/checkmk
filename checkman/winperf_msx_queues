@@ -1,7 +1,7 @@
 title: MS Exchange: Queue Length
 agents: windows
 catalog: app/exchange
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the current length of various MS Exchange
@@ -22,7 +22,6 @@ description:
 item:
  The name of the queue
 
-inventory:
+discovery:
  One service is created for each queue that is defined in {winperf_msx_queues}
  if the agent outputs the matching performance counters.
-

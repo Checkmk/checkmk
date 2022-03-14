@@ -1,7 +1,7 @@
 title: Windows: Bonding Network Interface (Operating System Level)
 agents: windows
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current state of a Windows bonding interface
@@ -20,7 +20,6 @@ description:
 item:
  The team name of the bonding interface.
 
-inventory:
+discovery:
  One service is created for every bonding interface found in state
  up or degraded.
-

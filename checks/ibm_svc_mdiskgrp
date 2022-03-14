@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
 # 0:Quorum_2:online:1:0:704.00MB:64:704.00MB:0.00MB:0.00MB:0.00MB:0:0:auto:inactive:no:0.00MB:0.00MB:0.00MB
@@ -54,34 +57,34 @@ def ibm_svc_mdiskgrp_to_mb(size):
 
 def parse_ibm_svc_mdiskgrp(info):
     dflt_header = [
-        u'id',
-        u'name',
-        u'status',
-        u'mdisk_count',
-        u'vdisk_count',
-        u'capacity',
-        u'extent_size',
-        u'free_capacity',
-        u'virtual_capacity',
-        u'used_capacity',
-        u'real_capacity',
-        u'overallocation',
-        u'warning',
-        u'easy_tier',
-        u'easy_tier_status',
-        u'compression_active',
-        u'compression_virtual_capacity',
-        u'compression_compressed_capacity',
-        u'compression_uncompressed_capacity',
-        u'parent_mdisk_grp_id',
-        u'parent_mdisk_grp_name',
-        u'child_mdisk_grp_count',
-        u'child_mdisk_grp_capacity',
-        u'type',
-        u'encrypt',
-        u'owner_type',
-        u'site_id',
-        u'site_name',
+        "id",
+        "name",
+        "status",
+        "mdisk_count",
+        "vdisk_count",
+        "capacity",
+        "extent_size",
+        "free_capacity",
+        "virtual_capacity",
+        "used_capacity",
+        "real_capacity",
+        "overallocation",
+        "warning",
+        "easy_tier",
+        "easy_tier_status",
+        "compression_active",
+        "compression_virtual_capacity",
+        "compression_compressed_capacity",
+        "compression_uncompressed_capacity",
+        "parent_mdisk_grp_id",
+        "parent_mdisk_grp_name",
+        "child_mdisk_grp_count",
+        "child_mdisk_grp_capacity",
+        "type",
+        "encrypt",
+        "owner_type",
+        "site_id",
+        "site_name",
     ]
     parsed = {}
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
@@ -89,7 +92,7 @@ def parse_ibm_svc_mdiskgrp(info):
             data = rows[0]
         except IndexError:
             continue
-        parsed.setdefault(data['name'], data)
+        parsed.setdefault(data["name"], data)
     return parsed
 
 
@@ -100,7 +103,7 @@ def inventory_ibm_svc_mdiskgrp(parsed):
 
 @get_parsed_item_data
 def check_ibm_svc_mdiskgrp(item, params, data):
-    mgrp_status = data['status']
+    mgrp_status = data["status"]
 
     if mgrp_status != "online":
         yield 2, "Status: %s" % mgrp_status
@@ -112,13 +115,13 @@ def check_ibm_svc_mdiskgrp(item, params, data):
     # expect.
 
     # 1. Physical size of the pool
-    capacity = ibm_svc_mdiskgrp_to_mb(data['capacity'])
+    capacity = ibm_svc_mdiskgrp_to_mb(data["capacity"])
 
     # 2. Part of that that is physically in use
-    real_capacity = ibm_svc_mdiskgrp_to_mb(data['real_capacity'])
+    real_capacity = ibm_svc_mdiskgrp_to_mb(data["real_capacity"])
 
     # 3. Provisioned space - can be more than physical size
-    virtual_capacity = ibm_svc_mdiskgrp_to_mb(data['virtual_capacity'])
+    virtual_capacity = ibm_svc_mdiskgrp_to_mb(data["virtual_capacity"])
 
     # Compute available (do not use free_capacity, it's something different)
     avail_mb = capacity - real_capacity
@@ -143,8 +146,10 @@ def check_ibm_svc_mdiskgrp(item, params, data):
         elif provisioning >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                                   get_percent_human_readable(crit))
+            infotext += " (warn/crit at %s/%s)" % (
+                get_percent_human_readable(warn),
+                get_percent_human_readable(crit),
+            )
         warn_mb = capacity * mb * warn / 100
         crit_mb = capacity * mb * crit / 100
     else:
@@ -153,8 +158,12 @@ def check_ibm_svc_mdiskgrp(item, params, data):
 
     # Note: Performance data is now (with new metric system) normed to
     # canonical units - i.e. 1 byte in this case.
-    yield state, infotext, [("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0,
-                             capacity * mb)]
+    yield state, infotext, [
+        ("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)
+    ]
+
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 check_info["ibm_svc_mdiskgrp"] = {

@@ -14,7 +14,7 @@ def parse_safenet_hsm(info):
     }
 
 
-#.
+# .
 #   .--Event stats---------------------------------------------------------.
 #   |          _____                 _         _        _                  |
 #   |         | ____|_   _____ _ __ | |_   ___| |_ __ _| |_ ___            |
@@ -91,7 +91,7 @@ check_info["safenet_hsm.events"] = {
     "group": "safenet_hsm_eventstats",
 }
 
-#.
+# .
 #   .--Operation stats-----------------------------------------------------.
 #   |             ___                       _   _                          |
 #   |            / _ \ _ __   ___ _ __ __ _| |_(_) ___  _ __               |
@@ -121,11 +121,9 @@ def check_safenet_hsm(_no_item, params, parsed):
     def check_operation_request_rate(operation_requests):
         request_rate = get_rate("operation_requests", now, operation_requests)
 
-        status, infotext, extra_perf = check_levels(request_rate,
-                                                    "request_rate",
-                                                    params["request_rate"],
-                                                    unit="1/s",
-                                                    infoname="Requests")
+        status, infotext, extra_perf = check_levels(
+            request_rate, "request_rate", params["request_rate"], unit="1/s", infoname="Requests"
+        )
         perfdata = [("requests_per_second", request_rate)] + extra_perf[1:]
         return status, infotext, perfdata
 
@@ -177,7 +175,12 @@ check_info["safenet_hsm"] = {
     "inventory_function": inventory_safenet_hsm,
     "check_function": check_safenet_hsm,
     "service_description": "HSM Operation Stats",
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12383"),
+    "snmp_scan_function": lambda oid: (
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12383")  # old SafeNet devices
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(
+            ".1.3.6.1.4.1.8072"
+        )  # oid changed with Thales SafeNet Luna S700 Series
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.12383.3.1.1",
         [
@@ -185,7 +188,8 @@ check_info["safenet_hsm"] = {
             "2",  # hsmOperationErrors
             "3",  # hsmCriticalEvents
             "4",  # hsmNonCriticalEvents
-        ]),
+        ],
+    ),
     "has_perfdata": True,
     "group": "safenet_hsm_operstats",
 }

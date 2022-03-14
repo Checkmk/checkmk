@@ -1,0 +1,16 @@
+Title: agent_cisco_prime: invalid agent arguments
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630405668
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When configuring the special agent Cisco Prime with its corresponding ruleset,
+the change could not be activated. The following error message appeared after
+attempting to activate the changes: "Error running automation call restart
+(exit code 1), error: An error occurred: Error creating configuration:
+'hostname'". This has been fixed.

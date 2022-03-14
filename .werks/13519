@@ -1,0 +1,24 @@
+Title: <tt>check_icmp</tt>: Fix "Failed to resolve $: Name or service not known"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637836515
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Depending on the configuration, the active check <tt>check_icmp</tt> (ICMP
+Echo Requests) crashed with
+"Failed to resolve $: Name or service not known".
+
+This happened with the following configuration options below "Alternative
+address to ping":
+<ul>
+<li>Ping all IPv4 addresses</li>
+<li>Ping all IPv6 addresses</li>
+<li>Ping additional IPv4 addresses</li>
+<li>Ping additional IPv6 addresses</li>
+<li>Ping IPv4 address identified by its index</li>
+<li>Ping IPv6 address identified by its index</li>
+</ul> 

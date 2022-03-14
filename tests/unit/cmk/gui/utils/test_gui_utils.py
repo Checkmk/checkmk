@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from cmk.gui.utils import unique_default_name_suggestion
 
 

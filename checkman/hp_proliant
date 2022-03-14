@@ -1,7 +1,7 @@
 title: HP Proliant Servers: General Status
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
@@ -11,5 +11,5 @@ description:
  The status is {OK} only if the agent signals {Ok}, {WARN} on
  {Degraded} and {CRIT} on {Failed}. If you get an {UKNOWN} state you may need a Firmware Update
 
-inventory:
+discovery:
  One service is created for each supported server.

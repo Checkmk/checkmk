@@ -1,13 +1,12 @@
 title: Hyper-V VMs: Age of oldest Checkpoint
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks queries a Microsoft Hyper-V Server via an agent plugin (hyperv_vms_guestinfos.ps1).
  It returns for each VM a list of Checkpoints (Snapshots) and the age using pickyback.
  Leves for {WARN} and {CRIT} can be set using Wato.
 
-inventory:
+discovery:
  One service is created for each system.
-

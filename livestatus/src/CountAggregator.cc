@@ -9,11 +9,11 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void CountAggregator::consume(Row row, const contact* auth_user,
+void CountAggregator::consume(Row row, const contact *auth_user,
                               std::chrono::seconds timezone_offset) {
     if (_filter->accepts(row, auth_user, timezone_offset)) {
         _count++;
     }
 }
 
-void CountAggregator::output(RowRenderer& r) const { r.output(_count); }
+void CountAggregator::output(RowRenderer &r) const { r.output(_count); }

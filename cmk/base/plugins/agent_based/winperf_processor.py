@@ -3,15 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Tuple, Optional
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_value_store,
-    IgnoreResultsError,
     IgnoreResults,
+    IgnoreResultsError,
     Metric,
     register,
     render,
@@ -19,6 +18,7 @@ from .agent_based_api.v1 import (
     Service,
     State,
 )
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cpu_util import check_cpu_util
 
 
@@ -47,7 +47,8 @@ def parse_winperf_processor(string_table: StringTable) -> Optional[Section]:
             continue
         # behaviour of raising ValueError kept during migration
         section.ticks.append(
-            CoreTicks(name=what, total=int(line[-2]), per_core=[int(t) for t in line[1:-2]]))
+            CoreTicks(name=what, total=int(line[-2]), per_core=[int(t) for t in line[1:-2]])
+        )
 
     return section
 
@@ -55,7 +56,7 @@ def parse_winperf_processor(string_table: StringTable) -> Optional[Section]:
 register.agent_section(
     name="winperf_processor",
     parse_function=parse_winperf_processor,
-    supersedes=['hr_cpu'],
+    supersedes=["hr_cpu"],
 )
 
 
@@ -65,11 +66,11 @@ def discover_winperf_processor_util(section: Section) -> DiscoveryResult:
 
 
 def _clamp_percentage(value: float) -> float:
-    '''clamp percentage to the range 0-100
+    """clamp percentage to the range 0-100
 
     Due to timing invariancies the measured level can become > 100%.
     This makes users unhappy, so cut it off.
-    '''
+    """
     return min(100.0, max(0.0, value))
 
 
@@ -79,8 +80,7 @@ def _ticks_to_percent(
     this_time: float,
     index: Optional[int] = None,
 ) -> float:
-    """Convert ticks (100ns) to a number between 0 and 100
-    """
+    """Convert ticks (100ns) to a number between 0 and 100"""
     value = ticks.total if index is None else ticks.per_core[index]
     key = f"{ticks.name}" if index is None else f"{ticks.name}.{index}"
     ticks_per_sec = get_rate(value_store, key, this_time, value, raise_overflow=True)
@@ -122,10 +122,12 @@ def _get_cores(
     cores = []
     for idx in range(len(ticks.per_core)):
         try:
-            cores.append((
-                "core%d" % idx,
-                _ticks_to_percent(value_store, ticks, this_time, idx),
-            ))
+            cores.append(
+                (
+                    "core%d" % idx,
+                    _ticks_to_percent(value_store, ticks, this_time, idx),
+                )
+            )
         except IgnoreResultsError:
             continue
     return cores
@@ -134,10 +136,9 @@ def _get_cores(
 def _encode_cpu_count_in_boundary(generator: CheckResult, num_cpus: int) -> CheckResult:
     for res in generator:
         if isinstance(res, Metric) and res.name == "util":
-            yield Metric(res.name,
-                         res.value,
-                         levels=res.levels,
-                         boundaries=(res.boundaries[0], num_cpus))
+            yield Metric(
+                res.name, res.value, levels=res.levels, boundaries=(res.boundaries[0], num_cpus)
+            )
             break
         yield res
     yield from generator
@@ -170,10 +171,12 @@ def check_winperf_processor_util(params: Mapping[str, Any], section: Section) ->
                 cores=cores,
                 value_store=value_store,
                 this_time=section.time,
-            ), num_cpus)
+            ),
+            num_cpus,
+        )
 
     yield Result(state=State.OK, notice=f"Number of processors: {num_cpus}")
-    yield Metric('cpus', num_cpus)  # seriously?
+    yield Metric("cpus", num_cpus)  # seriously?
 
 
 register.check_plugin(

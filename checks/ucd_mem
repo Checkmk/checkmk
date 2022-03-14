@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
 # have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
@@ -35,7 +37,7 @@ from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-
 # suggested by customer
 factory_settings["ucd_mem_default_levels"] = {
     "levels": ("perc_used", (80.0, 90.0)),
-    "swap_errors": 0
+    "swap_errors": 0,
 }
 
 
@@ -54,32 +56,32 @@ def check_ucd_mem(item, params, parsed):
         return
 
     # general errors
-    error = parsed['error']
-    if error and error != 'swap':
-        yield 1, 'Error: %s' % error
+    error = parsed["error"]
+    if error and error != "swap":
+        yield 1, "Error: %s" % error
 
     # map legacy levels
-    if params.get('levels') is not None:
-        params['levels_ram'] = params.pop('levels')
+    if params.get("levels") is not None:
+        params["levels_ram"] = params.pop("levels")
 
     results = check_memory_dict(parsed, params)
     for state, infotext, perfdata in results.values():
         yield state, infotext, perfdata
 
     # swap errors
-    if 'error_swap' in parsed:
-        if parsed['error_swap'] != 0 and parsed['error_swap_msg']:
-            yield params.get("swap_errors", 0), 'Swap error: %s' % parsed['error_swap_msg']
+    if "error_swap" in parsed:
+        if parsed["error_swap"] != 0 and parsed["error_swap_msg"]:
+            yield params.get("swap_errors", 0), "Swap error: %s" % parsed["error_swap_msg"]
 
 
 # This check plugin uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
-check_info['ucd_mem'] = {
-    'parse_function': parse_ucd_mem,
-    'inventory_function': inventory_ucd_mem,
-    'check_function': check_ucd_mem,
-    'service_description': 'Memory',
-    'has_perfdata': True,
-    'snmp_info': (
+check_info["ucd_mem"] = {
+    "parse_function": parse_ucd_mem,
+    "inventory_function": inventory_ucd_mem,
+    "check_function": check_ucd_mem,
+    "service_description": "Memory",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.2021.4",
         [
             "5",  # memTotalReal
@@ -94,12 +96,12 @@ check_info['ucd_mem'] = {
             "100",  # memSwapError
             "2",  # memErrorName
             "101",  # smemSwapErrorMsg
-        ]),
-
+        ],
+    ),
     # Some devices are reporting wrong data on
     # HOST-RESOURCES-MIB. Use UCD-MIB in these
     # cases instead
-    'snmp_scan_function': is_ucd_mem,
-    'default_levels_variable': 'ucd_mem_default_levels',
-    'group': 'memory_simple',
+    "snmp_scan_function": is_ucd_mem,
+    "default_levels_variable": "ucd_mem_default_levels",
+    "group": "memory_simple",
 }

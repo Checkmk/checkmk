@@ -9,21 +9,19 @@ from typing import List, Optional
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics import (
-    parse_color,
-    darken_color,
-    lighten_color,
-)
+from cmk.gui.plugins.metrics.utils import darken_color, lighten_color, parse_color
 
 
-def render_graph_pdf(instance,
-                     graph_artwork,
-                     graph_data_range,
-                     graph_render_options,
-                     pos_left=None,
-                     pos_top=None,
-                     total_width=None,
-                     total_height=None):
+def render_graph_pdf(
+    instance,
+    graph_artwork,
+    graph_data_range,
+    graph_render_options,
+    pos_left=None,
+    pos_top=None,
+    total_width=None,
+    total_height=None,
+):
     pdf_document = instance["document"]
 
     logger.debug("  Render graph %r", graph_artwork["definition"]["specification"])
@@ -53,10 +51,12 @@ def render_graph_pdf(instance,
     rule_line_width = 0.1  # mm
     label_line_width = 0.04  # mm
     v_line_color = tuple(
-        map(parse_color, [graph_render_options["foreground_color"], "#a0a0a0", "#a0a0a0"]))
+        map(parse_color, [graph_render_options["foreground_color"], "#a0a0a0", "#a0a0a0"])
+    )
     v_line_dash = [None, [0.2, 0.4], None]
     t_line_color = tuple(
-        map(parse_color, [graph_render_options["foreground_color"], "#a0a0a0", "#666666"]))
+        map(parse_color, [graph_render_options["foreground_color"], "#a0a0a0", "#666666"])
+    )
     t_line_dash = [None, [0.2, 0.2], None]
     legend_box_line_width = 0.1
 
@@ -83,7 +83,8 @@ def render_graph_pdf(instance,
         width,
         height + title_height + legend_height,
         border_width=graph_render_options["border_width"],
-        left_mm=pos_left)
+        left_mm=pos_left,
+    )
 
     # From here width, height, total_height, left and top are in "mm".
 
@@ -96,14 +97,20 @@ def render_graph_pdf(instance,
 
     # Regular title (above graph area)
     if graph_render_options["show_title"] is True:
-        pdf_document.render_aligned_text(left,
-                                         top - title_height,
-                                         width,
-                                         title_height,
-                                         graph_artwork["title"],
-                                         align="center",
-                                         bold=True,
-                                         color=foreground_color)
+        title_left_margin = left + right_margin
+        if vertical_axis_label := graph_artwork.get("vertical_axis", {}).get("axis_label"):
+            title_left_margin = left + left_border + left_margin
+
+        pdf_document.render_aligned_text(
+            title_left_margin,
+            top - title_height,
+            width,
+            title_height,
+            graph_artwork["title"],
+            align="left",
+            bold=True,
+            color=foreground_color,
+        )
 
     # The following code is inspired by htdocs/js/graphs.js:render_graph(). Whenever
     # you change something there, the change should also be reflected here!
@@ -153,12 +160,22 @@ def render_graph_pdf(instance,
             prev_lower = None
             prev_upper = None
 
-            gradient = (t_orig, v_orig, t_orig, v_orig + v_mm,
-                        (darken_color(color, color_gradient), color,
-                         lighten_color(color, color_gradient)), (0.0, 0.5, 1.0))
+            gradient = (
+                t_orig,
+                v_orig,
+                t_orig,
+                v_orig + v_mm,
+                (darken_color(color, color_gradient), color, lighten_color(color, color_gradient)),
+                (0.0, 0.5, 1.0),
+            )
 
             for lower, upper in points:
-                if lower is not None and upper is not None and prev_lower is not None and prev_upper is not None:
+                if (
+                    lower is not None
+                    and upper is not None
+                    and prev_lower is not None
+                    and prev_upper is not None
+                ):
                     pdf_document.begin_path()
                     pdf_document.move_to(trans_t(t - step) - 0.01, trans_v(prev_lower))
                     pdf_document.line_to(trans_t(t - step) - 0.01, trans_v(prev_upper))
@@ -197,11 +214,9 @@ def render_graph_pdf(instance,
     pdf_document.render_rect(t_orig, bottom, t_mm, v_orig - bottom, fill_color=background_color)
 
     # Paint axes and a strong line at 0, if that is in the range
-    pdf_document.render_line(t_orig,
-                             v_orig - axis_over_width,
-                             t_orig,
-                             v_orig + v_mm,
-                             color=axis_color)
+    pdf_document.render_line(
+        t_orig, v_orig - axis_over_width, t_orig, v_orig + v_mm, color=axis_color
+    )
     pdf_document.render_line(t_orig - axis_over_width, v_orig, right, v_orig, color=axis_color)
     if v_range_from <= 0 <= v_range_to:
         pdf_document.render_line(t_orig, trans_v(0), right, trans_v(0), color=zero_rule_color)
@@ -209,91 +224,107 @@ def render_graph_pdf(instance,
     # Show the inline title
     if graph_render_options["show_title"] == "inline":
         title_top = top - (mm_per_ex_by_render_options(graph_render_options) * 2)
-        pdf_document.render_aligned_text(left,
-                                         title_top,
-                                         width,
-                                         mm_per_ex_by_render_options(graph_render_options) * 2,
-                                         graph_artwork["title"],
-                                         align="center",
-                                         bold=True,
-                                         color=foreground_color)
+        pdf_document.render_aligned_text(
+            left,
+            title_top,
+            width,
+            mm_per_ex_by_render_options(graph_render_options) * 2,
+            graph_artwork["title"],
+            align="center",
+            bold=True,
+            color=foreground_color,
+        )
 
     if graph_render_options["show_graph_time"]:
         title_top = top - (mm_per_ex_by_render_options(graph_render_options) * 2)
-        pdf_document.render_aligned_text(0,
-                                         title_top,
-                                         width,
-                                         mm_per_ex_by_render_options(graph_render_options) * 2,
-                                         graph_artwork["time_axis"]["title"],
-                                         align="right",
-                                         bold=True,
-                                         color=foreground_color)
+        pdf_document.render_aligned_text(
+            left - right_margin,
+            title_top,
+            width,
+            mm_per_ex_by_render_options(graph_render_options) * 2,
+            graph_artwork["time_axis"]["title"],
+            align="right",
+            bold=True,
+            color=foreground_color,
+        )
 
     # Paint the vertical axis
     if graph_render_options["show_vertical_axis"]:
         # Render optional vertical axis label
         vertical_axis_label = graph_artwork["vertical_axis"]["axis_label"]
         if vertical_axis_label:
-            pdf_document.render_aligned_text(left + left_margin,
-                                             top - title_height,
-                                             left_border,
-                                             title_height,
-                                             vertical_axis_label,
-                                             align="center",
-                                             valign="middle",
-                                             color=foreground_color)
+            pdf_document.render_aligned_text(
+                left + left_margin,
+                top - title_height,
+                left_border,
+                title_height,
+                vertical_axis_label,
+                align="center",
+                valign="middle",
+                color=foreground_color,
+            )
 
     for position, label, line_width in graph_artwork["vertical_axis"]["labels"]:
         if line_width > 0:
-            pdf_document.render_line(t_orig,
-                                     trans_v(position),
-                                     right,
-                                     trans_v(position),
-                                     width=label_line_width,
-                                     color=v_line_color[line_width],
-                                     dashes=v_line_dash[line_width])
+            pdf_document.render_line(
+                t_orig,
+                trans_v(position),
+                right,
+                trans_v(position),
+                width=label_line_width,
+                color=v_line_color[line_width],
+                dashes=v_line_dash[line_width],
+            )
 
         if graph_render_options["show_vertical_axis"] and label:
-            pdf_document.render_aligned_text(t_orig - v_label_margin - left_border,
-                                             trans_v(position),
-                                             left_border,
-                                             mm_per_ex,
-                                             label,
-                                             align="right",
-                                             valign="middle",
-                                             color=foreground_color)
+            pdf_document.render_aligned_text(
+                t_orig - v_label_margin - left_border,
+                trans_v(position),
+                left_border,
+                mm_per_ex,
+                label,
+                align="right",
+                valign="middle",
+                color=foreground_color,
+            )
 
     # Paint time axis
     for position, label, line_width in graph_artwork["time_axis"]["labels"]:
         t_pos_mm = trans_t(position)
         if line_width > 0 and t_pos_mm > t_orig:
-            pdf_document.render_line(t_pos_mm,
-                                     v_orig,
-                                     t_pos_mm,
-                                     trans_v(v_range_to),
-                                     width=label_line_width,
-                                     color=t_line_color[line_width],
-                                     dashes=t_line_dash[line_width])
+            pdf_document.render_line(
+                t_pos_mm,
+                v_orig,
+                t_pos_mm,
+                trans_v(v_range_to),
+                width=label_line_width,
+                color=t_line_color[line_width],
+                dashes=t_line_dash[line_width],
+            )
 
         if graph_render_options["show_time_axis"] and label:
-            pdf_document.render_aligned_text(t_pos_mm,
-                                             v_orig - t_label_margin - mm_per_ex,
-                                             0,
-                                             mm_per_ex,
-                                             label,
-                                             align="center",
-                                             color=foreground_color)
+            pdf_document.render_aligned_text(
+                t_pos_mm,
+                v_orig - t_label_margin - mm_per_ex,
+                0,
+                mm_per_ex,
+                label,
+                align="center",
+                color=foreground_color,
+            )
 
     # Paint horizontal rules like warn and crit
     rules = graph_artwork["horizontal_rules"]
     for position, label, color_from_rule, title in rules:
         if v_range_from <= position <= v_range_to:
-            pdf_document.render_line(t_orig,
-                                     trans_v(position),
-                                     right,
-                                     trans_v(position),
-                                     width=rule_line_width,
-                                     color=parse_color(color_from_rule))
+            pdf_document.render_line(
+                t_orig,
+                trans_v(position),
+                right,
+                trans_v(position),
+                width=rule_line_width,
+                color=parse_color(color_from_rule),
+            )
 
     # Paint legend
     if graph_render_options["show_legend"]:
@@ -305,12 +336,14 @@ def render_graph_pdf(instance,
         def paint_legend_line(color, texts):
             l = t_orig
             if color:
-                pdf_document.render_rect(l,
-                                         legend_top + mm_per_ex * 0.2,
-                                         legend_box_size,
-                                         legend_box_size,
-                                         fill_color=color,
-                                         line_width=legend_box_line_width)
+                pdf_document.render_rect(
+                    l,
+                    legend_top + mm_per_ex * 0.2,
+                    legend_box_size,
+                    legend_box_size,
+                    fill_color=color,
+                    line_width=legend_box_line_width,
+                )
             for nr, text in enumerate(texts):
                 if text:
                     pdf_document.render_aligned_text(
@@ -320,7 +353,8 @@ def render_graph_pdf(instance,
                         legend_lineskip,
                         text,
                         align=nr == 0 and "left" or "right",
-                        color=foreground_color)
+                        color=foreground_color,
+                    )
                 if nr == 0:
                     l += legend_column_width * 3
                 else:
@@ -339,7 +373,7 @@ def render_graph_pdf(instance,
 
         for curve in graph_artwork["curves"]:
             legend_top -= legend_lineskip
-            texts = [curve["title"]]
+            texts = [str(curve["title"])]
             for scalar, title in scalars:
                 texts.append(curve["scalars"][scalar][1])
             paint_legend_line(parse_color(curve["color"]), texts)
@@ -348,11 +382,12 @@ def render_graph_pdf(instance,
             pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)
             for value, readable, color_from_artwork, title in graph_artwork["horizontal_rules"]:
                 legend_top -= legend_lineskip
-                paint_legend_line(parse_color(color_from_artwork),
-                                  [title] + [None] * 3 + [readable])
+                paint_legend_line(
+                    parse_color(color_from_artwork), [title] + [None] * 3 + [readable]
+                )
 
     if graph_artwork["definition"].get("is_forecast"):
-        pin = trans_t(graph_artwork['requested_end_time'])
+        pin = trans_t(graph_artwork["requested_end_time"])
         pdf_document.render_line(pin, v_orig, pin, trans_v(v_range_to), color=(0.0, 1.0, 0.0))
 
     pdf_document.restore_state()
@@ -409,8 +444,10 @@ def _graph_vertical_axis_width(graph_render_options):
     if not graph_render_options["show_vertical_axis"]:
         return 0.0  # mm
 
-    if isinstance(graph_render_options["vertical_axis_width"], tuple) \
-        and graph_render_options["vertical_axis_width"][0] == "explicit":
+    if (
+        isinstance(graph_render_options["vertical_axis_width"], tuple)
+        and graph_render_options["vertical_axis_width"][0] == "explicit"
+    ):
         return get_mm_per_ex(graph_render_options["vertical_axis_width"][1])
 
     return 5 * mm_per_ex_by_render_options(graph_render_options)
@@ -464,5 +501,6 @@ def graph_legend_height(graph_artwork, graph_render_options):
         if not curve.get("dont_paint"):
             num_painted_curves += 1
 
-    return legend_top_margin + (legend_lineskip *
-                                (1 + num_painted_curves + len(graph_artwork["horizontal_rules"])))
+    return legend_top_margin + (
+        legend_lineskip * (1 + num_painted_curves + len(graph_artwork["horizontal_rules"]))
+    )

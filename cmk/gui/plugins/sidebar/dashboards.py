@@ -6,17 +6,17 @@
 
 from typing import List
 
-import cmk.gui.config as config
 import cmk.gui.dashboard as dashboard
+from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import TopicMenuTopic
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
+from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
+    SidebarSnapin,
+    snapin_registry,
 )
+from cmk.gui.type_defs import TopicMenuTopic
 
 
 @snapin_registry.register
@@ -37,13 +37,13 @@ class Dashboards(SidebarSnapin):
         show_topic_menu(treename="dashboards", menu=self._get_dashboard_menu_items())
 
         links = []
-        if config.user.may("general.edit_dashboards"):
+        if user.may("general.edit_dashboards"):
             if config.debug:
                 links.append((_("Export"), "export_dashboards.py"))
             links.append((_("Edit"), "edit_dashboards.py"))
             footnotelinks(links)
 
     def _get_dashboard_menu_items(self) -> List[TopicMenuTopic]:
-        return make_topic_menu([
-            ("dashboards", e) for e in dashboard.get_permitted_dashboards().items()
-        ])
+        return make_topic_menu(
+            [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+        )

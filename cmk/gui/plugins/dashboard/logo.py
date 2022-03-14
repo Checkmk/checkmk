@@ -4,18 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.globals import html, theme
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
 
 
 @dashlet_registry.register
 class MKLogoDashlet(Dashlet):
     """Dashlet that displays the Check_MK logo"""
+
     @classmethod
     def type_name(cls):
         return "mk_logo"
@@ -38,5 +35,5 @@ class MKLogoDashlet(Dashlet):
 
     def show(self):
         html.open_a(href="https://checkmk.com/", target="_blank")
-        html.img(html.theme_url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
+        html.img(theme.url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()

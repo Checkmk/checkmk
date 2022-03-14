@@ -1,7 +1,7 @@
 title: SAP HANA: Events
 agents: linux
 catalog: app/sap_hana
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the events occured on SAP HANA.
@@ -12,8 +12,10 @@ description:
  goes CRIT. If there are disabled alerts the check reports
  WARN and if there are high alerts then the check goes CRIT.
 
+ This check is also cluster-aware.
+
 item:
  The sid instance name
 
-inventory:
+discovery:
  One service is created for each instance.

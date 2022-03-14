@@ -9,12 +9,17 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hwg import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['hwg_humidity'] = {
+
+factory_settings["hwg_humidity_defaultlevels"] = HWG_HUMIDITY_DEFAULTLEVELS
+
+
+check_info["hwg_humidity"] = {
     "parse_function": parse_hwg,
     "check_function": check_hwg_humidity,
     "inventory_function": inventory_hwg_humidity,
@@ -29,8 +34,9 @@ check_info['hwg_humidity'] = {
             "3",  # sensState
             "4",  # sensString
             "7",  # sensUnit
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: "hwg" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "humidity",
-    "default_levels_variable": "hwg_humidity_defaultlevels"
+    "default_levels_variable": "hwg_humidity_defaultlevels",
 }

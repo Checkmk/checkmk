@@ -1,7 +1,7 @@
 title: IBM MQ: Availability of Queue Manager
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of an IBM MQ Queue Manager. It uses the output
@@ -24,5 +24,5 @@ description:
 item:
  The name of the queue manager.
 
-inventory:
+discovery:
  One service is created for each queue manager.

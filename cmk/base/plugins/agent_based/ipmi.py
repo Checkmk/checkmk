@@ -4,28 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Mapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    State as state,
-    type_defs,
-)
-from .utils import ipmi
+from typing import Any, Mapping, Optional
 
-# NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
-# This is needed because inventory_ipmi_rules was once not a dict, which is not allowed by the API
-# for discovery rulesets
-# ==================================================================================================
-from cmk.utils.type_defs import RuleSetName  # pylint: disable=cmk-module-layer-violation
-from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discovery_ruleset  # pylint: disable=cmk-module-layer-violation
-# ==================================================================================================
+from .agent_based_api.v1 import register, Service, State, type_defs
+from .utils import ipmi
 
 # Example of output from ipmi:
 # <<<ipmi>>>
@@ -113,6 +95,7 @@ from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discove
 # BMC Watchdog     | 03h | ok |  7.1 |
 # PS1 Status       | C8h | ok | 10.1 | Presence detected, Failure detected     <= NOT OK !!
 # PS2 Status       | C9h | ok | 10.2 | Presence detected
+# Drive 4          | 64h | ok  |  4.4 | Drive Present, Drive Fault <= NOT OK
 
 # broken
 # <<<ipmi:cached(1472175405,300)>>>
@@ -198,12 +181,13 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
                         "unrec_high",
                     ],
                     line[1:],
-                ))
+                )
+            )
 
             sensor = parsed.setdefault(
                 name,
                 ipmi.Sensor(
-                    data['status_txt'],
+                    data["status_txt"],
                     data["unit"].replace(" ", "_"),
                 ),
             )
@@ -243,25 +227,14 @@ def _merge_sections(
     }
 
 
-def _get_discovery_ruleset() -> Any:
-    # NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
-    # This is needed because inventory_ipmi_rules was once not a dict, which is not allowed by the
-    # API for discovery rulesets
-    # ==============================================================================================
-    rules_all_hosts = get_discovery_ruleset(RuleSetName("inventory_ipmi_rules"))
-    rules_this_host = get_config_cache().host_extra_conf(host_name(), rules_all_hosts)
-    rules_this_host += [{"discovery_mode": ("summarize", {})}]  # default parameters
-    return rules_this_host[0]
-    # ==============================================================================================
-
-
 def discover_ipmi(
+    params: ipmi.DiscoveryParams,
     section_ipmi: Optional[ipmi.Section],
     section_ipmi_discrete: Optional[ipmi.Section],
 ) -> type_defs.DiscoveryResult:
-
     section_merged = _merge_sections(section_ipmi, section_ipmi_discrete)
-    mode, ignore_params = ipmi.transform_discovery_ruleset(_get_discovery_ruleset())
+
+    mode, ignore_params = params["discovery_mode"]
     if mode == "summarize":
         yield Service(item="Summary")
         return
@@ -275,14 +248,17 @@ def discover_ipmi(
             yield Service(item=sensor_name)
 
 
-def ipmi_status_txt_mapping(status_txt: str) -> state:
+def ipmi_status_txt_mapping(status_txt: str) -> State:
     status_txt_lower = status_txt.lower()
-    if status_txt.startswith('ok') and not ("failure detected" in status_txt_lower or
-                                            "in critical array" in status_txt_lower):
-        return state.OK
-    if status_txt.startswith('nc'):
-        return state.WARN
-    return state.CRIT
+    if status_txt.startswith("ok") and not (
+        "failure detected" in status_txt_lower
+        or "in critical array" in status_txt_lower
+        or "drive fault" in status_txt_lower
+    ):
+        return State.OK
+    if status_txt.startswith("nc"):
+        return State.WARN
+    return State.CRIT
 
 
 def check_ipmi(
@@ -305,14 +281,9 @@ register.check_plugin(
     sections=["ipmi", "ipmi_discrete"],
     service_name="IPMI Sensor %s",
     discovery_function=discover_ipmi,
+    discovery_ruleset_name="inventory_ipmi_rules",
+    discovery_default_parameters={"discovery_mode": ("summarize", {})},
     check_function=check_ipmi,
-    check_ruleset_name='ipmi',
+    check_ruleset_name="ipmi",
     check_default_parameters={"ignored_sensorstates": ["ns", "nr", "na"]},
 )
-
-# NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
-# This is needed because inventory_ipmi_rules was once not a dict, which is not allowed by the API
-# for discovery rulesets
-# ==================================================================================================
-add_discovery_ruleset(RuleSetName("inventory_ipmi_rules"))
-# ==================================================================================================

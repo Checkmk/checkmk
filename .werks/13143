@@ -1,0 +1,13 @@
+Title: Make token authentication available for Prometheus
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1631711267
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+You can now select between Basic authentication and Token authentication
+for the Prometheus special agent.
+

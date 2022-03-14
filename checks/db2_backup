@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
 # 2015-03-12-04.00.13.000000
@@ -48,7 +49,7 @@ def check_db2_backup(item, params, parsed):
         yield 0, "Time since last backup: %s" % get_age_human_readable(age)
 
 
-check_info['db2_backup'] = {
+check_info["db2_backup"] = {
     "parse_function": parse_db2_dbs,
     "service_description": "DB2 Backup %s",
     "check_function": check_db2_backup,

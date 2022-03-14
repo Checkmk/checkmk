@@ -1,6 +1,6 @@
 Put your custom notification scripts in local/share/check_mk/notifications
-as described in https://checkmk.com/cms_notifications.html and ensure that
-they are executable (chmod +x).
+as described in https://docs.checkmk.com/master/en/notifications.html and
+ensure that they are executable (chmod +x).
 
 All executable files will be considered targets for notifications.
 If you want your scripts to have user readable aliasses then put those into

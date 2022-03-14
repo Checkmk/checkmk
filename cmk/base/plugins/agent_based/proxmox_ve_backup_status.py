@@ -4,19 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, TypedDict
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Mapping, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
     register,
+    render,
     Result,
     Service,
     State,
-    check_levels,
-    render,
 )
-
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -27,6 +26,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 class BackupData(TypedDict, total=False):
     """Define names and types for all _potential_ details of backups.
     These details are redundant and only partially available. The magic will be done in the check"""
+
     started_time: datetime
     total_duration: float
     bytes_written_size: int
@@ -38,6 +38,9 @@ class BackupData(TypedDict, total=False):
     upload_amount: int
     upload_total: int
     upload_time: float
+    backup_amount: int
+    backup_total: int
+    backup_time: float
     error: str
 
 
@@ -46,32 +49,38 @@ Section = Mapping[str, BackupData]
 
 def parse_proxmox_ve_vm_backup_status(string_table: StringTable) -> Section:
     result = BackupData()
-    backup_data = json.loads(string_table[0][0])['last_backup'] or {}
-    if 'started_time' in backup_data:
-        result['started_time'] = datetime.strptime(backup_data['started_time'], "%Y-%m-%d %H:%M:%S")
-    if 'total_duration' in backup_data:
-        result['total_duration'] = int(backup_data['total_duration'])
-    if 'bytes_written_size' in backup_data:
-        result['bytes_written_size'] = int(backup_data['bytes_written_size'])
-    if 'bytes_written_bandwidth' in backup_data:
-        result['bytes_written_bandwidth'] = float(backup_data['bytes_written_bandwidth'])
-    if 'transfer_size' in backup_data:
-        result['transfer_size'] = int(backup_data['transfer_size'])
-    if 'transfer_time' in backup_data:
-        result['transfer_time'] = float(backup_data['transfer_time'])
-    if 'archive_name' in backup_data:
-        result['archive_name'] = str(backup_data['archive_name'])
-    if 'archive_size' in backup_data:
-        result['archive_size'] = int(backup_data['archive_size'])
-    if 'upload_amount' in backup_data:
-        result['upload_amount'] = int(backup_data['upload_amount'])
-    if 'upload_total' in backup_data:
-        result['upload_total'] = int(backup_data['upload_total'])
-    if 'upload_time' in backup_data:
-        result['upload_time'] = float(backup_data['upload_time'])
-    if 'error' in backup_data:
-        result['error'] = str(backup_data['error'])
-    return {'last_backup': result}
+    backup_data = json.loads(string_table[0][0])["last_backup"] or {}
+    if "started_time" in backup_data:
+        result["started_time"] = datetime.strptime(backup_data["started_time"], "%Y-%m-%d %H:%M:%S")
+    if "total_duration" in backup_data:
+        result["total_duration"] = int(backup_data["total_duration"])
+    if "bytes_written_size" in backup_data:
+        result["bytes_written_size"] = int(backup_data["bytes_written_size"])
+    if "bytes_written_bandwidth" in backup_data:
+        result["bytes_written_bandwidth"] = float(backup_data["bytes_written_bandwidth"])
+    if "transfer_size" in backup_data:
+        result["transfer_size"] = int(backup_data["transfer_size"])
+    if "transfer_time" in backup_data:
+        result["transfer_time"] = float(backup_data["transfer_time"])
+    if "archive_name" in backup_data:
+        result["archive_name"] = str(backup_data["archive_name"])
+    if "archive_size" in backup_data:
+        result["archive_size"] = int(backup_data["archive_size"])
+    if "upload_amount" in backup_data:
+        result["upload_amount"] = int(backup_data["upload_amount"])
+    if "upload_total" in backup_data:
+        result["upload_total"] = int(backup_data["upload_total"])
+    if "upload_time" in backup_data:
+        result["upload_time"] = float(backup_data["upload_time"])
+    if "backup_amount" in backup_data:
+        result["backup_amount"] = int(backup_data["backup_amount"])
+    if "backup_total" in backup_data:
+        result["backup_total"] = int(backup_data["backup_total"])
+    if "backup_time" in backup_data:
+        result["backup_time"] = float(backup_data["backup_time"])
+    if "error" in backup_data:
+        result["error"] = str(backup_data["error"])
+    return {"last_backup": result}
 
 
 def discover_single(section: Section) -> DiscoveryResult:
@@ -110,8 +119,11 @@ def check_proxmox_ve_vm_backup_status(
     age_levels_upper = params.get("age_levels_upper")
     last_backup = section.get("last_backup")
     if not last_backup:
-        yield (Result(state=State.CRIT, summary="No backup found") if age_levels_upper else  #
-               Result(state=State.OK, summary="No backup found and none needed"))
+        yield (
+            Result(state=State.CRIT, summary="No backup found")
+            if age_levels_upper
+            else Result(state=State.OK, summary="No backup found and none needed")  #
+        )
         return
     if "error" in last_backup:
         yield Result(
@@ -134,27 +146,38 @@ def check_proxmox_ve_vm_backup_status(
         )
     yield Result(
         state=State.OK,
-        summary=f"Time: {last_backup.get('started_time')}",
+        summary=f"Time: {started_time}",
     )
     yield Result(
         state=State.OK,
         summary=f"Duration: {render.timespan(last_backup['total_duration'])}",
     )
 
-    if 'archive_name' in last_backup:
+    if "archive_name" in last_backup:
         yield Result(state=State.OK, summary=f"Name: {last_backup['archive_name']}")
-    if 'archive_size' in last_backup:
+    if "archive_size" in last_backup:
         yield Result(state=State.OK, summary=f"Size: {render.bytes(last_backup['archive_size'])}")
 
-    if all(k in last_backup for k in {'bytes_written_size', 'bytes_written_bandwidth'}):
-        bandwidth = last_backup['bytes_written_bandwidth']
-    elif all(k in last_backup for k in {'transfer_size', 'transfer_time'}):
-        bandwidth = last_backup['transfer_size'] / last_backup['transfer_time']
-    elif all(k in last_backup for k in {'upload_amount', 'upload_total', 'upload_time'}):
-        bandwidth = last_backup['upload_amount'] / last_backup['upload_time']
-        yield Result(
-            state=State.OK,
-            summary=f"Dedup rate: {last_backup['upload_total'] / last_backup['upload_amount']:.2f}")
+    if all(k in last_backup for k in ("bytes_written_size", "bytes_written_bandwidth")):
+        bandwidth = last_backup["bytes_written_bandwidth"]
+    elif all(k in last_backup for k in ("transfer_size", "transfer_time")):
+        if last_backup["transfer_time"] == 0:
+            return
+        bandwidth = last_backup["transfer_size"] / last_backup["transfer_time"]
+    elif all(k in last_backup for k in ("upload_amount", "upload_total", "upload_time")):
+        if last_backup["upload_amount"] > 0:
+            dedup_rate = last_backup["upload_total"] / last_backup["upload_amount"]
+            yield Result(state=State.OK, summary=f"Dedup rate: {dedup_rate:.2f}")
+        if last_backup["upload_time"] == 0:
+            return
+        bandwidth = last_backup["upload_amount"] / last_backup["upload_time"]
+    elif all(k in last_backup for k in ("backup_amount", "backup_total", "backup_time")):
+        if last_backup["backup_amount"] > 0:
+            dedup_rate = last_backup["backup_total"] / last_backup["backup_amount"]
+            yield Result(state=State.OK, summary=f"Dedup rate: {dedup_rate:.2f}")
+        if last_backup["backup_time"] == 0:
+            return
+        bandwidth = last_backup["backup_amount"] / last_backup["backup_time"]
     else:
         return
 
@@ -167,8 +190,9 @@ register.agent_section(
 )
 
 
-def check_proxmox_ve_vm_backup_status_unpure(params: Mapping[str, Any],
-                                             section: Section) -> CheckResult:
+def check_proxmox_ve_vm_backup_status_unpure(
+    params: Mapping[str, Any], section: Section
+) -> CheckResult:
     """Because of datetime.now() this function is not testable.
     Test check_proxmox_ve_vm_backup_status() instead."""
     yield from check_proxmox_ve_vm_backup_status(datetime.now(), params, section)
@@ -180,8 +204,10 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_proxmox_ve_vm_backup_status_unpure,
     check_ruleset_name="proxmox_ve_vm_backup_status",
-    check_default_parameters={"age_levels_upper": (
-        60 * 60 * 26,
-        60 * 60 * 50,
-    )},
+    check_default_parameters={
+        "age_levels_upper": (
+            60 * 60 * 26,
+            60 * 60 * 50,
+        )
+    },
 )

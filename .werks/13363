@@ -1,0 +1,17 @@
+Title: Veeam: Add CDP job monitoring
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1637750397
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+You can now monitor the status and the time since last execution of the
+Continuous Data Protection (CDP) jobs run by Veeam.
+
+In order to carry out the check, the Veeam agent plugin
+needs to be installed on the backup server.
+
+For further information look at the respective manpage

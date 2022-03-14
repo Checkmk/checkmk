@@ -8,15 +8,15 @@ import io
 import tarfile
 
 import cmk.utils.crash_reporting
+
 import cmk.gui.crash_reporting as crash_reporting
 
 
 def test_gui_crash_report_registry():
-    assert cmk.utils.crash_reporting.crash_report_registry["gui"] \
-            == crash_reporting.GUICrashReport
+    assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_reporting.GUICrashReport
 
 
-def test_gui_crash_report_get_packed(register_builtin_html):
+def test_gui_crash_report_get_packed(request_context):
     store = crash_reporting.CrashReportStore()
     try:
         raise ValueError("DINGELING")

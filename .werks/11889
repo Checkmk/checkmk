@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin tcp_conn_stats was not discovered (or got no data) for
 datapower devices accessing the relevant data via SNMP.

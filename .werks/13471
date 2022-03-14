@@ -1,0 +1,12 @@
+Title: mk_logwatch: validate regular expressions upon rule creation
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1636454218
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously invalid regular expressons in the mk_logwatch configuration where not properly validated, leading to a crash of the plugin on the monitored host.
+We now validate the configured expressions during rule creation.

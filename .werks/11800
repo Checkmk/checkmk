@@ -1,0 +1,14 @@
+Title: Avoid escaping in custom host attributes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1617808320
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In case custom host attributes where containing special characters (e.g. "&"), they where stored escaped on disk
+and therfore also displayed escaped in the GUI.
+This fix is applied during <tt>omd update</tt>, so no manual interaction is needed when updating to this patchlevel.

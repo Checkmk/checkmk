@@ -1,0 +1,28 @@
+Title: Cleanup abandoned user profile directories after 30 days
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1620402343
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Each user that is able to log into the Checkmk GUI gets a user profile
+directory created below <tt>var/check_mk/web/[user_id]</tt>.
+
+During deletion of a user, the profile directory is not deleted automatically.
+This is done to prevent loss of user configurations when users are deleted
+accidentally and recreated later.
+
+While this is helpful for the case mentioned above, this may result in
+abandoned user profile directories. Especially in the case where a large number
+of users was created (e.g. by an LDAP synchronization) and later removed, this
+could lead to a large number of directories. With a large number of
+directories, this may even affect the performance of different parts of the
+GUI.
+
+The now introduced housekeeping logic will detect all directories not belonging
+to an existing user. For each of these directories it will find the most recent
+modified file. In case this file modification is older than 30 days, the
+profile directory will be deleted.

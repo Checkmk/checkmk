@@ -1,0 +1,13 @@
+Title: real-time checks: improved encryption
+Class: security
+Compatible: compat
+Component: checks
+Date: 1631533074
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Linux agent now uses some advantages of current (>= 1.1.1)
+OpenSSL versions and employs a safer encryption algorithm for
+the real-time UDP packets on applicable systems.

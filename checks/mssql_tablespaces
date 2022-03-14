@@ -32,7 +32,7 @@ factory_settings["mssql_tablespace_default_levels"] = {}
 
 def parse_mssql_tablespaces(info):
     def to_bytes(value, uom):
-        exponent = {'KB': 1, 'MB': 2, 'GB': 3, 'TB': 4}.get(uom, 0)
+        exponent = {"KB": 1, "MB": 2, "GB": 3, "TB": 4}.get(uom, 0)
         try:
             return float(value) * (1024**exponent)
         except ValueError:
@@ -45,12 +45,12 @@ def parse_mssql_tablespaces(info):
 
         pairs = list(zip(line[:14:2], line[1:14:2]))
         item = "%s %s" % pairs[0]
-        keys = ('size', 'unallocated', 'reserved', 'data', 'indexes', 'unused')
+        keys = ("size", "unallocated", "reserved", "data", "indexes", "unused")
         values = (to_bytes(*p) for p in pairs[1:])
         data = dict(zip(keys, values))
 
         if len(line) > 14 and line[14].startswith("ERROR:"):
-            data["error"] = ' '.join(line[15:])
+            data["error"] = " ".join(line[15:])
 
         parsed.setdefault(item, data)
 
@@ -70,24 +70,22 @@ def check_mssql_tablespaces(item, params, parsed):
 
     if size is not None:
         levels = params.get("size", (None, None))
-        yield check_levels(size,
-                           'size',
-                           levels,
-                           human_readable_func=get_bytes_human_readable,
-                           infoname="Size")
+        yield check_levels(
+            size, "size", levels, human_readable_func=get_bytes_human_readable, infoname="Size"
+        )
 
     for key, title, is_upper in [
-        ('unallocated', 'Unallocated space', False),
-        ('reserved', 'Reserved space', True),
-        ('data', 'Data', True),
-        ('indexes', 'Indexes', True),
-        ('unused', 'Unused', True),
+        ("unallocated", "Unallocated space", False),
+        ("reserved", "Reserved space", True),
+        ("data", "Data", True),
+        ("indexes", "Indexes", True),
+        ("unused", "Unused", True),
     ]:
         value_bytes = tablespace[key]
         if value_bytes is None:
             continue
 
-        infotext = '%s: %s' % (title, get_bytes_human_readable(value_bytes))
+        infotext = "%s: %s" % (title, get_bytes_human_readable(value_bytes))
         try:
             value_perc = 100.0 * value_bytes / size
             infotext += ", %s" % get_percent_human_readable(value_perc)
@@ -112,16 +110,19 @@ def check_mssql_tablespaces(item, params, parsed):
             state = 1
         if state:
             infotext += " (warn/crit %s %s/%s)" % (
-                ('below', 'at')[is_upper], readable_f(warn), readable_f(crit))
+                ("below", "at")[is_upper],
+                readable_f(warn),
+                readable_f(crit),
+            )
         yield state, infotext, [(key, value_bytes)]
 
 
-check_info['mssql_tablespaces'] = {
-    'parse_function': parse_mssql_tablespaces,
-    'inventory_function': discover(),
-    'check_function': check_mssql_tablespaces,
-    'service_description': 'MSSQL %s Sizes',
-    'group': 'mssql_tablespaces',
-    'has_perfdata': True,
-    'default_levels_variable': 'mssql_tablespace_default_levels',
+check_info["mssql_tablespaces"] = {
+    "parse_function": parse_mssql_tablespaces,
+    "inventory_function": discover(),
+    "check_function": check_mssql_tablespaces,
+    "service_description": "MSSQL %s Sizes",
+    "group": "mssql_tablespaces",
+    "has_perfdata": True,
+    "default_levels_variable": "mssql_tablespace_default_levels",
 }

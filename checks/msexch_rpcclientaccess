@@ -9,11 +9,12 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
-factory_settings['msexch_rpcclientaccess_defaultlevels'] = {
-    'latency': (200.0, 250.0),
-    'requests': (30, 40),
+factory_settings["msexch_rpcclientaccess_defaultlevels"] = {
+    "latency": (200.0, 250.0),
+    "requests": (30, 40),
 }
 
 
@@ -25,33 +26,35 @@ def check_msexch_rpcclientaccess(_no_item, params, parsed):
     # despite the source being raw-data, the averaged latency is
     # pre-processed
     table = parsed[""]
-    yield wmi_yield_raw_counter(table,
-                                None,
-                                "RPCAveragedLatency",
-                                infoname="Average latency",
-                                perfvar="average_latency",
-                                levels=params['latency'],
-                                unit="ms")
-    yield wmi_yield_raw_persec(table,
-                               None,
-                               "RPCRequests",
-                               infoname="RPC Requests/sec",
-                               perfvar="requests_per_sec",
-                               levels=params['requests'])
+    yield wmi_yield_raw_counter(
+        table,
+        None,
+        "RPCAveragedLatency",
+        infoname="Average latency",
+        perfvar="average_latency",
+        levels=params["latency"],
+        unit="ms",
+    )
+    yield wmi_yield_raw_persec(
+        table,
+        None,
+        "RPCRequests",
+        infoname="RPC Requests/sec",
+        perfvar="requests_per_sec",
+        levels=params["requests"],
+    )
     yield wmi_yield_raw_counter(table, None, "UserCount", infoname="Users", perfvar="current_users")
-    yield wmi_yield_raw_counter(table,
-                                None,
-                                "ActiveUserCount",
-                                infoname="Active users",
-                                perfvar="active_users")
+    yield wmi_yield_raw_counter(
+        table, None, "ActiveUserCount", infoname="Active users", perfvar="active_users"
+    )
 
 
-check_info['msexch_rpcclientaccess'] = {
-    'inventory_function': discover_msexch_rpcclientaccess,
-    'check_function': check_msexch_rpcclientaccess,
-    'parse_function': parse_wmi_table,
-    'has_perfdata': True,
-    'service_description': "Exchange RPC Client Access",
-    'group': 'msx_rpcclientaccess',
-    'default_levels_variable': 'msexch_rpcclientaccess_defaultlevels'
+check_info["msexch_rpcclientaccess"] = {
+    "inventory_function": discover_msexch_rpcclientaccess,
+    "check_function": check_msexch_rpcclientaccess,
+    "parse_function": parse_wmi_table,
+    "has_perfdata": True,
+    "service_description": "Exchange RPC Client Access",
+    "group": "msx_rpcclientaccess",
+    "default_levels_variable": "msexch_rpcclientaccess_defaultlevels",
 }

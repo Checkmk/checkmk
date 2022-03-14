@@ -1,7 +1,7 @@
 title: HP-UX: Multipathing
 agents: hpux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of Multipath groups (LUNs) on HP-UX.
@@ -15,9 +15,8 @@ description:
 item:
  The WWID of the LUN.
 
-inventory:
+discovery:
  One service is created for each LUN that has at least
  two paths which are not {UNOPEN}. LUNs with all paths
  in state {UNOPEN} will be ignored. Also LUNs with only
  one path will be ignored (there are usually local devices).
-

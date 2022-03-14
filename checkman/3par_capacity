@@ -1,7 +1,7 @@
 title: HPE 3PAR: Capacity
 agents: 3par
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the
@@ -23,5 +23,5 @@ description:
 item:
  The drive type (ie. {{SSD}}, {{FC}} (Fast Class) or {{NL}} (Near Line)) or {{all}}.
 
-inventory:
+discovery:
  One service is created for each device type if the capacity of the device is not zero.

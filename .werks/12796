@@ -1,0 +1,13 @@
+Title: Add computation options to availability options
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1618563915
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+You can now configure computation options for the report element "Availability table"
+again.

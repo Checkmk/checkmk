@@ -1,0 +1,18 @@
+Title: esx_vsphere_hostsystem_mem: added cluster check
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1630501518
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The cluster check "esx_vsphere_hostsystem_mem_cluster" was configurable in
+the enforced services and was working up until Checkmk version 1.6. This check
+has been removed. Instead, the cluster functionality has been implemented and
+consolidated with the standard check for memory utilization of ESX vSphere host
+systems, "esx_vsphere_hostsystem_mem_usage". As a result, the ruleset
+has also been consolidated. Please migrate any rules configured for the cluster
+check "esx_vsphere_hostsystem_mem_cluster" to the new ruleset "Main memory
+usage of ESX host system" to continue using it.

@@ -5,57 +5,46 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
 import subprocess
 import traceback
-from typing import Dict, Any
+from typing import Any, Dict
+from typing import Optional as _Optional
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import ConfigurationWarnings
 
-from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Age,
-    Dictionary,
-    Tuple,
-    Filesize,
-    Optional,
-    ListChoice,
-    DropdownChoice,
-    Checkbox,
-)
-
-from cmk.gui.plugins.wato import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_domain_registry,
+from cmk.gui.log import logger
+from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
-    ConfigDomainOMD,
-    LivestatusViaTCP,
-    config_variable_registry,
-    ConfigVariable,
-    site_neutral_path,
     add_replication_paths,
+    config_domain_registry,
+    config_variable_registry,
+    ConfigDomainOMD,
+    ConfigVariable,
+    ConfigVariableGroupSiteManagement,
+    LivestatusViaTCP,
     ReplicationPath,
+    site_neutral_path,
     wato_fileheader,
 )
-
+from cmk.gui.plugins.watolib.utils import SerializedSettings
 from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    Filesize,
+    Integer,
+    ListChoice,
+    Optional,
+    Tuple,
+)
 
-
-@config_variable_group_registry.register
-class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
-    def title(self):
-        return _('Site Management')
-
-    def sort_index(self):
-        return 30
-
-
-#.
+# .
 #   .--omd config----------------------------------------------------------.
 #   |                             _                    __ _                |
 #   |          ___  _ __ ___   __| |   ___ ___  _ __  / _(_) __ _          |
@@ -82,8 +71,10 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def valuespec(self):
         return Checkbox(
             title=_("Start during system boot"),
-            help=_("Whether or not this site should be started during startup of "
-                   "the Check_MK server."),
+            help=_(
+                "Whether or not this site should be started during startup of "
+                "the Check_MK server."
+            ),
         )
 
 
@@ -101,10 +92,12 @@ class ConfigVariableSiteCore(ConfigVariable):
     def valuespec(self):
         return DropdownChoice(
             title=_("Monitoring core"),
-            help=_("Choose the monitoring core to run for monitoring. You can also "
-                   "decide to run no monitoring core in this site. This can be useful "
-                   "for instances running only a GUI for connecting to other monitoring "
-                   "sites."),
+            help=_(
+                "Choose the monitoring core to run for monitoring. You can also "
+                "decide to run no monitoring core in this site. This can be useful "
+                "for instances running only a GUI for connecting to other monitoring "
+                "sites."
+            ),
             choices=self._monitoring_core_choices(),
         )
 
@@ -134,11 +127,13 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            LivestatusViaTCP(),
+            valuespec=LivestatusViaTCP(),
             title=_("Access to Livestatus via TCP"),
-            help=_("Check_MK Livestatus usually listens only on a local UNIX socket - "
-                   "for reasons of performance and security. This option is used "
-                   "to make it reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."),
+            help=_(
+                "Check_MK Livestatus usually listens only on a local UNIX socket - "
+                "for reasons of performance and security. This option is used "
+                "to make it reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."
+            ),
             label=_("Enable Livestatus access via network (TCP)"),
             none_label=_("Livestatus is available locally"),
         )
@@ -157,7 +152,7 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            ListChoice(
+            valuespec=ListChoice(
                 choices=[
                     ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
                     ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
@@ -167,11 +162,13 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
                 empty_text=_("Locally enabled"),
             ),
             title=_("Event Console"),
-            help=_("This option enables the Event Console - The event processing and "
-                   "classification daemon of Check_MK. You can also configure whether "
-                   "or not the Event Console shal listen for incoming SNMP traps or "
-                   "syslog messages. Please note that only a single Check_MK site per "
-                   "Check_MK server can listen for such messages."),
+            help=_(
+                "This option enables the Event Console - The event processing and "
+                "classification daemon of Check_MK. You can also configure whether "
+                "or not the Event Console shal listen for incoming SNMP traps or "
+                "syslog messages. Please note that only a single Check_MK site per "
+                "Check_MK server can listen for such messages."
+            ),
             label=_("Event Console enabled"),
             none_label=_("Event Console disabled"),
             indent=False,
@@ -191,23 +188,25 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Integer(
+            valuespec=Integer(
                 title=_("Port number"),
                 minvalue=1,
                 maxvalue=65535,
                 default_value=5667,
             ),
             title=_("Listen for passive checks via NSCA"),
-            help=_("Enable listening for passible checks via NSCA. With the default configuration "
-                   "the TCP port 5667 will be opened. You may also want to update the NSCA "
-                   "configuration file %s to fit your needs.") %
-            site_neutral_path("etc/nsca/nsca.cfg"),
+            help=_(
+                "Enable listening for passible checks via NSCA. With the default configuration "
+                "the TCP port 5667 will be opened. You may also want to update the NSCA "
+                "configuration file %s to fit your needs."
+            )
+            % site_neutral_path("etc/nsca/nsca.cfg"),
             label=_("Enable listening for passive checks using NSCA"),
             none_label=_("NSCA is disabled"),
         )
 
 
-#.
+# .
 #   .--Diskspace-----------------------------------------------------------.
 #   |              ____  _     _                                           |
 #   |             |  _ \(_)___| | _____ _ __   __ _  ___ ___               |
@@ -225,14 +224,14 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    diskspace_config = cmk.utils.paths.omd_root + '/etc/diskspace.conf'
+    diskspace_config = cmk.utils.paths.omd_root / "etc/diskspace.conf"
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return "diskspace"
 
-    def activate(self):
-        pass
+    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+        return []
 
     def config_dir(self):
         return ""  # unused, we override load and save below
@@ -244,9 +243,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
         # Convert old config (min_free_bytes and min_file_age) were independent options
         if "min_free_bytes" in cleanup_settings:
-            cleanup_settings["min_free_bytes"] = (cleanup_settings["min_free_bytes"],
-                                                  cleanup_settings.pop("min_file_age",
-                                                                       2592000))  # 1 month
+            cleanup_settings["min_free_bytes"] = (
+                cleanup_settings["min_free_bytes"],
+                cleanup_settings.pop("min_file_age", 2592000),
+            )  # 1 month
 
         if cleanup_settings.get("cleanup_abandoned_host_files", False) is None:
             del cleanup_settings["cleanup_abandoned_host_files"]
@@ -277,15 +277,15 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
         output = ""
         for k, v in sorted(config.items()):
-            output += '%s = %r\n' % (k, v)
+            output += "%s = %r\n" % (k, v)
 
-        store.save_file(self.diskspace_config, output)
+        store.save_text_to_file(self.diskspace_config, output)
 
     def default_globals(self):
         diskspace_context: Dict[str, Any] = {}
-        filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
+        filename = cmk.utils.paths.omd_root / "bin/diskspace"
         with filename.open(encoding="utf-8") as f:
-            code = compile(f.read(), str(filename), 'exec')
+            code = compile(f.read(), str(filename), "exec")
             exec(code, {}, diskspace_context)
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
@@ -312,7 +312,8 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
                 "The monitoring site is executing the program <tt>diskspace</tt> 5 past "
                 "every full hour as cron job. Details about the execution are logged to the file "
                 "<tt>var/log/diskspace.log</tt>. You can always execut this program manually "
-                "(add the <tt>-v</tt> option to see details about the actions taken)."),
+                "(add the <tt>-v</tt> option to see details about the actions taken)."
+            ),
             elements=[
                 (
                     "max_file_age",
@@ -320,17 +321,20 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
                         minvalue=1,  # 1 sec
                         default_value=31536000,  # 1 year
                         title=_("Delete files older than"),
-                        help=
-                        _("The historic events (state changes, downtimes etc.) of your hosts and services "
-                          "is stored in the monitoring "
-                          "history as plain text log files. One history log file contains the monitoring "
-                          "history of a given time period of all hosts and services. The files which are "
-                          "older than the configured time will be removed on the next execution of the "
-                          "disk space cleanup.<br>"
-                          "The historic metrics are stored in files for each host and service "
-                          "individually. When a host or service is removed from the monitoring, it's "
-                          "metric files remain untouched on your disk until the files last update "
-                          "(modification time) is longer ago than the configure age."))),
+                        help=_(
+                            "The historic events (state changes, downtimes etc.) of your hosts and services "
+                            "is stored in the monitoring "
+                            "history as plain text log files. One history log file contains the monitoring "
+                            "history of a given time period of all hosts and services. The files which are "
+                            "older than the configured time will be removed on the next execution of the "
+                            "disk space cleanup.<br>"
+                            "The historic metrics are stored in files for each host and service "
+                            "individually. When a host or service is removed from the monitoring, it's "
+                            "metric files remain untouched on your disk until the files last update "
+                            "(modification time) is longer ago than the configure age."
+                        ),
+                    ),
+                ),
                 (
                     "min_free_bytes",
                     Tuple(
@@ -346,44 +350,56 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
                                 default_value=2592000,  # 1 month
                                 help=_(
                                     "With this option you can prevent cleanup of files which have been updated "
-                                    "within this time range."),
+                                    "within this time range."
+                                ),
                             ),
                         ],
                         title=_("Delete additional files when disk space is below"),
-                        help=
-                        _("When the disk space cleanup by file age was not able to gain enough "
-                          "free disk space, then the cleanup mechanism starts cleaning up additional "
-                          "files. The files are deleted by age, the oldest first, until the files are "
-                          "newer than the configured minimum file age."))),
+                        help=_(
+                            "When the disk space cleanup by file age was not able to gain enough "
+                            "free disk space, then the cleanup mechanism starts cleaning up additional "
+                            "files. The files are deleted by age, the oldest first, until the files are "
+                            "newer than the configured minimum file age."
+                        ),
+                    ),
+                ),
                 (
                     "cleanup_abandoned_host_files",
                     Age(
                         title=_("Cleanup abandoned host files older than"),
                         minvalue=3600,  # 1 hour
                         default_value=2592000,  # 1 month
-                        help=
-                        _("During monitoring there are several dedicated files created for each host. "
-                          "There are, for example, the discovered services, performance data and "
-                          "different temporary files created. During deletion of a host, these files "
-                          "are normally deleted. But there are cases, where the files are left on "
-                          "the disk until manual deletion, for example if you move a host from one "
-                          "site to another or deleting a host manually from the configuration.<br>"
-                          "The performance data (RRDs) and HW/SW inventory archive are never deleted "
-                          "during host deletion. They are only deleted automatically when you enable "
-                          "this option and after the configured period."))),
+                        help=_(
+                            "During monitoring there are several dedicated files created for each host. "
+                            "There are, for example, the discovered services, performance data and "
+                            "different temporary files created. During deletion of a host, these files "
+                            "are normally deleted. But there are cases, where the files are left on "
+                            "the disk until manual deletion, for example if you move a host from one "
+                            "site to another or deleting a host manually from the configuration.<br>"
+                            "The performance data (RRDs) and HW/SW inventory archive are never deleted "
+                            "during host deletion. They are only deleted automatically when you enable "
+                            "this option and after the configured period."
+                        ),
+                    ),
+                ),
             ],
             default_keys=["cleanup_abandoned_host_files"],
             empty_text=_("Disk space cleanup is disabled"),
         )
 
 
-add_replication_paths([
-    ReplicationPath(
-        "file", "diskspace",
-        os.path.relpath(ConfigDomainDiskspace.diskspace_config, cmk.utils.paths.omd_root), []),
-])
+add_replication_paths(
+    [
+        ReplicationPath(
+            "file",
+            "diskspace",
+            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
+            [],
+        ),
+    ]
+)
 
-#.
+# .
 #   .--Apache--------------------------------------------------------------.
 #   |                    _                     _                           |
 #   |                   / \   _ __   __ _  ___| |__   ___                  |
@@ -408,22 +424,22 @@ class ConfigDomainApache(ABCConfigDomain):
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
 
-    def activate(self):
+    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            completed_process = subprocess.run(
                 ["omd", "reload", "apache"],
-                stdin=open(os.devnull),
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
 
-            stdout, _stderr = p.communicate()
-            if p.returncode != 0:
-                raise Exception(stdout)
+            if completed_process.returncode:
+                raise Exception(completed_process.stdout)
 
             return []
         except Exception:
@@ -439,9 +455,10 @@ class ConfigDomainApache(ABCConfigDomain):
             output += "ServerLimit %d\n" % config["apache_process_tuning"]["number_of_processes"]
             output += "MaxClients %d\n" % config["apache_process_tuning"]["number_of_processes"]
 
-        config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d",
-                                        "zzz_check_mk.conf")
-        store.save_file(config_file_path, output)
+        config_file_path = os.path.join(
+            cmk.utils.paths.omd_root, "etc/apache/conf.d", "zzz_check_mk.conf"
+        )
+        store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
         config = self.load(site_specific=False)
@@ -456,9 +473,8 @@ class ConfigDomainApache(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/apache/apache.conf")]
-        config_files += sorted(
-            Path(cmk.utils.paths.omd_root).joinpath("etc/apache/conf.d").glob("*.conf"))
+        config_files = [cmk.utils.paths.omd_root / "etc/apache/apache.conf"]
+        config_files += sorted((cmk.utils.paths.omd_root / "etc/apache/conf.d").glob("*.conf"))
 
         value = default_value
 
@@ -489,23 +505,25 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
         return Dictionary(
             title=_("Apache process tuning"),
             elements=[
-                ("number_of_processes",
-                 Integer(
-                     title=_("Number of apache processes"),
-                     help=
-                     _("Use this value to tune the maximum number of apache client requests that will be processed simultaneously "
-                       "(maximum number of apache server processes allowed to start). In case you have a lot of incoming "
-                       "requests in parallel it may be a good idea to increase this value. But do this carefully, more is "
-                       "not always better. The apache processes normally need a decent amount of memory and you should "
-                       "only configure as many apache processes as your system can handle in high load situations."
-                      ),
-                     minvalue=5,
-                 )),
+                (
+                    "number_of_processes",
+                    Integer(
+                        title=_("Number of apache processes"),
+                        help=_(
+                            "Use this value to tune the maximum number of apache client requests that will be processed simultaneously "
+                            "(maximum number of apache server processes allowed to start). In case you have a lot of incoming "
+                            "requests in parallel it may be a good idea to increase this value. But do this carefully, more is "
+                            "not always better. The apache processes normally need a decent amount of memory and you should "
+                            "only configure as many apache processes as your system can handle in high load situations."
+                        ),
+                        minvalue=5,
+                    ),
+                ),
             ],
         )
 
 
-#.
+# .
 #   .--rrdcached-----------------------------------------------------------.
 #   |                        _                _              _             |
 #   |           _ __ _ __ __| | ___ __ _  ___| |__   ___  __| |            |
@@ -530,22 +548,22 @@ class ConfigDomainRRDCached(ABCConfigDomain):
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"
 
-    def activate(self):
+    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            completed_process = subprocess.run(
                 ["omd", "restart", "rrdcached"],
-                stdin=open(os.devnull),
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
 
-            stdout, _stderr = p.communicate()
-            if p.returncode != 0:
-                raise Exception(stdout)
+            if completed_process.returncode:
+                raise Exception(completed_process.stdout)
 
             return []
         except Exception:
@@ -559,9 +577,10 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         for key, val in sorted(config.get("rrdcached_tuning", {}).items()):
             output += "%s=%d\n" % (key, val)
 
-        config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d",
-                                        "zzz_check_mk.conf")
-        store.save_file(config_file_path, output)
+        config_file_path = os.path.join(
+            cmk.utils.paths.omd_root, "etc/rrdcached.d", "zzz_check_mk.conf"
+        )
+        store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):
         config = self.load(site_specific=False)
@@ -579,9 +598,8 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.conf")]
-        config_files += sorted(
-            Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.d").glob("*.conf"))
+        config_files = [cmk.utils.paths.omd_root / "etc/rrdcached.conf"]
+        config_files += sorted((cmk.utils.paths.omd_root / "etc/rrdcached.d").glob("*.conf"))
 
         value = default_value
 
@@ -612,41 +630,58 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
         return Dictionary(
             title=_("RRDCached tuning"),
             elements=[
-                ("TIMEOUT",
-                 Age(
-                     title=_("Disk flush interval of updated metrics"),
-                     help=_("Updated metrics are written to disk in the configured interval. "
+                (
+                    "TIMEOUT",
+                    Age(
+                        title=_("Disk flush interval of updated metrics"),
+                        help=_(
+                            "Updated metrics are written to disk in the configured interval. "
                             "The write operation is only performed for metrics that are being "
-                            "updated. Old metrics are not affected by this option."),
-                     minvalue=0,
-                 )),
-                ("RANDOM_DELAY",
-                 Age(
-                     title=_("Random delay"),
-                     help=_("The rrdcached will delay writing of each metric for a random "
+                            "updated. Old metrics are not affected by this option."
+                        ),
+                        minvalue=0,
+                    ),
+                ),
+                (
+                    "RANDOM_DELAY",
+                    Age(
+                        title=_("Random delay"),
+                        help=_(
+                            "The rrdcached will delay writing of each metric for a random "
                             "number of seconds in the range [0..delay]. This will avoid too many "
                             "writes being queued simultaneously. This number should not be "
-                            "higher than the value specified in \"Disk flush interval of "
-                            "updated metrics\"."),
-                     minvalue=0,
-                 )),
-                ("FLUSH_TIMEOUT",
-                 Age(
-                     title=_("Disk flush interval of old data"),
-                     help=_("The entire cache is searched in the interval configured here for old "
+                            'higher than the value specified in "Disk flush interval of '
+                            'updated metrics".'
+                        ),
+                        minvalue=0,
+                    ),
+                ),
+                (
+                    "FLUSH_TIMEOUT",
+                    Age(
+                        title=_("Disk flush interval of old data"),
+                        help=_(
+                            "The entire cache is searched in the interval configured here for old "
                             "values which shal be written to disk. This only concerns RRD files to "
                             "which updates have stopped, so setting this to a high value is "
-                            "acceptable in most cases."),
-                     minvalue=0,
-                 )),
-                ("WRITE_THREADS",
-                 Integer(
-                     title=_("Number of threads used for writing RRD files"),
-                     help=_("Increasing this number will allow rrdcached to have more simultaneous "
+                            "acceptable in most cases."
+                        ),
+                        minvalue=0,
+                    ),
+                ),
+                (
+                    "WRITE_THREADS",
+                    Integer(
+                        title=_("Number of threads used for writing RRD files"),
+                        help=_(
+                            "Increasing this number will allow rrdcached to have more simultaneous "
                             "I/O requests into the kernel. This may allow the kernel to re-order "
-                            "disk writes, resulting in better disk throughput."),
-                     minvalue=1,
-                     maxvalue=100)),
+                            "disk writes, resulting in better disk throughput."
+                        ),
+                        minvalue=1,
+                        maxvalue=100,
+                    ),
+                ),
             ],
             optional_keys=[],
         )

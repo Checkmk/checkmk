@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#TODO WATORule
-factory_settings['informix_tabextents_default_levels'] = {
-    'levels': (40, 70),
+# TODO WATORule
+factory_settings["informix_tabextents_default_levels"] = {
+    "levels": (40, 70),
 }
 
 
@@ -38,13 +38,15 @@ def check_informix_tabextents(item, params, parsed):
         max_extents = -1
         long_output = []
         for entry in parsed[item]:
-            extents = int(entry['extents'])
+            extents = int(entry["extents"])
             if extents >= max_extents:
                 max_extents = extents
-            long_output.append("[%s/%s] Extents: %s, Rows: %s" % \
-                    (entry['db'], entry["tab"], entry['extents'], entry['nrows']))
+            long_output.append(
+                "[%s/%s] Extents: %s, Rows: %s"
+                % (entry["db"], entry["tab"], entry["extents"], entry["nrows"])
+            )
 
-        warn, crit = params['levels']
+        warn, crit = params["levels"]
         state = 0
         infotext = "Maximal extents: %s" % max_extents
         if max_extents >= crit:
@@ -53,15 +55,15 @@ def check_informix_tabextents(item, params, parsed):
             state = 1
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)
-        return state, "%s\n%s" % (infotext, "\n".join(long_output)),\
-               [('max_extents', max_extents)]
+        return state, "%s\n%s" % (infotext, "\n".join(long_output)), [("max_extents", max_extents)]
 
 
-check_info['informix_tabextents'] = {
-    'parse_function': parse_informix_tabextents,
-    'inventory_function': inventory_informix_tabextents,
-    'check_function': check_informix_tabextents,
-    'has_perfdata': True,
-    'service_description': 'Informix Table Extents %s',
-    'default_levels_variable': 'informix_tabextents_default_levels',
+check_info["informix_tabextents"] = {
+    "parse_function": parse_informix_tabextents,
+    "inventory_function": inventory_informix_tabextents,
+    "check_function": check_informix_tabextents,
+    "has_perfdata": True,
+    "service_description": "Informix Table Extents %s",
+    "group": "informix_tabextents",
+    "default_levels_variable": "informix_tabextents_default_levels",
 }

@@ -6,45 +6,96 @@
 #ifndef IntColumn_h
 #define IntColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
+#include <utility>
+#include <variant>
 
 #include "Column.h"
 #include "Filter.h"
+#include "IntAggregator.h"
+#include "IntFilter.h"
+#include "Renderer.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Aggregator;
 class Row;
-class RowRenderer;
 
-namespace deprecated {
+template <class T, int32_t Default = 0>
 class IntColumn : public Column {
 public:
-    using Column::Column;
+    using value_type = int32_t;
+    using f0_t = std::function<value_type(const T &)>;
+    using f1_t = std::function<value_type(const T &, const contact *)>;
+    using function_type = std::variant<f0_t, f1_t>;
+
+    IntColumn(const std::string &name, const std::string &description,
+              const ColumnOffsets &offsets, const function_type &f)
+        : Column{name, description, offsets}, f_{f} {}
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::int_; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
+                std::chrono::seconds /*timezone_offset*/) const override {
+        r.output(getValue(row, auth_user));
+    }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string &value) const override;
+        const std::string &value) const override {
+        return std::make_unique<IntFilter>(
+            kind, name(),
+            [this](Row row, const contact *auth_user) {
+                return this->getValue(row, auth_user);
+            },
+            relOp, value);
+    }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
-        AggregationFactory factory) const override;
+        AggregationFactory factory) const override {
+        return std::make_unique<IntAggregator>(
+            factory, [this](Row row, const contact *auth_user) {
+                return getValue(row, auth_user);
+            });
+    }
 
     // TODO(sp): The only 2 places where auth_user is actually used are
-    // HostListState::getValue() and ServiceListState::getValue().
-    // These methods aggregate values for hosts/services, but they should do
-    // this only for "allowed" hosts/services. Find a better design than this
-    // parameter passing hell..
-    virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
-};
-}  // namespace deprecated
+    // HostListState::getValue() and ServiceListState::getValue(). These methods
+    // aggregate values for hosts/services, but they should do this only for
+    // "allowed" hosts/services. Find a better design than this parameter
+    // passing hell..
+    [[nodiscard]] virtual value_type getValue(Row row,
+                                              const contact *auth_user) const {
+        const T *data = IntColumn<T, Default>::template columnData<T>(row);
+        if (std::holds_alternative<f0_t>(f_)) {
+            return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
+        }
+        if (std::holds_alternative<f1_t>(f_)) {
+            return data == nullptr ? Default
+                                   : std::get<f1_t>(f_)(*data, auth_user);
+        }
+        throw std::runtime_error("unreachable");
+    }
 
-#endif  // IntColumn_h
+private:
+    const function_type f_;
+};
+
+namespace column::detail {
+constexpr int32_t toInt32(bool b) { return b ? 1 : 0; }
+}  // namespace column::detail
+
+template <class T, bool Default = false>
+class BoolColumn : public IntColumn<T, column::detail::toInt32(Default)> {
+public:
+    BoolColumn(const std::string &name, const std::string &description,
+               const ColumnOffsets &offsets, std::function<bool(const T &)> f)
+        : IntColumn<T, column::detail::toInt32(Default)>{
+              name, description, offsets, [f = std::move(f)](const T &t) {
+                  return column::detail::toInt32(f(t));
+              }} {}
+};
+
+#endif

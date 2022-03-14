@@ -1,7 +1,7 @@
 title: IBM Tivoli Storage Manager (TSM): Usage of Storage Pools
 agents: aix, linux
 catalog: app/tsm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is used on servers running Tivoli storage manager to
@@ -13,6 +13,5 @@ description:
 item:
  The name of the instance (optional) and the name of the staging pool seperated by a {{/}}
 
-inventory:
+discovery:
  One service is created for each storage pool on the server independent of their type.
-

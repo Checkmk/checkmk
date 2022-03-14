@@ -21,7 +21,7 @@ def inventory_hitachi_hnas_cifs(info):
 def check_hitachi_hnas_cifs(item, _no_params, info):
     for evs_id, share_name, users in info:
         if evs_id + " " + share_name == item:
-            perfdata = [('users', users, '', '', 0)]
+            perfdata = [("users", users, "", "", 0)]
             return 0, "%s users" % users, perfdata
     return 3, "Share not found"
 

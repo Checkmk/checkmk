@@ -1,0 +1,21 @@
+Title: LDAP: Only set customer user attribute on creation
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1637748090
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Werk #13370 introduced the automatic setting of the customer user attribute on
+LDAP synchronization. This Werk did not keep in mind the option to change the
+customer attribute in the user setting, leading to the behaviour, that the
+customer attribute of the LDAP connection is set on every LDAP synchronization,
+overwriting existing changes.
+
+From now on, the customer attribute will only be set once by the LDAP
+synchronization on user creation.
+
+Please check existing users after the update for correct customer settings.

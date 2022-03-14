@@ -52,7 +52,7 @@ def check_h3c_lanswitch_cpu(item, params, info):
     for line in info:
         if h3c_lanswitch_cpu_genitem(line[0]) == item:
             util = int(line[1])
-            infotext = ("average usage was %d%% over last 5 minutes." % util)
+            infotext = "average usage was %d%% over last 5 minutes." % util
             perfdata = [("usage", util, warn, crit, 0, 100)]
 
             if util > crit:
@@ -64,15 +64,17 @@ def check_h3c_lanswitch_cpu(item, params, info):
     return (3, "%s not found" % item)
 
 
-check_info["h3c_lanswitch_cpu"] = (check_h3c_lanswitch_cpu, "CPU Utilization %s", 1,
-                                   inventory_h3c_lanswitch_cpu)
+check_info["h3c_lanswitch_cpu"] = (
+    check_h3c_lanswitch_cpu,
+    "CPU Utilization %s",
+    1,
+    inventory_h3c_lanswitch_cpu,
+)
 
 snmp_info["h3c_lanswitch_cpu"] = (
     ".1.3.6.1.4.1.43.45.1.6.1.1.1",
-    [
-        OID_END,
-        "3"  # 5-min average load.
-    ])
+    [OID_END, "3"],  # 5-min average load.
+)
 
 # just a rough match that will handle most devices.
-snmp_scan_functions["h3c_lanswitch_cpu"] = lambda oid: '3com s' in oid(".1.3.6.1.2.1.1.1.0").lower()
+snmp_scan_functions["h3c_lanswitch_cpu"] = lambda oid: "3com s" in oid(".1.3.6.1.2.1.1.1.0").lower()

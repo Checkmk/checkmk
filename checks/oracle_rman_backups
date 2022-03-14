@@ -13,7 +13,7 @@ def check_oracle_rman_backups(item, params, info):
     return 1, "This check is deprecated. Please update the mk_oracle agent plugin"
 
 
-check_info['oracle_rman_backups'] = {
+check_info["oracle_rman_backups"] = {
     "service_description": "ORA %s RMAN Backup",
     "check_function": check_oracle_rman_backups,
     "inventory_function": inventory_oracle_rman_backups,

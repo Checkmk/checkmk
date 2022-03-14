@@ -1,0 +1,54 @@
+Title: Don't show clear text passwords in the audit log
+Class: security
+Compatible: incomp
+Component: multisite
+Date: 1633018379
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+Beginning from version 2.0 passwords were written to the audit log
+in clear text when a rule with a password field was created/cloned
+or when a password in a rule was modified. This werk fixes that so
+that no passwords are written to the audit log anymore.
+
+By default only admin users are able to see the audit log. Guests
+and normal monitoring users do not have acces to the audit log. If
+a rule uses the password store, no passwords were written to the
+audit log.
+
+Existing passwords in the audit log should be replaced automatically
+by "hash:XXXXXXXXXX" during the update. But please double check
+that no passwords remain in the log (see next paragraph for details).
+If you e.g. use rulesets from extension packages that contain
+password fields, passwords from these rules may remain in the log.
+Additionally, rules from the rulesets "Check SFTP Service",
+"Microsoft SQL Server (Windows)" and "Redis databases" cannot be
+replaced reliably. So these passwords will remail in the audit log
+even after the update.
+
+You can remove/replace remaining passwords directly in the log files.
+The log files are placed in the directory var/check_mk/wato/log. The
+names of the files are wato_audit.log for the most recent file and
+wato_audit.log.YYYY-MM-DD for historic files. Note that if you use
+the action "Clear audit log" in the GUI the log is not deleted, but
+moved from wato_audit.log to wato_audit.log.YYYY-MM-DD. So in this
+case the passwords will not be visible in the GUI anymore, but remain
+in the historic log files of the site. The historic files are only
+accessible by the site user and group from the command line. A backup
+of the original audit log (before passwords were replaced) is copied
+to "~/audit_log_backup". If anything goes wrong during the update,
+you have to copy the files back to var/check_mk/wato/log and replace
+the passwords manually. If the update works as expected, you can
+remove the backup files.
+
+In distributed setups which do not replicate the configuration
+passwords are replaced during the update of each site.
+
+In setups which replicate the configuration from central to remote
+sites no passwords should be present in the logs of the remote site,
+since only information about the activation is logged. Only if you
+switched to a replicated setup after the upgrade to the 2.0, passwords
+can be present in the logs. Since passwords may be in this scenario as
+well, the steps described before also apply.

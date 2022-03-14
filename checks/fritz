@@ -15,35 +15,35 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 # Internet connection
 #
 def inventory_fritz_conn(parsed):
-    conn_stat = parsed.get('NewConnectionStatus')
-    if (conn_stat and conn_stat != 'Unconfigured' and 'NewExternalIPAddress' in parsed):
+    conn_stat = parsed.get("NewConnectionStatus")
+    if conn_stat and conn_stat != "Unconfigured" and "NewExternalIPAddress" in parsed:
         return [(None, {})]
 
 
 def check_fritz_conn(_unused, _no_params, parsed):
 
-    conn_stat = parsed.get('NewConnectionStatus')
-    yield 0, 'Status: %s' % conn_stat
+    conn_stat = parsed.get("NewConnectionStatus")
+    yield 0, "Status: %s" % conn_stat
 
-    if conn_stat not in ('Connected', 'Connecting', 'Disconnected', 'Unconfigured'):
-        yield 3, 'unhandled connection status'
+    if conn_stat not in ("Connected", "Connecting", "Disconnected", "Unconfigured"):
+        yield 3, "unhandled connection status"
 
-    if conn_stat == 'Connected':
-        yield 0, 'WAN IP Address: %s' % parsed.get('NewExternalIPAddress')
+    if conn_stat == "Connected":
+        yield 0, "WAN IP Address: %s" % parsed.get("NewExternalIPAddress")
     else:
-        yield 1, ''
+        yield 1, ""
 
-    last_err = parsed.get('NewLastConnectionError')
-    if last_err and last_err != 'ERROR_NONE':
-        yield 0, 'Last Error: %s' % last_err
+    last_err = parsed.get("NewLastConnectionError")
+    if last_err and last_err != "ERROR_NONE":
+        yield 0, "Last Error: %s" % last_err
 
-    uptime = parsed.get('NewUptime')
+    uptime = parsed.get("NewUptime")
     if uptime:
         conn_time = check_uptime_seconds({}, float(uptime))
         yield 0, str(conn_time[1]), conn_time[2]
 
 
-check_info['fritz.conn'] = {
+check_info["fritz.conn"] = {
     "inventory_function": inventory_fritz_conn,
     "check_function": check_fritz_conn,
     "service_description": "Connection",
@@ -55,29 +55,29 @@ check_info['fritz.conn'] = {
 # Config
 #
 def inventory_fritz_config(parsed):
-    if 'NewDNSServer1' in parsed:
+    if "NewDNSServer1" in parsed:
         return [(None, {})]
 
 
 def check_fritz_config(_unused, _no_params, parsed):
 
     label_val = [
-        ('Auto Disconnect Time', parsed.get('NewAutoDisconnectTime', '0.0.0.0')),
-        ('DNS-Server1', parsed.get('NewDNSServer1', '0.0.0.0')),
-        ('DNS-Server2', parsed.get('NewDNSServer2', '0.0.0.0')),
-        ('VoIP-DNS-Server1', parsed.get('NewVoipDNSServer1', '0.0.0.0')),
-        ('VoIP-DNS-Server2', parsed.get('NewVoipDNSServer2', '0.0.0.0')),
-        ('uPnP Config Enabled', parsed.get('NewUpnpControlEnabled', '0.0.0.0')),
+        ("Auto Disconnect Time", parsed.get("NewAutoDisconnectTime", "0.0.0.0")),
+        ("DNS-Server1", parsed.get("NewDNSServer1", "0.0.0.0")),
+        ("DNS-Server2", parsed.get("NewDNSServer2", "0.0.0.0")),
+        ("VoIP-DNS-Server1", parsed.get("NewVoipDNSServer1", "0.0.0.0")),
+        ("VoIP-DNS-Server2", parsed.get("NewVoipDNSServer2", "0.0.0.0")),
+        ("uPnP Config Enabled", parsed.get("NewUpnpControlEnabled", "0.0.0.0")),
     ]
 
-    output = ['%s: %s' % (l, v) for l, v in label_val if v != '0.0.0.0']
+    output = ["%s: %s" % (l, v) for l, v in label_val if v != "0.0.0.0"]
 
     if output:
-        return 0, ', '.join(output)
-    return 3, 'Configuration info is missing'
+        return 0, ", ".join(output)
+    return 3, "Configuration info is missing"
 
 
-check_info['fritz.config'] = {
+check_info["fritz.config"] = {
     "inventory_function": inventory_fritz_config,
     "check_function": check_fritz_config,
     "service_description": "Configuration",
@@ -88,28 +88,28 @@ check_info['fritz.config'] = {
 # Link
 #
 def inventory_fritz_link(parsed):
-    if 'NewLinkStatus' in parsed and 'NewPhysicalLinkStatus' in parsed:
+    if "NewLinkStatus" in parsed and "NewPhysicalLinkStatus" in parsed:
         return [(None, {})]
 
 
 def check_fritz_link(_no_item, _no_params, parsed):
 
     label_val = [
-        ('Link Status', parsed.get('NewLinkStatus')),
-        ('Physical Link Status', parsed.get('NewPhysicalLinkStatus')),
-        ('Link Type', parsed.get('NewLinkType')),
-        ('WAN Access Type', parsed.get('NewWANAccessType')),
+        ("Link Status", parsed.get("NewLinkStatus")),
+        ("Physical Link Status", parsed.get("NewPhysicalLinkStatus")),
+        ("Link Type", parsed.get("NewLinkType")),
+        ("WAN Access Type", parsed.get("NewWANAccessType")),
     ]
 
-    output = ['%s: %s' % (l, v) for l, v in label_val if v]
+    output = ["%s: %s" % (l, v) for l, v in label_val if v]
 
     if output:
-        return 0, ', '.join(output)
-    return 3, 'Link info is missing'
+        return 0, ", ".join(output)
+    return 3, "Link info is missing"
 
 
 check_info["fritz.link"] = {
-    'check_function': check_fritz_link,
-    'inventory_function': inventory_fritz_link,
-    'service_description': 'Link Info',
+    "check_function": check_fritz_link,
+    "inventory_function": inventory_fritz_link,
+    "service_description": "Link Info",
 }

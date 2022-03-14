@@ -1,0 +1,23 @@
+title: Ciena 5171: PM instance Tx/Rx Bytes
+agents: snmp
+catalog: hw/network/ciena
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors
+
+ - the bytes transmitted per second
+
+ - the bytes received per second
+
+ The check always returns {OK}.
+
+ This check supports the Ciena 5171 Packetwave Platform.
+
+ The relevant MIB is CIENA-CES-PM.
+
+item:
+ The instance name as provided by the device.
+
+discovery:
+ One service is created for each instance reporting measurements.

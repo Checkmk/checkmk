@@ -32,8 +32,4 @@ def parse_cisco_prime(key, info):
     }
     """
     elements = json.loads(info[0][0])["queryResponse"]["entity"]
-    return {
-        item["@id"]: item  #
-        for elem in elements  #
-        for item in (elem[key],)
-    }
+    return {item["@id"]: item for elem in elements for item in (elem[key],)}

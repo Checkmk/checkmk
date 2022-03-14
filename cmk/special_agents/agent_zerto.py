@@ -18,23 +18,21 @@ import sys
 import requests
 
 from cmk.utils.exceptions import MKException
+
 LOGGER = logging.getLogger(__name__)
 
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
 
-    #flags
-    parser.add_argument('-a',
-                        '--authentication',
-                        default='windows',
-                        type=str,
-                        help='Authentication method')
-    parser.add_argument('-d',
-                        '--debug',
-                        action='store_true',
-                        help='Debug mode: raise Python exceptions')
-    parser.add_argument('-v', '--verbose', action='count', help='Be more verbose')
+    # flags
+    parser.add_argument(
+        "-a", "--authentication", default="windows", type=str, help="Authentication method"
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Debug mode: raise Python exceptions"
+    )
+    parser.add_argument("-v", "--verbose", action="count", help="Be more verbose")
     parser.add_argument("-u", "--username", required=True, help="Zerto user name")
     parser.add_argument("-p", "--password", required=True, help="Zerto user password")
     parser.add_argument("hostaddress", help="Zerto host name")
@@ -58,7 +56,7 @@ def parse_arguments(argv):
 class ZertoRequest:
     def __init__(self, connection_url, session_id):
         self._endpoint = "%s/vms" % connection_url
-        self._headers = {'x-zerto-session': session_id, 'content-type': 'application/json'}
+        self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
     def get_vms_data(self):
         response = requests.get(self._endpoint, headers=self._headers, verify=False)  # nosec
@@ -86,19 +84,17 @@ class ZertoConnection:
         else:
             dataval = {"AuthenticationMethod": 1}
             LOGGER.debug("VCenter dataval: %r", dataval)
-            headers = {'content-type': 'application/json'}
-            response = requests.post(url,
-                                     data=dataval,
-                                     auth=self._credentials,
-                                     headers=headers,
-                                     verify=False)  # nosec
+            headers = {"content-type": "application/json"}
+            response = requests.post(  # nosec
+                url, data=dataval, auth=self._credentials, headers=headers, verify=False
+            )
 
         LOGGER.debug("Response status code: %s", response.status_code)
 
         if response.status_code != 200:
             raise AuthError("Failed authenticating to the Zerto Virtual Manager")
 
-        return response.headers.get('x-zerto-session')
+        return response.headers.get("x-zerto-session")
 
 
 class AuthError(MKException):
@@ -107,16 +103,16 @@ class AuthError(MKException):
 
 def main(argv=None):
     args = parse_arguments(argv or sys.argv[1:])
-    connection = ZertoConnection(args.host, args.username, args.password)
+    connection = ZertoConnection(args.hostaddress, args.username, args.password)
     session_id = connection.get_session_id(args.authentication)
     request = ZertoRequest(connection.base_url, session_id)
     vm_data = request.get_vms_data()
 
     for vm in vm_data:
         try:
-            sys.stdout.write("<<<<{}>>>>\n".format(vm['VmName']))
+            sys.stdout.write("<<<<{}>>>>\n".format(vm["VmName"]))
             sys.stdout.write("<<<zerto_vpg_rpo:sep(124)>>>\n")
-            sys.stdout.write("{}|{}|{}\n".format(vm['VpgName'], vm['Status'], vm['ActualRPO']))
+            sys.stdout.write("{}|{}|{}\n".format(vm["VpgName"], vm["Status"], vm["ActualRPO"]))
             sys.stdout.write("<<<<>>>>\n")
         except KeyError:
             continue

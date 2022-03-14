@@ -1,7 +1,7 @@
 title: Prometheus: Build Check
 agents: prometheus
 catalog: app/prometheus
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check lists the build information of the underlying Prometheus server.
@@ -9,5 +9,5 @@ description:
  state. Depending on the Prometheus version, additional information such as the
  storage retention time may be shown.
 
-inventory:
+discovery:
  One service is created for the host

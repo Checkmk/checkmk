@@ -1,0 +1,14 @@
+Title: Fix "Element does not exist anymore" message in notification conditions
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626267073
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a notification rule contained conditions for "Match hosts", a message like
+"Element 'my_host' does not exist anymore" was shown within the conditions
+column.

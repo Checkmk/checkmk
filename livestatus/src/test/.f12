@@ -5,7 +5,6 @@
 
 set -e
 
-CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 REPO_DIR=$(git rev-parse --show-toplevel)
 
 execute_test() {
@@ -17,12 +16,13 @@ execute_test() {
 # same as in scripts/run-cxx-linter
 if [ -z "$RUN_HERE" ]; then
     echo "Running in Docker Container $CONTAINER (workdir $PWD)"
-    docker run -a stdout -a stderr -t \
+    : "${IMAGE_NAME:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh IMAGE_TESTING)"}"
+    docker run -a stdout -a stderr -t --rm \
         -u "$UID:$UID" \
         -v "$REPO_DIR:$REPO_DIR" \
         -e RUN_HERE="true" \
         -w "$PWD" \
-        "$CONTAINER" \
+        "${IMAGE_NAME}" \
         ./.f12
 else
     execute_test

@@ -1,0 +1,13 @@
+Title: proxmox_ve_backup_status: ZeroDivisionError() raised on some agent input
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617109047
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Zero-values for transfer_time, upload_amount or upload_time could result in ZeroDivisionError
+being raised. This change omits specific results in those cases.

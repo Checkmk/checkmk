@@ -1,7 +1,7 @@
 title: HPE StoreOnce: Status of Service Set
 agents: storeonce
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the overall health and status of a service set. Also name
@@ -13,5 +13,5 @@ description:
 item:
  The ID of a service set
 
-inventory:
+discovery:
  One service is created for each service set.

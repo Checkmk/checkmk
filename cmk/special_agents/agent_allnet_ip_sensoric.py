@@ -7,19 +7,20 @@
 # This agent uses UPNP API calls to the Fritz!Box to gather information
 # about connection configuration and status.
 
-import re
-import sys
 import getopt
 import pprint
+import re
 import socket
-import urllib.request
+import sys
 import traceback
+import urllib.request
 
 from cmk.utils.exceptions import MKException
 
 
 def usage():
-    sys.stderr.write("""Check_MK ALLNET IP-Sensoric Agent
+    sys.stderr.write(
+        """Check_MK ALLNET IP-Sensoric Agent
 
 USAGE: agent_allnet_ip_sensoric [OPTIONS] HOST
        agent_allnet_ip_sensoric -h
@@ -34,7 +35,8 @@ OPTIONS:
                                 applied to the whole check, instead it is used for
                                 the http query only.
   --debug                       Debug mode: let Python exceptions come through
-""")
+"""
+    )
 
 
 class RequestError(MKException):
@@ -42,57 +44,56 @@ class RequestError(MKException):
 
 
 def get_allnet_ip_sensoric_info(host_address, opt_debug):
-    url = 'http://%s/xml/sensordata.xml' % host_address
+    url = "http://%s/xml/sensordata.xml" % host_address
 
     headers = {
-        'User-agent': 'Check_MK agent_allnet_ip_sensoric',
+        "User-agent": "Check_MK agent_allnet_ip_sensoric",
     }
 
     if opt_debug:
-        sys.stdout.write('============================\n')
-        sys.stdout.write('URL: %s\n' % url)
+        sys.stdout.write("============================\n")
+        sys.stdout.write("URL: %s\n" % url)
 
     try:
         req = urllib.request.Request(url, None, headers)
-        handle = urllib.request.urlopen(req)
+        with urllib.request.urlopen(req) as handle:
+            infos = handle.info()
+            contents = handle.read().decode("utf-8")
     except Exception:
         if opt_debug:
-            sys.stdout.write('----------------------------\n')
+            sys.stdout.write("----------------------------\n")
             sys.stdout.write(traceback.format_exc())
-            sys.stdout.write('============================\n')
-        raise RequestError('Error during http call')
-
-    infos = handle.info()
-    contents = handle.read()
+            sys.stdout.write("============================\n")
+        raise RequestError("Error during http call")
 
     if opt_debug:
-        sys.stdout.write('----------------------------\n')
-        sys.stdout.write('Server: %s\n' % infos['SERVER'])
-        sys.stdout.write('----------------------------\n')
-        sys.stdout.write(contents + '\n')
-        sys.stdout.write('============================\n')
+        sys.stdout.write("----------------------------\n")
+        sys.stdout.write("Server: %s\n" % infos["SERVER"])
+        sys.stdout.write("----------------------------\n")
+        sys.stdout.write(contents + "\n")
+        sys.stdout.write("============================\n")
 
     attrs = {}
 
     context = None
     for line in contents.splitlines():
 
-        match = re.search('<(sensor[0-9]+|system)>', line)
+        match = re.search("<(sensor[0-9]+|system)>", line)
         if match:
             context = match.group(1)
             continue
 
-        match = re.search('</(sensor[0-9]+|system)>', line)
+        match = re.search("</(sensor[0-9]+|system)>", line)
         if match:
             context = None
             continue
 
-        match = re.search(r'<(\w+)>(.+)</\w+>', line)
+        match = re.search(r"<(\w+)>(.+)</\w+>", line)
         if match and context:
             attrs["%s.%s" % (context, match.group(1))] = match.group(2)
 
     if opt_debug:
-        sys.stdout.write('Parsed: %s\n' % pprint.pformat(attrs))
+        sys.stdout.write("Parsed: %s\n" % pprint.pformat(attrs))
 
     return attrs
 
@@ -101,8 +102,8 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = 'h:t:d'
-    long_options = ['help', 'timeout=', 'debug']
+    short_options = "h:t:d"
+    long_options = ["help", "timeout=", "debug"]
 
     host_address = None
     opt_debug = False
@@ -115,11 +116,11 @@ def main(sys_argv=None):
         return 1
 
     for o, a in opts:
-        if o in ['--debug']:
+        if o in ["--debug"]:
             opt_debug = True
-        elif o in ['-t', '--timeout']:
+        elif o in ["-t", "--timeout"]:
             opt_timeout = int(a)
-        elif o in ['-h', '--help']:
+        elif o in ["-h", "--help"]:
             usage()
             sys.exit(0)
 
@@ -142,11 +143,11 @@ def main(sys_argv=None):
             if opt_debug:
                 raise
 
-        sys.stdout.write('<<<allnet_ip_sensoric:sep(59)>>>\n')
+        sys.stdout.write("<<<allnet_ip_sensoric:sep(59)>>>\n")
         for key, value in sorted(status.items()):
-            sys.stdout.write('%s;%s\n' % (key, value))
+            sys.stdout.write("%s;%s\n" % (key, value))
 
     except Exception:
         if opt_debug:
             raise
-        sys.stderr.write('Unhandled error: %s' % traceback.format_exc())
+        sys.stderr.write("Unhandled error: %s" % traceback.format_exc())

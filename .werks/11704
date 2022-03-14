@@ -6,7 +6,7 @@ Date: 1611650426
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The ibm_mq plugins had various bugs from Checkmk version 2.0.0b1 to 2.0.0b5.
 In particlar, the check plugin ibm_mq_queues would not run at all.

@@ -1,7 +1,7 @@
 title: Nutanix Prism: Alerts
 agents: nutanix
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the alerts reported by a nutanix cluster.
@@ -13,5 +13,5 @@ description:
 
  This check requires the special agent configurable through "Nutanix Prism".
 
-inventory:
+discovery:
  One service is created.

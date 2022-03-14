@@ -1,0 +1,9 @@
+Title: ups_out_load: Upper thresholds/levels for OUT Load are configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1616062239
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1

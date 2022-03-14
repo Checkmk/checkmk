@@ -1,0 +1,13 @@
+Title: API folder_config: fixing the show endpoint which did not work for the root folder
+Class: fix
+Compatible: compat
+Component: core
+Date: 1616597378
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, it was not possible for the get the root folder
+through the show endpoint. This werk fixes this behavior.

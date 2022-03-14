@@ -1,7 +1,7 @@
 title: NetApp Clustermode Filer: NVRAM Battery
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the status of the NVRAM battery for each cluster node.
@@ -14,5 +14,5 @@ description:
 item:
  The name of the cluster node
 
-inventory:
+discovery:
  One service is created for each node.

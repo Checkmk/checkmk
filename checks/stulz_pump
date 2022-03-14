@@ -8,21 +8,21 @@
 def inventory_stulz_pump(info):
     inventory = []
     for pump_id, _pump_status in info[0]:
-        pump_id = pump_id.replace('.1', '')
+        pump_id = pump_id.replace(".1", "")
         inventory.append((pump_id, None))
     return inventory
 
 
 def check_stulz_pump(item, _no_params, info):
     for index, (pump_id, pump_status) in enumerate(info[0]):
-        pump_id = pump_id.replace('.1', '')
+        pump_id = pump_id.replace(".1", "")
         if pump_id == item:
             pump_rpm = info[1][index][0]
-            perfdata = [('rpm', pump_rpm + "%", None, None, 0, 100)]
-            if pump_status == '1':
+            perfdata = [("rpm", pump_rpm + "%", None, None, 0, 100)]
+            if pump_status == "1":
                 state = 0
                 infotext = "Pump is running at %s%%" % pump_rpm
-            elif pump_status == '0':
+            elif pump_status == "0":
                 state = 2
                 infotext = "Pump is not running"
             else:
@@ -41,5 +41,5 @@ check_info["stulz_pump"] = {
     "snmp_info": [
         (".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5802", [OID_END, 2]),
         (".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5821", [2]),
-    ]
+    ],
 }

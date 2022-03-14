@@ -1,0 +1,14 @@
+Title: fileinfo_groups: No group patterns found for some enforced services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619534871
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If enforced services have been configured for fileinfo groups, there may be
+instances in which the service returns an UNKNOWN status, along with the error
+message "No group pattern found". This has been fixed.

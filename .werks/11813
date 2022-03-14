@@ -1,0 +1,20 @@
+Title: Make async sections of mk_oracle.ps1 working
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627636300
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The async sections of mk_oracle.ps1 (Windows Version of mk_oracle) had a major design flaw.
+The async sections may not be fully executed and led to stale services.
+This is fixed now.
+
+Keep in mind that you need to set the execution mode for this plugin to async in check_mk.user.yaml:
+execution:
+    - pattern: '$CUSTOM_PLUGINS_PATH$\mk_oracle.ps1'
+      async: yes
+
+With Werk #11815 <tt>async: yes</tt> be done automatically via the extended mk_oracle bakery plugin.

@@ -1,0 +1,19 @@
+Title: logwatch: fix "invalid regular expression" crash
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1617025502
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The logwatch check crashed when the option to reclassify error messages was
+used in combination with regular expressions that contain a special character
+escaped with a back slash. The error looks similar to this: "Exception:
+MKGeneralException (Invalid regular expression 'some.random.file.exe\) has
+opened key': unbalanced parenthesis at position 28)". This has been fixed.
+Please be aware that you may need to review your regular expression patterns,
+especially in the case of Windows file paths. Toggle inline help for more
+information.

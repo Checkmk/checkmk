@@ -1,7 +1,7 @@
 title: Microsoft Azure Storage Accounts: Performance
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports metrics regarding performance of monitored
@@ -13,8 +13,6 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each storage account if all required metrics
  (total_SuccessServerLatency, total_SuccessE2ELatency, total_Availability) are given.
-
-

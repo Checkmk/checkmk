@@ -5,27 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    OptionalDropdownChoice,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Integer, OptionalDropdownChoice, Tuple
 
 
 def _parameter_valuespec_memory_relative():
-    return OptionalDropdownChoice(title=_("Memory usage"),
-                                  choices=[(None, _("Do not impose levels"))],
-                                  otherlabel=_("Percentual levels ->"),
-                                  explicit=Tuple(elements=[
-                                      Integer(title=_("Warning at"), default_value=85, unit="%"),
-                                      Integer(title=_("Critical at"), default_value=90, unit="%"),
-                                  ],))
+    return OptionalDropdownChoice(
+        title=_("Memory usage"),
+        choices=[(None, _("Do not impose levels"))],
+        otherlabel=_("Percentual levels ->"),
+        explicit=Tuple(
+            elements=[
+                Integer(title=_("Warning at"), default_value=85, unit="%"),
+                Integer(title=_("Critical at"), default_value=90, unit="%"),
+            ],
+        ),
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +33,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_memory_relative,
         title=lambda: _("Main memory usage for Brocade fibre channel switches"),
-    ))
+    )
+)

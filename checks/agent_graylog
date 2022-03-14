@@ -15,13 +15,17 @@
 #     'display_source_details': 'source',
 # }
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_graylog_arguments(params, hostname, ipaddress):
+
+def agent_graylog_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = [
         "-P",
         params["protocol"],
         "-m",
-        ','.join(params["sections"]),
+        ",".join(params["sections"]),
         "-t",
         params["since"],
         "-u",
@@ -44,4 +48,4 @@ def agent_graylog_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['graylog'] = agent_graylog_arguments
+special_agent_info["graylog"] = agent_graylog_arguments

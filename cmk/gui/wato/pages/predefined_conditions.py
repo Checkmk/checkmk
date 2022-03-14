@@ -7,50 +7,60 @@
 
 from typing import List, Optional, Type
 
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.plugins.wato.utils import (
+    ConfigDomainCore,
+    mode_registry,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+    WatoMode,
+)
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
-    FixedValue,
     Alternative,
     DropdownChoice,
     DualListChoice,
+    FixedValue,
     Transform,
+    ValueSpec,
 )
-
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
-from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
-from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.rulespecs import ServiceRulespec
+from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ConfigDomainCore,
-    SimpleModeType,
-    SimpleListMode,
-    SimpleEditMode,
-    mode_registry,
-)
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets
+from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
-from cmk.gui.utils.urls import makeuri_contextless
+
+class DummyRulespecGroup(RulespecGroup):
+    @property
+    def name(self):
+        return "dummy"
+
+    @property
+    def title(self):
+        return "Dummy"
+
+    @property
+    def help(self):
+        return "Dummy"
 
 
 def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
-        group=RulespecGroupMonitoringConfiguration,
-        valuespec=lambda: FixedValue(None),
+        group=DummyRulespecGroup,
+        valuespec=lambda: FixedValue(value=None),
     )
 
 
 def vs_conditions():
     return Transform(
-        VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
+        valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         forth=lambda c: RuleConditions("").from_config(c),
         back=lambda c: c.to_config_with_folder(),
     )
@@ -84,7 +94,7 @@ class ModePredefinedConditions(SimpleListMode):
         return ["rulesets"]
 
     def __init__(self):
-        super(ModePredefinedConditions, self).__init__(
+        super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
@@ -99,55 +109,69 @@ class ModePredefinedConditions(SimpleListMode):
     def _validate_deletion(self, ident, entry):
         rulesets = AllRulesets()
         rulesets.load()
-        matched_rulesets = SearchedRulesets(rulesets, {
-            "rule_predefined_condition": ident
-        }).get_rulesets()
+        matched_rulesets = SearchedRulesets(
+            rulesets, {"rule_predefined_condition": ident}
+        ).get_rulesets()
 
         if matched_rulesets:
             raise MKUserError(
                 "_delete",
-                _("You can not delete this %s because it is <a href=\"%s\">in use</a>.") %
-                (self._mode_type.name_singular(), self._search_url(ident)))
+                _('You can not delete this %s because it is <a href="%s">in use</a>.')
+                % (self._mode_type.name_singular(), self._search_url(ident)),
+            )
 
     def page(self):
         html.p(
-            _("This module can be used to define conditions for Check_MK rules in a central place. "
-              "You can then refer to these conditions from different rulesets. Using these predefined "
-              "conditions may save you a lot of redundant conditions when you need them in multiple "
-              "rulesets."))
-        super(ModePredefinedConditions, self).page()
+            _(
+                "This module can be used to define conditions for Check_MK rules in a central place. "
+                "You can then refer to these conditions from different rulesets. Using these predefined "
+                "conditions may save you a lot of redundant conditions when you need them in multiple "
+                "rulesets."
+            )
+        )
+        super().page()
 
     def _show_action_cell(self, table, ident):
-        super(ModePredefinedConditions, self)._show_action_cell(table, ident)
+        super()._show_action_cell(table, ident)
 
-        html.icon_button(self._search_url(ident),
-                         _("Show rules using this %s") % self._mode_type.name_singular(), "search")
+        html.icon_button(
+            self._search_url(ident),
+            _("Show rules using this %s") % self._mode_type.name_singular(),
+            "search",
+        )
 
     def _search_url(self, ident):
         return makeuri_contextless(
             request,
-            [("mode", "rule_search"), ("filled_in", "rule_search"),
-             ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
-             ("search_p_rule_predefined_condition_USE", "on")],
+            [
+                ("mode", "rule_search"),
+                ("filled_in", "rule_search"),
+                ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
+                ("search_p_rule_predefined_condition_USE", "on"),
+            ],
         )
 
     def _show_entry_cells(self, table, ident, entry):
-        table.cell(_("Title"), html.render_text(entry["title"]))
+        table.cell(_("Title"), entry["title"])
 
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")
         html.open_li()
-        html.write("%s: %s" %
-                   (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
+        html.write_text(
+            "%s: %s" % (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path())
+        )
         html.close_li()
         html.close_ul()
-        html.write(vs_conditions().value_to_text(entry["conditions"]))
+        html.write_text(vs_conditions().value_to_html(entry["conditions"]))
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
-                _("Administrators (having the permission "
-                  "\"Write access to all predefined conditions\")"))
+                _(
+                    "Administrators (having the permission "
+                    '"Write access to all predefined conditions")'
+                )
+            )
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
 
@@ -176,19 +200,21 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         return ModePredefinedConditions
 
     def __init__(self):
-        super(ModeEditPredefinedCondition, self).__init__(
+        super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
 
     def _vs_individual_elements(self):
-        if config.user.may("wato.edit_all_predefined_conditions"):
+        if user.may("wato.edit_all_predefined_conditions"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Administrators"),
-                    totext=_("Administrators (having the permission "
-                             "\"Write access to all predefined conditions\")"),
+                    totext=_(
+                        "Administrators (having the permission "
+                        '"Write access to all predefined conditions")'
+                    ),
                 )
             ]
         else:
@@ -196,37 +222,47 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
         return [
             ("conditions", vs_conditions()),
-            ("owned_by",
-             Alternative(
-                 title=_("Editable by"),
-                 help=_(
-                     "Each predefined condition is owned by a group of users which are able to edit, "
-                     "delete and use existing predefined conditions."),
-                 elements=admin_element + [
-                     DropdownChoice(
-                         title=_("Members of the contact group:"),
-                         choices=lambda: self._contact_group_choices(only_own=True),
-                         invalid_choice="complain",
-                         empty_text=_(
-                             "You need to be member of at least one contact group to be able to "
-                             "create a predefined condition."),
-                         invalid_choice_title=_("Group not existant or not member"),
-                         invalid_choice_error=_("The choosen group is either not existant "
-                                                "anymore or you are not a member of this "
-                                                "group. Please choose another one."),
-                     ),
-                 ])),
-            ("shared_with",
-             DualListChoice(
-                 title=_("Share with"),
-                 help=_(
-                     "By default only the members of the owner contact group are permitted "
-                     "to use a a predefined condition. It is possible to share it with "
-                     "other groups of users to make them able to use a predefined condition in rules."
-                 ),
-                 choices=self._contact_group_choices,
-                 autoheight=False,
-             )),
+            (
+                "owned_by",
+                Alternative(
+                    title=_("Editable by"),
+                    help=_(
+                        "Each predefined condition is owned by a group of users which are able to edit, "
+                        "delete and use existing predefined conditions."
+                    ),
+                    elements=admin_element
+                    + [
+                        DropdownChoice(
+                            title=_("Members of the contact group:"),
+                            choices=lambda: self._contact_group_choices(only_own=True),
+                            invalid_choice="complain",
+                            empty_text=_(
+                                "You need to be member of at least one contact group to be able to "
+                                "create a predefined condition."
+                            ),
+                            invalid_choice_title=_("Group not existant or not member"),
+                            invalid_choice_error=_(
+                                "The choosen group is either not existant "
+                                "anymore or you are not a member of this "
+                                "group. Please choose another one."
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "shared_with",
+                DualListChoice(
+                    title=_("Share with"),
+                    help=_(
+                        "By default only the members of the owner contact group are permitted "
+                        "to use a a predefined condition. It is possible to share it with "
+                        "other groups of users to make them able to use a predefined condition in rules."
+                    ),
+                    choices=self._contact_group_choices,
+                    autoheight=False,
+                ),
+            ),
         ]
 
     def _save(self, entries):
@@ -236,7 +272,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super(ModeEditPredefinedCondition, self)._save(entries)
+        super()._save(entries)
 
         conditions = RuleConditions("").from_config(entries[self._ident]["conditions"])
 
@@ -291,12 +327,12 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         contact_groups = load_contact_group_information()
 
         if only_own:
-            assert config.user.id is not None
-            user_groups = userdb.contactgroups_of_user(config.user.id)
+            assert user.id is not None
+            user_groups = userdb.contactgroups_of_user(user.id)
         else:
             user_groups = []
 
         entries = [
-            (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
+            (c, g["alias"]) for c, g in contact_groups.items() if not only_own or c in user_groups
         ]
         return sorted(entries, key=lambda x: x[1])

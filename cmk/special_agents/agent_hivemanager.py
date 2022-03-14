@@ -23,8 +23,8 @@ def main(sys_argv=None):
         sys.stderr.write("Usage: agent_hivemanager <IP> <USERNAME> <PASSWORD>\n")
         return 2
 
-    auth = '%s:%s' % (user, password)
-    auth_encoded = base64.encodebytes(auth.encode('utf-8')).decode('utf-8').replace('\n', '')
+    auth = "%s:%s" % (user, password)
+    auth_encoded = base64.encodebytes(auth.encode("utf-8")).decode("utf-8").replace("\n", "")
     headers = {
         "Authorization": "Basic %s" % auth_encoded,
         "Content-Type": "application/json",
@@ -36,24 +36,24 @@ def main(sys_argv=None):
         return 2
 
     informations = [
-        'hostName',
-        'clients',
-        'alarm',
-        'connection',
-        'upTime',
-        'eth0LLDPPort',
-        'eth0LLDPSysName',
-        'hive',
-        'hiveOS',
-        'hwmodel'
-        'serialNumber',
-        'nodeId',
-        'location',
-        'networkPolicy',
+        "hostName",
+        "clients",
+        "alarm",
+        "connection",
+        "upTime",
+        "eth0LLDPPort",
+        "eth0LLDPSysName",
+        "hive",
+        "hiveOS",
+        "hwmodel",
+        "serialNumber",
+        "nodeId",
+        "location",
+        "networkPolicy",
     ]
 
     print("<<<hivemanager_devices:sep(124)>>>")
     for line in json.loads(data):
-        if line['upTime'] == '':
-            line['upTime'] = "down"
+        if line["upTime"] == "":
+            line["upTime"] = "down"
         print("|".join(map(str, ["%s::%s" % (x, y) for x, y in line.items() if x in informations])))

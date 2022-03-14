@@ -5,47 +5,46 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Alternative,
-    Tuple,
-    Age,
-    FixedValue,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, Tuple
 
 
 def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
     # use Dictionary as Optional returning an empty dict if empty
-    return Dictionary(elements=[(
-        "age_levels_upper",
-        Alternative(
-            title=_("Backup conditions"),
-            elements=[
-                Tuple(
-                    title=_("Set conditions"),
+    return Dictionary(
+        elements=[
+            (
+                "age_levels_upper",
+                Alternative(
+                    title=_("Backup conditions"),
                     elements=[
-                        Age(
-                            title=_("Warning at"),
-                            display=["days", "hours", "minutes"],
-                            # bit more than a day
-                            default_value=int(60 * 60 * 26),
+                        Tuple(
+                            title=_("Set conditions"),
+                            elements=[
+                                Age(
+                                    title=_("Warning at"),
+                                    display=["days", "hours", "minutes"],
+                                    # bit more than a day
+                                    default_value=int(60 * 60 * 26),
+                                ),
+                                Age(
+                                    title=_("Critical at"),
+                                    display=["days", "hours", "minutes"],
+                                    # bit more than two days
+                                    default_value=int(60 * 60 * 50),
+                                ),
+                            ],
                         ),
-                        Age(
-                            title=_("Critical at"),
-                            display=["days", "hours", "minutes"],
-                            # bit more than two days
-                            default_value=int(60 * 60 * 50),
-                        ),
+                        FixedValue(value=None, title=_("No Conditions"), totext=""),
                     ],
                 ),
-                FixedValue(None, title=_("No Conditions"), totext=""),
-            ]))])
+            )
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -55,4 +54,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_proxmox_ve_vm_backup_requirements,
-    ))
+    )
+)

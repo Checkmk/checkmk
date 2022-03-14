@@ -1,0 +1,11 @@
+Title: Fix case where passive checks would remain "passive" until a core restart
+Class: fix
+Compatible: compat
+Component: core
+Date: 1627897209
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

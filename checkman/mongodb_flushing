@@ -1,7 +1,7 @@
 title: MongoDB: Flushing
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors time how long MongoDB needs
@@ -13,5 +13,5 @@ description:
  on the same host where the {mk_mongodb} plugin is installed. The data is piggybacked
  to a pseudo host named after the replica set name, intead.
 
-inventory:
+discovery:
  One service is created.

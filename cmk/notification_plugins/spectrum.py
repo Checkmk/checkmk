@@ -15,21 +15,29 @@ from cmk.notification_plugins import utils
 
 def send_trap(oids, target, community):
     cmd = [
-        "/usr/bin/snmptrap", '-v', '1', '-c', community, target, "1.3.6.1.4.1.100.1.2.3",
-        "172.25.221.23", "6", "1", "\"\""
+        "/usr/bin/snmptrap",
+        "-v",
+        "1",
+        "-c",
+        community,
+        target,
+        "1.3.6.1.4.1.100.1.2.3",
+        "172.25.221.23",
+        "6",
+        "1",
+        '""',
     ]
     for oid, value in oids.items():
         # Feel free to add more types. Currently only Integer and Strings are supported
         if isinstance(value, int):
-            oid_id = 'i'
+            oid_id = "i"
         elif isinstance(value, str):
-            oid_id = 's'
-            value = "\"%s\"" % value.replace("\"", " ")
+            oid_id = "s"
+            value = '"%s"' % value.replace('"', " ")
         cmd += [oid, oid_id, "%s" % value]
 
     sys.stderr.write("%r" % cmd)
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    return p.wait()
+    return subprocess.run(cmd, stdin=subprocess.PIPE, check=False).returncode
 
 
 def main():
@@ -48,24 +56,25 @@ def main():
     complete_url = "https://" + context["MONITORING_HOST"]
     if "OMD_SITE" in context:
         complete_url += "/" + context["OMD_SITE"]
-    complete_url += context.get("SERVICEURL", context.get("HOSTURL", u''))
+    complete_url += context.get("SERVICEURL", context.get("HOSTURL", ""))
 
     oids = {
-        base_oid + ".1": context['MONITORING_HOST'],
-        base_oid + ".2": context['HOSTNAME'],
-        base_oid + ".3": context['HOSTADDRESS'],
-        base_oid + ".4": context.get('HOSTGROUPNAMES', ""),
-        base_oid + ".5": context.get('SERVICEDESC', 'Connectivity'),
-        base_oid + ".6": context.get('SERVICESTATE', context.get('HOSTSTATE')),
-        base_oid + ".7": context.get('SERVICEOUTPUT', context.get("HOSTOUTPUT")),
+        base_oid + ".1": context["MONITORING_HOST"],
+        base_oid + ".2": context["HOSTNAME"],
+        base_oid + ".3": context["HOSTADDRESS"],
+        base_oid + ".4": context.get("HOSTGROUPNAMES", ""),
+        base_oid + ".5": context.get("SERVICEDESC", "Connectivity"),
+        base_oid + ".6": context.get("SERVICESTATE", context.get("HOSTSTATE")),
+        base_oid + ".7": context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT")),
         base_oid + ".8": "HARD",  # Notifications always are in HARDSTATE
-        base_oid + ".9": context.get('SERVICEDESC', 'Connectivity'),
+        base_oid + ".9": context.get("SERVICEDESC", "Connectivity"),
         base_oid + ".10": 3,  # SPECIFIC TRAP (type) NUMBER
         base_oid + ".11": "Call number 123456",  # CALLOUT STRING
         base_oid + ".12": complete_url,
-        base_oid + ".13": "%s alarm on host %s" %
-                          (context.get('SERVICEDESC', 'Connectivity'), context['HOSTNAME']),
-        base_oid + ".14": context.get('SERVICEGROUPNAMES', ""),
+        base_oid
+        + ".13": "%s alarm on host %s"
+        % (context.get("SERVICEDESC", "Connectivity"), context["HOSTNAME"]),
+        base_oid + ".14": context.get("SERVICEGROUPNAMES", ""),
     }
 
-    sys.exit(send_trap(oids, context['PARAMETER_DESTINATION'], context['PARAMETER_COMMUNITY']))
+    sys.exit(send_trap(oids, context["PARAMETER_DESTINATION"], context["PARAMETER_COMMUNITY"]))

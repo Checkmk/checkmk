@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_acme_sbc(params, hostname, ipaddress):
+
+def agent_acme_sbc(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     return [hostname]
 
 
-special_agent_info['acme_sbc'] = agent_acme_sbc
+special_agent_info["acme_sbc"] = agent_acme_sbc

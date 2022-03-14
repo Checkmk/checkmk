@@ -1,7 +1,7 @@
 title: Usage of Physical and Virtual RAM
 agents: linux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the current usage of physical RAM and
@@ -35,8 +35,7 @@ description:
  Hint: If you want to monitor swapping, you probably better measure major
  pagefaults. Please look at the check {kernel}.
 
-inventory:
+discovery:
  One service is created on each host that provides the section {<<<mem>>>}.
  If that section also outputs information about the Windows page file,
  then the check {<<<mem.win>>>} creates a service instead.
-

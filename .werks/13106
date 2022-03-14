@@ -1,0 +1,13 @@
+Title: Fix missing spaces on CSV and JSON export of views
+Class: fix
+Compatible: comp
+Component: multisite
+Date: 1629722192
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a view with tag column was exported via CSV or JSON, multiple tags were not
+seperated with space.

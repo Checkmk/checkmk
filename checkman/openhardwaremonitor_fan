@@ -1,7 +1,7 @@
 title: Hardware Sensors via OpenHardwareMonitor: Fans
 agents: windows
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors fan speed sensors reported by the tool
@@ -20,5 +20,5 @@ description:
 item:
  The name of the sensor as reported by OpenHardwareMonitor
 
-inventory:
+discovery:
  One service is created for each available sensor with the sensor type ("Fan").

@@ -7,6 +7,7 @@
 import signal
 from types import FrameType
 from typing import Optional
+
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 
@@ -30,13 +31,18 @@ class TimeoutManager:
     first try to write anything to the client) which will result in an
     exception.
     """
+
     def enable_timeout(self, duration: int) -> None:
         def handle_request_timeout(signum: int, frame: Optional[FrameType]) -> None:
             raise RequestTimeout(
-                _("Your request timed out after %d seconds. This issue may be "
-                  "related to a local configuration problem or a request which works "
-                  "with a too large number of objects. But if you think this "
-                  "issue is a bug, please send a crash report.") % duration)
+                _(
+                    "Your request timed out after %d seconds. This issue may be "
+                    "related to a local configuration problem or a request which works "
+                    "with a too large number of objects. But if you think this "
+                    "issue is a bug, please send a crash report."
+                )
+                % duration
+            )
 
         signal.signal(signal.SIGALRM, handle_request_timeout)
         signal.alarm(duration)

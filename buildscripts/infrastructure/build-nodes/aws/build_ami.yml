@@ -1,0 +1,313 @@
+#!/usr/bin/env ansible-playbook
+# doc for modules:
+# https://docs.ansible.com/ansible/latest/modules/ec2_module.html
+# https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_ami_module.html
+- name: "Create VMs in Amazon EC2"
+  hosts: localhost
+  connection: local
+  vars_files:
+    - group_vars/vars.yml
+
+  tasks:
+    - name: Get data about checkmk free AMIs
+      ec2_ami_info:
+          filters:
+              name: "*checkmk*free*"
+          region: "{{ ec2_region }}"
+      register: AMIs
+    - name: "Delete AMIs which are older than {{ ami_cleanup_age_in_days }} days"
+      ec2_ami:
+          region: "{{ ec2_region }}"
+          image_id: "{{ item.image_id }}"
+          delete_snapshot: yes
+          state: absent
+      loop: "{{ AMIs.images }}"
+      when: "{{ (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ') - item.creation_date | to_datetime('%Y-%m-%dT%H:%M:%S.%fZ')).days > ami_cleanup_age_in_days }}"
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var AWS_ACCESS_KEY_ID not defined or empty."
+      when: ec2_access_key | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var AWS_SECRET_ACCESS_KEY not defined or empty."
+      when: ec2_secret_key | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var EC2_KEY not defined or empty."
+      when: ec2_key | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var ANSIBLE_SSH_PRIVATE_KEY_FILE not defined or empty."
+      when: ansible_ssh_private_key_file | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var CMKADMIN_PASS not defined or empty."
+      when: cmkadmin_pass | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var EDITION not defined or empty."
+      when: cmk_edition | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var CMK_VERS not defined or empty."
+      when: cmk_version | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var PACKAGE_DIR not defined or empty."
+      when: package_dir | length == 0
+
+    - name: Ensure a security group for VMs servers is in place
+      ec2_group:
+        name: "{{ ec2_security_group_vms }}"
+        description: Security Group for my VMs servers
+        region: "{{ ec2_region }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+
+    - name: Provision VMs on Amazon
+      ec2:
+        spot_price: "0.02"
+        spot_wait_timeout: 600
+        instance_initiated_shutdown_behavior: terminate
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        key_name: "{{ ec2_key }}"
+        # TODO: This may need to be changed when pushing the image to Amazon Marketplace (CMK-8655)
+        region: "{{ ec2_region }}"
+        group: "{{ ec2_security_group_vms }}"
+        instance_type: "{{ item.value.instance_type }}"
+        image: "{{ ami_id }}"
+        wait: true
+        volumes:
+            # Partition 1: OMD Versions: We store here the application
+          - device_name: /dev/sda1
+            volume_type: gp2
+            volume_size: "{{ item.value.disk_volume }}"
+            delete_on_termination: true
+            # Partition 2: OMD Sites: We store here the user data
+          - device_name: /dev/sdb
+            volume_type: gp2
+            volume_size: 5
+            delete_on_termination: false
+
+        exact_count: "{{ item.value.count }}"
+        vpc_subnet_id: "{{ item.value.vpc_subnet_id }}"
+        count_tag:
+          Name: "{{ cmk_edition }} - {{ item.key }}"
+        instance_tags:
+          Name: "{{ cmk_edition }} - {{ item.key }}"
+          role: "{{ item.key }}"
+          cmk_site: "{{ item.value.cmk_site }}"
+      with_dict: "{{ servers }}"
+      register: ec2_instance
+
+    - name: setting facts
+      set_fact:
+        ec2_instance: "{{ ec2_instance.results | map(attribute='tagged_instances') | list }}"
+      when:
+        - ec2_instance is defined
+    - debug: msg="{{ ec2_instance }}"
+
+    - name: Add VM instance public IPs to host group
+      add_host:
+        instance_id: "{{ item.id }}"
+        hostname: "{{ item.public_ip }}"
+        groups: "{{ item.tags.role }}"
+        public_ip: "{{ item.public_ip }}"
+        privat_ip: "{{ item.private_ip }}"
+        cmk_site: "{{ item.tags.cmk_site }}"
+        ec2_access_key: "{{ ec2_access_key }}"
+        ec2_secret_key: "{{ ec2_secret_key }}"
+        ansible_ssh_user: "{{ ansible_ssh_user }}"
+        ec2_auto_shutdown: "{{ ec2_auto_shutdown }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file }}"
+        ansible_ssh_port: 22
+      with_items: "{{ ec2_instance }}"
+      when:
+        - ec2_instance is defined
+
+    - name: Wait for SSH to come up
+      wait_for:
+        host: "{{ item.public_ip }}"
+        port: 22
+        delay: 30
+        timeout: 120
+        state: started
+      with_items: "{{ ec2_instance }}"
+      when:
+        - ec2_instance is defined
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  tasks:
+    - name: Format data partition with ext4
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/xvdb
+
+    - name: create directory /opt/omd
+      ansible.builtin.file:
+        path: /opt/omd
+        state: directory
+        mode: '0755'
+
+    - name: create directory as mount point for data partition
+      ansible.builtin.file:
+        path: /mnt/data_partition
+        state: directory
+        mode: '0755'
+
+    # If the data parttion would be mounted as /opt/omd/sites there would be a "lost+found" directory.
+    # Therefore a mount bind is used.
+    # (A symlink does not work as the tmpfs mount point cannot be created)
+    - name: mount data partition
+      ansible.posix.mount:
+        path: /mnt/data_partition
+        src: /dev/xvdb
+        fstype: ext4
+        opts: defaults
+        state: mounted
+
+    - name: create directory as mount point for data partition
+      ansible.builtin.file:
+        path: /mnt/data_partition/sites
+        state: directory
+        mode: '0755'
+
+    - name: mount bind as replacement for symlink in order to support mount tmpfs
+      ansible.posix.mount:
+        path: /opt/omd/sites
+        src: /mnt/data_partition/sites
+        fstype: none
+        opts: bind
+        state: mounted
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - install-cmk
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - configure-apache
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - add-localhost
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - change-motd
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  tasks:
+    - name: Disable remote root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: 'PermitRootLogin no'
+
+    - name: restart ssh service
+      service:
+        name: ssh
+        state: restarted
+
+    - name: Reboot ec2 instance
+      reboot:
+
+    # This must be the last step for configuring the EC2 instance directly.
+    # After this step has been executed, ansible can not connect to the EC2 instance any more.
+    # correct behaviour => "Failed to connect to the host via ssh: ubuntu@1.2.3.4: Permission denied (publickey)."}"
+    - name: Delete ansible ssh key
+      file:
+        state: absent
+        path: /home/{{ ansible_ssh_user }}/.ssh
+
+- name: debug var
+  gather_facts: False
+  hosts: localhost
+  tasks:
+    - debug: msg="content of ec2_instance {{ ec2_instance[0][0] }}"
+
+    # the ports are already configured as open in the security group used by this script
+    # when the AMI is cloned the customer has to configure the ports in a security group
+    # TODO: Should we also check if other ports are closed? (CMK-7830)
+    - name: Check all port numbers are accessible from the current host
+      wait_for:
+        host: '{{ ec2_instance[0][0]["public_ip"] }}'
+        port: "{{ item }}"
+        state: started         # Port should be open
+        delay: 0               # No wait before first check (sec)
+        timeout: 3             # Stop checking after timeout (sec)
+      with_items:
+        - 443
+        - 80
+
+- name: create AMI from EC2 instance
+  gather_facts: False
+  vars_files:
+      - group_vars/vars.yml
+  hosts: localhost
+  tasks:
+    - name: gather facts about an AMI with name "checkmk {{ cmk_edition }} {{ cmk_version }}"
+      ec2_ami_info:
+        region: "{{ ec2_region }}"
+        filters:
+          name: "checkmk {{ cmk_edition }} {{ cmk_version }}"
+      register: ami_image_ids
+    - debug: msg="content of ami_image_ids {{ ami_image_ids }}"
+    - name: Deregister old AMI (delete associated snapshots too)
+      ec2_ami:
+        image_id: '{{ ami_image_ids["images"][0]["image_id"] }}'
+        region: "{{ ec2_region }}"
+        delete_snapshot: True
+        state: absent
+      when: ami_image_ids["images"]|length>0
+    - name: Create AMI
+      ec2_ami:
+        instance_id: "{{ ec2_instance[0][0].id }}"
+        region: "{{ ec2_region }}"
+        wait: yes
+        wait_timeout: 900     # Prevent "botocore.exceptions.WaiterError: Waiter image_available failed: Max attempts exceeded"
+        name: "checkmk {{ cmk_edition }} {{ cmk_version }}"
+        description: "This EC2 instance contains a running checkmk installation."
+        tags:
+          Name: "{{ cmk_edition }} {{ cmk_version }}"
+          Service: checkmk

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_sensor_item import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # normal(1):         the environment is good, such as low
 #                    temperature.
 # warning(2):        the environment is bad, such as temperature
@@ -32,7 +33,7 @@ cisco_temp_perf_envmon_states = {
     3: "critical",
     4: "shutdown",
     5: "notPresent",
-    6: "notFunctioning"
+    6: "notFunctioning",
 }
 
 
@@ -46,20 +47,22 @@ def check_cisco_temp_perf(item, _no_params, info):
             return 3, "This check is obsolete, please re-inventorize this host"
 
 
-check_info['cisco_temp_perf'] = {
-    "check_function"        : check_cisco_temp_perf,
-    "inventory_function"    : inventory_cisco_temp_perf,
-    "service_description"   : "Temperature %s",
-    "has_perfdata"          : True,
-    "snmp_scan_function"    :
-        lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-               and oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") is not None \
-               and oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") is None,
-    "snmp_info"             : (".1.3.6.1.4.1.9.9.13.1.3.1", [ # CISCO-SMI
-                               2, # ciscoEnvMonTemperatureStatusDescr
-                               3, # ciscoEnvMonTemperatureStatusValue
-                               4, # ciscoEnvMonTemperatureThreshold
-                               6, # ciscoEnvMonTemperatureState
-                               OID_END
-                            ]),
+check_info["cisco_temp_perf"] = {
+    "check_function": check_cisco_temp_perf,
+    "inventory_function": inventory_cisco_temp_perf,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") is not None
+    and oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") is None,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.13.1.3.1",
+        [  # CISCO-SMI
+            2,  # ciscoEnvMonTemperatureStatusDescr
+            3,  # ciscoEnvMonTemperatureStatusValue
+            4,  # ciscoEnvMonTemperatureThreshold
+            6,  # ciscoEnvMonTemperatureState
+            OID_END,
+        ],
+    ),
 }

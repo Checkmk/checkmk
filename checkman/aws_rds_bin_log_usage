@@ -1,7 +1,7 @@
 title: AWS RDS: Binary Logs
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the disk space occupied by binary logs.
@@ -16,6 +16,6 @@ item:
  Name of the instance and region name (to avoid duplicate services
  in case of multi-region monitoring).
 
-inventory:
+discovery:
  One service is created for each database if all required metrics
  (BinLogDiskUsage) are given.

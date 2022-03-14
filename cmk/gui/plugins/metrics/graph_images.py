@@ -13,30 +13,24 @@ import traceback
 
 import livestatus
 
-import cmk.utils.render
 import cmk.utils
+import cmk.utils.render
 
-import cmk.gui.config as config
 import cmk.gui.pdf as pdf
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    MKUnauthenticatedException,
-    MKUserError,
-)
-from cmk.gui.log import logger
+from cmk.gui.exceptions import MKGeneralException, MKUnauthenticatedException, MKUserError
+from cmk.gui.globals import config, request, response
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
-from cmk.gui.plugins.metrics.identification import graph_identification_types
+from cmk.gui.log import logger
+from cmk.gui.plugins.metrics import artwork, html_render
 from cmk.gui.plugins.metrics.graph_pdf import (
+    compute_pdf_graph_data_range,
     get_mm_per_ex,
     graph_legend_height,
     render_graph_pdf,
-    compute_pdf_graph_data_range,
 )
-
-from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics import html_render
+from cmk.gui.plugins.metrics.identification import graph_identification_types
+from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
+from cmk.gui.utils.logged_in import SuperUserContext
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -44,25 +38,27 @@ from cmk.gui.plugins.metrics import html_render
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 @cmk.gui.pages.register("noauth:ajax_graph_images")
 def ajax_graph_images_for_notifications():
-    graphs = []
-
-    if html.request.remote_ip not in ["127.0.0.1", "::1"]:
+    if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
-            _("You are not allowed to access this page (%s).") % html.request.remote_ip)
+            _("You are not allowed to access this page (%s).") % request.remote_ip
+        )
 
-    config.set_super_user()
+    with SuperUserContext():
+        _answer_graph_image_request()
 
+
+def _answer_graph_image_request() -> None:
     try:
-        host_name = html.request.var("host")
+        host_name = request.var("host")
         if not host_name:
-            raise MKGeneralException(_("Missing mandatory \"host\" parameter"))
+            raise MKGeneralException(_('Missing mandatory "host" parameter'))
 
-        service_description = html.request.var("service", "_HOST_")
+        service_description = request.var("service", "_HOST_")
 
-        site = html.request.var("site")
+        site = request.var("site")
         # FIXME: We should really enforce site here. But it seems that the notification context
         # has no idea about the site of the host. This could be optimized later.
-        #if not site:
+        # if not site:
         #    raise MKGeneralException("Missing mandatory \"site\" parameter")
         try:
             row = get_graph_data_from_livestatus(site, host_name, service_description)
@@ -70,8 +66,9 @@ def ajax_graph_images_for_notifications():
             if config.debug:
                 raise
             raise Exception(
-                _("Cannot render graph: host %s, service %s not found.") %
-                (host_name, service_description))
+                _("Cannot render graph: host %s, service %s not found.")
+                % (host_name, service_description)
+            )
 
         site = row["site"]
 
@@ -88,21 +85,25 @@ def ajax_graph_images_for_notifications():
                 "host_name": host_name,
                 "service_description": service_description,
                 "graph_index": None,  # all graphs
-            })
+            },
+        )
 
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
         graph_recipes = graph_identification_types.create_graph_recipes(
-            graph_identification, destination=html_render.GraphDestinations.notification)
-        num_graphs = html.request.get_integer_input("num_graphs") or len(graph_recipes)
+            graph_identification, destination=html_render.GraphDestinations.notification
+        )
+        num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
+        graphs = []
         for graph_recipe in graph_recipes[:num_graphs]:
-            graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
-                                                          graph_render_options)
+            graph_artwork = artwork.compute_graph_artwork(
+                graph_recipe, graph_data_range, graph_render_options
+            )
             graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_options)
 
             graphs.append(base64.b64encode(graph_png).decode("ascii"))
 
-        html.write(json.dumps(graphs))
+        response.set_data(json.dumps(graphs))
 
     except Exception as e:
         logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
@@ -116,7 +117,7 @@ def graph_image_data_range(graph_render_options, start_time, end_time):
     return compute_pdf_graph_data_range(width_mm, start_time, end_time)
 
 
-def graph_image_render_options(request=None):
+def graph_image_render_options(api_request=None):
     # Set image rendering defaults
     graph_render_options = {
         "font_size": 8.0,  # pt
@@ -132,12 +133,13 @@ def graph_image_render_options(request=None):
     }
 
     # Populate missing keys
-    graph_render_options = artwork.add_default_render_options(graph_render_options,
-                                                              render_unthemed=True)
+    graph_render_options = artwork.add_default_render_options(
+        graph_render_options, render_unthemed=True
+    )
 
     # Enforce settings optionally setable via request
-    if request and request.get("render_options"):
-        graph_render_options.update(request["render_options"])
+    if api_request and api_request.get("render_options"):
+        graph_render_options.update(api_request["render_options"])
 
     return graph_render_options
 
@@ -150,38 +152,42 @@ def render_graph_image(graph_artwork, graph_data_range, graph_render_options):
     image_height = (height_ex * mm_per_ex) + legend_height
 
     # TODO: Better use reporting.get_report_instance()
-    doc = pdf.Document(font_family="Helvetica",
-                       font_size=graph_render_options["font_size"],
-                       lineheight=1.2,
-                       pagesize=(width_ex * mm_per_ex, image_height),
-                       margins=(0, 0, 0, 0))
+    doc = pdf.Document(
+        font_family="Helvetica",
+        font_size=graph_render_options["font_size"],
+        lineheight=1.2,
+        pagesize=(width_ex * mm_per_ex, image_height),
+        margins=(0, 0, 0, 0),
+    )
     instance = {
         "document": doc,
         "options": {},
         # Keys not set here. Do we need them?
-        #instance["range"] = from_until
-        #instance["range_title"] = range_title
-        #instance["macros"] = create_report_macros(report, from_until, range_title)
-        #instance["report"] = report
+        # instance["range"] = from_until
+        # instance["range_title"] = range_title
+        # instance["macros"] = create_report_macros(report, from_until, range_title)
+        # instance["report"] = report
     }
 
-    render_graph_pdf(instance,
-                     graph_artwork,
-                     graph_data_range,
-                     graph_render_options,
-                     pos_left=0.0,
-                     pos_top=0.0,
-                     total_width=(width_ex * mm_per_ex),
-                     total_height=image_height)
+    render_graph_pdf(
+        instance,
+        graph_artwork,
+        graph_data_range,
+        graph_render_options,
+        pos_left=0.0,
+        pos_top=0.0,
+        total_width=(width_ex * mm_per_ex),
+        total_height=image_height,
+    )
 
     pdf_graph = doc.end(do_send=False)
-    #open("/tmp/x.pdf", "w").write(pdf_graph)
+    # open("/tmp/x.pdf", "w").write(pdf_graph)
     return pdf.pdf2png(pdf_graph)
 
 
-def graph_recipes_for_api_request(request):
+def graph_recipes_for_api_request(api_request):
     # Get and validate the specification
-    graph_identification = request.get("specification", [])
+    graph_identification = api_request.get("specification", [])
     if not graph_identification:
         raise MKUserError(None, _("The graph specification is missing"))
 
@@ -194,7 +200,7 @@ def graph_recipes_for_api_request(request):
     default_time_range = (time.time() - (25 * 3600), time.time())
 
     # Get and validate the data range
-    graph_data_range = request.get("data_range", {})
+    graph_data_range = api_request.get("data_range", {})
     graph_data_range.setdefault("time_range", default_time_range)
 
     time_range = graph_data_range["time_range"]
@@ -218,15 +224,15 @@ def graph_recipes_for_api_request(request):
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
-    if request.get("consolidation_function"):
+    if api_request.get("consolidation_function"):
         for graph_recipe in graph_recipes:
-            graph_recipe["consolidation_function"] = request.get("consolidation_function")
+            graph_recipe["consolidation_function"] = api_request.get("consolidation_function")
 
     return graph_data_range, graph_recipes
 
 
-def graph_spec_from_request(request):
-    graph_data_range, graph_recipes = graph_recipes_for_api_request(request)
+def graph_spec_from_request(api_request):
+    graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
 
     try:
         graph_recipe = graph_recipes[0]

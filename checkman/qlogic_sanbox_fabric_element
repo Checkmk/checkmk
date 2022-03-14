@@ -1,7 +1,7 @@
 title: QLogic SANbox Fibre Channel Switches: Status of Fabric Elements
 agents: snmp
 catalog: hw/storagehw/qlogic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Status of Fabric Elements in QLogic SANbox Fibre Channel Switches.
@@ -12,5 +12,5 @@ description:
 item:
  The ID of fabric element
 
-inventory:
+discovery:
  One service is created for each Fabric Element found by SNMP.

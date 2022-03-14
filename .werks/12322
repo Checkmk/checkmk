@@ -1,0 +1,17 @@
+Title: Standalone Windows exe files are no more included in distro to avoid false positives from antiviruses
+Class: fix
+Compatible: compat
+Component: distros
+Date: 1620286495
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+In the past we delivered in the shipped package few Windows exe files, which were either intended to be 
+installed on their own or should serve as an example. However some antivirus programs produced false positives 
+for these files.
+
+Because in this version the agent installation can only be carried out using the MSI and the example is no 
+more relevant, all exe files have been removed from the shipped package thus fixing the problem with 
+antivirus software.

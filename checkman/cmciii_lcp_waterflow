@@ -1,7 +1,7 @@
 title: Rittal CMC-III LCP: Water Flow
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the water flow of Rittal CMC-III LCP devices.
@@ -14,5 +14,5 @@ description:
  extracted and a state of {WARN} is assumed if the actual flow is
  outside these limits.
 
-inventory:
+discovery:
  One service is created.

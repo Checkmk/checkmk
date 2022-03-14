@@ -1,0 +1,17 @@
+Title: BI: Fix missing comment fields, add show more mode
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1630608456
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The pages for editing BI packs and aggregations had no comment field.
+This was now added as "Show more" field.
+
+The comment field for BI rules is now also only visible if show more is active.
+
+All comment fields were also added to the REST-API.

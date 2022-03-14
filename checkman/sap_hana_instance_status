@@ -1,0 +1,21 @@
+title: SAP HANA: Instance Status
+agents: linux
+catalog: app/sap_hana
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of SAP HANA instance.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ The check is {OK} if all processes are {GREEN}. If one of the processes isn't
+ {GREEN} it is {WARN}. If there was an error fetching processes or processes
+ aren't running the check {CRIT}.
+
+ This check is also cluster-aware.
+
+item:
+ The sid instance name
+
+discovery:
+ One service is created for each instance.

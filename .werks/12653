@@ -1,0 +1,17 @@
+Title: agent_innovaphone: added support for TLS
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1619168557
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The agent_innovaphone is now ready to handle TLS connections.
+The parameters "Protocol" and "SSL certificate verification" were added to agent_innovaphone.
+The default parameter for "Prococol" is "HTTPS" and "SSL certificate verification" is enabled by default.
+This werk is marked as incompatible, because the new default settings will forced to be secure even if
+the old configuration was insecure.
+If you want to keep the old default configuration you can change the protocol to "HTTP" and select
+"Ignore certificate errors" for the option "SSL certificate verification".

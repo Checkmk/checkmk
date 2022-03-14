@@ -19,7 +19,7 @@ def check_apc_sts_source(_not_item, params, info):
     }
     sources = {}
     sources["source1"], sources["source2"] = info[0]
-    for name, what in [("Source 1", 'source1'), ("Source 2", 'source2')]:
+    for name, what in [("Source 1", "source1"), ("Source 2", "source2")]:
         state = 0
         infotext = "%s: %s" % (name, states[sources[what]])
         if params[what] != sources[what]:
@@ -29,9 +29,9 @@ def check_apc_sts_source(_not_item, params, info):
 
 
 check_info["apc_sts_source"] = {
-    'inventory_function': inventory_apc_sts_source,
-    'check_function': check_apc_sts_source,
-    'service_description': 'Source',
+    "inventory_function": inventory_apc_sts_source,
+    "check_function": check_apc_sts_source,
+    "service_description": "Source",
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.705.2.2" in oid(".1.3.6.1.2.1.1.2.0"),
     "snmp_info": (".1.3.6.1.4.1.705.2", ["3.5", "4.5"]),
 }

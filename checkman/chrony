@@ -1,7 +1,7 @@
 title: Chrony: NTP Time Synchronization
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of {chronyc tracking} in order to
@@ -14,6 +14,5 @@ description:
 
  When {chrony} is not found running, the check goes to {CRIT}.
 
-inventory:
+discovery:
  One service is created if chrony is running.
-

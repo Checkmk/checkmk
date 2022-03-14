@@ -1,7 +1,7 @@
 title: PostgreSQL: Connection Time
 agents: linux
 catalog: app/postgresql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check simply outputs the connection time when querying the
@@ -12,6 +12,5 @@ description:
 item:
  Name of the category
 
-inventory:
+discovery:
  One service is created.
-

@@ -1,7 +1,7 @@
 title: HPE StoreOnce REST API 4.x: Appliance's license
 agents: storeonce4x
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the license state of a storeonce appliance.
@@ -10,5 +10,5 @@ description:
 item:
  The appliance's host name.
 
-inventory:
+discovery:
  One service per appliance is created.

@@ -1,0 +1,34 @@
+Title: omd update: Add version compatibility barrier
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1638386538
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+For some time now, we have been recommending that, in the case of major updates
+over several versions, the updates to the individual versions should be made in
+stages, e.g. in the case of a migration from 1.5 to 2.0, the version 1.5 should
+first be updated to 1.6 and then to 2.0.
+
+Furthermore, <tt>omd update</tt> does support downgrades to older major
+versions. However, a lot of manual adjustments are necessary to make the
+configuration and runtime data of the site compatible to an older major version
+again. So we don't recommend to do this step either.
+
+This change now introduces a hard barrier in the <tt>omd update</tt> command,
+which forces the above recommendations.
+
+Examples:
+
+<ul>
+    <li>1.6 to 2.0 is allowed</li>
+    <li>2.0 to 2.1 is allowed</li>
+    <li>1.6 to 2.1 is blocked</li>
+</ul>
+
+You can disable this new check by using the <tt>omd -f update [site]</tt>
+command. However, sites that have been updated this way will no longer be
+supported by us.

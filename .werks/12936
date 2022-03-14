@@ -1,0 +1,12 @@
+Title: <tt>sap_hana_status</tt>: Add description to service output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1631877470
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Description added to <tt>sap_hana_status</tt> service output to offer
+more information in case of error.

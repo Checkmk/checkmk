@@ -17,10 +17,7 @@
 
 
 def inventory_pandacom_fan(info):
-    return [ (fan_nr, None) \
-             for fan_nr, fan_state in info \
-             if fan_state not in [ "0", "5" ]
-    ]
+    return [(fan_nr, None) for fan_nr, fan_state in info if fan_state not in ["0", "5"]]
 
 
 def check_pandacom_fan(item, params, info):
@@ -39,15 +36,16 @@ def check_pandacom_fan(item, params, info):
             return state, "Operational status: %s" % state_readable
 
 
-check_info['pandacom_fan'] = {
-    'inventory_function': inventory_pandacom_fan,
-    'check_function': check_pandacom_fan,
-    'service_description': 'Fan %s',
-    'snmp_info': (
+check_info["pandacom_fan"] = {
+    "inventory_function": inventory_pandacom_fan,
+    "check_function": check_pandacom_fan,
+    "service_description": "Fan %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.3652.3.2.3.1",
         [
             "1",  # fanGroupNumber
             "2",  # fanGroupStatus
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
 }

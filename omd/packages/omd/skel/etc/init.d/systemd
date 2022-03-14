@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# Start only if the socket is configured for this user.
+SOCKET="livestatus.socket"
+test -f "${OMD_ROOT}/.config/systemd/user/$SOCKET" || exit 5
+
+# Start only if LIVESTATUS_TCP is configured.
+# shellcheck source=/dev/null
+. "${OMD_ROOT}/etc/omd/site.conf"
+if [ "$CONFIG_LIVESTATUS_TCP" != on ]; then
+    exit 5
+fi
+
+SEMAPHORE="$OMD_ROOT/tmp/run/$OMD_SITE.lingering"
+SYSTEMCTL="systemctl --quiet --user"
+XDG_RUNTIME_DIR="/run/user/$(id -u "$OMD_SITE")"
+export XDG_RUNTIME_DIR
+
+case "$1" in
+    start)
+        printf "Starting livestatus TCP socket..."
+        loginctl enable-linger "$OMD_SITE"
+        while ! $SYSTEMCTL status > /dev/null 2>&1; do
+            sleep 1
+            printf "."
+        done
+        $SYSTEMCTL enable $SOCKET
+        $SYSTEMCTL start $SOCKET
+        if ! $SYSTEMCTL is-active $SOCKET; then
+            echo "Failed"
+            exit 1
+        fi
+        touch "$SEMAPHORE"
+        echo "OK"
+        ;;
+    stop)
+        printf "Stopping livestatus TCP socket..."
+        rm -f "$SEMAPHORE"
+        $SYSTEMCTL stop $SOCKET
+        $SYSTEMCTL disable $SOCKET
+        loginctl disable-linger "$OMD_SITE"
+        echo "OK"
+        ;;
+    restart)
+        $SYSTEMCTL is-active $SOCKET && $0 stop
+        $0 start
+        ;;
+    reload)
+        if [ ! -f "$SEMAPHORE" ]; then
+            echo "User not lingering"
+            exit 1
+        fi
+        if ! $SYSTEMCTL is-active $SOCKET; then
+            echo "Socket not active"
+            exit 1
+        fi
+        $SYSTEMCTL daemon-reload
+        ;;
+    status)
+        printf "Checking status of livestatus TCP socket..."
+        if [ ! -f "$SEMAPHORE" ]; then
+            echo "stopped"
+            exit 1
+        fi
+        echo "running"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|reload|restart|status}"
+        exit 2
+        ;;
+esac

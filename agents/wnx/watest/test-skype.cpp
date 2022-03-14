@@ -62,7 +62,7 @@ TEST(SectionProviderSkype, SimulatedIntegration) {
     // verify
     auto table = cma::tools::SplitString(ret, "\n");
     if (table.size() < (size_t)(2 + 2 * 3 + 3)) {
-        for (auto& e : table) std::cout << e << std::endl;
+        for (auto &e : table) std::cout << e << std::endl;
     }
     ASSERT_GE(table.size(), (size_t)(2 + 2 * 3 + 3))
         << "Probably You have to install ASP.NET";

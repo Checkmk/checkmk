@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mbg_lantime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['mbg_lantime_state_default_levels'] = MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS
+
+factory_settings["mbg_lantime_state_default_levels"] = MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS
 
 
 def inventory_mbg_lantime_state(info):
@@ -19,31 +20,33 @@ def inventory_mbg_lantime_state(info):
 
 def check_mbg_lantime_state(_no_item, params, info):
     states = {
-        '0': (2, 'not synchronized'),
-        '1': (2, 'no good reference clock'),
-        '2': (0, 'sync to external reference clock'),
-        '3': (0, 'sync to serial reference clock'),
-        '4': (0, 'normal operation PPS'),
-        '5': (0, 'normal operation reference clock'),
+        "0": (2, "not synchronized"),
+        "1": (2, "no good reference clock"),
+        "2": (0, "sync to external reference clock"),
+        "3": (0, "sync to serial reference clock"),
+        "4": (0, "normal operation PPS"),
+        "5": (0, "normal operation reference clock"),
     }
     return check_mbg_lantime_state_common(states, _no_item, params, info)
 
 
 check_info["mbg_lantime_state"] = {
-    'check_function': check_mbg_lantime_state,
-    'inventory_function': inventory_mbg_lantime_state,
-    'service_description': 'LANTIME State',
-    'has_perfdata': True,
-    'group': 'mbg_lantime_state',
-    'default_levels_variable': "mbg_lantime_state_default_levels",
-    'snmp_info': (
-        '.1.3.6.1.4.1.5597.3.1',
+    "check_function": check_mbg_lantime_state,
+    "inventory_function": inventory_mbg_lantime_state,
+    "service_description": "LANTIME State",
+    "has_perfdata": True,
+    "group": "mbg_lantime_state",
+    "default_levels_variable": "mbg_lantime_state_default_levels",
+    "snmp_info": (
+        ".1.3.6.1.4.1.5597.3.1",
         [
             2,  # MBG-SNMP-MIB::mbgLtNtpCurrentStateVal
             3,  # MBG-SNMP-MIB::mbgLtNtpNtpStratum
             5,  # MBG-SNMP-MIB::mbgLtNtpActiveRefclockName
             7,  # MBG-SNMP-MIB::mbgLtNtpActiveRefclockOffsetVal
-        ]),
-    'snmp_scan_function': lambda oid: (oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3" and
-                                       not oid(".1.3.6.1.4.1.5597.30.0.2.*")),
+        ],
+    ),
+    "snmp_scan_function": lambda oid: (
+        oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3" and not oid(".1.3.6.1.4.1.5597.30.0.2.*")
+    ),
 }

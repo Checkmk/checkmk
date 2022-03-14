@@ -1,0 +1,18 @@
+Title: Add automatic cleanup note if crash report can not be found
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1635154167
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a crash report can not be found any more, a note to the error message was
+added, that this can be caused by the automatic cleanup job that found more
+than 200 crash reports below ~/var/check_mk/crashes. The cleanup job has than
+already deleted this report.
+
+The report should be generated again if the related page is called again or the
+next check interval for a related check is reached.

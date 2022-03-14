@@ -5,18 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Mapping, Optional, Set
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.utils import cmk_path
+from tests.testlib.utils import cmk_path
 
-import cmk.utils.debug
+from tests.unit.conftest import FixPluginLegacy, FixRegister
+
 import cmk.utils.man_pages as man_pages
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.base.api.agent_based.register as agent_based_register
-
 # TODO: Add tests for module internal functions
+
+ManPages = Mapping[str, Optional[man_pages.ManPage]]
 
 
 @pytest.fixture(autouse=True)
@@ -25,12 +27,12 @@ def patch_cmk_paths(monkeypatch, tmp_path):
 
 
 @pytest.fixture(scope="module", name="all_pages")
-def _get_all_pages():
+def get_all_pages() -> ManPages:
     return {name: man_pages.load_man_page(name) for name in man_pages.all_man_pages()}
 
 
 @pytest.fixture(scope="module", name="catalog")
-def _get_catalog():
+def get_catalog():
     return man_pages.load_man_page_catalog()
 
 
@@ -41,13 +43,13 @@ def test_man_page_exists_only_shipped():
 
 def test_man_page_exists_both_dirs(tmp_path):
     f1 = tmp_path / "file1"
-    f1.write_text(u"x", encoding="utf-8")
+    f1.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_exists("file1") is True
     assert man_pages.man_page_exists("file2") is False
 
     f2 = tmp_path / "if"
-    f2.write_text(u"x", encoding="utf-8")
+    f2.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_exists("if") is True
 
@@ -59,18 +61,18 @@ def test_man_page_path_only_shipped():
 
 def test_man_page_path_both_dirs(tmp_path):
     f1 = tmp_path / "file1"
-    f1.write_text(u"x", encoding="utf-8")
+    f1.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_path("file1") == tmp_path / "file1"
     assert man_pages.man_page_path("file2") is None
 
     f2 = tmp_path / "if"
-    f2.write_text(u"x", encoding="utf-8")
+    f2.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_path("if") == tmp_path / "if"
 
 
-def test_all_manpages_migrated(all_pages):
+def test_all_manpages_migrated(all_pages: ManPages):
     for name in all_pages:
         if name in ("check-mk-inventory", "check-mk"):
             continue
@@ -78,9 +80,9 @@ def test_all_manpages_migrated(all_pages):
 
 
 def test_all_man_pages(tmp_path):
-    (tmp_path / ".asd").write_text(u"", encoding="utf-8")
-    (tmp_path / "asd~").write_text(u"", encoding="utf-8")
-    (tmp_path / "if").write_text(u"", encoding="utf-8")
+    (tmp_path / ".asd").write_text("", encoding="utf-8")
+    (tmp_path / "asd~").write_text("", encoding="utf-8")
+    (tmp_path / "if").write_text("", encoding="utf-8")
 
     pages = man_pages.all_man_pages()
 
@@ -92,7 +94,7 @@ def test_all_man_pages(tmp_path):
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 
-def test_load_all_man_pages(all_pages):
+def test_load_all_man_pages(all_pages: ManPages):
     for name, man_page in all_pages.items():
         assert man_page is not None, name
         assert isinstance(man_page, dict)
@@ -142,41 +144,67 @@ def test_no_unsorted_man_pages():
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
 
 
-def test_manpage_files(all_pages):
+def test_manpage_files(all_pages: ManPages):
     assert len(all_pages) > 1000
 
 
-def test_find_missing_manpages_passive(fix_register, all_pages):
+def test_find_missing_manpages_passive(fix_register: FixRegister, all_pages: ManPages):
     for plugin_name in fix_register.check_plugins:
         assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_active(fix_plugin_legacy, all_pages):
+def test_find_missing_manpages_active(fix_plugin_legacy: FixPluginLegacy, all_pages: ManPages):
     for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_cluster_section(fix_register, all_pages):
-    missing_cluster_description = set()
+def test_find_missing_plugins(
+    fix_register: FixRegister,
+    fix_plugin_legacy: FixPluginLegacy,
+    all_pages: ManPages,
+) -> None:
+    missing_plugins = (
+        set(all_pages)
+        - set(str(plugin_name) for plugin_name in fix_register.check_plugins)
+        - set(f"check_{name}" for name in fix_plugin_legacy.active_check_info)
+        - {
+            "check-mk",
+            "check-mk-inventory",
+        }
+    )
+    assert (
+        not missing_plugins
+    ), f"The following manpages have no corresponding plugins: {', '.join(missing_plugins)}"
+
+
+def test_cluster_check_functions_match_manpages_cluster_sections(
+    fix_register: FixRegister,
+    all_pages: ManPages,
+):
+    missing_cluster_description: Set[str] = set()
+    unexpected_cluster_description: Set[str] = set()
+
     for plugin in fix_register.check_plugins.values():
-        if plugin.cluster_check_function.__name__ in (
-                "unfit_for_clustering",
-                "cluster_legacy_mode_from_hell",
-        ):
-            continue
         man_page = all_pages[str(plugin.name)]
         assert man_page
-        if "cluster" not in man_page["header"]:
-            missing_cluster_description.add(str(plugin.name))
+        has_cluster_doc = "cluster" in man_page["header"]
+        has_cluster_func = plugin.cluster_check_function is not None
+        if has_cluster_doc is not has_cluster_func:
+            (missing_cluster_description, unexpected_cluster_description,)[
+                has_cluster_doc
+            ].add(str(plugin.name))
 
     assert not missing_cluster_description
+    assert not unexpected_cluster_description
 
 
 def test_no_subtree_and_entries_on_same_level(catalog):
     for category, entries in catalog.items():
         has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
-        assert has_entries != has_categories, "A category must only have entries or categories, not both"
+        assert (
+            has_entries != has_categories
+        ), "A category must only have entries or categories, not both"
 
 
 # TODO: print_man_page_browser()
@@ -190,29 +218,24 @@ def _check_man_page_structure(page):
     for key in ["header"]:
         assert key in page
 
-    for key in ['description', 'license', 'title', 'catalog', 'agents', 'distribution']:
+    for key in ["description", "license", "title", "catalog", "agents", "distribution"]:
         assert key in page["header"]
 
-    if "configuration" in page:
-        assert isinstance(page["configuration"], list)
-
-    if "parameters" in page:
-        assert isinstance(page["parameters"], list)
-
-    if "inventory" in page:
-        assert isinstance(page["inventory"], list)
+    for key in ["configuration", "parameters", "discovery"]:
+        if key in page:
+            assert isinstance(page["inventory"], list)
 
     assert isinstance(page["header"]["agents"], list)
 
 
-def test_load_man_page_format(all_pages):
+def test_load_man_page_format(all_pages: ManPages):
     page = all_pages["if64"]
     assert isinstance(page, dict)
 
     _check_man_page_structure(page)
 
     # Check optional keys
-    for key in ['item', 'inventory']:
+    for key in ["item", "discovery"]:
         assert key in page["header"]
 
 
@@ -248,13 +271,14 @@ def test_print_man_page(capsys):
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages(all_pages) -> None:
+def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():
         man_page = all_pages[name]
         assert man_page is not None
-        found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
+        found_catalog_entries_from_man_pages |= set(man_page["header"]["catalog"].split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
     assert missing_catalog_entries == set(), "Found missing catalog entries: %s" % ", ".join(
-        sorted(missing_catalog_entries))
+        sorted(missing_catalog_entries)
+    )

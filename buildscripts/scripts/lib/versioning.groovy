@@ -10,18 +10,36 @@ def REPO_PATCH_RULES = [\
     "folders_to_be_removed": [\
         "enterprise", \
         "managed", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee}"],\
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"],\
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee}"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"]], \
 "enterprise": [\
+    "folders_to_be_removed": [\
+        "managed", \
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
+"free": [\
+    "folders_to_be_removed": [\
+        "managed", \
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
+"managed": [\
+    "folders_to_be_removed": [\
+        "plus", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"]], \
+"plus": [\
     "folders_to_be_removed": [\
         "managed", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
-"managed": [\
-    "folders_to_be_removed": [],\
-    "folders_to_be_created": []] \
 ]
 
 def get_branch(scm) {
@@ -31,15 +49,13 @@ def get_branch(scm) {
 
 def get_cmk_version(scm, VERSION) {
     def BRANCH = get_branch(scm)
-    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
-    def DATE = new Date()
 
     if (BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE) // Regular daily build of master branch
+        return get_date() // Regular daily build of master branch
     } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE) + '-' + BRANCH // Experimental builds
+        return get_date() + '-' + BRANCH // Experimental builds
     } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE) // version branch dailies (e.g. 1.6.0)
+        return BRANCH + '-' + get_date() // version branch dailies (e.g. 1.6.0)
     } else {
         return VERSION
     }
@@ -110,7 +126,9 @@ def patch_themes(EDITION) {
                 """
             }
             break
+        case 'plus':
         case 'enterprise':
+        case 'free':
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
                 sh """
@@ -121,9 +139,9 @@ def patch_themes(EDITION) {
     }
 }
 
-def patch_demo(DEMO) {
-    if (DEMO == 'yes') {
-        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'" .demo/" defines.make'''
+def patch_demo(EDITION) {
+    if (EDITION == 'free') {
+        sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
         sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
         sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{TrialManager.h,test/test_TrialManager.cc}'''
         sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' livestatus/src/TableStatus.cc'''
@@ -134,11 +152,29 @@ def set_version(CMK_VERS) {
     sh "make NEW_VERSION=${CMK_VERS} setversion"
 }
 
-def patch_git_after_checkout(EDITION, DEMO, CMK_VERS) {
+def patch_git_after_checkout(EDITION, CMK_VERS) {
     patch_folders(EDITION)
     patch_themes(EDITION)
-    patch_demo(DEMO)
+    patch_demo(EDITION)
     set_version(CMK_VERS)
+}
+
+def delete_non_cre_files() {
+    non_cre_paths = [
+        "enterprise",
+        "managed",
+        "plus",
+        "check_mk_enterprise",
+        "check_mk_managed",
+        "cee",
+        "cme",
+        "cpe",
+        "cee.py",
+        "cme.py",
+        "cpe.py",
+    ]
+    find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
+    sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""
 }
 
 return this

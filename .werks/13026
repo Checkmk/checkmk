@@ -1,0 +1,19 @@
+Title: agent plugin mk_db2.linux: fix timeout
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626431323
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When the db2 queries take longer than 10 seconds, the command is terminated.
+
+Before this fix the termination did not work out as expected: Only the
+currently running command was terminated, but the script was still running in
+the background. This lead to a very confusing output: The output of the
+terminated script was interleaved with the output of the remaining script. The
+sections where mixed up and various other db2 checks crashed with strange error
+messages.

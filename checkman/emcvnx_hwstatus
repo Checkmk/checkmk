@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Hardware Status
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the status of Power Supplies, SPS, SPS Cabeling, LCC, SP, CPU Modules,
@@ -26,7 +26,7 @@ item:
 
     0/0 SP B I/O Module 0
 
-inventory:
+discovery:
  One service is created for each hardware status entry listed
  in the agent output and not having status "Empty" (Entries having "Empty"
  status when running inventory are considered to be intentionally empty.)

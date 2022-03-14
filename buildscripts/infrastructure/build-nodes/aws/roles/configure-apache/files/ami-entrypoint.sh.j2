@@ -1,0 +1,55 @@
+#!/bin/bash
+# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e -o pipefail
+
+HOOKROOT=/ami-entrypoint.d
+
+exec_hook() {
+    HOOKDIR="$HOOKROOT/$1"
+    if [ -d "$HOOKDIR" ]; then
+        pushd "$HOOKDIR" >/dev/null
+        for hook in *; do
+            if [ ! -d "$hook" ] && [ -x "$hook" ]; then
+                echo "### Running $HOOKDIR/$hook"
+                ./"$hook"
+            fi
+        done
+        popd >/dev/null
+    fi
+}
+
+exec_hook pre-entrypoint
+
+# shellcheck disable=SC1083
+bash /home/{{ ansible_ssh_user }}/create_certificate.sh
+
+echo "### Checking if updating is required..."
+
+# In case the version symlink is dangling we are in an update situation: The
+# volume was previously attached to a container with another Checkmk version.
+# We now have to perform the "omd update" to be able to bring the site back
+# to life.
+if [ ! -e "/omd/sites/{{cmk_site}}/version" ]; then
+    trap 'omd stop '"{{cmk_site}}"'; exit 0' SIGTERM SIGHUP SIGINT
+    echo "whoami: $(whoami)"
+    echo "pwd: $(pwd)"
+
+    echo "### UPDATING SITE"
+    exec_hook pre-update
+    omd -f update --conflict=install "{{cmk_site}}"
+    exec_hook post-update
+
+    echo "### STARTING XINETD"
+    service xinetd start
+
+    echo "### STARTING SITE"
+    exec_hook pre-start
+    omd start "{{cmk_site}}"
+    exec_hook post-start
+
+fi
+
+echo "### Finished"

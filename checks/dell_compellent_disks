@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_legacy_includes import dell_compellent
+
 # example output
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.2.1 1
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.2.2 2
@@ -24,17 +25,13 @@ dell_compellent_disks_health_map = {
 
 
 def parse_dell_compellent_disks(info):
-    # Need to be compatible with shared inventory function
-    parsed = {}
-    disk_info, disk_serials = info
-    for idx, (number, status, health, health_message, enclosure) in enumerate(disk_info):
-        inst_data = [status, health, health_message, enclosure]
-        try:
-            inst_data.append(disk_serials[idx][0])
-        except IndexError:
-            inst_data.append(None)
-        parsed.setdefault(number, inst_data)
-    return parsed
+    disk_info = info[0]
+    disk_serials = {number: serial for number, serial in info[1]}
+
+    return {
+        disk_name_position: [status, health, health_message, enclosure, disk_serials.get(number)]
+        for number, status, disk_name_position, health, health_message, enclosure in disk_info
+    }
 
 
 @get_parsed_item_data
@@ -49,30 +46,35 @@ def check_dell_compellent_disks(_item, _no_params, data):
 
     if health_message:
         health_state, health_state_readable = dell_compellent_disks_health_map.get(
-            health, (3, 'unknown[%s]' % health))
+            health, (3, "unknown[%s]" % health)
+        )
         yield health_state, "Health: %s, Reason: %s" % (health_state_readable, health_message)
 
 
-check_info['dell_compellent_disks'] = {
-    'parse_function': parse_dell_compellent_disks,
-    'inventory_function': discover(),
-    'check_function': check_dell_compellent_disks,
-    'service_description': 'Disk %s',
-    'snmp_info': [
+check_info["dell_compellent_disks"] = {
+    "parse_function": parse_dell_compellent_disks,
+    "inventory_function": discover(),
+    "check_function": check_dell_compellent_disks,
+    "service_description": "Disk %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.674.11000.2000.500.1.2.14.1',
+            ".1.3.6.1.4.1.674.11000.2000.500.1.2.14.1",
             [
                 "2",  # DELL-STORAGE-SC-MIB::scDiskNbr
                 "3",  # DELL-STORAGE-SC-MIB::scDiskStatus
+                "4",  # DELL-STORAGE-SC-MIB::scDiskNamePosition
                 "5",  # DELL-STORAGE-SC-MIB::scDiskHealthy
                 "6",  # DELL-STORAGE-SC-MIB::scDiskStatusMsg
                 "11",  # DELL-STORAGE-SC-MIB::scDiskEnclosure
-            ]),
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.674.11000.2000.500.1.2.45.1',
+            ".1.3.6.1.4.1.674.11000.2000.500.1.2.45.1",
             [
+                "2",  # DELL-STORAGE-SC-MIB::scDiskConfigNbr
                 "3",  # DELL-STORAGE-SC-MIB::scDiskConfigSerial
-            ]),
+            ],
+        ),
     ],
-    'snmp_scan_function': dell_compellent.scan,
+    "snmp_scan_function": dell_compellent.scan,
 }

@@ -1,7 +1,7 @@
 title: JVM Ehcache Statistics: Off-heap Cache Usage
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number and hit-rate of cached objects held off-heap
@@ -14,6 +14,5 @@ item:
  The name of the application server instance as configured by the agent followed
  by the cache
 
-inventory:
+discovery:
  One service is created for each cache.
-

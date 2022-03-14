@@ -1,0 +1,14 @@
+Title: Provide caller's IP in web.log for errors arising from agent updater requests
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1629712185
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This is an addition to Werk #10435, where the caller's hostname, if provided in the
+request, was added to the error information.
+Now, to overcome situations with a missing or incorrectly specified hostname,
+the caller's IP is logged additionally.

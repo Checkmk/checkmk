@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # -- Statistics
 # .1.3.6.1.4.1.1230.2.7.2.1.2.0 200 --> MCAFEE-MWG-MIB::stMalwareDetected.0
 # .1.3.6.1.4.1.1230.2.7.2.1.5.0 4394370 --> MCAFEE-MWG-MIB::stConnectionsBlocked.0
@@ -16,8 +17,10 @@ from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=w
 
 def parse_mcaffee_webgateway(info):
     parsed = []
-    for index, key, label in ((0, 'infections', 'Infections'), (1, 'connections_blocked',
-                                                                'Connections blocked')):
+    for index, key, label in (
+        (0, "infections", "Infections"),
+        (1, "connections_blocked", "Connections blocked"),
+    ):
         try:
             parsed.append((key, int(info[0][index]), label))
         except (IndexError, ValueError):
@@ -29,25 +32,28 @@ def check_mcafee_webgateway(_no_item, params, parsed):
     now = time.time()
     for key, value, label in parsed:
         rate = get_rate("check_mcafee_webgateway.%s" % key, now, value)
-        yield check_levels(rate,
-                           '%s_rate' % key,
-                           params.get(key),
-                           human_readable_func=lambda f: "%.1f/s" % f,
-                           infoname=label)
+        yield check_levels(
+            rate,
+            "%s_rate" % key,
+            params.get(key),
+            human_readable_func=lambda f: "%.1f/s" % f,
+            infoname=label,
+        )
 
 
-check_info['mcafee_webgateway'] = {
-    'parse_function': parse_mcaffee_webgateway,
-    'inventory_function': inventory_mcafee_gateway_generic,
-    'check_function': check_mcafee_webgateway,
-    'service_description': 'Web gateway statistics',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.7.2.1',
+check_info["mcafee_webgateway"] = {
+    "parse_function": parse_mcaffee_webgateway,
+    "inventory_function": inventory_mcafee_gateway_generic,
+    "check_function": check_mcafee_webgateway,
+    "service_description": "Web gateway statistics",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.7.2.1",
         [
             "2",  # MCAFEE-MWG-MIB::stMalwareDetected
             "5",  # MCAFEE-MWG-MIB::stConnectionsBlocked
-        ]),
-    'snmp_scan_function': scan_mcafee_webgateway,
-    'has_perfdata': True,
-    'group': 'mcafee_web_gateway',
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_webgateway,
+    "has_perfdata": True,
+    "group": "mcafee_web_gateway",
 }

@@ -1,0 +1,13 @@
+Title: downtime script: deprecating the previous downtime scripts
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1614784735
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The previous downtime scripts downtime and downtime.python3 are deprecated
+due to the introduction of the new REST API based downtime script.

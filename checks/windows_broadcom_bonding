@@ -32,7 +32,7 @@ def check_windows_broadcom_bonding(item, params, info):
     return (3, "Bond %s not found in agent output" % item)
 
 
-check_info['windows_broadcom_bonding'] = {
+check_info["windows_broadcom_bonding"] = {
     "check_function": check_windows_broadcom_bonding,
     "inventory_function": inventory_windows_broadcom_bonding,
     "service_description": "Bonding Interface %s",

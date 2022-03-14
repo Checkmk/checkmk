@@ -1,0 +1,20 @@
+Title: Simplify adding CAs and new permission to perform requests from the Checkmk server
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1639388827
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+With the new option "Fetch certificate from server" in the global settings
+"Trusted certificate authorities for SSL" and "Connection to remote agent bakery"
+it is now possible to contact a host from the Checkmk server to retrieve CA
+information.
+
+To perform these actions a user needs the permission "Perform requests from the
+Checkmk server". By default only the Role admin has this permission.
+
+The mechanism to fetch the data is essentially the same as for the "Livestatus
+encryption of host HOSTNAME" in the "Distributed monitoring".

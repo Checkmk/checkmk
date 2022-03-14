@@ -1,7 +1,7 @@
 title: HP Proliant Servers: Power Supplies
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
@@ -20,6 +20,6 @@ description:
 item:
  The system chassis number followed by the bay number
 
-inventory:
+discovery:
  One service is created for each present PSU entry.
  Additionally one service is created which sums up the used capacity.

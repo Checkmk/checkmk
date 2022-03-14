@@ -48,6 +48,10 @@ body.login {
     left: 40px;
     width: 120px;
     height: auto;
+
+    &.custom {
+      width: 60px;
+    }
   }
 
   #version {
@@ -73,24 +77,24 @@ body.login {
   }
 
   #label_user {
-    top: 80px;
+    top: 86px;
   }
 
   #input_user {
-    top: 76px;
+    top: 79px;
   }
 
   #label_pass {
-    top: 120px;
+    top: 126px;
   }
 
   #input_pass {
-    top: 116px;
+    top: 119px;
   }
 
   #input_user,
   #input_pass {
-    left: 146px;
+    left: 135px;
     width: 183px;
     height: $input-field-height;
     background-repeat: no-repeat;
@@ -99,10 +103,10 @@ body.login {
     box-shadow: none;
   }
 
-  #_login {
+  #_login,
+  #_use_backup_code {
     position: absolute;
-    right: 15px;
-    bottom: 40px;
+    bottom: 29px;
     left: 40px;
     width: calc(100% - 80px);
     height: 29px;
@@ -114,29 +118,28 @@ body.login {
 
   #login_error {
     position: absolute;
-    bottom: 4px;
+    bottom: 6px;
     left: 92px;
     z-index: 100;
     width: 180px;
-    height: 30px;
+    height: 16px;
     padding: 0;
     margin: 0;
-    color: $lightgrey;
+    color: $font-color-light-grey;
     background-color: $color-state-2-background;
     background-image: none;
     background-repeat: no-repeat;
-    border: 1px solid $color-state-error-border;
     border-radius: $theme-border-radius;
-  }
 
-  #login_error div.error {
-    padding: 8px 0 0;
-    margin: 0;
-    color: $lightgrey;
-    background-color: transparent;
-    border-style: none;
-    border-radius: 0;
-    box-shadow: 0 0 0;
+    div.error {
+      padding: 1px 0 0;
+      margin: 0;
+      color: $font-color-light-grey;
+      background-color: transparent;
+      border-style: none;
+      border-radius: 0;
+      box-shadow: 0 0 0;
+    }
   }
 
   #foot {
@@ -145,13 +148,64 @@ body.login {
     left: 10px;
     width: 350px;
     margin: 0 auto 10px;
-    color: $darkgrey;
+    color: $font-color-dimmed;
     text-align: center;
   }
 
   div#login div#foot a,
   div#login div#foot body.main .popup_menu span,
   body.main .popup_menu div#login div#foot span {
-    color: $darkgrey;
+    color: $font-color-dimmed;
+  }
+
+  &.two_factor {
+    #webauthn_message {
+      position: absolute;
+      top: 83px;
+      right: 0;
+      left: 0;
+      padding: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    #label_2fa {
+      position: absolute;
+      top: 70px;
+      left: 40px;
+    }
+
+    #label_pass {
+      top: 153px;
+    }
+
+    #input_pass {
+      top: 146px;
+    }
+
+    #_use_backup_code {
+      bottom: 20px;
+    }
+
+    .foldable {
+      .foldable_header {
+        position: absolute;
+        top: 125px;
+        left: 40px;
+        text-align: left;
+
+        b {
+          font-weight: normal;
+        }
+      }
+
+      .treeangle {
+        position: unset;
+        margin: 0;
+      }
+    }
   }
 }

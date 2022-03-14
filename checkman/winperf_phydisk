@@ -1,7 +1,7 @@
 title: Windows: Disk Throughput
 agents: windows
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the throughput of physical disk on Windows
@@ -34,7 +34,7 @@ item:
  Either {"SUMMARY"} for a summarized check of alls disks or the
  name of the disk device, e.g. {"C:"}.
 
-inventory:
+discovery:
  One service is created for each disk if the configuration is set to {"single"}.
  If the configuration is set to {"summary"} one service is created for each host.
  If set to {"legacy"} then two services one for read and one for write

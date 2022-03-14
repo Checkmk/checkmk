@@ -5,39 +5,39 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _item_spec_pfm_health():
-    return TextAscii(title=_("Number or ID of the disk"),
-                     help=_("How the disks are named depends on the type of hardware being "
-                            "used. Please look at already discovered checks for examples."))
+    return TextInput(
+        title=_("Number or ID of the disk"),
+        help=_(
+            "How the disks are named depends on the type of hardware being "
+            "used. Please look at already discovered checks for examples."
+        ),
+    )
 
 
 def _parameter_valuespec_pfm_health():
-    return Dictionary(elements=[
-        (
-            "health_lifetime_perc",
-            Tuple(
-                title=_("Lower levels for health lifetime"),
-                elements=[
-                    Percentage(title=_("Warning if below"), default_value=10),
-                    Percentage(title=_("Critical if below"), default_value=5)
-                ],
+    return Dictionary(
+        elements=[
+            (
+                "health_lifetime_perc",
+                Tuple(
+                    title=_("Lower levels for health lifetime"),
+                    elements=[
+                        Percentage(title=_("Warning if below"), default_value=10),
+                        Percentage(title=_("Critical if below"), default_value=5),
+                    ],
+                ),
             ),
-        ),
-    ],)
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -48,4 +48,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pfm_health,
         title=lambda: _("PCIe flash module"),
-    ))
+    )
+)

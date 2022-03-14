@@ -1,13 +1,12 @@
 title: Bluecat Adonis: Command Server State
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the OperState of the Command Server Service on bluecat adonis devices.
  The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
  It is possible to change the behavior in WATO.
 
-inventory:
+discovery:
  One service is created
-

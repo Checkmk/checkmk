@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.20632.2.13 3
 
 # Suggested by customer
@@ -23,16 +24,18 @@ def check_barracuda_system_cpu_util(_no_item, params, info):
     return check_cpu_util(int(info[0][0]), params)
 
 
-check_info['barracuda_system_cpu_util'] = {
-    'inventory_function'        : inventory_barracuda_system_cpu_util,
-    'check_function'            : check_barracuda_system_cpu_util,
-    'service_description'       : 'CPU utilization',
-    'has_perfdata'              : True,
+check_info["barracuda_system_cpu_util"] = {
+    "inventory_function": inventory_barracuda_system_cpu_util,
+    "check_function": check_barracuda_system_cpu_util,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying
     # all needed OIDs. Then we can use 'snmpget' and 'snmpwalk' on these single OIDs.
-    'snmp_info'                 : (".1.3.6.1.4.1.20632.2", [ "13" ]),
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and \
-                                              "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'group'                     : "cpu_utilization",
+    "snmp_info": (".1.3.6.1.4.1.20632.2", ["13"]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.8072.3.2.10"
+    )
+    and "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "group": "cpu_utilization",
 }

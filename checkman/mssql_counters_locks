@@ -1,7 +1,7 @@
 title: MS SQL Tablespaces: Locks per Second
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors locking related information of MSSQL tablespaces
@@ -18,9 +18,5 @@ description:
 item:
  The MSSQL instance name and the tablespace name separated by a space.
 
-inventory:
+discovery:
  One service is created for each tablespace.
-
-cluster:
- On a cluster the check just cumulates all results for each cluster node.
- The overall result state then reflects the worst state of all nodes.

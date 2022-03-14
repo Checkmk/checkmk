@@ -57,10 +57,10 @@ table.hostmatrix {
   td {
     width: 50%;
     padding: 0;
-  }
 
-  .statebullet {
-    margin: 5px 2px 2px;
+    a.link {
+      padding: 2px 2px 2px $spacing-half;
+    }
   }
 }
 
@@ -138,28 +138,6 @@ table.mkeventd_performance {
 }
 
 /*
- * NagVis maps snapin
- */
-div.state1 {
-  &.statea,
-  &.stated {
-    border-color: rgb(255, 255, 0);
-  }
-}
-
-div.state2 {
-  &.statea,
-  &.stated {
-    border-color: rgb(255, 0, 0);
-  }
-}
-
-div.statea,
-div.stated {
-  background-color: rgb(0, 187, 51);
-}
-
-/*
  * Performance snapin
  */
 table.performance {
@@ -193,7 +171,7 @@ table.performance {
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color-sidebar;
+  color: $font-color;
   background-color: $server-time-div-bg-color;
   text-align: center;
   border-spacing: 4px;
@@ -278,7 +256,7 @@ table.tacticaloverview {
     font-weight: normal;
     line-height: 1.6;
     letter-spacing: 0;
-    color: $tactical-overview-th-font-color;
+    color: $font-color-dimmed;
     text-align: left;
 
     span {
@@ -296,7 +274,7 @@ table.tacticaloverview {
       box-shadow: none;
 
       a.link {
-        color: $color-nuance-16;
+        color: $font-color-orange;
       }
     }
 
@@ -326,7 +304,7 @@ body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $font-color-sidebar;
+  color: $font-color;
 }
 
 div.tacticalalert,
@@ -370,7 +348,6 @@ div.spacertop {
     float: right;
     margin-top: -2px;
     margin-bottom: 2px;
-    border: $primary-border;
   }
 
   /* TODO: Reproduce this html element */
@@ -383,19 +360,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-  }
-
-  div.statebullet {
-    position: relative;
-    top: 3px;
-    left: 1px;
-    display: inline-block;
-    float: none;
-    width: 8px;
-    height: 8px;
-    margin-right: 0;
-    border-radius: 50%;
-    box-shadow: 0 0 0.7px rgb(40, 72, 80);
   }
 
   ul > div.statebullet.leaf {
@@ -509,7 +473,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: $font-color-sidebar;
+  color: $font-color;
 
   p {
     font-weight: normal;
@@ -543,7 +507,7 @@ div.spacertop {
   input {
     width: 100%;
     height: $input-field-height;
-    color: $font-color-sidebar;
+    color: $font-color;
     background-image: url("images/icon_quicksearch.png");
     background-position: right $spacing bottom 4px;
     background-size: 15px;
@@ -571,14 +535,14 @@ div.spacertop {
   width: 223px;
   padding: 8px;
   margin-top: 2px;
-  color: $font-color-sidebar;
-  background-color: $inpage-highlight-color;
+  color: $font-color;
+  background-color: $input-background-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    color: $font-color-sidebar;
+    color: $font-color;
     text-align: left;
     text-decoration: none;
 
@@ -605,7 +569,7 @@ div.spacertop {
   color: $font-color;
 
   table.cmc_stats {
-    width: $snapin-cmc-table-width;
+    width: 100%;
     border-spacing: 0 4px;
     box-sizing: border-box;
 
@@ -642,7 +606,7 @@ div.spacertop {
  */
 #snapin_reports {
   i {
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
   }
 
   input {
@@ -653,7 +617,6 @@ div.spacertop {
 
   div {
     font-size: $font-size-small;
-    color: $footnote-link-color;
   }
 
   div.timerange {

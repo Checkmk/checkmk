@@ -12,29 +12,29 @@ from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcar
 
 
 def inventory_3par_hosts(parsed):
-    for entry in parsed.get('members', {}):
+    for entry in parsed.get("members", {}):
         if "name" in entry:
-            yield (entry['name'], None)
+            yield (entry["name"], None)
 
 
 def check_3par_hosts(item, _no_params, parsed):
-    for entry in parsed.get('members', {}):
-        if item == entry.get('name'):
-            yield 0, "ID: %s" % entry['id']
+    for entry in parsed.get("members", {}):
+        if item == entry.get("name"):
+            yield 0, "ID: %s" % entry["id"]
 
-            os = entry.get('descriptors', {}).get('os')
+            os = entry.get("descriptors", {}).get("os")
             if os is not None:
                 yield 0, "OS: %s" % os
 
-            if len(entry.get('FCPaths', 0)) > 0:
-                yield 0, "FC Paths: %s" % len(entry['FCPaths'])
-            elif len(entry.get('iSCSIPaths', 0)) > 0:
-                yield 0, "iSCSI Paths: %s" % len(entry['iSCSIPaths'])
+            if len(entry.get("FCPaths", 0)) > 0:
+                yield 0, "FC Paths: %s" % len(entry["FCPaths"])
+            elif len(entry.get("iSCSIPaths", 0)) > 0:
+                yield 0, "iSCSI Paths: %s" % len(entry["iSCSIPaths"])
 
 
-check_info['3par_hosts'] = {
-    'parse_function': parse_3par,
-    'inventory_function': inventory_3par_hosts,
-    'check_function': check_3par_hosts,
-    'service_description': "Host %s",
+check_info["3par_hosts"] = {
+    "parse_function": parse_3par,
+    "inventory_function": inventory_3par_hosts,
+    "check_function": check_3par_hosts,
+    "service_description": "Host %s",
 }

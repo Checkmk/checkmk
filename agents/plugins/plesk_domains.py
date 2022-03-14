@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 # Lists all domains configured in plesk
 #
@@ -12,27 +12,31 @@ __version__ = "2.1.0i1"
 # <domain>
 
 import sys
+
 try:
     import MySQLdb  # type: ignore[import] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
-        "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e)
+        "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e
+    )
     sys.exit(0)
 
+with open("/etc/psa/.psa.shadow") as pwd_file:
+    pwd = pwd_file.read().strip()
 try:
     db = MySQLdb.connect(
-        host='localhost',
-        db='psa',
-        user='admin',
-        passwd=open('/etc/psa/.psa.shadow').read().strip(),
-        charset='utf8',
+        host="localhost",
+        db="psa",
+        user="admin",
+        passwd=pwd,
+        charset="utf8",
     )
 except MySQLdb.Error as e:
     sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
     sys.exit(1)
 
 cursor = db.cursor()
-cursor.execute('SELECT name FROM domains')
-sys.stdout.write('<<<plesk_domains>>>\n')
-sys.stdout.write("%s\n" % '\n'.join([d[0] for d in cursor.fetchall()]))
+cursor.execute("SELECT name FROM domains")
+sys.stdout.write("<<<plesk_domains>>>\n")
+sys.stdout.write("%s\n" % "\n".join([d[0] for d in cursor.fetchall()]))
 cursor.close()

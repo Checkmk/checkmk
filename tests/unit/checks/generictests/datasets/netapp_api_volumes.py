@@ -188,33 +188,35 @@ info = [
 ]
 
 mock_host_conf = {
-    '': [[
-        {
-            'group_name': 'euedcnas1710.v_1710_data',
-            'patterns_include': ['euedcnas1710.v_1710_data'],
-            'patterns_exclude': []
-        },
-        {
-            'group_name': 'group1',
-            'patterns_include': ['vol0'],
-            'patterns_exclude': []
-        },
-        {
-            'group_name': 'group2',
-            'patterns_include': ['vol_bronze1*'],
-            'patterns_exclude': []
-        },
-        {
-            'group_name': 'group2',
-            'patterns_include': [],
-            'patterns_exclude': ['vol_bronze1_cifs']
-        },
-        {
-            'group_name': 'group3',
-            'patterns_include': [],
-            'patterns_exclude': []
-        },
-    ],],
+    '': [{
+        "groups": [
+            {
+                'group_name': 'euedcnas1710.v_1710_data',
+                'patterns_include': ['euedcnas1710.v_1710_data'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group1',
+                'patterns_include': ['vol0'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group2',
+                'patterns_include': ['vol_bronze1*'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group2',
+                'patterns_include': [],
+                'patterns_exclude': ['vol_bronze1_cifs']
+            },
+            {
+                'group_name': 'group3',
+                'patterns_include': [],
+                'patterns_exclude': []
+            },
+        ],
+    }],
 }
 
 discovery = {
@@ -312,16 +314,12 @@ checks = {
                 "show_reserved": False,
             },
             [
-                (
-                    0,
-                    '1.11% used (31.67 GB of 2.79 TB)',
-                    [
-                        ('fs_used', 32429.234375, 2341335.171875, 2634002.068359375, 0,
-                         2926668.96484375),
-                        ('fs_size', 2926668.96484375),
-                        ('fs_used_percent', 1.1080595299486269),
-                    ]
-                ),
+                (0, '1.11% used (31.67 GB of 2.79 TB)', [
+                    ('fs_used', 32429.234375, 2341335.171875, 2634002.068359375, 0,
+                     2926668.96484375),
+                    ('fs_size', 2926668.96484375),
+                    ('fs_used_percent', 1.1080595299486269),
+                ]),
                 (
                     0,
                     'trend: +21.32 GB / 24 hours',
@@ -370,27 +368,28 @@ checks = {
                 'show_reserved': False,
                 'perfdata': ['', 'nfs', 'cifs', 'san', 'fcp', 'iscsi'],
                 'magic': 0.8,
-                'trend_mb': (100, 200),
+                'trend_bytes': (104857600, 209715200),
                 'trend_perc': (5.0, 10.0),
                 'trend_timeleft': (12, 6),
                 'trend_showtimeleft': True
             },
             [
                 (2, '60.04% used (180.13 of 300.00 GB, warn/crit at 50.00%/60.00%)', [
-                     ('fs_used', 184455.7265625, 153600.0, 184320.0, 0, 307200.0),
-                     ('fs_size', 307200.0),
-                     ('fs_used_percent', 60.04418182373047),
+                    ('fs_used', 184455.7265625, 153600.0, 184320.0, 0, 307200.0),
+                    ('fs_size', 307200.0),
+                    ('fs_used_percent', 60.04418182373047),
                 ]),
-                (2, 'trend: +121.29 GB / 24 hours - growing too fast (warn/crit at 100.00 MB/200.00 MB per 24.0 h)'
-                 '(!!), growing too fast (warn/crit at 5.000%/10.000% per 24.0 h)(!!), time '
+                (2,
+                 'trend: +121.29 GB / 24 hours - growing too fast (warn/crit at 100.00 MB/200.00 MB per 24.0 h)'
+                 '(!!), growing too fast (warn/crit at 5.0%/10.0% per 24.0 h)(!!), time '
                  'left until disk full: 23 hours', [
                      ('growth', 2190950.615204839),
                      ('trend', 124195.93898073, 100.0, 200.0, 0, 12800.0),
                      ('trend_hoursleft', 23.719475746763944),
-                ]),
-                (0, 'Inodes used: 0.04%, Inodes available: 9,335,461 (99.96%)', [
-                     ('inodes_used', 3414, 8404987.5, 8871931.25, 0.0, 9338875.0),
                  ]),
+                (0, 'Inodes used: 0.04%, Inodes available: 9,335,461 (99.96%)', [
+                    ('inodes_used', 3414, 8404987.5, 8871931.25, 0.0, 9338875.0),
+                ]),
                 (
                     0,
                     '',
@@ -449,7 +448,7 @@ checks = {
                 'show_reserved': False,
                 'perfdata': ['', 'nfs', 'cifs', 'san', 'fcp', 'iscsi'],
                 'magic': 0.8,
-                'trend_mb': (100, 200),
+                'trend_bytes': (104857600, 209715200),
                 'trend_perc': (5.0, 10.0),
                 'trend_timeleft': (12, 6),
                 'trend_showtimeleft': True,

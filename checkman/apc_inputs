@@ -1,7 +1,7 @@
 title: APC UPS: Input Contacts
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the input contacts of a APC UPS.
@@ -20,7 +20,7 @@ description:
 
  This check uses the PowerNet-MIB.
 
-inventory:
+discovery:
  One service is created for each contact
 
 item:

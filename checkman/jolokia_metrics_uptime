@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Uptime (deprecated)
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -18,7 +18,6 @@ description:
 item:
  The name of the instance
 
-inventory:
+discovery:
  One service is created for each application running inside an Jolokia
  instance sent by the agent.
-

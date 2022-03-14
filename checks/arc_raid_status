@@ -39,8 +39,9 @@ def check_arc_raid_status(item, params, info):
             i_disks = params
             c_disks = saveint(line[-5])
             if i_disks != c_disks:
-                messages.append("Number of disks has changed from %d to %d(!!)" %
-                                (i_disks, c_disks))
+                messages.append(
+                    "Number of disks has changed from %d to %d(!!)" % (i_disks, c_disks)
+                )
                 state = 2
 
             return state, ", ".join(messages)

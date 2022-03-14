@@ -1,7 +1,7 @@
 title: Arbor Peakflow TMS: Disk Usage
 agents: snmp
 catalog: hw/network/arbor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors disk usage on Arbor Peakflow TMS devices.
@@ -16,9 +16,8 @@ description:
 
  This check uses the PEAKFLOW-TMS-MIB.
 
-inventory:
+discovery:
  One service is created.
 
 item:
  The sole item is named "/".
-

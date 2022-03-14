@@ -1,0 +1,37 @@
+Title: generate default site configuration before Apache starts
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1626258904
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+Before this Werk, the default configuration was created by Checkmk
+on the first request to the GUI.
+
+This has been changed to happend *before* the Apache process starts up
+the first time. The reason for this is that some parts of Checkmk
+(e.g. the REST API) now need the default configuration to already be
+present at startup.
+
+This may cause issues with server configuration management systems (e.g.
+Puppet, Chef or Ansible) when these systems expect a certain file to be
+missing in a newly created site, whereas now these files will exist.
+
+The files in question are:
+
+etc/check_mk/multisite.d/wato/ca-certificates.mk
+etc/check_mk/multisite.d/wato/groups.mk
+etc/check_mk/multisite.d/wato/global.mk
+etc/check_mk/multisite.d/wato/tags.mk
+etc/check_mk/multisite.d/wato/users.mk
+
+etc/check_mk/conf.d/wato/contacts.mk
+etc/check_mk/conf.d/wato/groups.mk
+etc/check_mk/conf.d/wato/rules.mk
+etc/check_mk/conf.d/wato/global.mk
+etc/check_mk/conf.d/wato/notifications.mk
+etc/check_mk/conf.d/wato/tags.mk

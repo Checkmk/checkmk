@@ -8,8 +8,8 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <cstdint>
-#include <ctime>
+#include <chrono>
+#include <cstddef>
 #include <string>
 #include <vector>
 class HostServiceState;
@@ -28,27 +28,27 @@ using HostServiceKey = void *;
 class HostServiceState {
 public:
     bool _is_host;
-    time_t _time;
-    int32_t _lineno;
-    time_t _from;
-    time_t _until;
+    std::chrono::system_clock::time_point _time;
+    size_t _lineno;
+    std::chrono::system_clock::time_point _from;
+    std::chrono::system_clock::time_point _until;
 
-    time_t _duration;
+    std::chrono::system_clock::duration _duration;
     double _duration_part;
 
-    time_t _duration_unmonitored;
+    std::chrono::system_clock::duration _duration_unmonitored;
     double _duration_part_unmonitored;
 
-    time_t _duration_ok;
+    std::chrono::system_clock::duration _duration_ok;
     double _duration_part_ok;
 
-    time_t _duration_warning;
+    std::chrono::system_clock::duration _duration_warning;
     double _duration_part_warning;
 
-    time_t _duration_critical;
+    std::chrono::system_clock::duration _duration_critical;
     double _duration_part_critical;
 
-    time_t _duration_unknown;
+    std::chrono::system_clock::duration _duration_unknown;
     double _duration_part_unknown;
 
     // State information
@@ -66,7 +66,7 @@ public:
     // Absent state handling
     bool _may_no_longer_exist;
     bool _has_vanished;
-    time_t _last_known_time;
+    std::chrono::system_clock::time_point _last_known_time;
 
     std::string _debug_info;
     std::string _log_output;

@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+
 #
 # Example Output:
 # .1.3.6.1.4.1.5951.4.1.1.41.8.1.1.4.47.118.97.114  "/var"
@@ -24,12 +27,15 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # .1.3.6.1.4.1.5951.4.1.1.41.8.1.3.6.47.102.108.97.115.104  7256
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 def inventory_df_netscaler(info):
     mplist = []
     for mp, size_mb, _avail_mb in info:
         if int(size_mb) > 0 and mp not in inventory_df_exclude_mountpoints:
             mplist.append(mp)
-    return df_inventory(mplist)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
 def check_df_netscaler(item, params, info):
@@ -53,6 +59,7 @@ check_info["df_netscaler"] = {
             1,  # sysHealthDiskName
             2,  # sysHealthDiskSize
             3,  # sysHealthDiskAvail
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
 }

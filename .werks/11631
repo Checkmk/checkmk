@@ -6,7 +6,7 @@ Date: 1613031442
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The license usage report should NOT contain sites, hosts and services which are
 used for test scenarios.  Due to a lot of different scenarios we need a

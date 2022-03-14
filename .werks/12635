@@ -1,0 +1,16 @@
+Title: fileinfo, filestats: improve description of upper levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617258325
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The fileinfo and filestats rules have imprecise descriptions of upper levels
+in their respective configuration rulesets. WARN and CRIT configuration
+variables were described as "Warning/Critical if above", but the states were
+already applied when the configured values were reached. This has been fixed by
+changing the configuration descriptions to "Warning/Critical at or above".

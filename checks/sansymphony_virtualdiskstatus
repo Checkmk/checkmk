@@ -12,7 +12,7 @@
 def parse_sansymphony_virtualdiskstatus(info):
     parsed = {}
     for line in info:
-        parsed.setdefault(line[0], ' '.join(line[1:]))
+        parsed.setdefault(line[0], " ".join(line[1:]))
     return parsed
 
 
@@ -22,7 +22,7 @@ def check_sansymphony_virtualdiskstatus(_no_item, _no_params, data):
     return state, "Volume state is: %s" % data
 
 
-check_info['sansymphony_virtualdiskstatus'] = {
+check_info["sansymphony_virtualdiskstatus"] = {
     "parse_function": parse_sansymphony_virtualdiskstatus,
     "inventory_function": discover(),
     "check_function": check_sansymphony_virtualdiskstatus,

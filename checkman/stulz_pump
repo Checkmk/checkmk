@@ -1,7 +1,7 @@
 title: STULZ Clima Unit: Pump Status
 agents: snmp
 catalog: hw/environment/stulz
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This plugin checks the status and RPM of pumps of Stulz clima units. It returns
@@ -10,5 +10,5 @@ description:
 item:
  ID of the pump
 
-inventory:
+discovery:
  One service is created for each pump.

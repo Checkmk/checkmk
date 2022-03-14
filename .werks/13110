@@ -1,0 +1,15 @@
+Title: LDAP: Fix MKLDAPException if "User-ID attribute" is not lower case
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1629875204
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If the User-ID attribute was not entered lower case, e.g. "MyUserAttribute", the
+LDAP sync failed with the error
+"cmk.gui.plugins.userdb.ldap_connector.MKLDAPException: The configured User-ID
+attribute "MyUserAttribute" does not exist for the user...".

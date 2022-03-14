@@ -1,7 +1,7 @@
 title: AWS EC2: Limits
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the AWS/EC2 limits.
@@ -43,5 +43,5 @@ description:
  If limits are enabled account attributes of EC2 resource are
  additionally fetched.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

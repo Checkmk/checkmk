@@ -1,0 +1,14 @@
+Title: Fix possible synchronization error on user profile changes in distributed setups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624613443
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If a user with non-Ascii-characters in user ID or alias made profile changes in
+a distributed setup (e.g. password change), the error "Password changed (sync
+failed: Got invalid data: Internal automation error: The given text must only
+contain ASCII characters..." was shown on the "Activate pending changes" page.

@@ -5,26 +5,38 @@
 
 set -e -o pipefail
 
-case "$DISTRO" in
-centos-7 | centos-8)
-    echo "Installing for CentOS 7, 8"
-    curl -sL https://rpm.nodesource.com/setup_12.x | bash -
-    yum -y install nodejs
-    exit 0
-    ;;
-debian-* | ubuntu-* | cma)
-    echo "Installing for Debian / Ubuntu"
-    curl -sL https://deb.nodesource.com/setup_12.x | bash -
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=build_lib.sh
+. "${SCRIPT_DIR}/build_lib.sh"
+
+# We only ensure we use the right major version at the moment
+NODEJS_VERSION=$(get_version "$SCRIPT_DIR" NODEJS_VERSION)
+NPM_VERSION=$(get_version "$SCRIPT_DIR" NPM_VERSION)
+
+install_package() {
+    if [ "$(lsb_release -s -i)" != "Ubuntu" ]; then
+        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        exit 1
+    fi
+
+    echo "Installing nodejs"
+    curl -sL "https://deb.nodesource.com/setup_$NODEJS_VERSION.x" | bash -
     apt-get install -y nodejs
-    exit 0
-    ;;
-sles-*)
-    echo "Installing for SLES"
-    zypper -n --no-gpg-checks in --replacefiles --force-resolution nodejs10 npm10
-    exit 0
-    ;;
-*)
-    echo "ERROR: Unhandled DISTRO: $DISTRO"
-    exit 1
-    ;;
-esac
+}
+
+test_package() {
+    log "Testing for node v$NODEJS_VERSION in \$PATH"
+    node --version | grep "^v$NODEJS_VERSION\." >/dev/null 2>&1 || (
+        echo "Invalid version: $(node --version)"
+        exit 1
+    )
+
+    log "Testing for npm $NPM_VERSION in \$PATH"
+    npm --version | grep "^$NPM_VERSION\." >/dev/null 2>&1 || (
+        echo "Invalid version: $(npm --version)"
+        exit 1
+    )
+}
+
+install_package
+test_package

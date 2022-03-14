@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Note: This file is almost identical with ibm_svc_nodestats. We should
 # create an include file for sharing common code!
 
@@ -67,28 +69,46 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 
 def parse_ibm_svc_nodestats(info):
     dflt_header = [
-        'node_id',
-        'node_name',
-        'stat_name',
-        'stat_current',
-        'stat_peak',
-        'stat_peak_time',
+        "node_id",
+        "node_name",
+        "stat_name",
+        "stat_current",
+        "stat_peak",
+        "stat_peak_time",
     ]
     parsed = {}
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         for data in rows:
-            node_name = data['node_name']
-            stat_name = data['stat_name']
-            if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
-                             "vdisk_w_ms"):
+            node_name = data["node_name"]
+            stat_name = data["stat_name"]
+            if stat_name in (
+                "vdisk_r_mb",
+                "vdisk_w_mb",
+                "vdisk_r_io",
+                "vdisk_w_io",
+                "vdisk_r_ms",
+                "vdisk_w_ms",
+            ):
                 item_name = "VDisks %s" % node_name
                 stat_name = stat_name.replace("vdisk_", "")
-            elif stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
-                               "mdisk_w_ms"):
+            elif stat_name in (
+                "mdisk_r_mb",
+                "mdisk_w_mb",
+                "mdisk_r_io",
+                "mdisk_w_io",
+                "mdisk_r_ms",
+                "mdisk_w_ms",
+            ):
                 item_name = "MDisks %s" % node_name
                 stat_name = stat_name.replace("mdisk_", "")
-            elif stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
-                               "drive_w_ms"):
+            elif stat_name in (
+                "drive_r_mb",
+                "drive_w_mb",
+                "drive_r_io",
+                "drive_w_io",
+                "drive_r_ms",
+                "drive_w_ms",
+            ):
                 item_name = "Drives %s" % node_name
                 stat_name = stat_name.replace("drive_", "")
             elif stat_name in ("write_cache_pc", "total_cache_pc", "cpu_pc"):
@@ -96,7 +116,7 @@ def parse_ibm_svc_nodestats(info):
             else:
                 continue
             try:
-                stat_current = int(data['stat_current'])
+                stat_current = int(data["stat_current"])
             except ValueError:
                 continue
             parsed.setdefault(item_name, {}).setdefault(stat_name, stat_current)
@@ -114,9 +134,11 @@ def parse_ibm_svc_nodestats(info):
 
 
 def inventory_ibm_svc_nodestats_diskio(info):
-    return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).items()
-            if 'r_mb' in data and 'w_mb' in data]
+    return [
+        (node_name, None)
+        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        if "r_mb" in data and "w_mb" in data
+    ]
 
 
 def check_ibm_svc_nodestats_diskio(item, _no_params, info):
@@ -124,13 +146,16 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
     if data is None:
         return
 
-    read_bytes = data['r_mb'] * 1024 * 1024
-    write_bytes = data['w_mb'] * 1024 * 1024
+    read_bytes = data["r_mb"] * 1024 * 1024
+    write_bytes = data["w_mb"] * 1024 * 1024
     perfdata = [("read", read_bytes), ("write", write_bytes)]
 
-    return 0, "%s/s read, %s/s write" % \
-        (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)), \
-        perfdata
+    return (
+        0,
+        "%s/s read, %s/s write"
+        % (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)),
+        perfdata,
+    )
 
 
 check_info["ibm_svc_nodestats.diskio"] = {
@@ -140,7 +165,7 @@ check_info["ibm_svc_nodestats.diskio"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--iops----------------------------------------------------------------.
 #   |                          _                                           |
 #   |                         (_) ___  _ __  ___                           |
@@ -152,9 +177,11 @@ check_info["ibm_svc_nodestats.diskio"] = {
 
 
 def inventory_ibm_svc_nodestats_iops(info):
-    return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).items()
-            if 'r_io' in data and 'w_io' in data]
+    return [
+        (node_name, None)
+        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        if "r_io" in data and "w_io" in data
+    ]
 
 
 def check_ibm_svc_nodestats_iops(item, _no_params, info):
@@ -162,8 +189,8 @@ def check_ibm_svc_nodestats_iops(item, _no_params, info):
     if data is None:
         return
 
-    read_iops = data['r_io']
-    write_iops = data['w_io']
+    read_iops = data["r_io"]
+    write_iops = data["w_io"]
     perfdata = [("read", read_iops), ("write", write_iops)]
 
     return 0, "%s IO/s read, %s IO/s write" % (read_iops, write_iops), perfdata
@@ -176,7 +203,7 @@ check_info["ibm_svc_nodestats.iops"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--disk latency--------------------------------------------------------.
 #   |             _ _     _      _       _                                 |
 #   |          __| (_)___| | __ | | __ _| |_ ___ _ __   ___ _   _          |
@@ -188,9 +215,11 @@ check_info["ibm_svc_nodestats.iops"] = {
 
 
 def inventory_ibm_svc_nodestats_disk_latency(info):
-    return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).items()
-            if 'r_ms' in data and 'w_ms' in data]
+    return [
+        (node_name, None)
+        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        if "r_ms" in data and "w_ms" in data
+    ]
 
 
 def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
@@ -198,8 +227,8 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
     if data is None:
         return
 
-    read_latency = data['r_ms']
-    write_latency = data['w_ms']
+    read_latency = data["r_ms"]
+    write_latency = data["w_ms"]
     perfdata = [("read_latency", read_latency), ("write_latency", write_latency)]
 
     return 0, "Latency is %s ms for read, %s ms for write" % (read_latency, write_latency), perfdata
@@ -212,7 +241,7 @@ check_info["ibm_svc_nodestats.disk_latency"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--cpu-----------------------------------------------------------------.
 #   |                                                                      |
 #   |                           ___ _ __  _   _                            |
@@ -227,16 +256,18 @@ ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 
 def inventory_ibm_svc_nodestats_cpu(info):
-    return [(node_name, "ibm_svc_cpu_default_levels")
-            for node_name, data in parse_ibm_svc_nodestats(info).items()
-            if 'cpu_pc' in data]
+    return [
+        (node_name, "ibm_svc_cpu_default_levels")
+        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        if "cpu_pc" in data
+    ]
 
 
 def check_ibm_svc_nodestats_cpu(item, params, info):
     data = parse_ibm_svc_nodestats(info).get(item)
     if data is None:
         return
-    return check_cpu_util(data['cpu_pc'], params)
+    return check_cpu_util(data["cpu_pc"], params)
 
 
 check_info["ibm_svc_nodestats.cpu_util"] = {
@@ -247,7 +278,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
     "group": "cpu_utilization_multiitem",
 }
 
-#.
+# .
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
 #   |                       ___ __ _  ___| |__   ___                       |
@@ -259,9 +290,11 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
 
 
 def inventory_ibm_svc_nodestats_cache(info):
-    return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).items()
-            if 'write_cache_pc' in data and 'total_cache_pc' in data]
+    return [
+        (node_name, None)
+        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        if "write_cache_pc" in data and "total_cache_pc" in data
+    ]
 
 
 def check_ibm_svc_nodestats_cache(item, _no_params, info):
@@ -271,11 +304,16 @@ def check_ibm_svc_nodestats_cache(item, _no_params, info):
 
     write_cache_pc = data["write_cache_pc"]
     total_cache_pc = data["total_cache_pc"]
-    perfdata = [("write_cache_pc", write_cache_pc, None, None, 0, 100),
-                ("total_cache_pc", total_cache_pc, None, None, 0, 100)]
+    perfdata = [
+        ("write_cache_pc", write_cache_pc, None, None, 0, 100),
+        ("total_cache_pc", total_cache_pc, None, None, 0, 100),
+    ]
 
-    return 0, "Write cache usage is %d %%, total cache usage is %d %%" % \
-           (write_cache_pc, total_cache_pc), perfdata
+    return (
+        0,
+        "Write cache usage is %d %%, total cache usage is %d %%" % (write_cache_pc, total_cache_pc),
+        perfdata,
+    )
 
 
 check_info["ibm_svc_nodestats.cache"] = {

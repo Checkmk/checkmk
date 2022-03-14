@@ -1,7 +1,7 @@
 title: Dell Compellent: Controller Status
 agents: snmp
 catalog: hw/storagehw/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the status, name, model and address of a controller of
@@ -11,5 +11,5 @@ description:
 item:
  The controller number
 
-inventory:
+discovery:
  One service is created for each controller.

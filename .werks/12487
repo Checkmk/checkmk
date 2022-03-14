@@ -1,0 +1,20 @@
+Title: Extend reports user permissions to allow edit of report elements from other users
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1618931929
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Users in a role with permission "Edit foreign reports"(only admins by
+default) could access and edit the properties of reports configured by
+other users, yet were not able to edit the contents receiving the error
+"The requested report does not exist".
+
+With this werk finding, editing and generating reports with configurations
+from other users is possible given the correct permissions.
+
+This feature is not for collaborative editing, but so that admins and other
+privileged users can overwrite configurations of other users.

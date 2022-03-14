@@ -11,8 +11,12 @@
 #     'user': 'kitty'
 # }
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_jenkins_arguments(params, hostname, ipaddress):
+
+def agent_jenkins_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = [
         "-P",
         params["protocol"],
@@ -24,7 +28,7 @@ def agent_jenkins_arguments(params, hostname, ipaddress):
 
     if "sections" in params:
         args += ["-m", " ".join(params["sections"])]
-    #compatibility with extension package format 1.6
+    # compatibility with extension package format 1.6
     elif "infos" in params:
         args += ["-m", " ".join(params["infos"])]
 
@@ -36,4 +40,4 @@ def agent_jenkins_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['jenkins'] = agent_jenkins_arguments
+special_agent_info["jenkins"] = agent_jenkins_arguments

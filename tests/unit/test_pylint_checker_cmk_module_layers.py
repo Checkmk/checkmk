@@ -6,15 +6,15 @@
 
 # pylint: disable=protected-access
 
-import itertools
-import pytest  # type: ignore[import]
 
-from testlib.pylint_checker_cmk_module_layers import (
-    _get_absolute_importee,
-    CMKModuleLayerChecker,
+import pytest
+
+from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
-    Component,
+    _get_absolute_importee,
     _in_component,
+    CMKModuleLayerChecker,
+    Component,
     ModuleName,
     ModulePath,
 )
@@ -30,20 +30,31 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
         ("cmk.core_helpers.agent", "_base", 1, False, "cmk.core_helpers._base"),
         # relative import in __init__
         ("cmk.core_helpers", "agent", 1, True, "cmk.core_helpers.agent"),
-    ])
-def test__get_absolute_importee(root_name: str, modname: str, level: int, is_package: bool,
-                                abs_module: str):
-    assert _get_absolute_importee(
-        root_name=root_name,
-        modname=modname,
-        level=level,
-        is_package=is_package,
-    ) == abs_module
+    ],
+)
+def test__get_absolute_importee(
+    root_name: str, modname: str, level: int, is_package: bool, abs_module: str
+):
+    assert (
+        _get_absolute_importee(
+            root_name=root_name,
+            modname=modname,
+            level=level,
+            is_package=is_package,
+        )
+        == abs_module
+    )
 
 
 @pytest.mark.parametrize("component", COMPONENT_LIST)
-def test_utils_import_ok(component):
-    for importee in ("cmk", "cmk.utils", "cmk.utils.anything"):
+def test_allowed_import_ok(component):
+    for importee in (
+        "cmk",
+        "cmk.utils",
+        "cmk.utils.anything",
+        "cmk.automations",
+        "cmk.automations.whatever",
+    ):
         is_ok = not _in_component(ModuleName(component), Component("cmk.base.plugins.agent_based"))
         assert is_ok is CHECKER._is_import_allowed(
             ModulePath("_not/relevant_"),
@@ -69,9 +80,20 @@ def test_utils_import_ok(component):
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
         # disallow import of one plugin in another
-        ("cmk/base/plugins/agent_based", "cmk.base.plugins.agent_based.foo",
-         "cmk.base.plugins.agent_based.bar", False),
-    ])
+        (
+            "cmk/base/plugins/agent_based",
+            "cmk.base.plugins.agent_based.foo",
+            "cmk.base.plugins.agent_based.bar",
+            False,
+        ),
+        # disallow import of `base` / `gui` in `automations`
+        ("cmk/automations", "cmk.automations.x", "cmk.base.a", False),
+        ("cmk/automations", "cmk.automations.y", "cmk.gui.b", False),
+        # alow import of `automations` in `base` / `gui`
+        ("cmk/base", "cmk.base.x", "cmk.automations.a", True),
+        ("cmk/gui", "cmk.gui.y", "cmk.automations.b", True),
+    ],
+)
 def test__is_import_allowed(module_path, importer, importee, allowed):
     assert allowed is CHECKER._is_import_allowed(
         ModulePath(module_path),

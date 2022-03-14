@@ -9,18 +9,21 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#<<<scaleio_system:sep(9)>>>
-#SYSTEM 5914d6b47d479d5a:
+
+# <<<scaleio_system:sep(9)>>>
+# SYSTEM 5914d6b47d479d5a:
 #        ID                                                 5914d6b47d479d5a
 #        NAME                                               N/A
 #        CAPACITY_ALERT_HIGH_THRESHOLD                      80%
@@ -41,19 +44,21 @@ def check_scaleio_system(item, params, parsed):
         return
 
     if "levels" not in params:
-        params["levels"] = (float(data["CAPACITY_ALERT_HIGH_THRESHOLD"][0].strip("%")), \
-                            float(data["CAPACITY_ALERT_CRITICAL_THRESHOLD"][0].strip("%")))
+        params["levels"] = (
+            float(data["CAPACITY_ALERT_HIGH_THRESHOLD"][0].strip("%")),
+            float(data["CAPACITY_ALERT_CRITICAL_THRESHOLD"][0].strip("%")),
+        )
     total = int(data["MAX_CAPACITY_IN_KB"][2].strip("(")) * 1024
     free = int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")) * 1024
 
     yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info['scaleio_system'] = {
-    'parse_function': lambda info: parse_scaleio(info, "SYSTEM"),
-    'inventory_function': inventory_scaleio_system,
-    'check_function': check_scaleio_system,
-    'service_description': 'ScaleIO System %s',
-    'group': 'filesystem',
-    'has_perfdata': True,
+check_info["scaleio_system"] = {
+    "parse_function": lambda info: parse_scaleio(info, "SYSTEM"),
+    "inventory_function": inventory_scaleio_system,
+    "check_function": check_scaleio_system,
+    "service_description": "ScaleIO System %s",
+    "group": "filesystem",
+    "has_perfdata": True,
 }

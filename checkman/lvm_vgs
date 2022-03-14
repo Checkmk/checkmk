@@ -1,7 +1,7 @@
 title: LVM: Volume Groups
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the usage of LVM volume groups.
@@ -13,5 +13,5 @@ description:
 item:
  Name of the volume group
 
-inventory:
+discovery:
  One service is created for each volume group.

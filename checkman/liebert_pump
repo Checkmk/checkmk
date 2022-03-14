@@ -1,7 +1,7 @@
 title: Liebert: Pump Working Hours
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the working hours of the pump. The state will change to {CRIT} if the lifetime given by the device is reached.
@@ -9,5 +9,5 @@ description:
 item:
  The item will be the data label of the OID
 
-inventory:
+discovery:
  One service is created for each pump.

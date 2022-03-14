@@ -1,0 +1,18 @@
+Title: New special agent to monitor Datadog
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1621332211
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk introduces a new special agent which enables the monitoring
+of Datadog monitors and Datadog events in Checkmk. To collects its
+data, the agent connects to the Datadog API.
+
+Datadog monitors are monitored as services of the host on which the
+special agent is executed. One monitor corresponds to one service.
+Datadog events are forwarded to the local event console of the
+Checkmk site.

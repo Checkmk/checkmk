@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesVirtualization,
+from cmk.gui.plugins.wato.utils import (
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesVirtualization,
 )
 
 rulespec_registry.register(
@@ -16,4 +16,5 @@ rulespec_registry.register(
         check_group_name="vm_state",
         group=RulespecGroupEnforcedServicesVirtualization,
         title=lambda: _("Overall state of a virtual machine (for example ESX VMs)"),
-    ))
+    )
+)

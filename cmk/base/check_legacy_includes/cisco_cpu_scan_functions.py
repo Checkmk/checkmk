@@ -10,14 +10,21 @@
 
 
 def snmp_scan_cisco_cpu(oid):
-    return (_is_cisco(oid) and not _has_table_2(oid) and
-            (bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.8.1')) or
-             bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1'))))
+    return (
+        _is_cisco(oid)
+        and (not _is_cisco_nexus(oid) or not bool(oid(".1.3.6.1.4.1.9.9.305.1.1.1.0")))
+        and not _has_table_2(oid)
+        and (
+            bool(oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"))
+            or bool(oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1"))
+        )
+    )
 
 
 #   ---fallback-------------------------------------------------------------
 
 
+# the follwoing function was duplicated to cmk/base/plugins/agent_based/cisco_cpu_multiitem.py
 def snmp_scan_cisco_cpu_multiitem(oid):
     return _is_cisco(oid) and not _is_cisco_nexus(oid) and _has_table_2(oid)
 
@@ -33,8 +40,11 @@ def snmp_scan_cisco_nexus_cpu(oid):
 
 
 def snmp_scan_cisco_oldcpu(oid):
-    return (oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745") and _has_table_2(oid) and
-            bool(oid(".1.3.6.1.4.1.9.2.1.57.0")))
+    return (
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")
+        and _has_table_2(oid)
+        and bool(oid(".1.3.6.1.4.1.9.2.1.57.0"))
+    )
 
 
 #   ---helper---------------------------------------------------------------

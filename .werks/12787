@@ -1,0 +1,18 @@
+Title: Kubernetes: Custom URL: ignore default port
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621600290
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Affected Component: Special Agent Kubernetes: Configuration "API server endpoint"
+
+Before this werk the default https port (433) was appended to the URL defined
+with the option "Custom URL".
+
+After this werk the custom URL will be used as is to query the
+Kubernetes cluster.

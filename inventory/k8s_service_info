@@ -17,6 +17,6 @@ def inv_k8s_service_info(info, inventory_tree):
         inv_node[key] = value
 
 
-inv_info['k8s_service_info'] = {
-    'inv_function': inv_k8s_service_info,
+inv_info["k8s_service_info"] = {
+    "inv_function": inv_k8s_service_info,
 }

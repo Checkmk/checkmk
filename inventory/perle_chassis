@@ -23,6 +23,6 @@ def inv_perle_chassis(info):
     node["firmware"] = fw
 
 
-inv_info['perle_chassis'] = {
-    'inv_function': inv_perle_chassis,
+inv_info["perle_chassis"] = {
+    "inv_function": inv_perle_chassis,
 }

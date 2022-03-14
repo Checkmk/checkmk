@@ -1,0 +1,23 @@
+Title: Performance graphs always use default color styles
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1628601980
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before checkmk 2.0.0 it was possible for users to configure the background,
+foreground and canvas color of the performance graphs. This was ralery useful
+and with the posiblility to switch between theme having a fixed set of style
+custom set colors was unpleasing on theme changes.
+
+Although the option to set these colors was removed the web renderer could still
+read them out of the config. This was particularly anoying on modified service
+views, which contain performance graphs and which had saved their default pre
+2.0 color default, which don't match the new color themes in version 2.0.0
+
+This Werk enforces checkmk's color themes for all Performance graphs and
+discards any previous custom setup.

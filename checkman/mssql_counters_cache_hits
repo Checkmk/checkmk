@@ -1,7 +1,7 @@
 title: MS SQL Server: Cache Hit Ratio
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the cache hit ratio counters as reported by
@@ -18,10 +18,7 @@ item:
  The MSSQL instance name, counter name and object name (like the tablespace
  name) are used for the item.
 
-inventory:
+discovery:
  One service is created for each available cache hit counter.
  This might be dedicated to tablespaces but also MSSQL server internal parts
  like the "Buffer Manager".
-
-cluster:
- On a cluster the check just cumulates all results for each cluster node.

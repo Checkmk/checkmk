@@ -1,0 +1,13 @@
+Title: ps: compute percentual memory usage for clustered services
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1623268750
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The percentual memory displayed is the quotient of the accumulated memory
+use of the processes and the accumulated total memory of every node the
+processes are running on.

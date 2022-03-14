@@ -1,7 +1,7 @@
 title: MS SQL Database: Connections
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports number of active connections for a database.
@@ -16,6 +16,5 @@ description:
 item:
  The MSSQL database identifier.
 
-inventory:
+discovery:
  One service is created for each database.
-

@@ -1,0 +1,13 @@
+Title: Fix ALLNET IP Sensoric special agent (check plugins <tt>allnet_ip_sensoric_...</tt>)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1622101222
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This werk fixes a bug in the ALLNET IP Sensoric special agent. The bug
+prevented the special agent from delivering its data, s.t. the corresponding
+check plugins <tt>allnet_ip_sensoric_...</tt> went stale.

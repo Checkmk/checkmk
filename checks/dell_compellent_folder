@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes import dell_compellent
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -11,12 +13,10 @@
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-from cmk.base.check_legacy_includes import dell_compellent
-
 
 def inventory_dell_compellent_folder(info):
     for line in info:
-        if float(line[1]) != 0:
+        if line[1] and float(line[1]) != 0:
             yield (line[0], {})
 
 
@@ -29,17 +29,18 @@ def check_dell_compellent_folder(item, params, info):
             yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info['dell_compellent_folder'] = {
-    'inventory_function': inventory_dell_compellent_folder,
-    'check_function': check_dell_compellent_folder,
-    'service_description': 'Folder %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.674.11000.2000.500.1.2.32.1',
+check_info["dell_compellent_folder"] = {
+    "inventory_function": inventory_dell_compellent_folder,
+    "check_function": check_dell_compellent_folder,
+    "service_description": "Folder %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.674.11000.2000.500.1.2.32.1",
         [
             2,  # DELL-STORAGE-SC-MIB::scDiskFolderSUNbr
             5,  # DELL-STORAGE-SC-MIB::scDiskFolderSUTotalSpace2
             6,  # DELL-STORAGE-SC-MIB::scDiskFolderSUUsedSpace2
-        ]),
-    'snmp_scan_function': dell_compellent.scan,
-    'group': 'filesystem',
+        ],
+    ),
+    "snmp_scan_function": dell_compellent.scan,
+    "group": "filesystem",
 }

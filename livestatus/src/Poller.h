@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "BitMask.h"
+#include "ChronoUtils.h"
 #include "Logger.h"
 
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
@@ -34,13 +35,12 @@ public:
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
         // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
         do {
-            auto millis =
-                std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+            auto millis = mk::ticks<std::chrono::milliseconds>(timeout);
             // The cast below is OK because int has at least 32 bits on all
             // platforms we care about: The timeout is then limited to 24.85
             // days, which should be more than enough for our needs.
             retval = ::poll(_pollfds.data(), _pollfds.size(),
-                            static_cast<int>(millis.count()));
+                            static_cast<int>(millis));
         } while (retval == -1 && errno == EINTR);
 
         return retval;
@@ -49,7 +49,7 @@ public:
     template <typename Rep, typename Period>
     [[nodiscard]] bool wait(std::chrono::duration<Rep, Period> timeout,
                             const int fd, const PollEvents e,
-                            Logger* const logger) {
+                            Logger *const logger) {
         addFileDescriptor(fd, e);
         const int retval = poll(timeout);
         if (retval == -1) {
@@ -99,7 +99,7 @@ public:
 
     template <class Protocol, class SocketService>
     void addFileDescriptor(
-        const asio::basic_socket<Protocol, SocketService>& sock, PollEvents e) {
+        const asio::basic_socket<Protocol, SocketService> &sock, PollEvents e) {
         addFileDescriptor(native_handle(sock), e);
     }
 
@@ -111,7 +111,7 @@ public:
 
     template <class Protocol, class SocketService>
     bool isFileDescriptorSet(
-        const asio::basic_socket<Protocol, SocketService>& sock,
+        const asio::basic_socket<Protocol, SocketService> &sock,
         PollEvents e) const {
         return isFileDescriptorSet(native_handle(sock), e);
     }
@@ -134,10 +134,10 @@ private:
 
     template <class Protocol, class SocketService>
     static int native_handle(
-        const asio::basic_socket<Protocol, SocketService>& sock) {
+        const asio::basic_socket<Protocol, SocketService> &sock) {
         // socket::native_handle is not const but we just want the copy of an
         // int here.
-        return const_cast<asio::basic_socket<Protocol, SocketService>&>(sock)
+        return const_cast<asio::basic_socket<Protocol, SocketService> &>(sock)
             .native_handle();
     }
 };
@@ -146,10 +146,10 @@ struct POSIXPollEvents {
     short value;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const POSIXPollEvents& e) {
+inline std::ostream &operator<<(std::ostream &os, const POSIXPollEvents &e) {
     os << "{";
     auto emit_separator{false};
-    for (const auto& [mask, description] : {std::pair{POLLIN, "in"},
+    for (const auto &[mask, description] : {std::pair{POLLIN, "in"},
                                             {POLLPRI, "pri"},
                                             {POLLOUT, "out"},
                                             {POLLERR, "err"},
@@ -163,7 +163,7 @@ inline std::ostream& operator<<(std::ostream& os, const POSIXPollEvents& e) {
     return os << "}";
 }
 
-inline std::ostream& operator<<(std::ostream& os, const pollfd& p) {
+inline std::ostream &operator<<(std::ostream &os, const pollfd &p) {
     return os << "pollfd{fd=" << p.fd << ",events=" << POSIXPollEvents{p.events}
               << ",revents=" << POSIXPollEvents{p.revents} << "}";
 }

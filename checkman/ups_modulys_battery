@@ -1,13 +1,12 @@
 title: Socomec Modulys UPS Device: Battery Status
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors whether the battery is discharging, the remaining capacity and estimated time until
  shutdown as well as the general health state of the battery.
  Note: It is currently unclear whether the time until shutdown is reliably reported by the device.
 
-inventory:
+discovery:
  One service is created.
-

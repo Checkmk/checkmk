@@ -9,43 +9,43 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from cmk.base.plugins.agent_based.utils.aws import (
-    extract_aws_metrics_by_labels,
-    parse_aws,
-)
+from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_elbv2_target_groups_lambda(info):
-    metrics = extract_aws_metrics_by_labels(['RequestCount', 'LambdaUserError'], parse_aws(info))
+    metrics = extract_aws_metrics_by_labels(["RequestCount", "LambdaUserError"], parse_aws(info))
     return metrics
 
 
 @aws_get_parsed_item_data
 def check_aws_application_elb_target_groups_lambda(item, params, data):
 
-    request_rate = data.get('RequestCount')
+    request_rate = data.get("RequestCount")
     if request_rate is None:
         raise MKCounterWrapped("Currently no data from AWS")
 
     yield check_aws_request_rate(request_rate)
 
-    lambda_error_rate = data.get('LambdaUserError')
+    lambda_error_rate = data.get("LambdaUserError")
     if lambda_error_rate is None:
         lambda_error_rate = 0  # CloudWatch only reports LambdaUserError if the value is nonzero
 
-    for result in check_aws_error_rate(lambda_error_rate, request_rate,
-                                       'aws_lambda_users_errors_rate',
-                                       'aws_lambda_users_errors_perc',
-                                       params.get('levels_lambda', {}), "Lambda user errors"):
+    for result in check_aws_error_rate(
+        lambda_error_rate,
+        request_rate,
+        "aws_lambda_users_errors_rate",
+        "aws_lambda_users_errors_perc",
+        params.get("levels_lambda", {}),
+        "Lambda user errors",
+    ):
         yield result
 
 
-check_info['aws_elbv2_application_target_groups_lambda'] = {
-    'parse_function': parse_aws_elbv2_target_groups_lambda,
-    'inventory_function': discover(lambda k, v: 'RequestCount' in v),
-    'check_function': check_aws_application_elb_target_groups_lambda,
-    'service_description': 'AWS/ApplicationELB Lambda %s',
-    'group': 'aws_elbv2_target_errors',
-    'has_perfdata': True,
+check_info["aws_elbv2_application_target_groups_lambda"] = {
+    "parse_function": parse_aws_elbv2_target_groups_lambda,
+    "inventory_function": discover(lambda k, v: "RequestCount" in v),
+    "check_function": check_aws_application_elb_target_groups_lambda,
+    "service_description": "AWS/ApplicationELB Lambda %s",
+    "group": "aws_elbv2_target_errors",
+    "has_perfdata": True,
 }

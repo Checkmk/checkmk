@@ -1,0 +1,16 @@
+Title: Fixed steadily rising CPU load due to misconfigured dashboard dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626956173
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The <tt>Host statistics</tt> and <tt>Service statistics</tt> dashlets had an increasing number of AJAX requests the
+longer the dashboard stayed open. Over time, this flooded the Apache Web Server, increasing the CPU load.
+
+This behaviour happens because the 1.6->2.0 config migration missed to convert these two dashlets to a different update mechanism.
+As a workaround till version 2.0.0p9 you can simply remove and re-add the statistics snapins.

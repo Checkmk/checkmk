@@ -5,73 +5,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
-from typing import Iterator, Optional, Type, overload
 import base64
-import traceback
 import time
+import traceback
+from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 
-from six import ensure_str
-
-import cmk.utils.version as cmk_version
 import cmk.utils.render as render
-from cmk.utils.type_defs import UserId, timeperiod_spec_alias
+import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import timeperiod_spec_alias, UserId
 
-import cmk.gui.userdb as userdb
-import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
-import cmk.gui.escaping as escaping
-from cmk.gui.table import table_element
-import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
+import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.htmllib import Choices, HTML
-from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import (
-    cleanup_connection_id,
-    get_connection,
-)
-from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _, _u, get_languages, get_language_alias
-from cmk.gui.globals import html, request
-from cmk.gui.valuespec import (
-    UserID,
-    EmailAddress,
-    Alternative,
-    DualListChoice,
-    FixedValue,
-)
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _u, get_language_alias, get_languages
+from cmk.gui.log import logger
 from cmk.gui.page_menu import (
+    make_checkbox_selection_json_text,
+    make_checkbox_selection_topic,
+    make_confirmed_form_submit_link,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_checkbox_selection_json_text,
-    make_checkbox_selection_topic,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_confirmed_form_submit_link,
 )
-from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
-from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.gui.watolib.changes import make_object_audit_log_url
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    make_confirm_link,
-    make_action_link,
+from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
+from cmk.gui.plugins.wato.utils import (
     flash,
-    redirect,
+    make_action_link,
+    make_confirm_link,
+    mode_registry,
     mode_url,
+    redirect,
+    WatoMode,
 )
-
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.sites import get_configured_site_choices
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult, Choices, UserSpec
+from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
+from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
+from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -90,7 +79,7 @@ class ModeUsers(WatoMode):
         return ["users"]
 
     def __init__(self):
-        super(ModeUsers, self).__init__()
+        super().__init__()
         self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
 
@@ -98,6 +87,8 @@ class ModeUsers(WatoMode):
         return _("Users")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
+        del breadcrumb[-1]
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -111,7 +102,8 @@ class ModeUsers(WatoMode):
                                     title=_("Add user"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "edit_user")])),
+                                        watolib.folder_preserving_link([("mode", "edit_user")])
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -128,7 +120,8 @@ class ModeUsers(WatoMode):
                                         form_name="bulk_delete_form",
                                         button_name="_bulk_delete_users",
                                         message=_(
-                                            "Do you really want to delete the selected users?"),
+                                            "Do you really want to delete the selected users?"
+                                        ),
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -140,8 +133,8 @@ class ModeUsers(WatoMode):
                             entries=list(self._page_menu_entries_synchronized_users()),
                         ),
                         PageMenuTopic(
-                            title=_("Notify users"),
-                            entries=list(self._page_menu_entries_notify_users()),
+                            title=_("User messages"),
+                            entries=list(self._page_menu_entries_user_messages()),
                         ),
                         make_checkbox_selection_topic(self.name()),
                     ],
@@ -167,7 +160,7 @@ class ModeUsers(WatoMode):
                 yield PageMenuEntry(
                     title=_("Synchronize users"),
                     icon_name="replicate",
-                    item=make_simple_link(html.makeactionuri([("_sync", 1)])),
+                    item=make_simple_link(makeactionuri(request, transactions, [("_sync", 1)])),
                 )
 
                 yield PageMenuEntry(
@@ -176,16 +169,16 @@ class ModeUsers(WatoMode):
                     item=make_simple_link(self._job.detail_url()),
                 )
 
-    def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("general.notify"):
+    def _page_menu_entries_user_messages(self) -> Iterator[PageMenuEntry]:
+        if user.may("general.message"):
             yield PageMenuEntry(
-                title=_("Notify users"),
-                icon_name="notifications",
-                item=make_simple_link("notify.py"),
+                title=_("Send user messages"),
+                icon_name="message",
+                item=make_simple_link("message.py"),
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("wato.custom_attributes"):
+        if user.may("wato.custom_attributes"):
             yield PageMenuEntry(
                 title=_("Custom attributes"),
                 icon_name="custom_attr",
@@ -199,53 +192,61 @@ class ModeUsers(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if html.request.var('_delete'):
-            delete_users([html.request.get_unicode_input("_delete")])
+        if request.var("_delete"):
+            delete_users([request.get_str_input("_delete")])
+            return redirect(self.mode_url())
 
-        elif html.request.var('_sync'):
+        if request.var("_sync"):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
-                job.set_function(job.do_sync,
-                                 add_to_changelog=True,
-                                 enforce_sync=True,
-                                 load_users_func=userdb.load_users,
-                                 save_users_func=userdb.save_users)
+                job.set_function(
+                    job.do_sync,
+                    add_to_changelog=True,
+                    enforce_sync=True,
+                    load_users_func=userdb.load_users,
+                    save_users_func=userdb.save_users,
+                )
 
                 try:
                     job.start()
                 except background_job.BackgroundJobAlreadyRunning as e:
-                    raise MKUserError(None,
-                                      _("Another synchronization job is already running: %s") % e)
+                    raise MKUserError(
+                        None, _("Another synchronization job is already running: %s") % e
+                    )
 
                 self._job_snapshot = job.get_status_snapshot()
             except Exception:
                 logger.exception("error syncing users")
-                raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
+                raise MKUserError(None, traceback.format_exc().replace("\n", "<br>\n"))
+            return redirect(self.mode_url())
 
-        elif html.request.var("_bulk_delete_users"):
+        if request.var("_bulk_delete_users"):
             self._bulk_delete_users_after_confirm()
+            return redirect(self.mode_url())
 
-        else:
-            action_handler = gui_background_job.ActionHandler(self.breadcrumb())
-            action_handler.handle_actions()
-            if action_handler.did_acknowledge_job():
-                self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
-                flash(_("Synchronization job acknowledged"))
-        return redirect(self.mode_url())
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
+        action_handler.handle_actions()
+        if action_handler.did_acknowledge_job():
+            self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
+            flash(_("Synchronization job acknowledged"))
+            return redirect(self.mode_url())
+
+        return None
 
     def _bulk_delete_users_after_confirm(self):
         selected_users = []
         users = userdb.load_users()
-        for varname, _value in html.request.itervars(prefix="_c_user_"):
+        for varname, _value in request.itervars(prefix="_c_user_"):
             if html.get_checkbox(varname):
-                user = base64.b64decode(
-                    varname.split("_c_user_")[-1].encode("utf-8")).decode("utf-8")
-                if user in users:
-                    selected_users.append(user)
+                user_id = base64.b64decode(varname.split("_c_user_")[-1].encode("utf-8")).decode(
+                    "utf-8"
+                )
+                if user_id in users:
+                    selected_users.append(user_id)
 
         if selected_users:
             delete_users(selected_users)
@@ -258,21 +259,25 @@ class ModeUsers(WatoMode):
         elif self._job_snapshot.is_active():
             # Still running
             html.show_message(
-                HTML(_("User synchronization currently running: ")) + self._job_details_link())
+                HTML(_("User synchronization currently running: ")) + self._job_details_link()
+            )
             url = makeuri(request, [])
             html.immediate_browser_redirect(2, url)
 
-        elif self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED \
-             and not self._job_snapshot.acknowledged_by():
+        elif (
+            self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED
+            and not self._job_snapshot.acknowledged_by()
+        ):
             # Just finished, auto-acknowledge
-            userdb.UserSyncBackgroundJob().acknowledge(config.user.id)
-            #html.show_message(_("User synchronization successful"))
+            userdb.UserSyncBackgroundJob().acknowledge(user.id)
+            # html.show_message(_("User synchronization successful"))
 
         elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
             # Finished, but not OK - show info message with links to details
             html.show_warning(
-                HTML(_("Last user synchronization ran into an exception: ")) +
-                self._job_details_link())
+                HTML(_("Last user synchronization ran into an exception: "))
+                + self._job_details_link()
+            )
 
         self._show_user_list()
 
@@ -282,11 +287,13 @@ class ModeUsers(WatoMode):
     def _job_details_url(self):
         return makeuri_contextless(
             request,
-            [("mode", "background_job_details"),
-             ("back_url",
-              makeuri_contextless(request, [("mode", "users")], filename="%s.py" % html.myfile)),
-             ("job_id", self._job_snapshot.get_job_id())],
-            filename="wato.py")
+            [
+                ("mode", "background_job_details"),
+                ("back_url", makeuri_contextless(request, [("mode", "users")])),
+                ("job_id", self._job_snapshot.get_job_id()),
+            ],
+            filename="wato.py",
+        )
 
     def _show_job_info(self):
         if self._job_snapshot.is_active():
@@ -299,7 +306,7 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self):
+    def _show_user_list(self) -> None:
         visible_custom_attrs = [
             (name, attr) for name, attr in userdb.get_user_attributes() if attr.show_in_table()
         ]
@@ -316,35 +323,40 @@ class ModeUsers(WatoMode):
 
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - config.user_online_maxage
-            for uid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
+            for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
                 # Checkboxes
                 table.cell(
-                    html.render_input("_toggle_group",
-                                      type_="button",
-                                      class_="checkgroup",
-                                      onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
-                                      make_checkbox_selection_json_text(),
-                                      value='X'),
+                    html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);"
+                        % make_checkbox_selection_json_text(),
+                        value="X",
+                    ),
                     sortable=False,
-                    css="checkbox")
+                    css="checkbox",
+                )
 
-                if uid != config.user.id:
-                    html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
+                if uid != user.id:
+                    html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")).decode())
 
-                user_connection_id = cleanup_connection_id(user.get('connector'))
+                user_connection_id = user_spec.get("connector")
                 connection = get_connection(user_connection_id)
 
                 # Buttons
                 table.cell(_("Actions"), css="buttons")
                 if connection:  # only show edit buttons when the connector is available and enabled
-                    edit_url = watolib.folder_preserving_link([("mode", "edit_user"),
-                                                               ("edit", uid)])
+                    edit_url = watolib.folder_preserving_link(
+                        [("mode", "edit_user"), ("edit", uid)]
+                    )
                     html.icon_button(edit_url, _("Properties"), "edit")
 
-                    clone_url = watolib.folder_preserving_link([("mode", "edit_user"),
-                                                                ("clone", uid)])
+                    clone_url = watolib.folder_preserving_link(
+                        [("mode", "edit_user"), ("clone", uid)]
+                    )
                     html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
                 delete_url = make_confirm_link(
@@ -353,112 +365,132 @@ class ModeUsers(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
-                notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
-                                                                    ("user", uid)])
                 if rulebased_notifications_enabled():
-                    html.icon_button(notifications_url, _("Custom notification table of this user"),
-                                     "notifications")
+                    notifications_url = watolib.folder_preserving_link(
+                        [("mode", "user_notifications"), ("user", uid)]
+                    )
+                    html.icon_button(
+                        notifications_url,
+                        _("Custom notification table of this user"),
+                        "notifications",
+                    )
 
                 # ID
                 table.cell(_("ID"), uid)
 
                 # Online/Offline
-                if config.user.may("wato.show_last_user_activity"):
-                    last_seen = userdb.get_last_activity(uid, user)
-                    user.get('last_seen', 0)
+                if user.may("wato.show_last_user_activity"):
+                    last_seen = userdb.get_last_activity(user_spec)
                     if last_seen >= online_threshold:
-                        title = _('Online')
-                        img_txt = 'online'
+                        title = _("Online")
+                        img_txt = "online"
                     elif last_seen != 0:
-                        title = _('Offline')
-                        img_txt = 'offline'
+                        title = _("Offline")
+                        img_txt = "offline"
                     elif last_seen == 0:
-                        title = _('Never logged in')
-                        img_txt = 'inactive'
+                        title = _("Never logged in")
+                        img_txt = "inactive"
 
-                    title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
+                    title += " (%s %s)" % (render.date(last_seen), render.time_of_day(last_seen))
                     table.cell(_("Act."))
                     html.icon(img_txt, title)
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
-                        html.write_text("%s %s" %
-                                        (render.date(last_seen), render.time_of_day(last_seen)))
+                        html.write_text(
+                            "%s %s" % (render.date(last_seen), render.time_of_day(last_seen))
+                        )
                     else:
                         html.write_text(_("Never logged in"))
 
                 if cmk_version.is_managed_edition():
-                    table.cell(_("Customer"), managed.get_customer_name(user))
+                    table.cell(_("Customer"), managed.get_customer_name(user_spec))
 
                 # Connection
                 if connection:
-                    table.cell(_("Connection"),
-                               '%s (%s)' % (connection.short_title(), user_connection_id))
+                    table.cell(
+                        _("Connection"), "%s (%s)" % (connection.short_title(), user_connection_id)
+                    )
                     locked_attributes = userdb.locked_attributes(user_connection_id)
                 else:
-                    table.cell(_("Connection"),
-                               "%s (%s) (%s)" % (_("UNKNOWN"), user_connection_id, _("disabled")),
-                               css="error")
+                    table.cell(
+                        _("Connection"),
+                        "%s (%s) (%s)" % (_("UNKNOWN"), user_connection_id, _("disabled")),
+                        css="error",
+                    )
                     locked_attributes = []
 
                 # Authentication
-                if "automation_secret" in user:
-                    auth_method = _("Automation")
-                elif user.get("password") or 'password' in locked_attributes:
+                if "automation_secret" in user_spec:
+                    auth_method: Union[str, HTML] = _("Automation")
+                elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
+                    if _is_two_factor_enabled(user_spec):
+                        auth_method += " (+2FA)"
                 else:
-                    auth_method = "<i>%s</i>" % _("none")
+                    auth_method = html.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"))
-                if user.get("locked", False):
-                    html.icon('user_locked', _('The login is currently locked'))
+                if user_spec.get("locked", False):
+                    html.icon("user_locked", _("The login is currently locked"))
 
-                if "disable_notifications" in user and isinstance(user["disable_notifications"],
-                                                                  bool):
-                    disable_notifications_opts = {"disable": user["disable_notifications"]}
+                if "disable_notifications" in user_spec and isinstance(
+                    user_spec["disable_notifications"], bool
+                ):
+                    disable_notifications_opts = {"disable": user_spec["disable_notifications"]}
                 else:
-                    disable_notifications_opts = user.get("disable_notifications", {})
+                    disable_notifications_opts = user_spec.get("disable_notifications", {})
 
                 if disable_notifications_opts.get("disable", False):
-                    html.icon('notif_disabled', _('Notifications are disabled'))
+                    html.icon("notif_disabled", _("Notifications are disabled"))
 
                 # Full name / Alias
-                table.text_cell(_("Alias"), user.get("alias", ""))
+                table.cell(_("Alias"), user_spec.get("alias", ""))
 
                 # Email
-                table.text_cell(_("Email"), user.get("email", ""))
+                table.cell(_("Email"), user_spec.get("email", ""))
 
                 # Roles
                 table.cell(_("Roles"))
-                if user.get("roles", []):
-                    role_links = [(watolib.folder_preserving_link([("mode", "edit_role"),
-                                                                   ("edit", role)]),
-                                   roles[role].get("alias")) for role in user["roles"]]
+                if user_spec.get("roles", []):
+                    role_links = [
+                        (
+                            watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role)]),
+                            roles[role].get("alias"),
+                        )
+                        for role in user_spec["roles"]
+                    ]
                     html.write_html(
                         HTML(", ").join(
-                            html.render_a(alias, href=link) for (link, alias) in role_links))
+                            html.render_a(alias, href=link) for (link, alias) in role_links
+                        )
+                    )
 
                 # contact groups
                 table.cell(_("Contact groups"))
-                cgs = user.get("contactgroups", [])
+                cgs = user_spec.get("contactgroups", [])
                 if cgs:
                     cg_aliases = [
-                        contact_groups[c]['alias'] if c in contact_groups else c for c in cgs
+                        contact_groups[c]["alias"] if c in contact_groups else c for c in cgs
                     ]
                     cg_urls = [
-                        watolib.folder_preserving_link([("mode", "edit_contact_group"),
-                                                        ("edit", c)]) for c in cgs
+                        watolib.folder_preserving_link(
+                            [("mode", "edit_contact_group"), ("edit", c)]
+                        )
+                        for c in cgs
                     ]
                     html.write_html(
                         HTML(", ").join(
                             html.render_a(content, href=url)
-                            for (content, url) in zip(cg_aliases, cg_urls)))
+                            for (content, url) in zip(cg_aliases, cg_urls)
+                        )
+                    )
                 else:
                     html.i(_("none"))
 
-                #table.cell(_("Sites"))
-                #html.write(vs_authorized_sites().value_to_text(user.get("authorized_sites",
+                # table.cell(_("Sites"))
+                # html.write_text(vs_authorized_sites().value_to_html(user_spec.get("authorized_sites",
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
@@ -466,28 +498,34 @@ class ModeUsers(WatoMode):
                     table.cell(_("Notifications"))
                     if not cgs:
                         html.i(_("not a contact"))
-                    elif not user.get("notifications_enabled", True):
+                    elif not user_spec.get("notifications_enabled", True):
                         html.write_text(_("disabled"))
-                    elif user.get("host_notification_options", "") == "" and \
-                         user.get("service_notification_options", "") == "":
+                    elif (
+                        user_spec.get("host_notification_options", "") == ""
+                        and user_spec.get("service_notification_options", "") == ""
+                    ):
                         html.write_text(_("all events disabled"))
                     else:
-                        tp = user.get("notification_period", "24X7")
+                        tp = user_spec.get("notification_period", "24X7")
+                        tp_code = HTML()
                         if tp not in timeperiods:
-                            tp = tp + _(" (invalid)")
+                            tp_code = escape_to_html(tp + _(" (invalid)"))
                         elif tp not in watolib.timeperiods.builtin_timeperiods():
-                            url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
-                                                                  ("edit", tp)])
-                            tp = html.render_a(timeperiod_spec_alias(timeperiods[tp], tp), href=url)
+                            url = watolib.folder_preserving_link(
+                                [("mode", "edit_timeperiod"), ("edit", tp)]
+                            )
+                            tp_code = html.render_a(
+                                timeperiod_spec_alias(timeperiods[tp], tp), href=url
+                            )
                         else:
-                            tp = timeperiod_spec_alias(timeperiods[tp], tp)
-                        html.write(tp)
+                            tp_code = escape_to_html(timeperiod_spec_alias(timeperiods[tp], tp))
+                        html.write_html(tp_code)
 
                 # the visible custom attributes
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
-                    table.cell(escaping.escape_attribute(_u(vs.title())))
-                    html.write(vs.value_to_text(user.get(name, vs.default_value())))
+                    table.cell(_u(vs.title()))
+                    html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
         html.hidden_fields()
         html.end_form()
@@ -495,14 +533,20 @@ class ModeUsers(WatoMode):
         if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"
             html.open_div(class_="info")
-            html.write(
-                _("Note: you haven't defined any contact groups yet. If you <a href='%s'>"
-                  "create some contact groups</a> you can assign users to them und thus "
-                  "make them monitoring contacts. Only monitoring contacts can receive "
-                  "notifications.") % url)
-            html.write(" you can assign users to them und thus "
-                       "make them monitoring contacts. Only monitoring contacts can receive "
-                       "notifications.")
+            html.write_text(
+                _(
+                    "Note: you haven't defined any contact groups yet. If you <a href='%s'>"
+                    "create some contact groups</a> you can assign users to them und thus "
+                    "make them monitoring contacts. Only monitoring contacts can receive "
+                    "notifications."
+                )
+                % url
+            )
+            html.write_text(
+                " you can assign users to them und thus "
+                "make them monitoring contacts. Only monitoring contacts can receive "
+                "notifications."
+            )
             html.close_div()
 
 
@@ -543,7 +587,7 @@ class ModeEditUser(WatoMode):
         return self.mode_url(edit=self._user_id)
 
     def __init__(self):
-        super(ModeEditUser, self).__init__()
+        super().__init__()
 
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.
@@ -556,26 +600,26 @@ class ModeEditUser(WatoMode):
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
-        self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
+        self._user_id = request.get_str_input("edit")  # missing -> new user
         # This is needed for the breadcrumb computation:
         # When linking from user notification rules page the request variable is "user"
         # instead of "edit". We should also change that variable to "user" on this page,
         # then we can simply use self._user_id.
-        if not self._user_id and html.request.has_var("user"):
-            self._user_id = html.request.get_str_input_mandatory("user")
+        if not self._user_id and request.has_var("user"):
+            self._user_id = request.get_str_input_mandatory("user")
 
-        self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
+        self._cloneid = request.get_str_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
-        self._users = userdb.load_users(lock=html.is_transaction())
-        new_user = userdb.new_user_template('htpasswd')
+        self._users = userdb.load_users(lock=transactions.is_transaction())
+        new_user = userdb.new_user_template("htpasswd")
         if self._user_id is not None:
             self._user = self._users.get(UserId(self._user_id), new_user)
         elif self._cloneid:
             self._user = self._users.get(UserId(self._cloneid), new_user)
         else:
             self._user = new_user
-        self._locked_attributes = userdb.locked_attributes(self._user.get('connector'))
+        self._locked_attributes = userdb.locked_attributes(self._user.get("connector"))
 
     def title(self):
         if self._is_new_user:
@@ -583,17 +627,17 @@ class ModeEditUser(WatoMode):
         return _("Edit user %s") % self._user_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(_("User"),
-                                          breadcrumb,
-                                          form_name="user",
-                                          button_name="save")
+        menu = make_simple_form_page_menu(
+            _("User"), breadcrumb, form_name="user", button_name="_save"
+        )
 
         action_dropdown = menu.dropdowns[0]
         action_dropdown.topics.append(
             PageMenuTopic(
                 title=_("This user"),
                 entries=list(self._page_menu_entries_this_user()),
-            ))
+            )
+        )
 
         return menu
 
@@ -603,54 +647,92 @@ class ModeEditUser(WatoMode):
                 title=_("Notification rules"),
                 icon_name="topic_events",
                 item=make_simple_link(
-                    watolib.folder_preserving_link([("mode", "user_notifications"),
-                                                    ("user", self._user_id)])),
+                    watolib.folder_preserving_link(
+                        [("mode", "user_notifications"), ("user", self._user_id)]
+                    )
+                ),
             )
 
-        if config.user.may("wato.auditlog") and not self._is_new_user:
+        if user.may("wato.auditlog") and not self._is_new_user:
             assert self._user_id is not None
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",
                 item=make_simple_link(
-                    make_object_audit_log_url(make_user_object_ref(UserId(self._user_id)))),
+                    make_object_audit_log_url(make_user_object_ref(UserId(self._user_id)))
+                ),
+            )
+
+        if not self._is_new_user:
+            yield PageMenuEntry(
+                title=_("Disable two-factor authentication"),
+                icon_name="2fa",
+                item=make_simple_link(
+                    make_confirm_link(
+                        url=make_action_link(
+                            [
+                                ("mode", "edit_user"),
+                                ("user", self._user_id),
+                                ("_disable_two_factor", "1"),
+                            ]
+                        ),
+                        message=_(
+                            "Do you really want to disable the two-factor authentication of %s?"
+                        )
+                        % self._user_id,
+                    )
+                ),
+                is_enabled=_is_two_factor_enabled(self._user),
             )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
+            return redirect(mode_url("users"))
+
+        if self._user_id is not None and request.has_var("_disable_two_factor"):
+            userdb.disable_two_factor_authentication(UserId(self._user_id))
             return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
-            self._user_id = html.request.get_unicode_input_mandatory("edit").strip()
+            self._user_id = request.get_str_input_mandatory("edit").strip()
             user_attrs = self._users[UserId(self._user_id)].copy()
 
         # Full name
-        user_attrs["alias"] = html.request.get_unicode_input_mandatory("alias").strip()
+        user_attrs["alias"] = request.get_str_input_mandatory("alias").strip()
+
+        # Connector
+        user_attrs["connector"] = self._user.get("connector")
 
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
 
-        if (UserId(self._user_id) in self._users and user_attrs["locked"] and
-                self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"]):
+        if (
+            UserId(self._user_id) in self._users
+            and user_attrs["locked"]
+            and self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"]
+        ):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
-        auth_method = html.request.var("authmethod")
+        auth_method = request.var("authmethod")
         if auth_method == "secret":
-            secret = html.request.get_str_input_mandatory("_auth_secret", "").strip()
-            user_attrs["automation_secret"] = secret
-            user_attrs["password"] = hash_password(secret)
-            increase_serial = True  # password changed, reflect in auth serial
+            secret = request.get_str_input_mandatory("_auth_secret", "").strip()
+            if secret:
+                user_attrs["automation_secret"] = secret
+                user_attrs["password"] = hash_password(secret)
+                increase_serial = True  # password changed, reflect in auth serial
+            elif "automation_secret" not in user_attrs and "password" in user_attrs:
+                del user_attrs["password"]
 
         else:
-            password = html.request.get_str_input_mandatory("_password_" + self._pw_suffix(),
-                                                            '').strip()
-            password2 = html.request.get_str_input_mandatory("_password2_" + self._pw_suffix(),
-                                                             '').strip()
+            password = request.get_str_input_mandatory("_password_" + self._pw_suffix(), "").strip()
+            password2 = request.get_str_input_mandatory(
+                "_password2_" + self._pw_suffix(), ""
+            ).strip()
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
@@ -684,13 +766,11 @@ class ModeEditUser(WatoMode):
 
         idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
-        if idle_timeout is not None:
-            user_attrs["idle_timeout"] = idle_timeout
-        elif idle_timeout is None and "idle_timeout" in user_attrs:
+        if idle_timeout is None:
             del user_attrs["idle_timeout"]
 
         # Pager
-        user_attrs["pager"] = html.request.get_str_input_mandatory("pager", '').strip()
+        user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
 
         if cmk_version.is_managed_edition():
             customer = self._vs_customer.from_html_vars("customer")
@@ -711,14 +791,15 @@ class ModeEditUser(WatoMode):
             del user_attrs["authorized_sites"]
 
         # ntopng
-        if config.is_ntop_available():
-            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
-                user_attrs[ntop_username_attribute] = html.request.get_unicode_input_mandatory(
-                    ntop_username_attribute)
+                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(
+                    ntop_username_attribute
+                )
 
         # Roles
         user_attrs["roles"] = [
@@ -726,7 +807,7 @@ class ModeEditUser(WatoMode):
         ]
 
         # Language configuration
-        language = html.request.get_ascii_input_mandatory("language", "")
+        language = request.get_ascii_input_mandatory("language", "")
         if language != "_default_":
             user_attrs["language"] = language
         elif "language" in user_attrs:
@@ -745,14 +826,15 @@ class ModeEditUser(WatoMode):
             # Notifications
             user_attrs["notifications_enabled"] = html.get_checkbox("notifications_enabled")
 
-            ntp = html.request.var("notification_period")
+            ntp = request.var("notification_period")
             if ntp not in self._timeperiods:
                 ntp = "24X7"
             user_attrs["notification_period"] = ntp
 
             for what, opts in [("host", "durfs"), ("service", "wucrfs")]:
                 user_attrs[what + "_notification_options"] = "".join(
-                    [opt for opt in opts if html.get_checkbox(what + "_" + opt)])
+                    [opt for opt in opts if html.get_checkbox(what + "_" + opt)]
+                )
 
             value = watolib.get_vs_flexible_notifications().from_html_vars("notification_method")
             user_attrs["notification_method"] = value
@@ -761,7 +843,7 @@ class ModeEditUser(WatoMode):
 
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
-            value = attr.valuespec().from_html_vars('ua_' + name)
+            value = attr.valuespec().from_html_vars("ua_" + name)
             user_attrs[name] = value
 
         # Generate user "object" to update
@@ -770,7 +852,7 @@ class ModeEditUser(WatoMode):
         edit_users(user_object)
         return redirect(mode_url("users"))
 
-    def page(self):
+    def page(self) -> None:
         # Let exceptions from loading notification scripts happen now
         watolib.load_notification_scripts()
 
@@ -785,7 +867,7 @@ class ModeEditUser(WatoMode):
             vs_user_id = UserID(allow_empty=False)
 
         else:
-            vs_user_id = FixedValue(self._user_id)
+            vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
 
         def lockable_input(name, dflt):
@@ -797,7 +879,7 @@ class ModeEditUser(WatoMode):
 
         # Full name
         forms.section(_("Full name"), is_required=True)
-        lockable_input('alias', self._user_id)
+        lockable_input("alias", self._user_id)
         html.help(_("Full name or alias of the user"))
 
         # Email address
@@ -810,12 +892,15 @@ class ModeEditUser(WatoMode):
             html.hidden_field("email", email)
 
         html.help(
-            _("The email address is optional and is needed "
-              "if the user is a monitoring contact and receives notifications "
-              "via Email."))
+            _(
+                "The email address is optional and is needed "
+                "if the user is a monitoring contact and receives notifications "
+                "via Email."
+            )
+        )
 
         forms.section(_("Pager address"))
-        lockable_input('pager', '')
+        lockable_input("pager", "")
         html.help(_("The pager address is optional "))
 
         if cmk_version.is_managed_edition():
@@ -830,40 +915,44 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("authorized_sites"):
             vs_sites.render_input("authorized_sites", authorized_sites)
         else:
-            html.write_html(vs_sites.value_to_text(authorized_sites))
+            html.write_text(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
         custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
 
-        self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
+        self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
 
         # ntopng
-        if config.is_ntop_available():
-            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
                 forms.section(_("ntopng Username"))
-                lockable_input(ntop_username_attribute, '')
+                lockable_input(ntop_username_attribute, "")
                 html.help(
-                    _("The corresponding username in ntopng of the current checkmk user. "
-                      "It is used, in case the user mapping to ntopng is configured to use this "
-                      "custom attribute"))
+                    _(
+                        "The corresponding username in ntopng of the current checkmk user. "
+                        "It is used, in case the user mapping to ntopng is configured to use this "
+                        "custom attribute"
+                    )
+                )
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))
 
         is_automation = self._user.get("automation_secret", None) is not None
-        html.radiobutton("authmethod", "password", not is_automation,
-                         _("Normal user login with password"))
+        html.radiobutton(
+            "authmethod", "password", not is_automation, _("Normal user login with password")
+        )
         html.open_ul()
         html.open_table()
         html.open_tr()
         html.td(_("password:"))
         html.open_td()
 
-        if not self._is_locked('password'):
+        if not self._is_locked("password"):
             html.password_input("_password_" + self._pw_suffix(), autocomplete="new-password")
             html.close_td()
             html.close_tr()
@@ -881,65 +970,85 @@ class ModeEditUser(WatoMode):
             html.open_td()
             # Only make password enforcement selection possible when user is allowed to change the PW
             uid = None if self._user_id is None else UserId(self._user_id)
-            if (self._is_new_user or (config.user_may(uid, 'general.edit_profile') and
-                                      config.user_may(uid, 'general.change_password'))):
-                html.checkbox("enforce_pw_change",
-                              self._user.get("enforce_pw_change", False),
-                              label=_("Change password at next login or access"))
+            if self._is_new_user or (
+                user_may(uid, "general.edit_profile") and user_may(uid, "general.change_password")
+            ):
+                html.checkbox(
+                    "enforce_pw_change",
+                    self._user.get("enforce_pw_change", False),
+                    label=_("Change password at next login or access"),
+                )
             else:
                 html.write_text(
-                    _("Not permitted to change the password. Change can not be enforced."))
+                    _("Not permitted to change the password. Change can not be enforced.")
+                )
         else:
-            html.i(_('The password can not be changed (It is locked by the user connector).'))
-            html.hidden_field('_password', '')
-            html.hidden_field('_password2', '')
+            html.i(_("The password can not be changed (It is locked by the user connector)."))
+            html.hidden_field("_password", "")
+            html.hidden_field("_password2", "")
 
         html.close_td()
         html.close_tr()
         html.close_table()
         html.close_ul()
 
-        html.radiobutton("authmethod", "secret", is_automation,
-                         _("Automation secret for machine accounts"))
+        html.radiobutton(
+            "authmethod", "secret", is_automation, _("Automation secret for machine accounts")
+        )
 
         html.open_ul()
-        html.text_input("_auth_secret",
-                        self._user.get("automation_secret", ""),
-                        size=30,
-                        id_="automation_secret")
+        html.text_input(
+            "_auth_secret",
+            "",
+            size=30,
+            id_="automation_secret",
+            placeholder="******" if "automation_secret" in self._user else "",
+        )
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])
-        html.write(" &nbsp;")
-        html.icon_button("javascript:cmk.wato.randomize_secret('automation_secret', 20);",
-                         _("Create random secret"), "random")
+        html.write_text(" &nbsp;")
+        html.icon_button(
+            "javascript:cmk.wato.randomize_secret('automation_secret', 20);",
+            _("Create random secret"),
+            "random",
+        )
         html.close_b()
         html.close_ul()
 
         html.help(
-            _("If you want the user to be able to login "
-              "then specify a password here. Users without a login make sense "
-              "if they are monitoring contacts that are just used for "
-              "notifications. The repetition of the password is optional. "
-              "<br>For accounts used by automation processes (such as fetching "
-              "data from views for further procession), set the method to "
-              "<u>secret</u>. The secret will be stored in a local file. Processes "
-              "with read access to that file will be able to use Multisite as "
-              "a webservice without any further configuration."))
+            _(
+                "If you want the user to be able to login "
+                "then specify a password here. Users without a login make sense "
+                "if they are monitoring contacts that are just used for "
+                "notifications. The repetition of the password is optional. "
+                "<br>For accounts used by automation processes (such as fetching "
+                "data from views for further procession), set the method to "
+                "<u>secret</u>. The secret will be stored in a local file. Processes "
+                "with read access to that file will be able to use Multisite as "
+                "a webservice without any further configuration."
+            )
+        )
 
         # Locking
         forms.section(_("Disable password"), simple=True)
-        if not self._is_locked('locked'):
-            html.checkbox("locked",
-                          self._user.get("locked", False),
-                          label=_("disable the login to this account"))
+        if not self._is_locked("locked"):
+            html.checkbox(
+                "locked",
+                self._user.get("locked", False),
+                label=_("disable the login to this account"),
+            )
         else:
             html.write_text(
-                _('Login disabled') if self._user.get("locked", False) else _('Login possible'))
-            html.hidden_field('locked', '1' if self._user.get("locked", False) else '')
+                _("Login disabled") if self._user.get("locked", False) else _("Login possible")
+            )
+            html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
         html.help(
-            _("Disabling the password will prevent a user from logging in while "
-              "retaining the original password. Notifications are not affected "
-              "by this setting."))
+            _(
+                "Disabling the password will prevent a user from logging in while "
+                "retaining the original password. Notifications are not affected "
+                "by this setting."
+            )
+        )
 
         forms.section(_("Idle timeout"))
         idle_timeout = self._user.get("idle_timeout")
@@ -966,70 +1075,82 @@ class ModeEditUser(WatoMode):
                     html.a(role["alias"], href=url)
                     html.br()
 
-                html.hidden_field("role_" + role_id, '1' if is_member else '')
-        if self._is_locked('roles') and not is_member_of_at_least_one:
-            html.i(_('No roles assigned.'))
-        self._show_custom_user_attributes(custom_user_attr_topics.get('security', []))
+                html.hidden_field("role_" + role_id, "1" if is_member else "")
+        if self._is_locked("roles") and not is_member_of_at_least_one:
+            html.i(_("No roles assigned."))
+        self._show_custom_user_attributes(custom_user_attr_topics.get("security", []))
 
         # Contact groups
         forms.header(_("Contact Groups"), isopen=False)
         forms.section()
         groups_page_url = watolib.folder_preserving_link([("mode", "contact_groups")])
-        hosts_assign_url = watolib.folder_preserving_link([
-            ("mode", "edit_ruleset"),
-            ("varname", "host_contactgroups"),
-        ])
-        services_assign_url = watolib.folder_preserving_link([
-            ("mode", "edit_ruleset"),
-            ("varname", "service_contactgroups"),
-        ])
+        hosts_assign_url = watolib.folder_preserving_link(
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", "host_contactgroups"),
+            ]
+        )
+        services_assign_url = watolib.folder_preserving_link(
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", "service_contactgroups"),
+            ]
+        )
 
         if not self._contact_groups:
-            html.write(
-                _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url)
+            html.write_text(
+                _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url
+            )
         else:
-            entries = sorted([(group['alias'] or c, c) for c, group in self._contact_groups.items()
-                             ])
+            entries = sorted(
+                [(group["alias"] or c, c) for c, group in self._contact_groups.items()]
+            )
             is_member_of_at_least_one = False
             for alias, gid in entries:
                 is_member = gid in self._user.get("contactgroups", [])
 
-                if not self._is_locked('contactgroups'):
+                if not self._is_locked("contactgroups"):
                     html.checkbox("cg_" + gid, gid in self._user.get("contactgroups", []))
                 else:
                     if is_member:
                         is_member_of_at_least_one = True
-                    html.hidden_field("cg_" + gid, '1' if is_member else '')
+                    html.hidden_field("cg_" + gid, "1" if is_member else "")
 
-                if not self._is_locked('contactgroups') or is_member:
-                    url = watolib.folder_preserving_link([("mode", "edit_contact_group"),
-                                                          ("edit", gid)])
+                if not self._is_locked("contactgroups") or is_member:
+                    url = watolib.folder_preserving_link(
+                        [("mode", "edit_contact_group"), ("edit", gid)]
+                    )
                     html.a(alias, href=url)
                     html.br()
 
-            if self._is_locked('contactgroups') and not is_member_of_at_least_one:
-                html.i(_('No contact groups assigned.'))
+            if self._is_locked("contactgroups") and not is_member_of_at_least_one:
+                html.i(_("No contact groups assigned."))
 
         html.help(
-            _("Contact groups are used to assign monitoring "
-              "objects to users. If you haven't defined any contact groups yet, "
-              "then first <a href='%s'>do so</a>. "
-              "Hosts and services can be assigned to contact groups using this "
-              "<a href='%s'>rule for hosts</a> and this "
-              "<a href='%s'>rule for services</a>.<br><br>"
-              "If you do not put the user into any contact group "
-              "then no monitoring contact will be created for the user.") %
-            (groups_page_url, hosts_assign_url, services_assign_url))
+            _(
+                "Contact groups are used to assign monitoring "
+                "objects to users. If you haven't defined any contact groups yet, "
+                "then first <a href='%s'>do so</a>. "
+                "Hosts and services can be assigned to contact groups using this "
+                "<a href='%s'>rule for hosts</a> and this "
+                "<a href='%s'>rule for services</a>.<br><br>"
+                "If you do not put the user into any contact group "
+                "then no monitoring contact will be created for the user."
+            )
+            % (groups_page_url, hosts_assign_url, services_assign_url)
+        )
 
         forms.header(_("Notifications"), isopen=False)
         if not self._rbn_enabled():
             forms.section(_("Enabling"), simple=True)
-            html.checkbox("notifications_enabled",
-                          self._user.get("notifications_enabled", False),
-                          label=_("enable notifications"))
+            html.checkbox(
+                "notifications_enabled",
+                self._user.get("notifications_enabled", False),
+                label=_("enable notifications"),
+            )
             html.help(
-                _("Notifications are sent out "
-                  "when the status of a host or service changes."))
+                _("Notifications are sent out " "when the status of a host or service changes.")
+            )
 
             # Notification period
             forms.section(_("Notification time period"))
@@ -1041,8 +1162,11 @@ class ModeEditUser(WatoMode):
             ]
             html.dropdown("notification_period", choices, deflt=user_np, ordered=True)
             html.help(
-                _("Only during this time period the "
-                  "user will get notifications about host or service alerts."))
+                _(
+                    "Only during this time period the "
+                    "user will get notifications about host or service alerts."
+                )
+            )
 
             # Notification options
             notification_option_names = {  # defined here: _() must be executed always!
@@ -1060,55 +1184,67 @@ class ModeEditUser(WatoMode):
                 "both": {
                     "f": _("Start or end of flapping state"),
                     "s": _("Start or end of a scheduled downtime"),
-                }
+                },
             }
 
             forms.section(_("Notification Options"))
-            for title, what, opts in [(_("Host events"), "host", "durfs"),
-                                      (_("Service events"), "service", "wucrfs")]:
+            for title, what, opts in [
+                (_("Host events"), "host", "durfs"),
+                (_("Service events"), "service", "wucrfs"),
+            ]:
                 html.write_text("%s:" % title)
                 html.open_ul()
 
                 user_opts = self._user.get(what + "_notification_options", opts)
                 for opt in opts:
                     opt_name = notification_option_names[what].get(
-                        opt, notification_option_names["both"].get(opt))
+                        opt, notification_option_names["both"].get(opt)
+                    )
                     html.checkbox(what + "_" + opt, opt in user_opts, label=opt_name)
                     html.br()
                 html.close_ul()
 
             html.help(
-                _("Here you specify which types of alerts "
-                  "will be notified to this contact. Note: these settings will only be saved "
-                  "and used if the user is member of a contact group."))
+                _(
+                    "Here you specify which types of alerts "
+                    "will be notified to this contact. Note: these settings will only be saved "
+                    "and used if the user is member of a contact group."
+                )
+            )
 
             forms.section(_("Notification Method"))
             watolib.get_vs_flexible_notifications().render_input(
-                "notification_method", self._user.get("notification_method"))
+                "notification_method", self._user.get("notification_method")
+            )
 
         else:
             forms.section(_("Fallback notifications"), simple=True)
 
-            html.checkbox("fallback_contact",
-                          self._user.get("fallback_contact", False),
-                          label=_("Receive fallback notifications"))
+            html.checkbox(
+                "fallback_contact",
+                self._user.get("fallback_contact", False),
+                label=_("Receive fallback notifications"),
+            )
 
             html.help(
-                _("In case none of your notification rules handles a certain event a notification "
-                  "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
-                  "gets notified. Furthermore this contact will be used for notifications to any host or service "
-                  "that is not known to the monitoring. This can happen when you forward notifications "
-                  "from the Event Console.<br><br>Notification fallback can also configured in the global "
-                  "setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
-                  "Fallback email address for notifications</a>."))
+                _(
+                    "In case none of your notification rules handles a certain event a notification "
+                    "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
+                    "gets notified. Furthermore this contact will be used for notifications to any host or service "
+                    "that is not known to the monitoring. This can happen when you forward notifications "
+                    "from the Event Console.<br><br>Notification fallback can also configured in the global "
+                    'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
+                    "Fallback email address for notifications</a>."
+                )
+            )
 
-        self._show_custom_user_attributes(custom_user_attr_topics.get('notify', []))
+        self._show_custom_user_attributes(custom_user_attr_topics.get("notify", []))
 
         forms.header(_("Personal settings"), isopen=False)
         select_language(self._user)
-        self._show_custom_user_attributes(custom_user_attr_topics.get('personal', []))
+        self._show_custom_user_attributes(custom_user_attr_topics.get("personal", []))
         forms.header(_("Interface settings"), isopen=False)
-        self._show_custom_user_attributes(custom_user_attr_topics.get('interface', []))
+        self._show_custom_user_attributes(custom_user_attr_topics.get("interface", []))
 
         # Later we could add custom macros here, which then could be used
         # for notifications. On the other hand, if we implement some check_mk
@@ -1128,7 +1264,7 @@ class ModeEditUser(WatoMode):
 
     def _pw_suffix(self) -> str:
         if self._is_new_user:
-            return 'new'
+            return "new"
         assert self._user_id is not None
         return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
@@ -1144,25 +1280,25 @@ class ModeEditUser(WatoMode):
             default_value=None,
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("All sites"),
                     totext=_("May see all sites"),
                 ),
                 DualListChoice(
                     title=_("Specific sites"),
-                    choices=config.get_configured_site_choices,
+                    choices=get_configured_site_choices,
                 ),
             ],
         )
 
-    def _show_custom_user_attributes(self, custom_attr):
+    def _show_custom_user_attributes(self, custom_attr: List[Tuple[str, UserAttribute]]) -> None:
         for name, attr in custom_attr:
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
             else:
-                html.write(vs.value_to_text(self._user.get(name, vs.default_value())))
+                html.write_text(vs.value_to_html(self._user.get(name, vs.default_value())))
                 # Render hidden to have the values kept after saving
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
@@ -1170,18 +1306,37 @@ class ModeEditUser(WatoMode):
             html.help(_u(vs.help()))
 
 
-def select_language(user):
-    languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
+def select_language(user_spec: UserSpec) -> None:
+    languages: Choices = [l for l in get_languages() if l[0] not in config.hide_languages]
     if not languages:
         return
 
-    current_language = user.get("language")
+    current_language = user_spec.get("language")
     if current_language is None:
         current_language = "_default_"
 
-    languages.insert(0, ("_default_", _("Use the default language (%s)") %
-                         get_language_alias(config.default_language)))
+    languages.insert(
+        0,
+        (
+            "_default_",
+            _("Use the default language (%s)") % get_language_alias(config.default_language),
+        ),
+    )
 
     forms.section(_("Language"))
     html.dropdown("language", languages, deflt=current_language)
-    html.help(_('Configure the language to be used by the user in the user interface here.'))
+    html.help(
+        _(
+            "Configure the language of the user interface. Feel free to contribute to the "
+            "translations on %s."
+        )
+        % html.render_a(
+            "Weblate",
+            "https://translate.checkmk.com",
+            target="_blank",
+        )
+    )
+
+
+def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
+    return user_spec.get("two_factor_credentials", {}).get("webauthn_credentials") is not None

@@ -4,19 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import ActiveCheck  # type: ignore[import]
+import pytest
+
+from tests.testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [({
-    "imap_parameters": {
-        "server": "foo",
-        "ssl": (False, 143),
-        "auth": ("hans", "wurst"),
-    }
-}, ["--fetch-server=foo", "--fetch-port=143", "--fetch-username=hans", "--fetch-password=wurst"])])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (
+            {
+                "imap_parameters": {
+                    "server": "foo",
+                    "ssl": (False, 143),
+                    "auth": ("hans", "wurst"),
+                }
+            },
+            [
+                "--fetch-server=foo",
+                "--fetch-port=143",
+                "--fetch-username=hans",
+                "--fetch-password=wurst",
+            ],
+        )
+    ],
+)
 def test_check_mailboxes_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_mailboxes")

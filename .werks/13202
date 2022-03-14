@@ -1,0 +1,18 @@
+Title: <tt>wmi_cpuload</tt>: Handle Windows time counter resets
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630493732
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>wmi_cpuload</tt>, which monitors the CPU load of
+Windows hosts, uses an internal Windows time counter to compute the
+average load over the last 5 and 15 minutes. This counter can be reset
+by Windows due to various reasons.
+
+<tt>wmi_cpuload</tt> can now handle such resets. In case a reset
+occurs, the computation of the averages is reset as well and started
+from scratch based on the new counter.

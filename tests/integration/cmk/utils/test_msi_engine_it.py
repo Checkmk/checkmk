@@ -7,7 +7,9 @@
 import shutil
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib.site import Site
 
 import cmk.utils.msi_engine as msi_engine
 
@@ -22,27 +24,27 @@ EXPECTED_TEST_FILES = ["check_mk_agent.msi", "check_mk.user.yml"]
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
-def test_executables(site, executable):
+def test_executables(site: Site, executable):
     bin_path = Path(site.path("bin"))
     assert Path(bin_path / executable).exists(), "path: '{}' exe: '{}'".format(bin_path, executable)
 
 
 @pytest.mark.parametrize("test_file", EXPECTED_TEST_FILES)
-def test_files(site, test_file):
+def test_files(site: Site, test_file):
     msi_path = Path(site.path(MSI_LOCATION))
     assert Path(msi_path / test_file).exists(), "path: '{}' file: '{}'".format(msi_path, test_file)
 
 
-def _get_msi_file_path(site):
+def _get_msi_file_path(site: Site):
     msi_path = Path(site.path(MSI_LOCATION))
     return msi_path / "check_mk_agent.msi"
 
 
 # check the export with site/bin tools
-def test_export_msi_file(site, tmp_path):
+def test_export_msi_file(site: Site, tmp_path):
     msi_file = _get_msi_file_path(site=site)
 
-    out_dir = tmp_path / 'idts'
+    out_dir = tmp_path / "idts"
     bin_path = site.path("bin/")
     try:
         out_dir.mkdir()
@@ -108,14 +110,14 @@ def test_copy_or_create(tmp_path: Path) -> None:
     dst_file = tmp_path / "temp.x.out"
 
     # file doesn't exist, check file created
-    msi_engine.copy_or_create(src_file, dst_file, u"!!!")
+    msi_engine.copy_or_create(src_file, dst_file, "!!!")
     assert dst_file.exists()
     content = dst_file.read_text()
     assert content == "!!!"
 
     # files exists check file copied
-    src_file.write_text(u"+++")
-    msi_engine.copy_or_create(src_file, dst_file, u"!!!")
+    src_file.write_text("+++")
+    msi_engine.copy_or_create(src_file, dst_file, "!!!")
     assert dst_file.exists()
     content = dst_file.read_text()
     assert content == "+++"
@@ -137,11 +139,11 @@ def test_generate_product_versions():
 
 def test_make_msi_copy(tmp_path: Path) -> None:
     src_file = Path(tmp_path, "temp.in")
-    with src_file.open('w') as s:
+    with src_file.open("w") as s:
         s.write("+++")
     dst_file = Path(tmp_path, "temp.out")
     assert msi_engine.copy_file_safe(src_file, dst_file)
     assert dst_file.exists()
-    with dst_file.open('r') as d:
+    with dst_file.open("r") as d:
         content = d.read()
     assert content == "+++"

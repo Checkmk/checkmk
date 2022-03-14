@@ -16,6 +16,9 @@ Root:
   - unpack_all.cmd     - example how unpack few packages, every project can write own unpacker
   - /7zip              - binaries to unpack
   - /*                 - libraries for windows agent(new)
+  - wirunsql.vbs       - script is used to patch versions by build script
+  - clean_artifacts.cmd- used by Makefile to clean artifacts
+  -*_msi.cmd           - MSI tools
 
 Packages List:
   Global Packages[OMD]

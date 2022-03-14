@@ -106,17 +106,18 @@ def parse_cisco_temp_sensor(info):
 
     for endoid, level in levels_info:
         # endoid is e.g. 21549.9 or 21459.10
-        id_, _subid = endoid.split('.')
+        id_, _subid = endoid.split(".")
         thresholds.setdefault(id_, []).append(float(level))
 
     # Create main dictionary (only of temperature sensors)
     sensors = []
     for id_, sensortype, scale, precision, value, sensorstate in state_info:
-        value = float(value) / (10**int(precision))
-        threshold = thresholds[id_] / (10**int(precision))  # fixed: true-division
+        value = float(value) / (10 ** int(precision))
+        threshold = thresholds[id_] / (10 ** int(precision))  # fixed: true-division
 
         sensors.append(
-            (id_, descriptions.get(id_), sensortype, scale, value, sensorstate, threshold))
+            (id_, descriptions.get(id_), sensortype, scale, value, sensorstate, threshold)
+        )
     return sensors
 
 
@@ -158,33 +159,40 @@ def check_cisco_temp_sensor(item, params, info):
             return 3, "This check is obsolete, please re-inventorize this host"
 
 
-check_info['cisco_temp_sensor'] = {
-    "check_function"     : check_cisco_temp_sensor,
-    "inventory_function" : inventory_cisco_temp_sensor,
+check_info["cisco_temp_sensor"] = {
+    "check_function": check_cisco_temp_sensor,
+    "inventory_function": inventory_cisco_temp_sensor,
     "service_description": "Temperature %s",
-    "has_perfdata"       : True,
-    "snmp_scan_function" : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                                    oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") is not None,
-    "snmp_info"          : [
-                               ( ".1.3.6.1.2.1.47.1.1.1.1", [
-                                 OID_END,
-                                 CACHED_OID(2),  # entPhysicalDescription
-                               ]),
-
-                               # Type and current state
-                               ( ".1.3.6.1.4.1.9.9.91.1.1.1.1", [
-                                 OID_END,
-                                 1, # Type (see above), 8 = Celsius, 12 = truth value
-                                 2, # Scale, 8 == milli
-                                 3, # Precision
-                                 4, # Most recent measurement
-                                 5, # Status of the sensor 1 == ok, 2 == cannot report, 3 == broken
-                               ]),
-
-                               # Threshold
-                               ( ".1.3.6.1.4.1.9.9.91.1.2.1.1", [
-                                 OID_END,
-                                 4, # Thresholds
-                               ]),
-                            ],
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") is not None,
+    "snmp_info": [
+        (
+            ".1.3.6.1.2.1.47.1.1.1.1",
+            [
+                OID_END,
+                CACHED_OID(2),  # entPhysicalDescription
+            ],
+        ),
+        # Type and current state
+        (
+            ".1.3.6.1.4.1.9.9.91.1.1.1.1",
+            [
+                OID_END,
+                1,  # Type (see above), 8 = Celsius, 12 = truth value
+                2,  # Scale, 8 == milli
+                3,  # Precision
+                4,  # Most recent measurement
+                5,  # Status of the sensor 1 == ok, 2 == cannot report, 3 == broken
+            ],
+        ),
+        # Threshold
+        (
+            ".1.3.6.1.4.1.9.9.91.1.2.1.1",
+            [
+                OID_END,
+                4,  # Thresholds
+            ],
+        ),
+    ],
 }

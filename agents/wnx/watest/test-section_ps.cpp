@@ -24,9 +24,16 @@ long long convert(const std::string &value) {
 
 using namespace std::string_view_literals;
 
-const std::vector<std::string_view> special_processes{
-    {"System Idle Process"sv}, {"Memory"sv}, {"Registry"sv},
-    {"Memory Compression"sv},  {"vmmem"sv},  {"Secure System"sv}};
+const std::vector<std::string_view> g_special_processes{
+    {"System Idle Process"sv},
+    {"Memory"sv},
+    {"Registry"sv},
+    {"Memory Compression"sv},
+    {"vmmem"sv},
+    {"Secure System"sv},
+    {"init"sv},
+    {"fish"sv},
+    {"bash"sv}};
 
 }  // namespace
 
@@ -37,21 +44,21 @@ TEST(PsTest, Integration) {
             fmt::format("'{}'", use_full_path ? "Full path" : "Short path"));
         auto out = ProducePsWmi(use_full_path);
         EXPECT_EQ(use_full_path,
-                  out.find("svchost.exe -k") != std::string::npos);
+                  out.find("svchost.exe\t-k") != std::string::npos);
         auto all = cma::tools::SplitString(out, "\n");
         EXPECT_TRUE(all.size() > 10);
         for (auto &in : all) {
             auto by_tab = cma::tools::SplitString(in, "\t");
             SCOPED_TRACE(fmt::format("'{}'", in));
 
-            ASSERT_EQ(by_tab.size(), 2);
+            EXPECT_GE(by_tab.size(), 2U);
             ASSERT_EQ(by_tab[0].back(), ')');
             ASSERT_EQ(by_tab[0][0], '(');
             EXPECT_TRUE(by_tab[1].size() > 0);
             auto process_name = by_tab[1];
-            auto special =
-                std::find(special_processes.begin(), special_processes.end(),
-                          process_name) != special_processes.end();
+            auto special = std::find(g_special_processes.begin(),
+                                     g_special_processes.end(),
+                                     process_name) != g_special_processes.end();
 
             by_tab[0].erase(0, 1);
             by_tab[0].pop_back();
@@ -68,10 +75,11 @@ TEST(PsTest, Integration) {
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            if (!special)
+            if (!special) {
+                EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
                 EXPECT_TRUE(convert(by_comma[9]) > 0)
                     << "'" << process_name << "'";
+            }
             EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }

@@ -1,7 +1,7 @@
 title: Enterasys: Fans
 agents: snmp
 catalog: hw/network/enterasys
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health of the Fans. It will return an {UKN} state if the status changes
@@ -11,6 +11,5 @@ description:
 item:
  The ID of the FAN like reported in the output of the SNMP agent.
 
-inventory:
+discovery:
  One service is created for each Fan.
-

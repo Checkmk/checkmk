@@ -1,7 +1,7 @@
 title: AWS S3: Summary
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the combined size of all AWS S3 buckets
@@ -13,5 +13,5 @@ description:
  There are no default levels. Upper levels for the combined
  bucket size are configurable via the rule "AWS/S3 Buckets".
 
-inventory:
+discovery:
  One service is created.

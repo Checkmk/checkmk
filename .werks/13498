@@ -1,0 +1,30 @@
+Title: New permission to publish customizations to groups of user
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1637147523
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+If you wanted to permit a user to be able to share his customizations (views,
+dashboards, topics, etc.) with other users of his contact groups, you
+previously had to permit the user also to share his customziations with all
+users.
+
+All of the following permissions can now be set independent of each other:
+
+1) Publish view
+Make views visible and usable for all users.
+
+2) Publish to allowed contact groups
+Make views visible and usable for users of contact groups the publishing user
+is a member of.
+
+3) Publish to foreign contact groups.
+Make views visible and usable for users of contact groups the publishing user
+is not a member of.
+
+This way you can e.g. allow a user only to share his dashboards with users who
+are in the same contact group.

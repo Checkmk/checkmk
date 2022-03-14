@@ -1,7 +1,7 @@
 title: MS SQL: General State
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the general state of MSSQL server processes
@@ -20,5 +20,5 @@ description:
 item:
  The instance ID of the MSSQL server process instance.
 
-inventory:
+discovery:
  One service is created for each server process.

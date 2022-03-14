@@ -5,10 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Provide methods to get an snmp table with or without caching
 """
-from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
-
 from pathlib import Path
-from six import ensure_binary
+from typing import (
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 import cmk.utils.debug
 import cmk.utils.store as store
@@ -17,14 +25,14 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
-    SNMPBackend,
+    BackendSNMPTree,
     OID,
+    SNMPBackend,
     SNMPDecodedValues,
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
-    BackendSNMPTree,
     SNMPValueEncoding,
     SpecialColumn,
 )
@@ -34,7 +42,9 @@ ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
-class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disable=too-many-ancestors
+class WalkCache(
+    MutableMapping[str, Tuple[bool, SNMPRowInfo]]
+):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
     This cache is different from section stores in that is per-fetchoid,
@@ -44,11 +54,33 @@ class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disab
     by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
     is true).
     """
+
     __slots__ = ("_store", "_path")
 
     def __init__(self, host_name: HostName):
         self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+
+    @staticmethod
+    def _read_row(path: Path) -> SNMPRowInfo:
+        return store.load_object_from_file(path, default=None)
+
+    @staticmethod
+    def _write_row(path: Path, rowinfo: SNMPRowInfo) -> None:
+        return store.save_object_to_file(path, rowinfo, pretty=False)
+
+    @staticmethod
+    def _oid2name(fetchoid: str) -> str:
+        return f"OID{fetchoid}"
+
+    @staticmethod
+    def _name2oid(basename: str) -> str:
+        return basename[3:]
+
+    def _iterfiles(self) -> Iterable[Path]:
+        if not self._path.is_dir():
+            return ()
+        return self._path.iterdir()
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
@@ -68,29 +100,41 @@ class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disab
     def __len__(self) -> int:
         return self._store.__len__()
 
+    def clear(self) -> None:
+        for path in self._iterfiles():
+            path.unlink(missing_ok=True)
+
     def load(
         self,
         *,
         trees: Iterable[BackendSNMPTree],
     ) -> None:
         """Try to read the OIDs data from cache files"""
-        for tree in trees:
-            for oid in (o for o in tree.oids if o.save_to_cache):  # no point in reading otherwise
+        # Do not load the cached data if *any* plugin needs live data
+        do_not_load = {
+            f"{tree.base}.{oid.column}"
+            for tree in trees
+            for oid in tree.oids
+            if not oid.save_to_cache
+        }
 
-                fetchoid = f"{tree.base}.{oid.column}"
-                path = self._path / fetchoid
+        for path in self._iterfiles():
+            fetchoid = self._name2oid(path.name)
+            if fetchoid in do_not_load:
+                continue
 
-                console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
-                try:
-                    read_walk = store.load_object_from_file(path)
-                except Exception:
-                    console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-                    if cmk.utils.debug.enabled():
-                        raise
-                    continue
+            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            try:
+                read_walk = self._read_row(path)
+            except Exception:
+                console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                if cmk.utils.debug.enabled():
+                    raise
+                continue
 
-                if read_walk is not None:
-                    self._store[fetchoid] = (oid.save_to_cache, read_walk)  # (True, ...)
+            if read_walk is not None:
+                # 'False': no need to store this value: it is already stored!
+                self._store[fetchoid] = (False, read_walk)
 
     def save(self) -> None:
         self._path.mkdir(parents=True, exist_ok=True)
@@ -99,9 +143,9 @@ class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disab
             if not save_flag:
                 continue
 
-            path = self._path / fetchoid
+            path = self._path / self._oid2name(fetchoid)
             console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
-            store.save_object_to_file(path, rowinfo, pretty=False)
+            self._write_row(path, rowinfo)
 
 
 def get_snmp_table(
@@ -110,7 +154,7 @@ def get_snmp_table(
     tree: BackendSNMPTree,
     walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
     backend: SNMPBackend,
-) -> SNMPTable:
+) -> Sequence[SNMPTable]:
 
     index_column = -1
     index_format: Optional[SpecialColumn] = None
@@ -133,7 +177,8 @@ def get_snmp_table(
                 raise MKGeneralException(
                     "Invalid SNMP OID specification in implementation of check. "
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN "
-                    "and OID_END_OCTET_STRING.")
+                    "and OID_END_OCTET_STRING."
+                )
             rowinfo = []
             index_column = len(columns)
             index_format = oid.column
@@ -171,9 +216,9 @@ def _make_index_rows(
     index_rows = []
     for o, _unused_value in max_column:
         if index_format is SpecialColumn.END:
-            val = ensure_binary(_extract_end_oid(fetchoid, o))
+            val = _extract_end_oid(fetchoid, o).encode()
         elif index_format is SpecialColumn.STRING:
-            val = ensure_binary(o)
+            val = o.encode()
         elif index_format is SpecialColumn.BIN:
             val = _oid_to_bin(o)
         elif index_format is SpecialColumn.END_BIN:
@@ -186,7 +231,9 @@ def _make_index_rows(
     return index_rows
 
 
-def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) -> SNMPTable:
+def _make_table(
+    columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig
+) -> Sequence[SNMPTable]:
     # Here we have to deal with a nasty problem: Some brain-dead devices
     # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
     # in the interfaces MIB with 64 bit counters. So we need to look at
@@ -202,17 +249,17 @@ def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) 
 
 
 def _oid_to_bin(oid: OID) -> SNMPRawValue:
-    return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
+    return bytes(int(p) for p in oid.split(".") if p)
 
 
 def _extract_end_oid(prefix: OID, complete: OID) -> OID:
-    return complete[len(prefix):].lstrip('.')
+    return complete[len(prefix) :].lstrip(".")
 
 
 # sort OID strings numerically
 def _oid_to_intlist(oid: OID) -> List[int]:
     if oid:
-        return list(map(int, oid.split('.')))
+        return list(map(int, oid.split(".")))
     return []
 
 
@@ -225,7 +272,7 @@ def _key_oids(o1: OID) -> List[int]:
 
 
 def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
-    return _oid_to_intlist(pair1[0].lstrip('.'))
+    return _oid_to_intlist(pair1[0].lstrip("."))
 
 
 def _get_snmpwalk(
@@ -262,9 +309,7 @@ def _perform_snmpwalk(
     for context_name in backend.config.snmpv3_contexts_of(section_name):
         rows = backend.walk(
             oid=fetchoid,
-            # revert back to legacy "possilbly-empty-string"-Type
-            # TODO: pass Optional[SectionName] along!
-            check_plugin_name=str(section_name) if section_name else "",
+            section_name=section_name,
             table_base_oid=base_oid,
             context_name=context_name,
         )
@@ -274,8 +319,9 @@ def _perform_snmpwalk(
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" %
-                             rows[0][0])
+            console.vverbose(
+                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0]
+            )
             rows = rows[:1]
 
         for row_oid, val in rows:
@@ -288,17 +334,19 @@ def _perform_snmpwalk(
     return rowinfo
 
 
-def _sanitize_snmp_encoding(columns: ResultColumnsSanitized,
-                            snmp_config: SNMPHostConfig) -> ResultColumnsDecoded:
+def _sanitize_snmp_encoding(
+    columns: ResultColumnsSanitized, snmp_config: SNMPHostConfig
+) -> ResultColumnsDecoded:
     return [
-        _decode_column(column, value_encoding, snmp_config)  #
-        for column, value_encoding in columns
+        _decode_column(column, value_encoding, snmp_config) for column, value_encoding in columns  #
     ]
 
 
-def _decode_column(column: List[SNMPRawValue], value_encoding: SNMPValueEncoding,
-                   snmp_config: SNMPHostConfig) -> List[SNMPDecodedValues]:
+def _decode_column(
+    column: List[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
+) -> List[SNMPDecodedValues]:
     if value_encoding == "string":
+        # ? ensure_str is used with potentially different encodings
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:
         decode = lambda v: list(bytearray(v))
@@ -362,7 +410,7 @@ def _are_ascending_oids(oid_list: List[OID]) -> bool:
     return True
 
 
-def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
+def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> Sequence[SNMPTable]:
     if not columns:
         return []
 

@@ -1,0 +1,14 @@
+Title: Fix confirm message of remove comment command
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1622043104
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you wanted to remove a comment, e.g. for a service, the confirm message was
+"Do you really want to remove the following x services".
+
+The command was only executed for the comment, no hosts or services were lost.

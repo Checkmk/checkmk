@@ -4,49 +4,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Optional, TypeVar, Union
 import urllib.parse
+from typing import Callable, Optional, TypeVar, Union
 
 from livestatus import SiteId
 
 from cmk.utils.defines import short_service_state_name
 
-import cmk.gui.escaping as escaping
-import cmk.gui.config as config
-import cmk.gui.sites as sites
-from cmk.gui.type_defs import HTTPVariables, Row
-
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.valuespec import MonitoringState
-from cmk.gui.i18n import _, _l, ungettext
-
-from cmk.gui.globals import html
+import cmk.gui.sites as sites
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.htmllib import HTML
-
-from cmk.gui.plugins.views import (
-    get_permitted_views,
-    command_registry,
+from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.views.utils import (
+    ABCDataSource,
+    cmp_num_split,
+    cmp_simple_number,
+    cmp_simple_string,
     Command,
+    command_registry,
     CommandActionResult,
     CommandSpec,
     data_source_registry,
-    ABCDataSource,
-    RowTableLivestatus,
-    painter_registry,
-    Painter,
+    declare_1to1_sorter,
+    get_permitted_views,
     multisite_builtin_views,
     paint_age,
     paint_nagiosflag,
+    Painter,
+    painter_registry,
     row_id,
-    declare_1to1_sorter,
-    cmp_simple_number,
-    cmp_simple_string,
-    cmp_num_split,
+    RowTableLivestatus,
 )
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
+from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.utils.urls import makeactionuri, urlencode_vars
+from cmk.gui.valuespec import MonitoringState
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -64,15 +59,19 @@ class RowTableEC(RowTableLivestatus):
             if c not in columns:
                 columns.append(c)
 
-        rows = super(RowTableEC, self).query(view, columns, headers, only_sites, limit,
-                                             all_active_filters)
+        row_data = super().query(view, columns, headers, only_sites, limit, all_active_filters)
+
+        if isinstance(row_data, tuple):
+            rows, _unfiltered_amount_of_rows = row_data
+        else:
+            rows = row_data
 
         if not rows:
             return rows
 
         _ec_filter_host_information_of_not_permitted_hosts(rows)
 
-        if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
+        if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
             # user is not allowed to see all events returned by the core
             rows = [r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != ""]
 
@@ -98,10 +97,10 @@ class RowTableEC(RowTableLivestatus):
 # the "mkeventd.seeall" permissions. So it is simply not possible to do this on
 # core level at the moment.
 def _ec_filter_host_information_of_not_permitted_hosts(rows):
-    if config.user.may("mkeventd.seeall"):
+    if user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
-    user_groups = set(config.user.contact_groups)
+    user_groups = set(user.contact_groups)
 
     def is_contact(row):
         return bool(user_groups.intersection(row["host_contact_groups"]))
@@ -130,7 +129,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
             elif isinstance(row[key], str):
                 row[key] = ""
             elif isinstance(row[key], str):
-                row[key] = u""
+                row[key] = ""
 
 
 permission_registry.register(
@@ -138,10 +137,13 @@ permission_registry.register(
         section=mkeventd.PermissionSectionEventConsole,
         name="seeall",
         title=_("See all events"),
-        description=_("If a user lacks this permission then he/she can see only those events that "
-                      "originate from a host that he/she is a contact for."),
-        defaults=config.builtin_role_ids,
-    ))
+        description=_(
+            "If a user lacks this permission then he/she can see only those events that "
+            "originate from a host that he/she is a contact for."
+        ),
+        defaults=builtin_role_ids,
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -151,9 +153,11 @@ permission_registry.register(
         description=_(
             "If that user does not have the permission <i>See all events</i> then this permission "
             "controls wether he/she can see events that are not related to a host in the monitoring "
-            "and that do not have been assigned specific contact groups to via the event rule."),
-        defaults=config.builtin_role_ids,
-    ))
+            "and that do not have been assigned specific contact groups to via the event rule."
+        ),
+        defaults=builtin_role_ids,
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -162,9 +166,11 @@ permission_registry.register(
         title=_("See events in the sidebar element 'Overview'"),
         description=_(
             "Whether or not the user is permitted to see the number of open events in the "
-            "sidebar element 'Overview'."),
-        defaults=config.builtin_role_ids,
-    ))
+            "sidebar element 'Overview'."
+        ),
+        defaults=builtin_role_ids,
+    )
+)
 
 
 @data_source_registry.register
@@ -175,7 +181,7 @@ class DataSourceECEvents(ABCDataSource):
 
     @property
     def title(self):
-        return _("Event Console: Current Events")
+        return _("Event Console: Current events")
 
     @property
     def table(self):
@@ -191,7 +197,7 @@ class DataSourceECEvents(ABCDataSource):
 
     @property
     def id_keys(self):
-        return ['site', 'host_name', 'event_id']
+        return ["site", "host_name", "event_id"]
 
     @property
     def auth_domain(self):
@@ -210,7 +216,7 @@ class DataSourceECEventHistory(ABCDataSource):
 
     @property
     def title(self):
-        return _("Event Console: Event History")
+        return _("Event Console: Event history")
 
     @property
     def table(self):
@@ -226,7 +232,7 @@ class DataSourceECEventHistory(ABCDataSource):
 
     @property
     def id_keys(self):
-        return ['site', 'host_name', 'event_id', 'history_line']
+        return ["site", "host_name", "event_id", "history_line"]
 
     @property
     def auth_domain(self):
@@ -237,7 +243,7 @@ class DataSourceECEventHistory(ABCDataSource):
         return ["history_time"]
 
 
-#.
+# .
 #   .--Painters------------------------------------------------------------.
 #   |                 ____       _       _                                 |
 #   |                |  _ \ __ _(_)_ __ | |_ ___ _ __ ___                  |
@@ -262,7 +268,7 @@ class PainterEventId(Painter):
 
     @property
     def columns(self):
-        return ['event_id']
+        return ["event_id"]
 
     def render(self, row, cell):
         return ("number", str(row["event_id"]))
@@ -282,7 +288,7 @@ class PainterEventCount(Painter):
 
     @property
     def columns(self):
-        return ['event_count']
+        return ["event_count"]
 
     def render(self, row, cell):
         return ("number", str(row["event_count"]))
@@ -302,10 +308,10 @@ class PainterEventText(Painter):
 
     @property
     def columns(self):
-        return ['event_text']
+        return ["event_text"]
 
     def render(self, row, cell):
-        return "", escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
+        return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
 
 
 @painter_registry.register
@@ -315,14 +321,14 @@ class PainterEventMatchGroups(Painter):
         return "event_match_groups"
 
     def title(self, cell):
-        return _("Match Groups")
+        return _("Match groups")
 
     def short_title(self, cell):
         return _("Match")
 
     @property
     def columns(self):
-        return ['event_match_groups']
+        return ["event_match_groups"]
 
     def render(self, row, cell):
         groups = row["event_match_groups"]
@@ -348,11 +354,11 @@ class PainterEventFirst(Painter):
 
     @property
     def columns(self):
-        return ['event_first']
+        return ["event_first"]
 
     @property
     def painter_options(self):
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row, cell):
         return paint_age(row["event_first"], True, True)
@@ -372,11 +378,11 @@ class PainterEventLast(Painter):
 
     @property
     def columns(self):
-        return ['event_last']
+        return ["event_last"]
 
     @property
     def painter_options(self):
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row, cell):
         return paint_age(row["event_last"], True, True)
@@ -396,10 +402,10 @@ class PainterEventComment(Painter):
 
     @property
     def columns(self):
-        return ['event_comment']
+        return ["event_comment"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_comment"]))
+        return ("", row["event_comment"])
 
 
 @painter_registry.register
@@ -409,18 +415,18 @@ class PainterEventSl(Painter):
         return "event_sl"
 
     def title(self, cell):
-        return _("Service-Level")
+        return _("Service-level")
 
     def short_title(self, cell):
         return _("Level")
 
     @property
     def columns(self):
-        return ['event_sl']
+        return ["event_sl"]
 
     def render(self, row, cell):
         sl_txt = dict(config.mkeventd_service_levels).get(row["event_sl"], str(row["event_sl"]))
-        return "", escaping.escape_attribute(sl_txt)
+        return "", sl_txt
 
 
 @painter_registry.register
@@ -437,12 +443,12 @@ class PainterEventHost(Painter):
 
     @property
     def columns(self):
-        return ['event_host', 'host_name']
+        return ["event_host", "host_name"]
 
     def render(self, row, cell):
         if row["host_name"]:
-            return "", escaping.escape_attribute(row["host_name"])
-        return "", escaping.escape_attribute(row["event_host"])
+            return "", row["host_name"]
+        return "", row["event_host"]
 
 
 @painter_registry.register
@@ -452,17 +458,17 @@ class PainterEventIpaddress(Painter):
         return "event_ipaddress"
 
     def title(self, cell):
-        return _("Original IP-Address")
+        return _("Original IP address")
 
     def short_title(self, cell):
         return _("Orig. IP")
 
     @property
     def columns(self):
-        return ['event_ipaddress']
+        return ["event_ipaddress"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_ipaddress"]))
+        return ("", row["event_ipaddress"])
 
 
 @painter_registry.register
@@ -479,7 +485,7 @@ class PainterEventHostInDowntime(Painter):
 
     @property
     def columns(self):
-        return ['event_host_in_downtime']
+        return ["event_host_in_downtime"]
 
     def render(self, row, cell):
         return paint_nagiosflag(row, "event_host_in_downtime", True)
@@ -495,14 +501,14 @@ class PainterEventOwner(Painter):
         return _("Owner of event")
 
     def short_title(self, cell):
-        return _("owner")
+        return _("Owner")
 
     @property
     def columns(self):
-        return ['event_owner']
+        return ["event_owner"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_owner"]))
+        return ("", row["event_owner"])
 
 
 @painter_registry.register
@@ -512,17 +518,17 @@ class PainterEventContact(Painter):
         return "event_contact"
 
     def title(self, cell):
-        return _("Contact Person")
+        return _("Contact person")
 
     def short_title(self, cell):
         return _("Contact")
 
     @property
     def columns(self):
-        return ['event_contact']
+        return ["event_contact"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_contact"]))
+        return ("", row["event_contact"])
 
 
 @painter_registry.register
@@ -539,10 +545,10 @@ class PainterEventApplication(Painter):
 
     @property
     def columns(self):
-        return ['event_application']
+        return ["event_application"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_application"]))
+        return ("", row["event_application"])
 
 
 @painter_registry.register
@@ -559,14 +565,14 @@ class PainterEventPid(Painter):
 
     @property
     def columns(self):
-        return ['event_pid']
+        return ["event_pid"]
 
     def render(self, row, cell):
         return ("", "%s" % row["event_pid"])
 
 
 # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def _deref(x: Union[T, Callable[[], T]]) -> T:
@@ -587,7 +593,7 @@ class PainterEventPriority(Painter):
 
     @property
     def columns(self):
-        return ['event_priority']
+        return ["event_priority"]
 
     def render(self, row, cell):
         return ("", dict(_deref(mkeventd.syslog_priorities))[row["event_priority"]])
@@ -607,7 +613,7 @@ class PainterEventFacility(Painter):
 
     @property
     def columns(self):
-        return ['event_facility']
+        return ["event_facility"]
 
     def render(self, row, cell):
         return ("", dict(_deref(mkeventd.syslog_facilities))[row["event_facility"]])
@@ -627,14 +633,14 @@ class PainterEventRuleId(Painter):
 
     @property
     def columns(self):
-        return ['event_rule_id']
+        return ["event_rule_id"]
 
     def render(self, row, cell):
         rule_id = row["event_rule_id"]
-        if config.user.may("mkeventd.edit"):
-            urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
+        if user.may("mkeventd.edit"):
+            urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
-        return "", escaping.escape_attribute(rule_id)
+        return "", rule_id
 
 
 @painter_registry.register
@@ -651,12 +657,14 @@ class PainterEventState(Painter):
 
     @property
     def columns(self):
-        return ['event_state']
+        return ["event_state"]
 
     def render(self, row, cell):
         state = row["event_state"]
         name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, html.render_span(name)
+        return "state svcstate state%s" % state, html.render_span(
+            name, class_=["state_rounded_fill"]
+        )
 
 
 @painter_registry.register
@@ -673,10 +681,10 @@ class PainterEventPhase(Painter):
 
     @property
     def columns(self):
-        return ['event_phase']
+        return ["event_phase"]
 
     def render(self, row, cell):
-        return ("", mkeventd.phase_names.get(row["event_phase"], ''))
+        return ("", mkeventd.phase_names.get(row["event_phase"], ""))
 
 
 def paint_event_icons(row, history=False):
@@ -703,23 +711,24 @@ def render_event_phase_icons(row):
     elif phase == "delayed":
         title = _("The action of this event is still delayed in the hope of a cancelling event.")
     else:
-        return ''
+        return ""
 
     return html.render_icon(phase, title=title)
 
 
 def render_delete_event_icons(row):
-    if not config.user.may("mkeventd.delete"):
-        return ''
+    if not user.may("mkeventd.delete"):
+        return ""
     urlvars: HTTPVariables = []
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
-    if html.request.has_var("name") and html.request.has_var("id"):
-        ident = html.request.get_integer_input_mandatory("id")
+    if request.has_var("name") and request.has_var("id"):
+        ident = request.get_integer_input_mandatory("id")
 
         import cmk.gui.dashboard as dashboard
-        view = dashboard.get_dashlet(html.request.get_str_input_mandatory("name"), ident)
+
+        view = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)
 
         # These actions are not performed within the dashlet. Assume the title url still
         # links to the source view where the action can be performed.
@@ -730,7 +739,7 @@ def render_delete_event_icons(row):
             urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
-        view = get_permitted_views()[(html.request.get_str_input_mandatory("view_name"))]
+        view = get_permitted_views()[(request.get_str_input_mandatory("view_name"))]
         filename = None
 
     urlvars += [
@@ -741,7 +750,9 @@ def render_delete_event_icons(row):
         ("_delete_event", _("Archive Event")),
         ("_show_result", "0"),
     ]
-    url = html.makeactionuri(urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
+    url = makeactionuri(
+        request, transactions, urlvars, filename=filename, delvars=["selection", "show_checkboxes"]
+    )
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
 
@@ -752,14 +763,14 @@ class PainterEventIcons(Painter):
         return "event_icons"
 
     def title(self, cell):
-        return _("Event Icons")
+        return _("Event icons")
 
     def short_title(self, cell):
         return _("Icons")
 
     @property
     def columns(self):
-        return ['event_phase', 'event_host_in_downtime']
+        return ["event_phase", "event_host_in_downtime"]
 
     @property
     def printable(self):
@@ -776,14 +787,14 @@ class PainterEventHistoryIcons(Painter):
         return "event_history_icons"
 
     def title(self, cell):
-        return _("Event Icons")
+        return _("Event history icons")
 
     def short_title(self, cell):
         return _("Icons")
 
     @property
     def columns(self):
-        return ['event_phase', 'event_host_in_downtime']
+        return ["event_phase", "event_host_in_downtime"]
 
     @property
     def printable(self):
@@ -807,14 +818,14 @@ class PainterEventContactGroups(Painter):
 
     @property
     def columns(self):
-        return ['event_contact_groups']
+        return ["event_contact_groups"]
 
     def render(self, row, cell):
         cgs = row.get("event_contact_groups")
         if cgs is None:
             return "", ""
         if cgs:
-            return "", escaping.escape_attribute(", ".join(cgs))
+            return "", ", ".join(cgs)
         return "", "<i>" + _("none") + "</i>"
 
 
@@ -825,7 +836,7 @@ class PainterEventEffectiveContactGroups(Painter):
         return "event_effective_contact_groups"
 
     def title(self, cell):
-        return _("Contact groups effective (Host or rule contact groups)")
+        return _("Contact groups effective (host or rule contact groups)")
 
     def short_title(self, cell):
         return _("Contact groups")
@@ -833,9 +844,9 @@ class PainterEventEffectiveContactGroups(Painter):
     @property
     def columns(self):
         return [
-            'event_contact_groups',
-            'event_contact_groups_precedence',
-            'host_contact_groups',
+            "event_contact_groups",
+            "event_contact_groups_precedence",
+            "host_contact_groups",
         ]
 
     def render(self, row, cell):
@@ -847,8 +858,8 @@ class PainterEventEffectiveContactGroups(Painter):
         if cgs is None:
             return "", ""
         if cgs:
-            return "", escaping.escape_attribute(", ".join(sorted(cgs)))
-        return "", "<i>" + _("none") + "</i>"
+            return "", ", ".join(sorted(cgs))
+        return "", html.render_i(_("none"))
 
 
 # Event History
@@ -868,7 +879,7 @@ class PainterHistoryLine(Painter):
 
     @property
     def columns(self):
-        return ['history_line']
+        return ["history_line"]
 
     def render(self, row, cell):
         return ("number", "%s" % row["history_line"])
@@ -888,11 +899,11 @@ class PainterHistoryTime(Painter):
 
     @property
     def columns(self):
-        return ['history_time']
+        return ["history_time"]
 
     @property
     def painter_options(self):
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row, cell):
         return paint_age(row["history_time"], True, True)
@@ -912,11 +923,11 @@ class PainterHistoryWhat(Painter):
 
     @property
     def columns(self):
-        return ['history_what']
+        return ["history_what"]
 
     def render(self, row, cell):
         what = row["history_what"]
-        return "", html.render_span(what, title=mkeventd.action_whats[what])
+        return "", html.render_span(what, title=str(mkeventd.action_whats[what]))
 
 
 @painter_registry.register
@@ -930,7 +941,7 @@ class PainterHistoryWhatExplained(Painter):
 
     @property
     def columns(self):
-        return ['history_what']
+        return ["history_what"]
 
     def render(self, row, cell):
         return ("", mkeventd.action_whats[row["history_what"]])
@@ -950,10 +961,10 @@ class PainterHistoryWho(Painter):
 
     @property
     def columns(self):
-        return ['history_who']
+        return ["history_who"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["history_who"]))
+        return ("", row["history_who"])
 
 
 @painter_registry.register
@@ -963,20 +974,20 @@ class PainterHistoryAddinfo(Painter):
         return "history_addinfo"
 
     def title(self, cell):
-        return _("Additional Information")
+        return _("Additional information")
 
     def short_title(self, cell):
         return _("Info")
 
     @property
     def columns(self):
-        return ['history_addinfo']
+        return ["history_addinfo"]
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["history_addinfo"]))
+        return ("", row["history_addinfo"])
 
 
-#.
+# .
 #   .--Commands------------------------------------------------------------.
 #   |         ____                                          _              |
 #   |        / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___          |
@@ -993,7 +1004,8 @@ PermissionECUpdateEvent = permission_registry.register(
         title=_l("Update an event"),
         description=_l("Needed for acknowledging and changing the comment and contact of an event"),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 permission_registry.register(
@@ -1003,7 +1015,8 @@ permission_registry.register(
         title=_l("Update an event: change comment"),
         description=_l("Needed for changing a comment when updating an event"),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 permission_registry.register(
@@ -1013,7 +1026,8 @@ permission_registry.register(
         title=_l("Update an event: change contact"),
         description=_l("Needed for changing a contact when updating an event"),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 
 class ECCommand(Command):
@@ -1036,7 +1050,7 @@ class CommandECUpdateEvent(ECCommand):
 
     @property
     def title(self):
-        return _("Update & Acknowledge")
+        return _("Update & acknowledge")
 
     @property
     def permission(self):
@@ -1050,49 +1064,57 @@ class CommandECUpdateEvent(ECCommand):
 
     def render(self, what):
         html.open_table(border="0", cellpadding="0", cellspacing="3")
-        if config.user.may("mkeventd.update_comment"):
+        if user.may("mkeventd.update_comment"):
             html.open_tr()
+            html.td(_("Change comment:"))
             html.open_td()
-            html.write(_("Change comment:"))
-            html.close_td()
-            html.open_td()
-            html.text_input('_mkeventd_comment', size=50)
+            html.text_input("_mkeventd_comment", size=50)
             html.close_td()
             html.close_tr()
-        if config.user.may("mkeventd.update_contact"):
+        if user.may("mkeventd.update_contact"):
             html.open_tr()
+            html.td(_("Change contact:"))
             html.open_td()
-            html.write(_("Change contact:"))
-            html.close_td()
-            html.open_td()
-            html.text_input('_mkeventd_contact', size=50)
+            html.text_input("_mkeventd_contact", size=50)
             html.close_td()
             html.close_tr()
         html.open_tr()
-        html.td('')
+        html.td("")
         html.open_td()
-        html.checkbox('_mkeventd_acknowledge', True, label=_("Set event to acknowledged"))
+        html.checkbox("_mkeventd_acknowledge", True, label=_("Set event to acknowledged"))
         html.close_td()
         html.close_tr()
         html.close_table()
-        html.button('_mkeventd_update', _("Update"))
+        html.button("_mkeventd_update", _("Update"))
 
-    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
-                num_rows: int) -> CommandActionResult:
-        if html.request.var('_mkeventd_update'):
-            if config.user.may("mkeventd.update_comment"):
-                comment = html.request.get_unicode_input_mandatory(
-                    "_mkeventd_comment").strip().replace(";", ",")
+    def _action(
+        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+    ) -> CommandActionResult:
+        if request.var("_mkeventd_update"):
+            if user.may("mkeventd.update_comment"):
+                comment = (
+                    request.get_str_input_mandatory("_mkeventd_comment").strip().replace(";", ",")
+                )
             else:
                 comment = ""
-            if config.user.may("mkeventd.update_contact"):
-                contact = html.request.get_unicode_input_mandatory(
-                    "_mkeventd_contact").strip().replace(":", ",")
+            if user.may("mkeventd.update_contact"):
+                contact = (
+                    request.get_str_input_mandatory("_mkeventd_contact").strip().replace(":", ",")
+                )
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
-            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or
-                                              0, comment, contact), _("update")
+            return (
+                "UPDATE;%s;%s;%s;%s;%s"
+                % (
+                    row["event_id"],
+                    user.id,
+                    ack and 1 or 0,
+                    comment,
+                    contact,
+                ),
+                _("update"),
+            )
         return None
 
 
@@ -1101,10 +1123,13 @@ PermissionECChangeEventState = permission_registry.register(
         section=mkeventd.PermissionSectionEventConsole,
         name="changestate",
         title=_l("Change event state"),
-        description=_l("This permission allows to change the state classification of an event "
-                       "(e.g. from CRIT to WARN)."),
+        description=_l(
+            "This permission allows to change the state classification of an event "
+            "(e.g. from CRIT to WARN)."
+        ),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 
 @command_registry.register
@@ -1115,7 +1140,7 @@ class CommandECChangeState(ECCommand):
 
     @property
     def title(self):
-        return _("Change State")
+        return _("Change state")
 
     @property
     def permission(self):
@@ -1128,16 +1153,16 @@ class CommandECChangeState(ECCommand):
         )
 
     def render(self, what):
-        html.button('_mkeventd_changestate', _("Change Event state to:"))
+        html.button("_mkeventd_changestate", _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
 
-    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
-                num_rows: int) -> CommandActionResult:
-        if html.request.var('_mkeventd_changestate'):
+    def _action(
+        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+    ) -> CommandActionResult:
+        if request.var("_mkeventd_changestate"):
             state = MonitoringState().from_html_vars("_mkeventd_state")
-            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
-                                             state), _("change the state")
+            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], user.id, state), _("change the state")
         return None
 
 
@@ -1146,10 +1171,13 @@ PermissionECCustomActions = permission_registry.register(
         section=mkeventd.PermissionSectionEventConsole,
         name="actions",
         title=_l("Perform custom action"),
-        description=_l("This permission is needed for performing the configured actions "
-                       "(execution of scripts and sending emails)."),
+        description=_l(
+            "This permission is needed for performing the configured actions "
+            "(execution of scripts and sending emails)."
+        ),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 
 @command_registry.register
@@ -1160,7 +1188,7 @@ class CommandECCustomAction(ECCommand):
 
     @property
     def title(self):
-        return _("Custom Action")
+        return _("Custom action")
 
     @property
     def permission(self):
@@ -1177,12 +1205,13 @@ class CommandECCustomAction(ECCommand):
             html.button("_action_" + action_id, title)
             html.br()
 
-    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
-                num_rows: int) -> CommandActionResult:
+    def _action(
+        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+    ) -> CommandActionResult:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
-            if html.request.var("_action_" + action_id):
-                title = _("execute the action \"%s\"") % title
-                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), title
+            if request.var("_action_" + action_id):
+                title = _('execute the action "%s"') % title
+                return "ACTION;%s;%s;%s" % (row["event_id"], user.id, action_id), title
         return None
 
 
@@ -1193,7 +1222,8 @@ PermissionECArchiveEvent = permission_registry.register(
         title=_l("Archive an event"),
         description=_l("Finally archive an event without any further action"),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 
 @command_registry.register
@@ -1204,7 +1234,7 @@ class CommandECArchiveEvent(ECCommand):
 
     @property
     def title(self):
-        return _("Archive Event")
+        return _("Archive event")
 
     @property
     def permission(self):
@@ -1219,10 +1249,11 @@ class CommandECArchiveEvent(ECCommand):
     def render(self, what):
         html.button("_delete_event", _("Archive Event"))
 
-    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
-                num_rows: int) -> CommandActionResult:
-        if html.request.var("_delete_event"):
-            command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
+    def _action(
+        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+    ) -> CommandActionResult:
+        if request.var("_delete_event"):
+            command = "DELETE;%s;%s" % (row["event_id"], user.id)
             title = _("<b>archive</b>")
             return command, title
         return None
@@ -1235,7 +1266,8 @@ PermissionECArchiveEventsOfHost = permission_registry.register(
         title=_l("Archive events of hosts"),
         description=_l("Archive all open events of all hosts shown in host views"),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 
 @command_registry.register
@@ -1254,18 +1286,22 @@ class CommandECArchiveEventsOfHost(ECCommand):
 
     @property
     def tables(self):
-        return ["host", "service"]
+        return ["service"]
 
     def render(self, what):
         html.help(
-            _('Note: With this command you can archive all events of one host. '
-              'Needs a rule "Check event state in Event Console" to be '
-              'configured.'))
-        html.button("_archive_events_of_hosts", _('Archive events'), cssclass="hot")
+            _(
+                "Note: With this command you can archive all events of one host. "
+                'Needs a rule "Check event state in Event Console" to be '
+                "configured."
+            )
+        )
+        html.button("_archive_events_of_hosts", _("Archive events"), cssclass="hot")
 
-    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
-                num_rows: int) -> CommandActionResult:
-        if html.request.var("_archive_events_of_hosts"):
+    def _action(
+        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+    ) -> CommandActionResult:
+        if request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
                 tag: Optional[str] = "host"
             elif cmdtag == "SVC":
@@ -1274,16 +1310,19 @@ class CommandECArchiveEventsOfHost(ECCommand):
                 tag = None
 
             commands = []
-            if tag and row.get('%s_check_command' % tag, "").startswith('check_mk_active-mkevents'):
-                data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
-                                          "Filter: host_name = %s" % row['host_name'])
-                commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
+            if tag and row.get("%s_check_command" % tag, "").startswith("check_mk_active-mkevents"):
+                data = sites.live().query(
+                    "GET eventconsoleevents\n"
+                    + "Columns: event_id\n"
+                    + "Filter: host_name = %s" % row["host_name"]
+                )
+                commands = ["DELETE;%s;%s" % (entry[0], user.id) for entry in data]
 
             return commands, "<b>archive all events</b> of"
         return None
 
 
-#.
+# .
 #   .--Sorters-------------------------------------------------------------.
 #   |                  ____             _                                  |
 #   |                 / ___|  ___  _ __| |_ ___ _ __ ___                   |
@@ -1329,7 +1368,7 @@ declare_1to1_sorter("history_what", cmp_simple_string)
 declare_1to1_sorter("history_who", cmp_simple_string)
 declare_1to1_sorter("history_addinfo", cmp_simple_string)
 
-#.
+# .
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
 #   |                    \ \   / (_) _____      _____                      |
@@ -1342,537 +1381,535 @@ declare_1to1_sorter("history_addinfo", cmp_simple_string)
 
 def mkeventd_view(d):
     x = {
-        'topic': "events",
-        'browser_reload': 60,
-        'column_headers': 'pergroup',
-        'icon': 'event_console',
-        'mobile': False,
-        'hidden': False,
-        'mustsearch': False,
-        'group_painters': [],
-        'num_columns': 1,
-        'hidebutton': False,
-        'play_sounds': False,
-        'public': True,
-        'sorters': [],
-        'user_sortable': 'on',
-        'show_filters': [],
-        'hard_filters': [],
-        'hide_filters': [],
-        'hard_filtervars': [],
+        "topic": "events",
+        "browser_reload": 60,
+        "column_headers": "pergroup",
+        "icon": "event_console",
+        "mobile": False,
+        "hidden": False,
+        "mustsearch": False,
+        "group_painters": [],
+        "num_columns": 1,
+        "hidebutton": False,
+        "play_sounds": False,
+        "public": True,
+        "sorters": [],
+        "user_sortable": "on",
+        "show_filters": [],
+        "hard_filters": [],
+        "hide_filters": [],
+        "hard_filtervars": [],
     }
     x.update(d)
     return x
 
 
 # Table of all open events
-multisite_builtin_views['ec_events'] = mkeventd_view({
-    "sort_index": 10,
-    'title': _('Events'),
-    'description': _('Table of all currently open events (handled and unhandled)'),
-    'datasource': 'mkeventd_events',
-    'layout': 'table',
-    'painters': [
-        ('event_id', 'ec_event', None),
-        ('event_icons', None, None),
-        ('event_state', None, None),
-        ('event_sl', None, None),
-        ('event_host', 'ec_events_of_host', None),
-        ('event_rule_id', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_last', None, None),
-        ('event_count', None, None),
-    ],
-    'show_filters': [
-        'event_id',
-        'event_rule_id',
-        'event_text',
-        'event_application',
-        'event_contact',
-        'event_comment',
-        'event_host_regex',
-        'event_ipaddress',
-        'event_count',
-        'event_phase',
-        'event_state',
-        'event_first',
-        'event_last',
-        'event_priority',
-        'event_facility',
-        'event_sl',
-        'event_sl_max',
-        'event_host_in_downtime',
-        'hostregex',
-        'siteopt',
-    ],
-    'hard_filtervars': [
-        ('event_phase_open', "on"),
-        ('event_phase_ack', "on"),
-        ('event_phase_counting', ""),
-        ('event_phase_delayed', ""),
-    ],
-    'sorters': [('event_last', False)],
-})
+multisite_builtin_views["ec_events"] = mkeventd_view(
+    {
+        "sort_index": 10,
+        "title": _("Events"),
+        "description": _("Table of all currently open events (handled and unhandled)"),
+        "datasource": "mkeventd_events",
+        "layout": "table",
+        "painters": [
+            ("event_id", "ec_event", None),
+            ("event_icons", None, None),
+            ("event_state", None, None),
+            ("event_sl", None, None),
+            ("event_host", "ec_events_of_host", None),
+            ("event_rule_id", None, None),
+            ("event_application", None, None),
+            ("event_text", None, None),
+            ("event_last", None, None),
+            ("event_count", None, None),
+        ],
+        "show_filters": [
+            "event_id",
+            "event_rule_id",
+            "event_text",
+            "event_application",
+            "event_contact",
+            "event_comment",
+            "event_host_regex",
+            "event_ipaddress",
+            "event_count",
+            "event_phase",
+            "event_state",
+            "event_first",
+            "event_last",
+            "event_priority",
+            "event_facility",
+            "event_sl",
+            "event_sl_max",
+            "event_host_in_downtime",
+            "hostregex",
+            "siteopt",
+        ],
+        "hard_filtervars": [
+            ("event_phase_open", "on"),
+            ("event_phase_ack", "on"),
+            ("event_phase_counting", ""),
+            ("event_phase_delayed", ""),
+        ],
+        "sorters": [("event_last", False)],
+        "is_show_more": True,
+    }
+)
 
-multisite_builtin_views['ec_events_of_monhost'] = mkeventd_view({
-    'title': _('Events of Monitored Host'),
-    'description': _('Currently open events of a host that is monitored'),
-    'datasource': 'mkeventd_events',
-    'layout': 'table',
-    'hidden': True,
-    'painters': [
-        ('event_id', 'ec_event', None),
-        ('event_icons', None, None),
-        ('event_state', None, None),
-        ('event_sl', None, None),
-        ('event_rule_id', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_last', None, None),
-        ('event_count', None, None),
-    ],
-    'show_filters': [
-        'event_id',
-        'event_rule_id',
-        'event_text',
-        'event_application',
-        'event_contact',
-        'event_comment',
-        'event_count',
-        'event_phase',
-        'event_state',
-        'event_first',
-        'event_last',
-        'event_priority',
-        'event_facility',
-        'event_sl',
-        'event_sl_max',
-        'event_host_in_downtime',
-    ],
-    'hide_filters': [
-        'siteopt',
-        'host',
-    ],
-    'sorters': [('event_last', False)],
-})
-multisite_builtin_views['ec_events_of_host'] = mkeventd_view({
-    'title': _('Events of Host'),
-    'description': _('Currently open events of one specific host'),
-    'datasource': 'mkeventd_events',
-    'layout': 'table',
-    'hidden': True,
-    'painters': [
-        ('event_id', 'ec_event', None),
-        ('event_icons', None, None),
-        ('event_state', None, None),
-        ('event_sl', None, None),
-        ('event_rule_id', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_last', None, None),
-        ('event_count', None, None),
-    ],
-    'show_filters': [
-        'event_id',
-        'event_rule_id',
-        'event_text',
-        'event_application',
-        'event_contact',
-        'event_comment',
-        'event_count',
-        'event_phase',
-        'event_state',
-        'event_first',
-        'event_last',
-        'event_priority',
-        'event_facility',
-        'event_sl',
-        'event_sl_max',
-        'event_host_in_downtime',
-    ],
-    'hide_filters': [
-        'siteopt',
-        'event_host',
-    ],
-    'sorters': [('event_last', False)],
-})
+multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
+    {
+        "title": _("Events of monitored host"),
+        "description": _("Currently open events of a host that is monitored"),
+        "datasource": "mkeventd_events",
+        "layout": "table",
+        "hidden": True,
+        "painters": [
+            ("event_id", "ec_event", None),
+            ("event_icons", None, None),
+            ("event_state", None, None),
+            ("event_sl", None, None),
+            ("event_rule_id", None, None),
+            ("event_application", None, None),
+            ("event_text", None, None),
+            ("event_last", None, None),
+            ("event_count", None, None),
+        ],
+        "show_filters": [
+            "event_id",
+            "event_rule_id",
+            "event_text",
+            "event_application",
+            "event_contact",
+            "event_comment",
+            "event_count",
+            "event_phase",
+            "event_state",
+            "event_first",
+            "event_last",
+            "event_priority",
+            "event_facility",
+            "event_sl",
+            "event_sl_max",
+            "event_host_in_downtime",
+        ],
+        "hide_filters": [
+            "siteopt",
+            "host",
+        ],
+        "sorters": [("event_last", False)],
+    }
+)
+multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
+    {
+        "title": _("Events of host"),
+        "description": _("Currently open events of one specific host"),
+        "datasource": "mkeventd_events",
+        "layout": "table",
+        "hidden": True,
+        "painters": [
+            ("event_id", "ec_event", None),
+            ("event_icons", None, None),
+            ("event_state", None, None),
+            ("event_sl", None, None),
+            ("event_rule_id", None, None),
+            ("event_application", None, None),
+            ("event_text", None, None),
+            ("event_last", None, None),
+            ("event_count", None, None),
+        ],
+        "show_filters": [
+            "event_id",
+            "event_rule_id",
+            "event_text",
+            "event_application",
+            "event_contact",
+            "event_comment",
+            "event_count",
+            "event_phase",
+            "event_state",
+            "event_first",
+            "event_last",
+            "event_priority",
+            "event_facility",
+            "event_sl",
+            "event_sl_max",
+            "event_host_in_downtime",
+        ],
+        "hide_filters": [
+            "siteopt",
+            "event_host",
+        ],
+        "sorters": [("event_last", False)],
+    }
+)
 
-multisite_builtin_views['ec_event'] = mkeventd_view({
-    'title': _('Event Details'),
-    'description': _('Details about one event'),
-    'datasource': 'mkeventd_events',
-    'layout': 'dataset',
-    'hidden': True,
-    'browser_reload': 0,
-    'hide_filters': ['event_id',],
-    'painters': [
-        ('event_state', None, None),
-        ('event_host', None, None),
-        ('event_ipaddress', None, None),
-        ('foobar', None, None),
-        ('alias', 'hoststatus', None),
-        ('host_contacts', None, None),
-        ('host_icons', None, None),
-        ('event_text', None, None),
-        ('event_match_groups', None, None),
-        ('event_comment', None, None),
-        ('event_owner', None, None),
-        ('event_first', None, None),
-        ('event_last', None, None),
-        ('event_id', None, None),
-        ('event_icons', None, None),
-        ('event_count', None, None),
-        ('event_sl', None, None),
-        ('event_contact', None, None),
-        ('event_effective_contact_groups', None, None),
-        ('event_application', None, None),
-        ('event_pid', None, None),
-        ('event_priority', None, None),
-        ('event_facility', None, None),
-        ('event_rule_id', None, None),
-        ('event_phase', None, None),
-        ('host_services', None, None),
-    ],
-})
+multisite_builtin_views["ec_event"] = mkeventd_view(
+    {
+        "title": _("Event details"),
+        "description": _("Details about one event"),
+        "datasource": "mkeventd_events",
+        "layout": "dataset",
+        "hidden": True,
+        "browser_reload": 0,
+        "hide_filters": [
+            "event_id",
+        ],
+        "painters": [
+            ("event_state", None, None),
+            ("event_host", None, None),
+            ("event_ipaddress", None, None),
+            ("foobar", None, None),
+            ("alias", "hoststatus", None),
+            ("host_contacts", None, None),
+            ("host_icons", None, None),
+            ("event_text", None, None),
+            ("event_match_groups", None, None),
+            ("event_comment", None, None),
+            ("event_owner", None, None),
+            ("event_first", None, None),
+            ("event_last", None, None),
+            ("event_id", None, None),
+            ("event_icons", None, None),
+            ("event_count", None, None),
+            ("event_sl", None, None),
+            ("event_contact", None, None),
+            ("event_effective_contact_groups", None, None),
+            ("event_application", None, None),
+            ("event_pid", None, None),
+            ("event_priority", None, None),
+            ("event_facility", None, None),
+            ("event_rule_id", None, None),
+            ("event_phase", None, None),
+            ("host_services", None, None),
+        ],
+    }
+)
 
-multisite_builtin_views['ec_history_recent'] = mkeventd_view({
-    "sort_index": 20,
-    'title': _('Recent Event History'),
-    'description': _('Information about events and actions on events during the recent 24 hours.'),
-    'icon': {
-        'icon': 'event_console',
-        'emblem': 'time'
-    },
-    'datasource': 'mkeventd_history',
-    'layout': 'table',
-    'painters': [
-        ('history_time', None, None),
-        ('event_id', 'ec_historyentry', None),
-        ('history_who', None, None),
-        ('history_what', None, None),
-        ('event_history_icons', None, None),
-        ('event_state', None, None),
-        ('event_phase', None, None),
-        ('event_sl', None, None),
-        ('event_host', 'ec_history_of_host', None),
-        ('event_rule_id', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_last', None, None),
-        ('event_count', None, None),
-    ],
-    'show_filters': [
-        'event_id',
-        'event_rule_id',
-        'event_text',
-        'event_application',
-        'event_contact',
-        'event_comment',
-        'event_host_regex',
-        'event_ipaddress',
-        'event_count',
-        'event_phase',
-        'event_state',
-        'event_first',
-        'event_last',
-        'event_priority',
-        'event_facility',
-        'event_sl',
-        'event_sl_max',
-        'event_host_in_downtime',
-        'history_time',
-        'history_who',
-        'history_what',
-        'host_state_type',
-        'hostregex',
-        'siteopt',
-    ],
-    'hard_filtervars': [
-        ('history_time_from', '1'),
-        ('history_time_from_range', '86400'),
-    ],
-    'sorters': [
-        ('history_time', True),
-        ('history_line', True),
-    ],
-})
+multisite_builtin_views["ec_history_recent"] = mkeventd_view(
+    {
+        "sort_index": 20,
+        "title": _("Recent event history"),
+        "description": _(
+            "Information about events and actions on events during the recent 24 hours."
+        ),
+        "icon": {"icon": "event_console", "emblem": "time"},
+        "datasource": "mkeventd_history",
+        "layout": "table",
+        "painters": [
+            ("history_time", None, None),
+            ("event_id", "ec_historyentry", None),
+            ("history_who", None, None),
+            ("history_what", None, None),
+            ("event_history_icons", None, None),
+            ("event_state", None, None),
+            ("event_phase", None, None),
+            ("event_sl", None, None),
+            ("event_host", "ec_history_of_host", None),
+            ("event_rule_id", None, None),
+            ("event_application", None, None),
+            ("event_text", None, None),
+            ("event_last", None, None),
+            ("event_count", None, None),
+        ],
+        "show_filters": [
+            "event_id",
+            "event_rule_id",
+            "event_text",
+            "event_application",
+            "event_contact",
+            "event_comment",
+            "event_host_regex",
+            "event_ipaddress",
+            "event_count",
+            "event_phase",
+            "event_state",
+            "event_first",
+            "event_last",
+            "event_priority",
+            "event_facility",
+            "event_sl",
+            "event_sl_max",
+            "event_host_in_downtime",
+            "history_time",
+            "history_who",
+            "history_what",
+            "host_state_type",
+            "hostregex",
+            "siteopt",
+        ],
+        "hard_filtervars": [
+            ("history_time_from", "1"),
+            ("history_time_from_range", "86400"),
+        ],
+        "sorters": [
+            ("history_time", True),
+            ("history_line", True),
+        ],
+        "is_show_more": True,
+    }
+)
 
-multisite_builtin_views['ec_historyentry'] = mkeventd_view({
-    'title': _('Event History Entry'),
-    'description': _('Details about a historical event history entry'),
-    'datasource': 'mkeventd_history',
-    'layout': 'dataset',
-    'hidden': True,
-    'browser_reload': 0,
-    'hide_filters': [
-        'event_id',
-        'history_line',
-    ],
-    'painters': [
-        ('history_time', None, None),
-        ('history_line', None, None),
-        ('history_what', None, None),
-        ('history_what_explained', None, None),
-        ('history_who', None, None),
-        ('history_addinfo', None, None),
-        ('event_state', None, None),
-        ('event_host', 'ec_history_of_host', None),
-        ('event_ipaddress', None, None),
-        ('event_text', None, None),
-        ('event_match_groups', None, None),
-        ('event_comment', None, None),
-        ('event_owner', None, None),
-        ('event_first', None, None),
-        ('event_last', None, None),
-        ('event_id', 'ec_history_of_event', None),
-        ('event_history_icons', None, None),
-        ('event_count', None, None),
-        ('event_sl', None, None),
-        ('event_contact', None, None),
-        ('event_effective_contact_groups', None, None),
-        ('event_application', None, None),
-        ('event_pid', None, None),
-        ('event_priority', None, None),
-        ('event_facility', None, None),
-        ('event_rule_id', None, None),
-        ('event_phase', None, None),
-    ],
-})
+multisite_builtin_views["ec_historyentry"] = mkeventd_view(
+    {
+        "title": _("Event history entry"),
+        "description": _("Details about a historical event history entry"),
+        "datasource": "mkeventd_history",
+        "layout": "dataset",
+        "hidden": True,
+        "browser_reload": 0,
+        "hide_filters": [
+            "event_id",
+            "history_line",
+        ],
+        "painters": [
+            ("history_time", None, None),
+            ("history_line", None, None),
+            ("history_what", None, None),
+            ("history_what_explained", None, None),
+            ("history_who", None, None),
+            ("history_addinfo", None, None),
+            ("event_state", None, None),
+            ("event_host", "ec_history_of_host", None),
+            ("event_ipaddress", None, None),
+            ("event_text", None, None),
+            ("event_match_groups", None, None),
+            ("event_comment", None, None),
+            ("event_owner", None, None),
+            ("event_first", None, None),
+            ("event_last", None, None),
+            ("event_id", "ec_history_of_event", None),
+            ("event_history_icons", None, None),
+            ("event_count", None, None),
+            ("event_sl", None, None),
+            ("event_contact", None, None),
+            ("event_effective_contact_groups", None, None),
+            ("event_application", None, None),
+            ("event_pid", None, None),
+            ("event_priority", None, None),
+            ("event_facility", None, None),
+            ("event_rule_id", None, None),
+            ("event_phase", None, None),
+        ],
+    }
+)
 
-multisite_builtin_views['ec_history_of_event'] = mkeventd_view({
-    'title': _('History of Event'),
-    'description': _('History entries of one specific event'),
-    'datasource': 'mkeventd_history',
-    'layout': 'table',
-    'columns': 1,
-    'hidden': True,
-    'browser_reload': 0,
-    'hide_filters': ['event_id',],
-    'painters': [
-        ('history_time', None, None),
-        ('history_line', 'ec_historyentry', None),
-        ('history_what', None, None),
-        ('history_what_explained', None, None),
-        ('history_who', None, None),
-        ('event_state', None, None),
-        ('event_host', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_sl', None, None),
-        ('event_priority', None, None),
-        ('event_facility', None, None),
-        ('event_phase', None, None),
-        ('event_count', None, None),
-    ],
-    'sorters': [
-        ('history_time', True),
-        ('history_line', True),
-    ],
-})
+multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
+    {
+        "title": _("History of Event"),
+        "description": _("History entries of one specific event"),
+        "datasource": "mkeventd_history",
+        "layout": "table",
+        "columns": 1,
+        "hidden": True,
+        "browser_reload": 0,
+        "hide_filters": [
+            "event_id",
+        ],
+        "painters": [
+            ("history_time", None, None),
+            ("history_line", "ec_historyentry", None),
+            ("history_what", None, None),
+            ("history_what_explained", None, None),
+            ("history_who", None, None),
+            ("event_state", None, None),
+            ("event_host", None, None),
+            ("event_application", None, None),
+            ("event_text", None, None),
+            ("event_sl", None, None),
+            ("event_priority", None, None),
+            ("event_facility", None, None),
+            ("event_phase", None, None),
+            ("event_count", None, None),
+        ],
+        "sorters": [
+            ("history_time", True),
+            ("history_line", True),
+        ],
+    }
+)
 
-multisite_builtin_views['ec_history_of_host'] = mkeventd_view({
-    'title': _('Event History of Host'),
-    'description': _('History entries of one specific host'),
-    'datasource': 'mkeventd_history',
-    'layout': 'table',
-    'columns': 1,
-    'hidden': True,
-    'browser_reload': 0,
-    'hide_filters': ['event_host',],
-    'show_filters': [
-        'event_id',
-        'event_rule_id',
-        'event_text',
-        'event_application',
-        'event_contact',
-        'event_comment',
-        'event_count',
-        'event_phase',
-        'event_state',
-        'event_first',
-        'event_last',
-        'event_priority',
-        'event_facility',
-        'event_sl',
-        'event_sl_max',
-        'event_host_in_downtime',
-        'history_time',
-        'history_who',
-        'history_what',
-    ],
-    'painters': [
-        ('history_time', None, None),
-        ('event_id', 'ec_history_of_event', None),
-        ('history_line', 'ec_historyentry', None),
-        ('history_what', None, None),
-        ('history_what_explained', None, None),
-        ('history_who', None, None),
-        ('event_state', None, None),
-        ('event_host', None, None),
-        ('event_ipaddress', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_sl', None, None),
-        ('event_priority', None, None),
-        ('event_facility', None, None),
-        ('event_phase', None, None),
-        ('event_count', None, None),
-    ],
-    'sorters': [
-        ('history_time', True),
-        ('history_line', True),
-    ],
-})
+multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
+    {
+        "title": _("Event history of host"),
+        "description": _("History entries of one specific host"),
+        "datasource": "mkeventd_history",
+        "layout": "table",
+        "columns": 1,
+        "hidden": True,
+        "browser_reload": 0,
+        "hide_filters": [
+            "event_host",
+        ],
+        "show_filters": [
+            "event_id",
+            "event_rule_id",
+            "event_text",
+            "event_application",
+            "event_contact",
+            "event_comment",
+            "event_count",
+            "event_phase",
+            "event_state",
+            "event_first",
+            "event_last",
+            "event_priority",
+            "event_facility",
+            "event_sl",
+            "event_sl_max",
+            "event_host_in_downtime",
+            "history_time",
+            "history_who",
+            "history_what",
+        ],
+        "painters": [
+            ("history_time", None, None),
+            ("event_id", "ec_history_of_event", None),
+            ("history_line", "ec_historyentry", None),
+            ("history_what", None, None),
+            ("history_what_explained", None, None),
+            ("history_who", None, None),
+            ("event_state", None, None),
+            ("event_host", None, None),
+            ("event_ipaddress", None, None),
+            ("event_application", None, None),
+            ("event_text", None, None),
+            ("event_sl", None, None),
+            ("event_priority", None, None),
+            ("event_facility", None, None),
+            ("event_phase", None, None),
+            ("event_count", None, None),
+        ],
+        "sorters": [
+            ("history_time", True),
+            ("history_line", True),
+        ],
+    }
+)
 
-multisite_builtin_views['ec_event_mobile'] = {
-    'browser_reload': 0,
-    'column_headers': 'pergroup',
-    'context': {},
-    'datasource': 'mkeventd_events',
-    'description': u'Details about one event\n',
-    'group_painters': [],
-    'hidden': True,
-    'hidebutton': False,
-    'icon': 'event',
-    'layout': 'mobiledataset',
-    'mobile': True,
-    'name': 'ec_event_mobile',
-    'num_columns': 1,
-    'painters': [
-        ('event_state', None, None),
-        ('event_host', None, None),
-        ('event_ipaddress', None, None),
-        ('host_address', 'hoststatus', None),
-        ('host_contacts', None, None),
-        ('host_icons', None, None),
-        ('event_text', None, None),
-        ('event_comment', None, None),
-        ('event_owner', None, None),
-        ('event_first', None, None),
-        ('event_last', None, None),
-        ('event_id', None, None),
-        ('event_icons', None, None),
-        ('event_count', None, None),
-        ('event_sl', None, None),
-        ('event_contact', None, None),
-        ('event_effective_contact_groups', None, None),
-        ('event_application', None, None),
-        ('event_pid', None, None),
-        ('event_priority', None, None),
-        ('event_facility', None, None),
-        ('event_rule_id', None, None),
-        ('event_phase', None, None),
-        ('host_services', None, None),
+multisite_builtin_views["ec_event_mobile"] = {
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "context": {},
+    "datasource": "mkeventd_events",
+    "description": "Details about one event\n",
+    "group_painters": [],
+    "hidden": True,
+    "hidebutton": False,
+    "icon": "event",
+    "layout": "mobiledataset",
+    "mobile": True,
+    "name": "ec_event_mobile",
+    "num_columns": 1,
+    "painters": [
+        ("event_state", None, None),
+        ("event_host", None, None),
+        ("event_ipaddress", None, None),
+        ("host_address", "hoststatus", None),
+        ("host_contacts", None, None),
+        ("host_icons", None, None),
+        ("event_text", None, None),
+        ("event_comment", None, None),
+        ("event_owner", None, None),
+        ("event_first", None, None),
+        ("event_last", None, None),
+        ("event_id", None, None),
+        ("event_icons", None, None),
+        ("event_count", None, None),
+        ("event_sl", None, None),
+        ("event_contact", None, None),
+        ("event_effective_contact_groups", None, None),
+        ("event_application", None, None),
+        ("event_pid", None, None),
+        ("event_priority", None, None),
+        ("event_facility", None, None),
+        ("event_rule_id", None, None),
+        ("event_phase", None, None),
+        ("host_services", None, None),
     ],
-    'public': True,
-    'single_infos': ['event'],
-    'sorters': [],
-    'title': u'Event Details',
-    'topic': 'events',
-    'user_sortable': True
+    "public": True,
+    "single_infos": ["event"],
+    "sorters": [],
+    "title": "Event details",
+    "topic": "events",
+    "user_sortable": True,
 }
 
-multisite_builtin_views['ec_events_mobile'] = {
-    'browser_reload': 60,
-    'column_headers': 'pergroup',
-    'context': {
-        'event_application': {
-            'event_application': ''
+multisite_builtin_views["ec_events_mobile"] = {
+    "browser_reload": 60,
+    "column_headers": "pergroup",
+    "context": {
+        "event_application": {"event_application": ""},
+        "event_comment": {"event_comment": ""},
+        "event_contact": {"event_contact": ""},
+        "event_count": {"event_count_from": "", "event_count_to": ""},
+        "event_facility": {"event_facility": ""},
+        "event_first": {
+            "event_first_from": "",
+            "event_first_from_range": "3600",
+            "event_first_until": "",
+            "event_first_until_range": "3600",
         },
-        'event_comment': {
-            'event_comment': ''
+        "event_host_regex": {"event_host_regex": ""},
+        "event_id": {"event_id": ""},
+        "event_last": {
+            "event_last_from": "",
+            "event_last_from_range": "3600",
+            "event_last_until": "",
+            "event_last_until_range": "3600",
         },
-        'event_contact': {
-            'event_contact': ''
+        "event_phase": {
+            "event_phase_ack": "on",
+            "event_phase_closed": "on",
+            "event_phase_counting": "",
+            "event_phase_delayed": "",
+            "event_phase_open": "on",
         },
-        'event_count': {
-            'event_count_from': '',
-            'event_count_to': ''
+        "event_priority": {
+            "event_priority_0": "on",
+            "event_priority_1": "on",
+            "event_priority_2": "on",
+            "event_priority_3": "on",
+            "event_priority_4": "on",
+            "event_priority_5": "on",
+            "event_priority_6": "on",
+            "event_priority_7": "on",
         },
-        'event_facility': {
-            'event_facility': ''
+        "event_rule_id": {"event_rule_id": ""},
+        "event_sl": {"event_sl": ""},
+        "event_sl_max": {"event_sl_max": ""},
+        "event_state": {
+            "event_state_0": "on",
+            "event_state_1": "on",
+            "event_state_2": "on",
+            "event_state_3": "on",
         },
-        'event_first': {
-            'event_first_from': '',
-            'event_first_from_range': '3600',
-            'event_first_until': '',
-            'event_first_until_range': '3600'
-        },
-        'event_host_regex': {
-            'event_host_regex': ''
-        },
-        'event_id': {
-            'event_id': ''
-        },
-        'event_last': {
-            'event_last_from': '',
-            'event_last_from_range': '3600',
-            'event_last_until': '',
-            'event_last_until_range': '3600'
-        },
-        'event_phase': {
-            'event_phase_ack': 'on',
-            'event_phase_closed': 'on',
-            'event_phase_counting': '',
-            'event_phase_delayed': '',
-            'event_phase_open': 'on'
-        },
-        'event_priority': {
-            'event_priority_0': 'on',
-            'event_priority_1': 'on',
-            'event_priority_2': 'on',
-            'event_priority_3': 'on',
-            'event_priority_4': 'on',
-            'event_priority_5': 'on',
-            'event_priority_6': 'on',
-            'event_priority_7': 'on'
-        },
-        'event_rule_id': {
-            'event_rule_id': ''
-        },
-        'event_sl': {
-            'event_sl': ''
-        },
-        'event_sl_max': {
-            'event_sl_max': ''
-        },
-        'event_state': {
-            'event_state_0': 'on',
-            'event_state_1': 'on',
-            'event_state_2': 'on',
-            'event_state_3': 'on'
-        },
-        'event_text': {
-            'event_text': ''
-        },
-        'hostregex': {
-            'host_regex': ''
-        }
+        "event_text": {"event_text": ""},
+        "hostregex": {"host_regex": ""},
     },
-    'datasource': 'mkeventd_events',
-    'description': u'Table of all currently open events (handled and unhandled)\n',
-    'group_painters': [],
-    'hidden': False,
-    'hidebutton': False,
-    'icon': 'event',
-    'layout': 'mobilelist',
-    'mobile': True,
-    'name': 'ec_events_mobile',
-    'num_columns': 1,
-    'owner': 'cmkadmin',
-    'painters': [
-        ('event_id', 'ec_event_mobile', None),
-        ('event_state', None, None),
-        ('event_host', None, None),
-        ('event_application', None, None),
-        ('event_text', None, None),
-        ('event_last', None, None),
+    "datasource": "mkeventd_events",
+    "description": "Table of all currently open events (handled and unhandled)\n",
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": "event",
+    "layout": "mobilelist",
+    "mobile": True,
+    "name": "ec_events_mobile",
+    "num_columns": 1,
+    "owner": "cmkadmin",
+    "painters": [
+        ("event_id", "ec_event_mobile", None),
+        ("event_state", None, None),
+        ("event_host", None, None),
+        ("event_application", None, None),
+        ("event_text", None, None),
+        ("event_last", None, None),
     ],
-    'public': True,
-    'single_infos': [],
-    'sorters': [('event_last', False)],
-    'title': u'Events',
-    'topic': 'events',
-    'user_sortable': True,
+    "public": True,
+    "single_infos": [],
+    "sorters": [("event_last", False)],
+    "title": "Events",
+    "topic": "events",
+    "user_sortable": True,
 }

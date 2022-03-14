@@ -5,13 +5,18 @@
 
 // According to POSIX, SEEK_SET & Co. are both in <stdio.h> *and* <unistd.h>.
 // IWYU pragma: no_include <stdio.h>
+
+// We need pthread_setname_np() from <pthread.h>.
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "POSIXUtils.h"
 
-#include <fcntl.h>
+#include <pthread.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <array>
 #include <ratio>
 #include <thread>
 
@@ -101,7 +106,37 @@ namespace {
 thread_local std::string thread_name;
 }  // namespace
 
-void setThreadName(std::string name) { thread_name = move(name); }
+void setThreadName(std::string name) {
+    // Setting the thread name is a portability nightmare, even among POSIX
+    // systems, see e.g. https://stackoverflow.com/a/7989973.
+    //
+    // #include <pthread.h>  // or maybe <pthread_np.h> for some OSes
+    //
+    // Linux (remember to set _GNU_SOURCE, restricted to 16 chars)
+    // int pthread_setname_np(pthread_t thread, const char *name);
+    //
+    // NetBSD: name + arg work like printf(name, arg)
+    // int pthread_setname_np(pthread_t thread, const char *name, void *arg);
+    //
+    // FreeBSD & OpenBSD: function name is slightly different, no return value
+    // void pthread_set_name_np(pthread_t tid, const char *name);
+    //
+    // Mac OS X: must be set from within the thread (can't specify thread ID)
+    // int pthread_setname_np(const char *);
+    //
+    // HACK: We have yet another complication on Linux: Both
+    // pthread_setname_np(...) and prctl(PR_SET_NAME, ...) seem to reuse the
+    // kernel field for the "filename of the executable", i.e. the "Name" field
+    // in /proc/<pid>/status resp. the "tcomm" field in /proc/<pid>/stat. This
+    // confuses ps and pstree, so we don't set this for the main thread. :-/
+    if (name != "main") {
+        pthread_setname_np(pthread_self(), name.substr(0, 15).c_str());
+    }
+
+    // ... and here invisible to ps/pstree/..., but in its full glory:
+    thread_name = move(name);
+}
+
 std::string getThreadName() { return thread_name; }
 
 file_lock::file_lock(const char *name) : fd_(::open(name, O_RDWR)) {

@@ -1,0 +1,22 @@
+Title: Windows agent binary files are code signed
+Class: security
+Compatible: compat
+Component: checks
+Date: 1627572573
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+Since this release the following binary files are code signed with tribe29 digital 
+certificate:
+<ul>
+<li>check_mk_agent.msi</li>
+<li>check_mk_agent.exe</li>
+<li>check_mk_agent-64.exe</li>
+</ul>
+
+Details of the used digital certificate:
+Name of signer: <tt>tribe29 GmbH</tt>
+Digest algorithm: <tt>SHA256</tt>
+Timestamp: presented

@@ -1,7 +1,7 @@
 title: Windows Services
 agents: windows
 catalog: os/ps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current state of a Windows service.  Each service is either {running} or {stopped}
@@ -27,7 +27,7 @@ item:
  names with the display names of the services. Those are just being displayed
  as a further information.
 
-inventory:
+discovery:
  The inventory function of this check helps you to auto-detect the services
  that should be monitored on your hosts. Because Checkmk cannot know, which
  services are important for you, you have to configure some rules.

@@ -1,0 +1,15 @@
+Title: Views: Fix crash when sorting hosts by IPv4 addresses
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616999449
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When trying to sort a host view by the IPv4 address column, an exception like
+"TypeError ('>' not supported between instances of 'str' and 'tuple')" occurred
+when the hosts to be sorted had mixed addreses (IPv4 addresses and host or DNS
+names) configured.

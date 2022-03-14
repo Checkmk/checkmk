@@ -29,19 +29,20 @@
 # ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
 
 import getopt
+import html.parser
+import http.cookiejar
 import re
 import socket
 import sys
-import urllib.request
-import urllib.parse
 import urllib.error
-import http.cookiejar
-import html.parser
-from typing import Dict, cast, Tuple
+import urllib.parse
+import urllib.request
+from typing import cast, Dict, Tuple
 
 
 def usage():
-    sys.stderr.write("""
+    sys.stderr.write(
+        """
 USAGE: check_form_submit -I <HOSTADDRESS> [-u <URI>] [-p <PORT>] [-s]
             [-f <FORMNAME>] [-q <QUERYPARAMS>] [-e <REGEX>] [-t <TIMEOUT> ]
             [-n <WARN>,<CRIT>]
@@ -64,17 +65,18 @@ OPTIONS:
   -d                            Enable debug mode
   -h, --help                    Show this help message and exit
 
-""")
+"""
+    )
 
 
 def debug(msg):
     if opt_debug:
-        sys.stderr.write('%s\n' % msg)
+        sys.stderr.write("%s\n" % msg)
 
 
 class HostResult(Exception):
     def __init__(self, result):
-        super(HostResult, self).__init__()
+        super().__init__()
         self.result = result
 
 
@@ -83,59 +85,61 @@ def new_state(rc, s):
 
 
 def output_check_result(s):
-    sys.stdout.write('%s\n' % s)
+    sys.stdout.write("%s\n" % s)
 
 
 def get_base_url(ssl, host, port):
     if not ssl and port == 443:
         ssl = True
 
-    proto = 'https' if ssl else 'http'
-    if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
-        portspec = ''
+    proto = "https" if ssl else "http"
+    if (proto == "http" and port == 80) or (proto == "https" and port == 443):
+        portspec = ""
     else:
-        portspec = ':%d' % port
+        portspec = ":%d" % port
 
-    return '%s://%s%s' % (proto, host, portspec)
+    return "%s://%s%s" % (proto, host, portspec)
 
 
 # TODO: Refactor to requests
 def init_http():
     return urllib.request.build_opener(
-        urllib.request.HTTPRedirectHandler(), urllib.request.HTTPHandler(debuglevel=0),
+        urllib.request.HTTPRedirectHandler(),
+        urllib.request.HTTPHandler(debuglevel=0),
         urllib.request.HTTPSHandler(debuglevel=0),
-        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
+    )
 
 
-def open_url(client, url, method='GET', data=None, timeout=None):
-    if method == 'GET' and data is not None:
+def open_url(client, url, method="GET", data=None, timeout=None):
+    if method == "GET" and data is not None:
         # Add the query string to the url in this case
-        start = '&' if '?' in url else '?'
+        start = "&" if "?" in url else "?"
         url += start + urllib.parse.urlencode(data)
         data = None
 
     try:
         if data:
-            debug('POST %s' % url)
+            debug("POST %s" % url)
             # Py3:
             # Encode a dict or sequence of two-element tuples into a URL query string.
             data = urllib.parse.urlencode(data, encoding="utf8")
-            debug('  => %s' % data)
+            debug("  => %s" % data)
             # Py3:
             # POST data should be bytes, an iterable of bytes, or a file object.
             # It cannot be of type str.
             fd = client.open(url, data.encode("utf8"), timeout)  # will be a POST
         else:
-            debug('GET %s' % url)
+            debug("GET %s" % url)
             fd = client.open(url, timeout=timeout)  # GET
     except urllib.error.HTTPError as e:
-        new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
+        new_state(2, "Unable to open %s: [%d] %s" % (url, e.code, e))
 
     except urllib.error.URLError as e:
-        new_state(2, 'Unable to open %s: %s' % (url, e.reason))
+        new_state(2, "Unable to open %s: %s" % (url, e.reason))
 
     except socket.timeout as e:
-        new_state(2, 'Unable to open %s: %s' % (url, e))
+        new_state(2, "Unable to open %s: %s" % (url, e))
 
     real_url = fd.geturl()
     code = fd.getcode()
@@ -145,9 +149,12 @@ def open_url(client, url, method='GET', data=None, timeout=None):
     if encoding:
         content = content.decode(encoding)
 
-    debug('CODE: %s RESPONSE:' % code)
-    debug('\n'.join(
-        ['    %02d %s' % (index + 1, line) for index, line in enumerate(content.split('\n'))]))
+    debug("CODE: %s RESPONSE:" % code)
+    debug(
+        "\n".join(
+            ["    %02d %s" % (index + 1, line) for index, line in enumerate(content.split("\n"))]
+        )
+    )
     return real_url, content
 
 
@@ -157,27 +164,32 @@ class FormParser(html.parser.HTMLParser):
         self.current_form = None
         super().__init__()
 
+    # CPython screwed up the removal of the error() method from ParserBase,
+    # so we have to keep this until we use Python 3.10.
+    def error(self, message):
+        raise AssertionError(message)
+
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
 
-        if tag == 'form':
-            name = attrs.get('name', 'unnamed-%d' % (len(self.forms) + 1))
+        if tag == "form":
+            name = attrs.get("name", "unnamed-%d" % (len(self.forms) + 1))
             self.forms[name] = {
-                'attrs': dict(attrs),
-                'elements': {},
+                "attrs": dict(attrs),
+                "elements": {},
             }
             self.current_form = self.forms[name]
-        elif tag == 'input':
+        elif tag == "input":
             if self.current_form is None:
-                debug('Ignoring form field out of form tag')
+                debug("Ignoring form field out of form tag")
             else:
-                if 'name' in attrs:
-                    self.current_form['elements'][attrs['name']] = attrs.get('value', '')
+                if "name" in attrs:
+                    self.current_form["elements"][attrs["name"]] = attrs.get("value", "")
                 else:
-                    debug('Ignoring form field without name %r' % attrs)
+                    debug("Ignoring form field without name %r" % attrs)
 
     def handle_endtag(self, tag):
-        if tag == 'form':
+        if tag == "form":
             self.current_form = None
 
 
@@ -192,12 +204,14 @@ def parse_form(content, form_name):
     num_forms = len(forms)
 
     if num_forms == 0:
-        new_state(2, 'Found no form element in HTML code')
+        new_state(2, "Found no form element in HTML code")
 
     elif num_forms == 1 and form_name is not None and form_name in forms:
         new_state(
-            2, 'Found one form with name "%s" but expected name "%s"' %
-            (list(forms.keys())[0], form_name))
+            2,
+            'Found one form with name "%s" but expected name "%s"'
+            % (list(forms.keys())[0], form_name),
+        )
 
     elif num_forms == 1:
         form = forms[list(forms.keys())[0]]
@@ -205,20 +219,23 @@ def parse_form(content, form_name):
     elif form_name is None:
         new_state(
             2,
-            'No form name provided but found multiple forms (Names: %s)' % ', '.join(forms.keys()))
+            "No form name provided but found multiple forms (Names: %s)" % ", ".join(forms.keys()),
+        )
 
     else:
         form = forms.get(form_name)
         if form is None:
             new_state(
-                2, 'Found no form with name "%s" (Available: %s)' %
-                (form_name, ', '.join(forms.keys())))
+                2,
+                'Found no form with name "%s" (Available: %s)'
+                % (form_name, ", ".join(forms.keys())),
+            )
 
     return form
 
 
 def update_form_vars(form_elem, params):
-    v = form_elem['elements'].copy()
+    v = form_elem["elements"].copy()
     v.update(params)
     return v
 
@@ -235,14 +252,14 @@ def raise_host_state(client, base_url, uri, timeout, form_name, params, expect_r
 
     # Issue a HTTP request with those parameters
     # Extract the form target and method
-    method = form['attrs'].get('method', 'GET').upper()
-    target = form['attrs'].get('action', real_url)
-    if target[0] == '/':
+    method = form["attrs"].get("method", "GET").upper()
+    target = form["attrs"].get("action", real_url)
+    if target[0] == "/":
         # target is given as absolute path, relative to hostname
         target = base_url + target
-    elif target[0] != '':
+    elif target[0] != "":
         # relative URL
-        target = '%s/%s' % ('/'.join(real_url.rstrip('/').split('/')[:-1]), target)
+        target = "%s/%s" % ("/".join(real_url.rstrip("/").split("/")[:-1]), target)
 
     real_url, content = open_url(client, target, method, form_vars, timeout=timeout)
 
@@ -254,7 +271,7 @@ def raise_host_state(client, base_url, uri, timeout, form_name, params, expect_r
         else:
             new_state(2, 'Expected regex "%s" could not be found in form response' % expect_regex)
     else:
-        new_state(0, 'Form has been submitted')
+        new_state(0, "Form has been submitted")
 
 
 def check_host_states(states, num_warn, num_crit):
@@ -282,9 +299,9 @@ def check_host_states(states, num_warn, num_crit):
     else:
         sum_state = 0
 
-    txt = '%d succeeded, %d failed' % (num_success, num_failed)
+    txt = "%d succeeded, %d failed" % (num_success, num_failed)
     if failed:
-        txt += ' (%s)' % ', '.join(['%s: %s' % (n, msg[1]) for n, msg in failed])
+        txt += " (%s)" % ", ".join(["%s: %s" % (n, msg[1]) for n, msg in failed])
     return sum_state, txt
 
 
@@ -296,7 +313,7 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    short_options = 'I:u:p:H:f:q:e:t:n:sd'
+    short_options = "I:u:p:H:f:q:e:t:n:sd"
     long_options = ["help"]
 
     try:
@@ -307,7 +324,7 @@ def main(args=None):
 
     hosts = []
     multiple = False
-    uri = '/'
+    uri = "/"
     port = 80
     ssl = False
     form_name = None
@@ -318,35 +335,35 @@ def main(args=None):
     num_crit = None
 
     for o, a in opts:
-        if o in ['-h', '--help']:
+        if o in ["-h", "--help"]:
             usage()
             sys.exit(0)
-        elif o == '-I':
+        elif o == "-I":
             hosts.append(a)
-        elif o == '-u':
+        elif o == "-u":
             uri = a
-        elif o == '-p':
+        elif o == "-p":
             port = int(a)
-        elif o == '-s':
+        elif o == "-s":
             ssl = True
-        elif o == '-f':
+        elif o == "-f":
             form_name = a
-        elif o == '-q':
-            params = dict(cast(Tuple[str, str], parts.split('=', 1)) for parts in a.split('&'))
-        elif o == '-e':
+        elif o == "-q":
+            params = dict(cast(Tuple[str, str], parts.split("=", 1)) for parts in a.split("&"))
+        elif o == "-e":
             expect_regex = a
-        elif o == '-t':
+        elif o == "-t":
             timeout = int(a)
-        elif o == '-n':
-            if ',' in a:
-                num_warn, num_crit = [int(level) for level in a.split(',', 1)]
+        elif o == "-n":
+            if "," in a:
+                num_warn, num_crit = [int(level) for level in a.split(",", 1)]
             else:
                 num_warn = int(a)
-        elif o == '-d':
+        elif o == "-d":
             opt_debug = True
 
     if not hosts:
-        sys.stderr.write('Please provide the host to query via -I <HOSTADDRESS>.\n')
+        sys.stderr.write("Please provide the host to query via -I <HOSTADDRESS>.\n")
         usage()
         sys.exit(1)
 
@@ -373,7 +390,7 @@ def main(args=None):
     except Exception as e:
         if opt_debug:
             raise
-        return 3, 'Exception occured: %s\n' % e
+        return 3, "Exception occured: %s\n" % e
 
 
 if __name__ == "__main__":

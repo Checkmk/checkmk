@@ -63,7 +63,7 @@ the master branch.
 
 Clone from the Checkmk Git, then execute the following commands:
 
-```
+```bash
 cd omd
 make setup
 ../scripts/fake-windows-artifacts
@@ -76,6 +76,56 @@ make deb
 It will use the OMD package build cache to create a `.deb` file in the `omd`
 directory.
 
+## How to build one OMD package?
+
+The OMD packages are built in the following phases in general:
+
+- `{PKG}_UNPACK` - Unpack the source archive
+
+The source archive is unpacked into the `{PKG}_BUILD_DIR`. A default target is
+implemented for most of the packages. Only source archives which need special
+handling (e.g. because the archive name is not equal to the OMD package name)
+have a custom `{PKG}_UNPACK` target.
+
+- `{PKG}_BUILD` - Build the package
+
+For most packages this contains the normal `./configure && make` logic. The
+build is executed in `{PKG}_BUILD_DIR` (which is
+`omd/build/package_build/{PKG}-{VERS}`).
+
+- `{PKG}_INTERMEDIATE_INSTALL` - Intermediate install
+
+Installs the files previously built to a `{PKG}` individual target directory
+`{PKG}_INSTALL_DIR` (which is `omd/build/intermediate_install/{PKG}-{VERS}`).
+
+- `{PKG}_CACHE_PKG_PROCESS` - Optional processing of the build cache
+
+Some packages support a cached build. The files from `{PKG}_INSTALL_DIR` will be
+archived and uploaded to our nexus and then used again by other build processes.
+In case the nexus is available and it has a build cache archive, this is
+downloaded and unpacked to `{PKG}_INTERMEDIATE_INSTALL` instead of performing
+the previous steps.
+
+See also *Using package cache* on how to use it.
+
+- `{PKG}_INSTALL` - Install packe files to final target directory
+
+Install all the files of `{PKG}` from the intermediate install directory to the
+final target directory which is then used as base for the Checkmk RPM or DEB
+packages.
+
+All the phases mentioned above are represented by stamp files which are stored
+in `omd/build/stamps`.
+
+To execute a build step of your choice, you can do it like follows. In this
+example we either build the protobuf OMD package or receive previously built
+parts from the build cache.
+
+```
+cd omd
+make $PWD/build/stamps/protobuf-3.18.1-cache-pkg-process
+```
+
 ## Incremental package building
 
 TODO: See omd/Makefile and omd/debian/rules. Should be configurable by
@@ -84,7 +134,22 @@ environment variables in the future.
 ## Measuring build times
 
 To improve build times it is first important to understand which parts of the
-build take how much time. To do this, you can use `remake` like this:
+build take how much time.
+
+During packaging there are entries written to stdout of the build job. They look
+like this:
+
+```
++++ [1638200385] Build step '/home/lm/git/checkmk/omd/build/stamps/openssl-1.1.1l-install': done
+```
+
+You could grep them from the log to get an idea which package takes how long to
+be built. These lines are also written to `omd/omd_build_times.log`.
+
+The log contains absolute time stamps. You may use the helper script
+`omd/show_build_times` to get the duration of each step calculated.
+
+An other option would be to use `remake` like this:
 
 ```
 cd omd

@@ -1,7 +1,7 @@
 title: Areca Raid Controllers: Health and Status
 agents:  linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health and current status of a areca raid controller.
@@ -21,6 +21,5 @@ description:
 item:
  The numeric number of the array, reported by areca cli tool
 
-inventory:
+discovery:
  One service is created for each array
-

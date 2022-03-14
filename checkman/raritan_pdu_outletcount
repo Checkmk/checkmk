@@ -1,7 +1,7 @@
 title: Raritan PX-2000 Family: PDU Outlet Count
 agents: snmp
 catalog: hw/environment/raritan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current outlet count of the Raritan PX-2000
@@ -11,6 +11,5 @@ description:
  Only if you set levels explicitly, it returns {WARN} or {CRIT} if
  the value is outside the given ranges.
 
-inventory:
+discovery:
  One service is created for each host called Outlet Count.
-

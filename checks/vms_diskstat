@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+
 # Example output from agent:
 # <<<vms_diskstat>>>
 # $1$DGA1122: TEST_WORK 1171743836 1102431184 0.00
@@ -27,8 +30,11 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # $1$DGA1125: DATA_01 1171743836 202431184 0.20
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 def inventory_vms_diskstat_fs(info):
-    return df_inventory([line[1] for line in info])
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), [line[1] for line in info])
 
 
 def check_vms_diskstat_fs(item, params, info):
@@ -42,7 +48,7 @@ def check_vms_diskstat_fs(item, params, info):
     return (3, "no such disk")
 
 
-check_info['vms_diskstat.df'] = {
+check_info["vms_diskstat.df"] = {
     "check_function": check_vms_diskstat_fs,
     "inventory_function": inventory_vms_diskstat_fs,
     "service_description": "Filesystem %s",

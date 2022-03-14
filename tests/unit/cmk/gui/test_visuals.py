@@ -7,21 +7,20 @@
 # yapf: disable
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
-from cmk.gui.globals import html
+
+import cmk.gui.plugins.visuals.filters
 import cmk.gui.plugins.visuals.utils as utils
-import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
-import cmk.gui.plugins.visuals.filters
-from cmk.gui.type_defs import Visual
+from cmk.gui.globals import request
 
 
 def test_get_filter():
     f = visuals.get_filter("hostregex")
-    assert isinstance(f, cmk.gui.plugins.visuals.Filter)
+    assert isinstance(f, utils.Filter)
 
 
 def test_get_not_existing_filter():
@@ -29,16 +28,17 @@ def test_get_not_existing_filter():
         visuals.get_filter("dingelig")
 
 
+# TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info():
-    allowed = visuals.filters_allowed_for_info("host")
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
+    allowed = dict(visuals.filters_allowed_for_info("host"))
+    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
     assert "service" not in allowed
 
 
 def test_filters_allowed_for_infos():
     allowed = visuals.filters_allowed_for_infos(["host", "service"])
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
-    assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.FilterText)
+    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
+    assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
 
 
 def _expected_visual_types():
@@ -76,12 +76,10 @@ def _expected_visual_types():
     return expected_visual_types
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_types():
     assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_type_attributes():
     for ident, plugin_class in utils.visual_type_registry.items():
         plugin = plugin_class()
@@ -235,7 +233,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'comment_author': {
         'column': 'comment_author',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['comment_author', 'neg_comment_author'],
         'info': 'comment',
         'link_columns': ['comment_author'],
@@ -245,7 +243,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'comment_comment': {
         'column': 'comment_comment',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['comment_comment', 'neg_comment_comment'],
         'info': 'comment',
         'link_columns': ['comment_comment'],
@@ -368,7 +366,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'downtime_author': {
         'column': 'downtime_author',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['downtime_author'],
         'info': 'downtime',
         'link_columns': ['downtime_author'],
@@ -378,7 +376,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'downtime_comment': {
         'column': 'downtime_comment',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['downtime_comment'],
         'info': 'downtime',
         'link_columns': ['downtime_comment'],
@@ -401,7 +399,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'downtime_id': {
         'column': 'downtime_id',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['downtime_id'],
         'info': 'downtime',
         'link_columns': ['downtime_id'],
@@ -424,7 +422,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_application': {
         'column': 'event_application',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_application'],
         'info': 'event',
         'link_columns': ['event_application'],
@@ -434,7 +432,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_comment': {
         'column': 'event_comment',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_comment'],
         'info': 'event',
         'link_columns': ['event_comment'],
@@ -444,7 +442,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_contact': {
         'column': 'event_contact',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_contact'],
         'info': 'event',
         'link_columns': ['event_contact'],
@@ -485,7 +483,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_host': {
         'column': 'event_host',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_host'],
         'info': 'event',
         'link_columns': ['event_host'],
@@ -505,7 +503,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_host_regex': {
         'column': 'event_host',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_host'],
         'info': 'event',
         'link_columns': ['event_host'],
@@ -515,7 +513,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_id': {
         'column': 'event_id',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_id'],
         'info': 'event',
         'link_columns': ['event_id'],
@@ -525,7 +523,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_ipaddress': {
         'column': 'event_ipaddress',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_ipaddress'],
         'info': 'event',
         'link_columns': ['event_ipaddress'],
@@ -547,7 +545,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_owner': {
         'column': 'event_owner',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_owner'],
         'info': 'event',
         'link_columns': ['event_owner'],
@@ -581,7 +579,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_rule_id': {
         'column': 'event_rule_id',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_rule_id'],
         'info': 'event',
         'link_columns': ['event_rule_id'],
@@ -618,7 +616,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_text': {
         'column': 'event_text',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_text'],
         'info': 'event',
         'link_columns': ['event_text'],
@@ -638,7 +636,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'has_performance_data': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_has_performance_data'],
         'info': 'service',
         'link_columns': [],
@@ -648,7 +646,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'history_line': {
         'column': 'history_line',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['history_line'],
         'info': 'history',
         'link_columns': ['history_line'],
@@ -686,7 +684,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'history_who': {
         'column': 'history_who',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['history_who'],
         'info': 'history',
         'link_columns': ['history_who'],
@@ -696,7 +694,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host': {
         'column': 'host_name',
         'comment': u'Exact match, used for linking',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host', 'neg_host'],
         'info': 'host',
         'link_columns': ['host_name'],
@@ -725,7 +723,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_address', 'host_address_prefix'],
         'info': 'host',
         'link_columns': ['host_address'],
@@ -756,7 +754,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_ctc': {
         'column': 'host_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host_ctc'],
         'info': 'host',
         'link_columns': ['host_contacts'],
@@ -766,7 +764,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_ctc_regex': {
         'column': 'host_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host_ctc_regex'],
         'info': 'host',
         'link_columns': ['host_contacts'],
@@ -805,7 +803,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_ipv4_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_ipv4_address', 'host_ipv4_address_prefix'],
         'info': 'host',
         'link_columns': [],
@@ -814,7 +812,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_ipv6_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_ipv6_address', 'host_ipv6_address_prefix'],
         'info': 'host',
         'link_columns': [],
@@ -890,7 +888,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_staleness': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_host_staleness'],
         'info': 'host',
         'link_columns': [],
@@ -900,7 +898,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_state_type': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterStateType',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_host_state_type'],
         'info': 'host',
         'link_columns': [],
@@ -941,7 +939,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostgroupnameregex': {
         'column': 'hostgroup_name',
         'comment': u'Search field allowing regular expressions and partial matches on the names of hostgroups',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['hostgroup_regex'],
         'info': 'hostgroup',
         'link_columns': ['hostgroup_name'],
@@ -986,7 +984,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostnameoralias': {
         'column': ['host_alias', 'host_name'],
         'comment': u'Search field allowing regular expressions and partial matches',
-        'filter_class': 'FilterHostnameOrAlias',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['hostnameoralias'],
         'info': 'host',
         'link_columns': ['host_alias', 'host_name'],
@@ -996,7 +994,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostregex': {
         'column': 'host_name',
         'comment': u'Search field allowing regular expressions and partial matches',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host_regex', 'neg_host_regex'],
         'info': 'host',
         'link_columns': ['host_name'],
@@ -1036,7 +1034,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'in_downtime': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_in_downtime'],
         'info': 'service',
         'link_columns': [],
@@ -1305,6 +1303,15 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'link_columns': [],
         'sort_index': 800,
         'title': u'Networking \u27a4 Ports'
+    },
+    'inv_networking_hostname': {
+        'comment': None,
+        'filter_class': 'FilterInvText',
+        'htmlvars': ['inv_networking_hostname_from', 'inv_networking_hostname_to'],
+        'info': 'host',
+        'link_columns': [],
+        'sort_index': 800,
+        'title': u'Networking \u27a4 Hostname'
     },
     'inv_networking_total_interfaces': {
         'comment': None,
@@ -3040,7 +3047,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_command_name_regex': {
         'column': 'log_command_name',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_command_name_regex', 'neg_log_command_name_regex'],
         'info': 'log',
         'link_columns': ['log_command_name'],
@@ -3050,7 +3057,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_contact_name': {
         'column': 'log_contact_name',
         'comment': u'Exact match, used for linking',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_contact_name'],
         'info': 'log',
         'link_columns': ['log_contact_name'],
@@ -3060,7 +3067,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_contact_name_regex': {
         'column': 'log_contact_name',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_contact_name_regex', 'neg_log_contact_name_regex'],
         'info': 'log',
         'link_columns': ['log_contact_name'],
@@ -3101,7 +3108,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_state_type': {
         'column': 'log_state_type',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_state_type'],
         'info': 'log',
         'link_columns': ['log_state_type'],
@@ -3111,7 +3118,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_type': {
         'column': 'log_type',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_type'],
         'info': 'log',
         'link_columns': ['log_type'],
@@ -3218,7 +3225,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_ctc': {
         'column': 'service_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['service_ctc'],
         'info': 'service',
         'link_columns': ['service_contacts'],
@@ -3228,7 +3235,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_ctc_regex': {
         'column': 'service_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['service_ctc_regex'],
         'info': 'service',
         'link_columns': ['service_contacts'],
@@ -3318,7 +3325,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_staleness': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_service_staleness'],
         'info': 'service',
         'link_columns': [],
@@ -3328,7 +3335,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_state_type': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterStateType',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_service_state_type'],
         'info': 'service',
         'link_columns': [],
@@ -3347,7 +3354,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'servicegroupname': {
         'column': 'servicegroup_name',
         'comment': u'Exact match, used for linking',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['servicegroup_name'],
         'info': 'servicegroup',
         'link_columns': ['servicegroup_name'],
@@ -3357,7 +3364,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'servicegroupnameregex': {
         'column': 'servicegroup_name',
         'comment': u'Search field allowing regular expression and partial matches',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['servicegroup_regex', 'neg_servicegroup_regex'],
         'info': 'servicegroup',
         'link_columns': ['servicegroup_name'],
@@ -3471,7 +3478,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'info': 'host',
         'link_columns': [],
         'sort_index': 10,
-        'title': u'WATO Folder'
+        'title': u'Folder'
     },
 }
 
@@ -3479,7 +3486,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_filters(load_plugins):
+def test_registered_filters():
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
@@ -3500,19 +3507,20 @@ def test_registered_filters(load_plugins):
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
 
+
 expected_infos: Dict[str, Dict[str, Any]] = {
     'aggr': {
-        'single_spec': [('aggr_name', 'TextUnicode')],
+        'single_spec': [('aggr_name', 'TextInput')],
         'title': u'BI Aggregation',
         'title_plural': u'BI Aggregations'
     },
     'aggr_group': {
-        'single_spec': [('aggr_group', 'TextUnicode')],
+        'single_spec': [('aggr_group', 'TextInput')],
         'title': u'BI Aggregation Group',
         'title_plural': u'BI Aggregation Groups'
     },
     'command': {
-        'single_spec': [('command_name', 'TextUnicode')],
+        'single_spec': [('command_name', 'TextInput')],
         'title': u'Command',
         'title_plural': u'Commands'
     },
@@ -3522,7 +3530,7 @@ expected_infos: Dict[str, Dict[str, Any]] = {
         'title_plural': u'Comments'
     },
     'contact': {
-        'single_spec': [('log_contact_name', 'TextUnicode')],
+        'single_spec': [('log_contact_name', 'TextInput')],
         'title': u'Contact',
         'title_plural': u'Contacts'
     },
@@ -3548,13 +3556,13 @@ expected_infos: Dict[str, Dict[str, Any]] = {
     },
     'host': {
         'multiple_site_filters': ['hostgroup'],
-        'single_spec': [('host', 'TextUnicode')],
+        'single_spec': [('host', 'TextInput')],
         'title': u'Host',
         'title_plural': u'Hosts'
     },
     'hostgroup': {
         'single_site': False,
-        'single_spec': [('hostgroup', 'TextUnicode')],
+        'single_spec': [('hostgroup', 'TextInput')],
         'title': u'Host Group',
         'title_plural': u'Host Groups'
     },
@@ -3665,13 +3673,13 @@ expected_infos: Dict[str, Dict[str, Any]] = {
     },
     'service': {
         'multiple_site_filters': ['servicegroup'],
-        'single_spec': [('service', 'TextUnicode')],
+        'single_spec': [('service', 'TextInput')],
         'title': u'Service',
         'title_plural': u'Services'
     },
     'servicegroup': {
         'single_site': False,
-        'single_spec': [('servicegroup', 'TextUnicode')],
+        'single_spec': [('servicegroup', 'TextInput')],
         'title': u'Service Group',
         'title_plural': u'Service Groups'
     },
@@ -3681,7 +3689,6 @@ expected_infos: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_infos():
     assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
 
@@ -3689,7 +3696,6 @@ def test_registered_infos():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_info_attributes():
     for ident, cls in utils.visual_info_registry.items():
         info = cls()
@@ -3708,96 +3714,68 @@ def test_registered_info_attributes():
         assert info.single_site == spec.get("single_site", True)
 
 
-@pytest.mark.parametrize("visual,expected_vars", [
-    # No single context, no filter
-    ({"single_infos": [], "context": {}}, []),
-    # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
-    # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
-    # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, []),
-    # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
-        [("host", "abc"), ("service", "äää")]),
-])
-def test_add_context_to_uri_vars(register_builtin_html, visual, expected_vars):
-    with html.stashed_vars():
-        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"])
-        assert sorted(list(html.request.itervars())) == sorted(expected_vars)
-
-
-@pytest.mark.parametrize("visual,expected_vars", [
-    # No single context, no filter
-    ({"single_infos": [], "context": {}}, []),
-    # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
-    # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
-    # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, []),
-    # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
-        [("host", "abc"), ("service", u"äää")]),
-])
-def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
-    context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
+@pytest.mark.parametrize(
+    "context,expected_vars",
+    [
+        # No single context, use multi filter
+        ({"filter_name": {"filter_var": "eee"}}, [('filter_var', 'eee')]),
+        # Single host context
+        ({"host": {"host": "abc"}}, [("host", "abc")]),
+        # Single host context, and other filters
+        ({"host": {"host": "abc"}, "bla": {"blub": "ble"}},
+         [('blub', 'ble'), ('host', 'abc')]),
+        # Single host context, missing filter -> no failure
+        ({}, []),
+        # Single host + service context
+        ({"host": {"host": "abc"}, "service": {"service": "äää"}},
+         [("host", "abc"), ("service", u"äää")]),
+    ])
+def test_context_to_uri_vars(context, expected_vars):
+    context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
 
-@pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
+@pytest.mark.parametrize("infos,uri_vars,expected_context", [
     # No single context, no filter
-    (["host"], [], [("abc", "dingeling")], {}),
+    (["host"], [("abc", "dingeling")], {}),
     # Single host context
-    (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    (["host"], [("host", "aaa")], {"host": {"host": "aaa"}}),
     # Single host context with site hint
     # -> add site and siteopt (Why? Was like this in 1.6...)
-    (["host"], ["host"], [("host", "aaa"),("site", "abc")], {"host": "aaa", "site": {"site": "abc"},
+    (["host"], [("host", "aaa"),("site", "abc")], {"host": {"host": "aaa"}, "site": {"site": "abc"},
         "siteopt": {"site": "abc"}}),
     # Single host context -> not set
-    (["host"], ["host"], [], {}),
+    (["host"], [], {}),
     # Single host context -> empty set
-    (["host"], ["host"], [("host", "")], {}),
+    (["host"], [("host", "")], {}),
     # Single host context with non-ascii char
-    (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
+    (["host"], [("host", "äbc")], {"host": {"host": "äbc"}}),
     # Single host context, multiple services
-    (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
+    (["host", "service"], [("host", "aaa"), ("service_regex", "äbc")], {"host": {"host": "aaa"},
         'serviceregex': {'service_regex': 'äbc'}}),
     # multiple services
-    (["service", "host"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+    (["service", "host"], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'}, 'host': {'host': 'aaa'},}),
     # multiple services, ignore filters of unrelated infos
-    (["service"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+    (["service"], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'},}),
 ])
-def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, uri_vars,
+def test_get_context_from_uri_vars(request_context, infos, uri_vars,
         expected_context):
     for key, val in uri_vars:
-        html.request.set_var(key, val)
+        request.set_var(key, val)
 
-    context = visuals.get_context_from_uri_vars(infos, single_infos)
+    context = visuals.get_context_from_uri_vars(infos)
     assert context == expected_context
 
 
 @pytest.mark.parametrize("uri_vars,visual,expected_context", [
     # Single host context, set via URL, with some service filter, set via context
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"service_regex":
-        {"serviceregex": "abc"}},}, {"host": "aaa", "service_regex": {"serviceregex": "abc"},}),
+        {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
     # Single host context, set via context and URL
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"host":
-        "from_context",}}, {"host": "from_context"}),
+        {"host": "from_context"},}}, {"host": {"host": "from_context"}}),
     # No single context with some host & service filter
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {"service_regex":
         {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
@@ -3805,50 +3783,120 @@ def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, u
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {}},
         {"host": {"host": "aaa"},}),
 ])
-def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_context):
+def test_get_merged_context(request_context, uri_vars, visual, expected_context):
     for key, val in uri_vars:
-        html.request.set_var(key, val)
+        request.set_var(key, val)
 
-    url_context = visuals.get_context_from_uri_vars(visual["infos"], visual["single_infos"])
+    url_context = visuals.get_context_from_uri_vars(visual["infos"])
     context = visuals.get_merged_context(url_context, visual["context"])
 
     assert context == expected_context
 
 
 def test_get_missing_single_infos_has_context():
-    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": "abc"}) == set()
+    assert (
+        visuals.get_missing_single_infos(single_infos=["host"], context={"host": {"host": "abc"}})
+        == set()
+    )
 
 
 def test_get_missing_single_infos_missing_context():
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
-def test_context_uri_vars(register_builtin_html):
-    visual: Visual = {
-        "single_infos": ["host"],
-        "context": {
-            "host": "abc",
-            "blubl": {
-                "ag": "1"
+@pytest.mark.parametrize(
+    "context, single_infos, expected_context",
+    [
+        pytest.param(
+            {
+                "discovery_state": {
+                    "discovery_state_ignored": True,
+                    "discovery_state_vanished": False,
+                    "discovery_state_unmonitored": True,
+                }
             },
-        },
-    }
-
-    visual2: Visual = {
-        "single_infos": [],
-        "context": {
-            "hu_filter": {"hu": "hu"},
-        },
-    }
-
-    html.request.set_var("bla", "blub")
-    assert html.request.var("bla") == "blub"
-
-    with visuals.context_uri_vars(visual["context"], visual["single_infos"]), \
-         visuals.context_uri_vars(visual2["context"], visual2["single_infos"]):
-        assert html.request.var("bla") == "blub"
-        assert html.request.var("host") == "abc"
-        assert html.request.var("ag") == "1"
-        assert html.request.var("hu") == "hu"
-
-    assert list(dict(html.request.itervars()).keys()) == ["bla"]
+            [],
+            {
+                "discovery_state": {
+                    "discovery_state_ignored": "on",
+                    "discovery_state_vanished": "",
+                    "discovery_state_unmonitored": "on",
+                }
+            },
+            id="1.6.0->2.1.0 CMK-6606",
+        ),
+        pytest.param(
+            {"host": {"host": "heute"}},
+            ["host"],
+            {"host": {"host": "heute"}},
+            id="-> 2.1.0 Idempotent on already transformed single_info",
+        ),
+        pytest.param(
+            {"host": "heute", "event_id": 5},
+            ["host", "history"],
+            {"host": {"host": "heute"}, "event_id": {"event_id": "5"}},
+            id="-> 2.1.0 No single_info, only FilterHTTPVariables VisualContext",
+        ),
+        pytest.param(
+            {"site": "heute", "sites": "heute|morgen", "siteopt": "heute"},
+            [],
+            {
+                "site": {"site": "heute"},
+                "siteopt": {"site": "heute"},
+                "sites": {"sites": "heute|morgen"},
+            },
+            id="-> 2.1.0 Site hint is not bound to single info",
+        ),
+        pytest.param(
+            {
+                "invinterface_last_change": {
+                    "invinterface_last_change_from_days": "1",
+                    "invinterface_last_change_to_days": "5",
+                },
+                "inv_hardware_cpu_bus_speed": {
+                    "inv_hardware_cpu_bus_speed_from": "10",
+                    "inv_hardware_cpu_bus_speed_to": "20",
+                },
+                "event_count": {"event_count_from": "1", "event_count_to": "123"},
+                # Never existed with "to", just for the test
+                "history_time": {
+                    "history_time_from": "2001-02-03",
+                    "history_time_from_range": "abs",
+                    "history_time_to": "2001-02-05",
+                    "history_time_to_range": "abs",
+                },
+                # Not range filter
+                "another_filter": {
+                    "another_filter_to": "2001-02-05",
+                    "another_filter_to_range": "abs",
+                },
+            },
+            [],
+            {
+                "invinterface_last_change": {
+                    "invinterface_last_change_from_days": "1",
+                    "invinterface_last_change_until_days": "5",
+                },
+                "inv_hardware_cpu_bus_speed": {
+                    "inv_hardware_cpu_bus_speed_from": "10",
+                    "inv_hardware_cpu_bus_speed_until": "20",
+                },
+                "event_count": {"event_count_from": "1", "event_count_until": "123"},
+                "history_time": {
+                    "history_time_from": "2001-02-03",
+                    "history_time_from_range": "abs",
+                    "history_time_until": "2001-02-05",
+                    "history_time_until_range": "abs",
+                },
+                # Not range filter
+                "another_filter": {
+                    "another_filter_to": "2001-02-05",
+                    "another_filter_to_range": "abs",
+                },
+            },
+            id="-> 2.1.0 Range Filters have homogenous request vars",
+        ),
+    ],
+)
+def test_cleanup_contexts(context, single_infos, expected_context):
+    assert visuals.cleanup_context_filters(context, single_infos) == expected_context

@@ -29,7 +29,7 @@ def check_mssql_versions(item, _unused, info):
     for line in info:
         if line[0] == item:
             if len(line) >= 2:
-                yield 0, 'Server is running version %s' % line[1]
+                yield 0, "Server is running version %s" % line[1]
 
             if len(line) == 4:
                 yield 0, line[2]  # edition
@@ -37,17 +37,15 @@ def check_mssql_versions(item, _unused, info):
                 if line[3] != "":
                     yield 0, "clustered as %s" % line[3]
 
-            yield 1, "This check is deprecated. Please update the agent plugin on the " \
-                     "monitored system and rediscover the services of this host"
+            yield 1, "This check is deprecated. Please update the agent plugin on the monitored system and rediscover the services of this host"
 
             return
 
-    yield 1, "This check is deprecated. Please update the agent plugin on the " \
-             "monitored system and rediscover the services of this host"
+    yield 1, "This check is deprecated. Please update the agent plugin on the monitored system and rediscover the services of this host"
 
 
 check_info["mssql_versions"] = {
-    'check_function': check_mssql_versions,
-    'inventory_function': inventory_mssql_versions,
-    'service_description': 'MSSQL %s Version',
+    "check_function": check_mssql_versions,
+    "inventory_function": inventory_mssql_versions,
+    "service_description": "MSSQL %s Version",
 }

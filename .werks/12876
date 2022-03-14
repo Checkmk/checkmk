@@ -1,0 +1,23 @@
+Title: Checking of output phases of UPSs and PDUs: Various fixes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620135187
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This werk includes various fixes for the checking of output phases of UPSs
+and PDUs:
+
+<ul>
+<li>The rule "Parameters for output phases of UPSs and PDUs" allows for
+configuring levels on the load of the output phases. However, the configured
+levels had no actual impact on the monitoring behavior.</li>
+<li>Any levels with a warning value of exactly 0 configured in the rule above
+had no impact on the monitoring behavior.</li>
+<li>Values excatly equal to upper thresholds configured in the rule above were
+still considered as below this threshold. This is inconsistent with the general
+behavior of Checkmk and has been fixed.</li>
+</ul>

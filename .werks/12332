@@ -1,0 +1,15 @@
+Title: Stale status of host is correctly determined when host is not reachable
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1633536538
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously, for some period of time the GUI identified incorrectlly an unreachable 
+host as a stale. It looked as if the unreachable host gained stale status for 
+a while and then lost this  status.
+
+With this release the problem has been fixed.

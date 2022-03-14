@@ -1,0 +1,13 @@
+Title: cisco_vpn_sessions: Fix IndexError (string index out of range)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618551681
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When using the check cisco_vpn_sessions the check crashed with IndexError.
+This should now be fixed.

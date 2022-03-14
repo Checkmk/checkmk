@@ -1,0 +1,12 @@
+Title: Liveproxyd: Fixed unresponsive communication with remote sites
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1634817317
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The liveproxyd establishes permanent connections to the configured remote sites, named channels.
+Distributed setups having sites with connectivity issues caused these channels to be busy all the time.

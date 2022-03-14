@@ -23,13 +23,16 @@
 # change practices to avoid changing files, or work with support to identify the
 # problem.
 
-SplunkMessage = collections.namedtuple("SplunkMessage", [
-    "name",
-    "severity",
-    "server",
-    "timeCreated_iso",
-    "message",
-])
+SplunkMessage = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "SplunkMessage",
+    [
+        "name",
+        "severity",
+        "server",
+        "timeCreated_iso",
+        "message",
+    ],
+)
 
 
 def parse_splunk_system_msg(info):
@@ -41,7 +44,8 @@ def parse_splunk_system_msg(info):
             message = " ".join(msg_list[5:])
 
             parsed.setdefault("messages", []).append(
-                SplunkMessage(name, severity, server, timeCreated_iso, message))
+                SplunkMessage(name, severity, server, timeCreated_iso, message)
+            )
 
         except (IndexError, ValueError):
             pass
@@ -71,8 +75,13 @@ def check_splunk_system_msg(_no_item, _params, parsed):
         long_output += "%s - %s - %s\n" % (msg.timeCreated_iso, msg.server, msg.message)
 
     yield severity_mapping[
-        worst_severity], "Worst severity: %s, Last message from server: %s, Creation time: %s\n%s" % (
-            worst_severity, server, creation_time, long_output)
+        worst_severity
+    ], "Worst severity: %s, Last message from server: %s, Creation time: %s\n%s" % (
+        worst_severity,
+        server,
+        creation_time,
+        long_output,
+    )
 
 
 def _handle_severity(msg):

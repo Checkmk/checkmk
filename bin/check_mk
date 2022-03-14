@@ -11,12 +11,12 @@
 # - cluster_name  - Name of a cluster (string)
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
+import errno
+import getopt
 import logging
 import os
-import sys
-import getopt
 import socket
-import errno
+import sys
 
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user. Alas, this screws up our import ordering
@@ -26,19 +26,19 @@ if not os.environ.get("OMD_SITE"):
     sys.stderr.write("Check_MK can be used only as site user.\n")
     sys.exit(1)
 
-from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKBailOut
 import cmk.utils.caching
 import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTerminate
 from cmk.utils.log import console
 
-import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
-import cmk.base.profiling as profiling  # pylint: disable=cmk-module-layer-violation
-from cmk.base.modes import modes  # pylint: disable=cmk-module-layer-violation
 import cmk.base.check_api as check_api  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.crash_reporting  # pylint: disable=cmk-module-layer-violation
+import cmk.base.profiling as profiling  # pylint: disable=cmk-module-layer-violation
 import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
+from cmk.base.modes import modes  # pylint: disable=cmk-module-layer-violation
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")

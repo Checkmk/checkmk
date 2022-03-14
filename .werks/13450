@@ -1,0 +1,13 @@
+Title: <tt>apt</tt>: Fix APT Ubuntu security updates classification
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637072546
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Some APT updates were incorrectly classified as normal instead of security.
+This also led to the wrong monitoring state, WARN instead of CRIT.

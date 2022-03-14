@@ -1,0 +1,17 @@
+Title: oracle_asm_diskgroup: fix crash "TypeError (unsupported operand type(s) for *: 'NoneType' and 'int')".
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1616675244
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If the checkbox for the parameter "Trend computation" of the rule
+"ASM Disk Group (used space and growth)" was enabled,
+but the parameter "Enable trend computation" (trendrange)
+was left unchecked the check oracle_asm_diskgroup
+crashed with the error message:
+"TypeError (unsupported operand type(s) for *: 'NoneType' and 'int')".
+This condition is fixed by falling back to default parameters.

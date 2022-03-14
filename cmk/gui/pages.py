@@ -13,9 +13,8 @@ from typing import Any, Callable, Dict, Mapping, Optional, Type
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
 
-import cmk.gui.config as config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import g, html
+from cmk.gui.globals import config, g, html, request, response
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
@@ -34,7 +33,7 @@ AjaxPageResult = Dict[str, Any]
 #
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
-class Page(metaclass=abc.ABCMeta):
+class Page(abc.ABC):
     # TODO: In theory a page class could be registered below multiple URLs. For this case it would
     # be better to move the ident out of the class, to the registry. At the moment the URL is stored
     # in self._ident by PageRegistry.register_page().
@@ -54,18 +53,19 @@ class Page(metaclass=abc.ABCMeta):
 
 
 # TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(Page, metaclass=abc.ABCMeta):
+class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
+
     def __init__(self):
-        super(AjaxPage, self).__init__()
+        super().__init__()
         self._from_vars()
 
     def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
 
-    def webapi_request(self) -> Dict[str, str]:
-        return html.get_request()
+    def webapi_request(self) -> Dict[str, Any]:
+        return request.get_request()
 
     @abc.abstractmethod
     def page(self) -> AjaxPageResult:
@@ -75,14 +75,15 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
     def _handle_exc(self, method) -> None:
         # FIXME: cyclical link between crash_reporting.py and pages.py
         from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
+
         try:
             # FIXME: These methods write to the response themselves. This needs to be refactored.
             method()
         except MKException as e:
-            html.response.status_code = http_client.BAD_REQUEST
-            html.write(str(e))
+            response.status_code = http_client.BAD_REQUEST
+            html.write_text(str(e))
         except Exception as e:
-            html.response.status_code = http_client.INTERNAL_SERVER_ERROR
+            response.status_code = http_client.INTERNAL_SERVER_ERROR
             if config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
@@ -90,20 +91,21 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            html.write(str(e))
+            html.write_text(str(e))
 
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""
         # FIXME: cyclical link between crash_reporting.py and pages.py
         from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-        html.set_output_format("json")
+
+        response.set_content_type("application/json")
         try:
             action_response = self.page()
-            response = {"result_code": 0, "result": action_response, "severity": "success"}
+            resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
-            response = {"result_code": 1, "result": "%s" % e, "severity": "success"}
+            resp = {"result_code": 1, "result": str(e), "severity": "success"}
         except MKException as e:
-            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
+            resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         except Exception as e:
             if config.debug:
@@ -113,9 +115,9 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
+            resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
-        html.write(json.dumps(response))
+        response.set_data(json.dumps(resp))
 
 
 class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):
@@ -151,12 +153,17 @@ def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
 
     It is essentially a decorator that calls register_page_handler().
     """
+
     def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
         cls_name = "PageClass%s" % path.title().replace(":", "")
-        LegacyPageClass = type(cls_name, (Page,), {
-            "_wrapped_callable": (wrapped_callable,),
-            "page": lambda self: self._wrapped_callable[0]()
-        })
+        LegacyPageClass = type(
+            cls_name,
+            (Page,),
+            {
+                "_wrapped_callable": (wrapped_callable,),
+                "page": lambda self: self._wrapped_callable[0](),
+            },
+        )
 
         page_registry.register_page(path)(LegacyPageClass)
         return lambda: LegacyPageClass().handle_page()
@@ -171,8 +178,9 @@ def register_page_handler(path: str, page_func: PageHandlerFunc) -> PageHandlerF
     return wrap(page_func)
 
 
-def get_page_handler(name: str,
-                     dflt: Optional[PageHandlerFunc] = None) -> Optional[PageHandlerFunc]:
+def get_page_handler(
+    name: str, dflt: Optional[PageHandlerFunc] = None
+) -> Optional[PageHandlerFunc]:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no

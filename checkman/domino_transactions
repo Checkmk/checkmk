@@ -1,7 +1,7 @@
 title: IBM Lotus Domino: Number of Transactions
 agents: snmp
 catalog: app/lotusnotes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -9,5 +9,5 @@ description:
  minute on a Lotus Domino Server.  Warning and critical upper limits can be
  set.
 
-inventory:
+discovery:
  One service is created for each record.

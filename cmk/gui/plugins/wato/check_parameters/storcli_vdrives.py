@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _item_spec_storcli_vdrives():
-    return TextAscii(
+    return TextInput(
         title=_("Virtual Drive"),
         allow_empty=False,
     )
@@ -29,27 +24,41 @@ def _parameter_valuespec_storcli_vdrives():
     return Dictionary(
         title=_("Evaluation of VDrive States"),
         elements=[
-            ("Optimal", MonitoringState(
-                title=_("State for <i>Optimal</i>"),
-                default_value=0,
-            )),
-            ("Partially Degraded",
-             MonitoringState(
-                 title=_("State for <i>Partially Degraded</i>"),
-                 default_value=1,
-             )),
-            ("Degraded", MonitoringState(
-                title=_("State for <i>Degraded</i>"),
-                default_value=2,
-            )),
-            ("Offline", MonitoringState(
-                title=_("State for <i>Offline</i>"),
-                default_value=1,
-            )),
-            ("Recovery", MonitoringState(
-                title=_("State for <i>Recovery</i>"),
-                default_value=1,
-            )),
+            (
+                "Optimal",
+                MonitoringState(
+                    title=_("State for <i>Optimal</i>"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Partially Degraded",
+                MonitoringState(
+                    title=_("State for <i>Partially Degraded</i>"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "Degraded",
+                MonitoringState(
+                    title=_("State for <i>Degraded</i>"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "Offline",
+                MonitoringState(
+                    title=_("State for <i>Offline</i>"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "Recovery",
+                MonitoringState(
+                    title=_("State for <i>Recovery</i>"),
+                    default_value=1,
+                ),
+            ),
         ],
     )
 
@@ -62,4 +71,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storcli_vdrives,
         title=lambda: _("LSI RAID VDrives (StorCLI)"),
-    ))
+    )
+)

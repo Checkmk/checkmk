@@ -17,9 +17,11 @@ def parse_innovaphone_priports_l1(info):
 
 
 def inventory_innovaphone_priports_l1(parsed):
-    return [(item, {
-        'err_slip_count': data["slip"]
-    }) for item, data in parsed.items() if data["state"] != 1]
+    return [
+        (item, {"err_slip_count": data["slip"]})
+        for item, data in parsed.items()
+        if data["state"] != 1
+    ]
 
 
 @get_parsed_item_data
@@ -38,7 +40,7 @@ def check_innovaphone_priports_l1(item, params, data):
         yield 2, "Signal loss is %.2f/sec" % siglos_per_sec
 
     l1slip = data["slip"]
-    if l1slip > params.get('err_slip_count', 0):
+    if l1slip > params.get("err_slip_count", 0):
         yield 2, "Slip error count at %d" % l1slip
 
 
@@ -50,10 +52,11 @@ check_info["innovaphone_priports_l1"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.6666.1.2.1",
         [
-            1,  #l1PriLabel
-            2,  #l1PriState
-            5,  #l1PriErrSigLoss
-            9,  #l1PriErrSlip
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.6666",
+            1,  # l1PriLabel
+            2,  # l1PriState
+            5,  # l1PriErrSigLoss
+            9,  # l1PriErrSlip
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.6666",
 }

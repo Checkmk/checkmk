@@ -45,7 +45,7 @@ def check_foo(_no_item, params, info):
     return state, text, perfdata + extraperf
 
 
-check_info['foo'] = {
+check_info["foo"] = {
     "check_function": check_foo,
     "inventory_function": inventory_foo,
     "service_description": "FOO",

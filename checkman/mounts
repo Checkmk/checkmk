@@ -1,7 +1,7 @@
 title: Options of Mounted Filesystems
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the options with which a filesystem is mounted by
@@ -24,10 +24,9 @@ description:
 item:
  The mount point of the filesystem.
 
-inventory:
+discovery:
  One service is created for each filesystem which is not of the type {tmpfs}.
  The inventory uses the current mount options as check parameter.
  Note: the agent sends only filesystems which have a device below
  {/dev}, so network filesystems and virtual filesystems are excluded
  by the agent.
-

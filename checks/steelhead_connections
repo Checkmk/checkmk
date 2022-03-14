@@ -26,7 +26,7 @@ def check_steelhead_connections(item, params, info):
 
     values = {}
     for oid, value in info:
-        counter_type = oid.strip('.').split('.')[-2]
+        counter_type = oid.strip(".").split(".")[-2]
         key = map_counter_types.get(counter_type, "unknown")
         values[key] = int(value)
 
@@ -63,7 +63,7 @@ def check_steelhead_connections(item, params, info):
         yield state, infotext, perfdata
 
 
-check_info['steelhead_connections'] = {
+check_info["steelhead_connections"] = {
     "inventory_function": inventory_steelhead_connections,
     "check_function": check_steelhead_connections,
     "service_description": "Connections",

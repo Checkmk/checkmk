@@ -1,7 +1,7 @@
 title: BEA Weblogic: Length of Queue
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The BEA application servers have "Execute Queues" in which requests are
@@ -19,7 +19,7 @@ item:
  followed by the name of the application.
  I.e. webservices webservices
 
-inventory:
+discovery:
  One service is created for each application running inside a weblogic
  instance sent by the agent.
 
@@ -27,4 +27,3 @@ inventory:
 [paramters]
 warn (int): This many queue entries will trigger a WARNING state
 crit (int): This many queue entries will trigger a CRITICAL state
-

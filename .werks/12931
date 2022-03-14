@@ -1,0 +1,13 @@
+Title: <tt>mk_docker</tt>: Fix crash in mk_docker agent for Python2
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631025840
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Docker agent plugin for Python2, mk_docker_2.py crashed when fetching df data.
+This resulted with an UNKNOWN state in docker_node_info check.

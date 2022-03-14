@@ -4,22 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (
-    TextAscii,
-    Checkbox,
-)
-
-from cmk.gui.plugins.dashboard import (
-    IFrameDashlet,
-    dashlet_registry,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
+from cmk.gui.valuespec import Checkbox, TextInput
 
 
 @dashlet_registry.register
 class URLDashlet(IFrameDashlet):
     """Dashlet that displays a custom webpage"""
+
     @classmethod
     def type_name(cls):
         return "url"
@@ -43,24 +37,29 @@ class URLDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("url", TextAscii(
-                title=_('URL'),
-                size=50,
-                allow_empty=False,
-            )),
-            ("show_in_iframe",
-             Checkbox(
-                 title=_('Render in iframe'),
-                 label=_('Render URL contents in own frame'),
-                 default_value=True,
-             )),
+            (
+                "url",
+                TextInput(
+                    title=_("URL"),
+                    size=50,
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "show_in_iframe",
+                Checkbox(
+                    title=_("Render in iframe"),
+                    label=_("Render URL contents in own frame"),
+                    default_value=True,
+                ),
+            ),
         ]
 
     def update(self):
         pass  # Not called at all. This dashlet always opens configured pages (see below)
 
     def _get_iframe_url(self):
-        if not self._dashlet_spec.get('show_in_iframe', True):
+        if not self._dashlet_spec.get("show_in_iframe", True):
             return
 
         # Previous to 1.6 the url was optional and a urlfunc was allowed. The
@@ -70,4 +69,4 @@ class URLDashlet(IFrameDashlet):
         if "url" not in self._dashlet_spec:
             raise MKUserError(None, _("You need to specify a URL in the element properties"))
 
-        return self._dashlet_spec['url']
+        return self._dashlet_spec["url"]

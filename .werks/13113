@@ -1,0 +1,22 @@
+Title: Fix missing option to modify refresh interval
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1630412374
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When viewing combined graphs or graph collections, the refresh interval was
+always 60 seconds without an option to modify.
+
+The "Combined graphs" and "Graph collection" pages have now the "Display" menu
+entry "Modify display options" to edit this setting for the current viewed
+graphs.
+
+Please note that this settings are currently not stored. So if you leave the
+page and call it again, the refresh interval will be set to default of 60
+seconds. You can use bookmarks if you visit certain combined graphs or graph
+collections regularly.

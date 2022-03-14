@@ -1,0 +1,13 @@
+Title: Fix possible UnicodeDecodeError in reports
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1618989525
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If images where used in reports, e.g. for icons like "Log: event icon" in
+scheduled downtimes, an UnicodeDecodeError could occur.

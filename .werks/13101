@@ -1,0 +1,17 @@
+Title: Agent bakery: Fix reset of conditions while toggling master switch
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1629284922
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If the "Master switch" toggle was used on page "Automatic agent updates", all
+conditions were restored to not selected after toggling, even if condition have
+been set before.
+
+This was just a viewing problem, the configuration of the conditions was not
+changed.

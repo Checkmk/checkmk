@@ -1,0 +1,11 @@
+Title: Deprecated configuration option "Text logfiles (Windows)" has been removed from WATO
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1628838421
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

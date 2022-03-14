@@ -7,24 +7,28 @@
 # pylint: disable=redefined-outer-name
 # Library for pylint checks of Checkmk
 
-import os
-import getpass
 import glob
-import time
 import multiprocessing
+import os
 import subprocess
+import time
+from pathlib import Path
 
-from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter  # type: ignore[import]
+from pylint.reporters.text import (  # type: ignore[import]
+    ColorizedTextReporter,
+    ParseableTextReporter,
+)
 
-from testlib import repo_path, cmk_path, is_enterprise_repo
+from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
 
 def check_files(base_dir):
     filelist = sorted([base_dir + "/" + f for f in os.listdir(base_dir) if not f.startswith(".")])
 
     # Sort: first includes, then other
-    filelist = [ f for f in filelist if f.endswith(".include") ] + \
-               [ f for f in filelist if not f.endswith(".include") ]
+    filelist = [f for f in filelist if f.endswith(".include")] + [
+        f for f in filelist if not f.endswith(".include")
+    ]
 
     return filelist
 
@@ -36,7 +40,7 @@ def add_file(f, path):
     f.write("# ORIG-FILE: " + relpath + "\n")
     f.write("#\n")
     f.write("\n")
-    f.write(open(path).read())
+    f.write(Path(path).read_text())
 
 
 def run_pylint(base_path, check_files):
@@ -55,18 +59,21 @@ def run_pylint(base_path, check_files):
         "--rcfile",
         pylint_cfg,
         "--jobs=%d" % num_jobs_to_use(),
-    ] + pylint_args + check_files
+    ]
+    files = pylint_args + check_files
 
-    print("Running pylint in '%s' with: %s" % (base_path, subprocess.list2cmdline(cmd)))
-    p = subprocess.Popen(cmd, shell=False, cwd=base_path)
-    exit_code = p.wait()
-    print("Finished with exit code: %d" % exit_code)
+    print(
+        f"Running pylint in '{base_path}' with: {subprocess.list2cmdline(cmd)}"
+        f" [{len(files)} files omitted]"
+    )
+    exit_code = subprocess.run(cmd + files, shell=False, cwd=base_path, check=False).returncode
+    print(f"Finished with exit code: {exit_code}")
 
     return exit_code
 
 
 def num_jobs_to_use():
-    # Naive heuristic, but looks OK for our use cases: Normal quad core CPUs
+    # Naive heuristic, but looks OK for our use cases:\ Normal quad core CPUs
     # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
     # (=> 11 jobs). Just using 0 (meaning: use all reported CPUs) might just
     # work, too, but it's probably a bit too much.
@@ -76,7 +83,7 @@ def num_jobs_to_use():
     # means that there may be up to 8 pylint running in parallel. Currently
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
-    if getpass.getuser() == "jenkins":
+    if os.environ.get("USER") == "jenkins":
         return int(multiprocessing.cpu_count() / 8.0) + 3
     return int(multiprocessing.cpu_count() / 8.0) + 5
 
@@ -84,7 +91,7 @@ def num_jobs_to_use():
 def get_pylint_files(base_path, file_pattern):
     files = []
     for path in glob.glob("%s/%s" % (base_path, file_pattern)):
-        f = path[len(base_path) + 1:]
+        f = path[len(base_path) + 1 :]
 
         if f.endswith(".pyc"):
             continue
@@ -103,7 +110,8 @@ def is_python_file(path, shebang_name=None):
         return False
 
     # Only add python files
-    shebang = open(path, "r").readline().rstrip()
+    with open(path, "r") as f:
+        shebang = f.readline().rstrip()
     if shebang.startswith("#!") and shebang.endswith(shebang_name):
         return True
 
@@ -119,6 +127,12 @@ def is_python_file(path, shebang_name=None):
 # to real modules
 class CMKFixFileMixin:
     def handle_message(self, msg):
+        if msg.abspath is None:
+            # NOTE: I'm too lazy to define a Protocol for this mixin which is
+            # already on death row, so let's use a reflection hack...
+            getattr(super(), "handle_message")(msg)
+            return
+
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
         if new_path is None:
@@ -131,13 +145,14 @@ class CMKFixFileMixin:
 
         # NOTE: I'm too lazy to define a Protocol for this mixin which is
         # already on death row, so let's use a reflection hack...
-        getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
+        getattr(super(), "handle_message")(msg)
 
     def _change_path_to_repo_path(self, msg):
         return os.path.relpath(msg.abspath, cmk_path())
 
     def _orig_location_from_compiled_file(self, msg):
-        lines = open(msg.abspath).readlines()
+        with open(msg.abspath) as fmsg:
+            lines = fmsg.readlines()
         line_nr = msg.line
         orig_file, went_back = None, -3
         while line_nr > 0:
@@ -155,12 +170,18 @@ class CMKOutputScanTimesMixin:
 
     Can be useful to track down pylint performance issues. Simply make the
     reporter class inherit from this class to use it."""
+
     def on_set_current_module(self, modname, filepath):
         # HACK: See note above.
-        getattr(super(CMKOutputScanTimesMixin, self), "on_set_current_module")(modname, filepath)
+        getattr(super(), "on_set_current_module")(modname, filepath)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
-                                  getattr(self, "_current_filepath")))
+            print(
+                "% 8.3fs %s"
+                % (
+                    time.time() - getattr(self, "_current_start_time"),
+                    getattr(self, "_current_filepath"),
+                )
+            )
 
         print("          %s..." % filepath)
         self._current_name = modname
@@ -170,10 +191,15 @@ class CMKOutputScanTimesMixin:
 
     def on_close(self, stats, previous_stats):
         # HACK: See note above.
-        getattr(super(CMKOutputScanTimesMixin, self), "on_close")(stats, previous_stats)
+        getattr(super(), "on_close")(stats, previous_stats)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
-                                  getattr(self, "_current_filepath")))
+            print(
+                "% 8.3fs %s"
+                % (
+                    time.time() - getattr(self, "_current_start_time"),
+                    getattr(self, "_current_filepath"),
+                )
+            )
 
 
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):
@@ -184,26 +210,21 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
     name = "cmk_parseable"
 
 
-def verify_pylint_version():
-    import pylint  # type: ignore[import] # pylint: disable=import-outside-toplevel
-    if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
-        raise Exception("You need to use at least pylint 1.5.5. Run \"make setup\" in "
-                        "pylint directory to get the current version.")
-
-
 # Is called by pylint to load this plugin
 def register(linter):
-    verify_pylint_version()
-
-    # Disable some CEE/CME specific things when linting CRE repos
+    # Disable some CEE/CME/CPE specific things when linting CRE repos
     if not is_enterprise_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
-        linter.global_set_option("ignored-modules",
-                                 "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
+        linter.global_set_option(
+            "ignored-modules",
+            "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.base.cpe,cmk.gui.cpe",
+        )
         # This disables no-member errors
-        linter.global_set_option("generated-members",
-                                 r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
+        linter.global_set_option(
+            "generated-members",
+            r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.base\.cpe|cmk\.gui\.cpe)(\..*)?",
+        )
 
     linter.register_reporter(CMKColorizedTextReporter)
     linter.register_reporter(CMKParseableTextReporter)

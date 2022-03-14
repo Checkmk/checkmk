@@ -4,15 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Literal, Mapping, Optional, Tuple, Union
+from typing import Literal, Mapping, Optional, Tuple, TypedDict, Union
+
+from ..agent_based_api.v1 import Metric, render, Result
+from ..agent_based_api.v1 import State as state
 from ..agent_based_api.v1.type_defs import CheckResult
 
-from ..agent_based_api.v1 import Metric, render, Result, State as state
+_LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
+MemoryLevels = Tuple[_LevelsMode, Tuple[Optional[float], Optional[float]]]
 
 SectionMem = Mapping[str, int]
 
 
-def is_linux_section(section: Dict[str, int]) -> bool:
+class SectionMemUsed(TypedDict, total=False):
+    Cached: int
+    MemFree: int
+    MemTotal: int
+    SwapFree: int
+    SwapTotal: int
+
+
+def is_linux_section(section: SectionMem) -> bool:
     # match these to the keys required by checks/mem
     return {
         "Buffers",
@@ -26,8 +38,7 @@ def is_linux_section(section: Dict[str, int]) -> bool:
     } <= section.keys()
 
 
-def get_levels_mode_from_value(
-    warn: Optional[float],) -> Literal["abs_used", "abs_free", "perc_used", "perc_free"]:
+def get_levels_mode_from_value(warn: Optional[float]) -> _LevelsMode:
     """get levels mode by looking at the value
 
     Levels may be given either as
@@ -49,7 +60,7 @@ def get_levels_mode_from_value(
 
 
 def normalize_levels(
-    mode: str,
+    mode: _LevelsMode,
     warn: Optional[float],
     crit: Optional[float],
     total: float,
@@ -76,8 +87,8 @@ def normalize_levels(
     if warn is None or crit is None:
         return None, None, ""
 
-    mode_split = mode.split('_', 1)
-    if mode_split[0] not in ('perc', 'abs') or mode_split[-1] not in ('used', 'free'):
+    mode_split = mode.split("_", 1)
+    if mode_split[0] not in ("perc", "abs") or mode_split[-1] not in ("used", "free"):
         raise NotImplementedError("unknown levels mode: %r" % (mode,))
 
     # normalize percent -> absolute
@@ -104,8 +115,8 @@ def normalize_levels(
 def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> state:
     """get state according to levels
 
-        >>> print(compute_state(23., 12, 42))
-        State.WARN
+    >>> print(compute_state(23., 12, 42))
+    State.WARN
 
     """
     if crit is not None and value >= crit:
@@ -119,7 +130,8 @@ def check_element(
     label: str,
     used: float,
     total: float,
-    levels: Tuple[str, Tuple[Optional[float], Optional[float]]],  # we can deal with Any, though
+    # levels: we can deal with anything, though
+    levels: Optional[MemoryLevels] = None,
     label_total: str = "",
     show_free: bool = False,
     metric_name: Optional[str] = None,
@@ -127,19 +139,19 @@ def check_element(
 ) -> CheckResult:
     """Yield a check result and metric for one memory element
 
-        >>> result, metric = check_element(
-        ...     label="Short term memory",
-        ...     used=46,
-        ...     total=200.,
-        ...     levels=("perc_used", (12, 42)),
-        ...     create_percent_metric=True,
-        ... )
-        >>> print(result.summary)
-        Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
-        >>> print(result.state)
-        State.WARN
-        >>> print(metric)
-        Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
+    >>> result, metric = check_element(
+    ...     label="Short term memory",
+    ...     used=46,
+    ...     total=200.,
+    ...     levels=("perc_used", (12, 42)),
+    ...     create_percent_metric=True,
+    ... )
+    >>> print(result.summary)
+    Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
+    >>> print(result.state)
+    State.WARN
+    >>> print(metric)
+    Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
 
     """
     if show_free:
@@ -161,9 +173,10 @@ def check_element(
     try:
         mode, (warn, crit) = levels  # type: ignore
     except (ValueError, TypeError):  # handle None, "ignore"
-        mode, (warn, crit) = "ignore", (None, None)
+        warn, crit, levels_text = None, None, ""
+    else:
+        warn, crit, levels_text = normalize_levels(mode, warn, crit, total)
 
-    warn, crit, levels_text = normalize_levels(mode, warn, crit, total)
     my_state = compute_state(used, warn, crit)
     if my_state != state.OK and levels_text:
         infotext = "%s (%s)" % (infotext, levels_text)

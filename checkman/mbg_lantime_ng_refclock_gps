@@ -1,7 +1,7 @@
 title: Meinberg LANTIME Devices: GPS Refclock State (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -21,9 +21,8 @@ description:
  "GPS antenna disconnected", "GPS warm boot", "GPS cold boot",
  "GPS antenna short circuit" and "MRS GPS sync".
 
-inventory:
+discovery:
  One service is created for eachr GPS refclock.
 
 item:
  The index number of the refclock.
-

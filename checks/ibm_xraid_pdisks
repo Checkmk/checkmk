@@ -42,21 +42,24 @@ def check_ibm_xraid_pdisks(item, _no_params, info):
 
 
 check_info["ibm_xraid_pdisks"] = {
-      "check_function"     : check_ibm_xraid_pdisks,
-      "service_description": "RAID PDisk %s",
-      "inventory_function" : inventory_ibm_xraid_pdisks,
-      # there is no information about the ext mib in the right place
-      # (at least on windows)
-      # this means the check has to fetch a specific oid. Limit this
-      # effect to relevant systems to lessen useless scanning.
-      "snmp_scan_function" : lambda oid: \
-            oid(".1.3.6.1.2.1.1.1.0").lower() in ["software: windows", "linux"] \
-            and oid(".1.3.6.1.4.1.795.14.1.100.1.0"),
-      "snmp_info"          : (".1.3.6.1.4.1.795.14.1", [
-         "503.1.1.4",
-         "400.1.1.1",
-         "400.1.1.5",
-         "400.1.1.11",
-         "400.1.1.12",
-         ])
+    "check_function": check_ibm_xraid_pdisks,
+    "service_description": "RAID PDisk %s",
+    "inventory_function": inventory_ibm_xraid_pdisks,
+    # there is no information about the ext mib in the right place
+    # (at least on windows)
+    # this means the check has to fetch a specific oid. Limit this
+    # effect to relevant systems to lessen useless scanning.
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower()
+    in ["software: windows", "linux"]
+    and oid(".1.3.6.1.4.1.795.14.1.100.1.0"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.795.14.1",
+        [
+            "503.1.1.4",
+            "400.1.1.1",
+            "400.1.1.5",
+            "400.1.1.11",
+            "400.1.1.12",
+        ],
+    ),
 }

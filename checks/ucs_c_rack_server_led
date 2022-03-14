@@ -19,17 +19,17 @@ def check_ucs_c_rack_server_led(
     led_dict: Dict,
 ) -> Iterable[Tuple[int, str]]:
     for k, v in sorted(led_dict.items()):
-        if k == 'Color':
+        if k == "Color":
             state = params.get(v, 3)
         else:
             state = 0
         yield state, "%s: %s" % (k, v)
 
 
-check_info['ucs_c_rack_server_led'] = {
-    'inventory_function': discover(),
-    'check_function': check_ucs_c_rack_server_led,
-    'service_description': 'LED %s',
-    'group': 'ucs_c_rack_server_led',
-    'default_levels_variable': 'ucs_c_rack_server_led_default_levels'
+check_info["ucs_c_rack_server_led"] = {
+    "inventory_function": discover(),
+    "check_function": check_ucs_c_rack_server_led,
+    "service_description": "LED %s",
+    "group": "ucs_c_rack_server_led",
+    "default_levels_variable": "ucs_c_rack_server_led_default_levels",
 }

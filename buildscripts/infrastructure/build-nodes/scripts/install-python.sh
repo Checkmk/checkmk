@@ -6,17 +6,39 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=1.1.1d
+failure() {
+    echo "$(basename "$0"):" "$@" >&2
+    exit 1
+}
+
+# read optional command line argument
+if [ "$#" -eq 1 ]; then
+    PYTHON_VERSION=$1
+else
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
+            break
+        elif [ "$PWD" == / ]; then
+            failure "could not determine Python version"
+        else
+            cd ..
+        fi
+    done
+fi
+
+OPENSSL_VERSION=1.1.1l
 OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
-PYTHON_VERSION=3.8.7
 DIR_NAME=Python-${PYTHON_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=1
+BUILD_ID=3
 
 build_package() {
     mkdir -p /opt/src
@@ -34,6 +56,8 @@ build_package() {
         --prefix="${TARGET_DIR}/${DIR_NAME}" \
         --with-ensurepip=install \
         --with-openssl="${OPENSSL_PATH}" \
+        --enable-optimizations \
+        --with-lto \
         --enable-shared
     make -j2
     make install
@@ -42,11 +66,5 @@ build_package() {
     rm -rf /opt/src
 }
 
-set_symlinks() {
-    log "Set symlink"
-    mkdir -p "${TARGET_DIR}/bin"
-    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
-}
-
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
-set_symlinks
+set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"

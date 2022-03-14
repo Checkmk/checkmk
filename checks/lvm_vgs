@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 def inventory_lvm_vgs(info):
@@ -30,7 +33,7 @@ def check_lvm_vgs(item, params, info):
     return df_check_filesystem_list(item, params, vglist)
 
 
-check_info['lvm_vgs'] = {
+check_info["lvm_vgs"] = {
     "check_function": check_lvm_vgs,
     "inventory_function": inventory_lvm_vgs,
     "service_description": "LVM VG %s",

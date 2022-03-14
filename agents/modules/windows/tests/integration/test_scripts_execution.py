@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from pathlib import Path
 import os
-
-from subprocess import (Popen, PIPE)
+import subprocess
+from pathlib import Path
 from typing import Tuple
+
+import pytest  # type: ignore[import]
 
 
 def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
@@ -21,35 +21,45 @@ def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
     assert exe.exists()
     assert script.exists()
 
-    process = Popen([exe, script], stdout=PIPE, stderr=PIPE)
-    pipe, err = process.communicate()
-    ret = process.wait()
+    completed_process = subprocess.run(
+        [exe, script],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    return (
+        completed_process.returncode,
+        completed_process.stdout.decode("utf-8"),
+        completed_process.stderr.decode("utf-8"),
+    )
 
-    return ret, pipe.decode("utf-8"), err.decode("utf-8")
 
-
-@pytest.mark.parametrize("script,expected_code,expected_pipe,expected_err", [
-    (
-        Path("..\\..\\..\\..\\..\\enterprise\\agents\\plugins\\cmk_update_agent.py"),
-        1,
-        "",
-        "Missing config file at .\\cmk-update-agent.cfg. Configuration",
-    ),
-    (
-        Path("..\\..\\..\\..\\plugins\\mk_logwatch.py"),
-        0,
-        "<<<logwatch>>>",
-        "",
-    ),
-    (
-        Path("..\\..\\..\\..\\plugins\\mk_jolokia.py"),
-        0,
-        "<<<jolokia_info:sep(0)>>>",
-        "",
-    ),
-])
-def test_other_scripts(python_to_test: Path, script: Path, expected_code: int, expected_pipe: str,
-                       expected_err: str):
+@pytest.mark.parametrize(
+    "script,expected_code,expected_pipe,expected_err",
+    [
+        (
+            Path("..\\..\\..\\..\\..\\enterprise\\agents\\plugins\\cmk_update_agent.py"),
+            1,
+            "",
+            "Missing config file at .\\cmk-update-agent.cfg. Configuration",
+        ),
+        (
+            Path("..\\..\\..\\..\\plugins\\mk_logwatch.py"),
+            0,
+            "<<<logwatch>>>",
+            "",
+        ),
+        (
+            Path("..\\..\\..\\..\\plugins\\mk_jolokia.py"),
+            0,
+            "<<<jolokia_info:sep(0)>>>",
+            "",
+        ),
+    ],
+)
+def test_other_scripts(
+    python_to_test: Path, script: Path, expected_code: int, expected_pipe: str, expected_err: str
+):
     pythons = python_to_test
     for python_name in os.listdir(pythons):
         # Call the script using deployed python as client does

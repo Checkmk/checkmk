@@ -1,0 +1,27 @@
+Title: response format of all host_config/folder_config REST API endpoints
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1626110796
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+The response format of some host_config and folder_config endpoints
+did not fully conform to the OpenAPI spec. This has now been fixed, but
+this also means that the following endpoints
+
+   create folder
+   hosts of folder
+   update folder
+   bulk update folders
+   move a folder
+
+   bulk create hosts
+   list hosts
+
+will have a different format in SOME attributes on the attributes key
+within the "extensions" key. The now documented format in the OpenAPI
+documentation is the correct one now.

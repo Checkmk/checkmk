@@ -1,7 +1,7 @@
 title: Dell Equallogic SAN Storage: Health- and Raid State
 agents: snmp
 catalog: hw/storagehw/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the Health- and Raid State on Dell Equallogic SAN Storages.
@@ -11,6 +11,5 @@ description:
 item:
  The Name of the Member Device
 
-inventory:
+discovery:
  One service is created for each member.
-

@@ -1,0 +1,22 @@
+Title: Ineffective default parameters for various plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633777491
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Affected plugins are
+
+<ul>
+  <li>avaya_45xx_temp</li>
+  <li>cisco_qos</li>
+  <li>db2_logsizes</li>
+  <li>emc_vplex_director_stats</li>
+  <li>ra32e_sensors</li>
+</ul>
+
+Users that use the (very) old <i>.mk</i>-file configuration
+for check plugins may have to adjust some variable names.

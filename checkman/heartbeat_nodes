@@ -1,7 +1,7 @@
 title: Heartbeat Cluster: Node Status and Link Status
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of several cl_status calls as sent by the Checkmk
@@ -18,5 +18,5 @@ item:
  The name of the node as configured in the ha.cf configuration file.
 
 
-inventory:
+discovery:
  One service is created for each node of a cluster.

@@ -1,0 +1,16 @@
+Title: ServiceNow: Added support for creation of cases
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1626868319
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Until now, only the creation of incidents was supported. With this werk, the
+notification rule for Servicenow receives an option to use the management type
+"Case" to create cases with the related notifications.
+
+For now, problem and recovery notifications are supported. Acknowledgements and
+downtime notifications are currently not supported.

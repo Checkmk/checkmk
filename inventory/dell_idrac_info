@@ -31,26 +31,25 @@ def _get_date_format(date):
 
 
 def inv_dell_idrac_info(info):
-    serial, expresscode, bios_date, bios_version, \
-        bios_vendor, raid_name, raid_version = info[0][0]
+    serial, expresscode, bios_date, bios_version, bios_vendor, raid_name, raid_version = info[0][0]
 
     node = inv_tree("hardware.system.")
-    node['serial'] = serial
-    node['expresscode'] = expresscode
+    node["serial"] = serial
+    node["expresscode"] = expresscode
 
     node = inv_tree("software.bios.")
-    node['version'] = bios_version
-    node['vendor'] = bios_vendor
+    node["version"] = bios_version
+    node["vendor"] = bios_vendor
 
     bios_date_fmt = _get_date_format(bios_date)
     if bios_date_fmt:
-        node['date'] = time.mktime(time.strptime(bios_date, bios_date_fmt))
+        node["date"] = time.mktime(time.strptime(bios_date, bios_date_fmt))
 
     node = inv_tree("hardware.storage.controller.")
-    node['version'] = raid_version
-    node['name'] = raid_name
+    node["version"] = raid_version
+    node["name"] = raid_name
 
 
-inv_info['dell_hw_info'] = {
-    'inv_function': inv_dell_idrac_info,
+inv_info["dell_hw_info"] = {
+    "inv_function": inv_dell_idrac_info,
 }

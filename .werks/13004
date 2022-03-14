@@ -1,0 +1,12 @@
+Title: Fix audit log export to contain only csv data
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1630565309
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Audit log contained html tags after the exported csv data.
+This has been fixed.

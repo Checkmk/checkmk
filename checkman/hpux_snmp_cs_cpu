@@ -1,12 +1,12 @@
 title: HP-UX: CPU Utilization (via SNMP)
 agents: hpux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check
  cycle using SNMP and the HP-UX SNMP agent. It outputs values
  for user, system, nice and idle.
 
-inventory:
+discovery:
  One service is created for each host.

@@ -1,7 +1,7 @@
 title: Huawei OSN: Interfaces
 agents: snmp
 catalog: hw/network/huawei
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the octets and packets sent and received by the interfaces
@@ -11,5 +11,5 @@ description:
 item:
  Name of the interface
 
-inventory:
+discovery:
  One service is created for each interface.

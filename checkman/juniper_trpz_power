@@ -1,7 +1,7 @@
 title: Juniper/Trapeze: Check for PSU Units
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the state of the internal power supplies in Juniper switches.
@@ -10,6 +10,5 @@ description:
 item:
  Name of the power supply
 
-inventory:
+discovery:
  One service is created for each PSU.
-

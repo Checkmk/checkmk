@@ -7,16 +7,16 @@
 from typing import List, Optional, Pattern
 
 import cmk.utils.debug
-from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.regex import regex
 
 # Conveniance macros for legacy tuple based host and service rules
-PHYSICAL_HOSTS = ['@physical']  # all hosts but not clusters
-CLUSTER_HOSTS = ['@cluster']  # all cluster hosts
-ALL_HOSTS = ['@all']  # physical and cluster hosts
+PHYSICAL_HOSTS = ["@physical"]  # all hosts but not clusters
+CLUSTER_HOSTS = ["@cluster"]  # all cluster hosts
+ALL_HOSTS = ["@all"]  # physical and cluster hosts
 ALL_SERVICES = [""]  # optical replacement"
-NEGATE = '@negate'  # negation in boolean lists
+NEGATE = "@negate"  # negation in boolean lists
 
 # TODO: We could make some more optimizations to host/item list matching:
 # - Is it worth to detect matches that are no regex matches?
@@ -56,29 +56,29 @@ def in_extraconf_hostlist(hostlist, hostname):
         pass  # Empty list, no problem.
 
     for hostentry in hostlist:
-        if hostentry == '':
-            raise MKGeneralException('Empty hostname in host list %r' % hostlist)
+        if hostentry == "":
+            raise MKGeneralException("Empty hostname in host list %r" % hostlist)
         negate = False
         use_regex = False
-        if hostentry[0] == '@':
-            if hostentry == '@all':
+        if hostentry[0] == "@":
+            if hostentry == "@all":
                 return True
             # TODO: Is not used anymore for a long time. Will be cleaned up
             # with 1.6 tuple ruleset cleanup
-            #ic = is_cluster(hostname)
-            #if hostentry == '@cluster' and ic:
+            # ic = is_cluster(hostname)
+            # if hostentry == '@cluster' and ic:
             #    return True
-            #elif hostentry == '@physical' and not ic:
+            # elif hostentry == '@physical' and not ic:
             #    return True
 
         # Allow negation of hostentry with prefix '!'
         else:
-            if hostentry[0] == '!':
+            if hostentry[0] == "!":
                 hostentry = hostentry[1:]
                 negate = True
 
             # Allow regex with prefix '~'
-            if hostentry[0] == '~':
+            if hostentry[0] == "~":
                 hostentry = hostentry[1:]
                 use_regex = True
 
@@ -104,7 +104,7 @@ def hosttags_match_taglist(hosttags, required_tags):
     A trailing + means a prefix match."""
     for tag in required_tags:
         negate, tag = _parse_negated(tag)
-        if tag and tag[-1] == '+':
+        if tag and tag[-1] == "+":
             tag = tag[:-1]
             matches = False
             for t in hosttags:
@@ -148,7 +148,7 @@ def convert_pattern_list(patterns: List[str]) -> Optional[Pattern[str]]:
 def _parse_negated(pattern):
     # Allow negation of pattern with prefix '!'
     try:
-        negate = pattern[0] == '!'
+        negate = pattern[0] == "!"
         if negate:
             pattern = pattern[1:]
     except IndexError:

@@ -1,7 +1,7 @@
 title: Socomec Modulys UPS Device: Output Phases
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors voltage, current, frequency, power and load output phases of Socomec Modulys UPSs.
@@ -9,6 +9,5 @@ description:
 item:
  The identifier of the phase (usually {"Phase 1"}, {"Phase 2"}, {"Phase 3"}).
 
-inventory:
+discovery:
  One service is created for each input phase (usually one or three).
-

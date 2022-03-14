@@ -15,18 +15,20 @@ def test_fortimail_serial_inventory():
                 "model": "FortiMail-VM",
                 "serial": "FEVM1234567890",
                 "os": "v5.4,build719,180328 (5.4.5 GA)",
-            },),) == [
-                Attributes(
-                    path=["hardware", "system"],
-                    inventory_attributes={
-                        "model": "FortiMail-VM",
-                        "serial": "FEVM1234567890",
-                    },
-                ),
-                Attributes(
-                    path=["software", "operating_system"],
-                    inventory_attributes={
-                        "version": "v5.4,build719,180328 (5.4.5 GA)",
-                    },
-                ),
-            ]
+            },
+        ),
+    ) == [
+        Attributes(
+            path=["hardware", "system"],
+            inventory_attributes={
+                "model": "FortiMail-VM",
+                "serial": "FEVM1234567890",
+            },
+        ),
+        Attributes(
+            path=["software", "operating_system"],
+            inventory_attributes={
+                "version": "v5.4,build719,180328 (5.4.5 GA)",
+            },
+        ),
+    ]

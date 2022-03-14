@@ -1,0 +1,12 @@
+Title: BI aggregation datasource program: Fixed "By aggregation name" filter
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1626693086
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This filter did not work at all. Also updated the documentation that this filter only supports exact aggregation name matches

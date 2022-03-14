@@ -4,5 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.plugin_loader import load_plugins
-load_plugins(__file__, __name__)
+#
+#    This file (cmk.gui.plugins.wato.check_parameters/__init__.py) is only kept to make
+#    our dev tools (pylint & co) happy.
+#    It will not be deployed, as cmk.gui.plugins.wato.check_parameters is supposed to be a
+#    namespace that can be shadowed/extended using the local/
+#    hierarchy.
+#
+#    This file must not contain any code.
+#

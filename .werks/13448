@@ -1,0 +1,19 @@
+Title: agent_cisco_prime: Cisco prime WLAN controller checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1635342878
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Six checks for monitoring cisco prime WLAN controllers added:
+<ul>
+<li>wlan_controller_metadata</li>
+<li>wlan_controller_alarm_status</li>
+<li>wlan_controller_access_points</li>
+<li>wlan_controller_clients</li>
+<li>wlan_controller_reachability</li>
+<li>wlan_controller_last_backup</li>
+</ul>

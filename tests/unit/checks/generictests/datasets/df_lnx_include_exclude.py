@@ -48,86 +48,130 @@ parsed = parse_df([
 ])
 
 mock_host_conf = {
-    '':
-        [
-            [
-                {'group_name': 'group1',
-                 'patterns_include': ['/opt/omd/sites/*'],
-                 'patterns_exclude': []},
-                {'group_name': 'group2',
-                 'patterns_include': ['/opt/omd/sites/site[12]/*'],
-                 'patterns_exclude': []},
-                {'group_name': 'group2',
-                 'patterns_include': ['/opt/omd/sites/site[3]/*'],
-                 'patterns_exclude': []},
-                {'group_name': 'group3',
-                 'patterns_include': ['*'],
-                 'patterns_exclude': []},
-                {'group_name': 'group4',
-                 'patterns_include': ['/opt/omd/sites/*'],
-                 'patterns_exclude': ['/opt/omd/sites/site[2,4]/*']},
-                {'group_name': 'group5',
-                 'patterns_include': ['/opt/omd/sites/site1*'],
-                 'patterns_exclude': ['/opt/omd/sites/site10/*']},
-                {'group_name': 'group5',
-                 'patterns_include': [''],
-                 'patterns_exclude': ['']},
-                {'group_name': 'group_empty_1',
-                 'patterns_include': [''],
-                 'patterns_exclude': []},
-                {'group_name': 'group_empty_2',
-                 'patterns_include': ['/notfound'],
-                 'patterns_exclude': []},
-                {'group_name': 'group_empty_3',
-                 'patterns_include': [],
-                 'patterns_exclude': ['*']},
-                {'group_name': 'group_empty_4',
-                 'patterns_include': ['*'],
-                 'patterns_exclude': []},
-                {'group_name': 'group_empty_4',
-                 'patterns_include': [],
-                 'patterns_exclude': ['*']},
-                {'group_name': 'group_empty_5',
-                 'patterns_include': [],
-                 'patterns_exclude': []},
-            ],
-        ],
+    '': [{
+        "groups": [
+            {
+                'group_name': 'group1',
+                'patterns_include': ['/opt/omd/sites/*'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group2',
+                'patterns_include': ['/opt/omd/sites/site[12]/*'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group2',
+                'patterns_include': ['/opt/omd/sites/site[3]/*'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group3',
+                'patterns_include': ['*'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group4',
+                'patterns_include': ['/opt/omd/sites/*'],
+                'patterns_exclude': ['/opt/omd/sites/site[2,4]/*']
+            },
+            {
+                'group_name': 'group5',
+                'patterns_include': ['/opt/omd/sites/site1*'],
+                'patterns_exclude': ['/opt/omd/sites/site10/*']
+            },
+            {
+                'group_name': 'group5',
+                'patterns_include': [''],
+                'patterns_exclude': ['']
+            },
+            {
+                'group_name': 'group_empty_1',
+                'patterns_include': [''],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group_empty_2',
+                'patterns_include': ['/notfound'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group_empty_3',
+                'patterns_include': [],
+                'patterns_exclude': ['*']
+            },
+            {
+                'group_name': 'group_empty_4',
+                'patterns_include': ['*'],
+                'patterns_exclude': []
+            },
+            {
+                'group_name': 'group_empty_4',
+                'patterns_include': [],
+                'patterns_exclude': ['*']
+            },
+            {
+                'group_name': 'group_empty_5',
+                'patterns_include': [],
+                'patterns_exclude': []
+            },
+        ]
+    },],
 }
 
-mock_host_conf_merged = {'': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-                              'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}}
+mock_host_conf_merged = {
+    '': {
+        'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+        'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
+    }
+}
 
 discovery = {
     '': [
         (
             'group1',
-            {'patterns': (['/opt/omd/sites/*'], []),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+            {
+                'patterns': (['/opt/omd/sites/*'], []),
+                'grouping_behaviour': 'mountpoint',
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
+            },
         ),
         (
             'group2',
-            {'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+            {
+                'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
+                'grouping_behaviour': 'mountpoint',
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
+            },
         ),
         (
             'group3',
-            {'patterns': (['*'], []),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+            {
+                'patterns': (['*'], []),
+                'grouping_behaviour': 'mountpoint',
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
+            },
         ),
         (
             'group4',
-            {'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+            {
+                'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
+                'grouping_behaviour': 'mountpoint',
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
+            },
         ),
         (
             'group5',
-            {'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+            {
+                'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
+                'grouping_behaviour': 'mountpoint',
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
+            },
         ),
     ],
 }
@@ -136,98 +180,61 @@ checks = {
     '': [
         (
             'group1',
-            {'patterns': (['/opt/omd/sites/*'], []),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+            {
+                'patterns': (['/opt/omd/sites/*'], []),
+                'grouping_behaviour': 'mountpoint',
+                "item_appearance": "mountpoint",
+            },
             [
-                (0,
-                 '0.08% used (52.38 MB of 61.81 GB)',
-                 [('fs_used', 52.3828125, 50635.025, 56964.403125, 0, 63293.78125),
-                  ('fs_size', 63293.78125),
-                  ('fs_used_percent', 0.0827613889792688)]),
-                (0,
-                 '',
-                 [('inodes_used', 12319, None, None, 0.0, 16203208.0)]),
-                (0,
-                 '8 filesystems',
-                 []),
+                (0, '0.08% used (52.38 MB of 61.81 GB)', [('fs_used', 52.3828125, 50635.025,
+                                                           56964.403125, 0, 63293.78125),
+                                                          ('fs_size', 63293.78125),
+                                                          ('fs_used_percent', 0.0827613889792688)]),
+                (0, '', [('inodes_used', 12319, None, None, 0.0, 16203208.0)]),
+                (0, '8 filesystems', []),
             ],
         ),
-        (
-            'group2',
-            {'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
-            [
-                (0,
-                 '0.08% used (18.95 MB of 23.18 GB)',
-                 [('fs_used', 18.9453125, 18988.134375, 21361.651171875, 0, 23735.16796875),
-                  ('fs_size', 23735.16796875),
-                  ('fs_used_percent', 0.07981958469787793)]),
-                (0,
-                 '',
-                 [('inodes_used', 4623, None, None, 0.0, 6076203.0)]),
-                (0,
-                 '3 filesystems',
-                 []),
-            ]
-        ),
-        (
-            'group3',
-            {'patterns': (['*'], []),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
-            [
-                (0,
-                 '22.24% used (69.64 of 313.09 GB)',
-                 [('fs_used', 71308.953125, 256483.0375, 288543.4171875, 0, 320603.796875),
-                  ('fs_size', 320603.796875),
-                  ('fs_used_percent', 22.242080043987315)]),
-                (0,
-                 '',
-                 [('inodes_used', 1280583, None, None, 0.0, 41868133.0)]),
-                (0,
-                 '16 filesystems',
-                 [])
-            ]
-        ),
-        (
-            'group4',
-            {'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
-            [
-                (0,
-                 '0.08% used (39.75 MB of 46.36 GB)',
-                 [('fs_used', 39.75390625, 37976.26875, 42723.30234375, 0, 47470.3359375),
-                  ('fs_size', 47470.3359375),
-                  ('fs_used_percent', 0.083744733347454)]),
-                (0,
-                 '',
-                 [('inodes_used', 9237, None, None, 0.0, 12152406.0)]),
-                (0,
-                 '6 filesystems',
-                 [])
-            ]
-        ),
-        (
-            'group5',
-            {'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
-             'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
-            [
-                (0,
-                 '0.08% used (6.31 MB of 7.73 GB)',
-                 [('fs_used', 6.30859375, 6329.378125, 7120.550390625, 0, 7911.72265625),
-                  ('fs_size', 7911.72265625),
-                  ('fs_used_percent', 0.07973729646623064)]),
-                (0,
-                 '',
-                 [('inodes_used', 1541, None, None, 0.0, 2025401.0)]),
-                (0,
-                 '1 filesystems',
-                 [])
-            ]
-        ),
+        ('group2', {
+            'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
+            'grouping_behaviour': 'mountpoint',
+            "item_appearance": "mountpoint",
+        }, [
+            (0, '0.08% used (18.95 MB of 23.18 GB)', [('fs_used', 18.9453125, 18988.134375,
+                                                       21361.651171875, 0, 23735.16796875),
+                                                      ('fs_size', 23735.16796875),
+                                                      ('fs_used_percent', 0.07981958469787793)]),
+            (0, '', [('inodes_used', 4623, None, None, 0.0, 6076203.0)]),
+            (0, '3 filesystems', []),
+        ]),
+        ('group3', {
+            'patterns': (['*'], []),
+            'grouping_behaviour': 'mountpoint',
+            "item_appearance": "mountpoint",
+        }, [(0, '22.24% used (69.64 of 313.09 GB)', [('fs_used', 71308.953125, 256483.0375,
+                                                      288543.4171875, 0, 320603.796875),
+                                                     ('fs_size', 320603.796875),
+                                                     ('fs_used_percent', 22.242080043987315)]),
+            (0, '', [('inodes_used', 1280583, None, None, 0.0, 41868133.0)]),
+            (0, '16 filesystems', [])]),
+        ('group4', {
+            'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
+            'grouping_behaviour': 'mountpoint',
+            "item_appearance": "mountpoint",
+        }, [(0, '0.08% used (39.75 MB of 46.36 GB)', [('fs_used', 39.75390625, 37976.26875,
+                                                       42723.30234375, 0, 47470.3359375),
+                                                      ('fs_size', 47470.3359375),
+                                                      ('fs_used_percent', 0.083744733347454)]),
+            (0, '', [('inodes_used', 9237, None, None, 0.0, 12152406.0)]),
+            (0, '6 filesystems', [])]),
+        ('group5', {
+            'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
+            'grouping_behaviour': 'mountpoint',
+            "item_appearance": "mountpoint",
+        }, [(0, '0.08% used (6.31 MB of 7.73 GB)', [('fs_used', 6.30859375,
+                                                     6329.378125, 7120.550390625, 0, 7911.72265625),
+                                                    ('fs_size', 7911.72265625),
+                                                    ('fs_used_percent', 0.07973729646623064)]),
+            (0, '', [('inodes_used', 1541, None, None, 0.0, 2025401.0)]),
+            (0, '1 filesystems', [])]),
     ],
 }

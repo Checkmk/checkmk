@@ -1,0 +1,12 @@
+Title: Update mobile GUI
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1622449504
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The dependencies jQuery mobile and jQuery of the mobile GUI
+are updated to mitigate security issues in these libraries.

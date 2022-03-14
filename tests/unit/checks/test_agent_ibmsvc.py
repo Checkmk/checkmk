@@ -4,36 +4,71 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import SpecialAgent  # type: ignore[import]
+import pytest
+
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({
-        'infos': [
-            'lshost', 'lslicense', 'lsmdisk', 'lsmdiskgrp', 'lsnode', 'lsnodestats', 'lssystem',
-            'lssystemstats', 'lsportfc', 'lsenclosure', 'lsenclosurestats', 'lsarray', 'disks'
-        ],
-        'user': 'user',
-        'accept-any-hostkey': True
-    }, [
-        "-u", "user", "--accept-any-hostkey", "-i",
-        "lshost,lslicense,lsmdisk,lsmdiskgrp,lsnode,lsnodestats,lssystem,lssystemstats,lsportfc,lsenclosure,lsenclosurestats,lsarray,disks",
-        "address"
-    ]),
-    ({
-        'infos': [
-            'lshost', 'lslicense', 'lsmdisk', 'lsmdiskgrp', 'lsnode', 'lsnodestats', 'lssystem',
-            'lssystemstats', 'lsportfc', 'lsenclosure', 'lsenclosurestats', 'lsarray', 'disks'
-        ],
-        'user': 'user',
-        'accept-any-hostkey': False
-    }, ["-u", "user", "address"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (
+            {
+                "infos": [
+                    "lshost",
+                    "lslicense",
+                    "lsmdisk",
+                    "lsmdiskgrp",
+                    "lsnode",
+                    "lsnodestats",
+                    "lssystem",
+                    "lssystemstats",
+                    "lsportfc",
+                    "lsenclosure",
+                    "lsenclosurestats",
+                    "lsarray",
+                    "disks",
+                ],
+                "user": "user",
+                "accept-any-hostkey": True,
+            },
+            [
+                "-u",
+                "user",
+                "--accept-any-hostkey",
+                "-i",
+                "lshost,lslicense,lsmdisk,lsmdiskgrp,lsnode,lsnodestats,lssystem,lssystemstats,lsportfc,lsenclosure,lsenclosurestats,lsarray,disks",
+                "address",
+            ],
+        ),
+        (
+            {
+                "infos": [
+                    "lshost",
+                    "lslicense",
+                    "lsmdisk",
+                    "lsmdiskgrp",
+                    "lsnode",
+                    "lsnodestats",
+                    "lssystem",
+                    "lssystemstats",
+                    "lsportfc",
+                    "lsenclosure",
+                    "lsenclosurestats",
+                    "lsarray",
+                    "disks",
+                ],
+                "user": "user",
+                "accept-any-hostkey": False,
+            },
+            ["-u", "user", "address"],
+        ),
+    ],
+)
 def test_ibmsvc_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_ibmsvc')
+    agent = SpecialAgent("agent_ibmsvc")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

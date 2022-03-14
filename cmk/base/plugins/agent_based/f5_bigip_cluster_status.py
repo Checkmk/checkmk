@@ -6,42 +6,35 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import Any, List, Mapping, Optional
+from typing import List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import (
     F5_BIGIP,
+    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
+    F5BigipClusterStatusVSResult,
     VERSION_PRE_V11_2,
     VERSION_V11_2_PLUS,
-    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
 )
 
 NodeState = int
 
 STATE_NAMES = {
     True: ("unknown", "offline", "forced offline", "standby", "active"),
-    False: ("standby", "active 1", "active 2", "active")
+    False: ("standby", "active 1", "active 2", "active"),
 }
 
 
-def parse_f5_bigip_cluster_status(string_table: List[StringTable]) -> NodeState:
+def parse_f5_bigip_cluster_status(
+    string_table: List[StringTable],
+) -> Optional[NodeState]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_cluster_status([[['4']]])
     4
     """
-    return int(string_table[0][0][0])
+    return int(string_table[0][0][0]) if string_table[0] else None
 
 
 def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:
@@ -52,7 +45,7 @@ def _node_result(
     node_name: str,
     node_state: NodeState,
     is_gt_v11_2: bool,
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
 ) -> Result:
     """Turn given node details into
     >>> _node_result("", 4, True, {'type': 'active_standby'})
@@ -60,11 +53,12 @@ def _node_result(
     >>> _node_result("", 3, False, {'type': 'active_standby'})
     Result(state=<State.OK: 0>, summary='Node is active')
     """
-    state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {})}
+    state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {}).items()}
     state_mapping = {**{0: 3, 1: 2, 2: 2, 3: 0, 4: 0}, **state_mapping_from_params}
     return Result(
         state=state(state_mapping[node_state] if is_gt_v11_2 else 0),
-        summary="Node %sis %s" % (
+        summary="Node %sis %s"
+        % (
             ("[%s] " % node_name) if node_name else "",
             STATE_NAMES[is_gt_v11_2][node_state],
         ),
@@ -72,7 +66,7 @@ def _node_result(
 
 
 def _check_f5_bigip_cluster_status_common(
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
     section: NodeState,
     is_gt_v11_2: bool,
 ) -> CheckResult:
@@ -80,8 +74,8 @@ def _check_f5_bigip_cluster_status_common(
 
 
 def _cluster_check_f5_bigip_cluster_status_common(
-    params: Mapping[str, Any],
-    section: Mapping[str, NodeState],
+    params: F5BigipClusterStatusVSResult,
+    section: Mapping[str, Optional[NodeState]],
     is_gt_v11_2: bool,
 ) -> CheckResult:
     """
@@ -104,13 +98,16 @@ def _cluster_check_f5_bigip_cluster_status_common(
         yield Result(state=state.CRIT, summary="No active node found: ")
 
     for node_name, node_state in sorted(section.items()):
-        yield _node_result(node_name, node_state, is_gt_v11_2, params)
+        if node_state is not None:
+            yield _node_result(node_name, node_state, is_gt_v11_2, params)
 
 
-### Older than v11.2
+# Older than v11.2
 
 
-def check_f5_bigip_cluster_status(params: Mapping[str, Any], section: int) -> CheckResult:
+def check_f5_bigip_cluster_status(
+    params: F5BigipClusterStatusVSResult, section: int
+) -> CheckResult:
     """
     >>> for r in check_f5_bigip_cluster_status({"type": "active_standby"}, 3):
     ...     print(r)
@@ -120,8 +117,8 @@ def check_f5_bigip_cluster_status(params: Mapping[str, Any], section: int) -> Ch
 
 
 def cluster_check_f5_bigip_cluster_status(
-    params: Mapping[str, Any],
-    section: Mapping[str, NodeState],
+    params: F5BigipClusterStatusVSResult,
+    section: Mapping[str, Optional[NodeState]],
 ) -> CheckResult:
     """
     >>> for r in cluster_check_f5_bigip_cluster_status(
@@ -153,16 +150,18 @@ register.check_plugin(
     cluster_check_function=cluster_check_f5_bigip_cluster_status,
 )
 
-### From v11.2 and up
+# From v11.2 and up
 
 
-def check_f5_bigip_cluster_status_v11_2(params: Mapping[str, Any], section: int) -> CheckResult:
+def check_f5_bigip_cluster_status_v11_2(
+    params: F5BigipClusterStatusVSResult, section: int
+) -> CheckResult:
     yield from _check_f5_bigip_cluster_status_common(params, section, True)
 
 
 def cluster_check_f5_bigip_cluster_status_v11_2(
-    params: Mapping[str, Any],
-    section: Mapping[str, NodeState],
+    params: F5BigipClusterStatusVSResult,
+    section: Mapping[str, Optional[NodeState]],
 ) -> CheckResult:
     yield from _cluster_check_f5_bigip_cluster_status_common(params, section, True)
 
@@ -187,7 +186,7 @@ register.check_plugin(
 )
 
 #
-#F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
+# F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 
 
 def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[NodeState]:
@@ -197,6 +196,8 @@ def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[Nod
     """
     # .1.3.6.1.4.1.3375.2.1.13.1.1.0 0 # sysVcmpNumber
     # .1.3.6.1.4.1.3375.2.1.14.1.1.0 3 # sysCmFailoverStatusId
+    if not string_table[0]:
+        return None
     count, status = string_table[0][0]
     if int(count) == 0:
         return NodeState(status)
@@ -214,7 +215,8 @@ register.snmp_section(
             oids=[
                 "13.1.1.0",  # sysVcmpNumber
                 "14.3.1.0",  # sysCmFailoverStatusId
-            ]),
+            ],
+        ),
     ],
 )
 

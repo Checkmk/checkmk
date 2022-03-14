@@ -1,0 +1,14 @@
+Title: checks: Fix "MS Exchange Information Store" rule crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617971015
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The checks msexch_isclienttype and msexch_isstore crashed with
+"AttributeError: 'tuple' object has no attribute 'get'"
+if the rule "MS Exchange Information Store" existed. This should now be fixed.

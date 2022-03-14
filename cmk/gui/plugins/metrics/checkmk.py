@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import graph_info, metric_info, MONITORING_STATUS_COLORS
+from cmk.gui.i18n import _l
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info, MONITORING_STATUS_COLORS
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -23,157 +23,157 @@ from cmk.gui.plugins.metrics import graph_info, metric_info, MONITORING_STATUS_C
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 metric_info["host_check_rate"] = {
-    "title": _("Host check rate"),
+    "title": _l("Host check rate"),
     "unit": "1/s",
     "color": "52/a",
 }
 
 metric_info["monitored_hosts"] = {
-    "title": _("Monitored hosts"),
+    "title": _l("Monitored hosts"),
     "unit": "count",
     "color": "52/b",
 }
 
 metric_info["hosts_active"] = {
-    "title": _("Active hosts"),
+    "title": _l("Active hosts"),
     "unit": "count",
     "color": "11/a",
 }
 
 metric_info["hosts_inactive"] = {
-    "title": _("Inactive hosts"),
+    "title": _l("Inactive hosts"),
     "unit": "count",
     "color": "16/a",
 }
 
 metric_info["hosts_degraded"] = {
-    "title": _("Degraded hosts"),
+    "title": _l("Degraded hosts"),
     "unit": "count",
     "color": "23/a",
 }
 
 metric_info["hosts_offline"] = {
-    "title": _("Offline hosts"),
+    "title": _l("Offline hosts"),
     "unit": "count",
     "color": "31/a",
 }
 
 metric_info["hosts_other"] = {
-    "title": _("Other hosts"),
+    "title": _l("Other hosts"),
     "unit": "count",
     "color": "41/a",
 }
 
 metric_info["service_check_rate"] = {
-    "title": _("Service check rate"),
+    "title": _l("Service check rate"),
     "unit": "1/s",
     "color": "21/a",
 }
 
 metric_info["monitored_services"] = {
-    "title": _("Monitored services"),
+    "title": _l("Monitored services"),
     "unit": "count",
     "color": "21/b",
 }
 
 metric_info["livestatus_connect_rate"] = {
-    "title": _("Livestatus connects"),
+    "title": _l("Livestatus connects"),
     "unit": "1/s",
     "color": "#556677",
 }
 
 metric_info["livestatus_request_rate"] = {
-    "title": _("Livestatus requests"),
+    "title": _l("Livestatus requests"),
     "unit": "1/s",
     "color": "#bbccdd",
 }
 
 metric_info["helper_usage_cmk"] = {
-    "title": _("Checkmk helper usage"),
+    "title": _l("Checkmk helper usage"),
     "unit": "%",
     "color": "15/a",
 }
 
 metric_info["helper_usage_fetcher"] = {
-    "title": _("Fetcher helper usage"),
+    "title": _l("Fetcher helper usage"),
     "unit": "%",
     "color": "15/a",
 }
 
 metric_info["helper_usage_checker"] = {
-    "title": _("Checker helper usage"),
+    "title": _l("Checker helper usage"),
     "unit": "%",
     "color": "15/a",
 }
 
 metric_info["helper_usage_generic"] = {
-    "title": _("Generic helper usage"),
+    "title": _l("Generic helper usage"),
     "unit": "%",
     "color": "41/a",
 }
 
 metric_info["average_latency_cmk"] = {
-    "title": _("Checkmk check latency"),
+    "title": _l("Checkmk check latency"),
     "unit": "s",
     "color": "15/a",
 }
 
 metric_info["average_latency_fetcher"] = {
-    "title": _("Checkmk fetcher latency"),
+    "title": _l("Checkmk fetcher latency"),
     "unit": "s",
     "color": "15/a",
 }
 
 metric_info["average_latency_generic"] = {
-    "title": _("Check latency"),
+    "title": _l("Check latency"),
     "unit": "s",
     "color": "41/a",
 }
 
 metric_info["livestatus_usage"] = {
-    "title": _("Livestatus usage"),
+    "title": _l("Livestatus usage"),
     "unit": "%",
     "color": "12/a",
 }
 
 metric_info["livestatus_overflows_rate"] = {
-    "title": _("Livestatus overflows"),
+    "title": _l("Livestatus overflows"),
     "unit": "1/s",
     "color": "16/a",
 }
 
 metric_info["cmk_time_agent"] = {
-    "title": _("Time spent waiting for Checkmk agent"),
+    "title": _l("Time spent waiting for Checkmk agent"),
     "unit": "s",
     "color": "36/a",
 }
 
 metric_info["cmk_time_snmp"] = {
-    "title": _("Time spent waiting for SNMP responses"),
+    "title": _l("Time spent waiting for SNMP responses"),
     "unit": "s",
     "color": "32/a",
 }
 
 metric_info["cmk_time_ds"] = {
-    "title": _("Time spent waiting for special agent"),
+    "title": _l("Time spent waiting for special agent"),
     "unit": "s",
     "color": "34/a",
 }
 
 metric_info["log_message_rate"] = {
-    "title": _("Log messages"),
+    "title": _l("Log messages"),
     "unit": "1/s",
     "color": "#aa44cc",
 }
 
 metric_info["normal_updates"] = {
-    "title": _("Pending normal updates"),
+    "title": _l("Pending normal updates"),
     "unit": "count",
     "color": "#c08030",
 }
 
 metric_info["security_updates"] = {
-    "title": _("Pending security updates"),
+    "title": _l("Pending security updates"),
     "unit": "count",
     "color": "#ff0030",
 }
@@ -181,19 +181,19 @@ metric_info["security_updates"] = {
 # Note: current can be any phase, not only open, but also
 # delayed, couting or ack.
 metric_info["num_open_events"] = {
-    "title": _("Current events"),
+    "title": _l("Current events"),
     "unit": "count",
     "color": "26/b",
 }
 
 metric_info["num_high_alerts"] = {
-    "title": _("High alerts"),
+    "title": _l("High alerts"),
     "unit": "count",
     "color": "22/a",
 }
 
 metric_info["num_disabled_alerts"] = {
-    "title": _("Disabled alerts"),
+    "title": _l("Disabled alerts"),
     "unit": "count",
     "color": "24/a",
 }
@@ -202,79 +202,79 @@ metric_info["num_disabled_alerts"] = {
 def register_omd_apache_metrics():
     for ty, unit in [("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s")]:
         metric_info[ty + "_cmk_views"] = {
-            "title": _("Checkmk: Views"),
+            "title": "%s: %s" % (_l("Checkmk: Views"), ty.capitalize()),
             "unit": unit,
             "color": "#ff8080",
         }
 
         metric_info[ty + "_cmk_wato"] = {
-            "title": _("Checkmk: WATO"),
+            "title": "%s: %s" % (_l("Checkmk: WATO"), ty.capitalize()),
             "unit": unit,
             "color": "#377cab",
         }
 
         metric_info[ty + "_cmk_bi"] = {
-            "title": _("Checkmk: BI"),
+            "title": "%s: %s" % (_l("Checkmk: BI"), ty.capitalize()),
             "unit": unit,
             "color": "#4eb0f2",
         }
 
         metric_info[ty + "_cmk_snapins"] = {
-            "title": _("Checkmk: Sidebar elements"),
+            "title": "%s: %s" % (_l("Checkmk: Sidebar elements"), ty.capitalize()),
             "unit": unit,
             "color": "#ff4040",
         }
 
         metric_info[ty + "_cmk_dashboards"] = {
-            "title": _("Checkmk: Dashboards"),
+            "title": "%s: %s" % (_l("Checkmk: Dashboards"), ty.capitalize()),
             "unit": unit,
             "color": "#4040ff",
         }
 
         metric_info[ty + "_cmk_other"] = {
-            "title": _("Checkmk: Other"),
+            "title": "%s: %s" % (_l("Checkmk: Other"), ty.capitalize()),
             "unit": unit,
             "color": "#5bb9eb",
         }
 
         metric_info[ty + "_nagvis_snapin"] = {
-            "title": _("NagVis: Sidebar element"),
+            "title": "%s: %s" % (_l("NagVis: Sidebar element"), ty.capitalize()),
             "unit": unit,
             "color": "#f2904e",
         }
 
         metric_info[ty + "_nagvis_ajax"] = {
-            "title": _("NagVis: AJAX"),
+            "title": "%s: %s" % (_l("NagVis: AJAX"), ty.capitalize()),
             "unit": unit,
             "color": "#af91eb",
         }
 
         metric_info[ty + "_nagvis_other"] = {
-            "title": _("NagVis: Other"),
+            "title": "%s: %s" % (_l("NagVis: Other"), ty.capitalize()),
             "unit": unit,
             "color": "#f2df40",
         }
 
         metric_info[ty + "_images"] = {
-            "title": _("Image"),
+            "title": "%s: %s" % (_l("Image"), ty.capitalize()),
             "unit": unit,
             "color": "#91cceb",
         }
 
         metric_info[ty + "_styles"] = {
-            "title": _("Styles"),
+            "title": "%s: %s" % (_l("Styles"), ty.capitalize()),
             "unit": unit,
             "color": "#c6f24e",
         }
 
         metric_info[ty + "_scripts"] = {
-            "title": _("Scripts"),
+            "title": "%s: %s" % (_l("Scripts"), ty.capitalize()),
             "unit": unit,
             "color": "#4ef26c",
         }
 
         metric_info[ty + "_other"] = {
-            "title": _("Other"),
+            "title": "%s: %s" % (_l("Other"), ty.capitalize()),
             "unit": unit,
             "color": "#4eeaf2",
         }
@@ -283,66 +283,78 @@ def register_omd_apache_metrics():
 register_omd_apache_metrics()
 
 metric_info["cmk_hosts_up"] = {
-    "title": _("UP hosts"),
+    "title": _l("UP hosts"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["ok/up"],
 }
 
 metric_info["cmk_hosts_down"] = {
-    "title": _("DOWN hosts"),
+    "title": _l("DOWN hosts"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["critical/down"],
 }
 
 metric_info["cmk_hosts_unreachable"] = {
-    "title": _("Unreachable hosts"),
+    "title": _l("Unreachable hosts"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
 }
 
 metric_info["cmk_hosts_in_downtime"] = {
-    "title": _("Hosts in downtime"),
+    "title": _l("Hosts in downtime"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["in_downtime"],
 }
 
 metric_info["cmk_services_ok"] = {
-    "title": _("OK services"),
+    "title": _l("OK services"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["ok/up"],
 }
 
 metric_info["cmk_services_in_downtime"] = {
-    "title": _("Services in downtime"),
+    "title": _l("Services in downtime"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["in_downtime"],
 }
 
 metric_info["cmk_services_on_down_hosts"] = {
-    "title": _("Services of down hosts"),
+    "title": _l("Services of down hosts"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["on_down_host"],
 }
 
 metric_info["cmk_services_warning"] = {
-    "title": _("WARNING services"),
+    "title": _l("WARNING services"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["warning"],
 }
 
 metric_info["cmk_services_unknown"] = {
-    "title": _("UNKNOWN services"),
+    "title": _l("UNKNOWN services"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
 }
 
 metric_info["cmk_services_critical"] = {
-    "title": _("CRITICAL services"),
+    "title": _l("CRITICAL services"),
     "unit": "count",
     "color": MONITORING_STATUS_COLORS["critical/down"],
 }
 
-#.
+metric_info["age_oldest"] = {
+    "title": _l("Oldest age"),
+    "unit": "s",
+    "color": "35/a",
+}
+
+metric_info["age_youngest"] = {
+    "title": _l("Youngest age"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -355,43 +367,58 @@ metric_info["cmk_services_critical"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["livestatus_requests_per_connection"] = {
-    "title": _("Livestatus Requests per Connection"),
-    "metrics": [("livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
-                 _("Average requests per connection")),],
+    "title": _l("Livestatus Requests per Connection"),
+    "metrics": [
+        (
+            "livestatus_request_rate,livestatus_connect_rate,/#88aa33",
+            "area",
+            _l("Average requests per connection"),
+        ),
+    ],
 }
 
 graph_info["livestatus_usage"] = {
-    "title": _("Livestatus usage"),
-    "metrics": [("livestatus_usage", "area"),],
+    "title": _l("Livestatus usage"),
+    "metrics": [
+        ("livestatus_usage", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_cmk"] = {
-    "title": _("Checkmk helper usage"),
-    "metrics": [("helper_usage_cmk", "area"),],
+    "title": _l("Checkmk helper usage"),
+    "metrics": [
+        ("helper_usage_cmk", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_fetcher"] = {
-    "title": _("Fetcher helper usage"),
-    "metrics": [("helper_usage_fetcher", "area"),],
+    "title": _l("Fetcher helper usage"),
+    "metrics": [
+        ("helper_usage_fetcher", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_checker"] = {
-    "title": _("Checker helper usage"),
-    "metrics": [("helper_usage_checker", "area"),],
+    "title": _l("Checker helper usage"),
+    "metrics": [
+        ("helper_usage_checker", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_generic"] = {
-    "title": _("Generic helper usage"),
-    "metrics": [("helper_usage_generic", "area"),],
+    "title": _l("Generic helper usage"),
+    "metrics": [
+        ("helper_usage_generic", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["average_check_latency"] = {
-    "title": _("Average check latency"),
+    "title": _l("Average check latency"),
     "metrics": [
         ("average_latency_cmk", "line"),
         ("average_latency_generic", "line"),
@@ -399,7 +426,7 @@ graph_info["average_check_latency"] = {
 }
 
 graph_info["average_fetcher_latency"] = {
-    "title": _("Average check latency"),
+    "title": _l("Average check latency"),
     "metrics": [
         ("average_latency_fetcher", "line"),
         ("average_latency_generic", "line"),
@@ -407,7 +434,7 @@ graph_info["average_fetcher_latency"] = {
 }
 
 graph_info["pending_updates"] = {
-    "title": _("Pending updates"),
+    "title": _l("Pending updates"),
     "metrics": [
         ("normal_updates", "stack"),
         ("security_updates", "stack"),
@@ -415,7 +442,7 @@ graph_info["pending_updates"] = {
 }
 
 graph_info["handled_requests"] = {
-    "title": _("Handled Requests"),
+    "title": _l("Handled Requests"),
     "metrics": [
         ("requests_cmk_views", "stack"),
         ("requests_cmk_wato", "stack"),
@@ -435,7 +462,7 @@ graph_info["handled_requests"] = {
 }
 
 graph_info["cmk_http_pagetimes"] = {
-    "title": _("Time spent for various page types"),
+    "title": _l("Time spent for various page types"),
     "metrics": [
         ("secs_cmk_views", "stack"),
         ("secs_cmk_wato", "stack"),
@@ -455,7 +482,7 @@ graph_info["cmk_http_pagetimes"] = {
 }
 
 graph_info["cmk_http_traffic"] = {
-    "title": _("Bytes sent"),
+    "title": _l("Bytes sent"),
     "metrics": [
         ("bytes_cmk_views", "stack"),
         ("bytes_cmk_wato", "stack"),
@@ -475,7 +502,7 @@ graph_info["cmk_http_traffic"] = {
 }
 
 graph_info["host_and_service_checks"] = {
-    "title": _("Host and Service Checks"),
+    "title": _l("Host and Service Checks"),
     "metrics": [
         ("host_check_rate", "stack"),
         ("service_check_rate", "stack"),
@@ -483,7 +510,7 @@ graph_info["host_and_service_checks"] = {
 }
 
 graph_info["number_of_monitored_hosts_and_services"] = {
-    "title": _("Number of Monitored Hosts and Services"),
+    "title": _l("Number of Monitored Hosts and Services"),
     "metrics": [
         ("monitored_hosts", "stack"),
         ("monitored_services", "stack"),
@@ -491,7 +518,7 @@ graph_info["number_of_monitored_hosts_and_services"] = {
 }
 
 graph_info["livestatus_connects_and_requests"] = {
-    "title": _("Livestatus Connects and Requests"),
+    "title": _l("Livestatus Connects and Requests"),
     "metrics": [
         ("livestatus_request_rate", "area"),
         ("livestatus_connect_rate", "area"),
@@ -499,7 +526,7 @@ graph_info["livestatus_connects_and_requests"] = {
 }
 
 graph_info["message_processing"] = {
-    "title": _("Message processing"),
+    "title": _l("Message processing"),
     "metrics": [
         ("average_message_rate", "area"),
         ("average_drop_rate", "area"),
@@ -507,7 +534,7 @@ graph_info["message_processing"] = {
 }
 
 graph_info["rule_efficiency"] = {
-    "title": _("Rule efficiency"),
+    "title": _l("Rule efficiency"),
     "metrics": [
         ("average_rule_trie_rate", "area"),
         ("average_rule_hit_rate", "area"),
@@ -515,7 +542,7 @@ graph_info["rule_efficiency"] = {
 }
 
 graph_info["inbound_and_outbound_messages"] = {
-    "title": _("Inbound and Outbound Messages"),
+    "title": _l("Inbound and Outbound Messages"),
     "metrics": [
         ("messages_outbound", "stack"),
         ("messages_inbound", "stack"),
@@ -523,20 +550,22 @@ graph_info["inbound_and_outbound_messages"] = {
 }
 
 graph_info["cmk_hosts_total"] = {
-    "title": _("Total number of hosts"),
-    "metrics": [(
-        "cmk_hosts_up,"
-        "cmk_hosts_down,"
-        "cmk_hosts_unreachable,"
-        "cmk_hosts_in_downtime,"
-        "+,+,+#0485d1",
-        "stack",
-        _("Total"),
-    ),],
+    "title": _l("Total number of hosts"),
+    "metrics": [
+        (
+            "cmk_hosts_up,"
+            "cmk_hosts_down,"
+            "cmk_hosts_unreachable,"
+            "cmk_hosts_in_downtime,"
+            "+,+,+#0485d1",
+            "stack",
+            _l("Total"),
+        ),
+    ],
 }
 
 graph_info["cmk_hosts_not_up"] = {
-    "title": _("Number of problematic hosts"),
+    "title": _l("Number of problematic hosts"),
     "metrics": [
         (
             "cmk_hosts_down",
@@ -555,22 +584,24 @@ graph_info["cmk_hosts_not_up"] = {
 }
 
 graph_info["cmk_services_total"] = {
-    "title": _("Total number of services"),
-    "metrics": [(
-        "cmk_services_ok,"
-        "cmk_services_in_downtime,"
-        "cmk_services_on_down_hosts,"
-        "cmk_services_warning,"
-        "cmk_services_unknown,"
-        "cmk_services_critical,"
-        "+,+,+,+,+#0485d1",
-        "stack",
-        _("Total"),
-    ),],
+    "title": _l("Total number of services"),
+    "metrics": [
+        (
+            "cmk_services_ok,"
+            "cmk_services_in_downtime,"
+            "cmk_services_on_down_hosts,"
+            "cmk_services_warning,"
+            "cmk_services_unknown,"
+            "cmk_services_critical,"
+            "+,+,+,+,+#0485d1",
+            "stack",
+            _l("Total"),
+        ),
+    ],
 }
 
 graph_info["cmk_services_not_ok"] = {
-    "title": _("Number of problematic services"),
+    "title": _l("Number of problematic services"),
     "metrics": [
         (
             "cmk_services_in_downtime",

@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.aws_constants as aws_types
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import cmk.utils.aws_constants as aws_types
 
 default_running_ondemand_instances = [
     (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
@@ -19,25 +20,25 @@ default_running_ondemand_instance_families = [
     ("%s_vcpu" % inst_fam, (None, 80.0, 90.0)) for inst_fam in aws_types.AWSEC2InstFamilies
 ]
 
-factory_settings['aws_ec2_limits_default_levels'] = {
-    'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
-    'elastic_ip_addresses': (None, 80.0, 90.0),
-    'vpc_sec_group_rules': (None, 80.0, 90.0),
-    'vpc_sec_groups': (None, 80.0, 90.0),
-    'if_vpc_sec_group': (None, 80.0, 90.0),
-    'spot_inst_requests': (None, 80.0, 90.0),
-    'active_spot_fleet_requests': (None, 80.0, 90.0),
-    'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
-    'running_ondemand_instances_total': (None, 80.0, 90.0),
-    'running_ondemand_instances': default_running_ondemand_instances,
-    'running_ondemand_instances_vcpus': default_running_ondemand_instance_families,
+factory_settings["aws_ec2_limits_default_levels"] = {
+    "vpc_elastic_ip_addresses": (None, 80.0, 90.0),
+    "elastic_ip_addresses": (None, 80.0, 90.0),
+    "vpc_sec_group_rules": (None, 80.0, 90.0),
+    "vpc_sec_groups": (None, 80.0, 90.0),
+    "if_vpc_sec_group": (None, 80.0, 90.0),
+    "spot_inst_requests": (None, 80.0, 90.0),
+    "active_spot_fleet_requests": (None, 80.0, 90.0),
+    "spot_fleet_total_target_capacity": (None, 80.0, 90.0),
+    "running_ondemand_instances_total": (None, 80.0, 90.0),
+    "running_ondemand_instances": default_running_ondemand_instances,
+    "running_ondemand_instances_vcpus": default_running_ondemand_instance_families,
 }
 
 
 def _transform_ec2_limits(params):
     # Check default reset
     def instance_limits(limits):
-        return {'running_ondemand_instances_%s' % inst_type: levels for inst_type, levels in limits}
+        return {"running_ondemand_instances_%s" % inst_type: levels for inst_type, levels in limits}
 
     transformed = instance_limits(default_running_ondemand_instances)
     transformed.update(instance_limits(default_running_ondemand_instance_families))
@@ -59,12 +60,12 @@ def check_aws_ec2_limits(item, params, region_data):
     return check_aws_limits("ec2", params, region_data)
 
 
-check_info['aws_ec2_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_ec2_limits,
-    'service_description': 'AWS/EC2 Limits %s',
-    'group': 'aws_ec2_limits',
-    'default_levels_variable': 'aws_ec2_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_ec2_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_ec2_limits,
+    "service_description": "AWS/EC2 Limits %s",
+    "group": "aws_ec2_limits",
+    "default_levels_variable": "aws_ec2_limits_default_levels",
+    "has_perfdata": True,
 }

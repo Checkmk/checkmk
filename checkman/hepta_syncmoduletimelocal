@@ -1,14 +1,14 @@
 title: Hepta: Local Time
 agents: snmp
 catalog: hw/time/hopf
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the local time of the module.
 
  This check supports Hepta 8029 and Hepta 8030 devices.
 
-inventory:
+discovery:
  One service is created.
 
 item:

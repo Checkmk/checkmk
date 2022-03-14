@@ -26,14 +26,14 @@ def check_emcvnx_agent(item, _no_params, parsed):
     for line in errors:
         # Only handle real errors here not e.g. certificate errors handled by
         # the info check.
-        if line.startswith('Error'):
+        if line.startswith("Error"):
             yield 2, line
 
     for key, value in output:
         yield 0, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_agent'] = {
+check_info["emcvnx_agent"] = {
     "parse_function": parse_emcvnx_agent,
     "inventory_function": inventory_emcvnx_agent,
     "check_function": check_emcvnx_agent,

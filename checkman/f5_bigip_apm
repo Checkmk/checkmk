@@ -1,13 +1,12 @@
 title: F5 Big-IP: Number of Current SSL/VPN Connections
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   The check queries the MIB tables of F5 Big-IP loadbalancers
   for the total number of current SSL/VPN connections
   {ampGlobalConnectivityStatCurConns}.
 
-inventory:
+discovery:
   One service is created.
-

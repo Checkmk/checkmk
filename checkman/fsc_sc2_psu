@@ -1,7 +1,7 @@
 title: Fujitsu SC2: PSU Status
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the PSU status
@@ -14,6 +14,5 @@ description:
 item:
  The PSU designation
 
-inventory:
+discovery:
  One service is created for each PSU.
-

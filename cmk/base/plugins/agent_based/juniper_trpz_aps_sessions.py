@@ -4,37 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#grep -r -E ".1.3.6.1.4.1.14525.3.1|.1.3.6.1.4.1.14525.3.3"
-#juniper-trpz-1         :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.6
-#juniper-trpz-2         :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
-#juniper-trpz-wlc-800-1 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
-#juniper-trpz-wlc-800-2 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
-#juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
+# grep -r -E ".1.3.6.1.4.1.14525.3.1|.1.3.6.1.4.1.14525.3.3"
+# juniper-trpz-1         :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.6
+# juniper-trpz-2         :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
+# juniper-trpz-wlc-800-1 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
+# juniper-trpz-wlc-800-2 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
+# juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
-from typing import Any, Dict, List, Mapping, MutableMapping, Tuple, TypedDict
 import time
 from contextlib import suppress
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
-    SNMPTree,
-    OIDEnd,
-    Service,
-    Metric,
-    Result,
-    State as state,
-    register,
     any_of,
-    startswith,
     get_rate,
     get_value_store,
     GetRateError,
+    Metric,
+    OIDEnd,
+    register,
     render,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
 )
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    DiscoveryResult,
-    CheckResult,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 RadioCounters = List[float]
 
@@ -90,12 +86,13 @@ def parse_juniper_trpz_aps_sessions(string_table: List[StringTable]) -> Section:
     12.109.103.48.50.49.50.48.51.51.56.49.53: {'1': ([0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0), '2': ([0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0)}
     12.109.103.48.50.49.50.48.51.52.53.50.56: {'1': ([0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0), '2': ([0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0)}
     """
+
     def to_int(string: str) -> int:
         return int(string) if string else 0
 
     radios: RadioDict = {}
     for combined_radio_oid, *counters, sessions, noise_floor in string_table[1]:
-        for oid, number in (combined_radio_oid.rsplit('.', 1),):
+        for oid, number in (combined_radio_oid.rsplit(".", 1),):
             radios.setdefault(oid, {})[number] = (
                 list(map(to_int, counters)),
                 to_int(sessions),
@@ -103,10 +100,11 @@ def parse_juniper_trpz_aps_sessions(string_table: List[StringTable]) -> Section:
             )
 
     return {
-        name.replace('AP-', ''): {
-            'oid': oid,
-            'status': status,
-        } for oid, status, name in string_table[0]
+        name.replace("AP-", ""): {
+            "oid": oid,
+            "status": status,
+        }
+        for oid, status, name in string_table[0]
     }, radios
 
 
@@ -162,20 +160,24 @@ def _check_common_juniper_trpz_aps_sessions(
     item_status, item_active_node, item_passive_node, item_radios = "", "n/A", "n/A", {}
     for node_name, oid, status, node_radios in (  #
         (name, aps[item]["oid"], aps[item]["status"], radios)
-            for name, (aps, radios) in section.items()
-            if item in aps):
+        for name, (aps, radios) in section.items()
+        if item in aps
+    ):
         if item_status != "10":
             item_active_node, item_status = node_name, status
             item_radios = node_radios[oid]
         else:
             item_passive_node = node_name
 
-    state_code, state_string = AP_STATES.get(item_status, (state.UNKNOWN, 'unknown'))
-    yield Result(state=state_code,
-                 summary="%sStatus: %s" % (
-                     "" if "" in section else ("[%s/%s] " % (item_active_node, item_passive_node)),
-                     state_string,
-                 ))
+    state_code, state_string = AP_STATES.get(item_status, (state.UNKNOWN, "unknown"))
+    yield Result(
+        state=state_code,
+        summary="%sStatus: %s"
+        % (
+            "" if "" in section else ("[%s/%s] " % (item_active_node, item_passive_node)),
+            state_string,
+        ),
+    )
 
     ap_rates: RadioCounters = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     ap_sessions = 0
@@ -198,16 +200,24 @@ def _check_common_juniper_trpz_aps_sessions(
                 radio_rates[nr] = radio_rate
                 ap_rates[nr] += radio_rate
 
-        yield Result(state=state.OK,
-                     summary="Radio %s: %s" % (radio_number, ", ".join((
-                         "Input: %s" % render.networkbandwidth(radio_rates[5]),
-                         "Output: %s" % render.networkbandwidth(radio_rates[1] + radio_rates[3]),
-                         "Errors: %d" % radio_rates[6],
-                         "Resets: %d" % radio_rates[7],
-                         "Retries: %d" % radio_rates[8],
-                         "Sessions: %s" % sessions,
-                         "Noise: %s dBm" % noise_floor,
-                     ))))
+        yield Result(
+            state=state.OK,
+            summary="Radio %s: %s"
+            % (
+                radio_number,
+                ", ".join(
+                    (
+                        "Input: %s" % render.networkbandwidth(radio_rates[5]),
+                        "Output: %s" % render.networkbandwidth(radio_rates[1] + radio_rates[3]),
+                        "Errors: %d" % radio_rates[6],
+                        "Resets: %d" % radio_rates[7],
+                        "Retries: %d" % radio_rates[8],
+                        "Sessions: %s" % sessions,
+                        "Noise: %s dBm" % noise_floor,
+                    )
+                ),
+            ),
+        )
 
     yield Metric("if_out_unicast", ap_rates[0])
     yield Metric("if_out_unicast_octets", ap_rates[1])
@@ -238,45 +248,49 @@ def check_juniper_trpz_aps_sessions(
 
 def cluster_check_juniper_trpz_aps_sessions(
     item: str,
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),
         time.time(),
         item,
-        section,
+        {k: v for k, v in section.items() if v is not None},
     )
 
 
 register.snmp_section(
     name="juniper_trpz_aps_sessions",
-    detect=any_of(startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
-                  startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3")),
+    detect=any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3"),
+    ),
     parse_function=parse_juniper_trpz_aps_sessions,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14525.4.5.1.1.2.1",
             oids=[
                 OIDEnd(),
-                "5",  #  trpzApStatApStatusMacApState         -> status of access point
-                "8",  #  trpzApStatApStatusMacApName          -> name of access point
-            ]),
+                "5",  # trpzApStatApStatusMacApState         -> status of access point
+                "8",  # trpzApStatApStatusMacApName          -> name of access point
+            ],
+        ),
         SNMPTree(
             base=".1.3.6.1.4.1.14525.4.5.1.1.10.1",
             oids=[
                 OIDEnd(),
-                "3",  #  trpzApStatRadioOpStatsTxUniPkt       -> unicast packets transmitted
-                "4",  #  trpzApStatRadioOpStatsTxUniOct       -> octets transmitted in unicast packets
-                "5",  #  trpzApStatRadioOpStatsTxMultiPkt     -> multicast packets transmitted
-                "6",  #  trpzApStatRadioOpStatsTxMultiOct     -> octets transmitted in multicast packets
-                "7",  #  trpzApStatRadioOpStatsRxPkt          -> packets received
-                "8",  #  trpzApStatRadioOpStatsRxOctet        -> octets received
+                "3",  # trpzApStatRadioOpStatsTxUniPkt       -> unicast packets transmitted
+                "4",  # trpzApStatRadioOpStatsTxUniOct       -> octets transmitted in unicast packets
+                "5",  # trpzApStatRadioOpStatsTxMultiPkt     -> multicast packets transmitted
+                "6",  # trpzApStatRadioOpStatsTxMultiOct     -> octets transmitted in multicast packets
+                "7",  # trpzApStatRadioOpStatsRxPkt          -> packets received
+                "8",  # trpzApStatRadioOpStatsRxOctet        -> octets received
                 "11",  # trpzApStatRadioOpStatsPhyErr         -> nr. physical errors occurred
                 "12",  # trpzApStatRadioOpStatsResetCount     -> nr. reset operations
                 "14",  # trpzApStatRadioOpStatsRxRetriesCount -> nr. transmission retries
                 "15",  # trpzApStatRadioOpStatsUserSessions   -> current client sessions
                 "16",  # trpzApStatRadioOpStatsNoiseFloor     -> noise floor (dBm)
-            ]),
+            ],
+        ),
     ],
 )
 

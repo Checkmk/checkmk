@@ -33,13 +33,23 @@ def check_oracle_longactivesessions(item, params, info):
         if line[0] == item:
             itemfound = True
 
-        if line[0] == item and line[1] != '':
+        if line[0] == item and line[1] != "":
             sessioncount += 1
-            _sid, sidnr, serial, machine, process, osuser, program, \
-            last_call_el, sql_id = line
+            _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
-            longoutput = 'Session (sid,serial,proc) %s %s %s active for %s from %s osuser %s program %s sql_id %s ' \
-                        % (sidnr, serial, process, get_age_human_readable(int(last_call_el)), machine, osuser, program, sql_id)
+            longoutput = (
+                "Session (sid,serial,proc) %s %s %s active for %s from %s osuser %s program %s sql_id %s "
+                % (
+                    sidnr,
+                    serial,
+                    process,
+                    get_age_human_readable(int(last_call_el)),
+                    machine,
+                    osuser,
+                    program,
+                    sql_id,
+                )
+            )
 
     if itemfound:
         infotext = "%s" % sessioncount
@@ -68,7 +78,7 @@ def check_oracle_longactivesessions(item, params, info):
     raise MKCounterWrapped("no info from database. Check ORA %s Instance" % item)
 
 
-check_info['oracle_longactivesessions'] = {
+check_info["oracle_longactivesessions"] = {
     "check_function": check_oracle_longactivesessions,
     "inventory_function": inventory_oracle_longactivesessions,
     "service_description": "ORA %s Long Active Sessions",

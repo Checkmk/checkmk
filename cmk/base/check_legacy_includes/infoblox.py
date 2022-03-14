@@ -8,8 +8,9 @@ from typing import Any, Dict
 
 
 def scan_infoblox(oid):
-    return "infoblox" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.7779.1")
+    return "infoblox" in oid(".1.3.6.1.2.1.1.1.0").lower() or oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.7779.1"
+    )
 
 
 def inventory_infoblox_statistics(info):

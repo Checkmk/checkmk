@@ -9,8 +9,9 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['jolokia_jvm_threading.pool'] = {
-    'currentThreadsBusy': (80, 90),
+
+factory_settings["jolokia_jvm_threading.pool"] = {
+    "currentThreadsBusy": (80, 90),
 }
 
 
@@ -18,12 +19,12 @@ def parse_jolokia_jvm_threading(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = jolokia_mbean_attribute('type', mbean)
+        type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
 
         if type_ == "ThreadPool":
             for key in data:
-                name = jolokia_mbean_attribute('name', key).strip('"')
+                name = jolokia_mbean_attribute("name", key).strip('"')
                 parsed_data[name] = data[key]
         else:
             parsed_data.update(data)
@@ -39,34 +40,30 @@ def discover_jolokia_jvm_threading(_instance, data):
 @get_parsed_item_data
 def check_jolokia_jvm_threading(item, params, instance_data):
     data = instance_data.get("Threading", {})
-    count = data.get('ThreadCount')
+    count = data.get("ThreadCount")
     if count is not None:
-        levels = params.get('threadcount_levels')
-        yield check_levels(count,
-                           'ThreadCount',
-                           levels,
-                           infoname="Count",
-                           human_readable_func=lambda i: "%.f" % i)
+        levels = params.get("threadcount_levels")
+        yield check_levels(
+            count, "ThreadCount", levels, infoname="Count", human_readable_func=lambda i: "%.f" % i
+        )
 
         counter = "jolokia_jvm_threading.count.%s" % item
         thread_rate = get_rate(counter, time.time(), count, allow_negative=True)
-        levels = params.get('threadrate_levels')
-        yield check_levels(thread_rate, 'ThreadRate', levels, infoname="Rate")
+        levels = params.get("threadrate_levels")
+        yield check_levels(thread_rate, "ThreadRate", levels, infoname="Rate")
 
     for key, name in (
-        ('DaemonThreadCount', 'Daemon threads'),
-        ('PeakThreadCount', 'Peak count'),
-        ('TotalStartedThreadCount', 'Total started'),
+        ("DaemonThreadCount", "Daemon threads"),
+        ("PeakThreadCount", "Peak count"),
+        ("TotalStartedThreadCount", "Total started"),
     ):
         value = data.get(key)
         if value is None:
             continue
-        levels = params.get('%s_levels' % key.lower())
-        yield check_levels(value,
-                           key,
-                           levels,
-                           infoname=name,
-                           human_readable_func=lambda i: "%.f" % i)
+        levels = params.get("%s_levels" % key.lower())
+        yield check_levels(
+            value, key, levels, infoname=name, human_readable_func=lambda i: "%.f" % i
+        )
 
 
 check_info["jolokia_jvm_threading"] = {
@@ -97,22 +94,25 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
     yield 0, "Maximum threads: %d" % max_threads
 
     for key, name in (
-        ('currentThreadsBusy', 'Busy'),
-        ('currentThreadCount', 'Total'),
+        ("currentThreadsBusy", "Busy"),
+        ("currentThreadCount", "Total"),
     ):
         value = threadpool_info.get(key)
         if value is None:
             continue
         warn, crit = params.get(key, (None, None))
         if warn is not None:
-            warn *= (max_threads / 100.)
-            crit *= (max_threads / 100.)
+            warn *= max_threads / 100.0
+            crit *= max_threads / 100.0
 
-        yield check_levels(value,
-                           key, (warn, crit),
-                           boundaries=(None, max_threads),
-                           infoname=name,
-                           human_readable_func=lambda f: "%.f" % f)
+        yield check_levels(
+            value,
+            key,
+            (warn, crit),
+            boundaries=(None, max_threads),
+            infoname=name,
+            human_readable_func=lambda f: "%.f" % f,
+        )
 
 
 check_info["jolokia_jvm_threading.pool"] = {

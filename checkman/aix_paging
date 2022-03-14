@@ -1,7 +1,7 @@
 title: AIX: Paging Information
 agents: aix
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the usage of paged AIX volumes.
@@ -34,5 +34,5 @@ description:
 item:
  Name of the volume as defined in the system
 
-inventory:
+discovery:
  One service is created for each volume.

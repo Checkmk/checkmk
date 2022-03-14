@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
 # "page": 1}, "sidecars": [{"co  llectors": null, "node_name": "testserver",
@@ -42,23 +43,27 @@ def parse_graylog_sidecars(info):
             continue
 
         parsed.setdefault(
-            sidecar_nodename, {
+            sidecar_nodename,
+            {
                 "active": sidecar_data.get("active"),
-                "collectors": sidecar_data.get("node_details", {}).get("status",
-                                                                       {}).get("collectors"),
-                "collector_msg": sidecar_data.get("node_details", {}).get("status",
-                                                                          {}).get("message"),
+                "collectors": sidecar_data.get("node_details", {})
+                .get("status", {})
+                .get("collectors"),
+                "collector_msg": sidecar_data.get("node_details", {})
+                .get("status", {})
+                .get("message"),
                 "last_seen": sidecar_data.get("last_seen"),
                 "status": sidecar_data.get("node_details", {}).get("status", {}).get("status"),
-            })
+            },
+        )
 
     return parsed
 
 
 factory_settings["graylog_sidecars_default_levels"] = {
-    'running_lower': (1, 0),
-    'stopped_upper': (1, 1),
-    'failing_upper': (1, 1)
+    "running_lower": (1, 0),
+    "stopped_upper": (1, 1),
+    "failing_upper": (1, 1),
 }
 
 
@@ -80,11 +85,13 @@ def check_graylog_sidecars(item, params, item_data):
 
         yield 0, "Last seen: %s" % get_timestamp_human_readable(local_timestamp)
 
-        yield check_levels(age,
-                           None,
-                           params.get("last_seen"),
-                           human_readable_func=get_age_human_readable,
-                           infoname="Before")
+        yield check_levels(
+            age,
+            None,
+            params.get("last_seen"),
+            human_readable_func=get_age_human_readable,
+            infoname="Before",
+        )
 
     collector_state = _handle_collector_states(item_data.get("status", 3), params)
     collector_msg = item_data.get("collector_msg")
@@ -94,14 +101,16 @@ def check_graylog_sidecars(item, params, item_data):
             for num_collector in msg:
                 count, status = num_collector.strip().split(" ")
 
-                collector_nr_levels = params.get('%s_upper' % status, (None, None))
-                collector_nr_levels_lower = params.get('%s_lower' % status, (None, None))
+                collector_nr_levels = params.get("%s_upper" % status, (None, None))
+                collector_nr_levels_lower = params.get("%s_lower" % status, (None, None))
 
-                yield check_levels(int(count),
-                                   "collectors_%s" % status,
-                                   collector_nr_levels + collector_nr_levels_lower,
-                                   human_readable_func=int,
-                                   infoname="Collectors %s" % status)
+                yield check_levels(
+                    int(count),
+                    "collectors_%s" % status,
+                    collector_nr_levels + collector_nr_levels_lower,
+                    human_readable_func=int,
+                    infoname="Collectors %s" % status,
+                )
 
         else:
             yield collector_state, "Collectors: %s" % collector_msg

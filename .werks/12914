@@ -1,0 +1,15 @@
+Title: mssql.vbs: plugin now uses UTF-16 to support special characters like umlauts
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1623148690
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, any non-ASCII characters in the output of the the mssql.vbs agent plugin
+were removed. As a result, the services were assigned incorrect (truncated) names.
+Now the plugin uses UTF-16 to encode its output and service names are displayed
+correctly. You have to rediscover the affected services.

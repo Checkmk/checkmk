@@ -1,7 +1,7 @@
 title: Citrix: Server Load
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The Citrix Server load is score calculated by citrix (See:
@@ -9,6 +9,5 @@ description:
  With this check it's possible to set thresholds for this value. In order
  to work the {citrix_serverload.ps1} plugin is needed.
 
-inventory:
+discovery:
  One service is created.
-

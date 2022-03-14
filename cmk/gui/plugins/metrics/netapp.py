@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -28,7 +24,7 @@ from cmk.gui.plugins.metrics import (
 
 
 def _fix_title(title):
-    return title.replace('read data', 'data read').replace('write data', 'data written')
+    return title.replace("read data", "data read").replace("write data", "data written")
 
 
 def register_netapp_api_vs_traffic_metrics():
@@ -77,7 +73,7 @@ def register_netapp_api_vs_traffic_metrics():
 
 register_netapp_api_vs_traffic_metrics()
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |

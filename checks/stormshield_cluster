@@ -9,20 +9,21 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Older versions replay an empty string if the state is Unknown / Error state
 
 sync_name_mapping = {
-    '1': 'Synced',
-    '0': 'Not Synced',
-    '-1': 'Unknown / Error',
-    '': 'Unknown / Error',
+    "1": "Synced",
+    "0": "Not Synced",
+    "-1": "Unknown / Error",
+    "": "Unknown / Error",
 }
 
 sync_status_mapping = {
-    '1': 0,
-    '0': 2,
-    '-1': 3,
-    '': 3,
+    "1": 0,
+    "0": 2,
+    "-1": 3,
+    "": 3,
 }
 
 
@@ -35,36 +36,37 @@ def check_stormshield_cluster(item, params, info):
         not_replying = int(not_replying)
         faulty_links = int(faulty_links)
 
-        yield sync_status_mapping[sync], 'Sync Status: %s' % sync_name_mapping[sync]
-        yield 0, 'Member: %s, Active: %s, Links used: %s' % (number, active, eth_links)
+        yield sync_status_mapping[sync], "Sync Status: %s" % sync_name_mapping[sync]
+        yield 0, "Member: %s, Active: %s, Links used: %s" % (number, active, eth_links)
 
         if not_replying > 0:
             status = 2
         else:
             status = 0
-        yield status, 'Not replying: %s' % not_replying
+        yield status, "Not replying: %s" % not_replying
 
         if faulty_links > 0:
             status = 2
         else:
             status = 0
-        yield status, 'Faulty: %s' % faulty_links
+        yield status, "Faulty: %s" % faulty_links
 
 
-check_info['stormshield_cluster'] = {
-    'inventory_function': inventory_stormshield_cluster,
-    'check_function': check_stormshield_cluster,
-    'service_description': 'HA Status',
-    'has_perfdata': False,
-    'snmp_info': (
-        '.1.3.6.1.4.1.11256.1.11',
+check_info["stormshield_cluster"] = {
+    "inventory_function": inventory_stormshield_cluster,
+    "check_function": check_stormshield_cluster,
+    "service_description": "HA Status",
+    "has_perfdata": False,
+    "snmp_info": (
+        ".1.3.6.1.4.1.11256.1.11",
         [
-            '1',  # 'Number of firewalls in the HA cluster'
-            '2',  # 'Number of firewalls registered in the HA cluster but not replying'
-            '3',  # 'Number of active firewalls'
-            '5',  # 'Number of ethernet links used for HA communication'
-            '6',  # 'Number of faulty HA links'
-            '8',  # snsHASyncStatus
-        ]),
-    'snmp_scan_function': stormshield_cluster_scan_function,
+            "1",  # 'Number of firewalls in the HA cluster'
+            "2",  # 'Number of firewalls registered in the HA cluster but not replying'
+            "3",  # 'Number of active firewalls'
+            "5",  # 'Number of ethernet links used for HA communication'
+            "6",  # 'Number of faulty HA links'
+            "8",  # snsHASyncStatus
+        ],
+    ),
+    "snmp_scan_function": stormshield_cluster_scan_function,
 }

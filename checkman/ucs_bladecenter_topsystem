@@ -1,12 +1,12 @@
 title: UCS Bladecenter: TopSystem Info
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the information of the TopSystem class of an UCS bladecenter.
  This includes the IP-Address, Current Time, IPv6-Address, Bladecenter Mode, System Name and the System Uptime.
  It is always OK.
 
-inventory:
+discovery:
  One service is created.

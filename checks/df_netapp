@@ -9,24 +9,29 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df_netapp import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 check_info["df_netapp"] = {
-    'check_function': check_df_netapp,
-    'inventory_function': inventory_df_netapp,
-    'service_description': 'Filesystem %s',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.789.1.5.4.1', [2, 29, 30]),
-    'snmp_scan_function': lambda oid: is_netapp_filer(oid) and oid(".1.3.6.1.4.1.789.1.5.4.1.29.*"),
-    'group': 'filesystem',
-    'default_levels_variable': 'filesystem_default_levels',
+    "check_function": check_df_netapp,
+    "inventory_function": inventory_df_netapp,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.789.1.5.4.1", [2, 29, 30]),
+    "snmp_scan_function": lambda oid: is_netapp_filer(oid) and oid(".1.3.6.1.4.1.789.1.5.4.1.29.*"),
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

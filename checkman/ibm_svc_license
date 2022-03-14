@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Licensing Status
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  For every licensed feature on an IBM SVC / Storwize V3700 / V7000 device, the
@@ -17,5 +17,5 @@ item:
  The name of the licensable feature. This is everything after used_ or
  license_ in the output of the lslicense command.
 
-inventory:
+discovery:
  One service is created for eeach licensable feature.

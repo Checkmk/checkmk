@@ -1,14 +1,13 @@
 title: Number of TCP Connections per State
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of TCP connections in the various possible states,
  which are: {ESTABLISHED}, {SYN_SENT}, {SYN_RECV}, {LAST_ACK}, {CLOSE_WAIT}, {TIME_WAIT}, {CLOSED}, {CLOSING}, {FIN_WAIT1}, {FIN_WAIT2}.
 
-inventory:
+discovery:
  One service is created if there is at least one TCP connection.
  On agents supporting {tcp_conn_stats} this should always be the case since at
  least the connection to the agent should be shown.
-

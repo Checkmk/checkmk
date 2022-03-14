@@ -1,7 +1,7 @@
 title: Connection to a TCP Port (unencrypted or with SSL)
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -22,4 +22,3 @@ description:
  within the next days.
 
  This check can be configured by Wato.
-

@@ -1,7 +1,7 @@
 title: AWS S3: Limits
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the account-wide number of AWS/S3 buckets.
@@ -20,5 +20,5 @@ description:
  Also, possibly configured restriction to names or tags are not
  taken into account.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

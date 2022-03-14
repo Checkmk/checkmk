@@ -5,40 +5,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersEnvironment,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextAscii, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _item_spec_cooling_cap():
-    return TextAscii(title=_("Cooling device"),
-                     help=_("This name corresponds to the cooling device to be monitored."),
-                     allow_empty=True)
+    return TextInput(
+        title=_("Cooling device"),
+        help=_("This name corresponds to the cooling device to be monitored."),
+        allow_empty=True,
+    )
 
 
 def _parameter_valuespec_cooling_cap():
     return Dictionary(
-        elements=[("min_capacity",
-                   Tuple(
-                       title=_("Minimal cooling capacity"),
-                       elements=[
-                           Percentage(title=_("Warning if below")),
-                           Percentage(title=_("Critical if below")),
-                       ],
-                   )),
-                  ("max_capacity",
-                   Tuple(
-                       title=_("Maximal cooling capacity"),
-                       elements=[
-                           Percentage(title=_("Warning if above")),
-                           Percentage(title=_("Critical if above")),
-                       ],
-                   ))],
-        help=_("Here you can set different warn/crit levels regarding the available cooling "
-               " capacity."),
+        elements=[
+            (
+                "min_capacity",
+                Tuple(
+                    title=_("Minimal cooling capacity"),
+                    elements=[
+                        Percentage(title=_("Warning if below")),
+                        Percentage(title=_("Critical if below")),
+                    ],
+                ),
+            ),
+            (
+                "max_capacity",
+                Tuple(
+                    title=_("Maximal cooling capacity"),
+                    elements=[
+                        Percentage(title=_("Warning if above")),
+                        Percentage(title=_("Critical if above")),
+                    ],
+                ),
+            ),
+        ],
+        help=_(
+            "Here you can set different warn/crit levels regarding the available cooling "
+            " capacity."
+        ),
     )
 
 
@@ -50,4 +60,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cooling_cap,
         title=lambda: _("Percentage of available cooling capacity"),
-    ))
+    )
+)

@@ -3,3 +3,24 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# 2019-01-17, comNET GmbH, Fabian Binder
+
+from typing import Any, Mapping, Optional, Sequence
+
+
+def agent_zerto_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    return [
+        "--authentication",
+        params.get("authentication", "windows"),
+        "-u",
+        params["username"],
+        "-p",
+        params["password"],
+        ipaddress or hostname,
+    ]
+
+
+special_agent_info["zerto"] = agent_zerto_arguments

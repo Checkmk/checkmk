@@ -9,6 +9,8 @@ withFolderProperties{
     BRANCH = env.BRANCH
 }
 
+def DOCKER_GROUP_ID
+
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
@@ -28,23 +30,30 @@ DISTRO_LIST = DISTRO_LIST - ['cma']
 
 currentBuild.description = '\nVersion: ' + VERSION + '\nEdition: ' + EDITION + '\nDistros: ' + DISTRO_LIST
 
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-        integration= load 'buildscripts/scripts/lib/integration.groovy'
-    }
-    try {
-        integration.build(
-            DISTRO_LIST: DISTRO_LIST,
-            EDITION: EDITION,
-            VERSION: VERSION,
-            DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), DOCKER_TAG, DOCKER_TAG_DEFAULT),
-            MAKE_TARGET: "test-integration-docker",
-            BRANCH: BRANCH,
-        )
-    }catch(Exception e) {
-        notify.notify_error(e)
+timeout(time: 12, unit: 'HOURS') {
+    node (NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
+            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+            docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
+            integration= load 'buildscripts/scripts/lib/integration.groovy'
+            // ID of docker group on the node
+            DOCKER_GROUP_ID = docker_util.get_docker_group_id()
+    
+        }
+        try {
+            integration.build(
+                DOCKER_GROUP_ID: DOCKER_GROUP_ID,
+                DISTRO_LIST: DISTRO_LIST,
+                EDITION: EDITION,
+                VERSION: VERSION,
+                DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), DOCKER_TAG, DOCKER_TAG_DEFAULT),
+                MAKE_TARGET: "test-integration-docker",
+                BRANCH: BRANCH,
+            )
+        }catch(Exception e) {
+            notify.notify_error(e)
+        }
     }
 }

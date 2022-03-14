@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['informix_locks_default_levels'] = {
-    'levels': (70, 80),
+factory_settings["informix_locks_default_levels"] = {
+    "levels": (70, 80),
 }
 
 
@@ -29,24 +29,25 @@ def inventory_informix_locks(parsed):
 def check_informix_locks(item, params, parsed):
     if item in parsed:
         data = parsed[item]
-        locks = int(data['locks'])
-        warn, crit = params['levels']
+        locks = int(data["locks"])
+        warn, crit = params["levels"]
         state = 0
-        infotext = 'Type: %s, Locks: %s' % (data['type'], locks)
+        infotext = "Type: %s, Locks: %s" % (data["type"], locks)
         if locks >= crit:
             state = 2
         elif locks >= crit:
             state = 1
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)
-        return state, infotext, [('locks', locks)]
+        return state, infotext, [("locks", locks)]
 
 
-check_info['informix_locks'] = {
-    'parse_function': parse_informix_locks,
-    'inventory_function': inventory_informix_locks,
-    'check_function': check_informix_locks,
-    'has_perfdata': True,
-    'service_description': 'Informix Locks %s',
-    'default_levels_variable': 'informix_locks_default_levels',
+check_info["informix_locks"] = {
+    "parse_function": parse_informix_locks,
+    "inventory_function": inventory_informix_locks,
+    "check_function": check_informix_locks,
+    "has_perfdata": True,
+    "service_description": "Informix Locks %s",
+    "group": "informix_locks",
+    "default_levels_variable": "informix_locks_default_levels",
 }

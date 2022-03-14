@@ -1,0 +1,18 @@
+Title: Fix possibility to overwrite selections of other users
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1622034624
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If a user with less permissions edited a duallist element (two lists with
+interchangable elements) like e.g. the "Match site" criteria in event console
+rules, the user could overwrite previously set values of users with more
+permissions, because he was not able to see elements he is not permitted for.
+
+The count of such elements will now be shown as "3 locked sites" entry in
+the "Match site" criteria of event console rules. This entry is disabled and
+can not be moved to unselected.

@@ -1,7 +1,7 @@
 title: Atto Fibrebridge: Throughput Status
 catalog: hw/storagehw/atto
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the throughput status of Atto Fibrebridge 6500N Controllers.
@@ -12,5 +12,5 @@ description:
 
  This check uses the ATTO6500N-MIB.
 
-inventory:
+discovery:
  One service is created for each device

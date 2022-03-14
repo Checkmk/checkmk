@@ -14,8 +14,8 @@ def check_vnx_version(item, params, info):
         yield 0, "%s: %s" % (line[0], line[1])
 
 
-check_info['vnx_version'] = {
-    'inventory_function': inventory_vnx_version,
-    'check_function': check_vnx_version,
-    'service_description': 'VNX Version',
+check_info["vnx_version"] = {
+    "inventory_function": inventory_vnx_version,
+    "check_function": check_vnx_version,
+    "service_description": "VNX Version",
 }

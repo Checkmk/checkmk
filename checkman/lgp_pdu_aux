@@ -1,7 +1,7 @@
 title: Liebert MPH/MPX Devices: PDU AUX Sensors
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors connected Power Distribution (PDU) Auxiliary (AUX) sensors
@@ -17,5 +17,5 @@ description:
 item:
  The type, the system label and the index of the PDU seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each AUX device.

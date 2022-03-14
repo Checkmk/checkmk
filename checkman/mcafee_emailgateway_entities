@@ -1,7 +1,7 @@
 title: McAfee Email Gateway: Entities
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the health status of miscellaneous
@@ -24,5 +24,5 @@ description:
 item:
  Title of the entity (e.g. {{RAID}}, {{Cooling}}, etc.)
 
-inventory:
+discovery:
  One service is created.

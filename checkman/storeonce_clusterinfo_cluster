@@ -1,12 +1,12 @@
 title: HPE StoreOnce: Cluster Status
 agents: storeonce
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the cluster and replication status. The reported states
  from the appliance are similar to Checkmk. The state "Information" will
  be treated as {OK}.
 
-inventory:
+discovery:
  One service is created.

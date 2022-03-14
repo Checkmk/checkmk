@@ -489,7 +489,7 @@ export class FigureBase {
                 .attr("xlink:href", d => d.url || "#");
         }
 
-        title_component
+        let text_element = title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
@@ -498,12 +498,82 @@ export class FigureBase {
             .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
+
+        let title_padding_left = 0;
+        const title_padding_left_raw = utils.get_computed_style(
+            d3.select("div.dashlet div.title").node(),
+            "padding-left"
+        );
+        if (title_padding_left_raw) {
+            title_padding_left = parseInt(title_padding_left_raw.replace("px", ""));
+        }
+
+        text_element.each((d, idx, nodes) => {
+            this._svg_text_overflow_ellipsis(
+                nodes[idx],
+                this.figure_size.width,
+                title_padding_left
+            );
+        });
+    }
+
+    /**
+     * Component to realize the css property text-overflow: ellipsis for svg text elements
+     * @param {DOMElement} text or tspan DOM element
+     * @param {number} width - Max width for the text/tspan element
+     * @param {number} padding - Padding for the text/tspan element
+     */
+    _svg_text_overflow_ellipsis(node, width, padding) {
+        let length = node.getComputedTextLength();
+        if (length <= width - padding) return;
+
+        const node_sel = d3.select(node);
+        let text = node_sel.text();
+        d3.select(node.parentNode)
+            .selectAll("title")
+            .data(d => [text])
+            .join("title")
+            .text(d => d)
+            .classed("svg_text_tooltip", true);
+
+        while (length > width - padding && text.length > 0) {
+            text = text.slice(0, -1);
+            node_sel.text(text + "...");
+            length = node.getComputedTextLength();
+        }
+        node_sel.attr("x", padding).attr("text-anchor", "left");
     }
 
     get_scale_render_function() {
+        // Create uniform behaviour with Graph dashlets: Display no unit at y-axis if value is 0
+        const f = render_function => v => Math.abs(v) < 10e-16 ? "0" : render_function(v);
         if (this._data.plot_definitions.length > 0)
-            return plot_render_function(this._data.plot_definitions[0]);
-        return plot_render_function({});
+            return f(plot_render_function(this._data.plot_definitions[0]));
+        return f(plot_render_function({}));
+    }
+}
+
+export class TextFigure extends FigureBase {
+    constructor(div_selector, fixed_size = null) {
+        super(div_selector, fixed_size);
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
+    }
+    initialize(debug) {
+        FigureBase.prototype.initialize.call(this, debug);
+        this.svg = this._div_selection.append("svg");
+        this.plot = this.svg.append("g");
+    }
+    resize() {
+        if (this._data.title) {
+            this.margin.top = 22; // magic number: title height
+        }
+        FigureBase.prototype.resize.call(this);
+        this.svg.attr("width", this.figure_size.width).attr("height", this.figure_size.height);
+        this.plot.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+    }
+    update_gui() {
+        this.resize();
+        this.render();
     }
 }
 
@@ -574,30 +644,26 @@ export class FigureTooltip {
     update_position(event) {
         if (!this.active()) return;
 
-        let ev = "sourceEvent" in event ? event.sourceEvent : event;
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
-        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
-        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+        let render_to_the_left = this.figure_size.width - x < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - y < tooltip_size.height - 16;
 
         this._tooltip
             .style("left", () => {
-                if (!render_to_the_left) return ev.layerX + 20 + "px";
-                return "auto";
+                return !render_to_the_left ? x + 20 + "px" : "auto";
             })
             .style("right", () => {
-                if (render_to_the_left) return this.plot_size.width - ev.layerX + 75 + "px";
-                return "auto";
+                return render_to_the_left ? this.plot_size.width - x + 75 + "px" : "auto";
             })
             .style("bottom", () => {
-                if (render_upwards) return "6px";
-                return "auto";
+                return render_upwards ? "6px" : "auto";
             })
             .style("top", () => {
-                if (!render_upwards) return ev.layerY - 20 + "px";
-                return "auto";
+                return !render_upwards ? y - 20 + "px" : "auto";
             })
             .style("pointer-events", "none")
             .style("opacity", 1);
@@ -641,45 +707,60 @@ export class FigureTooltip {
     }
 }
 
+/**
+ * Component to draw a label at the bottom of the dashlet
+ * @param {FigureBase} figurebase - Draw label on this dashlet
+ * @param {Object} options - Configuration of the label
+ * @param {string} options.label - Text to draw in the label
+ * @param {string} options.css_class - Css classes to append to the label
+ * @param {boolean} options.visible - Whether to draw the label at all
+ * @param {string} options.font_size - Optional font size
+ */
 // Figure which inherited from FigureBase. Needs access to svg and size
-export function state_component(figurebase, state) {
-    if (!getIn(state, "draw")) {
+export function state_component(figurebase, options) {
+    // TODO: use figurebase.svg as first parameter and move size to options
+    if (!options.visible) {
         figurebase.svg.selectAll(".state_component").remove();
         return;
     }
     //hard fix for the moment
-    var border_width = 2;
-    let font_size = 16;
-
+    let font_size = options.font_size ? options.font_size : 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
-        .data([state])
+        .data([options])
         .join("g")
-        .classed("state_component", true);
-    let the_rect = state_component
-        .selectAll("rect")
+        .classed("state_component", true)
+        .attr(
+            "transform",
+            "translate(" +
+                (figurebase.figure_size.width - font_size * 8) / 2 +
+                ", " +
+                (figurebase.figure_size.height - font_size * 2) +
+                ")"
+        );
+    let label_box = state_component
+        .selectAll("rect.status_label")
         .data(d => [d])
-        .join("rect");
-    the_rect
-        .attr("x", border_width / 2)
-        .attr("y", border_width / 2)
-        .attr("width", figurebase.figure_size.width - border_width)
-        .attr("height", figurebase.figure_size.height - border_width)
-        .attr("class", d => d.style)
-        .style("fill", "none")
-        .style("stroke-width", border_width);
+        .join("rect")
+        .attr("class", d => `status_label ${d.css_class}`)
+        // status_label css class is also defined for WATO and not encapsulated
+        // it predifines other sizes, we use thus style instead of attr for size
+        // to override that
+        .style("width", font_size * 8)
+        .style("height", font_size * 1.5)
+        .attr("rx", 2);
 
     let the_text = state_component
         .selectAll("text")
         .data(d => [d])
-        .join("text");
-    the_text
-        .attr("x", figurebase.figure_size.width / 2)
-        .attr("y", figurebase.figure_size.height - font_size)
+        .join("text")
         .attr("text-anchor", "middle")
+        .attr("dx", font_size * 4)
+        .attr("dy", font_size * 1.1)
         .style("font-size", font_size + "px")
-        .attr("class", d => d.style)
-        .text(d => d.msg);
+        .style("fill", "black")
+        .style("font-weight", "bold")
+        .text(d => d.label);
 }
 
 export function renderable_value(value, domain, plot) {
@@ -720,34 +801,69 @@ export function plot_render_function(plot) {
 }
 export function svc_status_css(paint, params) {
     let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
-
     if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
     return status_cls;
 }
-export function background_status_component(selection, params, rect_size) {
-    let status_cls = svc_status_css("background", params);
 
-    if (status_cls) {
-        selection
-            .selectAll("rect.status_background")
-            .data([null])
-            .join(enter => enter.insert("rect", ":first-child"))
-            .attr("class", `status_background ${status_cls}`)
-            .attr("y", 0)
-            .attr("x", 0)
-            .attr("width", rect_size.width)
-            .attr("height", rect_size.height);
-    } else {
-        selection.selectAll("rect.status_background").remove();
-    }
+/**
+ * Draw an individual shape
+ *
+ * @callback pathCallback
+ * @param {d3.path} path - d3 path object to draw a shape with, it is filled with color to reflect the status.
+ */
+
+/**
+ * Component to draw a background color on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the background
+ * @param {Object} options.size - When path_callback is not given draw a rect
+ * @param {number} options.size.height - Height of the background rect
+ * @param {number} options.size.width - Width of the background rect
+ * @param {pathCallback} options.path_callback - Draw individual shape instead of rect
+ * @param {string} options.css_class - Css classes to append to the background
+ * @param {boolean} options.visible - Whether to draw the background at all
+ */
+export function background_status_component(selection, options) {
+    const data = options.visible ? [null] : [];
+
+    let path_callback =
+        options.path_callback ||
+        function (path) {
+            path.rect(0, 0, options.size.width, options.size.height);
+        };
+
+    let background_path = d3.path();
+    path_callback(background_path);
+
+    selection
+        .selectAll("path.status_background")
+        .data(data)
+        .join(enter => enter.insert("path", ":first-child"))
+        .attr("class", `status_background ${options.css_class}`)
+        .attr("d", background_path.toString());
 }
-export function metric_value_component(selection, value, attr, style) {
-    let css_class = svc_status_css("text", style);
-    if (!css_class) css_class = "single_value";
+
+/**
+ * Component to draw a big centered value on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the value
+ * @param {Object} options.value - Configuration of the text to draw
+ * @param {string} options.value.url - When given, add a link to the text
+ * @param {string} options.value.unit - Append a unit to the value. e.g. '%'
+ * @param {string} options.value.value - Text to display
+ * @param {Object} options.position - Where to draw the Text
+ * @param {number} options.position.x - X position relative to the center of the text
+ * @param {number} options.position.y - Y position relative to the baseline of the text
+ * @param {number} options.font_size - Size of the font, clamped to [12, 50]
+ * @param {boolean} options.visible - Whether to draw the value at all
+ */
+export function metric_value_component(selection, options) {
+    const font_size = clamp(options.font_size, [12, 50]);
+    const data = options.visible ? [options.value] : [];
 
     let link = selection
         .selectAll("a.single_value")
-        .data([value])
+        .data(data)
         .join("a")
         .classed("single_value", true)
         .attr("xlink:href", d => d.url || null);
@@ -756,16 +872,69 @@ export function metric_value_component(selection, value, attr, style) {
         .data(d => [d])
         .join("text")
         .text(d => d.value)
-        .attr("x", attr.x)
-        .attr("y", attr.y)
+        .attr("x", options.position.x)
+        .attr("y", options.position.y)
         .attr("text-anchor", "middle")
-        .attr("class", css_class)
-        .style("font-size", style.font_size + "px");
+        .attr("dominant-baseline", "central")
+        .style("font-weight", "bold")
+        .style("font-size", font_size + "px");
 
     let unit = text
         .selectAll("tspan")
         .data(d => [d])
         .join("tspan")
-        .style("font-size", style.font_size / 2 + "px")
+        .style("font-size", font_size / 2 + "px")
+        .style("font-weight", "lighter")
         .text(d => d.unit);
+    if (options.value.unit !== "%") {
+        unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
+    }
+}
+
+/**
+ * Function to provide default options for metric_value_component
+ * @param {Object} size - Size of container to draw to
+ * @param {number} size.width - Width of container
+ * @param {number} size.height - Height of container
+ * @param {Object} options - Configuration the values
+ * @param {number} options.font_size - Overwrite auto font_size (calculated by size)
+ * @param {boolean} options.visible - Overwrite auto visible (true)
+ * @param {Object} options.position - Overwrite a position value
+ * @param {number} options.position.y - Overwrite y position
+ *
+ * The function provides the following options in the result:
+ * * position
+ * * font_size
+ * * visible
+ */
+export function metric_value_component_options_big_centered_text(size, options) {
+    if (options == undefined) {
+        options = {};
+    }
+
+    let font_size = Math.min(size.width / 5, (size.height * 2) / 3);
+    if (options.font_size !== undefined) {
+        font_size = options.font_size;
+    }
+
+    let visible = true;
+    if (options.visible !== undefined) {
+        visible = options.visible;
+    }
+
+    const position_x = size.width / 2;
+
+    let position_y = size.height / 2;
+    if (options.position !== undefined && options.position.y !== undefined) {
+        position_y = options.position.y;
+    }
+
+    return {
+        position: {
+            x: position_x,
+            y: position_y,
+        },
+        font_size: font_size,
+        visible: visible,
+    };
 }

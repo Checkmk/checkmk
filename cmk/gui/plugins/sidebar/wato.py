@@ -4,43 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-)
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
-import cmk.gui.config as config
-import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
-import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML, Choices
+import cmk.gui.views as views
+import cmk.gui.watolib as watolib
+from cmk.gui.globals import config, html, user
+from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
-from cmk.gui.globals import html
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-    match_item_generator_registry,
-)
-
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
+from cmk.gui.plugins.sidebar import search
+from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    search,
+    SidebarSnapin,
+    snapin_registry,
 )
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainModuleTopic,
-    main_module_registry,
+from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
+from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
 )
 
 
@@ -48,7 +36,7 @@ def render_wato(mini):
     if not config.wato_enabled:
         html.write_text(_("Setup is disabled."))
         return False
-    if not config.user.may("wato.use"):
+    if not user.may("wato.use"):
         html.write_text(_("You are not allowed to use the setup."))
         return False
 
@@ -57,18 +45,20 @@ def render_wato(mini):
     if mini:
         for topic in menu:
             for item in topic.items:
-                html.icon_button(url=item.url,
-                                 class_="show_more_mode" if item.is_show_more else None,
-                                 title=item.title,
-                                 icon=item.icon or "wato",
-                                 target="main")
+                html.icon_button(
+                    url=item.url,
+                    class_="show_more_mode" if item.is_show_more else None,
+                    title=item.title,
+                    icon=item.icon or "wato",
+                    target="main",
+                )
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
     pending_info = watolib.get_pending_changes_info()
     if pending_info:
         footnotelinks([(pending_info, "wato.py?mode=changelog")])
-        html.div('', class_="clear")
+        html.div("", class_="clear")
 
 
 def get_wato_menu_items() -> List[TopicMenuTopic]:
@@ -83,10 +73,11 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
             module.topic,
             TopicMenuTopic(
                 name=module.topic.name,
-                title=module.topic.title,
+                title=str(module.topic.title),
                 icon=module.topic.icon_name,
                 items=[],
-            ))
+            ),
+        )
         topic.items.append(
             TopicMenuItem(
                 name=module.mode_or_url,
@@ -95,7 +86,8 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
                 sort_index=module.sort_index,
                 is_show_more=module.is_show_more,
                 icon=module.icon,
-            ))
+            )
+        )
 
     # Sort the items of all topics
     for topic in by_topic.values():
@@ -113,7 +105,8 @@ mega_menu_registry.register(
         sort_index=15,
         topics=get_wato_menu_items,
         search=search.SetupSearch("setup_search"),
-    ))
+    )
+)
 
 
 class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
@@ -126,14 +119,16 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
         self._topic_generator = topic_generator
 
     def generate_match_items(self) -> MatchItems:
-        yield from (MatchItem(
-            title=topic_menu_item.title,
-            topic=_("Setup"),
-            url=topic_menu_item.url,
-            match_texts=[topic_menu_item.title],
+        yield from (
+            MatchItem(
+                title=topic_menu_item.title,
+                topic=_("Setup"),
+                url=topic_menu_item.url,
+                match_texts=[topic_menu_item.title],
+            )
+            for topic_menu_topic in self._topic_generator()
+            for topic_menu_item in topic_menu_topic.items
         )
-                    for topic_menu_topic in self._topic_generator()
-                    for topic_menu_item in topic_menu_topic.items)
 
     @staticmethod
     def is_affected_by_change(_change_action_name: str) -> bool:
@@ -148,38 +143,8 @@ match_item_generator_registry.register(
     MatchItemGeneratorSetupMenu(
         "setup",
         mega_menu_registry["setup"].topics,
-    ))
-
-
-@snapin_registry.register
-class SidebarSnapinWATO(SidebarSnapin):
-    @staticmethod
-    def type_name():
-        return "admin"
-
-    @classmethod
-    def title(cls):
-        return _("Setup")
-
-    @classmethod
-    def has_show_more_items(cls):
-        return True
-
-    @classmethod
-    def description(cls):
-        return _("Direct access to the setup menu")
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["admin", "user"]
-
-    # refresh pending changes, if other user modifies something
-    @classmethod
-    def refresh_regularly(cls):
-        return True
-
-    def show(self):
-        render_wato(mini=False)
+    )
+)
 
 
 @snapin_registry.register
@@ -215,19 +180,17 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
 def compute_foldertree():
     sites.live().set_prepend_site(True)
-    query = "GET hosts\n" \
-            "Stats: state >= 0\n" \
-            "Columns: filename"
+    query = "GET hosts\nStats: state >= 0\nColumns: filename"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
 
     def get_folder(path, num=0):
         folder = watolib.Folder.folder(path)
         return {
-            'title': folder.title() or path.split('/')[-1],
-            '.path': path,
-            '.num_hosts': num,
-            '.folders': {},
+            "title": folder.title() or path.split("/")[-1],
+            ".path": path,
+            ".num_hosts": num,
+            ".folders": {},
         }
 
     # After the query we have a list of lists where each
@@ -242,15 +205,15 @@ def compute_foldertree():
 
         # Loop through all levels of this folder to add the
         # host count to all parent levels
-        path_parts = wato_folder_path.split('/')
+        path_parts = wato_folder_path.split("/")
         for num_parts in range(0, len(path_parts)):
-            this_folder_path = '/'.join(path_parts[:num_parts])
+            this_folder_path = "/".join(path_parts[:num_parts])
 
             if watolib.Folder.folder_exists(this_folder_path):
                 if this_folder_path not in user_folders:
                     user_folders[this_folder_path] = get_folder(this_folder_path, num)
                 else:
-                    user_folders[this_folder_path]['.num_hosts'] += num
+                    user_folders[this_folder_path][".num_hosts"] += num
 
     #
     # Now build the folder tree
@@ -258,10 +221,10 @@ def compute_foldertree():
     for folder_path, folder in sorted(user_folders.items(), reverse=True):
         if not folder_path:
             continue
-        folder_parts = folder_path.split('/')
-        parent_folder = '/'.join(folder_parts[:-1])
+        folder_parts = folder_path.split("/")
+        parent_folder = "/".join(folder_parts[:-1])
 
-        user_folders[parent_folder]['.folders'][folder_path] = folder
+        user_folders[parent_folder][".folders"][folder_path] = folder
         del user_folders[folder_path]
 
     #
@@ -274,8 +237,8 @@ def compute_foldertree():
     # top level
     def reduce_tree(folders):
         for folder_path, folder in folders.items():
-            if len(folder['.folders']) == 1 and folder['.num_hosts'] == 0:
-                child_path, child_folder = list(folder['.folders'].items())[0]
+            if len(folder[".folders"]) == 1 and folder[".num_hosts"] == 0:
+                child_path, child_folder = list(folder[".folders"].items())[0]
                 folders[child_path] = child_folder
                 del folders[folder_path]
 
@@ -293,28 +256,29 @@ def render_tree_folder(tree_id, folder, js_func):
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
-    if folder['.path'] == '' and is_leaf:
+    if folder[".path"] == "" and is_leaf:
         html.open_ul()  # empty root folder
-    elif folder and folder['.path'] != '':
+    elif folder and folder[".path"] != "":
         html.open_ul(style="padding-left:0px;")
 
-    title = html.render_a("%s (%d)" % (folder["title"], folder[".num_hosts"]),
-                          href="#",
-                          class_="link",
-                          onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
+    title = html.render_a(
+        "%s (%d)" % (folder["title"], folder[".num_hosts"]),
+        href="#",
+        class_="link",
+        onclick="%s(this, '%s');" % (js_func, folder[".path"]),
+    )
 
     if not is_leaf:
-        html.begin_foldable_container(
-            tree_id,
-            "/" + folder[".path"],
-            False,
-            HTML(title),
+        with foldable_container(
+            treename=tree_id,
+            id_="/" + folder[".path"],
+            isopen=False,
+            title=HTML(title),
             icon="foldable_sidebar",
             padding=6,
-        )
-        for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
-            render_tree_folder(tree_id, subfolder, js_func)
-        html.end_foldable_container()
+        ):
+            for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
+                render_tree_folder(tree_id, subfolder, js_func)
     else:
         html.li(title)
 
@@ -329,18 +293,20 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _('Tree of folders')
+        return _("Tree of folders")
 
     @classmethod
     def description(cls):
-        return _('This snapin shows the folders defined in WATO. It can be used to '
-                 'open views filtered by the WATO folder. It works standalone, without '
-                 'interaction with any other snapin.')
+        return _(
+            "This snapin shows the folders defined in WATO. It can be used to "
+            "open views filtered by the WATO folder. It works standalone, without "
+            "interaction with any other snapin."
+        )
 
     def show(self):
         if not watolib.is_wato_slave_site():
             if not config.wato_enabled:
-                html.write_text(_("WATO is disabled."))
+                html.write_text(_("Setup is disabled."))
                 return False
 
         user_folders = compute_foldertree()
@@ -348,14 +314,23 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         #
         # Render link target selection
         #
-        selected_topic, selected_target = config.user.load_file("foldertree",
-                                                                (_('Hosts'), 'allhosts'))
-
         # Apply some view specific filters
-        views_to_show = [(name, view)
-                         for name, view in views.get_permitted_views().items()
-                         if (not config.visible_views or name in config.visible_views) and
-                         (not config.hidden_views or name not in config.hidden_views)]
+        views_to_show: List[Tuple[str, ViewSpec]] = []
+        dflt_target_name: str = "allhosts"
+        dflt_topic_name: str = ""
+        for name, view in views.get_permitted_views().items():
+            if (not config.visible_views or name in config.visible_views) and (
+                not config.hidden_views or name not in config.hidden_views
+            ):
+                views_to_show.append((name, view))
+                if name == dflt_target_name:
+                    dflt_topic_name = view["topic"]
+
+        selected_topic_name: str
+        selected_target_name: str
+        selected_topic_name, selected_target_name = user.load_file(
+            "foldertree", (dflt_topic_name, dflt_target_name)
+        )
 
         visuals_to_show = [("views", e) for e in views_to_show]
         visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
@@ -366,10 +341,12 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.open_table()
         html.open_tr()
         html.open_td()
-        html.dropdown("topic",
-                      topic_choices,
-                      deflt=selected_topic,
-                      onchange='cmk.sidebar.wato_tree_topic_changed(this)')
+        html.dropdown(
+            "topic",
+            topic_choices,
+            deflt=selected_topic_name,
+            onchange="cmk.sidebar.wato_tree_topic_changed(this)",
+        )
         html.close_td()
         html.close_tr()
 
@@ -380,22 +357,24 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             targets: Choices = []
             for item in topic.items:
                 if item.url and item.url.startswith("dashboard.py"):
-                    name = 'dashboard|' + item.name
+                    name = "dashboard|" + item.name
                 else:
                     name = item.name
                 targets.append((name, item.title))
 
-            if topic.title != selected_topic:
-                default = ''
-                style: Optional[str] = 'display:none'
+            if topic.name != selected_topic_name:
+                default = ""
+                style: Optional[str] = "display:none"
             else:
-                default = selected_target
+                default = selected_target_name
                 style = None
-            html.dropdown("target_%s" % topic.title,
-                          targets,
-                          deflt=default,
-                          onchange='cmk.sidebar.wato_tree_target_changed(this)',
-                          style=style)
+            html.dropdown(
+                "target_%s" % topic.title,
+                targets,
+                deflt=default,
+                onchange="cmk.sidebar.wato_tree_target_changed(this)",
+                style=style,
+            )
 
         html.close_td()
         html.close_tr()
@@ -403,29 +382,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
         # Now render the whole tree
         if user_folders:
-            render_tree_folder("wato-hosts",
-                               list(user_folders.values())[0], 'cmk.sidebar.wato_tree_click')
-
-
-@snapin_registry.register
-class SidebarSnapinWATOFolders(SidebarSnapin):
-    @staticmethod
-    def type_name():
-        return "wato_folders"
-
-    @classmethod
-    def title(cls):
-        return _('Folders')
-
-    @classmethod
-    def description(cls):
-        return _('This snapin shows the folders defined in WATO. It can '
-                 'be used to open views filtered by the WATO folder. This '
-                 'snapin interacts with the "Views" snapin, when both are '
-                 'enabled.')
-
-    def show(self):
-        user_folders = compute_foldertree()
-        if user_folders:
-            render_tree_folder("wato-folders",
-                               list(user_folders.values())[0], 'cmk.sidebar.wato_folders_clicked')
+            render_tree_folder(
+                "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
+            )

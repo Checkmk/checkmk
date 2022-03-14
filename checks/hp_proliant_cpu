@@ -9,18 +9,20 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["hp_proliant_cpu"] = {
-    'check_function': check_hp_proliant_cpu,
-    'inventory_function': inventory_hp_proliant_cpu,
-    'service_description': 'HW CPU %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.232.1.2.2.1.1',
+    "check_function": check_hp_proliant_cpu,
+    "inventory_function": inventory_hp_proliant_cpu,
+    "service_description": "HW CPU %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.232.1.2.2.1.1",
         [
-            '1',  # cpqSeCpuUnitIndex
-            '2',  # cpqSeCpuSlot
-            '3',  # cpqSeCpuName
-            '6',  # cpqSeCpuStatus
-        ]),
-    'snmp_scan_function': hp_proliant_scan_function,
-    'management_board': HOST_ONLY,
+            "1",  # cpqSeCpuUnitIndex
+            "2",  # cpqSeCpuSlot
+            "3",  # cpqSeCpuName
+            "6",  # cpqSeCpuStatus
+        ],
+    ),
+    "snmp_scan_function": hp_proliant_scan_function,
+    "management_board": HOST_ONLY,
 }

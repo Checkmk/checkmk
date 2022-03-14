@@ -1,7 +1,7 @@
 title: IBM Blade Center: State of Blades
 agents: snmp
 catalog: hw/server/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check verifies the present-, health- and power-state of a blade in an
@@ -15,5 +15,5 @@ description:
 item:
  Number of the blade (as string, not int).
 
-inventory:
+discovery:
  One service is created for each powered blade.

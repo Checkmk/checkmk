@@ -1,7 +1,7 @@
 title: Perle Mediaconverter: CM 1000 Modules States
 agents: snmp
 catalog: hw/network/perle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the power state and fiber and copper LPRF and
@@ -22,5 +22,5 @@ description:
 item:
  The name of the module
 
-inventory:
+discovery:
  One service is created for each module.

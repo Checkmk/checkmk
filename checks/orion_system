@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -18,50 +19,57 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def parse_orion_system(info):
     map_charge_states = {
-        '1': (0, 'float charging'),
-        '2': (0, 'discharge'),
-        '3': (0, 'equalize'),
-        '4': (0, 'boost'),
-        '5': (0, 'battery test'),
-        '6': (0, 'recharge'),
-        '7': (0, 'separate charge'),
-        '8': (0, 'event control charge'),
+        "1": (0, "float charging"),
+        "2": (0, "discharge"),
+        "3": (0, "equalize"),
+        "4": (0, "boost"),
+        "5": (0, "battery test"),
+        "6": (0, "recharge"),
+        "7": (0, "separate charge"),
+        "8": (0, "event control charge"),
     }
 
-    system_voltage, load_current, battery_current, battery_temp,\
-        charge_state, _battery_current_limit, rectifier_current,\
-        system_power = info[0]
+    (
+        system_voltage,
+        load_current,
+        battery_current,
+        battery_temp,
+        charge_state,
+        _battery_current_limit,
+        rectifier_current,
+        system_power,
+    ) = info[0]
 
     parsed = {
-        'charging': {
-            'Battery': map_charge_states.get(charge_state, (3, "unknown[%s]" % charge_state))
+        "charging": {
+            "Battery": map_charge_states.get(charge_state, (3, "unknown[%s]" % charge_state))
         },
-        'temperature': {},
-        'electrical': {},
+        "temperature": {},
+        "electrical": {},
     }
 
     if battery_temp != "2147483647":
         # From MIB: The max. value 2147483647 is used to indicate an invalid value."
-        parsed['temperature']['Battery'] = int(battery_temp) * 0.1
+        parsed["temperature"]["Battery"] = int(battery_temp) * 0.1
 
     for what, value, factor in [
-        ('voltage', system_voltage, 0.01),
-        ('current', load_current, 0.1),
-        ('power', system_power, 0.1),
+        ("voltage", system_voltage, 0.01),
+        ("current", load_current, 0.1),
+        ("power", system_power, 0.1),
     ]:
         if value != "2147483647":
             # From MIB: The max. value 2147483647 is used to indicate an invalid value."
-            system_data = parsed['electrical'].setdefault('System', {})
+            system_data = parsed["electrical"].setdefault("System", {})
             system_data[what] = int(value) * factor
 
     for item, value in [
-        ('Battery', battery_current),
-        ('Rectifier', rectifier_current),
+        ("Battery", battery_current),
+        ("Rectifier", rectifier_current),
     ]:
         if value != "2147483647":
             # From MIB: The max. value 2147483647 is used to indicate an invalid value."
-            item_data = parsed['electrical'].setdefault(item, {})
-            item_data['current'] = int(battery_temp) * 0.1
+            item_data = parsed["electrical"].setdefault(item, {})
+            item_data["current"] = int(battery_temp) * 0.1
 
     return parsed
 
@@ -73,29 +81,30 @@ def inventory_orion_system_temp(parsed):
 
 def check_orion_system_temp(item, params, parsed):
     if item in parsed["temperature"]:
-        return check_temperature(parsed['temperature'][item], params, 'orion_system_temp.%s' % item)
+        return check_temperature(parsed["temperature"][item], params, "orion_system_temp.%s" % item)
 
 
-check_info['orion_system'] = {
-    'parse_function': parse_orion_system,
-    'inventory_function': inventory_orion_system_temp,
-    'check_function': check_orion_system_temp,
-    'service_description': 'Temperature %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.20246.2.3.1.1.1.2.3',
+check_info["orion_system"] = {
+    "parse_function": parse_orion_system,
+    "inventory_function": inventory_orion_system_temp,
+    "check_function": check_orion_system_temp,
+    "service_description": "Temperature %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.20246.2.3.1.1.1.2.3",
         [
-            '1',  # ORION-BASE-MIB::dcSystemVoltage
-            '2',  # ORION-BASE-MIB::dcLoadCurrent
-            '3',  # ORION-BASE-MIB::dcBatteryCurrent
-            '4',  # ORION-BASE-MIB::dcBatteryTemperature
-            '5',  # ORION-BASE-MIB::dcChargeState
-            '6',  # ORION-BASE-MIB::dcCurrentLimit
-            '7',  # ORION-BASE-MIB::dcRectifierCurrent
-            '8',  # ORION-BASE-MIB::dcSystemPower
-        ]),
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.20246'),
-    'has_perfdata': True,
-    'group': 'temperature',
+            "1",  # ORION-BASE-MIB::dcSystemVoltage
+            "2",  # ORION-BASE-MIB::dcLoadCurrent
+            "3",  # ORION-BASE-MIB::dcBatteryCurrent
+            "4",  # ORION-BASE-MIB::dcBatteryTemperature
+            "5",  # ORION-BASE-MIB::dcChargeState
+            "6",  # ORION-BASE-MIB::dcCurrentLimit
+            "7",  # ORION-BASE-MIB::dcRectifierCurrent
+            "8",  # ORION-BASE-MIB::dcSystemPower
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20246"),
+    "has_perfdata": True,
+    "group": "temperature",
 }
 
 
@@ -110,25 +119,21 @@ def check_orion_system_charging(item, params, parsed):
         return state, "Status: %s" % state_readable
 
 
-check_info['orion_system.charging'] = {
-    'inventory_function': inventory_orion_system_charging,
-    'check_function': check_orion_system_charging,
-    'service_description': 'Charge %s',
+check_info["orion_system.charging"] = {
+    "inventory_function": inventory_orion_system_charging,
+    "check_function": check_orion_system_charging,
+    "service_description": "Charge %s",
 }
-
-
-def inventory_orion_system_electrical(parsed):
-    return inventory_elphase(parsed["electrical"])
 
 
 def check_orion_system_electrical(item, params, parsed):
     return check_elphase(item, params, parsed["electrical"])
 
 
-check_info['orion_system.dc'] = {
-    'inventory_function': inventory_orion_system_electrical,
-    'check_function': check_orion_system_electrical,
-    'service_description': 'Direct Current %s',
-    'has_perfdata': True,
-    'group': 'ups_outphase',
+check_info["orion_system.dc"] = {
+    "inventory_function": lambda parsed: discover()(parsed["electrical"]),
+    "check_function": check_orion_system_electrical,
+    "service_description": "Direct Current %s",
+    "has_perfdata": True,
+    "group": "ups_outphase",
 }

@@ -8,15 +8,14 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <ctime>
+#include <cstddef>
 #include <memory>
 #include <string>
 
-#include "Logfile.h"
+#include "LogCache.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
-class LogCache;
 class MonitoringCore;
 class Query;
 class Row;
@@ -34,8 +33,9 @@ public:
 
 private:
     LogCache *_log_cache;
-    bool answerQueryReverse(const logfile_entries_t *entries, Query *query,
-                            time_t since, time_t until);
+
+    static LogFilter constructFilter(Query *query,
+                                     size_t max_lines_per_logfile);
 };
 
 #endif  // TableLog_h

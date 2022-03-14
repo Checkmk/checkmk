@@ -1,0 +1,16 @@
+Title: REST API: acknowledgement - not found on update is a 400
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615309104
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When acknowledging a non existing service, a HTTP 404 was about
+to be triggered, but was not defined for this endpoint. This could
+lead to an HTTP 500 (Internal Server Error). This has now been
+fixed to correctly return a HTTP 400 (Bad Request) error, which
+is defined for this endpoint, brining it in line with the documentation.

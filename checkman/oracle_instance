@@ -2,7 +2,7 @@ title: Oracle Instance: Status of Database
 agents: linux, aix, hpux, solaris, windows
 distribution: check_mk
 catalog: app/oracle
-license: GPL
+license: GPLv2
 description:
  This check monitors the state of an Oracle Instance. The check depends on
  the state of the database.
@@ -112,5 +112,5 @@ description:
 item:
  The ORACLE_SID
 
-inventory:
+discovery:
  One service is created for each running database.

@@ -1,0 +1,30 @@
+Title: REST API missing and duplicated hosts problem
+Class: fix
+Compatible: compat
+Component: core
+Date: 1634566838
+Edition: cre
+Knowledge: doc
+Level: 3
+State: unknown
+Version: 2.1.0b1
+
+This Werk fixes a very severe data inconsistency problem in the REST API.
+
+Previously, only the actual working code of the individual endpoints were
+locked, but the validation logic which gets executed before the endpoints
+didn't fall into that locking scope. This logic could then trigger a cache
+load which could lead to data inconsistency and even data loss when using
+the REST API highly concurrently.
+
+The observed effects were:
+
+ * when moving hosts concurrently, some hosts may disappear
+ * when moving hosts concurrently, some hosts may end up in multiple folders
+ * when editing hosts, spurious 421 or 401 responses could appear
+
+The locks have now been modified to encompass also the validation logic.
+
+This Werk fixes the afore mentioned problems.
+
+There are no further actions to be taken.

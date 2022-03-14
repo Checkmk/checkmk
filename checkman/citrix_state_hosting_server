@@ -1,7 +1,7 @@
 title: Citrix: VM Hosting Server
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks displays the hosting server on which a VM is currently running.
@@ -11,6 +11,5 @@ description:
  for this to work. Data for the hosts is collected on the controller and
  given to the monitoring server as piggyback data.
 
-inventory:
+discovery:
  One service is created for each controller.
-

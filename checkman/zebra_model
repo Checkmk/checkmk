@@ -1,10 +1,10 @@
 title: Zebra Printer: General Information
 agents: snmp
 catalog: hw/printer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks shows the model, serial number and firmware version of Zebra printers. The status of the service is always {OK}.
 
-inventory:
+discovery:
  One service is created for each device.

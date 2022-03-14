@@ -1,7 +1,7 @@
 title: ZFS Arc Cache: Hit Ratios and Sizes
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the cache hit ratio, the prefetch data hit ratio, the
@@ -10,6 +10,6 @@ description:
 
  This check is only for reporting and always returns {OK}.
 
-inventory:
+discovery:
  One service is created on every machine delivering information
  at least about zfs cache hits and misses.

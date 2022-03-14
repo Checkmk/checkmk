@@ -6,7 +6,7 @@
 
 import logging
 
-from testlib import on_time
+from tests.testlib import on_time
 
 import cmk.utils.log as log
 
@@ -45,17 +45,19 @@ def test_open_log(tmp_path):
     log_file = tmp_path / "test.log"
     log.open_log(log_file)
 
-    with on_time('2018-04-15 16:50', 'CET'):
+    with on_time("2018-04-15 16:50", "CET"):
         log.logger.warning("abc")
         log.logger.warning("äbc")
 
     with log_file.open("rb") as f:
-        assert f.read() == (b"2018-04-15 18:50:00,000 [30] [cmk] abc\n"
-                            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n")
+        assert f.read() == (
+            b"2018-04-15 18:50:00,000 [30] [cmk] abc\n"
+            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n"
+        )
 
 
 def test_set_verbosity():
-    root = logging.getLogger('cmk')
+    root = logging.getLogger("cmk")
     root.setLevel(logging.INFO)
 
     l = logging.getLogger("cmk.test_logger")

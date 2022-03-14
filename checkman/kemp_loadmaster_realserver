@@ -1,7 +1,7 @@
 title: Kemp Loadmaster: State of Real Servers
 agents: snmp
 catalog: hw/network/kemp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of all enabled backend servers which are connected to a Kemp
@@ -11,6 +11,6 @@ description:
 item:
  IP address of the realserver
 
-inventory:
+discovery:
  One service is created for each backend server if it is not disabled.
  Each one is defined by its ID.

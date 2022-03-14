@@ -1,0 +1,15 @@
+Title: mqtt_clients mqtt_messages mqtt_uptime mqtt_broker: New checks to gather MQTT broker information
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1636927268
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk introduces new checks which gather information from some MQTT
+brokers. The mqtt_clients check displays client related statistics,
+mqtt_messages shows message related statistics, mqtt_uptime shows the uptime of
+the broker process and mqtt_broker shows miscellaneous information of the
+broker.

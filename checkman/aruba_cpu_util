@@ -1,7 +1,7 @@
 title: Aruba WLAN Controller: CPU Utilization
 agents: snmp
 catalog: hw/network/aruba
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization on the Aruba devices.
@@ -12,9 +12,8 @@ description:
 
  The check uses the WLSX-SYSTEMEXT-MIB
 
-inventory:
+discovery:
  One service is created for each detected CPU.
 
 item:
  The description of the processor.
-

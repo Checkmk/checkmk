@@ -1,0 +1,14 @@
+Title: Fix crash in kaspersky_av_client.vbs when using a non-German locale
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633945984
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The script used a hardcoded "." as date separator. As a result, the script (CDate)
+crashed on non-German locales. This is now fixed. The script no longer depends
+on the locale of the machine.
+

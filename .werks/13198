@@ -1,0 +1,16 @@
+Title: Stop showing automation secrets
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1643016958
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Before this Werk, on the edit_user page the automation secret could be viewed.
+This could be abused by other vulnerabilities (e.g. XSS) to retrieve this
+secret to abuse it later.
+
+When creating a new automation user / edit an automation secret you should
+write the secret down (e.g. in a password store).

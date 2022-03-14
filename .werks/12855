@@ -1,0 +1,14 @@
+Title: Raw Edition: Remove artifacts of old CRE graphing GUI
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632205398
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+With werk #10714 we replaced the old pnp4nagios based graphing system of the
+Checkmk Raw Edition. This change now removes some files that were left over
+from the previous graphing system which were not used anymore since 2.0.

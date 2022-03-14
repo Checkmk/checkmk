@@ -1,7 +1,7 @@
 title: HPE 3PAR: Ports
 agents: 3par
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the
@@ -25,5 +25,5 @@ description:
 item:
  {{Protocol name}} (i.e. FC, iSCSI, FCOE, IP or SAS) and {{Node}}, {{Slot}} and {{Cardport}} values.
 
-inventory:
+discovery:
  One service is created for each port connection if type is not 3 (FREE).

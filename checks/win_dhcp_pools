@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example outputs from agent:
 #
 # <<<win_dhcp_pools>>>
@@ -62,35 +63,35 @@ discovery_win_dhcp_pools = []
 # ...that's the reason why french translations with special characters must get provided like here.
 
 win_dhcp_pools_stats_translate = {
-    'Entdeckungen': 'Discovers',
-    'Angebote': 'Offers',
-    'Anforderungen': 'Requests',
-    'Acks': 'Acks',
-    'Naks': 'Nacks',
-    'Abweisungen': 'Declines',
-    'Freigaben': 'Releases',
-    'Subnetz': 'Subnet',
-    'Bereiche': 'Scopes',
-    'Anzahl der verwendeten Adressen': 'No. of Addresses in use',
-    'Anzahl der freien Adressen': 'No. of free Addresses',
-    'Anzahl der anstehenden Angebote': 'No. of pending offers',
-    u'D\x82couvertes': 'Discovers',
-    'Offres': 'Offers',
-    u'Requ\x88tes': 'Requests',
-    'AR': 'Acks',
-    u'AR n\x82g.': 'Nacks',
-    'Refus': 'Declines',
-    u'Lib\x82rations': 'Releases',
-    u'Sous-r\x82seau': 'Subnet',
-    u'\x90tendues': 'Scopes',
-    u"Nb d'adresses utilis\x82es": 'No. of Addresses in use',
-    "Nb d'adresses libres": 'No. of free Addresses',
-    "Nb d'offres en attente": 'No. of pending offers',
+    "Entdeckungen": "Discovers",
+    "Angebote": "Offers",
+    "Anforderungen": "Requests",
+    "Acks": "Acks",
+    "Naks": "Nacks",
+    "Abweisungen": "Declines",
+    "Freigaben": "Releases",
+    "Subnetz": "Subnet",
+    "Bereiche": "Scopes",
+    "Anzahl der verwendeten Adressen": "No. of Addresses in use",
+    "Anzahl der freien Adressen": "No. of free Addresses",
+    "Anzahl der anstehenden Angebote": "No. of pending offers",
+    "D\x82couvertes": "Discovers",
+    "Offres": "Offers",
+    "Requ\x88tes": "Requests",
+    "AR": "Acks",
+    "AR n\x82g.": "Nacks",
+    "Refus": "Declines",
+    "Lib\x82rations": "Releases",
+    "Sous-r\x82seau": "Subnet",
+    "\x90tendues": "Scopes",
+    "Nb d'adresses utilis\x82es": "No. of Addresses in use",
+    "Nb d'adresses libres": "No. of free Addresses",
+    "Nb d'offres en attente": "No. of pending offers",
 }
 
 
 def parse_win_dhcp_pools(info):
-    return [' '.join(line).rstrip('.').split(' = ') for line in info]
+    return [" ".join(line).rstrip(".").split(" = ") for line in info]
 
 
 def inventory_win_dhcp_pools(info):
@@ -102,7 +103,7 @@ def inventory_win_dhcp_pools(info):
     last_pool = ""
     pool_stats = []
     for line in parse_win_dhcp_pools(info):
-        if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet':
+        if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet":
             in_block = True
             pool_stats = []
             last_pool = line[1]
@@ -115,7 +116,7 @@ def inventory_win_dhcp_pools(info):
             used, free, pending = pool_stats  # pylint: disable=unbalanced-tuple-unpacking
             size = used + free + pending
             if size > 0 or discover_empty:
-                inventory.append((last_pool, 'win_dhcp_pools_default_levels'))
+                inventory.append((last_pool, "win_dhcp_pools_default_levels"))
     return inventory
 
 
@@ -123,7 +124,7 @@ def check_win_dhcp_pools(item, params, info):
     in_block = False
     pool_stats = [None, None, None]
     for line in parse_win_dhcp_pools(info):
-        if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet' and line[1] == item:
+        if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet" and line[1] == item:
             in_block = True
             pool_stats = []
             continue
@@ -142,22 +143,25 @@ def check_win_dhcp_pools(item, params, info):
             yield 3, "DHCP Pool contains no IP addresses / is deactivated"
             return
 
-        for check_result in check_dhcp_pools_levels(free, used, pending, size, params):
-            yield check_result
+        for state, infotext, perfdata in check_dhcp_pools_levels(free, used, pending, size, params):
+            # The Windows DHCP plugin collects statistics, not real-time
+            # measurements. "Average" is pre-pended in order to clarify this. See
+            # SUP-9126
+            yield state, f"Average {infotext}", perfdata
 
     else:
-        yield 3, 'Pool information not found'
+        yield 3, "Pool information not found"
 
 
 check_info["win_dhcp_pools"] = {
-    'check_function': check_win_dhcp_pools,
-    'inventory_function': inventory_win_dhcp_pools,
-    'service_description': 'DHCP Pool %s',
-    'has_perfdata': True,
-    'group': 'win_dhcp_pools',
+    "check_function": check_win_dhcp_pools,
+    "inventory_function": inventory_win_dhcp_pools,
+    "service_description": "DHCP Pool %s",
+    "has_perfdata": True,
+    "group": "win_dhcp_pools",
 }
 
-#.
+# .
 #   .--Pool stats----------------------------------------------------------.
 #   |              ____             _       _        _                     |
 #   |             |  _ \ ___   ___ | |  ___| |_ __ _| |_ ___               |
@@ -169,11 +173,11 @@ check_info["win_dhcp_pools"] = {
 
 
 def inventory_win_dhcp_pools_stats(info):
-    return [(None, None) for line in info if line[0] != '']
+    return [(None, None) for line in info if line[0] != ""]
 
 
 def check_win_dhcp_pools_stats(item, params, info):
-    output = ''
+    output = ""
     perfdata = []
     this_time = int(time.time())
 
@@ -181,28 +185,28 @@ def check_win_dhcp_pools_stats(item, params, info):
         if len(line) > 0:
             key = win_dhcp_pools_stats_translate.get(line[0], line[0])
             if key in [
-                    'Discovers',
-                    'Offers',
-                    'Requests',
-                    'Acks',
-                    'Nacks',
-                    'Declines',
-                    'Releases',
-                    'Scopes',
+                "Discovers",
+                "Offers",
+                "Requests",
+                "Acks",
+                "Nacks",
+                "Declines",
+                "Releases",
+                "Scopes",
             ]:
                 value = saveint(line[1])
                 per_sec = get_rate("win_dhcp_stats.%s" % key, this_time, value)
-                output += '%s: %.0f/s, ' % (key, per_sec)
+                output += "%s: %.0f/s, " % (key, per_sec)
                 perfdata.append((key, per_sec))
 
-    if output == '':
+    if output == "":
         return (3, "Information not available")
-    return 0, output.rstrip(', '), perfdata
+    return 0, output.rstrip(", "), perfdata
 
 
 check_info["win_dhcp_pools.stats"] = {
-    'check_function': check_win_dhcp_pools_stats,
-    'inventory_function': inventory_win_dhcp_pools_stats,
-    'service_description': 'DHCP Stats',
-    'has_perfdata': True,
+    "check_function": check_win_dhcp_pools_stats,
+    "inventory_function": inventory_win_dhcp_pools_stats,
+    "service_description": "DHCP Stats",
+    "has_perfdata": True,
 }

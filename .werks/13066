@@ -1,0 +1,11 @@
+Title: Fix path traversal vulnerability
+Class: security
+Compatible: compat
+Component: wato
+Date: 1627028701
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+An authenticated user was able to enumerate the filesystem, accessible to the siteuser. No file contents were disclosed.

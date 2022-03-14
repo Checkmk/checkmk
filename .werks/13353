@@ -1,0 +1,19 @@
+Title: Linux agent: Fix two localisation issues
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1635519169
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+On some systems, the linux agent tried to set invalid localisation
+settings. For example, when <tt>C.utf8</tt> is not available, but
+<tt>es_EC.utf8</tt> is, the agent still tried to set <tt>C.utf8</tt>
+as localisation, which resulted in the error
+<tt>setlocale: LC_ALL: cannot change locale</tt>.
+
+Furthermore, in the rare case where the <tt>locale</tt> or the
+<tt>inpath</tt> command were not available, no localisation was set.
+These cases now default to <tt>LC_ALL=C</tt>.

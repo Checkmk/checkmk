@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.1 1 --> FE-FIREEYE-MIB::feFanIndex.1
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.2 2 --> FE-FIREEYE-MIB::feFanIndex.2
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.3 3 --> FE-FIREEYE-MIB::feFanIndex.3
@@ -46,8 +47,9 @@ from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard
 def check_fireeye_fans(item, params, info):
     for index, status, health, speed_str in info:
         if index == item:
-            for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
-                                                                       (health, 'Health')]).items():
+            for text, (state, state_readable) in check_fireeye_states(
+                [(status, "Status"), (health, "Health")]
+            ).items():
                 yield state, "%s: %s" % (text, state_readable)
 
             yield 0, "Speed: %s RPM" % speed_str
@@ -64,6 +66,7 @@ check_info["fireeye_fans"] = {
             "2",  # FE-FIREEYE-MIB::feFanStatus
             "3",  # FE-FIREEYE-MIB::feFanIsHealthy
             "4",  # FE-FIREEYE-MIB::feFanSpeed
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_fireeye,
 }

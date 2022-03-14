@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
+
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
 
 import io
 import os
@@ -15,15 +18,14 @@ import sys
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
 if sys.version_info[0] >= 3:
-    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
-                                  newline='\n',
-                                  encoding=sys.stdout.encoding,
-                                  errors=sys.stdout.errors)
+    new_stdout = io.TextIOWrapper(
+        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
+    )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import List, Dict, Tuple, Any, Optional, Union, Callable
+    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 except ImportError:
     pass
 
@@ -42,81 +44,189 @@ except ImportError:
         "<<<jolokia_info>>>\n"
         "Error: mk_jolokia requires either the json or simplejson library."
         " Please either use a Python version that contains the json library or install the"
-        " simplejson library on the monitored system.\n")
+        " simplejson library on the monitored system.\n"
+    )
     sys.exit(1)
 
 try:
     import requests
     from requests.auth import HTTPDigestAuth
-    from requests.packages import urllib3
+
+    # These days urllib3 would be included directly, but we leave it as it is for the moment
+    # for compatibility reasons - at least for the agent plugin here.
+    from requests.packages import urllib3  # type: ignore[attr-defined]
 except ImportError:
-    sys.stdout.write("<<<jolokia_info>>>\n"
-                     "Error: mk_jolokia requires the requests library."
-                     " Please install it on the monitored system.\n")
+    sys.stdout.write(
+        "<<<jolokia_info>>>\n"
+        "Error: mk_jolokia requires the requests library."
+        " Please install it on the monitored system.\n"
+    )
     sys.exit(1)
 
-VERBOSE = sys.argv.count('--verbose') + sys.argv.count('-v') + 2 * sys.argv.count('-vv')
-DEBUG = sys.argv.count('--debug')
+VERBOSE = sys.argv.count("--verbose") + sys.argv.count("-v") + 2 * sys.argv.count("-vv")
+DEBUG = sys.argv.count("--debug")
 
 MBEAN_SECTIONS = {
-    'jvm_threading': ("java.lang:type=Threading",),
-    'jvm_memory': (
+    "jvm_threading": ("java.lang:type=Threading",),
+    "jvm_memory": (
         "java.lang:type=Memory",
         "java.lang:name=*,type=MemoryPool",
     ),
-    'jvm_runtime': ("java.lang:type=Runtime/Uptime,Name",),
-    'jvm_garbagecollectors':
-        ("java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",),
+    "jvm_runtime": ("java.lang:type=Runtime/Uptime,Name",),
+    "jvm_garbagecollectors": (
+        "java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",
+    ),
 }  # type: Dict[str, Tuple[str, ...]]
 
 MBEAN_SECTIONS_SPECIFIC = {
-    'tomcat': {
-        'jvm_threading':
-            ("*:name=*,type=ThreadPool/maxThreads,currentThreadCount,currentThreadsBusy/",),
+    "tomcat": {
+        "jvm_threading": (
+            "*:name=*,type=ThreadPool/maxThreads,currentThreadCount,currentThreadsBusy/",
+        ),
     },
 }
 
 QUERY_SPECS_LEGACY = [
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "InMemoryHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "OnDiskHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "MemoryStoreObjectCount", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "DiskStoreObjectCount", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "CacheMissPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "CacheHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "OffHeapHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "InMemoryMisses", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "OffHeapStoreObjectCount", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "WriterQueueLength", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "WriterMaxQueueSize", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "AssociatedCacheName", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
-     [], True),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OffHeapHits",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OnDiskHits",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "InMemoryHitPercentage",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "CacheMisses",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OnDiskHitPercentage",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "MemoryStoreObjectCount",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "DiskStoreObjectCount",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "CacheMissPercentage",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "CacheHitPercentage",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OffHeapHitPercentage",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "InMemoryMisses",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OffHeapStoreObjectCount",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "WriterQueueLength",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "WriterMaxQueueSize",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OffHeapMisses",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "InMemoryHits",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "AssociatedCacheName",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "ObjectCount",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "OnDiskMisses",
+        "",
+        [],
+        True,
+    ),
+    (
+        "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+        "CacheHits",
+        "",
+        [],
+        True,
+    ),
 ]  # type: List[Tuple[str, str, str, List, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
@@ -128,8 +238,13 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
         ("*:Name=ThreadPoolRuntime,*", "ExecuteThreadTotalCount", None, ["ServerRuntime"], False),
         ("*:*", "ExecuteThreadIdleCount", None, ["ServerRuntime"], False),
         ("*:*", "HoggingThreadCount", None, ["ServerRuntime"], False),
-        ("*:Type=WebAppComponentRuntime,*", "OpenSessionsCurrentCount", None,
-         ["ServerRuntime", "ApplicationRuntime"], False),
+        (
+            "*:Type=WebAppComponentRuntime,*",
+            "OpenSessionsCurrentCount",
+            None,
+            ["ServerRuntime", "ApplicationRuntime"],
+            False,
+        ),
     ],
     "tomcat": [
         ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
@@ -139,12 +254,14 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
         # too wide location for addressing the right info
         # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
     ],
-    "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path",
-                                                                              "context"], False),],
+    "jboss": [
+        ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
+    ],
 }
 
 AVAILABLE_PRODUCTS = sorted(
-    set(QUERY_SPECS_SPECIFIC_LEGACY.keys()) | set(MBEAN_SECTIONS_SPECIFIC.keys()))
+    set(QUERY_SPECS_SPECIFIC_LEGACY.keys()) | set(MBEAN_SECTIONS_SPECIFIC.keys())
+)
 
 # Default global configuration: key, value [, help]
 DEFAULT_CONFIG_TUPLES = (
@@ -154,7 +271,7 @@ DEFAULT_CONFIG_TUPLES = (
     ("suburi", "jolokia", "Path-component of the URI to query."),
     ("user", "monitoring", "Username to use for connecting."),
     ("password", None, "Password to use for connecting."),
-    ("mode", "digest", "Authentication mode. Can be \"basic\", \"digest\" or \"https\"."),
+    ("mode", "digest", 'Authentication mode. Can be "basic", "digest" or "https".'),
     ("instance", None, "Name of the instance in the monitoring. Defaults to port."),
     ("verify", None),
     ("client_cert", None, "Path to client cert for https authentication."),
@@ -162,9 +279,13 @@ DEFAULT_CONFIG_TUPLES = (
     ("service_url", None),
     ("service_user", None),
     ("service_password", None),
-    ("product", None, "Product description. Available: %s. If not provided,"
-     " we try to detect the product from the jolokia info section." %
-     ", ".join(AVAILABLE_PRODUCTS)),
+    (
+        "product",
+        None,
+        "Product description. Available: %s. If not provided,"
+        " we try to detect the product from the jolokia info section."
+        % ", ".join(AVAILABLE_PRODUCTS),
+    ),
     ("timeout", 1.0, "Connection/read timeout for requests."),
     ("custom_vars", []),
     # List of instances to monitor. Each instance is a dict where
@@ -186,9 +307,9 @@ def get_default_config_dict():
 
 
 def write_section(name, iterable):
-    sys.stdout.write('<<<%s:sep(0)>>>\n' % name)
+    sys.stdout.write("<<<%s:sep(0)>>>\n" % name)
     for line in iterable:
-        sys.stdout.write(chr(0).join(map(str, line)) + '\n')
+        sys.stdout.write(chr(0).join(map(str, line)) + "\n")
 
 
 def cached(function):
@@ -206,7 +327,7 @@ def cached(function):
 
 class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
     # use this to filter headers whien recording via vcr trace
-    FILTER_SENSITIVE = {'filter_headers': [('authorization', '****')]}
+    FILTER_SENSITIVE = {"filter_headers": [("authorization", "****")]}
 
     @staticmethod
     def _sanitize_config(config):
@@ -271,8 +392,8 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
 
     def _get_base_url(self):
         return "%s://%s:%d/%s/" % (
-            self._config["protocol"].strip('/'),
-            self._config["server"].strip('/'),
+            self._config["protocol"].strip("/"),
+            self._config["server"].strip("/"),
             self._config["port"],
             self._config["suburi"],
         )
@@ -309,7 +430,7 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
                 self._config["client_cert"],
                 self._config["client_key"],
             )
-        elif auth_method == 'digest':
+        elif auth_method == "digest":
             session.auth = HTTPDigestAuth(
                 self._config["user"],
                 self._config["password"],
@@ -342,9 +463,9 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         try:
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
-            raw_response = self._session.post(self.base_url,
-                                              data=post_data,
-                                              verify=self._session.verify)
+            raw_response = self._session.post(
+                self.base_url, data=post_data, verify=self._session.verify
+            )
         except requests.exceptions.ConnectionError:
             if DEBUG:
                 raise
@@ -359,11 +480,13 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
 
 
 def validate_response(raw):
-    '''return loaded response or raise exception'''
+    """return loaded response or raise exception"""
     if VERBOSE > 1:
-        sys.stderr.write("DEBUG: %r:\n"
-                         "DEBUG:   headers: %r\n"
-                         "DEBUG:   content: %r\n\n" % (raw, raw.headers, raw.content))
+        sys.stderr.write(
+            "DEBUG: %r:\n"
+            "DEBUG:   headers: %r\n"
+            "DEBUG:   content: %r\n\n" % (raw, raw.headers, raw.content)
+        )
 
     # check the status of the http server
     if not 200 <= raw.status_code < 300:
@@ -393,7 +516,7 @@ def validate_response(raw):
 def fetch_var(inst, function, path, use_target=False):
     data = inst.get_post_data(path, function, use_target=use_target)
     obj = inst.post(data)
-    return obj['value']
+    return obj["value"]
 
 
 # convert single values into lists of items in
@@ -401,14 +524,14 @@ def fetch_var(inst, function, path, use_target=False):
 def make_item_list(path, value, itemspec):
     if not isinstance(value, dict):
         if isinstance(value, str):
-            value = value.replace(r'\/', '/')
+            value = value.replace(r"\/", "/")
         return [(path, value)]
 
     result = []
     for key, subvalue in value.items():
         # Handle filtering via itemspec
         miss = False
-        while itemspec and '=' in itemspec[0]:
+        while itemspec and "=" in itemspec[0]:
             if itemspec[0] not in key:
                 miss = True
                 break
@@ -432,14 +555,14 @@ def extract_item(key, itemspec):
 
     path = key.split(":", 1)[-1]
     components = path.split(",")
-    comp_dict = dict(c.split('=') for c in components if c.count('=') == 1)
+    comp_dict = dict(c.split("=") for c in components if c.count("=") == 1)
 
     item = ()  # type: Tuple[Any, ...]
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]
-            if '/' in right:
-                right = '/' + right.split('/')[-1]
+            if "/" in right:
+                right = "/" + right.split("/")[-1]
             item = item + (right,)
     return item
 
@@ -511,20 +634,20 @@ def _process_queries(inst, queries):
 
 
 def query_instance(inst):
-    write_section('jolokia_info', generate_jolokia_info(inst))
+    write_section("jolokia_info", generate_jolokia_info(inst))
 
     # now (after jolokia_info) we're sure about the product
     specs_specific = QUERY_SPECS_SPECIFIC_LEGACY.get(inst.product, [])
-    write_section('jolokia_metrics', generate_values(inst, specs_specific))
-    write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_LEGACY))
+    write_section("jolokia_metrics", generate_values(inst, specs_specific))
+    write_section("jolokia_metrics", generate_values(inst, QUERY_SPECS_LEGACY))
 
     sections_specific = MBEAN_SECTIONS_SPECIFIC.get(inst.product, {})
     for section_name, mbeans in sections_specific.items():
-        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
+        write_section("jolokia_%s" % section_name, generate_json(inst, mbeans))
     for section_name, mbeans_tups in MBEAN_SECTIONS.items():
-        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans_tups))
+        write_section("jolokia_%s" % section_name, generate_json(inst, mbeans_tups))
 
-    write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
+    write_section("jolokia_generic", generate_values(inst, inst.custom_vars))
 
 
 def generate_jolokia_info(inst):
@@ -535,15 +658,15 @@ def generate_jolokia_info(inst):
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 
-    info = data.get('info', {})
-    version = info.get('version', "unknown")
-    product = info.get('product', "unknown")
+    info = data.get("info", {})
+    version = info.get("version", "unknown")
+    product = info.get("product", "unknown")
     if inst.product is not None:
         product = inst.product
     else:
         inst.product = product
 
-    agentversion = data.get('agent', "unknown")
+    agentversion = data.get("agent", "unknown")
     yield inst.name, product, version, agentversion
 
 
@@ -566,7 +689,7 @@ def generate_json(inst, mbeans):
         try:
             data = inst.get_post_data(mbean, "read", use_target=True)
             obj = inst.post(data)
-            yield inst.name, mbean, json.dumps(obj['value'])
+            yield inst.name, mbean, json.dumps(obj["value"])
         except (IOError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:
@@ -596,7 +719,8 @@ def load_config(custom_config):
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
-        exec(open(conffile).read(), {}, custom_config)
+        with open(conffile) as conf:
+            exec(conf.read(), {}, custom_config)
     return custom_config
 
 

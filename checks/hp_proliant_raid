@@ -19,11 +19,14 @@ def parse_hp_proliant_raid(info):
         else:
             itemname = name
 
-        parsed.setdefault(itemname.strip(), {
-            "status": status,
-            "size": int(size_str) * 1024 * 1024,
-            "rebuild_perc": rebuild,
-        })
+        parsed.setdefault(
+            itemname.strip(),
+            {
+                "status": status,
+                "size": int(size_str) * 1024 * 1024,
+                "rebuild_perc": rebuild,
+            },
+        )
 
     return parsed
 
@@ -57,8 +60,10 @@ def check_hp_proliant_raid(item, _no_params, parsed):
         data = parsed[item]
         dev_status = data["status"]
         state, state_readable = map_states[dev_status]
-        infotext   = "Status: %s, Logical volume size: %s" % \
-                     (state_readable, get_bytes_human_readable(data["size"]))
+        infotext = "Status: %s, Logical volume size: %s" % (
+            state_readable,
+            get_bytes_human_readable(data["size"]),
+        )
 
         # From CPQIDA-MIB:
         # This value is the percent complete of the rebuild.
@@ -73,11 +78,11 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
 
 check_info["hp_proliant_raid"] = {
-    'parse_function': parse_hp_proliant_raid,
-    'check_function': check_hp_proliant_raid,
-    'inventory_function': inventory_hp_proliant_raid,
-    'service_description': 'Logical Device %s',
-    'snmp_info': (
+    "parse_function": parse_hp_proliant_raid,
+    "check_function": check_hp_proliant_raid,
+    "inventory_function": inventory_hp_proliant_raid,
+    "service_description": "Logical Device %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.232.3.2.3.1.1",
         [
             "2",  # CPQIDA-MIB::cpqDaLogDrvIndex
@@ -85,6 +90,7 @@ check_info["hp_proliant_raid"] = {
             "4",  # CPQIDA-MIB::cpqDaLogDrvStatus
             "9",  # CPQIDA-MIB::cpqDaLogDrvSize
             "12",  # CPQIDA-MIB::cpqDaLogDrvPercentRebuild
-        ]),
-    'snmp_scan_function': hp_proliant_scan_function,
+        ],
+    ),
+    "snmp_scan_function": hp_proliant_scan_function,
 }

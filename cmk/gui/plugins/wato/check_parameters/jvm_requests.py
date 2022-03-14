@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_jvm_requests():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
         allow_empty=False,
@@ -28,8 +23,10 @@ def _item_spec_jvm_requests():
 
 def _parameter_valuespec_jvm_requests():
     return Tuple(
-        help=_("This rule sets the warn and crit levels for the number "
-               "of incoming requests to a JVM application server."),
+        help=_(
+            "This rule sets the warn and crit levels for the number "
+            "of incoming requests to a JVM application server."
+        ),
         elements=[
             Integer(
                 title=_("Warning if below"),
@@ -62,4 +59,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_requests,
         parameter_valuespec=_parameter_valuespec_jvm_requests,
         title=lambda: _("JVM request count"),
-    ))
+    )
+)

@@ -1,7 +1,7 @@
 title: Dell OpenManage: PSU Redundancy Status
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the redundancy status of the PSUs. The state will
@@ -12,5 +12,5 @@ description:
 item:
  The index of a redundancy group
 
-inventory:
+discovery:
  One service is created for each redundancy group.

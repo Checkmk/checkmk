@@ -1,11 +1,10 @@
 title: Juniper/ScreenOS: Memory Usage
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the current memory usage Juniper ScreenOS devices.
 
-inventory:
+discovery:
  One service is created.
-

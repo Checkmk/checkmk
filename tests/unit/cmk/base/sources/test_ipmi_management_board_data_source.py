@@ -4,18 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario  # type: ignore[import]
+from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result, SourceType
+from cmk.utils.check_utils import ActiveCheckResult
+from cmk.utils.type_defs import HostName, result, SourceType
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode
-from cmk.core_helpers.ipmi import IPMISummarizer
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.ipmi import IPMISource
 
 
@@ -25,59 +26,70 @@ def mode_fixture(request):
 
 
 def test_attribute_defaults(mode, monkeypatch):
-    hostname = "testhost"
-    Scenario().add_host(hostname).apply(monkeypatch)
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = config.lookup_mgmt_board_ip_address(host_config)
 
-    source = IPMISource(hostname, ipaddress, mode=mode)
+    source = IPMISource(hostname, ipaddress)
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
-    assert source.mode is mode
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown")
+    assert source.summarize(result.OK(HostSections[AgentRawDataSection]()), mode=mode) == [
+        ActiveCheckResult(0, "Success")
+    ]
     assert source.id == "mgmt_ipmi"
 
 
-def test_summarizer():
-    assert IPMISummarizer._get_ipmi_version(None) == "unknown"
-
-
-def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
-    hostname = "testhost"
+def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
+    hostname = HostName("testhost")
     ipaddress = "127.0.0.1"
 
     def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
         return ipaddress
 
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(config, "host_attributes", {
-        hostname: {
-            "management_address": ipaddress
+    monkeypatch.setattr(
+        config,
+        "host_attributes",
+        {
+            hostname: {"management_address": ipaddress},
         },
-    })
+    )
 
-    source = IPMISource(hostname, ipaddress, mode=mode)
+    source = IPMISource(hostname, ipaddress)
     assert source.host_config.management_address == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch):
-    assert IPMISource._make_description(
-        "1.2.3.4",
-        {},
-    ) == "Management board - IPMI (Address: 1.2.3.4)"
+    assert (
+        IPMISource._make_description(
+            "1.2.3.4",
+            {},
+        )
+        == "Management board - IPMI (Address: 1.2.3.4)"
+    )
 
 
 def test_description_with_credentials(monkeypatch):
-    assert IPMISource._make_description(
-        None, {"username": "Bobby"}) == "Management board - IPMI (User: Bobby)"
+    assert (
+        IPMISource._make_description(None, {"username": "Bobby"})
+        == "Management board - IPMI (User: Bobby)"
+    )
 
 
 def test_description_with_ipaddress_and_credentials(monkeypatch):
-    assert IPMISource._make_description(
-        "1.2.3.4",
-        {"username": "Bobby"},
-    ) == "Management board - IPMI (Address: 1.2.3.4, User: Bobby)"
+    assert (
+        IPMISource._make_description(
+            "1.2.3.4",
+            {"username": "Bobby"},
+        )
+        == "Management board - IPMI (Address: 1.2.3.4, User: Bobby)"
+    )

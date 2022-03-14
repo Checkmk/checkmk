@@ -1,0 +1,11 @@
+Title: agent_innovaphone: add support for password store
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1619438534
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The password store can now be used to specify passwords for the innovaphone agent.

@@ -1,0 +1,14 @@
+Title: GUI: Improve loading times after restart of the site apache
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1631989966
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The Checkmk GUI application is now initialized automatically when the apache
+process is started (restarted). This speeds up processing of the first HTTP
+request to the Checkmk GUI.

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.4.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 142 122" style="enable-background:new 0 0 142 122;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#8F5ED8;}
+	.st1{fill:#FFD54F;}
+	.st2{fill:#B894EE;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#303946;}
+	.st4{fill-rule:evenodd;clip-rule:evenodd;fill:#ED3B3B;}
+	.st5{fill-rule:evenodd;clip-rule:evenodd;fill:#FAD90D;}
+	.st6{fill-rule:evenodd;clip-rule:evenodd;fill:#52D300;}
+</style>
+<g id="Icons">
+	<g id="menuicons_Configure" transform="translate(-71.000000, -623.000000)">
+		<g id="Service-State" transform="translate(71.000000, 623.000000)">
+			<g id="service" transform="translate(20.094891, 0.000000)">
+				<polygon id="Path" class="st0" points="61,0 121.9,26.1 61,52.3 0,26.1 				"/>
+				<polygon id="Path_00000073001823466449660470000013008530743404877486_" class="st1" points="0,26.1 61,52.3 61,122 0,95.9 				
+					"/>
+				<polygon id="Path_00000173150448504200531520000010851199660410406792_" class="st0" points="121.9,26.1 61,52.3 61,122 
+					121.9,95.9 				"/>
+				<polygon id="Path_00000137845215624323552670000005272221001029027974_" class="st2" points="0,26.1 0,95.9 61,122 61,52.3 				
+					"/>
+			</g>
+			<g id="status" transform="translate(0.000000, 9.967539)">
+				<path id="Rectangle" class="st3" d="M15,0h10.1c8.3,0,15,6.7,15,15v70.3c0,8.3-6.7,15-15,15H15c-8.3,0-15-6.7-15-15V15
+					C0,6.7,6.7,0,15,0z"/>
+				<path id="Rectangle_00000049190021275384710370000011204921099217824674_" class="st4" d="M20,10L20,10c5.5,0,10,4.5,10,10v0
+					c0,5.5-4.5,10-10,10h0c-5.5,0-10-4.5-10-10v0C10,14.5,14.5,10,20,10z"/>
+				<path id="Rectangle_00000027599857143766143060000001167939085918346665_" class="st5" d="M20,40.1L20,40.1c5.5,0,10,4.5,10,10
+					v0c0,5.5-4.5,10-10,10h0c-5.5,0-10-4.5-10-10v0C10,44.6,14.5,40.1,20,40.1z"/>
+				<path id="Rectangle_00000127763655599565172570000013210951047579294394_" class="st6" d="M20,70.2L20,70.2c5.5,0,10,4.5,10,10
+					v0c0,5.5-4.5,10-10,10h0c-5.5,0-10-4.5-10-10v0C10,74.7,14.5,70.2,20,70.2z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

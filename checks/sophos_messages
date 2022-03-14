@@ -29,22 +29,26 @@ def check_sophos_messages(item, params, info):
             now = time.time()
             inbound = get_rate("inbound", now, int(inbound_str))
             outbound = get_rate("outbound", now, int(outbound_str))
-            infotext = "%.1f Inbounds and Outbounds/s, %.1f Inbounds/s, %.1f Outbounds/s" % \
-                        (inbound + outbound, inbound, outbound)
+            infotext = "%.1f Inbounds and Outbounds/s, %.1f Inbounds/s, %.1f Outbounds/s" % (
+                inbound + outbound,
+                inbound,
+                outbound,
+            )
             return 0, infotext, [("messages_inbound", inbound), ("messages_outbound", outbound)]
 
 
-check_info['sophos_messages'] = {
-    'inventory_function': inventory_sophos_messages,
-    'check_function': check_sophos_messages,
-    'service_description': 'Messages %s',
-    'has_perfdata': True,
-    'snmp_info': (
+check_info["sophos_messages"] = {
+    "inventory_function": inventory_sophos_messages,
+    "check_function": check_sophos_messages,
+    "service_description": "Messages %s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.2604.1.1.1.4.1",
         [
             "2",  # counterType -> read-only
             "3",  # counterInbound
             "4",  # counterOutbound
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2604",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2604",
 }

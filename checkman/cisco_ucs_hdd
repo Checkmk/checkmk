@@ -1,7 +1,7 @@
 title: Cisco UCS: HDD Operation Status
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -13,6 +13,6 @@ description:
  status is "operable", "removed" or "autoUpgrade". In other cases, the check will report
  a {WARNING} or {CRITICAL} status, based on the severity of the issue.
 
-inventory:
+discovery:
  One service is created for each HDD.
  If the HDD is in status "removed", no service is created.

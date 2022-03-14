@@ -7,13 +7,15 @@
 Special agent for monitoring Couchbase servers with Checkmk
 """
 
-import sys
 import argparse
-import logging
 import json
+import logging
+import sys
+
 import requests
 
 import cmk.utils.password_store
+
 from cmk.special_agents.utils import vcrtrace
 
 LOGGER = logging.getLogger(__name__)
@@ -126,34 +128,30 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("-v",
-                        "--verbose",
-                        default=0,
-                        action="count",
-                        help="Enable verbose logging.")
+    parser.add_argument(
+        "-v", "--verbose", default=0, action="count", help="Enable verbose logging."
+    )
     parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
-    parser.add_argument("-t",
-                        "--timeout",
-                        default=10,
-                        help="Timeout for API-calls in seconds. Default: 10")
-    parser.add_argument("-b",
-                        "--buckets",
-                        default=[],
-                        action='append',
-                        help="Gives a bucket to monitor. Can be used multiple times.")
-    parser.add_argument("-P",
-                        "--port",
-                        default=8091,
-                        help="Gives the port for API-calls. Default: 8091")
-    parser.add_argument("-u",
-                        "--username",
-                        default=None,
-                        help="The username for authentication at the API.")
-    parser.add_argument("-p",
-                        "--password",
-                        default=None,
-                        help="The password for authentication at the API.")
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
+    parser.add_argument(
+        "-t", "--timeout", default=10, help="Timeout for API-calls in seconds. Default: 10"
+    )
+    parser.add_argument(
+        "-b",
+        "--buckets",
+        default=[],
+        action="append",
+        help="Gives a bucket to monitor. Can be used multiple times.",
+    )
+    parser.add_argument(
+        "-P", "--port", default=8091, help="Gives the port for API-calls. Default: 8091"
+    )
+    parser.add_argument(
+        "-u", "--username", default=None, help="The username for authentication at the API."
+    )
+    parser.add_argument(
+        "-p", "--password", default=None, help="The password for authentication at the API."
+    )
     parser.add_argument("hostname", help="Host or ip address to contact.")
 
     return parser.parse_args(argv)
@@ -180,24 +178,24 @@ class CouchbaseClient:
 
     def _get_suburi(self, suburi):
         uri = self._base + suburi
-        LOGGER.debug('request GET %r', uri)
+        LOGGER.debug("request GET %r", uri)
 
         try:
             response = self._session.get(uri, timeout=self._timeout)
             response.raise_for_status()
         except (requests.ConnectionError, requests.HTTPError):
-            LOGGER.warning('%r could not be reached', uri)
+            LOGGER.warning("%r could not be reached", uri)
             raise
 
         try:
             return response.json()
         except ValueError:
-            LOGGER.warning('Invalid response: %r', response)
+            LOGGER.warning("Invalid response: %r", response)
             raise
 
     def get_pool(self):
         """Gets the pools response"""
-        return self._get_suburi('')
+        return self._get_suburi("")
 
     def get_bucket(self, bucket):
         return self._get_suburi("/buckets/%s/stats" % bucket)
@@ -213,10 +211,10 @@ def _get_dump(node_name, raw_data, filter_keys, process=lambda x: x):
 
 def sections_node(client):
     pool = client.get_pool()
-    node_list = [(node['hostname'].split(':')[0], node) for node in pool.get('nodes', ())]
+    node_list = [(node["hostname"].split(":")[0], node) for node in pool.get("nodes", ())]
 
     sections = {
-        "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list],
+        "couchbase_nodes_uptime": ["%s %s" % (node["uptime"], name) for name, node in node_list],
         "couchbase_nodes_info:sep(0)": [
             _get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list
         ],
@@ -231,26 +229,26 @@ def sections_node(client):
             for name, node in node_list
         ],
         "couchbase_nodes_cache:sep(0)": [
-            _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_CACHE)
+            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_CACHE)
             for name, node in node_list
         ],
         "couchbase_nodes_operations": [
-            "%s %s" % (node.get('interestingStats', {}).get('ops'), name)
+            "%s %s" % (node.get("interestingStats", {}).get("ops"), name)
             for name, node in node_list
         ],
         "couchbase_nodes_items:sep(0)": [
-            _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_ITEMS)
+            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_ITEMS)
             for name, node in node_list
         ],
         "couchbase_nodes_size:sep(0)": [
-            _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_SIZE)
+            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_SIZE)
             for name, node in node_list
         ],
     }
 
     output = []
     for section_name, section_content in sections.items():
-        output.append('<<<%s>>>' % section_name)
+        output.append("<<<%s>>>" % section_name)
         output.extend(section_content)
     return output
 
@@ -263,7 +261,7 @@ def fetch_bucket_data(client, buckets, debug):
             if debug:
                 raise
             continue
-        yield bucket, response.get('op', {}).get('samples', {})
+        yield bucket, response.get("op", {}).get("samples", {})
 
 
 def _average(value_list):
@@ -298,7 +296,7 @@ def sections_buckets(bucket_list):
 
     output = []
     for section_name, section_content in sections.items():
-        output.append('<<<%s>>>' % section_name)
+        output.append("<<<%s>>>" % section_name)
         output.extend(section_content)
     return output
 
@@ -324,6 +322,6 @@ def main(argv=None):
     bucket_list = list(fetch_bucket_data(client, args.buckets, args.debug))
     output += sections_buckets(bucket_list)
 
-    output.append('')
-    sys.stdout.write('\n'.join(output))
+    output.append("")
+    sys.stdout.write("\n".join(output))
     return 0

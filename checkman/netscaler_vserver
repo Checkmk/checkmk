@@ -1,7 +1,7 @@
 title: Citrix Netscaler: VServer Status
 agents: snmp
 catalog: app/netscaler
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the VServers of Citrix Netscaler
@@ -16,7 +16,7 @@ description:
  and CRIT if the health drops below configurable levels (WATO rule "Netscaler VServer
  States"). The default levels are 100% and 0.1%.
 
-inventory:
+discovery:
  One service is created for each VServer.
 
 item:

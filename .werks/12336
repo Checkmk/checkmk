@@ -1,0 +1,19 @@
+Title: REST API: single folder/folder list, additional parameter "show_hosts"
+Class: feature
+Compatible: compat
+Component: core
+Date: 1614790140
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, when showing the information of a folder or listing
+all folders, the hosts were not displayed due to performance reasons.
+
+This can now be switched back on with an additional query parameter
+named "show_hosts". When set to a non-zero value, the hosts are shown
+in the response.
+
+There is no further configuration neccessary.

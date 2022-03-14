@@ -1,0 +1,20 @@
+Title: Fixed logging with microsecond timestamps
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1634113670
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Checkmk 1.6.0 introduced a small regression where log lines in cmc.log were
+missing a space when logging with microseconds was enabled. Lines like
+
+    2021-10-13 10:24:51696.318 [5] [core 12345] Foo bar happened.
+
+should really read:
+
+    2021-10-13 10:24:51 696.318 [5] [core 12345] Foo bar happened.
+
+This has been fixed.

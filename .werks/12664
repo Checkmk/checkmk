@@ -1,0 +1,12 @@
+Title: BI "Aggregation group" now shows simple aggregation groups again
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1630917463
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Instead of showing aggregation groups and paths, the filter only showed paths.

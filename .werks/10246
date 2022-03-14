@@ -1,0 +1,16 @@
+Title: omd backup: Made it more robust against rrdcached communication issues
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1570002129
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The "omd backup" could be terminated during backup by issues of the rrdcached.
+The backup communicates with the rrdcached to pause updates to the RRD files
+to ensure the files are consistent during backup. In case the rrdcached is not
+answering as expected or a connection is not possible the backup should
+continue with the backup instead of failing.

@@ -1,7 +1,7 @@
 title: Fujitsu ETERNUS DX500 S3 Storage Systems: Power Supply Units Mounted on CE
 agents: snmp
 catalog: hw/storagehw/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the reported status of all installed power supply units
@@ -13,6 +13,6 @@ item:
  The index of the power supply unit mounted on CE (CPSU) in the SNMP table.
  It is of type integer. The first module has an index of {0}.
 
-inventory:
+discovery:
  One service is created for each power supply unit
  if the state is not {invalid} (4).

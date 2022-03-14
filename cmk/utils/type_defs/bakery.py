@@ -41,10 +41,11 @@ BakeryOpSys = NewType("BakeryOpSys", str)
 
 
 class BuiltinBakeryHostName(enum.Enum):
-    """ Type for representation of the special agent types
+    """Type for representation of the special agent types
     VANILLA and GENERIC. Yields the same interface as OrdinaryBakeryHostName
     in order to enable a generic handling in one data structure.
     """
+
     def __init__(self, raw_name: str, name: str) -> None:
         self.raw_name = raw_name
         self._display_name = name
@@ -57,18 +58,20 @@ class BuiltinBakeryHostName(enum.Enum):
 
 
 class OrdinaryBakeryHostName(str):
-    """ Wrapper for normal HostNames, when used as a mapping to an agent,
+    """Wrapper for normal HostNames, when used as a mapping to an agent,
     that enables a generic handling alongside the special agent types
     VANILLA and GENERIC.
     """
+
     @property
     def raw_name(self) -> str:
         return self
 
 
 # Type for entries in data structures that contain both of the above types.
-BakeryHostName = Union[Literal[BuiltinBakeryHostName.VANILLA, BuiltinBakeryHostName.GENERIC],
-                       OrdinaryBakeryHostName]
+BakeryHostName = Union[
+    Literal[BuiltinBakeryHostName.VANILLA, BuiltinBakeryHostName.GENERIC], OrdinaryBakeryHostName
+]
 
 
 class BakerySigningCredentials(TypedDict):

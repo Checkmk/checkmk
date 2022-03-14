@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -28,8 +24,10 @@ from cmk.gui.plugins.metrics import (
 
 metric_info["curdepth"] = {
     "title": _("Queue depth"),
-    "help": _("The current depth of the queue, that is, the number of messages " +
-              "on the queue, including both committed messages and uncommitted messages."),
+    "help": _(
+        "The current depth of the queue, that is, the number of messages "
+        "on the queue, including both committed messages and uncommitted messages."
+    ),
     "unit": "count",
     "color": "#4287f5",
 }
@@ -69,7 +67,7 @@ metric_info["qtime_long"] = {
     "color": "#0da317",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |

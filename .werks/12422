@@ -1,0 +1,13 @@
+Title: Notifications of contact: handle multiple contacts correctly
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616519242
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The view "Notifications of contact", which displays the notifications sent to
+a given contact, did not properly include notifications which were also sent
+to other contacts besides the one in question. This has been fixed.

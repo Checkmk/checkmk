@@ -4,16 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 import logging
+from typing import Optional
 
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
+from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
-try:
-    from .cee.snmp_backend import pysnmp_backend  # type: ignore[import]
-except ImportError:
-    pysnmp_backend = None  # type: ignore[assignment]
 
 try:
     from .cee.snmp_backend import inline  # type: ignore[import]
@@ -34,10 +30,9 @@ def get_force_stored_walks() -> bool:
     return _force_stored_walks
 
 
-def backend(snmp_config: SNMPHostConfig,
-            logger: logging.Logger,
-            *,
-            use_cache: Optional[bool] = None) -> SNMPBackend:
+def backend(
+    snmp_config: SNMPHostConfig, logger: logging.Logger, *, use_cache: Optional[bool] = None
+) -> SNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 
@@ -46,9 +41,6 @@ def backend(snmp_config: SNMPHostConfig,
 
     if inline and snmp_config.snmp_backend == SNMPBackendEnum.INLINE:
         return inline.InlineSNMPBackend(snmp_config, logger)
-
-    if pysnmp_backend and snmp_config.snmp_backend == SNMPBackendEnum.PYSNMP:
-        return pysnmp_backend.PySNMPBackend(snmp_config, logger)
 
     if snmp_config.snmp_backend == SNMPBackendEnum.CLASSIC:
         return ClassicSNMPBackend(snmp_config, logger)

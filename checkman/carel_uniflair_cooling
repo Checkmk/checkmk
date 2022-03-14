@@ -1,7 +1,7 @@
 title: CAREL Uniflair Air Conditions: Cooling
 agents: snmp
 catalog: hw/environment/carel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors parameters of datacenter cooling devices
@@ -21,6 +21,5 @@ description:
  The check also queries the air humidity level, but currently
  does not allow setting a level on this.
 
-inventory:
+discovery:
  One service is created.
-

@@ -20,8 +20,6 @@
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
-#include "ListColumn.h"
-#include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "Query.h"
 #include "Row.h"
@@ -165,37 +163,37 @@ ECRow::ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
 }
 
 // static
-std::unique_ptr<StringColumn::Callback<ECRow>> ECRow::makeStringColumn(
+std::unique_ptr<StringColumn<ECRow>> ECRow::makeStringColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<StringColumn::Callback<ECRow>>(
+    return std::make_unique<StringColumn<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getString(name); });
 }
 
 // static
-std::unique_ptr<IntColumn::Callback<ECRow>> ECRow::makeIntColumn(
+std::unique_ptr<IntColumn<ECRow>> ECRow::makeIntColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<IntColumn::Callback<ECRow>>(
+    return std::make_unique<IntColumn<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getInt(name); });
 }
 
 // static
-std::unique_ptr<DoubleColumn::Callback<ECRow>> ECRow::makeDoubleColumn(
+std::unique_ptr<DoubleColumn<ECRow>> ECRow::makeDoubleColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<DoubleColumn::Callback<ECRow>>(
+    return std::make_unique<DoubleColumn<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getDouble(name); });
 }
 
 // static
-std::unique_ptr<TimeColumn::Callback<ECRow>> ECRow::makeTimeColumn(
+std::unique_ptr<TimeColumn<ECRow>> ECRow::makeTimeColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<TimeColumn::Callback<ECRow>>(
+    return std::make_unique<TimeColumn<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(r.getDouble(name)));
@@ -203,10 +201,10 @@ std::unique_ptr<TimeColumn::Callback<ECRow>> ECRow::makeTimeColumn(
 }
 
 // static
-std::unique_ptr<ListColumn::Callback<ECRow>> ECRow::makeListColumn(
+std::unique_ptr<ListColumn<ECRow>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<ListColumn::Callback<ECRow>>(
+    return std::make_unique<ListColumn<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             auto result = r.getString(name);
             return result.empty() || result == "\002"
@@ -249,11 +247,14 @@ void TableEventConsole::answerQuery(Query *query) {
 
 bool TableEventConsole::isAuthorizedForEvent(Row row,
                                              const contact *ctc) const {
+    if (ctc == no_auth_user()) {
+        return true;
+    }
     // TODO(sp) Remove evil casts below.
     const auto *c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
-    auto precedence = std::static_pointer_cast<StringColumn::Callback<ECRow>>(
+    auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
     if (precedence == "rule") {
@@ -272,7 +273,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     const MonitoringCore::Contact *ctc, Row row, bool &result) const {
-    auto col = std::static_pointer_cast<deprecated::ListColumn>(
+    auto col = std::static_pointer_cast<ListColumn<ECRow>>(
         column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
         // TODO(sp) This check for None is a hack...

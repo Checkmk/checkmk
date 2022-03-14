@@ -1,7 +1,7 @@
 title: Couchbase Buckets: Operations
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -9,7 +9,7 @@ description:
  to a single bucket.
  Levels can be configured in the WATO rule "Couchbase Operations".
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

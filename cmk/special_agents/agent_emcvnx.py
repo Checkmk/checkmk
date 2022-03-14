@@ -8,10 +8,10 @@
 # http://corpusweb130.emc.com/upd_prod_VNX/UPDFinalPDF/jp/Command_Reference_for_Block.pdf
 
 # commands to be issued
-#naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -sp>
-#naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -disk>
-#naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -array>
-#naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -lun>
+# naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -sp>
+# naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -disk>
+# naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -array>
+# naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall < -lun>
 
 # command generic (rest less important)
 # naviseccli -h 10.1.36.13 -User XXXX -Password XXXX -Scope0 getall <-host>
@@ -23,11 +23,13 @@ import cProfile
 import getopt
 import os
 import sys
+from pathlib import Path
 from typing import Any, Dict
 
 
 def usage():
-    sys.stderr.write("""Check_MK EMC VNX Agent
+    sys.stderr.write(
+        """Check_MK EMC VNX Agent
 
 USAGE: agent_emcvnx [OPTIONS] HOST
        agent_emcvnx -h
@@ -57,7 +59,8 @@ OPTIONS:
                                 should be queried from the SP. You can define to use only
                                 view of them to optimize performance. The default is "all".
 
-""")
+"""
+    )
 
 
 #############################################################################
@@ -69,8 +72,8 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = 'hu:p:t:m:i:'
-    long_options = ['help', 'user=', 'password=', 'debug', 'timeout=', 'profile', 'modules=']
+    short_options = "hu:p:t:m:i:"
+    long_options = ["help", "user=", "password=", "debug", "timeout=", "profile", "modules="]
 
     try:
         opts, args = getopt.getopt(sys_argv, short_options, long_options)
@@ -82,74 +85,47 @@ def main(sys_argv=None):
     _opt_timeout = 60
 
     g_profile = None
-    g_profile_path = "emcvnx_profile.out"
 
     host_address = None
     user = None
     password = None
-    mortypes = ['all']
+    mortypes = ["all"]
     fetch_agent_info = False
 
     naviseccli_options: Dict[str, Dict[str, Any]] = {
-        "disks": {
-            "cmd_options": [(None, "getall -disk")],
-            "active": False,
-            "sep": None
-        },
-        "hba": {
-            "cmd_options": [(None, "getall -hba")],
-            "active": False,
-            "sep": None
-        },
-        "hwstatus": {
-            "cmd_options": [(None, "getall -array")],
-            "active": False,
-            "sep": None
-        },
-        "raidgroups": {
-            "cmd_options": [(None, "getall -rg")],
-            "active": False,
-            "sep": None
-        },
+        "disks": {"cmd_options": [(None, "getall -disk")], "active": False, "sep": None},
+        "hba": {"cmd_options": [(None, "getall -hba")], "active": False, "sep": None},
+        "hwstatus": {"cmd_options": [(None, "getall -array")], "active": False, "sep": None},
+        "raidgroups": {"cmd_options": [(None, "getall -rg")], "active": False, "sep": None},
         #   "agent-info"    : {"cmd_options" : [(None, "-sp")],               "active" : False, "sep" : None},
-        "sp_util": {
-            "cmd_options": [(None, "getcontrol -cbt")],
-            "active": False,
-            "sep": 58
-        },
-        "writecache": {
-            "cmd_options": [(None, "getcache -wst")],
-            "active": False,
-            "sep": None
-        },
-        "mirrorview": {
-            "cmd_options": [(None, "mirrorview -list")],
-            "active": False,
-            "sep": 58
-        },
+        "sp_util": {"cmd_options": [(None, "getcontrol -cbt")], "active": False, "sep": 58},
+        "writecache": {"cmd_options": [(None, "getcache -wst")], "active": False, "sep": None},
+        "mirrorview": {"cmd_options": [(None, "mirrorview -list")], "active": False, "sep": 58},
         "storage_pools": {
-            "cmd_options": [("storage_pools", "storagepool -list -all"),
-                            ("auto_tiering", "autoTiering -info -opStatus -loadBalance")],
+            "cmd_options": [
+                ("storage_pools", "storagepool -list -all"),
+                ("auto_tiering", "autoTiering -info -opStatus -loadBalance"),
+            ],
             "active": False,
-            "sep": 58
+            "sep": 58,
         },
     }
 
     for o, a in opts:
-        if o in ['--debug']:
+        if o in ["--debug"]:
             opt_debug = True
-        elif o in ['--profile']:
+        elif o in ["--profile"]:
             g_profile = cProfile.Profile()
             g_profile.enable()
-        elif o in ['-u', '--user']:
+        elif o in ["-u", "--user"]:
             user = a
-        elif o in ['-p', '--password']:
+        elif o in ["-p", "--password"]:
             password = a
-        elif o in ['-i', '--modules']:
-            mortypes = a.split(',')
-        elif o in ['-t', '--timeout']:
+        elif o in ["-i", "--modules"]:
+            mortypes = a.split(",")
+        elif o in ["-t", "--timeout"]:
             _opt_timeout = int(a)  # noqa: F841
-        elif o in ['-h', '--help']:
+        elif o in ["-h", "--help"]:
             usage()
             sys.exit(0)
 
@@ -186,12 +162,15 @@ def main(sys_argv=None):
     # fetch information by calling naviseccli
     #############################################################################
 
-    if (user is None or user == '') and (password is None or password == ''):
+    if (user is None or user == "") and (password is None or password == ""):
         # try using security files
         basecmd = "naviseccli -h %s " % host_address
     else:
-        basecmd = "naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user,
-                                                                          password)
+        basecmd = "naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (
+            host_address,
+            user,
+            password,
+        )
 
     #
     # check_mk section of agent output
@@ -206,12 +185,14 @@ def main(sys_argv=None):
 
     if cmdout:
         if "naviseccli: not found" in cmdout[0]:
-            sys.stderr.write("The command \"naviseccli\" could not be found. Terminating.\n")
+            sys.stderr.write('The command "naviseccli" could not be found. Terminating.\n')
             sys.exit(1)
 
         elif cmdout[0].startswith("Security file not found"):
-            sys.stderr.write("Could not find security file. Please provide valid user "
-                             "credentials if you don't have a security file.\n")
+            sys.stderr.write(
+                "Could not find security file. Please provide valid user "
+                "credentials if you don't have a security file.\n"
+            )
             sys.exit(1)
 
     print("<<<emcvnx_info:sep(58)>>>")
@@ -227,7 +208,7 @@ def main(sys_argv=None):
             sys.stderr.write("executing external command: %s\n" % cmd)
 
         for line in os.popen(cmd).readlines():  # nosec
-            print(line, end=' ')
+            print(line, end=" ")
 
     #
     # all other sections of agent output
@@ -247,16 +228,19 @@ def main(sys_argv=None):
                 if opt_debug:
                     sys.stderr.write("executing external command: %s\n" % cmd)
                 for line in os.popen(cmd).readlines():  # nosec
-                    print(line, end=' ')
+                    print(line, end=" ")
 
     if g_profile:
+        g_profile_path = Path("emcvnx_profile.out")
         g_profile.dump_stats(g_profile_path)
-        show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
-        open(show_profile, "w")\
-            .write("#!/usr/bin/python\n"
-                   "import pstats\n"
-                   "stats = pstats.Stats('%s')\n"
-                   "stats.sort_stats('time').print_stats()\n" % g_profile_path)
-        os.chmod(show_profile, 0o755)
+
+        show_profile = g_profile_path.parent / "show_profile.py"
+        show_profile.write_text(
+            "#!/usr/bin/python\n"
+            "import pstats\n"
+            "stats = pstats.Stats('%s')\n"
+            "stats.sort_stats('cumtime').print_stats()\n" % g_profile_path
+        )
+        show_profile.chmod(0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))

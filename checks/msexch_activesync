@@ -16,17 +16,15 @@ def discover_msexch_activesync(parsed):
 
 
 def check_msexch_activesync(_no_item, _no_params, parsed):
-    yield wmi_yield_raw_persec(parsed[""],
-                               None,
-                               "RequestsPersec",
-                               infoname="Requests/sec",
-                               perfvar="requests_per_sec")
+    yield wmi_yield_raw_persec(
+        parsed[""], None, "RequestsPersec", infoname="Requests/sec", perfvar="requests_per_sec"
+    )
 
 
-check_info['msexch_activesync'] = {
-    'inventory_function': discover_msexch_activesync,
-    'check_function': check_msexch_activesync,
-    'parse_function': parse_wmi_table,
-    'has_perfdata': True,
-    'service_description': "Exchange ActiveSync",
+check_info["msexch_activesync"] = {
+    "inventory_function": discover_msexch_activesync,
+    "check_function": check_msexch_activesync,
+    "parse_function": parse_wmi_table,
+    "has_perfdata": True,
+    "service_description": "Exchange ActiveSync",
 }

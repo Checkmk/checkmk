@@ -1,0 +1,13 @@
+Title: Fixed potential deadlock when archiving event console events
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1618226747
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+When lots of event console events are being archived while lots of new
+events are created, there was the possibility of a deadlock between the EC
+and the CMC. This has been fixed.

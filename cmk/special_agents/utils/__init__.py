@@ -10,10 +10,10 @@ After everything done this file should be empty!
 """
 
 from .misc import (
+    _NullContext,
     AgentJSON,
     DataCache,
-    _NullContext,
     datetime_serializer,
-    vcrtrace,
     get_seconds_since_midnight,
+    vcrtrace,
 )

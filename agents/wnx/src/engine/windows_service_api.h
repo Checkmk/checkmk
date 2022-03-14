@@ -41,7 +41,7 @@ int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy
 int ExecCap();                             // on cap
 
-int ExecCmkUpdateAgent(const std::vector<std::wstring>& params);  // updater
+int ExecCmkUpdateAgent(const std::vector<std::wstring> &params);  // updater
 
 int ExecVersion();                         // on version
 int ExecPatchHash();                       // on patch_hash
@@ -62,15 +62,19 @@ int ExecCvtIniYaml(std::filesystem::path IniFile,
                    StdioLog stdio_log);  // on cvt
 int ExecExtractCap(std::wstring_view cap_file,
                    std::wstring_view to);  //
-int ExecSection(const std::wstring& SecName,
+int ExecSection(const std::wstring &SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
 int ServiceAsService(std::wstring_view app_name,
                      std::chrono::milliseconds delay,
-                     const std::function<bool(const void* some_context)>&
-                         internal_callback);  // service execution
+                     const std::function<bool(const void *some_context)>
+                         &internal_callback);  // service execution
 
-void ProcessFirewallConfiguration(std::wstring_view app_name);
+/// returns -1 for all ports
+int GetFirewallPort();
+
+void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
+                                  std::wstring_view rule_name);
 [[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);
 
 // Converter API from YML language to wtools
@@ -78,18 +82,20 @@ wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view text);
 wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES
-constexpr const wchar_t* kServiceName = L"CheckMkService";
-constexpr const wchar_t* kServiceDisplayName =
+constexpr const wchar_t *kServiceName = L"CheckMkService";
+constexpr const wchar_t *kServiceDisplayName =
     L"Check MK windows agent service";
 
 // PARAMETERS
 constexpr int kServiceStartType = SERVICE_DEMAND_START;  //  SERVICE_AUTO_START;
-constexpr const wchar_t* kServiceDependencies = L"";
-constexpr const wchar_t* kServiceAccount = L"NT AUTHORITY\\LocalService";
-constexpr const wchar_t* kServicePassword = nullptr;
+constexpr const wchar_t *kServiceDependencies = L"";
+constexpr const wchar_t *kServiceAccount = L"NT AUTHORITY\\LocalService";
+constexpr const wchar_t *kServicePassword = nullptr;
 
 constexpr std::wstring_view kSrvFirewallRuleName = L"Checkmk Agent";
+constexpr std::wstring_view kIntFirewallRuleName = L"Checkmk Agent Internal";
 constexpr std::wstring_view kAppFirewallRuleName = L"Checkmk Agent application";
+constexpr std::wstring_view kTstFirewallRuleName = L"Checkmk Agent TEST";
 
 // service configuration
 // main call

@@ -22,28 +22,87 @@ public:
 
 namespace cma::srv {
 
-TEST(AsyncAnswerTest, Base) {
+TEST(AsyncAnswerTest, Ctor) {
     AsyncAnswer aa;
-    EXPECT_EQ(aa.order_, AsyncAnswer::Order::plugins_last);
-    EXPECT_EQ(aa.sw_.isStarted(), false);
-    aa.prepareAnswer("aaa");
-    EXPECT_EQ(aa.sw_.isStarted(), true);
+    EXPECT_EQ(aa.getStopWatch().isStarted(), false);
+    EXPECT_EQ(aa.awaitingSegments(), 0);
+    EXPECT_EQ(aa.receivedSegments(), 0);
+    EXPECT_FALSE(aa.isAnswerInUse());
+    EXPECT_EQ(aa.getIp(), std::string{});
+    EXPECT_GT(aa.getId().time_since_epoch().count(), 1000);
+}
 
-    EXPECT_EQ(aa.external_ip_, "aaa");
-    EXPECT_EQ(aa.awaited_segments_, 0);
-    EXPECT_EQ(aa.received_segments_, 0);
-    EXPECT_TRUE(aa.data_.empty());
-    EXPECT_TRUE(aa.segments_.empty());
-    EXPECT_TRUE(aa.plugins_.empty());
-    EXPECT_TRUE(aa.local_.empty());
+TEST(AsyncAnswerTest, Prepare) {
+    AsyncAnswer aa;
+    auto id = aa.getId();
+    EXPECT_TRUE(aa.prepareAnswer("aaa"));
+    EXPECT_NE(aa.getId(), id);
+    EXPECT_EQ(aa.getIp(), "aaa");
     EXPECT_FALSE(aa.prepareAnswer("aaa"));
-    aa.external_ip_ = "";
-    aa.awaited_segments_ = 1;
-    EXPECT_FALSE(aa.prepareAnswer("aaa"));
-    aa.external_ip_ = "";
-    aa.awaited_segments_ = 0;
-    aa.received_segments_ = 1;
-    EXPECT_FALSE(aa.prepareAnswer("aaa"));
+}
+
+TEST(AsyncAnswerTest, Run) {
+    AsyncAnswer aa;
+    aa.prepareAnswer("aaa");
+    aa.exeKickedCount(2);
+    EXPECT_EQ(aa.getStopWatch().isStarted(), true);
+    EXPECT_TRUE(aa.isAnswerInUse());
+    EXPECT_EQ(aa.awaitingSegments(), 2);
+    EXPECT_EQ(aa.receivedSegments(), 0);
+}
+
+TEST(AsyncAnswerTest, Timeout) {
+    AsyncAnswer aa;
+    EXPECT_GT(aa.timeout(), 0);
+    aa.newTimeout(1000);
+    EXPECT_EQ(aa.timeout(), 1000);
+    aa.newTimeout(90);
+    EXPECT_EQ(aa.timeout(), 1000);
+}
+
+class AsyncAnswerTestFixture : public ::testing::Test {
+public:
+    const int kicked_count{2};
+    const std::string segment_name{"A"};
+    void SetUp() override {
+        aa.prepareAnswer("aaa");
+        aa.exeKickedCount(kicked_count);
+        aa.addSegment(segment_name, aa.getId(), db);
+    }
+    AsyncAnswer aa;
+    AsyncAnswer::DataBlock db{0, 1};
+    AsyncAnswer::DataBlock db_result{0, 1, '\n'};
+    const std::vector<std::string> segments{segment_name};
+};
+
+TEST_F(AsyncAnswerTestFixture, Start) {
+    EXPECT_EQ(aa.awaitingSegments(), kicked_count);
+    EXPECT_EQ(aa.receivedSegments(), 1);
+    EXPECT_EQ(aa.segmentNameList(), segments);
+}
+
+TEST_F(AsyncAnswerTestFixture, Receive) {
+    EXPECT_EQ(aa.getDataAndClear(), db_result);
+    EXPECT_EQ(aa.awaitingSegments(), 0);
+    EXPECT_EQ(aa.receivedSegments(), 0);
+    EXPECT_EQ(aa.getIp(), "");
+}
+
+TEST_F(AsyncAnswerTestFixture, Drop) {
+    aa.dropAnswer();
+    EXPECT_EQ(aa.getDataAndClear(), AsyncAnswer::DataBlock{});
+    EXPECT_EQ(aa.awaitingSegments(), 0);
+    EXPECT_EQ(aa.receivedSegments(), 0);
+    EXPECT_EQ(aa.getIp(), "");
+}
+
+TEST_F(AsyncAnswerTestFixture, WaitFail) {
+    EXPECT_FALSE(aa.waitAnswer(1ms));  // one segment should miss
+}
+
+TEST_F(AsyncAnswerTestFixture, WaitSuccess) {
+    aa.addSegment("B", aa.getId(), db);
+    EXPECT_TRUE(aa.waitAnswer(1ms));
 }
 
 TEST(ServiceProcessorTest, Generate) {
@@ -63,7 +122,7 @@ TEST(ServiceProcessorTest, Generate) {
     AsyncAnswer::DataBlock db;
     auto ret = sp.wrapResultWithStaticSections(db);
     ret.push_back(0);
-    std::string data = reinterpret_cast<const char*>(ret.data());
+    std::string data = reinterpret_cast<const char *>(ret.data());
     ASSERT_TRUE(ret.size() > 5);
     auto t = cma::tools::SplitString(data, "\n");
     EXPECT_EQ(t[0] + "\n", cma::section::MakeHeader(cma::section::kCheckMk));
@@ -80,7 +139,7 @@ TEST(ServiceProcessorTest, StartStopExe) {
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto processor =
-        new ServiceProcessor(100ms, [&counter](const void* Processor) {
+        new ServiceProcessor(100ms, [&counter](const void *Processor) {
             xlog::l("pip").print();
             counter++;
             return true;

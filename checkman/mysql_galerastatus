@@ -1,7 +1,7 @@
 title: MySQL: Galera Status
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the status of the local Galera node and
@@ -15,7 +15,7 @@ description:
 item:
  The name of the instance
 
-inventory:
+discovery:
  One service is created for each instance on each host where the agent plugin
  {mk_mysql} is installed and the MySQL daemon is running if the instance
  has Galera enabled.

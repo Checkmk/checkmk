@@ -5,29 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_backup_timemachine():
-    return Dictionary(elements=[
-        ("age",
-         Tuple(
-             title=_("Maximum age of latest timemachine backup"),
-             elements=[
-                 Age(title=_("Warning if older than"), default_value=86400),
-                 Age(title=_("Critical if older than"), default_value=172800)
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "age",
+                Tuple(
+                    title=_("Maximum age of latest timemachine backup"),
+                    elements=[
+                        Age(title=_("Warning if older than"), default_value=86400),
+                        Age(title=_("Critical if older than"), default_value=172800),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -37,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_backup_timemachine,
         title=lambda: _("Timemachine backup age"),
-    ))
+    )
+)

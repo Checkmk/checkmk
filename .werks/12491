@@ -1,0 +1,25 @@
+Title: No autorefresh in Custom Graph editor
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1620301627
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The custom graph editor in a pursuit of convenience would save changes and
+refresh the page on every change. This convenience resulted in a high
+performance penalty when editing graphs with multiple metrics, as the entire
+page would need to be rendered again, and specially recollecting data from the
+RRD files.
+
+With this Werk, the custom graph editor does not execute the page reload upon
+changes.  The user is now responsible for this interaction. Following our UX
+project, now there is an "Apply" button on the top left corner of the editor to
+save and apply the changes to the graph. This allows users to place multiple
+changes at once, without incurring in a performance penalty, due to the constant
+refreshing of the editor.
+
+Users do need to press the "Apply" button to save changes, it is now not enough
+to just do changes and leave the editor.

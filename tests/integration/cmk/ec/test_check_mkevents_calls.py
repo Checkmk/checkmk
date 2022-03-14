@@ -5,17 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-import pytest  # type: ignore[import]
+
+import pytest
+
+from tests.testlib.site import Site
 
 
-@pytest.mark.parametrize("args", [
-    [],
-    ["-a"],
-])
-def test_simple_check_mkevents_call(site, args):
-    p = site.execute(["./check_mkevents"] + args + ["somehost"],
-                     stdout=subprocess.PIPE,
-                     cwd=site.path("lib/nagios/plugins"))
-    output = p.stdout.read()
+@pytest.mark.parametrize(
+    "args",
+    [
+        [],
+        ["-a"],
+    ],
+)
+def test_simple_check_mkevents_call(site: Site, args):
+    p = site.execute(
+        ["./check_mkevents"] + args + ["somehost"],
+        stdout=subprocess.PIPE,
+        cwd=site.path("lib/nagios/plugins"),
+    )
+    output = p.stdout.read() if p.stdout else "<NO STDOUT>"
     assert output == "OK - no events for somehost\n"
     assert p.wait() == 0

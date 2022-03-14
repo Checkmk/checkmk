@@ -1,14 +1,14 @@
 title: Couchbase Nodes: Services
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the services running on Couchbase nodes.
  It goes to a CRIT state if the reported services differ from
  the services at discovery and is OK otherwise.
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

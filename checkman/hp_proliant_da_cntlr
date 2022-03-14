@@ -1,7 +1,7 @@
 title: HP Proliant Servers: RAID Controllers
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
@@ -19,5 +19,5 @@ description:
 item:
  Index of the controller
 
-inventory:
+discovery:
  One service is created for each raid controller.

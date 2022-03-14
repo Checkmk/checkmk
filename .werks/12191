@@ -1,0 +1,13 @@
+Title: brocade_fcport: Fix crash when data missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617086710
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Check brocade_fcport crashed when if_info data was missing.
+Now, the check plugin isn't discovered in that case.

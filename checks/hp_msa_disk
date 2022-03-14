@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # drives 1 durable-id disk_01.01
 # drives 1 enclosure-id 1
 # drives 1 drawer-id 255
@@ -159,14 +162,14 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-check_info['hp_msa_disk'] = {
-    'parse_function': parse_hp_msa,
-    'inventory_function': inventory_hp_msa_health,
-    'check_function': check_hp_msa_health,
-    'service_description': 'Disk Health %s',
+check_info["hp_msa_disk"] = {
+    "parse_function": parse_hp_msa,
+    "inventory_function": inventory_hp_msa_health,
+    "check_function": check_hp_msa_health,
+    "service_description": "Disk Health %s",
 }
 
-#.
+# .
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
 #   |                      __| (_)___| | __ |_ _/ _ \                      |
@@ -176,15 +179,15 @@ check_info['hp_msa_disk'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info['hp_msa_disk.io'] = {
-    'inventory_function': inventory_hp_msa_io,
-    'check_function': check_hp_msa_io,
-    'service_description': 'Disks IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+check_info["hp_msa_disk.io"] = {
+    "inventory_function": inventory_hp_msa_io,
+    "check_function": check_hp_msa_io,
+    "service_description": "Disks IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -211,13 +214,13 @@ def check_hp_msa_disk_temp(item, params, parsed):
     return check_temperature_list(disks, params, "hp_msa_disk_temp_%s" % item)
 
 
-check_info['hp_msa_disk.temp'] = {
-    'inventory_function': inventory_hp_msa_disk_temp,
-    'check_function': check_hp_msa_disk_temp,
-    'service_description': 'Temperature %s',
-    'group': 'temperature',
-    'has_perfdata': True,
-    'default_levels_variable': "hp_msa_disk_temp_default_levels",
+check_info["hp_msa_disk.temp"] = {
+    "inventory_function": inventory_hp_msa_disk_temp,
+    "check_function": check_hp_msa_disk_temp,
+    "service_description": "Temperature %s",
+    "group": "temperature",
+    "has_perfdata": True,
+    "default_levels_variable": "hp_msa_disk_temp_default_levels",
 }
 
-#.
+# .

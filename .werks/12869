@@ -1,0 +1,15 @@
+Title: Fix error on commands in views with always enabled checkboxes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1622197552
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If commands where used in views with option "Always show the checkboxes"
+enabled, commands failed with an error "No rows selected to perform actions
+for." even if checkboxes had been selected. A workaround was, to send the
+command again after using the "Back to view" link of the error message.

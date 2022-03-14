@@ -41,8 +41,10 @@ def transform_units(params):
         new_params["collection_time"] = (ms_per_min[0] / 600.0, ms_per_min[1] / 600.0)
     if "CollectionCount" in params:
         count_rate_per_min = params["CollectionCount"]
-        new_params["collection_count"] = (count_rate_per_min[0] / 60.0,
-                                          count_rate_per_min[1] / 60.0)
+        new_params["collection_count"] = (
+            count_rate_per_min[0] / 60.0,
+            count_rate_per_min[1] / 60.0,
+        )
     return new_params
 
 
@@ -51,8 +53,8 @@ def check_jolokia_jvm_garbagecollectors(item, params, data):
 
     now = time.time()
     try:
-        count = data['CollectionCount']
-        ctime = data['CollectionTime']
+        count = data["CollectionCount"]
+        ctime = data["CollectionTime"]
     except KeyError:
         return
 
@@ -66,7 +68,7 @@ def check_jolokia_jvm_garbagecollectors(item, params, data):
     yield check_levels(
         count_rate,
         "jvm_garbage_collection_count",
-        params.get('collection_count'),
+        params.get("collection_count"),
         unit="/s",
         infoname="Garbage collections",
     )
@@ -74,7 +76,7 @@ def check_jolokia_jvm_garbagecollectors(item, params, data):
     yield check_levels(
         ctime_rate * 10.0,  # ms/s -> %
         "jvm_garbage_collection_time",
-        params.get('collection_time'),
+        params.get("collection_time"),
         unit="%",
         infoname="Time spent collecting garbage",
     )

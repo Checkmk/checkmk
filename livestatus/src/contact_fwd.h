@@ -9,10 +9,9 @@
 #if defined(CMC)
 class Contact;
 using contact = Contact;
-#elif defined(NAGIOS4)
-typedef struct contact contact;
 #else
-using contact = struct contact_struct;
+#include "nagios.h"
+using contact = nagios_compat_contact_struct;
 #endif
 
 #endif  // contact_fwd_h

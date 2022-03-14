@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: TopSystem Info
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the information of the TopSystem class of an UCS C-Series Rack Server.
@@ -28,5 +28,5 @@ description:
  This check does not support the C-Series Rack Server model Cisco UCS C125 M5 Rack Server Node
  which is used as part of a Cisco UCS C4200 Series Rack Server Chassis.
 
-inventory:
+discovery:
  One service is created for each server requested by the Special Agent agent_ucs_bladecenter.

@@ -1,7 +1,7 @@
 title: SAP HANA: Replication Status
 agents: linux
 catalog: app/sap_hana
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the replication status of SAP HANA.
@@ -15,8 +15,10 @@ description:
  If it returns 14 or 15 the check is OK. Otherwise the check
  reports UNKNOWN.
 
+ This check is also cluster-aware.
+
 item:
  The sid instance name
 
-inventory:
+discovery:
  One service is created for each instance if the mode is PRIMARY.

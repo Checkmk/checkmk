@@ -1,0 +1,14 @@
+Title: Fixed event console time filters
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1640787437
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+The event console contains logic to quickly skip history files which are not
+relevant for a given query. This logic was broken from day one, often
+resulting in superfluous processing of irrelevant history files, which in
+turn could lead to e.g. timeouts in the GUI. This has been fixed now.

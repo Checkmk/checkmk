@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from .cpu_load import check_cpu_load_generic
 
 #   .--Common--------------------------------------------------------------.
 #   |              ____                                                    |
@@ -18,9 +17,7 @@ from .cpu_load import check_cpu_load_generic
 
 
 def arbor_test_threshold(perc, name, warn, crit):
-    status = perc > crit and 2\
-            or perc > warn and 1\
-            or 0
+    status = perc > crit and 2 or perc > warn and 1 or 0
     infotext = "%s used: %d%%" % (name, perc)
 
     if status > 0:
@@ -28,7 +25,7 @@ def arbor_test_threshold(perc, name, warn, crit):
     return status, infotext
 
 
-#.
+# .
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
@@ -57,10 +54,10 @@ def check_arbor_memory(no_item, params, parsed):
     def combine_infotext(*blocks):
         return ", ".join([b for b in blocks if b])
 
-    ram_perc, swap_perc = map(int, parsed['memory'])
+    ram_perc, swap_perc = map(int, parsed["memory"])
 
-    ram_warn, ram_crit = params['levels_ram'][1]
-    swap_warn, swap_crit = params['levels_swap'][1]
+    ram_warn, ram_crit = params["levels_ram"][1]
+    swap_warn, swap_crit = params["levels_swap"][1]
 
     ram_status, ram_info = arbor_test_threshold(ram_perc, "RAM", ram_warn, ram_crit)
     swap_status, swap_info = arbor_test_threshold(swap_perc, "Swap", swap_warn, swap_crit)
@@ -68,37 +65,14 @@ def check_arbor_memory(no_item, params, parsed):
     infotext = combine_infotext(ram_info, swap_info)
 
     perfdata = [
-        ('mem_used_percent', ram_perc, ram_warn, ram_crit),
-        ('swap_used_percent', swap_perc, swap_warn, swap_crit),
+        ("mem_used_percent", ram_perc, ram_warn, ram_crit),
+        ("swap_used_percent", swap_perc, swap_warn, swap_crit),
     ]
 
     return worst_status(ram_status, swap_status), infotext, perfdata
 
 
-#.
-#   .--CPU Load------------------------------------------------------------.
-#   |              ____ ____  _   _   _                    _               |
-#   |             / ___|  _ \| | | | | |    ___   __ _  __| |              |
-#   |            | |   | |_) | | | | | |   / _ \ / _` |/ _` |              |
-#   |            | |___|  __/| |_| | | |__| (_) | (_| | (_| |              |
-#   |             \____|_|    \___/  |_____\___/ \__,_|\__,_|              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-arbor_cpuload_default_levels = (5.0, 10.0)
-
-
-def inventory_arbor_cpu_load(parsed):
-    if "cpu_loads" in parsed:
-        return [(None, "arbor_cpuload_default_levels")]
-
-
-def check_arbor_cpu_load(no_item, params, parsed):
-    load = [float(x) / 100.0 for x in parsed['cpu_loads']]
-    return check_cpu_load_generic(params, load, 1)
-
-
-#.
+# .
 #   .--Disk Usage----------------------------------------------------------.
 #   |            ____  _     _      _   _                                  |
 #   |           |  _ \(_)___| | __ | | | |___  __ _  __ _  ___             |
@@ -115,12 +89,12 @@ def inventory_arbor_disk_usage(parsed):
 
 
 def check_arbor_disk_usage(no_item, params, parsed):
-    usage = int(parsed['disk'])
-    status, infotext = arbor_test_threshold(usage, "Disk", *params['levels'])
-    return status, infotext, [('disk_utilization', float(usage) / 100.0)]
+    usage = int(parsed["disk"])
+    status, infotext = arbor_test_threshold(usage, "Disk", *params["levels"])
+    return status, infotext, [("disk_utilization", float(usage) / 100.0)]
 
 
-#.
+# .
 #   .--Host Fault----------------------------------------------------------.
 #   |             _   _           _     _____           _ _                |
 #   |            | | | | ___  ___| |_  |  ___|_ _ _   _| | |_              |
@@ -132,18 +106,18 @@ def check_arbor_disk_usage(no_item, params, parsed):
 
 
 def inventory_arbor_host_fault(parsed):
-    if 'host_fault' in parsed:
+    if "host_fault" in parsed:
         return [(None, None)]
 
 
 def check_arbor_host_fault(no_item, no_params, parsed):
     status = 0
-    if parsed['host_fault'] != "No Fault":
+    if parsed["host_fault"] != "No Fault":
         status = 2
-    return status, parsed['host_fault']
+    return status, parsed["host_fault"]
 
 
-#.
+# .
 #   .--Drop Rate-----------------------------------------------------------.
 #   |             ____                    ____       _                     |
 #   |            |  _ \ _ __ ___  _ __   |  _ \ __ _| |_ ___               |
@@ -155,39 +129,39 @@ def check_arbor_host_fault(no_item, no_params, parsed):
 
 
 def inventory_arbor_drop_rate(parsed):
-    if 'drop_rate' in parsed:
+    if "drop_rate" in parsed:
         return [("Overrun", {})]
 
 
 def check_arbor_drop_rate(no_item, params, parsed):
-    drop_rate = int(parsed['drop_rate'])
-    infotext = '%s pps' % drop_rate
+    drop_rate = int(parsed["drop_rate"])
+    infotext = "%s pps" % drop_rate
 
     lower_status = 0
-    lower_levels = params.get('levels_lower')
+    lower_levels = params.get("levels_lower")
     if lower_levels:
         warn, crit = lower_levels
 
         if drop_rate <= crit:
-            lower_status, label = 2, '(!!)'
+            lower_status, label = 2, "(!!)"
         elif drop_rate <= warn:
-            lower_status, label = 1, '(!)'
+            lower_status, label = 1, "(!)"
 
         if lower_status:
-            infotext += ' (warn/crit below %.1f/%.1f)%s' % (warn, crit, label)
+            infotext += " (warn/crit below %.1f/%.1f)%s" % (warn, crit, label)
 
     upper_status = 0
-    upper_levels = params.get('levels')
+    upper_levels = params.get("levels")
     if upper_levels:
         warn, crit = upper_levels
 
         if drop_rate >= crit:
-            upper_status, label = 2, '(!!)'
+            upper_status, label = 2, "(!!)"
         elif drop_rate >= warn:
-            upper_status, label = 1, '(!)'
+            upper_status, label = 1, "(!)"
 
         if upper_status:
-            infotext += ' (warn/crit above %.1f/%.1f)%s' % (warn, crit, label)
+            infotext += " (warn/crit above %.1f/%.1f)%s" % (warn, crit, label)
 
         perfdata = [("if_in_pkts", drop_rate, warn, crit)]
     else:
@@ -197,4 +171,4 @@ def check_arbor_drop_rate(no_item, params, parsed):
     yield status, infotext, perfdata
 
 
-#.
+# .

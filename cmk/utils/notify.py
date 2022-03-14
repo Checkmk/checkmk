@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NewType, Dict, List
+from typing import Dict, List, NewType
 
 import cmk.utils.defines
+
+# NOTE: Keep in sync with values in MonitoringLog.cc.
+MAX_COMMENT_LENGTH = 2000
+MAX_PLUGIN_OUTPUT_LENGTH = 1000
 
 # 0 -> OK
 # 1 -> temporary issue
@@ -17,14 +21,14 @@ NotificationContext = NewType("NotificationContext", Dict)
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
-    return cmk.utils.defines.service_state_name(exit_code, u"UNKNOWN")
+    return cmk.utils.defines.service_state_name(exit_code, "UNKNOWN")
 
 
 def find_wato_folder(context: NotificationContext) -> str:
     for tag in context.get("HOSTTAGS", "").split():
         if tag.startswith("/wato/"):
             return tag[6:].rstrip("/")
-    return u""
+    return ""
 
 
 def notification_message(plugin: NotificationPluginName, context: NotificationContext) -> str:
@@ -41,11 +45,23 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec = hostname
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
-    return u"%s: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output)
+    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
+    return "%s: %s;%s;%s;%s;%s" % (
+        what,
+        contact,
+        spec,
+        state,
+        plugin,
+        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+    )
 
 
-def notification_progress_message(plugin: NotificationPluginName, context: NotificationContext,
-                                  exit_code: NotificationResultCode, output: str) -> str:
+def notification_progress_message(
+    plugin: NotificationPluginName,
+    context: NotificationContext,
+    exit_code: NotificationResultCode,
+    output: str,
+) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -56,11 +72,22 @@ def notification_progress_message(plugin: NotificationPluginName, context: Notif
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
     state = _state_for(exit_code)
-    return u"%s: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output)
+    return "%s: %s;%s;%s;%s;%s" % (
+        what,
+        contact,
+        spec,
+        state,
+        plugin,
+        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+    )
 
 
-def notification_result_message(plugin: NotificationPluginName, context: NotificationContext,
-                                exit_code: NotificationResultCode, output: List[str]) -> str:
+def notification_result_message(
+    plugin: NotificationPluginName,
+    context: NotificationContext,
+    exit_code: NotificationResultCode,
+    output: List[str],
+) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -73,4 +100,12 @@ def notification_result_message(plugin: NotificationPluginName, context: Notific
     state = _state_for(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
-    return u"%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, short_output, comment)
+    return "%s: %s;%s;%s;%s;%s;%s" % (
+        what,
+        contact,
+        spec,
+        state,
+        plugin,
+        short_output[:MAX_PLUGIN_OUTPUT_LENGTH],
+        comment[:MAX_COMMENT_LENGTH],
+    )

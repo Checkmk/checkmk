@@ -1,7 +1,7 @@
 title: STULZ Clima Unit: Temperatures
 agents: snmp
 catalog: hw/environment/stulz
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This plugin polls the air temperature of all connected clima units on a stulz management.
@@ -11,6 +11,5 @@ description:
 item:
  The type of the sensor (e.g. {{unit air}}, etc.) and the index of the sensor seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each device.
-

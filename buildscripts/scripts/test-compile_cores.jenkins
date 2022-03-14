@@ -1,35 +1,26 @@
-def NODE = "both"
+def NODE = "linux"
 
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   pipelineTriggers([pollSCM('H/2 * * * *')]),
 ])
 
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-        str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-        withFolderProperties{
-            TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
+timeout(time: 12, unit: 'HOURS') {
+    node (NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
         }
-    }
-    try {
-        stage("Execute Test") {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def TEST_IMAGE = docker.image(TEST_CONTAINER)
-                TEST_IMAGE.pull()
-            }
-            ENV_VARS = ["TEST_CONTAINER=${TEST_CONTAINER}"]
-            withEnv(ENV_VARS) {
+        try {
+            stage("Execute Test") {
                 sh("make compile-neb-cmc-docker")
             }
+            stage("Analyse Issues") {
+                def GCC = scanForIssues tool: gcc()
+                publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+            }
+        } catch(Exception e) {
+            notify.notify_error(e)
         }
-        stage("Analyse Issues") {
-            def GCC = scanForIssues tool: gcc()
-            publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-        }
-    }catch(Exception e) {
-        notify.notify_error(e)
     }
 }

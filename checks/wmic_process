@@ -74,8 +74,8 @@ def check_wmic_process(item, params, info):
 
 
 check_info["wmic_process"] = {
-    'check_function': check_wmic_process,
-    'service_description': 'Process %s',
-    'has_perfdata': True,
-    'group': 'wmic_process'
+    "check_function": check_wmic_process,
+    "service_description": "Process %s",
+    "has_perfdata": True,
+    "group": "wmic_process",
 }

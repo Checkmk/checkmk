@@ -1,7 +1,7 @@
 title: Dell Compellent: Enclosure Status
 agents: snmp
 catalog: hw/storagehw/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the status, model, type and service tag of an
@@ -12,5 +12,5 @@ description:
 item:
  The Enclosure number
 
-inventory:
+discovery:
  One service is created for each enclosure.

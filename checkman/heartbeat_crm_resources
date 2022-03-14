@@ -1,7 +1,7 @@
 title: Heartbeat/Pacemaker Cluster: Resource Status (Cluster Resource Manager activated)
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of the {crm_mon} command as sent by the Checkmk
@@ -19,7 +19,6 @@ description:
 item:
  Name of the resource
 
-inventory:
+discovery:
  One service is created for each resource group or resource
  if {heartbeat_crm_resources_naildown} is set to {True}.
-

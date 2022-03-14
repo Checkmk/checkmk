@@ -1,0 +1,12 @@
+Title: Fixed broken caching for host/service/contact groups in the GUI
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1626088433
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This fix might increase the gui performance on installations with lots of groups.

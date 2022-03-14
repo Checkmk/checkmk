@@ -4,15 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_salesforce_arguments(params, hostname, ipaddress):
+
+def agent_salesforce_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     args = []
     for instance in params["instances"]:
         args += [
-            "--section_url", "salesforce_instances",
-            "https://api.status.salesforce.com/v1/instances/%s/status" % instance
+            "--section_url",
+            "salesforce_instances",
+            "https://api.status.salesforce.com/v1/instances/%s/status" % instance,
         ]
     return args
 
 
-special_agent_info['salesforce'] = agent_salesforce_arguments
+special_agent_info["salesforce"] = agent_salesforce_arguments

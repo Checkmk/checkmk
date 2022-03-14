@@ -3,524 +3,931 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# force load of environment
+#
+# BEGIN COMMON AGENT CODE
+#
+
+usage() {
+    cat <<HERE
+Usage: ${0} [OPTION...]
+
+The Checkmk agent to monitor *nix style systems.
+
+Options:
+  -h, --help                 show this message and exit
+  -d, --debug                emit debugging messages
+  -p, --profile              create files containing the execution times
+HERE
+}
+
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
+get_file_mtime() {
+    stat -c %Y "${1}" 2>/dev/null ||
+        stat -f %m "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
+}
+
+is_valid_plugin() {
+    # test if a file is executable and does not have certain
+    # extensions (remnants from distro upgrades).
+    case "${1:?No plugin defined}" in
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *) [ -f "${1}" ] && [ -x "${1}" ] ;;
+    esac
+}
+
+set_up_process_commandline_arguments() {
+    while [ -n "${1}" ]; do
+        case "${1}" in
+            -d | --debug)
+                set -xv
+                # restore stderr
+                exec 2>&9
+                shift
+                ;;
+
+            -p | --profile)
+                LOG_SECTION_TIME=true
+                # disable caching to get the whole execution time
+                DISABLE_CACHING=true
+                shift
+                ;;
+
+            -h | --help)
+                usage
+                exit 1
+                ;;
+
+            *)
+                shift
+                ;;
+        esac
+    done
+}
+
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+set_variable_defaults() {
+    : "${MK_LIBDIR:=/usr/check_mk/lib}"
+    : "${MK_CONFDIR:=/usr/check_mk/conf}"
+    : "${MK_VARDIR:=/tmp/check_mk}"
+    : "${MK_LOGDIR:=/var/log/check_mk}"
+
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+preamble_1() { # TODO: split these up more meaningful
+    # force load of environment
+
+    # shellcheck disable=SC1090
+    . "${HOME}/.profile" >/dev/null 2>&1
+
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
+
+    # Provide information about the remote host. That helps when data
+    # is being sent only once to each remote host.
+    if [ "${REMOTE_HOST}" ]; then
+        export REMOTE=${REMOTE_HOST}
+    elif [ "${SSH_CLIENT}" ]; then
+        export REMOTE=${SSH_CLIENT%% *}
+    fi
+
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR="${MK_LIBDIR}/plugins"
+
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please refer
+    # to online documentation for details.
+    LOCALDIR="${MK_LIBDIR}/local"
+
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR="${MK_VARDIR}/spool"
+
+    #Avoid problems with wrong decimal separators in other language verions of aix
+    export LC_NUMERIC="en_US"
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+# SC2089: Quotes/backslashes will be treated literally. Use an array.
+# shellcheck disable=SC2089
+MK_DEFINE_LOG_SECTION_TIME='_log_section_time() { "$@"; }'
+finalize_profiling() { :; }
+
+set_up_profiling() {
+
+    PROFILING_CONFIG="${MK_CONFDIR}/profiling.cfg"
+    if [ -e "${PROFILING_CONFIG}" ]; then
+        # Config vars:
+        #   LOG_SECTION_TIME=true/false
+        #   DISABLE_CACHING=true/false
+
+        # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+        # to get the real execution time during operation.
+        # shellcheck disable=SC1090
+        . "${PROFILING_CONFIG}"
+    fi
+
+    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
+
+    if ${LOG_SECTION_TIME:-false}; then
+        mkdir -p "${PROFILING_LOGFILE_DIR}"
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+
+        # SC2016: Expressions don't expand in single quotes, use double quotes for that.
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
+        MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
+            section_func="$@"
+
+            base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
+            profiling_logfile="'"${PROFILING_LOGFILE_DIR}"'/${base_name}.log"
+
+            start="$(perl -MTime::HiRes=time -le "print time()")"
+            { time ${section_func}; } 2>> "${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
+        }'
+
+        finalize_profiling() {
+            pro_log_file="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
+            agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+            echo "runtime $(echo "${agent_end} - ${agent_start}" | bc)" >>"${pro_log_file}"
+        }
+    fi
+
+    eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
+    export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
+}
+
+#
+# END COMMON AGENT CODE
+#
 
 read_python_version() {
-    if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge "$2" ]; then
-        echo "$1"
-        return 0
+    if inpath "${1}"; then
+        version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
+
+        major=${version%%.*}
+        minor=${version##*.}
+
+        if [ "${major}" -eq "${2}" ] && [ "${minor}" -ge "${3}" ]; then
+            echo "${1}"
+            return 0
+        fi
     fi
     return 1
 }
-PYTHON3=$(read_python_version python3 4)
-PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
-if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/python_path.cfg"
-fi
-export PYTHON2 PYTHON3
 
-if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
-    NO_PYTHON=true
-elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
-    WRONG_PYTHON_COMMAND=true
-elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
-    WRONG_PYTHON_COMMAND=true
-fi
+preamble_3() {
+    PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
+    PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
+    if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "${MK_CONFDIR}/python_path.cfg"
+    fi
+    export PYTHON2 PYTHON3
 
-if [ -e $HOME/.profile ]
-then
-    . $HOME/.profile >/dev/null 2>&1
-fi
+    if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
+        NO_PYTHON=true
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    fi
+}
 
-# Remove locale settings to eliminate localized outputs where possible
-export LC_ALL=C
-unset LANG
-
-export MK_LIBDIR=${MK_LIBDIR:-/usr/check_mk/lib}
-export MK_CONFDIR=${MK_CONFDIR:-/usr/check_mk/conf}
-export MK_VARDIR=${MK_VARDIR:-/tmp/check_mk}
-
-# Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
-
-# Provide information about the remote host. That helps when data
-# is being sent only once to each remote host.
-if [ "$REMOTE_HOST" ] ; then
-    export REMOTE=$REMOTE_HOST
-elif [ "$SSH_CLIENT" ] ; then
-    export REMOTE=${SSH_CLIENT%% *}
-fi
-
-# All executables in PLUGINSDIR will simply be executed and their
-# ouput appended to the output of the agent. Plugins define their own
-# sections and must output headers with '<<<' and '>>>'
-PLUGINSDIR=$MK_LIBDIR/plugins
-
-# All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. Please refer
-# to online documentation for details.
-LOCALDIR=$MK_LIBDIR/local
-
-# All files in SPOOLDIR will simply appended to the agent
-# output if they are not outdated (see below)
-SPOOLDIR=$MK_VARDIR/spool
-
-#Avoid problems with wrong decimal separators in other language verions of aix
-export LC_NUMERIC="en_US"
-
-# close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
-    set -xv
-else
-    exec </dev/null 2>/dev/null
-fi
+# encryption not available for aix
+optionally_encrypt() { cat; }
 
 # Shell version of the waitmax utility, that limits the runtime of
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
 # in time.
 waitmax() {
-   TIMEOUT=${1}0
-   SIGNAL=9
-   shift
+    TIMEOUT=${1}0
+    shift
 
-   # Run command in background
-   ksh -c "$*" &
-   PID=$!
+    # Run command in background
+    ksh -c "$*" &
+    PID=$!
 
-   # Wait for termination within TIMOUT seconds
-   while [ $TIMEOUT -gt 0 ]
-   do
-       TIMEOUT=$((TIMEOUT - 1))
-       if [ ! -e /proc/$PID ] ; then
-           return 0
-       fi
-       perl -e "select(undef, undef, undef, 0.1);"
-   done
+    # Wait for termination within TIMOUT seconds
+    while [ "${TIMEOUT}" -gt 0 ]; do
+        TIMEOUT=$((TIMEOUT - 1))
+        if [ ! -e /proc/${PID} ]; then
+            return 0
+        fi
+        perl -e "select(undef, undef, undef, 0.1);"
+    done
 
-   # Process did not terminate in time. Kill and
-   # return with an error
-   kill -9 $PID
-   return 255
+    # Process did not terminate in time. Kill and
+    # return with an error
+    kill -9 ${PID}
+    return 255
 }
 
-run_cached() {
-    NAME=$1
-    # Be aware: Maxage was expected to be given in minutes but this was
-    # confusing because all other agents use seconds here. So this has
-    # been changed to be compatible.
-    MAXAGE=$2
-    shift 2
-    CMDLINE=$*
+section_checkmk() {
+    echo "<<<check_mk>>>"
+    echo "Version: 2.2.0i1"
+    echo "AgentOS: aix"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: ${MK_CONFDIR}"
+    echo "DataDirectory: ${MK_VARDIR}"
+    echo "SpoolDirectory: ${SPOOLDIR}"
+    echo "PluginsDirectory: ${PLUGINSDIR}"
+    echo "LocalDirectory: ${LOCALDIR}"
 
-    if [ ! -e $MK_VARDIR/cache ] ; then mkdir -p $MK_VARDIR/cache ; fi
-    CACHEFILE=$MK_VARDIR/cache/$NAME.cache
+    #
+    # BEGIN COMMON AGENT CODE
+    #
 
-    USE_CACHEFILE=""
-    # Check if file exists and is recent enough
-    if [ -s $CACHEFILE ]
-    then
-        AGE=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
-        if (( $AGE < $MAXAGE )) ; then
-            USE_CACHEFILE=1
-        fi
-        # get file time for cache
-        MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' $CACHEFILE)
-        CACHE_INFO="cached($MTIME,$MAXAGE)"
-        if [[ $NAME == local_* ]]; then
-            sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
-        else
-            # insert the cache info in the section header (^= after '!'),
-            # if none is present (^= before '!')
-            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
-        fi
+    if [ -n "${NO_PYTHON}" ]; then
+        python_fail_msg="No suitable python installation found."
+    elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
+        python_fail_msg="Configured python command not found."
     fi
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]
-    then
-        nohup sh -c $CMDLINE > $CACHEFILE.new 2> /dev/null && mv $CACHEFILE.new $CACHEFILE  &
-    fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
 }
 
-function run_agent_plugin {
-    if [ "${1:0:2}" == "./" ]; then
-        agent_plugin="${1:2}"
-    else
-        agent_plugin="$1"
-    fi
-    extension="${agent_plugin##*.}"
-    filename="${agent_plugin%.*}"
-    # Execute all non python plugins with ./foo
-    if [ "$extension" != "py" ]; then
-        ./"$agent_plugin"
-        return
-    fi
-    if [ "${filename#${filename%??}}" != "_2" ]; then
-        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-                FAILED_PYTHON_PLUGINS=("$agent_plugin")
-            else
-                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
-            fi
-            return
-        fi
-        if [ -n "$PYTHON3" ]; then
-            $PYTHON3 "$agent_plugin"
-            return
-        fi
-        return
-    fi
-    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
-        return
-    fi
-    if [ -n "$PYTHON2" ]; then
-        $PYTHON2 "$agent_plugin"
-    fi
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
 }
 
-echo "<<<check_mk>>>"
-echo "Version: 2.1.0i1"
-echo "AgentOS: aix"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
+section_checkmk_agent_plugins() {
+    printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
+    printf "pluginsdir %s\n" "${PLUGINSDIR}"
+    printf "localdir %s\n" "${LOCALDIR}"
+    grep -r '^__version__' "${LOCALDIR}" "${PLUGINSDIR}"
+    grep -r '^CMK_VERSION' "${LOCALDIR}" "${PLUGINSDIR}"
+}
 
-echo '<<<df>>>'
-if [ -x /usr/opt/freeware/bin/df ] ; then
-    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x cdrfs"
-    # shellcheck disable=SC2086
-    /usr/opt/freeware/bin/df -PTlk $excludefs | sed 1d
+section_checkmk_failed_plugin() {
+    ${MK_RUN_SYNC_PARTS} || return
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${1}"
+}
 
-    # df inodes information
+#
+# END COMMON AGENT CODE
+#
+
+section_df() {
     echo '<<<df>>>'
-    echo '[df_inodes_start]'
-    # shellcheck disable=SC2086
-    /usr/opt/freeware/bin/df -PTli $excludefs | sed 1d
-    echo '[df_inodes_end]'
-else
-    df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
-fi
+    if [ -x /usr/opt/freeware/bin/df ]; then
+        excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x cdrfs"
+        # shellcheck disable=SC2086
+        /usr/opt/freeware/bin/df -PTlk ${excludefs} | sed 1d
 
-# Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
-if type stat >/dev/null 2>&1 ; then
-    echo '<<<nfsmounts>>>'
-    mount | grep ' nfs' | awk '{print $3;}' | \
-        while read MP
-    do
-        waitmax 5 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-            echo "$MP hanging 0 0 0 0"
-    done
-    echo '<<<cifsmounts>>>'
-    mount | grep ' cifs' | awk '{print $3;}' | \
-        while read MP
-    do
-        if [ ! -r $MP ]; then
-            echo "$MP Permission denied"
-        else
-            waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-                echo "$MP hanging 0 0 0 0"
-        fi
-    done
-fi
-
-echo '<<<ps>>>'
-ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
-
-if type lparstat >/dev/null 2>&1
-then
-  echo '<<<lparstat_aix>>>'
-  lparstat 1 1
-fi
-
-echo '<<<vmstat_aix>>>'
-vmstat | tail -n1
-
-echo '<<<aix_diskiod>>>'
-iostat -d | tr -s ' ' | grep hdisk
-
-echo '<<<aix_memory>>>'
-vmstat -v  | tr -s ' '
-swap -s
-
-echo '<<<mpstat_aix>>>'
-mpstat -a | tail -n1
-
-echo '<<<aix_paging>>>'
-lsps -a
-
-# CPU output of Linux agent simulated
-# (thanks to Cameron Pierce)
-echo '<<<cpu>>>'
-load=`uptime|sed -e 's;.*average: \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\);\1 \2 \3;'`
-ps=`ps -eo thcount | awk '{SUM+=$1} END {print SUM}'`
-procs=`vmstat|grep lcpu|sed -e 's;.*lcpu=\([[:digit:]]\{1,4\}\).*;\1;'`
-echo $load 1/$ps $$ $procs
-
-
-echo "<<<aix_if>>>"
-for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1)
-do
-    echo "[$ent]"
-    entstat "$ent" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
-    entstat "$ent" | grep -p "Driver Flags:"
-done
-
-
-if which ntpq > /dev/null 2>&1 ; then
-    if [ $(lssrc -s xntpd|grep -c active) -gt 0 ] ; then
-        echo '<<<ntp>>>'
-        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+        # df inodes information
+        echo '<<<df>>>'
+        echo '[df_inodes_start]'
+        # shellcheck disable=SC2086
+        /usr/opt/freeware/bin/df -PTli ${excludefs} | sed 1d
+        echo '[df_inodes_end]'
+    else
+        df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
     fi
-fi
+}
 
+section_nfs_mounts() {
+    # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
+    if inpath stat; then
+        echo '<<<nfsmounts>>>'
+        mount | grep ' nfs' | while read -r _ _ MP _; do
+            waitmax 5 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" || echo "${MP} hanging 0 0 0 0"
+        done
+        echo '<<<cifsmounts>>>'
+        mount | grep ' cifs' | while read -r _ _ MP _; do
+            if [ ! -r "${MP}" ]; then
+                echo "${MP} Permission denied"
+            else
+                waitmax 2 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" ||
+                    echo "${MP} hanging 0 0 0 0"
+            fi
+        done
+    fi
+}
 
-echo '<<<aix_multipath>>>'
+section_ps() {
+    echo '<<<ps>>>'
+    ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+}
+
+section_lparstat_aix() {
+    if inpath lparstat; then
+        echo '<<<lparstat_aix>>>'
+        lparstat 1 1
+    fi
+}
+
+section_vmstat_aix() {
+    echo '<<<vmstat_aix>>>'
+    vmstat | tail -n1
+}
+
+section_aix_diskio() {
+    echo '<<<aix_diskiod>>>'
+    iostat -d | tr -s ' ' | grep hdisk
+}
+
+section_aix_memory() {
+    echo '<<<aix_memory>>>'
+    vmstat -v | tr -s ' '
+    swap -s
+}
+
+section_mpstat_aix() {
+    echo '<<<mpstat_aix>>>'
+    mpstat -a | tail -n1
+}
+
+section_aix_paging() {
+    echo '<<<aix_paging>>>'
+    lsps -a
+}
+
+section_cpu() {
+    # CPU output of Linux agent simulated
+    # (thanks to Cameron Pierce)
+    echo '<<<cpu>>>'
+    load=$(uptime | sed -e 's;.*average: \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\);\1 \2 \3;')
+    ps=$(ps -eo thcount | awk '{SUM+=$1} END {print SUM}')
+    procs=$(vmstat | grep lcpu | sed -e 's;.*lcpu=\([[:digit:]]\{1,4\}\).*;\1;')
+    echo "${load} 1/${ps} $$ ${procs}"
+}
+
+section_aix_if() {
+    echo "<<<aix_if>>>"
+    for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
+        echo "[${ent}]"
+        entstat "${ent}" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
+        entstat "${ent}" | grep -p "Driver Flags:"
+    done
+}
+
+section_ntp() {
+    if inpath ntpq; then
+        if [ "$(lssrc -s xntpd | grep -c active)" -gt 0 ]; then
+            echo '<<<ntp>>>'
+            ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+        fi
+    fi
+}
+
+section_multipathing() {
+    echo '<<<aix_multipath>>>'
     lspath -F"name parent status"
+}
 
-
-echo '<<<aix_lvm>>>'
+section_aix_lvm() {
+    echo '<<<aix_lvm>>>'
     # -L disables LVM lock for the query. Avoids blocking while LVM is
     # doing changes. For rootvg that is fine.
     lsvg -L -l rootvg
-
-
-echo '<<<tcp_conn_stats>>>'
-netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
-
-# Libelle Business Shadow
-if type trd >/dev/null 2>&1
-then
-  echo '<<<libelle_business_shadow:sep(58)>>>'
-  $(which trd) -s
-fi
-
-if [ -x /usr/sbin/sendmail ] ; then
-    echo '<<<postfix_mailq>>>';
-    mailq 2>&1 | tail -n 6
-fi
-
-# uptime formats
-# 12:55pm  up 105 days, 21 hrs,  2 users, load average: 0.26, 0.26, 0.26 --> 9147600
-# 1:41pm   up 105 days, 21:46,   2 users, load average: 0.28, 0.28, 0.27 --> 9150360
-# 05:26PM  up           1:16,    1 user,  load average: 0.33, 0.21, 0.20 --> 4560
-# 06:13PM  up           2:03,    1 user,  load average: 1.16, 1.07, 0.91 --> 7380
-# 08:43AM  up 29 mins,           1 user,  load average: 0.09, 0.18, 0.21 --> 1740
-# 08:47AM  up 66 days,  18:34,   1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
-# 08:45AM  up 76 days,  34 mins, 1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
-echo '<<<uptime>>>'
-UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
-case $UPTIME in
-    *day* ) DAYS=$(echo $UPTIME | sed -e 's/days\{0,1\},.*//g') ;;
-    * ) DAYS="0" ;;
-esac
-
-case $UPTIME in
-    *:* )
-        HOURS=$(echo $UPTIME | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
-        MINS=$(echo $UPTIME | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g') ;;
-    *hr* )
-        HOURS=$(echo $UPTIME | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
-        MINS=0 ;;
-    *min* )
-        HOURS=0
-        MINS=$(echo $UPTIME | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g') ;;
-    * )
-        HOURS="0"
-        MINS=0 ;;
-esac
-
-echo $(((DAYS*86400)+(HOURS*3600)+(MINS*60)))
-
-
-if cd $PLUGINSDIR 2>/dev/null
-then
-    for skript in $(ls)
-    do
-        if [ -x "$skript" ] ; then
-            run_agent_plugin "$skript"
-    fi
-  done
-
-  # Call some plugins only every X'th second
-  for skript in [1-9]*/* ; do
-      if [ -x "$skript" ] ; then
-          run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
-      fi
-  done
-fi
-
-
-
-
-# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-perl -e '
-use File::Glob "bsd_glob";
-my @patterns = ();
-foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
-    open my $handle, "<", $_ or next;
-    while (<$handle>) {
-        chomp;
-        next if /^\s*(#|$)/;
-        my $pattern = $_;
-        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
-        push @patterns, $pattern;
-    }
-    warn "error while reading $_: $!\n" if $!;
-    close $handle;
 }
-exit if ! @patterns;
 
-print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+section_tcp() {
+    echo '<<<tcp_conn_stats>>>'
+    netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+}
 
-foreach (@patterns) {
-    foreach (bsd_glob("$_")) {
-        if (! -f) {
-            print "$_|missing\n" if ! -d;
-        } elsif (my @infos = stat) {
-            print "$_|ok|$infos[7]|$infos[9]\n";
-        } else {
-            print "$_|stat failed: $!\n";
+section_libelle() {
+    # Libelle Business Shadow
+    if inpath trd; then
+        echo '<<<libelle_business_shadow:sep(58)>>>'
+        trd -s
+    fi
+}
+
+section_mailqueue() {
+    if [ -x /usr/sbin/sendmail ]; then
+        echo '<<<postfix_mailq>>>'
+        mailq 2>&1 | tail -n 6
+    fi
+}
+
+section_uptime() {
+    echo '<<<uptime>>>'
+    UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
+    case ${UPTIME} in
+        *day*) DAYS="${UPTIME%% day*}" ;;
+        *) DAYS="0" ;;
+    esac
+
+    case ${UPTIME} in
+        *:*)
+            HOURS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
+            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
+            ;;
+        *hr*)
+            HOURS=$(echo "${UPTIME}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
+            MINS=0
+            ;;
+        *min*)
+            HOURS=0
+            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
+            ;;
+        *)
+            HOURS="0"
+            MINS=0
+            ;;
+    esac
+
+    echo $(((DAYS * 86400) + (HOURS * 3600) + (MINS * 60)))
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+section_fileinfo() {
+    # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    perl -e '
+    use File::Glob "bsd_glob";
+    my @patterns = ();
+    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
+        open my $handle, "<", $_ or next;
+        while (<$handle>) {
+            chomp;
+            next if /^\s*(#|$)/;
+            my $pattern = $_;
+            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+            push @patterns, $pattern;
+        }
+        warn "error while reading $_: $!\n" if $!;
+        close $handle;
+    }
+    exit if ! @patterns;
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+
+    foreach (@patterns) {
+        foreach (bsd_glob("$_")) {
+            if (! -f) {
+                print "$_|missing\n" if ! -d;
+            } elsif (my @infos = stat) {
+                print "$_|ok|$infos[7]|$infos[9]\n";
+            } else {
+                print "$_|stat failed: $!\n";
+            }
         }
     }
+    ' -- "${MK_CONFDIR}"
 }
-' -- "$MK_CONFDIR"
 
+#
+# END COMMON AGENT CODE
+#
 
-# powerHA
-if type lslpp >/dev/null 2>&1
-then
-    cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
-    if ! echo $cluster_cmd_output | grep -q "not installed"
-    then
-        # now the following commands should be available
-        nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
-        list_active_nodes=""
-        for node in $nodes
-        do
-            active_nodes=$(clgetactivenodes -n $node)
-            if echo $active_nodes | grep -q $node
-            then
-                list_active_nodes=$list_active_nodes"\n$node"
-            fi
-        done
-
-        if [ "$list_active_nodes" ]
-        then
-            echo '<<<aix_hacmp_nodes>>>'
-            echo -e $list_active_nodes
-            cllsnode
-        fi
-
-        echo '<<<aix_hacmp_services>>>'
-        if type clshowsrv ; then
-            waitmax 5 clshowsrv -v
-        else # fallback, hardcoded base installation path
-            waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
-        fi
-
-        echo '<<<aix_hacmp_resources:sep(58)>>>'
-        waitmax 5 clRGinfo -s
-    fi
-fi
-
-echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR 2>/dev/null
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-
-  # Call some local checks only every X'th second
-  for skript in [1-9]*/* ; do
-      if [ -x "$skript" ] ; then
-          run_cached local_${skript//\//\#} ${skript%/*} "$skript"
-      fi
-  done
-fi
-
-# MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-then
-    echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "$cmdline")
-        echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
-    done
-fi
-
-# Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    cd "$SPOOLDIR" > /dev/null
-    now=$(date +%s)
-
-    for file in *
-    do
-        # output every file in this directory. If the file is prefixed
-        # with a number, then that number is the maximum age of the
-        # file in seconds. If the file is older than that, it is ignored.
-        maxage=""
-        part="$file"
-
-        # Each away all digits from the front of the filename and
-        # collect them in the variable maxage.
-        while [ "${part/#[0-9]/}" != "$part" ]
-        do
-            maxage=$maxage${part:0:1}
-            part=${part:1}
-        done
-
-        # If there is at least one digit, than we honor that.
-        if [ "$maxage" ] ; then
-            mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt $maxage ] ; then
-                continue
-            fi
-        fi
-
-        # Output the file
-        cat "$file"
-    done
-    cd - > /dev/null
-fi
-
-
-# Get statistics about monitored jobs. Below the job directory there
-# is a sub directory per user that ran a job. That directory must be
-# owned by the user so that a symlink or hardlink attack for reading
-# arbitrary files can be avoided.
-if [ -d "$MK_VARDIR/job" ]; then
-    echo '<<<job>>>'
-    CDIR=$(pwd)
-    cd "$MK_VARDIR/job" 2> /dev/null || exit
-    for username in *; do
-        if [ -d "$username" ] && cd "$username"; then
-            for i in *; do
-               echo "==> $i <=="
-               cat "$i"
+section_aix_hacmp() {
+    # powerHA
+    if inpath lslpp; then
+        cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
+        if ! echo "${cluster_cmd_output}" | grep -q "not installed"; then
+            # now the following commands should be available
+            nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
+            list_active_nodes=""
+            for node in ${nodes}; do
+                active_nodes=$(clgetactivenodes -n "${node}")
+                if echo "${active_nodes}" | grep -q "${node}"; then
+                    list_active_nodes=${list_active_nodes}"\n${node}"
+                fi
             done
-            cd .. > /dev/null
+
+            if [ "${list_active_nodes}" ]; then
+                echo '<<<aix_hacmp_nodes>>>'
+                printf "%s\n" "${list_active_nodes}"
+                cllsnode
+            fi
+
+            echo '<<<aix_hacmp_services>>>'
+            if inpath clshowsrv; then
+                waitmax 5 clshowsrv -v
+            else # fallback, hardcoded base installation path
+                waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
+            fi
+
+            echo '<<<aix_hacmp_resources:sep(58)>>>'
+            waitmax 5 clRGinfo -s
+        fi
+    fi
+}
+
+section_job() {
+    # Get statistics about monitored jobs. Below the job directory there
+    # is a sub directory per user that ran a job. That directory must be
+    # owned by the user so that a symlink or hardlink attack for reading
+    # arbitrary files can be avoided.
+    if [ -d "${MK_VARDIR}/job" ]; then
+        echo '<<<job>>>'
+        CDIR=$(pwd)
+        cd "${MK_VARDIR}/job" 2>/dev/null || exit
+        for username in *; do
+            if [ -d "${username}" ] && cd "${username}"; then
+                for i in *; do
+                    echo "==> ${i} <=="
+                    cat "${i}"
+                done
+                cd .. >/dev/null
+            fi
+        done
+        cd "${CDIR}" 2>/dev/null || exit
+    fi
+}
+
+run_cached() {
+    NAME=${1}
+    # Be aware: Maxage was expected to be given in minutes but this was
+    # confusing because all other agents use seconds here. So this has
+    # been changed to be compatible.
+    MAXAGE=${2}
+    shift 2
+    CMDLINE=$*
+
+    if ${DISABLE_CACHING:-false}; then
+        # shellcheck disable=SC2090
+        ${CMDLINE}
+        return
+    fi
+
+    NOW=$(get_epoch)
+
+    if [ ! -e "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
+
+    USE_CACHEFILE=""
+    # Check if file exists and is recent enough
+    if [ -s "${CACHEFILE}" ]; then
+        AGE=$((NOW - $(get_file_mtime "${CACHEFILE}")))
+        if ((AGE < MAXAGE)); then
+            USE_CACHEFILE=1
+        fi
+
+        if ${MK_RUN_SYNC_PARTS}; then
+            # get file time for cache
+            MTIME=$(get_file_mtime "${CACHEFILE}")
+            CACHE_INFO="cached(${MTIME},${MAXAGE})"
+            if [[ ${NAME} == local_* ]]; then
+                # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
+                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            else
+                # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+            fi
+        fi
+    fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
+
+    if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+        {
+            nohup sh -c "eval ${MK_DEFINE_LOG_SECTION_TIME}; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null &&
+                mv -f "${CACHEFILE}.new" "${CACHEFILE}"
+        } || rm -f "${CACHEFILE}.new" "${CACHEFILE}" &
+    fi
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+run_local_checks() {
+    cd "${LOCALDIR}" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
+        for script in ./*; do
+            if is_valid_plugin "${script}"; then
+                _log_section_time "${script}"
+            fi
+        done
+    fi
+
+    # Call some local checks only every X'th second
+    for script in [1-9]*/*; do
+        if is_valid_plugin "${script}"; then
+            run_cached "local_${script##*/}" "${script%/*}" "_log_section_time '${script}'"
         fi
     done
-    cd "$CDIR" 2> /dev/null || exit
-fi
+}
 
-if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
-    echo "<<<check_mk>>>"
-    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
-    if [ -n "$NO_PYTHON" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
-    elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+run_spooler() {
+    (
+        cd "${SPOOLDIR}" 2>/dev/null || return
+
+        now=$(get_epoch)
+
+        for file in *; do
+            [ "${file}" != "*" ] || return
+
+            # If prefixed with a number, then that is the maximum age in seconds.
+            # If the file is older than that, it is ignored.
+            maxage="${file%%[^0-9]*}"
+            if [ "${maxage}" ]; then
+                mtime=$(get_file_mtime "${file}")
+                [ $((now - mtime)) -le "${maxage}" ] || continue
+            fi
+
+            cat "${file}"
+        done
+    )
+}
+
+get_plugin_interpreter() {
+    # Return the interpreter (or "") for the plugin file (or fail).
+    # We return the interpreter instead of wrapping the call, so we don't
+    # have to export the function (which is not portable).
+
+    # normalize input
+    agent_plugin="${1#./}"
+
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+
+    # Execute all non python plugins with ./foo
+    if [ "${extension}" != "py" ]; then
+        return 0
     fi
-fi
+
+    if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
+            section_checkmk_failed_plugin "${agent_plugin}"
+            return 1
+        fi
+
+        if [ -n "${PYTHON3}" ]; then
+            echo "${PYTHON3}"
+            return 0
+        fi
+
+        if [ ! -e "${filename}_2.py" ]; then
+            section_checkmk_failed_plugin "${agent_plugin} (Missing Python 3 installation)"
+            return 1
+        fi
+
+        # no python3 found, but python2 plugin file present
+        return 1
+    fi
+
+    if [ -x "${filename%??}.py" ] && [ -n "${PYTHON3}" ]; then
+        return 1
+    fi
+
+    if [ -n "${PYTHON2}" ]; then
+        echo "${PYTHON2}"
+        return 0
+    fi
+
+    section_checkmk_failed_plugin "${agent_plugin} (missing Python 2 installation)"
+    return 1
+}
+
+run_plugins() {
+    cd "${PLUGINSDIR}" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for script in ./*; do
+            if is_valid_plugin "${script}"; then
+                if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
+                    # SC2086: We don't want to quote, interpreter is "nothing" if empty, not "''"
+                    # shellcheck disable=SC2086
+                    _log_section_time ${plugin_interpreter} "${script}"
+                fi
+            fi
+        done
+    fi
+
+    # Call some plugins only every X'th second
+    for script in [1-9]*/*; do
+        if is_valid_plugin "${script}"; then
+            if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
+                # shellcheck disable=SC2086
+                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time ${plugin_interpreter} "${script}"
+            fi
+        fi
+    done
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+run_remote_plugins() {
+    # caching currently not supported
+    ${MK_RUN_SYNC_PARTS} || return
+
+    [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
+
+    # MK's Remote Plugin Executor
+    echo '<<<mrpe>>>'
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
+    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
+        while read descr cmdline; do
+            PLUGIN=${cmdline%% *}
+            OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
+            echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
+            echo
+        done
+}
+
+run_purely_synchronous_sections() {
+    _log_section_time section_checkmk
+
+    _log_section_time section_cmk_agent_ctl_status
+
+    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && log_section_time section_checkmk_agent_plugins
+
+    [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
+
+    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts
+
+    [ -z "${MK_SKIP_PS}" ] && _log_section_time section_ps
+
+    [ -z "${MK_SKIP_AIX_LPARSTAT}" ] && _log_section_time section_lparstat_aix
+
+    [ -z "${MK_SKIP_AIX_VMSTAT}" ] && _log_section_time section_vmstat_aix
+
+    [ -z "${MK_SKIP_AIX_DISKIO}" ] && _log_section_time section_aix_diskio
+
+    [ -z "${MK_SKIP_AIX_MEM}" ] && _log_section_time section_aix_memory
+
+    [ -z "${MK_SKIP_AIX_MPSTAT}" ] && _log_section_time section_mpstat_aix
+
+    [ -z "${MK_SKIP_AIX_PAGING}" ] && _log_section_time section_aix_paging
+
+    [ -z "${MK_SKIP_CPU}" ] && _log_section_time section_cpu
+
+    [ -z "${MK_SKIP_AIX_IF}" ] && _log_section_time section_aix_if
+
+    [ -z "${MK_SKIP_TIMESYNCHRONISATION}" ] && _log_section_time section_ntp
+
+    [ -z "${MK_SKIP_MULTIPATHING}" ] && _log_section_time section_multipathing
+
+    [ -z "${MK_SKIP_AIX_LVM}" ] && _log_section_time section_aix_lvm
+
+    [ -z "${MK_SKIP_TCP}" ] && _log_section_time section_tcp
+
+    [ -z "${MK_SKIP_LIBELLE}" ] && _log_section_time section_libelle
+
+    [ -z "${MK_SKIP_MAILQUEUE}" ] && _log_section_time section_mailqueue
+
+    [ -z "${MK_SKIP_UPTIME}" ] && _log_section_time section_uptime
+
+    [ -z "${MK_SKIP_FILEINFO}" ] && _log_section_time section_fileinfo
+
+    [ -z "${MK_SKIP_AIX_HACMP}" ] && _log_section_time section_aix_hacmp
+
+    [ -z "${MK_SKIP_JOB}" ] && _log_section_time section_job
+}
+
+run_partially_asynchronous_sections() {
+    # kept to keep agents similar. Currently no section in this agent calls run_cached.
+    :
+}
+
+main_setup() {
+    exec </dev/null 9>&2 2>/dev/null
+    set_up_process_commandline_arguments "$@"
+    set_up_get_epoch
+    set_variable_defaults
+    unset_locale
+    preamble_1
+    preamble_2
+    preamble_3
+
+    set_up_profiling
+}
+
+main_sync_parts() {
+    run_purely_synchronous_sections
+
+    run_spooler
+}
+
+main_mixed_parts() {
+    run_partially_asynchronous_sections
+
+    # run_remote_plugins -> _log_section_time CMD
+    run_remote_plugins
+
+    # run_local_checks -> _log_section_time CMD
+    #                  -> run_cached _log_section_time CMD
+    run_local_checks
+
+    # run_plugins -> _log_section_time CMD
+    run_plugins
+
+}
+
+main_async_parts() {
+    # run_real_time_checks not implemented in this agent
+    :
+}
+
+main_finalize_sync() {
+    _log_section_time section_checkmk_failed_plugins
+
+    finalize_profiling
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+main() {
+
+    while true; do
+
+        main_setup "$@"
+
+        (
+
+            ${MK_RUN_SYNC_PARTS} && main_sync_parts
+
+            (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+
+            ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+            ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
+
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
+
+        sleep "${MK_LOOP_INTERVAL}"
+
+    done
+
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main "$@"

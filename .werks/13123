@@ -1,0 +1,11 @@
+Title: <tt>cisco_wlc</tt>, <tt>cisco_wlc_clients</tt>: add support for Cisco Aironet 2800
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1629785395
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+These two check plugins will now discover services for Cisco Aironet 2800 devices.

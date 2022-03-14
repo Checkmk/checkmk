@@ -56,13 +56,12 @@ import argparse
 import re
 import sys
 import time
-from typing import Any, Dict, List
 import warnings
+from typing import Any, Dict, List
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
-from six import ensure_str
-import urllib3  # type: ignore[import]
+import urllib3
 
 from cmk.special_agents.utils import vcrtrace
 
@@ -74,9 +73,11 @@ if "--legacy" in sys.argv:
         from NaElement import NaElement  # type: ignore[import] # pylint: disable=import-error
         from NaServer import NaServer  # type: ignore[import] # pylint: disable=import-error
     except Exception as e:
-        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "
-                         "provided by the NetApp Managability SDK and must be put into "
-                         "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
+        sys.stderr.write(
+            "Unable to import the files NaServer.py/NaElement.py.\nThese files are "
+            "provided by the NetApp Managability SDK and must be put into "
+            "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e
+        )
         sys.exit(1)
 
 try:
@@ -88,29 +89,32 @@ except ImportError:
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
-    "DH+3DES",
-    "DH+HIGH",
-    "ECDH+3DES",
-    "ECDH+HIGH",
-    "RSA+3DES",
-    "RSA+HIGH",
-])
+# TODO: Couldn't we use create_urllib3_context() instead of this access violation?
+urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(  # type: ignore[attr-defined]
+    [
+        "DH+3DES",
+        "DH+HIGH",
+        "ECDH+3DES",
+        "ECDH+HIGH",
+        "RSA+3DES",
+        "RSA+HIGH",
+    ]
+)
 
 # This suppress deprecated warning on older python versions
 warnings.filterwarnings("ignore")
 
 # Use this block if you want to use TLS instead of SSL authentification
-#import ssl
-#from functools import wraps
-#def sslwrap(func):
+# import ssl
+# from functools import wraps
+# def sslwrap(func):
 #    @wraps(func)
 #    def bar(*args, **kw):
 #        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
 #        return func(*args, **kw)
 #    return bar
 #
-#ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+# ssl.wrap_socket = sslwrap(ssl.wrap_socket)
 
 
 def parse_arguments(argv):
@@ -124,55 +128,62 @@ def parse_arguments(argv):
             raise ValueError
 
     description, epilog = __doc__.split("\n\n", 1)  # See module's doc-string.
-    parser = argparse.ArgumentParser(description=description.strip(),
-                                     formatter_class=Formatter,
-                                     epilog=epilog.lstrip())
+    parser = argparse.ArgumentParser(
+        description=description.strip(), formatter_class=Formatter, epilog=epilog.lstrip()
+    )
     parser.add_argument(
-        dest='host_address',
-        type=str,
-        help='Hostname or IP-address of NetApp Filer.',
+        "host_address",
+        help="Hostname or IP-address of NetApp Filer.",
+    )
+    parser.add_argument(
+        "user",
+        help="Username for NetApp login",
+    )
+    parser.add_argument(
+        "secret",
+        help="Secret/Password for NetApp login",
     )
 
-    parser.add_argument('-u', '--user', help='Username for NetApp login')
-    parser.add_argument('-s', '--secret', help='Secret/Password for NetApp login')
-
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
 
     parser.add_argument(
-        '-t',
-        '--timeout',
+        "-t",
+        "--timeout",
         type=positive_int,
         default=120,
-        help=('Set the network timeout to the NetApp filer to TIMEOUT seconds. '
-              'Note: the timeout is not only applied to the connection, but also '
-              'to each individual subquery. (Default is %(default)s seconds)'),
+        help=(
+            "Set the network timeout to the NetApp filer to TIMEOUT seconds. "
+            "Note: the timeout is not only applied to the connection, but also "
+            "to each individual subquery. (Default is %(default)s seconds)"
+        ),
     )
     parser.add_argument(
-        '--nocounters',
-        dest='no_counters',
-        action='append',
+        "--no_counters",
+        nargs="*",
         type=str,
         default=[],
-        choices=['volumes'],
-        help=('(clustermode only), skip counters for the given element. '
-              'Right now only "volumes" is supported.'),
+        choices=["volumes"],
+        help=(
+            "(clustermode only), skip counters for the given element. "
+            'Right now only "volumes" is supported.'
+        ),
     )
 
     parser.add_argument(
-        '--xml',
-        dest='dump_xml',
-        action='store_true',
-        help='Dump XML messages into agent output.',
+        "--xml",
+        dest="dump_xml",
+        action="store_true",
+        help="Dump XML messages into agent output.",
     )
     parser.add_argument(
-        '--debug',
-        action='store_true',
-        help='Debug mode: let Python exceptions come through.',
+        "--debug",
+        action="store_true",
+        help="Debug mode: let Python exceptions come through.",
     )
     parser.add_argument(
-        '--legacy',
-        action='store_true',
-        help='Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)',
+        "--legacy",
+        action="store_true",
+        help="Legacy mode with NaServer.py/NaElements.py (not configurable in Setup)",
     )
 
     if not argv:
@@ -184,7 +195,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-#.
+# .
 #   .--Direct XML----------------------------------------------------------.
 #   |            ____  _               _    __  ____  __ _                 |
 #   |           |  _ \(_)_ __ ___  ___| |_  \ \/ /  \/  | |                |
@@ -234,7 +245,7 @@ class NetAppConnection:
         self.suppress_errors = False
 
         self.headers = {}
-        self.headers["Content-type"] = "text/xml; charset=\"UTF-8\""
+        self.headers["Content-type"] = 'text/xml; charset="UTF-8"'
         self.session = requests.Session()
         self.debug = False
 
@@ -280,12 +291,13 @@ class NetAppConnection:
             print("######## START QUERY ########")
             print(prettify(root_node.get_node()))
 
-        req = requests.Request('POST',
-                               "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" %
-                               self.hostname,
-                               data=request_message,
-                               headers=self.headers,
-                               auth=(self.user, self.password))
+        req = requests.Request(
+            "POST",
+            "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
+            data=request_message,
+            headers=self.headers,
+            auth=(self.user, self.password),
+        )
         prepped = self.session.prepare_request(req)
         # No SSL certificate check..
 
@@ -296,8 +308,10 @@ class NetAppConnection:
         if self.debug:
             print("######## GOT RESPONSE #######")
             if netapp_response.results_status() != "passed":
-                print("Error: Unable to parse content of response:\n%s" %
-                      netapp_response.results_reason())
+                print(
+                    "Error: Unable to parse content of response:\n%s"
+                    % netapp_response.results_reason()
+                )
                 if netapp_response.results_status() == "parse-exception":
                     print("Raw response text:\n%r" % netapp_response.raw_response_text)
             else:
@@ -305,8 +319,9 @@ class NetAppConnection:
 
         if netapp_response.results_status() != "passed":
             if not netapp_response.results_reason().startswith("Unable to find API"):
-                self.add_error_message("Querying class %s: %s" %
-                                       (node.tag, netapp_response.results_reason()))
+                self.add_error_message(
+                    "Querying class %s: %s" % (node.tag, netapp_response.results_reason())
+                )
 
         return netapp_response
 
@@ -390,14 +405,14 @@ class NetAppResponse:
     # In that case replace them and try again.
     # According to https://www.w3.org/TR/xml/#charsets
     # these should never be in an XML output:
-    INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
+    INVALID_XML = re.compile("[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]")
 
     def __init__(self, response, debug):
         self.status = None
         self.content = None
         self.reason = None
 
-        self.raw_response_text = response.text.encode("utf-8")
+        self.raw_response_text = response.text
 
         # Check for invalid authorization
         if response.status_code == 401:
@@ -410,7 +425,7 @@ class NetAppResponse:
             try:
                 self.content = NetAppNode(ET.fromstring(self.raw_response_text))
             except ET.ParseError:
-                clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
+                clean = NetAppResponse.INVALID_XML.sub("", self.raw_response_text)
                 self.content = NetAppNode(ET.fromstring(clean))
         except ET.ParseError as exc:
             if debug:
@@ -435,7 +450,7 @@ class NetAppResponse:
         return self.content.child_get("results")
 
 
-#.
+# .
 #   .--Format-Fctns--------------------------------------------------------.
 #   |   _____                          _        _____    _                 |
 #   |  |  ___|__  _ __ _ __ ___   __ _| |_     |  ___|__| |_ _ __  ___     |
@@ -479,16 +494,18 @@ def create_dict(instances, custom_key=None, is_counter=True):
 
 
 # Format config as one liner. Might add extra info identified by config_key
-def format_config(instances,
-                  prefix,
-                  config_key,
-                  config_report="all",
-                  config_scale=None,
-                  config_rename=None,
-                  extra_info=None,
-                  extra_info_report="all",
-                  delimeter="\t",
-                  skip_missing_config_key=False):
+def format_config(
+    instances,
+    prefix,
+    config_key,
+    config_report="all",
+    config_scale=None,
+    config_rename=None,
+    extra_info=None,
+    extra_info_report="all",
+    delimeter="\t",
+    skip_missing_config_key=False,
+):
 
     config_scale = {} if config_scale is None else config_scale
     config_rename = {} if config_rename is None else config_rename
@@ -540,7 +557,7 @@ def format_config(instances,
                 if value and (extra_info_report == "all" or key in extra_info_report):
                     line.append("%s %s" % (key, value))
 
-        result.append(("%s" % delimeter).join(ensure_str(x) for x in line))
+        result.append(("%s" % delimeter).join(line))
     return "\n".join(result)
 
 
@@ -550,8 +567,9 @@ def format_as_key_value(plain_instance, prefix="", report="all", delimeter="\t")
     for node in plain_instance.children_get():
         if report == "all" or node.element["name"] in report:
             if node.element["content"]:
-                result.append("%s%s%s%s" %
-                              (prefix, node.element["name"], delimeter, node.element["content"]))
+                result.append(
+                    "%s%s%s%s" % (prefix, node.element["name"], delimeter, node.element["content"])
+                )
     return "\n".join(result)
 
 
@@ -576,7 +594,7 @@ def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False
     return "\n".join(result)
 
 
-#.
+# .
 #   .--Query-Helpers-------------------------------------------------------.
 #   |  ___                              _   _      _                       |
 #   | / _ \ _   _  ___ _ __ _   _      | | | | ___| |_ __   ___ _ __ ___   |
@@ -602,7 +620,8 @@ def output_error_section(args, server):
         print("<<<netapp_api_connection>>>")
         # Remove some messages which may appear on a Netapp Simulator
         server.error_messages.remove_messages(
-            "storage-shelf-environment-list-info: Enclosure services scan not done")
+            "storage-shelf-environment-list-info: Enclosure services scan not done"
+        )
         server.error_messages.remove_messages("environment-sensors-get-iter: invalid operation")
         print(server.error_messages.format_messages())
 
@@ -665,7 +684,8 @@ def query(args, server, what, return_toplevel_node=False):
         while tag_string:
             # We need to start additinal query until all data is fetched
             tag_response = server.get_response(
-                [what, [["max-records", max_records], ["tag", tag_string]]])
+                [what, [["max-records", max_records], ["tag", tag_string]]]
+            )
             if tag_response.results_status() != "passed":
                 return
             if tag_response.get_results().child_get_string("num-records") == "0":
@@ -692,7 +712,9 @@ def query_counters(args, server, netapp_mode, what):
         # In clustermode there is no "get all" command for performance counters
         # We need to determine the instance names first and add them to the query
         if netapp_mode == "clustermode":
-            instance_query = NaElement("perf-object-instance-list-info-iter")  # pylint: disable=undefined-variable
+            instance_query = NaElement(
+                "perf-object-instance-list-info-iter"
+            )  # pylint: disable=undefined-variable
             instance_query.child_add_string("objectname", what)
 
             instance_query_response = server.invoke_elem(instance_query)
@@ -704,7 +726,9 @@ def query_counters(args, server, netapp_mode, what):
                     # Nothing to query..
                     return
 
-                instances_to_query = NaElement("instance-uuids")  # pylint: disable=undefined-variable
+                instances_to_query = NaElement(
+                    "instance-uuids"
+                )  # pylint: disable=undefined-variable
                 for uuid in instance_uuids:
                     instances_to_query.child_add_string("instance-uuid", uuid)
                 counter_query.child_add(instances_to_query)
@@ -720,19 +744,23 @@ def query_counters(args, server, netapp_mode, what):
     else:
         if netapp_mode == "clustermode":
             max_records = "3000"
-            response = server.get_response([
-                "perf-object-instance-list-info-iter",
-                [["objectname", what], ["max-records", max_records]]
-            ])
+            response = server.get_response(
+                [
+                    "perf-object-instance-list-info-iter",
+                    [["objectname", what], ["max-records", max_records]],
+                ]
+            )
 
             results = response.get_results()
             tag_string = results.child_get_string("next-tag")
             while tag_string:
                 # We need to start additinal query until all data is fetched
-                tag_response = server.get_response([
-                    "perf-object-instance-list-info-iter",
-                    [["objectname", what], ["max-records", max_records], ["tag", tag_string]]
-                ])
+                tag_response = server.get_response(
+                    [
+                        "perf-object-instance-list-info-iter",
+                        [["objectname", what], ["max-records", max_records], ["tag", tag_string]],
+                    ]
+                )
                 if tag_response.results_status() != "passed":
                     return
                 if tag_response.get_results().child_get_string("num-records") == "0":
@@ -768,7 +796,8 @@ def query_counters(args, server, netapp_mode, what):
                         break
                     instances_to_query[1].append(["instance-uuid", uuid])
                     perfobject_node: List[Any] = [
-                        "perf-object-get-instances", [["objectname", what]]
+                        "perf-object-get-instances",
+                        [["objectname", what]],
                     ]
                     perfobject_node[1].append(instances_to_query)
                 response = server.get_response(perfobject_node)
@@ -797,7 +826,8 @@ def query_counters(args, server, netapp_mode, what):
         responses = []
         while records != "0":
             perfobject_node = [
-                "perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]
+                "perf-object-get-instances-iter-next",
+                [["tag", tag], ["maximum", "1000"]],
             ]
             response = server.get_response(perfobject_node)
             results = response.get_results()
@@ -826,7 +856,7 @@ def fetch_netapp_mode(args, server):
 
     clustered_info = version_info.child_get_string("is-clustered")
     if clustered_info:
-        return '7mode' if clustered_info.lower() == 'false' else 'clustermode'
+        return "7mode" if clustered_info.lower() == "false" else "clustermode"
 
     # Looks like the is-clustered attribute is not set, e.g. NetApp 7-Mode Version 8.0
     version_string = version_info.child_get_string("version").lower()
@@ -835,10 +865,10 @@ def fetch_netapp_mode(args, server):
     # Possible approach: Query a class which does not exist in 7-mode and evaluate response
     if "NetApp Release 7.3.5.1".lower() in version_string:
         return "7mode"
-    return '7mode' if '7-mode' in version_string else 'clustermode'
+    return "7mode" if "7-mode" in version_string else "clustermode"
 
     # DEBUG
-    #version_info = query(args, server, "system-api-list")
+    # version_info = query(args, server, "system-api-list")
 
 
 def fetch_license_information(args, server):
@@ -849,7 +879,7 @@ def fetch_license_information(args, server):
             "v1": {},
             "v1_disabled": {},
             "v2": {},
-            "v2_disabled": {}
+            "v2_disabled": {},
         }
         license_info = query(args, server, "license-list-info")
         if license_info:
@@ -942,28 +972,34 @@ def process_clustermode(args, server, netapp_mode, licenses):
     if disks:
         print("<<<netapp_api_disk:sep(9)>>>")
         print(
-            format_config(disks,
-                          "disk",
-                          "disk-uid",
-                          config_report=[
-                              "disk-inventory-info.shelf-bay", "disk-inventory-info.serial-number",
-                              "disk-inventory-info.vendor", "disk-raid-info.container-type",
-                              "disk-raid-info.position", "disk-raid-info.used-blocks",
-                              "disk-raid-info.physical-blocks"
-                          ],
-                          config_scale={
-                              "disk-raid-info.physical-blocks": 4096,
-                              "disk-raid-info.used-blocks": 4096
-                          },
-                          config_rename={
-                              "disk-inventory-info.shelf-bay": "bay",
-                              "disk-inventory-info.serial-number": "serial-number",
-                              "disk-inventory-info.vendor": "vendor-id",
-                              "disk-raid-info.container-type": "raid-state",
-                              "disk-raid-info.position": "raid-type",
-                              "disk-raid-info.used-blocks": "used-space",
-                              "disk-raid-info.physical-blocks": "physical-space"
-                          }))
+            format_config(
+                disks,
+                "disk",
+                "disk-uid",
+                config_report=[
+                    "disk-inventory-info.shelf-bay",
+                    "disk-inventory-info.serial-number",
+                    "disk-inventory-info.vendor",
+                    "disk-raid-info.container-type",
+                    "disk-raid-info.position",
+                    "disk-raid-info.used-blocks",
+                    "disk-raid-info.physical-blocks",
+                ],
+                config_scale={
+                    "disk-raid-info.physical-blocks": 4096,
+                    "disk-raid-info.used-blocks": 4096,
+                },
+                config_rename={
+                    "disk-inventory-info.shelf-bay": "bay",
+                    "disk-inventory-info.serial-number": "serial-number",
+                    "disk-inventory-info.vendor": "vendor-id",
+                    "disk-raid-info.container-type": "raid-state",
+                    "disk-raid-info.position": "raid-type",
+                    "disk-raid-info.used-blocks": "used-space",
+                    "disk-raid-info.physical-blocks": "physical-space",
+                },
+            )
+        )
 
     # Volumes
     volumes = query(args, server, "volume-get-iter")
@@ -979,11 +1015,15 @@ def process_clustermode(args, server, netapp_mode, licenses):
                 "volume",
                 "volume-id-attributes.instance-uuid",
                 config_report=[
-                    "volume-space-attributes.size-available", "volume-space-attributes.size-total",
-                    "volume-state-attributes.state", "volume-id-attributes.owning-vserver-name",
-                    "volume-id-attributes.name", "volume-id-attributes.node",
-                    "volume-id-attributes.msid", "volume-inode-attributes.files-total",
-                    "volume-inode-attributes.files-used"
+                    "volume-space-attributes.size-available",
+                    "volume-space-attributes.size-total",
+                    "volume-state-attributes.state",
+                    "volume-id-attributes.owning-vserver-name",
+                    "volume-id-attributes.name",
+                    "volume-id-attributes.node",
+                    "volume-id-attributes.msid",
+                    "volume-inode-attributes.files-total",
+                    "volume-inode-attributes.files-used",
                 ],
                 config_rename={
                     "volume-space-attributes.size-available": "size-available",
@@ -994,7 +1034,7 @@ def process_clustermode(args, server, netapp_mode, licenses):
                     "volume-id-attributes.msid": "msid",
                     "volume-id-attributes.node": "node",
                     "volume-inode-attributes.files-total": "files-total",
-                    "volume-inode-attributes.files-used": "files-used"
+                    "volume-inode-attributes.files-used": "files-used",
                 },
                 extra_info=create_dict(volume_counters, custom_key=["instance_uuid"]),
                 extra_info_report=[
@@ -1002,38 +1042,52 @@ def process_clustermode(args, server, netapp_mode, licenses):
                     for x in ["data", "latency", "ops"]  #
                     for y in ["read_", "write_"]
                     for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
-                ] + ["instance_name"],
-                skip_missing_config_key=True))
+                ]
+                + ["instance_name"],
+                skip_missing_config_key=True,
+            )
+        )
 
     # Aggregations
     aggregations = query(args, server, "aggr-get-iter")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
         print(
-            format_config(aggregations,
-                          "aggregation",
-                          "aggregate-name",
-                          config_report=[
-                              "aggr-space-attributes.size-available",
-                              "aggr-space-attributes.size-total"
-                          ],
-                          config_rename={
-                              "aggr-space-attributes.size-available": "size-available",
-                              "aggr-space-attributes.size-total": "size-total"
-                          }))
+            format_config(
+                aggregations,
+                "aggregation",
+                "aggregate-name",
+                config_report=[
+                    "aggr-space-attributes.size-available",
+                    "aggr-space-attributes.size-total",
+                ],
+                config_rename={
+                    "aggr-space-attributes.size-available": "size-available",
+                    "aggr-space-attributes.size-total": "size-total",
+                },
+            )
+        )
 
     # LUNs
     luns = query(args, server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
         print(
-            format_config(luns,
-                          "lun",
-                          "path",
-                          config_report=[
-                              "size", "size-used", "path", "online", "read-only", "vserver",
-                              "volume"
-                          ]))
+            format_config(
+                luns,
+                "lun",
+                "path",
+                config_report=[
+                    "size",
+                    "size-used",
+                    "path",
+                    "online",
+                    "read-only",
+                    "vserver",
+                    "volume",
+                ],
+            )
+        )
 
     # Diagnosis status
     diag_status = query(args, server, "diagnosis-status-get")
@@ -1056,20 +1110,31 @@ def process_clustermode(args, server, netapp_mode, licenses):
     snapmirror_info = query(args, server, "snapmirror-get-iter")
     if snapmirror_info:
         print("<<<netapp_api_snapvault:sep(9)>>>")
+        # NOTE: destination-location is used as the item name for clustermode snapvault services, as the destination
+        # volume may not be unique. For 7mode installations, this has not been implemented, as we do not have a test case
+        # and we do not know whether the issue exists.
         print(
-            format_config(snapmirror_info,
-                          "snapvault",
-                          "destination-volume",
-                          config_report=[
-                              "destination-volume-node", "policy", "mirror-state", "source-vserver",
-                              "lag-time", "relationship-status"
-                          ],
-                          config_rename={
-                              "destination-volume-node": "destination-system",
-                              "mirror-state": "state",
-                              "source-vserver": "source-system",
-                              "relationship-status": "status"
-                          }))
+            format_config(
+                snapmirror_info,
+                "snapvault",
+                "destination-volume",
+                config_report=[
+                    "destination-volume-node",
+                    "policy",
+                    "mirror-state",
+                    "source-vserver",
+                    "lag-time",
+                    "relationship-status",
+                    "destination-location",
+                ],
+                config_rename={
+                    "destination-volume-node": "destination-system",
+                    "mirror-state": "state",
+                    "source-vserver": "source-system",
+                    "relationship-status": "status",
+                },
+            )
+        )
 
     # Environmental sensors
     environment_info = query_nodes(args, server, nodes, "storage-shelf-environment-list-info")
@@ -1092,11 +1157,14 @@ def process_clustermode(args, server, netapp_mode, licenses):
 
             for channel in channel_list.children_get():  # cycle channel list
                 for shelf in channel.child_get(
-                        "shelf-environ-shelf-list").children_get():  # cycle shelf list
+                    "shelf-environ-shelf-list"
+                ).children_get():  # cycle shelf list
                     shelf_id = shelf.child_get_string("shelf-id")
-                    for what, section in [("power-supply-list", "netapp_api_psu"),
-                                          ("cooling-element-list", "netapp_api_fan"),
-                                          ("temp-sensor-list", "netapp_api_temp")]:
+                    for what, section in [
+                        ("power-supply-list", "netapp_api_psu"),
+                        ("cooling-element-list", "netapp_api_fan"),
+                        ("temp-sensor-list", "netapp_api_temp"),
+                    ]:
                         print("<<<%s:sep(9)>>>" % section)
                         node = shelf.child_get(what)
                         print(format_config(node, what, shelf_id))
@@ -1112,27 +1180,42 @@ def process_clustermode(args, server, netapp_mode, licenses):
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
         print(
-            format_config(quota_info,
-                          "quota",
-                          "tree",
-                          config_report=[
-                              "volume", "tree", "disk-limit", "disk-used", "quota-type",
-                              "quota-users.quota-user.quota-user-name"
-                          ],
-                          config_rename={"quota-users.quota-user.quota-user-name": "quota-users"}))
+            format_config(
+                quota_info,
+                "quota",
+                "tree",
+                config_report=[
+                    "volume",
+                    "tree",
+                    "disk-limit",
+                    "disk-used",
+                    "quota-type",
+                    "quota-users.quota-user.quota-user-name",
+                ],
+                config_rename={"quota-users.quota-user.quota-user-name": "quota-users"},
+            )
+        )
 
     # LUNs
     luns = query(args, server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
         print(
-            format_config(luns,
-                          "lun",
-                          "path",
-                          config_report=[
-                              "size", "size-used", "path", "online", "read-only", "vserver",
-                              "volume"
-                          ]))
+            format_config(
+                luns,
+                "lun",
+                "path",
+                config_report=[
+                    "size",
+                    "size-used",
+                    "path",
+                    "online",
+                    "read-only",
+                    "vserver",
+                    "volume",
+                ],
+            )
+        )
 
 
 def process_vserver_status(args, server):
@@ -1146,14 +1229,19 @@ def process_vserver_status(args, server):
         for key in ("state", "vserver-subtype"):
             if vserver_data.get(key):
                 words += [key, str(vserver_data[key])]
-        print('\t'.join(words))
+        print("\t".join(words))
 
 
 def process_vserver_traffic(args, server, netapp_mode):
     print("<<<netapp_api_vs_traffic:sep(9)>>>")
     for what in [
-            "lif:vserver", "fcp_lif:vserver", "iscsi_lif:vserver", "cifs:vserver", "nfsv3", "nfsv4",
-            "nfsv4_1"
+        "lif:vserver",
+        "fcp_lif:vserver",
+        "iscsi_lif:vserver",
+        "cifs:vserver",
+        "nfsv3",
+        "nfsv4",
+        "nfsv4_1",
     ]:
         result = query_counters(args, server, netapp_mode, what)
         if result:
@@ -1177,8 +1265,11 @@ def process_interfaces(args, server, netapp_mode):
         # Process counters
         # NetApp clustermode reports sent_data instead of send_data..
         for key, values in if_counters_dict.items():
-            for old, new in [("sent_data", "send_data"), ("sent_packet", "send_packet"),
-                             ("sent_errors", "send_errors")]:
+            for old, new in [
+                ("sent_data", "send_data"),
+                ("sent_packet", "send_packet"),
+                ("sent_errors", "send_errors"),
+            ]:
                 values[new] = values[old]
                 del values[old]
 
@@ -1209,23 +1300,26 @@ def process_interfaces(args, server, netapp_mode):
             extra_info[key].update(values)
 
         print(
-            format_config(interfaces,
-                          "interface",
-                          "interface-name",
-                          extra_info=extra_info,
-                          extra_info_report=[
-                              "recv_data",
-                              "send_data",
-                              "recv_mcasts",
-                              "send_mcasts",
-                              "recv_errors",
-                              "send_errors",
-                              "instance_name",
-                              "link-status",
-                              "operational-speed",
-                              "recv_packet",
-                              "send_packet",
-                          ]))
+            format_config(
+                interfaces,
+                "interface",
+                "interface-name",
+                extra_info=extra_info,
+                extra_info_report=[
+                    "recv_data",
+                    "send_data",
+                    "recv_mcasts",
+                    "send_mcasts",
+                    "recv_errors",
+                    "send_errors",
+                    "instance_name",
+                    "link-status",
+                    "operational-speed",
+                    "recv_packet",
+                    "send_packet",
+                ],
+            )
+        )
 
 
 def process_ports(args, server, netapp_mode):
@@ -1259,18 +1353,24 @@ def process_cpu(args, server):
     if node_info and system_info:
         print("<<<netapp_api_cpu:sep(9)>>>")
         print(
-            format_config(node_info,
-                          "cpu-info",
-                          "system-name",
-                          config_report=["number-of-processors"],
-                          config_rename={"number-of-processors": "num_processors"}))
+            format_config(
+                node_info,
+                "cpu-info",
+                "system-name",
+                config_report=["number-of-processors"],
+                config_rename={"number-of-processors": "num_processors"},
+            )
+        )
         print(
-            format_config(system_info,
-                          "cpu-info",
-                          "node",
-                          config_scale={"cpu-busytime": 1000000},
-                          config_report=["cpu-busytime", "nvram-battery-status"],
-                          config_rename={"cpu-busytime": "cpu_busy"}))
+            format_config(
+                system_info,
+                "cpu-info",
+                "node",
+                config_scale={"cpu-busytime": 1000000},
+                config_report=["cpu-busytime", "nvram-battery-status"],
+                config_rename={"cpu-busytime": "cpu_busy"},
+            )
+        )
 
 
 def process_7mode(args, server, netapp_mode, licenses):
@@ -1280,15 +1380,25 @@ def process_7mode(args, server, netapp_mode, licenses):
     if interfaces:
         print("<<<netapp_api_if:sep(9)>>>")
         print(
-            format_config(interfaces,
-                          "interface",
-                          "interface-name",
-                          extra_info=create_dict(if_counters),
-                          extra_info_report=[
-                              "recv_data", "send_data", "recv_mcasts", "send_mcasts", "recv_errors",
-                              "send_errors", "instance_name", "mediatype", "recv_packet",
-                              "send_packet"
-                          ]))
+            format_config(
+                interfaces,
+                "interface",
+                "interface-name",
+                extra_info=create_dict(if_counters),
+                extra_info_report=[
+                    "recv_data",
+                    "send_data",
+                    "recv_mcasts",
+                    "send_mcasts",
+                    "recv_errors",
+                    "send_errors",
+                    "instance_name",
+                    "mediatype",
+                    "recv_packet",
+                    "send_packet",
+                ],
+            )
+        )
 
     # TODO: Fibrechannel interfaces
 
@@ -1313,8 +1423,14 @@ def process_7mode(args, server, netapp_mode, licenses):
                 "volume",
                 "name",
                 config_report=[
-                    "name", "volume-info", "size-total", "size-available", "volumes", "files-total",
-                    "files-used", "state"
+                    "name",
+                    "volume-info",
+                    "size-total",
+                    "size-available",
+                    "volumes",
+                    "files-total",
+                    "files-used",
+                    "state",
                 ],
                 extra_info=create_dict(volume_counters),
                 extra_info_report=[
@@ -1322,17 +1438,23 @@ def process_7mode(args, server, netapp_mode, licenses):
                     for x in ["data", "latency", "ops"]  #
                     for y in ["read_", "write_"]
                     for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
-                ] + ["instance_name"]))
+                ]
+                + ["instance_name"],
+            )
+        )
 
     # Aggregation
     aggregations = query(args, server, "aggr-list-info")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
         print(
-            format_config(aggregations,
-                          "aggregation",
-                          "name",
-                          config_report=["name", "size-total", "size-available"]))
+            format_config(
+                aggregations,
+                "aggregation",
+                "name",
+                config_report=["name", "size-total", "size-available"],
+            )
+        )
 
     # Snapshot info
     print("<<<netapp_api_snapshots:sep(9)>>>")
@@ -1345,13 +1467,20 @@ def process_7mode(args, server, netapp_mode, licenses):
             container = NetAppNode("container")
             container.append(volume.get_node())
         print(
-            format_config(container,
-                          "volume_snapshot",
-                          "name",
-                          config_report=[
-                              "name", "size-total", "snapshot-percent-reserved", "state",
-                              "snapshot-blocks-reserved", "reserve-used-actual"
-                          ]))
+            format_config(
+                container,
+                "volume_snapshot",
+                "name",
+                config_report=[
+                    "name",
+                    "size-total",
+                    "snapshot-percent-reserved",
+                    "state",
+                    "snapshot-blocks-reserved",
+                    "reserve-used-actual",
+                ],
+            )
+        )
 
     # Protocols
     print("<<<netapp_api_protocol:sep(9)>>>")
@@ -1366,12 +1495,13 @@ def process_7mode(args, server, netapp_mode, licenses):
         if protocol_counters:
             protocol_dict = create_dict(protocol_counters)
             print(
-                format_dict(protocol_dict[key],
-                            report=["instance_name",
-                                    "%s_read_ops" % what,
-                                    "%s_write_ops" % what],
-                            prefix="protocol %s" % key,
-                            as_line=True))
+                format_dict(
+                    protocol_dict[key],
+                    report=["instance_name", "%s_read_ops" % what, "%s_write_ops" % what],
+                    prefix="protocol %s" % key,
+                    as_line=True,
+                )
+            )
 
     # Diagnosis status
     diag_status = query(args, server, "diagnosis-status-get")
@@ -1384,13 +1514,24 @@ def process_7mode(args, server, netapp_mode, licenses):
     if disk_info:
         print("<<<netapp_api_disk:sep(9)>>>")
         print(
-            format_config(disk_info,
-                          "disk",
-                          "disk-uid",
-                          config_report=[
-                              "raid-state", "raid-type", "physical-space", "bay", "raid-type",
-                              "used-space", "serial-number", "disk-uid", "disk-model", "vendor-id"
-                          ]))
+            format_config(
+                disk_info,
+                "disk",
+                "disk-uid",
+                config_report=[
+                    "raid-state",
+                    "raid-type",
+                    "physical-space",
+                    "bay",
+                    "raid-type",
+                    "used-space",
+                    "serial-number",
+                    "disk-uid",
+                    "disk-model",
+                    "vendor-id",
+                ],
+            )
+        )
 
     # VFiler
     vfiler_info = query(args, server, "vfiler-list-info")
@@ -1413,16 +1554,27 @@ def process_7mode(args, server, netapp_mode, licenses):
             if not records or records == "0":
                 continue
             tag = response.child_get_string("tag")
-            response = server.invoke("snapvault-secondary-relationship-status-list-iter-next",
-                                     "maximum", records, "tag", tag)
+            response = server.invoke(
+                "snapvault-secondary-relationship-status-list-iter-next",
+                "maximum",
+                records,
+                "tag",
+                tag,
+            )
             print(
-                format_config(response.child_get("status-list"),
-                              "snapvault",
-                              "source-path",
-                              config_report=[
-                                  "lag-time", "state", "status", "source-system",
-                                  "destination-system"
-                              ]))
+                format_config(
+                    response.child_get("status-list"),
+                    "snapvault",
+                    "source-path",
+                    config_report=[
+                        "lag-time",
+                        "state",
+                        "status",
+                        "source-system",
+                        "destination-system",
+                    ],
+                )
+            )
             server.invoke("snapvault-secondary-relationship-status-list-iter-end", "tag", tag)
         server.set_vfiler("")  # revert back to default (no) vfiler
 
@@ -1435,17 +1587,23 @@ def process_7mode(args, server, netapp_mode, licenses):
             continue
         data = data[1]
         print(
-            format_config(data,
-                          "snapvault",
-                          "source-location",
-                          config_report=[
-                              "lag-time", "state", "status", "source-location",
-                              "destination-location"
-                          ],
-                          config_rename={
-                              "source-location": "source-system",
-                              "destination-location": "destination-system"
-                          }))
+            format_config(
+                data,
+                "snapvault",
+                "source-location",
+                config_report=[
+                    "lag-time",
+                    "state",
+                    "status",
+                    "source-location",
+                    "destination-location",
+                ],
+                config_rename={
+                    "source-location": "source-system",
+                    "destination-location": "destination-system",
+                },
+            )
+        )
     server.set_vfiler("")
 
     # VFiler Counters
@@ -1491,9 +1649,11 @@ def process_7mode(args, server, netapp_mode, licenses):
                 if shelf_list:
                     for shelf in shelf_list.children_get():
                         shelf_id = shelf.child_get_string("shelf-id")
-                        for what, section in [("power-supply-list", "netapp_api_psu"),
-                                              ("cooling-element-list", "netapp_api_fan"),
-                                              ("temp-sensor-list", "netapp_api_temp")]:
+                        for what, section in [
+                            ("power-supply-list", "netapp_api_psu"),
+                            ("cooling-element-list", "netapp_api_fan"),
+                            ("temp-sensor-list", "netapp_api_temp"),
+                        ]:
                             print("<<<%s:sep(9)>>>" % section)
                             node = shelf.child_get(what)
                             print(format_config(node, what, shelf_id))
@@ -1509,14 +1669,21 @@ def process_7mode(args, server, netapp_mode, licenses):
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
         print(
-            format_config(quota_info,
-                          "quota",
-                          "tree",
-                          config_report=[
-                              "volume", "tree", "disk-limit", "disk-used", "quota-type",
-                              "quota-users.quota-user.quota-user-name"
-                          ],
-                          config_rename={"quota-users.quota-user.quota-user-name": "quota-users"}))
+            format_config(
+                quota_info,
+                "quota",
+                "tree",
+                config_report=[
+                    "volume",
+                    "tree",
+                    "disk-limit",
+                    "disk-used",
+                    "quota-type",
+                    "quota-users.quota-user.quota-user-name",
+                ],
+                config_rename={"quota-users.quota-user.quota-user-name": "quota-users"},
+            )
+        )
 
 
 def connect(args):
@@ -1542,13 +1709,15 @@ def connect(args):
     except Exception:
         if args.debug:
             raise
-        sys.stderr.write("Cannot connect to NetApp Server. Maybe you provided wrong "
-                         "credentials. Please check your connection settings and try "
-                         "again.")
+        sys.stderr.write(
+            "Cannot connect to NetApp Server. Maybe you provided wrong "
+            "credentials. Please check your connection settings and try "
+            "again."
+        )
         sys.exit(1)
 
 
-#.
+# .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -1581,9 +1750,9 @@ def main(argv=None):
 
         return 0
 
-    except Exception as e:
+    except Exception as exc:
         # Shouldn't happen at all...
-        server.add_error_message("Agent Exception (contact developer): %s" % e)
+        server.add_error_message("Agent Exception (contact developer): %s" % exc)
         if args.debug:
             raise
         return 1
@@ -1591,5 +1760,5 @@ def main(argv=None):
         output_error_section(args, server)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -1,0 +1,9 @@
+#!/bin/bash
+# get public ip via instance metadata service:
+PUBLIC_IP=$(curl --silent http://169.254.169.254/latest/meta-data/public-ipv4)
+
+# generate a self signed certificate with IP address as common name
+openssl req \
+    -newkey rsa:2048 -nodes -keyout /etc/ssl/private/checkmk.key \
+    -subj "/CN=$PUBLIC_IP" \
+    -x509 -days 365 -out /etc/ssl/certs/checkmk.crt

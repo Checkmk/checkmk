@@ -1,0 +1,13 @@
+Title: agent_prometheus: fixing cadvisor memory check when no valid memory limit was provided
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621433821
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In the previous version, the machine memory was occasionally missing when
+the memory limit was 0. This werk fixes this behaviour to always provide
+the machine memory for this case.

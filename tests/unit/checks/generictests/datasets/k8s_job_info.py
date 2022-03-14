@@ -4,21 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# yapf: disable
 # type: ignore
 
 
-from cmk.base.discovered_labels import HostLabel
-
-checkname = 'k8s_job_info'
+checkname = "k8s_job_info"
 
 
-parsed = {u'active': 1, u'failed': 1, u'succeeded': 1}
+parsed = {"active": 1, "failed": 1, "succeeded": 1}
 
 
-discovery = {
-    '': [(None, {})]
-}
+discovery = {"": [(None, {})]}
 
 
-checks = {'': [(None, {}, [(2, 'Running: 1/3, Failed: 1, Succeeded: 1', [])])]}
+checks = {"": [(None, {}, [(2, "Running: 1/3, Failed: 1, Succeeded: 1", [])])]}

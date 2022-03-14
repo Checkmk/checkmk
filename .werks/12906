@@ -1,0 +1,25 @@
+Title: unix agents: changed signature of 'run_cached'
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1627215171
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This incompatible API change only affects users who use
+the function <tt>run_cached</tt> exported by the agents.
+
+The function no longer accepts the options <tt>-s</tt>,
+ <tt>-m</tt> or <tt>-am</tt>.
+
+The functions synopsis is now <tt>run_cached NAME MAXAGE COMMAND</tt>
+<ol>
+  <li><tt>name</tt>: The name of the cache file</li>
+  <li><tt>maxage</tt>: The time in seconds the generated data should be considered valid</li>
+  <li><tt>command</tt>: The command to generate the data</li>
+</ol>
+
+In particular the removal of the '-s' option means you now have to
+include the creation of the section header in your command.

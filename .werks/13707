@@ -1,0 +1,12 @@
+Title: <tt>juniper_cpu_util</tt>: Fix "Item not found in monitoring data" for 0% utilization
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643188811
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>juniper_cpu_util</tt> reported "Item not found in monitoring data"
+for devices with currently 0% utilization.

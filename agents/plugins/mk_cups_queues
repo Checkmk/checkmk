@@ -9,24 +9,32 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
-if type lpstat > /dev/null 2>&1 ; then
+if type lpstat >/dev/null 2>&1; then
     export LC_TIME="en_US.UTF-8"
     echo "<<<cups_queues>>>"
     CPRINTCONF=/etc/cups/printers.conf
-    if  [ -r "$CPRINTCONF" ] ; then
+    if [ -r "$CPRINTCONF" ]; then
         LOCAL_PRINTERS=$(perl -ne '/<(?:Default)?Printer ([\w-]+)>/ && print "$1\n"' $CPRINTCONF)
-        lpstat -h localhost -p | while read LINE
-        do
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
+        lpstat -h localhost -p | while read LINE; do
             PRINTER=$(echo "$LINE" | awk '{print $2}')
             if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
                 echo "$LINE"
             fi
         done
         echo '---'
-        lpstat -h localhost -o | while read LINE
-        do
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
+        lpstat -h localhost -o | while read LINE; do
             PRINTER=${LINE%%-*}
             if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
                 echo "$LINE"

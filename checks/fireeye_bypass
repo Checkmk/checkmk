@@ -9,32 +9,34 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#.1.3.6.1.4.1.25597.13.1.41.0 0
-#.1.3.6.1.4.1.25597.13.1.42.0 0
-#.1.3.6.1.4.1.25597.13.1.43.0 0
+
+# .1.3.6.1.4.1.25597.13.1.41.0 0
+# .1.3.6.1.4.1.25597.13.1.42.0 0
+# .1.3.6.1.4.1.25597.13.1.43.0 0
 
 
 def inventory_bypass(info):
     value = int(info[0][0])
-    yield None, {'value': value}
+    yield None, {"value": value}
 
 
 def check_fireeye_bypass(_no_item, params, info):
-    expected_value = params.get('value', 0)
+    expected_value = params.get("value", 0)
     current_value = int(info[0][0])
-    yield 0, 'Bypass E-Mail count: %d' % current_value
+    yield 0, "Bypass E-Mail count: %d" % current_value
     if current_value != expected_value:
-        yield 2, ' (was %d before)' % expected_value
+        yield 2, " (was %d before)" % expected_value
 
 
-check_info['fireeye_bypass'] = {
-    'inventory_function': inventory_bypass,
-    'check_function': check_fireeye_bypass,
-    'service_description': 'Bypass Mail Rate',
-    'snmp_info': (
-        '.1.3.6.1.4.1.25597.13.1',
+check_info["fireeye_bypass"] = {
+    "inventory_function": inventory_bypass,
+    "check_function": check_fireeye_bypass,
+    "service_description": "Bypass Mail Rate",
+    "snmp_info": (
+        ".1.3.6.1.4.1.25597.13.1",
         [
-            '41',  # FE-FIREEYE-MIB::feBypassEmailCount.0
-        ]),
-    'snmp_scan_function': scan_fireeye,
+            "41",  # FE-FIREEYE-MIB::feBypassEmailCount.0
+        ],
+    ),
+    "snmp_scan_function": scan_fireeye,
 }

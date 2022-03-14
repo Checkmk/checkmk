@@ -1,0 +1,13 @@
+Title: BI availabilty: Improved computation performance
+Class: feature
+Compatible: compat
+Component: bi
+Date: 1625641395
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Computing the availablity for BI aggregations requires quite a lot of computations.
+By removing some legacy code, the calculation is now 2-3 times faster (~5k aggregations/sec).

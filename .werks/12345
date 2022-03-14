@@ -1,0 +1,25 @@
+Title: Network scan: remove unused ip_regex_list from address_range
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1620032205
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When configuring a Network Scan on a Folder, IP ranges can be defined
+in the section "IP ranges to scan" and "IP ranges to exclude". Both
+allowed for an exclusion of IPs through "List of patterns to exclude"
+by using regex, yet only the pattern on "IP ranges to exclude" had
+any effect.
+
+This werk removes the "List of patterns to exclude" option from the
+"IP ranges to scan" section of "Network Scan" on the Folder configuration
+screen.
+
+Any previously stored "IP ranges to exclude" on "IP ranges to scan" will
+continue to be ignored, yet no longer displayed.
+
+No new entries like that can be made after this werk.

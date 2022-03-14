@@ -1,7 +1,7 @@
 title: Virtual Machine under ESX: Hostsystem the VM is Running on
 agents: vsphere
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provices information about the hostsystem where the VM is running on.
@@ -11,5 +11,5 @@ description:
 
  See "Monitoring VMWare ESX with Checkmk" in the online documentation as well.
 
-inventory:
+discovery:
  One service is created for each Virtual Machine.

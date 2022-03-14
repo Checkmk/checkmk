@@ -8,7 +8,8 @@
 # type: ignore
 
 from cmk.base.plugins.agent_based.ucs_c_rack_server_faultinst import (
-    parse_ucs_c_rack_server_faultinst,)
+    parse_ucs_c_rack_server_faultinst,
+)
 
 checkname = 'ucs_c_rack_server_faultinst'
 

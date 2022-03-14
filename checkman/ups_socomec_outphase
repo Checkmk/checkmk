@@ -1,7 +1,7 @@
 title: Socomec UPS Device: Output Phases
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors voltage, current and load output phases of Socomec UPSs. Current is purely informative
@@ -10,6 +10,5 @@ description:
 item:
  ID of the phase
 
-inventory:
+discovery:
  One service is created for each Socomec UPS output phase.
-

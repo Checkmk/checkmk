@@ -12,9 +12,9 @@ def parse_ibm_svc_with_header(info, dflt_header):
     parsed = {}
     header = dflt_header
     for line in info:
-        if ' command not found' in line:
+        if " command not found" in line:
             continue
-        elif line[0] in ['id', 'node_id', 'mdisk_id', 'enclosure_id']:
+        elif line[0] in ["id", "node_id", "mdisk_id", "enclosure_id"]:
             # newer agent output provides a header line
             header = line
         else:

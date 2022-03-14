@@ -1,0 +1,16 @@
+Title: apc_symmetra_elphase: Remove default current threshold
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1638266833
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+apc_symmetra_elphase check would assume CRIT state for current values bigger then 1 A.
+Since this value depends on the configuration of the UPS and the battery type, it
+produced error states for normal current values.
+
+If you want to keep using 1 A as a threshold value for apc_symmetra_elphase current
+set it up in the check's parameters.

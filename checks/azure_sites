@@ -9,18 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['levels_azure_sites'] = {
+
+factory_settings["levels_azure_sites"] = {
     # https://www.nngroup.com/articles/response-times-3-important-limits/
-    'avg_response_time_levels': (1.0, 10.0),
+    "avg_response_time_levels": (1.0, 10.0),
     # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
-    'error_rate_levels': (0.01, 0.04),
-    'cpu_time_percent_levels': (85., 95.),
+    "error_rate_levels": (0.01, 0.04),
+    "cpu_time_percent_levels": (85.0, 95.0),
 }
 
 _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
-    ('total_CpuTime', 'cpu_time_percent', 'CPU time', True),
-    ('total_AverageResponseTime', 'avg_response_time', 'Average response time', False),
-    ('total_Http5xx', 'error_rate', 'Rate of server errors', True),
+    ("total_CpuTime", "cpu_time_percent", "CPU time", True),
+    ("total_AverageResponseTime", "avg_response_time", "Average response time", False),
+    ("total_Http5xx", "error_rate", "Rate of server errors", True),
 )
 
 
@@ -37,12 +38,12 @@ def check_azure_sites(_item, params, resource):
         yield 0, "%s: %s" % kv_pair
 
 
-check_info['azure_sites'] = {
-    'parse_function': parse_azure,
-    'inventory_function': discover(),
-    'check_function': check_azure_sites,
-    'has_perfdata': True,
-    'service_description': "Site %s",
-    'default_levels_variable': 'levels_azure_sites',
-    'group': 'webserver',
+check_info["azure_sites"] = {
+    "parse_function": parse_azure,
+    "inventory_function": discover(),
+    "check_function": check_azure_sites,
+    "has_perfdata": True,
+    "service_description": "Site %s",
+    "default_levels_variable": "levels_azure_sites",
+    "group": "webserver",
 }

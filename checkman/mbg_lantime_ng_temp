@@ -1,15 +1,14 @@
 title: Meinberg LANTIME Devices: Temperature (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the temperature in degree Celsius of Meinberg LANTIME clocks supporting the
  new MBG-LANTIME-NG-MIB.
 
-inventory:
+discovery:
  One service is created for each device.
 
 item:
  The fixed statement {{System}}
-

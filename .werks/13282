@@ -1,0 +1,13 @@
+Title: BI datasource program: Fixed non-working aggregation filters with older configurations
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1637585740
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The aggregation filters for the <tt>BI aggregations</tt> datasource program configuration did
+not work, unless they were manually saved again within the GUI.

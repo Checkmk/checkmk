@@ -16,7 +16,7 @@ PACKAGE_LIBGSF_DESTDIR := $(LIBGSF_INSTALL_DIR)
 PACKAGE_LIBGSF_LDFLAGS := -L$(PACKAGE_LIBGSF_DESTDIR)/lib -lgsf-1
 PACKAGE_LIBGSF_CFLAGS := -I$(PACKAGE_LIBGSF_DESTDIR)/include/libgsf-1
 
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
 $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
 	cd $(LIBGSF_BUILD_DIR) && ./configure --prefix=""
 	$(MAKE) -C $(LIBGSF_BUILD_DIR)
@@ -28,13 +28,13 @@ $(LIBGSF_BUILD):
 endif
 
 $(LIBGSF_INTERMEDIATE_INSTALL): $(LIBGSF_BUILD)
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
 	$(MAKE) DESTDIR=$(LIBGSF_INSTALL_DIR) -C $(LIBGSF_BUILD_DIR) install
 endif
 	$(TOUCH) $@
 
 $(LIBGSF_INSTALL): $(LIBGSF_INTERMEDIATE_INSTALL)
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
 	$(RSYNC) $(LIBGSF_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 endif
 	$(TOUCH) $@

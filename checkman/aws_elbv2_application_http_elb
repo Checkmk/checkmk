@@ -1,7 +1,7 @@
 title: AWS ApplicationELB: HTTP ELB
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of HTTP 3XX, 4XX, 5XX, 500, 502, 503 and
@@ -13,5 +13,5 @@ description:
 
  No default levels are set, but upper levels can be configured.
 
-inventory:
+discovery:
  One service is created if the required metric RequestCount is given.

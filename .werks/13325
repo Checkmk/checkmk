@@ -1,0 +1,48 @@
+Title: Two-factor authentication via FIDO2/WebAuthn
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1640547957
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+With this change users of the Checkmk user interface can now configure Checkmk
+to ask for a second factor during user authentication.
+
+The new two-factor authentication is based on FIDO2/WebAuthn. You can use
+authenticators such as the YubiKey, a USB token, a smart phone, Apple’s Touch
+ID, and Windows Hello.
+
+To enable the new feature, login to the GUI and open the "User" mega menu on
+the bottom left of the screen. Then select "Two-factor authentication". On the
+opened page, you first need to click on "Add credential". Once you click that,
+your browser will ask you to activate your authenticator. Once done, the
+registration with your user account should be complete and a new registered
+credential is displayed.
+
+With this step you have enabled the two-factor authentication for your user
+account. Future logins will only be possible with the activated authenticator.
+
+If you don't have your authenticator at hand, you can use backup codes. It is
+recommended to generate these backup codes right away by clicking on
+"Regenerate backup codes". The resulting page will show you a list of 10 backup
+codes. Store them in a save place.
+
+Administrators can see that a user has the two-factor authentication enabled in
+the users list of the Setup. The Authentication column displays "Password
+(+2FA)" for these users. Admins can disable two-factor authentication for users
+to help them in case they don't have access to their second factor. This can be
+done via "Setup > Users > Edit user > Disable two-factor authentication".
+
+Please note that the WebAuthn standard makes this feature only usable in case
+you access the GUI using HTTPS.
+
+The WebAuthn two-factor authentication is also restrictive on the type of host
+address you use to access the GUI. It will be used as relying party identifier
+(https://www.w3.org/TR/webauthn-2/#relying-party-identifier) and has to be a
+valid domain string (https://url.spec.whatwg.org/#valid-domain-string). You
+will have to either use a simple host name or a full qualified domain name.
+Please note that you need to be consistent in the domain you use for the
+two-factor authentication to work.

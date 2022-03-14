@@ -1,7 +1,7 @@
 title: MySQL: Maximum Connection Usage since Startup
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows the tracking of connection usage for a MySQL database.
@@ -20,7 +20,6 @@ description:
 item:
  Current amount of connections
 
-inventory:
+discovery:
  One service is created on each host where the agent plugin {mk_mysql}
  is installed and the MySQL daemon is running.
-

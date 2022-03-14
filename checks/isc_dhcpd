@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 isc_dhcpd_default_levels = (15.0, 5.0)
 
 # Example output from agent:
@@ -34,7 +35,7 @@ def parse_isc_dhcpd(info):
     def ip_to_number(ip):
         number = 0
         factor = 1
-        for part in ip.split('.')[::-1]:
+        for part in ip.split(".")[::-1]:
             number += factor * int(part)
             factor *= 256
         return number
@@ -47,11 +48,11 @@ def parse_isc_dhcpd(info):
 
     mode = None
     for line in info:
-        if line[0] == '[general]':
+        if line[0] == "[general]":
             mode = "general"
-        elif line[0] == '[pools]':
+        elif line[0] == "[pools]":
             mode = "pools"
-        elif line[0] == '[leases]':
+        elif line[0] == "[leases]":
             mode = "leases"
 
         elif mode == "general":
@@ -59,7 +60,7 @@ def parse_isc_dhcpd(info):
                 parsed["pids"] = list(map(int, line[1:]))
 
         elif mode == "pools":
-            if 'bootp' in line[0]:
+            if "bootp" in line[0]:
                 line = line[1:]
             start, end = line[0], line[1]
             item = "%s-%s" % (start, end)
@@ -79,8 +80,10 @@ def check_isc_dhcpd(item, params, parsed):
     if len(parsed["pids"]) == 0:
         yield 2, "DHCP Daemon not running"
     elif len(parsed["pids"]) > 1:
-        yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (len(parsed["pids"]), ", ".join(
-            map(str, parsed["pids"])))
+        yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (
+            len(parsed["pids"]),
+            ", ".join(map(str, parsed["pids"])),
+        )
 
     if item not in parsed["pools"]:
         return
@@ -92,16 +95,17 @@ def check_isc_dhcpd(item, params, parsed):
         if lease_dec >= range_from and lease_dec <= range_to:
             num_used += 1
 
-    for check_result in check_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases,
-                                                params):
+    for check_result in check_dhcp_pools_levels(
+        num_leases - num_used, num_used, None, num_leases, params
+    ):
         yield check_result
 
 
 check_info["isc_dhcpd"] = {
-    'parse_function': parse_isc_dhcpd,
-    'inventory_function': inventory_isc_dhcpd,
-    'check_function': check_isc_dhcpd,
-    'service_description': 'DHCP Pool %s',
-    'group': 'win_dhcp_pools',
-    'has_perfdata': True,
+    "parse_function": parse_isc_dhcpd,
+    "inventory_function": inventory_isc_dhcpd,
+    "check_function": check_isc_dhcpd,
+    "service_description": "DHCP Pool %s",
+    "group": "win_dhcp_pools",
+    "has_perfdata": True,
 }

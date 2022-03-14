@@ -1,0 +1,19 @@
+Title: More secure password hashing
+Class: security
+Compatible: compat
+Component: wato
+Date: 1640170313
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+
+Passwords of local users were stored with SHA256-Crypt and 535000 rounds. Best
+practice is bcrypt. Checkmk supports basic-auth and used to support Apache2.2.
+Since bcrypt support was only added to Apache 2.4, SHA256-Crypt was used.
+
+Apache 2.2 is no longer maintained and all supported operating systems come
+with Apache 2.4. Therefore bcrypt is now used. The existing passwords will not
+be modified or invalidated. They can still be read by Checkmk. Newly set
+passwords via Web UI are now hashed with bcrypt.

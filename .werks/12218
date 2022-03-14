@@ -6,7 +6,7 @@ Date: 1614333463
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The options in the "Add" menu of dashboards related in an error, because this features are not available in CRE.
 Also the "Graphs" topic in the main menu section "Customize" was visible, even if empty.

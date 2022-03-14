@@ -4,26 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_cisco_prime_arguments(params, hostname, ipaddress):
+
+def agent_cisco_prime_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     basic_auth = params.get("basicauth")
     return [
         str(elem)  # non-str get ignored silently - so turn all elements into `str`
         for chunk in (
-            ("--hostname", params["hostname"]),
+            ("--hostname", ipaddress or hostname),
             ("-u", "%s:%s" % (basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
-            if basic_auth else (),
-            ("--port", params["port"])  #
-            if "port" in params else (),
-            ("--no-tls")  #
-            if params.get("no-tls") else (),
-            ("--no-cert-check")  #
-            if params.get("no-cert-check") else (),
-            ("--timeout", params["timeout"])  #
-            if "timeout" in params else (),
+            if basic_auth
+            else (),
+            ("--port", params["port"]) if "port" in params else (),  #
+            ("--no-tls",) if params.get("no-tls") else (),  #
+            ("--no-cert-check",) if params.get("no-cert-check") else (),  #
+            ("--timeout", params["timeout"]) if "timeout" in params else (),  #
         )
         for elem in chunk
     ]
 
 
-special_agent_info['cisco_prime'] = agent_cisco_prime_arguments
+special_agent_info["cisco_prime"] = agent_cisco_prime_arguments

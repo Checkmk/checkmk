@@ -1,7 +1,7 @@
 title: FAST LTA Storage Systems: Replication Status and Mode
 agents: snmp
 catalog: hw/storagehw/fastlta
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks if the Replication between Head Units is running on FAST LTA Storage
@@ -10,5 +10,5 @@ description:
  The replication mode (master, slave or standalone) is displayed only.
  It does not trigger a status change of the check.
 
-inventory:
+discovery:
  One service is created on every system (head unit).

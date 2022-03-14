@@ -1,7 +1,7 @@
 title: ALLNET IP Sensoric: Electric Tension Sensors
 agents: allnet_ip_sensoric
 catalog: hw/environment/allnet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks Electric Tension Sensors in ALLNET IP Sensoric devices.
@@ -12,5 +12,5 @@ item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
-inventory:
+discovery:
  One service is created for every electric tension sensor (function = 12).

@@ -1,0 +1,97 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+PIDFILE=$OMD_ROOT/tmp/run/agent-receiver.pid
+PID=$(cat $PIDFILE 2>/dev/null)
+KEY_AND_CERT_FILE=$OMD_ROOT/etc/ssl/agent_receiver_cert.pem
+
+. $OMD_ROOT/etc/omd/site.conf
+if [ "$CONFIG_AGENT_RECEIVER" != on ] ; then
+    exit 5
+fi
+
+case "$1" in
+
+    start)
+        echo -en "Starting agent-receiver..."
+        if kill -0 $PID >/dev/null 2>&1; then
+            echo 'Already running.'
+            exit 0
+        fi
+
+        gunicorn -D -p $PIDFILE  \
+                --error-logfile $OMD_ROOT/var/log/agent-receiver/error.log \
+                --access-logfile $OMD_ROOT/var/log/agent-receiver/access.log \
+                --keyfile "$KEY_AND_CERT_FILE" \
+                --certfile "$KEY_AND_CERT_FILE" \
+                -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
+                -k uvicorn.workers.UvicornWorker agent_receiver.server:main_app
+        if [ $? -eq 0 ]; then
+            echo "OK"
+            exit 0
+        else
+            echo "ERROR"
+            exit 1
+            fi
+            ;;
+
+    stop)
+        echo -n "Stopping agent-receiver..."
+
+        if [ -z "$PID" ] ; then
+            echo 'not running.'
+        elif ! kill -0 "$PID" >/dev/null 2>&1; then
+            echo "not running (PID file orphaned)"
+            rm "$PIDFILE"
+        else
+            echo -n "killing $PID..."
+            if kill "$PID" 2>/dev/null; then
+                # Only wait for pidfile removal when the signal could be sent
+                N=0
+                while [ -e "$PIDFILE" ] && kill -0 "$PID" 2>/dev/null ; do
+                    sleep 0.1
+                    N=$((N + 1))
+                    if [ $((N % 10)) -eq 0 ]; then echo -n . ; fi
+                    if [ $N -gt 600 ] ; then
+                        echo -n "sending SIGKILL..."
+                        kill -9 "$PID"
+                    elif [ $N = 700 ]; then
+                        echo "Failed"
+                        exit 1
+                    fi
+                done
+            else
+                # Remove the stale pidfile to have a clean state after this
+                rm "$PIDFILE"
+            fi
+            echo 'OK'
+        fi
+        exit 0
+        ;;
+
+    restart|reload)
+        $0 stop
+        $0 start
+        ;;
+
+    status)
+        echo -n 'Checking status of agent-receiver...'
+        if [ -z "$PID" ] ; then
+            echo "not running (PID file missing)"
+            exit 1
+        elif ! kill -0 "$PID" ; then
+            echo "not running (PID file orphaned)"
+            exit 1
+        else
+            echo "running"
+            exit 0
+        fi
+        ;;
+    *)
+        echo "Usage: agent-receiver {start|stop|restart|reload|status}"
+        exit 1
+        ;;
+
+esac

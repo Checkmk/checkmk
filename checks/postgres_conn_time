@@ -40,10 +40,10 @@ def check_postgres_conn_time(item, _no_params, parsed):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info['postgres_conn_time'] = {
+check_info["postgres_conn_time"] = {
     "parse_function": parse_postgres_conn_time,
     "inventory_function": inventory_postgres_conn_time,
     "check_function": check_postgres_conn_time,
     "service_description": "PostgreSQL Connection Time %s",
-    "has_perfdata": True
+    "has_perfdata": True,
 }

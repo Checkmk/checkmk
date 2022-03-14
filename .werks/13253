@@ -1,0 +1,16 @@
+Title: if_brocade_lancom: move mapping information away from interface description
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636540807
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1 
+
+Port mapping information provided by Lancom had been injected into the interface description
+which optionally can be used in the service name leading to altering service discovery results.
+
+With this change the mapping information becomes part of the service output.
+A re-discovery is necessary for affected devices in case the mapping information was part
+of the service name.

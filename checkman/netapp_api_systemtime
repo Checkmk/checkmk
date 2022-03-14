@@ -1,7 +1,7 @@
 title: NetApp Filer: Systemtime
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the time difference between system and agent time for a NetApp filer.
@@ -10,5 +10,5 @@ description:
 item:
  The node name.
 
-inventory:
+discovery:
  One service is created for each node.

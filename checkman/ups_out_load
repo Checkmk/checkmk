@@ -1,14 +1,14 @@
 title: Generic UPS Device: Out Load
 agents: snmp
 catalog: hw/power/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- OUT load
+ This check monitors the OUT Load on a UPS device.
+ Upper load levels for {WARN} and {CRIT} can be parametrized.
 
 item:
  ID of the phase
 
-inventory:
+discovery:
  One service is created for each phase.
-

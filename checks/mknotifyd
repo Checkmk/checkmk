@@ -5,51 +5,51 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from agent:
-#<<<mknotifyd:sep(0)>>>
-#1571151364
-#[heute]
-#Version:         2019.10.14
-#Updated:         1571151346 (2019-10-15 16:55:46)
-#Started:         1571143926 (2019-10-15 14:52:06, 7420 sec ago)
-#Configuration:   1571143926 (2019-10-15 14:52:06, 7420 sec ago)
-#Listening FD:    5
+# <<<mknotifyd:sep(0)>>>
+# 1571151364
+# [heute]
+# Version:         2019.10.14
+# Updated:         1571151346 (2019-10-15 16:55:46)
+# Started:         1571143926 (2019-10-15 14:52:06, 7420 sec ago)
+# Configuration:   1571143926 (2019-10-15 14:52:06, 7420 sec ago)
+# Listening FD:    5
 #
-#Spool:           New
-#Count:           0
-#Oldest:
-#Youngest:
+# Spool:           New
+# Count:           0
+# Oldest:
+# Youngest:
 #
-#Spool:           Deferred
-#Count:           0
-#Oldest:
-#Youngest:
+# Spool:           Deferred
+# Count:           0
+# Oldest:
+# Youngest:
 #
-#Spool:           Corrupted
-#Count:           0
-#Oldest:
-#Youngest:
+# Spool:           Corrupted
+# Count:           0
+# Oldest:
+# Youngest:
 #
-#Queue:           mail
-#Waiting:         0
-#Processing:      0
+# Queue:           mail
+# Waiting:         0
+# Processing:      0
 #
-#Queue:           None
-#Waiting:         0
-#Processing:      0
+# Queue:           None
+# Waiting:         0
+# Processing:      0
 #
-#Connection:               127.0.0.1:49850
-#Type:                     incoming
-#State:                    established
-#Since:                    1571143941 (2019-10-15 14:52:21, 7405 sec ago)
-#Notifications Sent:       41
-#Notifications Received:   41
-#Pending Acknowledgements:
-#Socket FD:                6
-#HB. Interval:             10 sec
-#LastIncomingData:         1571149829 (2019-10-15 16:30:29, 1517 sec ago)
-#LastHeartbeat:            1571151344 (2019-10-15 16:55:44, 2 sec ago)
-#InputBuffer:              0 Bytes
-#OutputBuffer:             0 Bytes
+# Connection:               127.0.0.1:49850
+# Type:                     incoming
+# State:                    established
+# Since:                    1571143941 (2019-10-15 14:52:21, 7405 sec ago)
+# Notifications Sent:       41
+# Notifications Received:   41
+# Pending Acknowledgements:
+# Socket FD:                6
+# HB. Interval:             10 sec
+# LastIncomingData:         1571149829 (2019-10-15 16:30:29, 1517 sec ago)
+# LastHeartbeat:            1571151344 (2019-10-15 16:55:44, 2 sec ago)
+# InputBuffer:              0 Bytes
+# OutputBuffer:             0 Bytes
 
 
 def parse_mknotifyd(info):
@@ -60,12 +60,12 @@ def parse_mknotifyd(info):
         timestamp, data = time.time(), info
 
     parsed = {
-        'sites': {},
-        'timestamp': timestamp,
+        "sites": {},
+        "timestamp": timestamp,
     }
 
     for line in data:
-        if line[0].startswith('['):
+        if line[0].startswith("["):
             site = line[0][1:-1]
             site_entry = {
                 "spools": {},
@@ -76,6 +76,9 @@ def parse_mknotifyd(info):
             parsed["sites"][site] = site_entry
         elif ":" in line[0]:
             varname, value = line[0].split(":", 1)
+            if varname in ("Site", "Encryption"):
+                # We do not use this data yet...
+                continue
             value = value.strip()
 
             if varname == "Spool":
@@ -99,14 +102,19 @@ def parse_mknotifyd(info):
                         value = int(value.split()[0])
                     except ValueError:
                         pass
-                elif value and value != "-" and varname not in [
+                elif (
+                    value
+                    and value != "-"
+                    and varname
+                    not in [
                         "Type",
                         "State",
                         "Version",
                         "Status Message",
                         "Pending Acknowledgements",
                         "Connect Time",
-                ]:
+                    ]
+                ):
                     value = int(value.split()[0])
                 elif varname == "Connect Time":
                     value = float(value.split()[0])
@@ -171,36 +179,44 @@ def check_mknotifyd(item, _no_params, parsed):
     status_age = parsed["timestamp"] - stat["Updated"]
     if status_age > 90:
         state = 2
-        infotext = "Status last updated %s ago, spooler seems crashed or busy" % get_age_human_readable(
-            status_age)
+        infotext = (
+            "Status last updated %s ago, spooler seems crashed or busy"
+            % get_age_human_readable(status_age)
+        )
     else:
         state = 0
         infotext = "Spooler running"
-    yield state, infotext, [('last_updated', status_age),
-                            ('new_files', stat['spools']['New']['Count'])]
+    yield state, infotext, [
+        ("last_updated", status_age),
+        ("new_files", stat["spools"]["New"]["Count"]),
+    ]
 
     # Are there any corrupted files
     corrupted = stat["spools"]["Corrupted"]
     if corrupted["Count"]:
         age = parsed["timestamp"] - corrupted["Youngest"]
-        perf_data = [('corrupted_files', corrupted["Count"])]
-        yield 1, "%d corrupted files: youngest %s ago" % (corrupted["Count"],
-                                                          get_age_human_readable(age)), perf_data
+        perf_data = [("corrupted_files", corrupted["Count"])]
+        yield 1, "%d corrupted files: youngest %s ago" % (
+            corrupted["Count"],
+            get_age_human_readable(age),
+        ), perf_data
 
     # Are there deferred files that are too old?
     deferred = stat["spools"]["Deferred"]
     if deferred["Count"]:
         age = parsed["timestamp"] - deferred["Oldest"]
         count = deferred["Count"]
-        perf_data = [('deferred_age', age), ('deferred_files', deferred["Count"])]
+        perf_data = [("deferred_age", age), ("deferred_files", deferred["Count"])]
         if age > 5:
             state = 1
         elif age > 600:
             state = 2
         else:
             state = 0
-        yield state, "%d deferred files: oldest %s ago" % (count,
-                                                           get_age_human_readable(age)), perf_data
+        yield state, "%d deferred files: oldest %s ago" % (
+            count,
+            get_age_human_readable(age),
+        ), perf_data
 
     return
 
@@ -230,7 +246,7 @@ def inventory_mknotifyd_connection(parsed):
 
 
 def check_mknotifyd_connection(item, _no_params, parsed):
-    site_name, connection_name = item.split('-', 1)
+    site_name, connection_name = item.split("-", 1)
 
     if site_name not in parsed["sites"]:
         raise MKCounterWrapped("No status information about spooler available")

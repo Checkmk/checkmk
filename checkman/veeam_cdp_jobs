@@ -1,0 +1,28 @@
+title: Veeam: CDP Jobs
+agents: windows
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status and the time since last execution of the
+ Continuous Data Protection (CDP) jobs run by Veeam.
+
+ In order to carry out the check, the Veeam agent plugin
+ needs to be installed on the backup server. See special instructions in the
+ comment section of the two Veeam agent plugin scripts on how to install
+ the scripts.
+
+ - This service is {OK} if the result of the job is {Running}
+
+ - It goes {CRIT} if the result of the backup is {Failed} or {Stopped}.
+
+ - It goes {UNKNOWN} in all other cases.
+
+ You can also configure upper thresholds for the age of the last CDP run.
+ The defaults are {WARN}: 1 day 6 hours and {CRIT}: 2 days.
+
+discovery:
+ One service is created for each CDP job created by the Veeam tool.
+
+item:
+ The name of the CDP job.

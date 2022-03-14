@@ -1,7 +1,7 @@
 title: Traffic and Status of Network Interfaces
 agents: snmp, hpux, solaris, openvms, agent_ucs_bladecenter, aix, hp_msa
 catalog: hw/network/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, packet
@@ -28,7 +28,7 @@ item:
  description {ifDescr} and its alias, which is the same as the description for this
  check.
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6, 32,

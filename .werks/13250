@@ -1,0 +1,17 @@
+Title: LDAP: Fix attribute sync for roles and groups if OpenLDAP is used
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1632902686
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a LDAP connection used OpenLDAP and the attribute sync plugins "Contactgroup
+Membership" and "Roles" were configured, the users did not get the roles and
+groups assigned that they are member of.
+
+These users should get their correct roles and groups with the next sync after
+upgrade, so please be aware that there could be changes.

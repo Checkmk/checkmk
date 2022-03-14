@@ -1,7 +1,7 @@
 title: Docker: Container Health
 agents: linux
 catalog: containerization/docker
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the health status of docker containers, as reported via
@@ -15,6 +15,6 @@ description:
  If you are configuring the plugin via the configuration file, make sure you do not skip the
  section "docker_container_status" (the default setting is fine).
 
-inventory:
+discovery:
  One service is created for each active container (running or exited or restart policy 'always')
  that has a health test configured.

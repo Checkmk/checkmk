@@ -5,33 +5,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    TextAscii,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _item_spec_acme_certificates():
-    return TextAscii(
+    return TextInput(
         title=_("Name of certificate"),
         allow_empty=False,
     )
 
 
 def _parameter_valuespec_acme_certificates():
-    return Dictionary(elements=[("expire_lower",
-                                 Tuple(title=_("Lower age levels for expire date"),
-                                       elements=[
-                                           Age(title=_("Warning if below"), default_value=604800),
-                                           Age(title=_("Critical if below"), default_value=2592000),
-                                       ]))],)
+    return Dictionary(
+        elements=[
+            (
+                "expire_lower",
+                Tuple(
+                    title=_("Lower age levels for expire date"),
+                    elements=[
+                        Age(title=_("Warning if below"), default_value=604800),
+                        Age(title=_("Critical if below"), default_value=2592000),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -42,4 +45,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_acme_certificates,
         title=lambda: _("ACME certificates"),
-    ))
+    )
+)

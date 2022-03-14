@@ -1,0 +1,12 @@
+Title: BI: fixed race condition leading to empty aggregation pages
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1621331504
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Due to a data write/read race condition, there was a small risk that the aggregation page would not display any aggregates at all.

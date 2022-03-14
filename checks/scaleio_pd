@@ -9,18 +9,21 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#<<<scaleio_pd>>>
-#PROTECTION_DOMAIN 91ebcf4500000000:
+
+# <<<scaleio_pd>>>
+# PROTECTION_DOMAIN 91ebcf4500000000:
 #        ID                                                 91ebcf4500000000
 #        NAME                                               domain01
 #        STATE                                              PROTECTION_DOMAIN_ACTIVE
@@ -47,13 +50,13 @@ def check_scaleio_pd(item, params, parsed):
     yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info['scaleio_pd'] = {
-    'parse_function': lambda info: parse_scaleio(info, "PROTECTION_DOMAIN"),
-    'inventory_function': inventory_scaleio_pd,
-    'check_function': check_scaleio_pd,
-    'service_description': 'ScaleIO PD capacity %s',
-    'has_perfdata': True,
-    'group': "filesystem",
+check_info["scaleio_pd"] = {
+    "parse_function": lambda info: parse_scaleio(info, "PROTECTION_DOMAIN"),
+    "inventory_function": inventory_scaleio_pd,
+    "check_function": check_scaleio_pd,
+    "service_description": "ScaleIO PD capacity %s",
+    "has_perfdata": True,
+    "group": "filesystem",
 }
 
 
@@ -74,8 +77,8 @@ def check_scaleio_pd_status(item, _no_params, parsed):
     yield state, "Name: %s, State: %s" % (name, status)
 
 
-check_info['scaleio_pd.status'] = {
-    'inventory_function': inventory_scaleio_pd_status,
-    'check_function': check_scaleio_pd_status,
-    'service_description': 'ScaleIO PD status %s',
+check_info["scaleio_pd.status"] = {
+    "inventory_function": inventory_scaleio_pd_status,
+    "check_function": check_scaleio_pd_status,
+    "service_description": "ScaleIO PD status %s",
 }

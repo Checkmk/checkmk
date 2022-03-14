@@ -10,5 +10,5 @@ from cmk.utils.type_defs import EvalableFloat
 
 
 def test_evalable_float():
-    inf = EvalableFloat('inf')
-    assert literal_eval("%r" % inf) == float('inf')
+    inf = EvalableFloat("inf")
+    assert literal_eval("%r" % inf) == float("inf")

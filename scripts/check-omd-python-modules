@@ -21,9 +21,43 @@ PYTHON3_MODULES=$REPO_PATH/omd/packages/python3-modules
 
 STATUS=0
 
-pushd $PYTHON3_MODULES > /dev/null
-awk '/^ *PYTHON3_MODULES_LIST *\+=/ { if (system("test -f src/" $3)) { missing = 1; print $3 " missing in python3-modules/src directory" } } END { if (missing) { exit 1 }}' python3-modules.make || STATUS=$?
+CHECK_MISSING=$(
+    cat - <<'EOF'
+BEGIN {
+    changed = 0
+    cache_incremented = 0
+
+    diff_cmd = "git diff --cached"
+    while ((diff_cmd |& getline line) > 0) {
+        if (match(line, /^\+PYTHON3_MODULES_BUILD_ID/)){
+            cache_incremented = 1
+        }
+    }
+    close(diff_cmd)
+}
+/^ *PYTHON3_MODULES_LIST *\+=/ {
+    changed = 1
+    if (system("test -f src/" $3)) {
+        missing = 1
+        print $3 " missing in python3-modules/src directory" > "/dev/stderr"
+    }
+}
+END {
+    if (changed && !cache_incremented) {
+        print "You must increment PYTHON3_MODULES_BUILD_ID in python3-modules.make for change to take effect." > "/dev/stderr"
+        exit 1
+    }
+    if (missing) {
+        exit 1
+    }
+}
+EOF
+)
+
+pushd "$PYTHON3_MODULES" >/dev/null || exit 1
+awk "$CHECK_MISSING" python3-modules.make || STATUS=$?
+# shellcheck disable=SC2010 # FIXME: Don't use ls | grep. Use a glob or a for loop with a condition to allow non-alphanumeric filenames
 ls -1 src | grep -E -v "download|README" | xargs -n 1 -i{} awk '/^ *PYTHON3_MODULES_LIST *\+= *{}/ { found = 1 } END { if (!found) { print "{} not in python3-modules.make"; exit 1 } }' python3-modules.make || STATUS=$?
-popd > /dev/null
+popd >/dev/null || exit 1
 
 exit $STATUS

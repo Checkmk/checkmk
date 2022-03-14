@@ -14,42 +14,42 @@ from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildca
 @get_parsed_item_data
 def check_couchbase_nodes_items(_item, params, data):
 
-    active = data.get('curr_items')
+    active = data.get("curr_items")
     if active is not None:
         yield check_levels(
             active,
-            'items_active',
-            params.get('curr_items'),
+            "items_active",
+            params.get("curr_items"),
             human_readable_func=str,
             infoname="Items in active vBuckets",
         )
 
-    non_res = data.get('vb_active_num_non_resident')
+    non_res = data.get("vb_active_num_non_resident")
     if non_res is not None:
         yield check_levels(
             non_res,
-            'items_non_res',
-            params.get('non_residents'),
+            "items_non_res",
+            params.get("non_residents"),
             human_readable_func=str,
-            infoname='Non-resident items',
+            infoname="Non-resident items",
         )
 
-    total = data.get('curr_items_tot')
+    total = data.get("curr_items_tot")
     if total is not None:
         yield check_levels(
             total,
-            'items',
-            params.get('curr_items_tot'),
+            "items",
+            params.get("curr_items_tot"),
             human_readable_func=str,
-            infoname='Total items in vBuckets',
+            infoname="Total items in vBuckets",
         )
 
 
-check_info['couchbase_nodes_items'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda _k, v: 'curr_items' in v),
-    'check_function': check_couchbase_nodes_items,
-    'service_description': 'Couchbase %s vBucket items',
-    'group': 'couchbase_items',
-    'has_perfdata': True
+check_info["couchbase_nodes_items"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda _k, v: "curr_items" in v),
+    "check_function": check_couchbase_nodes_items,
+    "service_description": "Couchbase %s vBucket items",
+    "group": "couchbase_items",
+    "has_perfdata": True,
 }

@@ -63,51 +63,50 @@ B. Update all or one selected test to match the current status quo
 
 """
 import ast
-from importlib import import_module
 import os
-from pathlib import Path
-import pytest
 import sys
 import time
+from importlib import import_module
+from pathlib import Path
 from typing import Any, Iterable
 
 import yapf  # type: ignore[import]
 
-import generictests.run
+from .run import run
 
 YAPF_STYLE = {
-    'dedent_closing_brackets': 1,
-    'split_before_closing_bracket': 1,
+    "dedent_closing_brackets": 1,
+    "split_before_closing_bracket": 1,
 }
 
 
 class WritableDataset:
     def __init__(self, init_dict):
         self.writelist = (
-            'checkname',
-            'freeze_time',
-            'info',
-            'parsed',
-            'discovery',
-            'checks',
-            'extra_sections',
-            'mock_host_conf',
-            'mock_host_conf_merged',
-            'mock_item_state',
+            "checkname",
+            "freeze_time",
+            "info",
+            "parsed",
+            "discovery",
+            "checks",
+            "extra_sections",
+            "mock_host_conf",
+            "mock_host_conf_merged",
+            "mock_item_state",
         )
-        self.checkname = init_dict.get('checkname', None)
-        self.info = init_dict.get('info', None)
-        freeze_time = init_dict.get('freeze_time', None)
+        self.checkname = init_dict.get("checkname", None)
+        self.info = init_dict.get("info", None)
+        freeze_time = init_dict.get("freeze_time", None)
         if freeze_time == "":
-            freeze_time = time.strftime(u"%Y-%m-%d %H:%M:%S")
+            freeze_time = time.strftime("%Y-%m-%d %H:%M:%S")
         self.freeze_time = freeze_time
-        self.parsed = init_dict.get('parsed', None)
-        self.discovery = init_dict.get('discovery', {})
-        self.checks = init_dict.get('checks', {})
-        self.extra_sections = init_dict.get('extra_sections', {})
-        self.mock_host_conf = init_dict.get('mock_host_conf', {})
-        self.mock_host_conf_merged = init_dict.get('mock_host_conf_merged', {})
-        self.mock_item_state = init_dict.get('mock_item_state', {})
+        self.parsed = init_dict.get("parsed", None)
+        self.discovery = init_dict.get("discovery", {})
+        self.checks = init_dict.get("checks", {})
+        self.extra_sections = init_dict.get("extra_sections", {})
+        self.mock_host_conf = init_dict.get("mock_host_conf", {})
+        self.mock_host_conf_merged = init_dict.get("mock_host_conf_merged", {})
+        self.mock_item_state = init_dict.get("mock_item_state", {})
 
     def update_check_result(self, subcheck, new_entry):
         subcheck_data = self.checks.setdefault(subcheck, [])[:]
@@ -124,7 +123,7 @@ class WritableDataset:
             value = getattr(self, attr)
             if not value:
                 continue
-            content.append(u"%s = %r" % (attr, value))
+            content.append("%s = %r" % (attr, value))
             imports |= self.get_imports(value)
 
         if not content:
@@ -133,11 +132,11 @@ class WritableDataset:
         content = list(sorted(imports)) + content
 
         yapfed_content, __ = yapf.yapflib.yapf_api.FormatCode(
-            '\n\n'.join(content),
+            "\n\n".join(content),
             style_config=YAPF_STYLE,
         )
 
-        with Path(filename).open('w') as handle:
+        with Path(filename).open("w") as handle:
             # Disabling yapf: yapf parses comment blocks and disables the next
             # lines if and only if the FIRST line of that block contains
             #   '# yapf: disable'
@@ -149,14 +148,14 @@ class WritableDataset:
             #   ''
             #   '# yapf: disable'
             comments = [
-                u'#!/usr/bin/env python3\n',
-                u'# -*- encoding: utf-8 -*-\n',
-                u'# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2\n',
-                u'# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n',
-                u'# conditions defined in the file COPYING, which is part of this source code package.\n',
-                u'\n',
-                u'# yapf: disable\n',
-                u'# type: ignore\n',
+                "#!/usr/bin/env python3\n",
+                "# -*- encoding: utf-8 -*-\n",
+                "# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2\n",
+                "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n",
+                "# conditions defined in the file COPYING, which is part of this source code package.\n",
+                "\n",
+                "# yapf: disable\n",
+                "# type: ignore\n",
             ]
             handle.writelines(comments)
             handle.write(yapfed_content)
@@ -173,7 +172,7 @@ class WritableDataset:
         elif isinstance(value, (tuple, list)):
             iterate = value
         else:
-            return {u"from %s import %s" % (value.__module__, value.__class__.__name__)}
+            return {"from %s import %s" % (value.__module__, value.__class__.__name__)}
 
         imports = set()
         for val in iterate:
@@ -187,11 +186,12 @@ def _get_out_filename(datasetfile, inplace):
 
     basename = os.path.basename(datasetfile)
     dirname = os.path.dirname(os.path.abspath(__file__))
-    out_name = os.path.join(dirname, 'datasets', basename)
+    out_name = os.path.join(dirname, "datasets", basename)
     if not os.path.exists(out_name):
         return out_name
 
-    return out_name.replace('.py', '_regression.py')
+    return out_name.replace(".py", "_regression.py")
+
 
 def test_main(fix_plugin_legacy, datasetfile, inplace):
     """Script to create test datasets.
@@ -213,6 +213,6 @@ def test_main(fix_plugin_legacy, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(fix_plugin_legacy.check_info, regression, write=True)
+    run(fix_plugin_legacy.check_info, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))

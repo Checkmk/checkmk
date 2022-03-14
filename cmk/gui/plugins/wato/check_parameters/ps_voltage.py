@@ -5,25 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Float,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Float, Tuple
 
 
 def _parameter_valuespec_ps_voltage():
-    return Tuple(elements=[
-        Float(title=_("Warning below"), unit=u"V"),
-        Float(title=_("Critical below"), unit=u"V"),
-        Float(title=_("Warning at or above"), unit=u"V"),
-        Float(title=_("Critical at or above"), unit=u"V"),
-    ],)
+    return Tuple(
+        elements=[
+            Float(title=_("Warning below"), unit="V"),
+            Float(title=_("Critical below"), unit="V"),
+            Float(title=_("Warning at or above"), unit="V"),
+            Float(title=_("Critical at or above"), unit="V"),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -32,4 +30,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_ps_voltage,
         title=lambda: _("Output Voltage of Power Supplies"),
-    ))
+    )
+)

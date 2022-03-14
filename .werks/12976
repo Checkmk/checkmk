@@ -1,0 +1,15 @@
+Title: Fix error using link of inherited attributes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624979537
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If a host or folder inherits an attribute from, e.g the parent folder, the
+attribute shows the note "(Inherited from my_folder)" with a link to the
+related folder.
+
+This link resulted in an error "This module has not yet been implemented.".

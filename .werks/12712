@@ -1,0 +1,15 @@
+Title: mssql_counters: ValueError() raised on unknown timestamp formats
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619431241
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Non-standard timestamp formats unknown to the mssql_counters section parser might lead to
+ValueError() being raised.
+This change adds the possibilities to write "a.m."/"p.m." instead of "AM"/"PM", write times with
+periods rather than colons and have space padded dates (" 1. 1.2021".

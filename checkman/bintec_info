@@ -1,7 +1,7 @@
 title: Bintec Routers: General Information
 agents: snmp
 catalog: hw/network/bintec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check retrieves the {software version} and the {serial number} of bintec
@@ -12,5 +12,5 @@ description:
 
  The check always reports an OK state.
 
-inventory:
+discovery:
  One service is created for each SNMP host.

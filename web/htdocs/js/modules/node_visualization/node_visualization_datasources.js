@@ -180,8 +180,8 @@ export class TopologyDatasource extends AbstractDatasource {
         super("Topology");
     }
 
-    fetch_hosts(topology_config) {
-        let fetch_params = "topology_config=" + JSON.stringify(topology_config);
+    fetch_hosts(topology_settings) {
+        let fetch_params = "topology_settings=" + JSON.stringify(topology_settings);
         this.fetch("ajax_fetch_topology.py", fetch_params);
     }
 }

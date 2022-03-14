@@ -1,0 +1,17 @@
+Title: contact group host attribute in REST API
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1631712328
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, the contact_group attribute could not be set, because it
+lead to an error. This has been fixed and it can now be set. The REST
+API documentation has been updated as well.
+
+Please note that, if you're using a statically typed language and a
+generated API client, you may have to regenerate your API client library.

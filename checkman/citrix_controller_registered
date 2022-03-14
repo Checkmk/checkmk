@@ -1,7 +1,7 @@
 title: Citrix XenApp Controller: Desktop Registered
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs the number of desktops currently registered to a
@@ -10,6 +10,5 @@ description:
  with Citrix Admin permissions for this to work. This check is purely
  informative and always OK.
 
-inventory:
+discovery:
  One service is created for each controller.
-

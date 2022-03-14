@@ -9,11 +9,14 @@ import subprocess
 
 import cmk.utils.version as cmk_version
 
+from cmk.gui.globals import html  # pylint: disable=cmk-module-layer-violation
+
 # Does not detect the module hierarchy correctly. Imports are fine.
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.globals import html  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.sidebar import (  # pylint: disable=cmk-module-layer-violation
-    SidebarSnapin, snapin_registry,
+
+from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    SidebarSnapin,
+    snapin_registry,
 )
 
 
@@ -42,24 +45,28 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         # The cma_nav-Module is a Python 2.7 module that is already installed by the CMA OS.  For
         # the future we should change this to some structured file format, but for the moment we
         # have to deal with existing firmwares. Use some py27 wrapper to produce the needed output.
-        p = subprocess.Popen(["/usr/bin/python2.7"],
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             encoding="utf-8",
-                             shell=False,
-                             close_fds=True)
-        stdout, stderr = p.communicate("\n".join([
-            'import imp',
-            'cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")',
-            'print(cma_nav.modules())',
-        ]))
+        completed_process = subprocess.run(
+            ["/usr/bin/python2.7"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            shell=False,
+            close_fds=True,
+            input="\n".join(
+                [
+                    "import imp",
+                    'cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")',
+                    "print(cma_nav.modules())",
+                ]
+            ),
+            check=False,
+        )
 
-        if stderr:
-            html.show_error(_("Failed to render navigation: %s") % stderr)
+        if completed_process.stderr:
+            html.show_error(_("Failed to render navigation: %s") % completed_process.stderr)
             return
 
-        nav_modules = ast.literal_eval(stdout)
+        nav_modules = ast.literal_eval(completed_process.stdout)
 
         base_url = "/webconf/"
 
@@ -73,6 +80,6 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
     def _iconlink(self, text, url, icon):
         html.open_a(class_=["iconlink", "link"], target="main", href=url)
         html.icon("/webconf/images/icon_%s.png" % icon, cssclass="inline")
-        html.write(text)
+        html.write_text(text)
         html.close_a()
         html.br()

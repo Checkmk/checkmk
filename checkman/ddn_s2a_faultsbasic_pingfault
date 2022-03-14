@@ -1,11 +1,11 @@
 title: DDN S2A: Ping Fault
 agents: ddn_s2a
 catalog: hw/storagehw/ddn_s2a
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the ping fault status, where a detected
  ping fault is being treated as WARN.
 
-inventory:
+discovery:
  One service is created for each device.

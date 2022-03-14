@@ -5,533 +5,755 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Dict
-import pytest  # type: ignore[import]
-from testlib import get_value_store_fixture
+from typing import Dict, List
+
+import pytest
+
+from cmk.base.plugins.agent_based import lnx_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
     IgnoreResultsError,
     Result,
     Service,
-    State as state,
-    type_defs,
 )
-from cmk.base.plugins.agent_based import lnx_if
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils import interfaces
 
-value_store_fixture = get_value_store_fixture(interfaces)
+from .utils_inventory import sort_inventory_result
 
 
-@pytest.mark.parametrize('string_table, result', [
-    (
-        [
-            [u'[start_iplink]'],
+@pytest.mark.parametrize(
+    "string_table, result",
+    [
+        (
             [
-                u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST>', u'mtu', u'1500', u'qdisc', u'fq_codel',
-                u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen', u'1000'
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                ["[end_iplink]"],
+                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [u'[end_iplink]'],
-            [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
-        ],
-        [
-            '1', 'wlp3s0', 'wlp3s0', '6', 0, '2', 130923553, 217262, 16078, 0, 0, 0, 23586281,
-            142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa'
-        ],
-    ),
-    (
-        [
-            [u'[start_iplink]'],
             [
-                u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP>', u'mtu', u'1500', u'qdisc',
-                u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
-                u'1000'
+                "1",
+                "wlp3s0",
+                "wlp3s0",
+                "6",
+                0,
+                "2",
+                130923553,
+                217262,
+                16078,
+                0,
+                0,
+                0,
+                23586281,
+                142684,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "\xaa\xaa\xaa\xaa\xaa\xaa",
             ],
-            [u'link/ether', u'BB:BB:BB:BB:BB:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [u'[end_iplink]'],
-            [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
-        ],
-        [
-            '1', 'wlp3s0', 'wlp3s0', '6', 0, '2', 130923553, 217262, 16078, 0, 0, 0, 23586281,
-            142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
-        ],
-    ),
-    (
-        [
-            [u'[start_iplink]'],
+        ),
+        (
             [
-                u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
-                u'1000'
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST,UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "BB:BB:BB:BB:BB:BB", "brd", "BB:BB:BB:BB:BB:BB"],
+                ["[end_iplink]"],
+                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
-            [u'link/ether', u'BB:BB:BB:BB:BB:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [u'[end_iplink]'],
-            [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
-        ],
-        [
-            '1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0, 0, 0, 23586281,
-            142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
-        ],
-    ),
-])
+            [
+                "1",
+                "wlp3s0",
+                "wlp3s0",
+                "6",
+                0,
+                "2",
+                130923553,
+                217262,
+                16078,
+                0,
+                0,
+                0,
+                23586281,
+                142684,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "\xbb\xbb\xbb\xbb\xbb\xbb",
+            ],
+        ),
+        (
+            [
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "BB:BB:BB:BB:BB:BB", "brd", "BB:BB:BB:BB:BB:BB"],
+                ["[end_iplink]"],
+                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+            ],
+            [
+                "1",
+                "wlp3s0",
+                "wlp3s0",
+                "6",
+                0,
+                "1",
+                130923553,
+                217262,
+                16078,
+                0,
+                0,
+                0,
+                23586281,
+                142684,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "\xbb\xbb\xbb\xbb\xbb\xbb",
+            ],
+        ),
+    ],
+)
 def test_parse_lnx_if(string_table, result):
     assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.Interface(*result)
 
 
-INTERFACE = interfaces.Interface('1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0,
-                                 0, 0, 23586281, 142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa')
+INTERFACE = interfaces.Interface(
+    "1",
+    "wlp3s0",
+    "wlp3s0",
+    "6",
+    0,
+    "1",
+    130923553,
+    217262,
+    16078,
+    0,
+    0,
+    0,
+    23586281,
+    142684,
+    0,
+    0,
+    0,
+    0,
+    0,
+    "\xaa\xaa\xaa\xaa\xaa\xaa",
+)
 
 PARAMS = {
-    'errors': {
-        'both': ('abs', (10, 20))
-    },
-    'speed': 10000000,
-    'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
-    'state': ['1'],
+    "errors": {"both": ("abs", (10, 20))},
+    "speed": 10000000,
+    "traffic": [("both", ("upper", ("perc", (5.0, 20.0))))],
+    "state": ["1"],
 }
 
 
-def test_check_lnx_if(monkeypatch, value_store):
+def test_check_lnx_if(monkeypatch):
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
-    monkeypatch.setattr('time.time', lambda: 0)
+    monkeypatch.setattr("time.time", lambda: 0)
     with pytest.raises(IgnoreResultsError):
-        list(lnx_if.check_lnx_if(
+        list(
+            lnx_if.check_lnx_if(
+                INTERFACE.index,
+                PARAMS,
+                section,
+            )
+        )
+    monkeypatch.setattr("time.time", lambda: 1)
+    result_lnx_if = list(
+        lnx_if.check_lnx_if(
             INTERFACE.index,
             PARAMS,
             section,
-        ))
-    monkeypatch.setattr('time.time', lambda: 1)
-    result_lnx_if = list(lnx_if.check_lnx_if(
-        INTERFACE.index,
-        PARAMS,
-        section,
-    ))
-    monkeypatch.setattr('time.time', lambda: 2)
+        )
+    )
+    monkeypatch.setattr("time.time", lambda: 2)
     result_interfaces = list(
         interfaces.check_multiple_interfaces(
             INTERFACE.index,
             PARAMS,
             section_if,
-        ))
+        )
+    )
     assert result_lnx_if == result_interfaces
 
 
-def test_cluster_check_lnx_if(monkeypatch, value_store):
+def test_cluster_check_lnx_if(monkeypatch):
     section: Dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
         iface = copy.copy(INTERFACE)
-        iface.node = 'node%s' % i
+        iface.node = "node%s" % i
         ifaces_node = [iface] * (i + 1)
         section[iface.node] = ifaces_node, {}
         ifaces += ifaces_node
-    monkeypatch.setattr('time.time', lambda: 0)
+    monkeypatch.setattr("time.time", lambda: 0)
     with pytest.raises(IgnoreResultsError):
-        list(lnx_if.cluster_check_lnx_if(
+        list(
+            lnx_if.cluster_check_lnx_if(
+                INTERFACE.index,
+                PARAMS,
+                section,
+            )
+        )
+    monkeypatch.setattr("time.time", lambda: 1)
+    result_lnx_if = list(
+        lnx_if.cluster_check_lnx_if(
             INTERFACE.index,
             PARAMS,
             section,
-        ))
-    monkeypatch.setattr('time.time', lambda: 1)
-    result_lnx_if = list(lnx_if.cluster_check_lnx_if(
-        INTERFACE.index,
-        PARAMS,
-        section,
-    ))
-    monkeypatch.setattr('time.time', lambda: 2)
-    result_interfaces = list(interfaces.check_multiple_interfaces(
-        INTERFACE.index,
-        PARAMS,
-        ifaces,
-    ))
+        )
+    )
+    monkeypatch.setattr("time.time", lambda: 2)
+    result_interfaces = list(
+        interfaces.check_multiple_interfaces(
+            INTERFACE.index,
+            PARAMS,
+            ifaces,
+        )
+    )
     assert result_lnx_if == result_interfaces
 
 
-@pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
-    (
-        [
-            [u'[start_iplink]'],
+@pytest.mark.parametrize(
+    "string_table, discovery_results, items_params_results",
+    [
+        (
             [
-                u'1:', u'lo:', u'<LOOPBACK,UP,LOWER_UP>', u'mtu', u'65536', u'qdisc', u'noqueue',
-                u'state', u'UNKNOWN', u'mode', u'DEFAULT', u'group', u'default', u'qlen', u'1000'
-            ],
-            [u'link/loopback', u'00:00:00:00:00:00', u'brd', u'00:00:00:00:00:00'],
-            [
-                u'2:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
-                u'1000'
-            ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [
-                u'3:', u'docker0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'noqueue', u'state', u'UP', u'mode', u'DEFAULT', u'group', u'default'
-            ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [
-                u'5:', u'veth6a06585@if4:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500',
-                u'qdisc', u'noqueue', u'master', u'docker0', u'state', u'UP', u'mode', u'DEFAULT',
-                u'group', u'default'
-            ],
-            [
-                u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB', u'link-netnsid',
-                u'0'
-            ],
-            [u'[end_iplink]'],
-            [
-                u'lo',
-                u' 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0'
-            ],
-            [
-                u'wlp3s0',
-                u' 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0'
-            ],
-            [
-                u'docker0',
-                u'       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'
-            ],
-            [
-                u'veth6a06585',
-                u'       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0'
-            ],
-        ],
-        [
-            Service(item='1', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-            Service(item='4', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-        ],
-        [
-            (
-                '1',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
+                ["[start_iplink]"],
                 [
-                    Result(state=state.OK, summary='[docker0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "1:",
+                    "lo:",
+                    "<LOOPBACK,UP,LOWER_UP>",
+                    "mtu",
+                    "65536",
+                    "qdisc",
+                    "noqueue",
+                    "state",
+                    "UNKNOWN",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
                 ],
-            ),
-            (
-                '4',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
+                ["link/loopback", "00:00:00:00:00:00", "brd", "00:00:00:00:00:00"],
                 [
-                    Result(state=state.OK, summary='[wlp3s0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:BB'),
-                    Result(state=state.OK, summary='Speed: unknown')
+                    "2:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
                 ],
-            ),
-        ],
-    ),
-    (
-        [
-            [u'[start_iplink]'],
-            [
-                u'1:', u'lo:', u'<LOOPBACK,UP,LOWER_UP>', u'mtu', u'65536', u'qdisc', u'noqueue',
-                u'state', u'UNKNOWN', u'mode', u'DEFAULT', u'group', u'default', u'qlen', u'1000'
-            ],
-            [u'link/loopback', u'00:00:00:00:00:00', u'brd', u'00:00:00:00:00:00'],
-            [
-                u'2:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
-                u'1000'
-            ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [
-                u'3:', u'docker0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'noqueue', u'state', u'UP', u'mode', u'DEFAULT', u'group', u'default'
-            ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [
-                u'5:', u'veth6a06585@if4:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500',
-                u'qdisc', u'noqueue', u'master', u'docker0', u'state', u'UP', u'mode', u'DEFAULT',
-                u'group', u'default'
-            ],
-            [
-                u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB', u'link-netnsid',
-                u'0'
-            ],
-            [u'[end_iplink]'],
-            [
-                u'lo',
-                u' 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0'
-            ],
-            [
-                u'wlp3s0',
-                u' 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0'
-            ],
-            [
-                u'docker0',
-                u'       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'
-            ],
-            [
-                u'veth6a06585',
-                u'       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0'
-            ],
-            [u'[lo]'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' 00', u'00', u'00', u'00', u'00', u'00'],
-            [u'[docker0]'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' AA', u'AA', u'AA', u'AA', u'AA', u'AA'],
-            [u'[veth6a06585]'],
-            [u'Speed', u' 10000Mb/s'],
-            [u'Duplex', u' Full'],
-            [u'Auto-negotiation', u' off'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' AA', u'AA', u'AA', u'AA', u'AA', u'AA'],
-            [u'[wlp3s0]'],
-            [u'Address', u' AA', u'AA', u'AA', u'AA', u'AA', u'AA'],
-        ],
-        [
-            Service(item='2', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-            Service(item='4', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-        ],
-        [
-            (
-                '2',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
+                ["link/ether", "AA:AA:AA:AA:AA:BB", "brd", "BB:BB:BB:BB:BB:BB"],
                 [
-                    Result(state=state.OK, summary='[docker0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "3:",
+                    "docker0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "noqueue",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
                 ],
-            ),
-            (
-                '4',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
                 [
-                    Result(state=state.OK, summary='[wlp3s0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "5:",
+                    "veth6a06585@if4:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "noqueue",
+                    "master",
+                    "docker0",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
                 ],
-            ),
-        ],
-    ),
-    (
-        [
-            [u'[start_iplink]'],
-            [
-                u'1:', u'lo:', u'<LOOPBACK,UP,LOWER_UP>', u'mtu', u'65536', u'qdisc', u'noqueue',
-                u'state', u'UNKNOWN', u'mode', u'DEFAULT', u'group', u'default', u'qlen', u'1000'
-            ],
-            [u'link/loopback', u'00:00:00:00:00:00', u'brd', u'00:00:00:00:00:00'],
-            [
-                u'2:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'fq_codel', u'state', u'UNKNOWN', u'mode', u'DORMANT', u'group', u'default',
-                u'qlen', u'1000'
-            ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [
-                u'3:', u'docker0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
-                u'noqueue', u'state', u'UNKNOWN', u'mode', u'DEFAULT', u'group', u'default'
-            ],
-            [u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
-            [
-                u'5:', u'veth6a06585@if4:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500',
-                u'qdisc', u'noqueue', u'master', u'docker0', u'state', u'UNKNOWN', u'mode',
-                u'DEFAULT', u'group', u'default'
-            ],
-            [
-                u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB', u'link-netnsid',
-                u'0'
-            ],
-            [u'[end_iplink]'],
-            [
-                u'lo',
-                u' 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0'
-            ],
-            [
-                u'wlp3s0',
-                u' 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0'
-            ],
-            [
-                u'docker0',
-                u'       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'
-            ],
-            [
-                u'veth6a06585',
-                u'       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0'
-            ],
-            [u'[lo]'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' 00', u'00', u'00', u'00', u'00', u'00'],
-            [u'[docker0]'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' AA', u'AA', u'AA', u'AA', u'AA', u'AA'],
-            [u'[veth6a06585]'],
-            [u'Speed', u' 10000Mb/s'],
-            [u'Duplex', u' Full'],
-            [u'Auto-negotiation', u' off'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' AA', u'AA', u'AA', u'AA', u'AA', u'AA'],
-            [u'[wlp3s0]'],
-            [u'Address', u' AA', u'AA', u'AA', u'AA', u'AA', u'AA'],
-        ],
-        [
-            Service(item='2', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-            Service(item='4', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-        ],
-        [
-            (
-                '2',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
                 [
-                    Result(state=state.OK, summary='[docker0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "link/ether",
+                    "AA:AA:AA:AA:AA:AA",
+                    "brd",
+                    "BB:BB:BB:BB:BB:BB",
+                    "link-netnsid",
+                    "0",
                 ],
-            ),
-            (
-                '4',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
+                ["[end_iplink]"],
                 [
-                    Result(state=state.OK, summary='[wlp3s0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "lo",
+                    " 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0",
                 ],
-            ),
-        ],
-    ),
-    (
-        [
-            [u'em0', u'376716785370 417455222 0 0 0 0 0 0 383578105955 414581956 0 0 0 0 0 0'],
-            [u'tun0', u'342545566242 0 259949262 0 0 0 0 0  0 19196 0 0  0 0'],
-            [u'tun1', u'2422824602 0 2357563 0 0 0 0 0  0 0 0 0  0 0'],
-            [u'[em0]'],
-            [u'Speed', u' 1000Mb/s'],
-            [u'Duplex', u' Full'],
-            [u'Auto-negotiation', u' on'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' 00', u'AA', u'11', u'BB', u'22', u'CC'],
-            [u'[tun0]'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' 123'],
-            [u'[tun1]'],
-            [u'Link detected', u' yes'],
-            [u'Address', u' 456'],
-        ],
-        [
-            Service(item='1',
-                    parameters={
-                        'discovered_oper_status': ['1'],
-                        'discovered_speed': 1000000000
-                    }),
-            Service(item='2', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-            Service(item='3', parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 0
-            }),
-        ],
-        [
-            (
-                '1',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 1000000000,
-                    'state': ['1']
-                },
                 [
-                    Result(state=state.OK, summary='[em0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: 00:AA:11:BB:22:CC'),
-                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
+                    "wlp3s0",
+                    " 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0",
                 ],
-            ),
-            (
-                '2',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
                 [
-                    Result(state=state.OK, summary='[tun0]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "docker0",
+                    "       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0",
                 ],
-            ),
-            (
-                '3',
-                {
-                    'errors': {
-                        'both': ('abs', (10, 20))
-                    },
-                    'speed': 0,
-                    'state': ['1']
-                },
                 [
-                    Result(state=state.OK, summary='[tun1]'),
-                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
-                    Result(state=state.OK, summary='Speed: unknown'),
+                    "veth6a06585",
+                    "       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0",
                 ],
-            ),
-        ],
-    ),
-])
+            ],
+            [
+                Service(
+                    item="1", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+                Service(
+                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+            ],
+            [
+                (
+                    "1",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[docker0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+                (
+                    "4",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[wlp3s0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:BB"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+            ],
+        ),
+        (
+            [
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "lo:",
+                    "<LOOPBACK,UP,LOWER_UP>",
+                    "mtu",
+                    "65536",
+                    "qdisc",
+                    "noqueue",
+                    "state",
+                    "UNKNOWN",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/loopback", "00:00:00:00:00:00", "brd", "00:00:00:00:00:00"],
+                [
+                    "2:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                [
+                    "3:",
+                    "docker0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "noqueue",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                [
+                    "5:",
+                    "veth6a06585@if4:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "noqueue",
+                    "master",
+                    "docker0",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                ],
+                [
+                    "link/ether",
+                    "AA:AA:AA:AA:AA:AA",
+                    "brd",
+                    "BB:BB:BB:BB:BB:BB",
+                    "link-netnsid",
+                    "0",
+                ],
+                ["[end_iplink]"],
+                [
+                    "lo",
+                    " 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0",
+                ],
+                [
+                    "wlp3s0",
+                    " 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0",
+                ],
+                [
+                    "docker0",
+                    "       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0",
+                ],
+                [
+                    "veth6a06585",
+                    "       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0",
+                ],
+                ["[lo]"],
+                ["Link detected", " yes"],
+                ["Address", " 00", "00", "00", "00", "00", "00"],
+                ["[docker0]"],
+                ["Link detected", " yes"],
+                ["Address", " AA", "AA", "AA", "AA", "AA", "AA"],
+                ["[veth6a06585]"],
+                ["Speed", " 10000Mb/s"],
+                ["Duplex", " Full"],
+                ["Auto-negotiation", " off"],
+                ["Link detected", " yes"],
+                ["Address", " AA", "AA", "AA", "AA", "AA", "AA"],
+                ["[wlp3s0]"],
+                ["Address", " AA", "AA", "AA", "AA", "AA", "AA"],
+            ],
+            [
+                Service(
+                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+                Service(
+                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+            ],
+            [
+                (
+                    "2",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[docker0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+                (
+                    "4",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[wlp3s0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+            ],
+        ),
+        (
+            [
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "lo:",
+                    "<LOOPBACK,UP,LOWER_UP>",
+                    "mtu",
+                    "65536",
+                    "qdisc",
+                    "noqueue",
+                    "state",
+                    "UNKNOWN",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/loopback", "00:00:00:00:00:00", "brd", "00:00:00:00:00:00"],
+                [
+                    "2:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UNKNOWN",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                [
+                    "3:",
+                    "docker0:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "noqueue",
+                    "state",
+                    "UNKNOWN",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                [
+                    "5:",
+                    "veth6a06585@if4:",
+                    "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "noqueue",
+                    "master",
+                    "docker0",
+                    "state",
+                    "UNKNOWN",
+                    "mode",
+                    "DEFAULT",
+                    "group",
+                    "default",
+                ],
+                [
+                    "link/ether",
+                    "AA:AA:AA:AA:AA:AA",
+                    "brd",
+                    "BB:BB:BB:BB:BB:BB",
+                    "link-netnsid",
+                    "0",
+                ],
+                ["[end_iplink]"],
+                [
+                    "lo",
+                    " 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0",
+                ],
+                [
+                    "wlp3s0",
+                    " 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0",
+                ],
+                [
+                    "docker0",
+                    "       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0",
+                ],
+                [
+                    "veth6a06585",
+                    "       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0",
+                ],
+                ["[lo]"],
+                ["Link detected", " yes"],
+                ["Address", " 00", "00", "00", "00", "00", "00"],
+                ["[docker0]"],
+                ["Link detected", " yes"],
+                ["Address", " AA", "AA", "AA", "AA", "AA", "AA"],
+                ["[veth6a06585]"],
+                ["Speed", " 10000Mb/s"],
+                ["Duplex", " Full"],
+                ["Auto-negotiation", " off"],
+                ["Link detected", " yes"],
+                ["Address", " AA", "AA", "AA", "AA", "AA", "AA"],
+                ["[wlp3s0]"],
+                ["Address", " AA", "AA", "AA", "AA", "AA", "AA"],
+            ],
+            [
+                Service(
+                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+                Service(
+                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+            ],
+            [
+                (
+                    "2",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[docker0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+                (
+                    "4",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[wlp3s0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+            ],
+        ),
+        (
+            [
+                ["em0", "376716785370 417455222 0 0 0 0 0 0 383578105955 414581956 0 0 0 0 0 0"],
+                ["tun0", "342545566242 0 259949262 0 0 0 0 0  0 19196 0 0  0 0"],
+                ["tun1", "2422824602 0 2357563 0 0 0 0 0  0 0 0 0  0 0"],
+                ["[em0]"],
+                ["Speed", " 1000Mb/s"],
+                ["Duplex", " Full"],
+                ["Auto-negotiation", " on"],
+                ["Link detected", " yes"],
+                ["Address", " 00", "AA", "11", "BB", "22", "CC"],
+                ["[tun0]"],
+                ["Link detected", " yes"],
+                ["Address", " 123"],
+                ["[tun1]"],
+                ["Link detected", " yes"],
+                ["Address", " 456"],
+            ],
+            [
+                Service(
+                    item="1",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 1000000000},
+                ),
+                Service(
+                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+                Service(
+                    item="3", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                ),
+            ],
+            [
+                (
+                    "1",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 1000000000, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[em0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="MAC: 00:AA:11:BB:22:CC"),
+                        Result(state=state.OK, summary="Speed: 1 GBit/s"),
+                    ],
+                ),
+                (
+                    "2",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[tun0]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+                (
+                    "3",
+                    {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+                    [
+                        Result(state=state.OK, summary="[tun1]"),
+                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=state.OK, summary="Speed: unknown"),
+                    ],
+                ),
+            ],
+        ),
+    ],
+)
 def test_lnx_if_regression(
     monkeypatch,
     string_table,
@@ -540,30 +762,123 @@ def test_lnx_if_regression(
 ):
     section = lnx_if.parse_lnx_if(string_table)
 
-    assert list(lnx_if.discover_lnx_if(
-        [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
-        section,
-    )) == discovery_results
+    assert (
+        list(
+            lnx_if.discover_lnx_if(
+                [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
+                section,
+            )
+        )
+        == discovery_results
+    )
 
-    monkeypatch.setattr(interfaces, 'get_value_store', lambda: {})
+    monkeypatch.setattr(interfaces, "get_value_store", lambda: {})
     for item, par, res in items_params_results:
-        assert list(lnx_if.check_lnx_if(
-            item,
-            par,
-            section,
-        )) == res
+        assert (
+            list(
+                lnx_if.check_lnx_if(
+                    item,
+                    par,
+                    section,
+                )
+            )
+            == res
+        )
 
-    node_name = 'node'
+    node_name = "node"
     for item, par, res in items_params_results:
-        assert list(lnx_if.cluster_check_lnx_if(
-            item,
-            par,
-            {node_name: section},
-        )) == [
-            Result(  # type: ignore[call-overload]
-                state=res[0].state,
-                summary=res[0].summary + ' on %s' % node_name if res[0].summary else None,
-                notice=res[0].summary + ' on %s' % node_name if not res[0].summary else None,
-                details=res[0].details + ' on %s' % node_name if res[0].details else None,
-            ),
-        ] + res[1:]
+        assert (
+            list(
+                lnx_if.cluster_check_lnx_if(
+                    item,
+                    par,
+                    {node_name: section},
+                )
+            )
+            == [
+                Result(  # type: ignore[call-overload]
+                    state=res[0].state,
+                    summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
+                    notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
+                    details=res[0].details + " on %s" % node_name if res[0].details else None,
+                ),
+            ]
+            + res[1:]
+        )
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        (
+            [],
+            [
+                Attributes(
+                    path=["networking"],
+                    inventory_attributes={
+                        "available_ethernet_ports": 0,
+                        "total_ethernet_ports": 0,
+                        "total_interfaces": 0,
+                    },
+                    status_attributes={},
+                ),
+            ],
+        ),
+        (
+            [
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                ["[end_iplink]"],
+                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+            ],
+            [
+                TableRow(
+                    path=["networking", "interfaces"],
+                    key_columns={
+                        "index": 1,
+                        "description": "wlp3s0",
+                        "alias": "wlp3s0",
+                    },
+                    inventory_columns={
+                        "speed": 0,
+                        "phys_address": "AA:AA:AA:AA:AA:AA",
+                        "oper_status": 2,
+                        "port_type": 6,
+                        "available": True,
+                    },
+                    status_columns={},
+                ),
+                Attributes(
+                    path=["networking"],
+                    inventory_attributes={
+                        "available_ethernet_ports": 1,
+                        "total_ethernet_ports": 1,
+                        "total_interfaces": 1,
+                    },
+                    status_attributes={},
+                ),
+            ],
+        ),
+    ],
+)
+def test_inventory_lnx_if(string_table: List[List[str]], expected_result: InventoryResult):
+    assert sort_inventory_result(
+        lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if(string_table))
+    ) == sort_inventory_result(expected_result)

@@ -5,30 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_fireeye_active_vms():
-    return Dictionary(elements=[(
-        "vms",
-        Tuple(
-            title=_("Levels for active VMs"),
-            elements=[
-                Integer(title="Warning at", default_value=60, unit="VMs"),
-                Integer(title="Critical at", default_value=70, unit="VMs"),
-            ],
-        ),
-    )],)
+    return Dictionary(
+        elements=[
+            (
+                "vms",
+                Tuple(
+                    title=_("Levels for active VMs"),
+                    elements=[
+                        Integer(title="Warning at", default_value=60, unit="VMs"),
+                        Integer(title="Critical at", default_value=70, unit="VMs"),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_active_vms,
         title=lambda: _("Fireeye Active VMs"),
-    ))
+    )
+)

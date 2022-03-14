@@ -46,12 +46,12 @@
 #  5  66.249.94.88 (66.249.94.88)  24.481 ms  24.498 ms  24.271 ms
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
+import ast
 import getopt
+import ipaddress
 import os
 import subprocess
 import sys
-import ipaddress
-import ast
 
 
 class MissingValueError(Exception):
@@ -68,16 +68,16 @@ class ExecutionError(Exception):
 
 def parse_exception(exc):
     exc = str(exc)
-    if exc[0] == '{':
+    if exc[0] == "{":
         exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
     return str(exc)
 
 
 def output_check_result(s, perfdata):
     if perfdata:
-        perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
-        s += ' | %s' % " ".join(perfdata_output_entries)
-    sys.stdout.write('%s\n' % s)
+        perfdata_output_entries = ["%s=%s" % (p[0], ";".join(map(str, p[1:]))) for p in perfdata]
+        s += " | %s" % " ".join(perfdata_output_entries)
+    sys.stdout.write("%s\n" % s)
 
 
 def option_to_state(c):
@@ -93,11 +93,16 @@ def _execute_traceroute(target, nodns, method, address_family):
     if address_family:
         cmd.append(address_family)
     cmd.append(target)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf8")
-    sto, ste = p.communicate()
-    if p.returncode:
-        raise ExecutionError("UNKNOWN - " + ste.replace("\n", " "))
-    return sto
+    completed_process = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf8",
+        check=False,
+    )
+    if completed_process.returncode:
+        raise ExecutionError("UNKNOWN - " + completed_process.stderr.replace("\n", " "))
+    return completed_process.stdout
 
 
 def check_traceroute(lines, routes):
@@ -131,14 +136,14 @@ def check_traceroute(lines, routes):
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
     )
-    perfdata = [('hops', hops)]
+    perfdata = [("hops", hops)]
     return state, info_text, perfdata
 
 
 def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
     try:
-        ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+        ip_address_version = ipaddress.ip_interface(address_arg.split("%")[0]).ip.version
     except ValueError:
         # May be a host or DNS name, don't execute the validation in this case.
         # check_traceroute will perform the name resolution for us.
@@ -146,12 +151,14 @@ def validate_ip_version(address_arg, ip_version_arg):
 
     if not ip_address_version == ip_version_arg:
         raise ProtocolVersionError(
-            'IP protocol version "%s" not the same as the IP address version "%s".' %
-            (ip_version_arg, ip_address_version))
+            'IP protocol version "%s" not the same as the IP address version "%s".'
+            % (ip_version_arg, ip_address_version)
+        )
 
 
 def usage():
-    sys.stdout.write("""check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
+    sys.stdout.write(
+        """check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
 
 Check by which routes TARGET is being reached. Each possible route is being
 prefixed with a state option:
@@ -171,7 +178,8 @@ Other options:
  -4             Use IPv4
  -6             Use IPv6
 
-""")
+"""
+    )
 
 
 def main(args=None):
@@ -205,25 +213,25 @@ def main(args=None):
 
         # first parse modifers
         for o, a in opts:
-            if o in ['-v', '--verbose']:
+            if o in ["-v", "--verbose"]:
                 opt_verbose += 1
-            elif o in ['-d', '--debug']:
+            elif o in ["-d", "--debug"]:
                 opt_debug = True
-            elif o in ['-w', '-W', '-c', '-C']:
+            elif o in ["-w", "-W", "-c", "-C"]:
                 route_params.append((o[1], a))
-            elif o == '-n':
+            elif o == "-n":
                 opt_nodns = True
-            elif o in ['-T', '-I']:
+            elif o in ["-T", "-I"]:
                 opt_method = o
-            elif o in ['-4', '-6']:
+            elif o in ["-4", "-6"]:
                 if opt_address_family:
-                    raise ProtocolVersionError('Cannot use both IPv4 and IPv6')
+                    raise ProtocolVersionError("Cannot use both IPv4 and IPv6")
                 validate_ip_version(target_address, int(o.lstrip("-")))
                 opt_address_family = o
 
         # now handle action options
         for o, a in opts:
-            if o in ['-h', '--help']:
+            if o in ["-h", "--help"]:
                 usage()
                 sys.exit(0)
 
@@ -244,7 +252,7 @@ def main(args=None):
     except Exception as e:
         if opt_debug:
             raise
-        return 2, 'Unhandled exception: %s' % parse_exception(e), None
+        return 2, "Unhandled exception: %s" % parse_exception(e), None
 
 
 if __name__ == "__main__":

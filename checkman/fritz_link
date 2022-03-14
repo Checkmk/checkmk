@@ -1,7 +1,7 @@
 title: AVM Fritz!Box: Network Link
 agents: fritzbox
 catalog: hw/network/avm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check is always OK, it outputs information about the network link
@@ -12,7 +12,7 @@ description:
  configure this agent to be used for the Fritz!Box you like to monitor. The
  special agent uses uPnP to get the needed information from the device.
 
-inventory:
+discovery:
  One service is created for each system
  if the agent has a section {<<<fritz>>>} and
  at least the keys {NewLinkStatus} and {NewPhysicalLinkStatus} are provided in this section.

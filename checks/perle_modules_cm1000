@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['perle_modules_cm1000'] = {
-    'inventory_function': inventory_perle_cm_modules,
-    'check_function': check_perle_cm_modules,
-    'service_description': 'Chassis slot %s CM1000',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1966.21.1.1.1.1.4.1',
+
+check_info["perle_modules_cm1000"] = {
+    "inventory_function": inventory_perle_cm_modules,
+    "check_function": check_perle_cm_modules,
+    "service_description": "Chassis slot %s CM1000",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1966.21.1.1.1.1.4.1",
         [
             "1.1.3",  # PERLE-MCR-MGT-MIB::cm1000Modelname
             "3.1.3",  # PERLE-MCR-MGT-MIB::cm1000LedPWR
@@ -27,6 +28,7 @@ check_info['perle_modules_cm1000'] = {
             "1.1.21",  # PERLE-MCR-MGT-MIB::cm1000CopperLinkStatus
             "1.1.22",  # PERLE-MCR-MGT-MIB::cm1000CopperConnType
             "1.1.24",  # PERLE-MCR-MGT-MIB::cm1000CopperSpeed
-        ]),
-    'snmp_scan_function': perle_scan_function,
+        ],
+    ),
+    "snmp_scan_function": perle_scan_function,
 }

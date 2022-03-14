@@ -9,13 +9,14 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-from typing import List, Optional, Tuple, NoReturn
 import argparse
 import logging
 import os
 import sys
+from typing import List, NoReturn, Optional, Tuple
 
 import cmk.utils.password_store
+
 cmk.utils.password_store.replace_passwords()
 
 LOG = logging.getLogger(__name__)
@@ -28,13 +29,13 @@ DEFAULT_PORTS = {
     "db2": 50000,
 }
 
-MP_INF: Tuple[float, float] = (float('-inf'), float('+inf'))
+MP_INF: Tuple[float, float] = (float("-inf"), float("+inf"))
 
 #   . parse commandline argumens
 
 
 def levels(values: str) -> Tuple[float, float]:
-    lower, upper = values.split(':')
+    lower, upper = values.split(":")
     _lower = float(lower) if lower else MP_INF[0]
     _upper = float(upper) if upper else MP_INF[1]
     return (_lower, _upper)
@@ -56,13 +57,13 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "--verbose",
         action="count",
         default=0,
-        help='''Verbose mode: print SQL statement and levels
-                             (for even more output use -vv''',
+        help="""Verbose mode: print SQL statement and levels
+                             (for even more output use -vv""",
     )
     parser.add_argument(
         "--debug",
         action="store_true",
-        help='''Debug mode: let Python exceptions come through''',
+        help="""Debug mode: let Python exceptions come through""",
     )
     parser.add_argument(
         "-m",
@@ -76,32 +77,32 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "-o",
         "--procedure",
         action="store_true",
-        help='''treat the main argument as a procedure instead
-                              of an SQL-Statement''',
+        help="""treat the main argument as a procedure instead
+                              of an SQL-Statement""",
     )
     parser.add_argument(
         "-i",
         "--input",
         metavar="CSV",
         default=[],
-        type=lambda s: s.split(','),
-        help='''comma separated list if values of input variables
-                             if required by the procedure''',
+        type=lambda s: s.split(","),
+        help="""comma separated list if values of input variables
+                             if required by the procedure""",
     )
     # optional arguments
     parser.add_argument(
         "-d",
         "--dbms",
-        default='postgres',
-        choices=['postgres', 'mysql', 'mssql', 'oracle', 'db2'],
+        default="postgres",
+        choices=["postgres", "mysql", "mssql", "oracle", "db2"],
         help='''Name of the database management system.
                              Default is "postgres"''',
     )
     parser.add_argument(
         "-H",
         "--hostname",
-        metavar='HOST',
-        default='127.0.0.1',
+        metavar="HOST",
+        default="127.0.0.1",
         help='''Hostname or IP-Address where the database lives.
                              Default is "127.0.0.1"''',
     )
@@ -110,32 +111,32 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "--port",
         default=None,
         type=int,
-        help='''Port used to connect to the database.
-                             Default depends on DBMS''',
+        help="""Port used to connect to the database.
+                             Default depends on DBMS""",
     )
     parser.add_argument(
         "-w",
         "--warning",
-        metavar='RANGE',
+        metavar="RANGE",
         default=MP_INF,
         type=levels,
-        help='''lower and upper level for the warning state,
-                             separated by a colon''',
+        help="""lower and upper level for the warning state,
+                             separated by a colon""",
     )
     parser.add_argument(
         "-c",
         "--critical",
-        metavar='RANGE',
+        metavar="RANGE",
         default=MP_INF,
         type=levels,
-        help='''lower and upper level for the critical state,
-                             separated by a colon''',
+        help="""lower and upper level for the critical state,
+                             separated by a colon""",
     )
     parser.add_argument(
         "-t",
         "--text",
-        default='',
-        help='''Additional text prefixed to the output''',
+        default="",
+        help="""Additional text prefixed to the output""",
     )
 
     # required arguments
@@ -143,26 +144,26 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "-n",
         "--name",
         required=True,
-        help='''Name of the database on the DBMS''',
+        help="""Name of the database on the DBMS""",
     )
     parser.add_argument(
         "-u",
         "--user",
         required=True,
-        help='''Username for database access''',
+        help="""Username for database access""",
     )
     parser.add_argument(
         "-p",
         "--password",
         required=True,
-        help='''Password for database access''',
+        help="""Password for database access""",
     )
     parser.add_argument(
         "cmd",
         metavar="SQL-Statement|Procedure",
         type=sql_cmd_piece,
-        nargs='+',
-        help='''Valid SQL-Statement for the selected database.
+        nargs="+",
+        help="""Valid SQL-Statement for the selected database.
                              The statement must return at least a number and a
                              string, plus optional performance data.
 
@@ -171,10 +172,10 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
                              The procedure must return one output variable,
                              which content is evaluated the same way as the
-                             output of the SQL-Statement''',
+                             output of the SQL-Statement""",
     )
     args = parser.parse_args(argv[1:])
-    args.cmd = ' '.join(args.cmd)
+    args.cmd = " ".join(args.cmd)
 
     # LOGGING
     fmt = "%(message)s"
@@ -186,13 +187,13 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
     # V-VERBOSE INFO
     for key, val in args.__dict__.items():
-        if key in ('user', 'password'):
-            val = '****'
-        LOG.debug('argparse: %s = %r', key, val)
+        if key in ("user", "password"):
+            val = "****"
+        LOG.debug("argparse: %s = %r", key, val)
     return args
 
 
-#.
+# .
 
 
 def bail_out(exit_code: int, output: str) -> NoReturn:
@@ -220,6 +221,7 @@ def _default_execute(cursor, cmd, inpt, procedure):
 
 def postgres_connect(host, port, db_name, user, pwd):
     import psycopg2  # type: ignore[import] # pylint: disable=import-outside-toplevel
+
     return psycopg2.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
@@ -229,6 +231,7 @@ def postgres_execute(cursor, cmd, inpt, procedure):
 
 def mysql_connect(host, port, db_name, user, pwd):
     import pymysql  # pylint: disable=import-outside-toplevel
+
     return pymysql.connect(host=host, port=port, db=db_name, user=user, passwd=pwd)
 
 
@@ -238,13 +241,14 @@ def mysql_execute(cursor, cmd, inpt, procedure):
 
 def mssql_connect(host, port, db_name, user, pwd):
     import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
+
     return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
 def mssql_execute(cursor, cmd, _inpt, procedure):
     if procedure:
         LOG.info("SQL Procedure Name: %s", cmd)
-        cmd = 'EXEC ' + cmd
+        cmd = "EXEC " + cmd
     else:
         LOG.info("SQL Statement: %s", cmd)
 
@@ -254,8 +258,9 @@ def mssql_execute(cursor, cmd, _inpt, procedure):
 
 
 def oracle_connect(host, port, db_name, user, pwd):
-    sys.path.append('/usr/lib/python%s.%s/site-packages' %
-                    (sys.version_info.major, sys.version_info.minor))
+    sys.path.append(
+        "/usr/lib/python%s.%s/site-packages" % (sys.version_info.major, sys.version_info.minor)
+    )
     try:
         import cx_Oracle  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
@@ -289,7 +294,7 @@ def oracle_execute(cursor, cmd, inpt, procedure):
 
         # for empty input this is just
         #  _res = outvar.getvalue()
-        _res = ','.join(i.getvalue() for i in inpt)
+        _res = ",".join(i.getvalue() for i in inpt)
         LOG.debug("outvar.getvalue() = %r", _res)
         params_result = _res.split(",")
         LOG.debug("params_result = %r", params_result)
@@ -309,10 +314,11 @@ def db2_connect(host, port, db_name, user, pwd):
     except ImportError as exc:
         bail_out(3, "%s. Please install it via pip." % exc)
 
-    cstring = 'DRIVER={IBM DB2 ODBC DRIVER};DATABASE=%s;' \
-              'HOSTNAME=%s;PORT=%s;PROTOCOL=TCPIP;UID=%s;PWD=%s;' \
-              % (db_name, host, port, user, pwd)
-    ibm_db_conn = ibm_db.connect(cstring, '', '')
+    cstring = (
+        "DRIVER={IBM DB2 ODBC DRIVER};DATABASE=%s;"
+        "HOSTNAME=%s;PORT=%s;PROTOCOL=TCPIP;UID=%s;PWD=%s;" % (db_name, host, port, user, pwd)
+    )
+    ibm_db_conn = ibm_db.connect(cstring, "", "")
     return ibm_db_dbi.Connection(ibm_db_conn)
 
 
@@ -320,7 +326,7 @@ def db2_execute(cursor, cmd, inpt, procedure):
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-#.
+# .
 
 
 def connect(dbms, host, port, db_name, user, pwd):
@@ -333,11 +339,11 @@ def connect(dbms, host, port, db_name, user, pwd):
         port = DEFAULT_PORTS[dbms]
 
     return {
-        'postgres': postgres_connect,
-        'mysql': mysql_connect,
-        'mssql': mssql_connect,
-        'oracle': oracle_connect,
-        'db2': db2_connect,
+        "postgres": postgres_connect,
+        "mysql": mysql_connect,
+        "mssql": mssql_connect,
+        "oracle": oracle_connect,
+        "db2": db2_connect,
     }[dbms](host, port, db_name, user, pwd)
 
 
@@ -351,11 +357,11 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
 
     try:
         result = {
-            'postgres': postgres_execute,
-            'mysql': mysql_execute,
-            'mssql': mssql_execute,
-            'oracle': oracle_execute,
-            'db2': db2_execute,
+            "postgres": postgres_execute,
+            "mysql": mysql_execute,
+            "mssql": mssql_execute,
+            "oracle": oracle_execute,
+            "db2": db2_execute,
         }[dbms](cursor, cmd, inpt, procedure)
     finally:
         cursor.close()
@@ -430,11 +436,11 @@ def main(argv: Optional[List[str]] = None) -> None:
     except Exception as exc:
         if args.debug:
             raise
-        errmsg = str(exc).strip('()').replace(r'\n', ' ')
+        errmsg = str(exc).strip("()").replace(r"\n", " ")
         bail_out(3, "Error while %s: %s" % (msg, errmsg))
 
     bail_out(state, args.text + text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

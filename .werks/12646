@@ -1,0 +1,22 @@
+Title: agent_azure: correct piggyback-section headers
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1617026155
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk only affects users who have installed Checkmk versions 1.6.0p20 -
+1.6.0p24 or 2.0 - 2.0.0p1 and are monitoring Azure ressource groups with a 
+hyphen in their name.
+
+In the afore mentioned versions, the special agent for Azure integration
+erroneously replaced hyphens by underscores in the piggybacked names of 
+ressource groups and VMs. This lead to missing data for existing Checkmk hosts, 
+and may have resulted in hosts being created with the wrong name.
+
+This commit fixes the problem. If this results in missing data for your hosts,
+rename the affected hosts to the correct name of the resource group or VM.

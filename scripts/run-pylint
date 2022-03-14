@@ -5,5 +5,13 @@
 
 set -e
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
+
+# There is some confusion regarding where and how pylint should be run from an
+# editor plugin, see e.g. https://github.com/flycheck/flycheck/issues/1758.
+# Furthermore, recent pylint versions seem to be buggy regarding relative
+# imports, see e.g. https://github.com/PyCQA/pylint/issues/3624. Our workaround
+# for all this craziness: Just run pylint from the toplevel of our project.
+cd "$REPO_PATH"
+
 exec "$REPO_PATH/scripts/run-pipenv" run pylint "$@"

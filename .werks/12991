@@ -1,0 +1,21 @@
+Title: Previsualization of views/dashboard/reports by admins
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624876038
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Between werks 12871 and 12487 there was a feature competition. Users with
+permission "Edit foreign (views/dashboards/reports)" (mostly admins) must be
+able to edit and thus preview all those pages. However under normal use of
+checkmk, the working user(also admin) wants to use/work with the page of highest
+priority, which must be restricted to only pages that the user owns or are
+published for all users.
+
+Werk 12487 allowed admins to preview everything, but under normal operation,
+views from other users would become their active working view. Werk 12871 fixed
+that bringing the priority back, yet breaking the posibility to preview
+everything from the editor. This werk brings both behaviors to work together.

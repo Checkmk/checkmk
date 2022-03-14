@@ -1,11 +1,11 @@
 title: Infoblox Devices: DHCP Statistics
 agents: snmp
 catalog: hw/network/infoblox
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the DHCP statistics of Infoblox devices which
  support the IB-DHCPONE MIB.
 
-inventory:
+discovery:
  One service is created.

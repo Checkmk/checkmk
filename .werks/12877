@@ -1,0 +1,15 @@
+Title: <tt>printer_supply</tt>: handle trailing null bytes in prtMarkerColorantValue
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620283623
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check plugin <tt>printer_supply</tt>, which monitors the fill levels of
+printer supplies via SNMP, is now able to handle trailing null bytes in the
+field prtMarkerColorantValue (observed for example for HP Jetdirect 153).
+Previously, such null bytes broke the displaying of the corresponding service
+output in the GUI.

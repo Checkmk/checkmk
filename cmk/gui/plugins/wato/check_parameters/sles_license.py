@@ -5,50 +5,52 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, Tuple
 
 
 def _parameter_valuespec_sles_license():
-    return Dictionary(elements=[
-        ("status",
-         DropdownChoice(
-             title=_("Status"),
-             help=_("Status of the SLES license"),
-             choices=[
-                 ('Registered', _('Registered')),
-                 ('Ignore', _('Do not check')),
-             ],
-         )),
-        ("subscription_status",
-         DropdownChoice(
-             title=_("Subscription"),
-             help=_("Status of the SLES subscription"),
-             choices=[
-                 ('ACTIVE', _('ACTIVE')),
-                 ('Ignore', _('Do not check')),
-             ],
-         )),
-        ("days_left",
-         Tuple(
-             title=_("Time until license expiration"),
-             help=_("Remaining days until the SLES license expires"),
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("days")),
-                 Integer(title=_("Critical at"), unit=_("days"))
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "status",
+                DropdownChoice(
+                    title=_("Status"),
+                    help=_("Status of the SLES license"),
+                    choices=[
+                        ("Registered", _("Registered")),
+                        ("Ignore", _("Do not check")),
+                    ],
+                ),
+            ),
+            (
+                "subscription_status",
+                DropdownChoice(
+                    title=_("Subscription"),
+                    help=_("Status of the SLES subscription"),
+                    choices=[
+                        ("ACTIVE", _("ACTIVE")),
+                        ("Ignore", _("Do not check")),
+                    ],
+                ),
+            ),
+            (
+                "days_left",
+                Tuple(
+                    title=_("Time until license expiration"),
+                    help=_("Remaining days until the SLES license expires"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("days")),
+                        Integer(title=_("Critical at"), unit=_("days")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -58,4 +60,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sles_license,
         title=lambda: _("SLES License"),
-    ))
+    )
+)

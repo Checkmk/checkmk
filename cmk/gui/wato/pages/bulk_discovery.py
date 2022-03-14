@@ -7,32 +7,26 @@
 this mode is used."""
 
 import copy
-from typing import List, Tuple, cast, Type, Optional
+from typing import cast, List, Optional, Tuple, Type
 
-import cmk.gui.config as config
-import cmk.gui.sites as sites
 import cmk.gui.forms as forms
-from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato.utils import get_hostnames_from_checkboxes, mode_registry, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
-    vs_bulk_discovery,
     DiscoveryHost,
     get_tasks,
+    vs_bulk_discovery,
 )
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    get_hostnames_from_checkboxes,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register
@@ -50,8 +44,8 @@ class ModeBulkDiscovery(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(html.request.var("_start"))
-        self._all = bool(html.request.var("all"))
+        self._start = bool(request.var("_save"))
+        self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
@@ -66,9 +60,9 @@ class ModeBulkDiscovery(WatoMode):
             self._bulk_discovery_params.update(bulk_discover_params)
 
         # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._recurse, self._only_failed, self._only_failed_invcheck,
-         self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
-                                     self._bulk_discovery_params["selection"])
+        (self._recurse, self._only_failed, self._only_failed_invcheck, self._only_ok_agent) = cast(
+            Tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+        )
 
         self._do_scan, self._bulk_size = self._get_performance_params()
         self._mode = self._bulk_discovery_params["mode"]
@@ -93,40 +87,44 @@ class ModeBulkDiscovery(WatoMode):
         return _("Bulk discovery")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Discovery"),
-                                          breadcrumb,
-                                          form_name="bulkinventory",
-                                          button_name="_start",
-                                          save_title=_("Start"))
+        return make_simple_form_page_menu(
+            _("Discovery"),
+            breadcrumb,
+            form_name="bulkinventory",
+            button_name="_save",
+            save_title=_("Start"),
+        )
 
     def action(self) -> ActionResult:
-        config.user.need_permission("wato.services")
+        user.need_permission("wato.services")
 
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
         try:
-            html.check_transaction()
-            self._job.set_function(self._job.do_execute, self._mode, self._do_scan,
-                                   self._error_handling, tasks)
+            transactions.check_transaction()
+            self._job.set_function(
+                self._job.do_execute, self._mode, self._do_scan, self._error_handling, tasks
+            )
             self._job.start()
         except Exception as e:
             if config.debug:
                 raise
             logger.exception("Failed to start bulk discovery")
             raise MKUserError(
-                None,
-                _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>"))
+                None, _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>")
+            )
 
         raise HTTPRedirect(self._job.detail_url())
 
     def page(self):
-        config.user.need_permission("wato.services")
+        user.need_permission("wato.services")
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
             html.show_message(
-                _("Bulk discovery currently running in <a href=\"%s\">background</a>.") %
-                self._job.detail_url())
+                _('Bulk discovery currently running in <a href="%s">background</a>.')
+                % self._job.detail_url()
+            )
             return
 
         self._show_start_form()
@@ -145,16 +143,21 @@ class ModeBulkDiscovery(WatoMode):
             #   imported/selected hosts can be executed
             vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
             msgs.append(
-                _("You have selected <b>%d</b> hosts for bulk discovery.") %
-                len(self._get_hosts_to_discover()))
+                _("You have selected <b>%d</b> hosts for bulk discovery.")
+                % len(self._get_hosts_to_discover())
+            )
             # The cast is needed for the moment, because mypy does not understand our data structure here
-            selection = cast(Tuple[bool, bool, bool, bool],
-                             self._bulk_discovery_params["selection"])
+            selection = cast(
+                Tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+            )
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
         msgs.append(
-            _("The Checkmk discovery will automatically find and configure services "
-              "to be checked on your hosts and may also discover host labels."))
+            _(
+                "The Checkmk discovery will automatically find and configure services "
+                "to be checked on your hosts and may also discover host labels."
+            )
+        )
         html.open_p()
         html.write_text(" ".join(msgs))
         vs.render_input("bulkinventory", self._bulk_discovery_params)
@@ -187,11 +190,11 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 if host_name in skip_hosts:
                     continue
-                host = Folder.current().host(host_name)
+                host = Folder.current().load_host(host_name)
                 host.need_permission("write")
                 hosts_to_discover.append(
-                    DiscoveryHost(host.site_id(),
-                                  host.folder().path(), host_name))
+                    DiscoveryHost(host.site_id(), host.folder().path(), host_name)
+                )
 
         else:
             # all host in this folder, maybe recursively. New: we always group
@@ -206,8 +209,8 @@ class ModeBulkDiscovery(WatoMode):
                 host = folder.host(host_name)
                 host.need_permission("write")
                 hosts_to_discover.append(
-                    DiscoveryHost(host.site_id(),
-                                  host.folder().path(), host_name))
+                    DiscoveryHost(host.site_id(), host.folder().path(), host_name)
+                )
 
         return hosts_to_discover
 
@@ -224,15 +227,19 @@ class ModeBulkDiscovery(WatoMode):
     def _find_hosts_with_failed_discovery_check(self):
         # Old service name "Check_MK inventory" needs to be kept because old
         # installations may still use that name
-        return sites.live().query_column("GET services\n"
-                                         "Filter: description = Check_MK inventory\n"
-                                         "Filter: description = Check_MK Discovery\n"
-                                         "Or: 2\n"
-                                         "Filter: state > 0\n"
-                                         "Columns: host_name")
+        return sites.live().query_column(
+            "GET services\n"
+            "Filter: description = Check_MK inventory\n"
+            "Filter: description = Check_MK Discovery\n"
+            "Or: 2\n"
+            "Filter: state > 0\n"
+            "Columns: host_name"
+        )
 
     def _find_hosts_with_failed_agent(self):
-        return sites.live().query_column("GET services\n"
-                                         "Filter: description = Check_MK\n"
-                                         "Filter: state >= 2\n"
-                                         "Columns: host_name")
+        return sites.live().query_column(
+            "GET services\n"
+            "Filter: description = Check_MK\n"
+            "Filter: state >= 2\n"
+            "Columns: host_name"
+        )

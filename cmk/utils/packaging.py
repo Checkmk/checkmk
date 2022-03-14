@@ -5,30 +5,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-from io import BytesIO
 import json
 import logging
 import os
-from pathlib import Path
 import pprint
 import subprocess
 import tarfile
 import time
 from contextlib import suppress
-from typing import cast, Any, Callable, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
+from io import BytesIO
+from pathlib import Path
+from typing import (
+    Any,
+    BinaryIO,
+    Callable,
+    cast,
+    Dict,
+    Final,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    TypedDict,
+)
 
-from six import ensure_binary, ensure_str
-
-from cmk.utils.i18n import _
-from cmk.utils.log import VERBOSE
-import cmk.utils.version as cmk_version
-import cmk.utils.paths
-import cmk.utils.tty as tty
-import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
-from cmk.utils.werks import parse_check_mk_version
+import cmk.utils.paths
+import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
+import cmk.utils.werks
 from cmk.utils.exceptions import MKException
+from cmk.utils.i18n import _
+from cmk.utils.log import VERBOSE
+from cmk.utils.version import parse_check_mk_version
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -59,6 +69,7 @@ def _get_permissions(path: str) -> int:
         (str(cmk.utils.paths.local_agents_dir), 0o755),
         (cmk.utils.paths.web_dir, 0o644),
         (str(cmk.utils.paths.local_web_dir), 0o644),
+        (str(cmk.utils.paths.local_gui_plugins_dir), 0o644),
         (str(cmk.utils.paths.pnp_templates_dir), 0o644),
         (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
         (str(cmk.utils.paths.doc_dir), 0o644),
@@ -82,17 +93,36 @@ def _get_permissions(path: str) -> int:
 PackageName = str
 PartName = str
 PartPath = str
-
-PackagePart = NamedTuple("PackagePart", [
-    ("ident", PartName),
-    ("title", str),
-    ("path", PartPath),
-])
-
-PackageInfo = Dict
-Packages = Dict[PackageName, PackageInfo]
 PartFiles = List[str]
 PackageFiles = Dict[PartName, PartFiles]
+
+
+class PackagePart(NamedTuple):
+    ident: PartName
+    title: str
+    path: PartPath
+
+
+# Would like to use class declaration here, but that is not compatible with the dots in the keys
+# below.
+PackageInfo = TypedDict(
+    "PackageInfo",
+    {
+        "title": str,
+        "name": str,
+        "description": str,
+        "version": str,
+        "version.packaged": str,
+        "version.min_required": str,
+        "version.usable_until": Optional[str],
+        "author": str,
+        "download_url": str,
+        "files": PackageFiles,
+    },
+)
+
+
+Packages = Dict[PackageName, PackageInfo]
 PackagePartInfo = Dict[PartName, Any]
 
 package_ignored_files = {
@@ -103,7 +133,7 @@ PACKAGE_EXTENSION: Final[str] = ".mkp"
 
 
 def package_dir() -> Path:
-    return Path(cmk.utils.paths.omd_root, "var", "check_mk", "packages")
+    return cmk.utils.paths.omd_root / "var/check_mk/packages"
 
 
 def get_config_parts() -> List[PackagePart]:
@@ -122,26 +152,39 @@ def get_repo_ntop_parts() -> List[PackagePart]:
 
 def get_package_parts() -> List[PackagePart]:
     return [
-        PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
-                    str(cmk.utils.paths.local_agent_based_plugins_dir)),
+        PackagePart(
+            "agent_based",
+            _("Agent based plugins (Checks, Inventory)"),
+            str(cmk.utils.paths.local_agent_based_plugins_dir),
+        ),
         PackagePart("checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)),
-        PackagePart("inventory", _("Legacy inventory plugins"),
-                    str(cmk.utils.paths.local_inventory_dir)),
-        PackagePart("checkman", _("Checks' man pages"),
-                    str(cmk.utils.paths.local_check_manpages_dir)),
+        PackagePart(
+            "inventory", _("Legacy inventory plugins"), str(cmk.utils.paths.local_inventory_dir)
+        ),
+        PackagePart(
+            "checkman", _("Checks' man pages"), str(cmk.utils.paths.local_check_manpages_dir)
+        ),
         PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
-        PackagePart("notifications", _("Notification scripts"),
-                    str(cmk.utils.paths.local_notifications_dir)),
-        PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
-        PackagePart("pnp-templates", _("PNP4Nagios templates (deprecated)"),
-                    str(cmk.utils.paths.local_pnp_templates_dir)),
+        PackagePart(
+            "notifications", _("Notification scripts"), str(cmk.utils.paths.local_notifications_dir)
+        ),
+        PackagePart("gui", _("GUI extensions"), str(cmk.utils.paths.local_gui_plugins_dir)),
+        PackagePart("web", _("Legacy GUI extensions"), str(cmk.utils.paths.local_web_dir)),
+        PackagePart(
+            "pnp-templates",
+            _("PNP4Nagios templates (deprecated)"),
+            str(cmk.utils.paths.local_pnp_templates_dir),
+        ),
         PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
         PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),
         PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
         PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
         PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
-        PackagePart("alert_handlers", _("Alert handlers"),
-                    str(cmk.utils.paths.local_share_dir / "alert_handlers")),
+        PackagePart(
+            "alert_handlers",
+            _("Alert handlers"),
+            str(cmk.utils.paths.local_share_dir / "alert_handlers"),
+        ),
     ]
 
 
@@ -173,9 +216,21 @@ def release(pacname: PackageName) -> None:
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
                 logger.log(VERBOSE, "    %s", f)
-            if part.ident == 'ec_rule_packs':
+            if part.ident == "ec_rule_packs":
                 ec.release_packaged_rule_packs(filenames)
     _remove_package_info(pacname)
+
+
+def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
+    info = tarfile.TarInfo()
+    info.mtime = int(time.time())
+    info.uid = 0
+    info.gid = 0
+    info.size = size
+    info.mode = 0o644
+    info.type = tarfile.REGTYPE
+    info.name = filename
+    return info
 
 
 def write_file(
@@ -185,41 +240,32 @@ def write_file(
     config_parts: Callable = get_config_parts,
 ) -> None:
     package["version.packaged"] = cmk_version.__version__
-    tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
-    def create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
-        info = tarfile.TarInfo()
-        info.mtime = int(time.time())
-        info.uid = 0
-        info.gid = 0
-        info.size = size
-        info.mode = 0o644
-        info.type = tarfile.REGTYPE
-        info.name = filename
-        return info
+    with tarfile.open(fileobj=file_object, mode="w:gz") as tar:
 
-    def add_file(filename: str, data: bytes) -> None:
-        info_file = BytesIO(data)
-        info = create_tar_info(filename, len(info_file.getvalue()))
-        tar.addfile(info, info_file)
+        def add_file(filename: str, data: bytes) -> None:
+            info_file = BytesIO(data)
+            info = _create_tar_info(filename, len(info_file.getvalue()))
+            tar.addfile(info, info_file)
 
-    # add the regular info file (Python format)
-    add_file("info", ensure_binary(pprint.pformat(package)))
+        # add the regular info file (Python format)
+        add_file("info", pprint.pformat(package).encode())
 
-    # add the info file a second time (JSON format) for external tools
-    add_file("info.json", ensure_binary(json.dumps(package)))
+        # add the info file a second time (JSON format) for external tools
+        add_file("info.json", json.dumps(package).encode())
 
-    # Now pack the actual files into sub tars
-    for part in package_parts() + config_parts():
-        filenames = package["files"].get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for f in filenames:
-                logger.log(VERBOSE, "    %s", f)
-            subdata = subprocess.check_output(
-                ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames)
-            add_file(part.ident + ".tar", subdata)
-    tar.close()
+        # Now pack the actual files into sub tars
+        for part in package_parts() + config_parts():
+            filenames = package["files"].get(part.ident, [])
+            if len(filenames) > 0:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                for f in filenames:
+                    logger.log(VERBOSE, "    %s", f)
+                subdata = subprocess.check_output(
+                    ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path]
+                    + filenames
+                )
+                add_file(part.ident + ".tar", subdata)
 
 
 def get_initial_package_info(pacname: str) -> PackageInfo:
@@ -246,7 +292,7 @@ def remove(package: PackageInfo) -> None:
                 logger.log(VERBOSE, "    %s", fn)
                 try:
                     path = part.path + "/" + fn
-                    if part.ident == 'ec_rule_packs':
+                    if part.ident == "ec_rule_packs":
                         _remove_packaged_rule_packs(filenames)
                     else:
                         with suppress(FileNotFoundError):
@@ -257,6 +303,8 @@ def remove(package: PackageInfo) -> None:
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
     (package_dir() / package["name"]).unlink()
+
+    _execute_post_package_change_actions(package)
 
 
 def disable(package_name: PackageName, package_info: PackageInfo) -> None:
@@ -331,7 +379,8 @@ def edit(pacname: PackageName, new_package_info: PackageInfo) -> None:
     if pacname != new_package_info["name"]:
         if _package_exists(new_package_info["name"]):
             raise PackageException(
-                "Cannot rename package: a package with that name already exists.")
+                "Cannot rename package: a package with that name already exists."
+            )
 
     _validate_package_files(pacname, new_package_info["files"])
 
@@ -359,14 +408,17 @@ def install(file_object: BinaryIO) -> PackageInfo:
     pacname = package["name"]
     old_package = read_package_info(pacname)
     if old_package:
-        logger.log(VERBOSE, "Updating %s from version %s to %s.", pacname, old_package["version"],
-                   package["version"])
+        logger.log(
+            VERBOSE,
+            "Updating %s from version %s to %s.",
+            pacname,
+            old_package["version"],
+            package["version"],
+        )
         update = True
     else:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
-
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")
 
     # Before installing check for conflicts
     keep_files = {}
@@ -387,53 +439,58 @@ def install(file_object: BinaryIO) -> PackageInfo:
             elif os.path.exists(path):
                 raise PackageException("File conflict: %s already existing." % path)
 
-    # Now install files, but only unpack files explicitely listed
-    for part in get_package_parts() + get_config_parts():
-        filenames = package["files"].get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for fn in filenames:
-                logger.log(VERBOSE, "    %s", fn)
+    with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
+        # Now install files, but only unpack files explicitely listed
+        for part in get_package_parts() + get_config_parts():
+            filenames = package["files"].get(part.ident, [])
+            if len(filenames) > 0:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                for fn in filenames:
+                    logger.log(VERBOSE, "    %s", fn)
 
-            # make sure target directory exists
-            if not os.path.exists(part.path):
-                logger.log(VERBOSE, "    Creating directory %s", part.path)
-                os.makedirs(part.path)
+                # make sure target directory exists
+                if not os.path.exists(part.path):
+                    logger.log(VERBOSE, "    Creating directory %s", part.path)
+                    os.makedirs(part.path)
 
-            tarsource = tar.extractfile(part.ident + ".tar")
-            if tarsource is None:
-                raise PackageException("Failed to open %s.tar" % part.ident)
+                tarsource = tar.extractfile(part.ident + ".tar")
+                if tarsource is None:
+                    raise PackageException("Failed to open %s.tar" % part.ident)
 
-            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
-            # been installed for cache invalidation.
-            tardest = subprocess.Popen(["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
-                                       stdin=subprocess.PIPE,
-                                       shell=False,
-                                       close_fds=True)
-            if tardest.stdin is None:
-                raise PackageException("Failed to open stdin")
+                # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+                # been installed for cache invalidation.
+                with subprocess.Popen(
+                    ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                    stdin=subprocess.PIPE,
+                    shell=False,
+                    close_fds=True,
+                ) as tardest:
+                    if tardest.stdin is None:
+                        raise PackageException("Failed to open stdin")
 
-            while True:
-                data = tarsource.read(4096)
-                if not data:
-                    break
-                tardest.stdin.write(data)
+                    while True:
+                        data = tarsource.read(4096)
+                        if not data:
+                            break
+                        tardest.stdin.write(data)
 
-            tardest.stdin.close()
-            tardest.wait()
+                # Fix permissions of extracted files
+                for filename in filenames:
+                    path = os.path.join(part.path, filename)
+                    desired_perm = _get_permissions(path)
+                    has_perm = os.stat(path).st_mode & 0o7777
+                    if has_perm != desired_perm:
+                        logger.log(
+                            VERBOSE,
+                            "    Fixing permissions of %s: %04o -> %04o",
+                            path,
+                            has_perm,
+                            desired_perm,
+                        )
+                        os.chmod(path, desired_perm)
 
-            # Fix permissions of extracted files
-            for filename in filenames:
-                path = os.path.join(part.path, filename)
-                desired_perm = _get_permissions(path)
-                has_perm = os.stat(path).st_mode & 0o7777
-                if has_perm != desired_perm:
-                    logger.log(VERBOSE, "    Fixing permissions of %s: %04o -> %04o", path,
-                               has_perm, desired_perm)
-                    os.chmod(path, desired_perm)
-
-            if part.ident == 'ec_rule_packs':
-                ec.add_rule_pack_proxies(filenames)
+                if part.ident == "ec_rule_packs":
+                    ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
     if update and old_package is not None:
@@ -450,12 +507,15 @@ def install(file_object: BinaryIO) -> PackageInfo:
                     except Exception as e:
                         logger.error("Error removing %s: %s", path, e)
 
-            if part.ident == 'ec_rule_packs':
+            if part.ident == "ec_rule_packs":
                 to_remove = [fn for fn in filenames if fn not in keep]
                 _remove_packaged_rule_packs(to_remove, delete_export=False)
 
     # Last but not least install package file
     write_package_info(package)
+
+    _execute_post_package_change_actions(package)
+
     return package
 
 
@@ -468,8 +528,8 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
     if not file_names:
         return
 
-    rule_packs = ec.load_rule_packs()
-    rule_pack_ids = [rp['id'] for rp in rule_packs]
+    rule_packs = list(ec.load_rule_packs())
+    rule_pack_ids = [rp["id"] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 
     for id_ in affected_ids:
@@ -482,11 +542,11 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
 
 def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")  # pylint:disable=consider-using-with
     package_info_file = tar.extractfile("info")
     if package_info_file is None:
         raise PackageException("Failed to open package info file")
-    return parse_package_info(ensure_str(package_info_file.read()))
+    return parse_package_info(package_info_file.read().decode())
 
 
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
@@ -498,12 +558,18 @@ def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
             packages[package_name] = package_info
 
     for part in get_package_parts():
-        _validate_package_files_part(packages, pacname, part.ident, part.path,
-                                     files.get(part.ident, []))
+        _validate_package_files_part(
+            packages, pacname, part.ident, part.path, files.get(part.ident, [])
+        )
 
 
-def _validate_package_files_part(packages: Packages, pacname: PackageName, part: PartName,
-                                 directory: PartPath, rel_paths: PartFiles) -> None:
+def _validate_package_files_part(
+    packages: Packages,
+    pacname: PackageName,
+    part: PartName,
+    directory: PartPath,
+    rel_paths: PartFiles,
+) -> None:
     for rel_path in rel_paths:
         path = os.path.join(directory, rel_path)
         if not os.path.exists(path):
@@ -512,8 +578,9 @@ def _validate_package_files_part(packages: Packages, pacname: PackageName, part:
         for other_pacname, other_package_info in packages.items():
             for other_rel_path in other_package_info["files"].get(part, []):
                 if other_rel_path == rel_path and other_pacname != pacname:
-                    raise PackageException("File %s does already belong to package %s" %
-                                           (path, other_pacname))
+                    raise PackageException(
+                        "File %s does already belong to package %s" % (path, other_pacname)
+                    )
 
 
 def _verify_check_mk_version(package: PackageInfo) -> None:
@@ -539,8 +606,10 @@ def _verify_check_mk_version(package: PackageInfo) -> None:
         return
 
     if not compatible:
-        raise PackageException("The package requires Check_MK version %s, "
-                               "but you have %s installed." % (min_version, version))
+        raise PackageException(
+            "The package requires Check_MK version %s, "
+            "but you have %s installed." % (min_version, version)
+        )
 
 
 def _normalize_daily_version(version: str) -> str:
@@ -567,18 +636,12 @@ def _normalize_daily_version(version: str) -> str:
     return version
 
 
-def get_all_package_infos() -> Packages:
-    packages = {}
-    for package_name in installed_names():
-        packages[package_name] = read_package_info(package_name)
+def get_unpackaged_files() -> Dict[str, List[str]]:
+    return {part.ident: files for part, files in unpackaged_files().items()}
 
-    return {
-        "installed": packages,
-        "unpackaged": {part.ident: files for part, files in unpackaged_files().items()},
-        "parts": package_part_info(),
-        "optional_packages": get_optional_package_infos(),
-        "disabled_packages": get_disabled_package_infos(),
-    }
+
+def get_installed_package_infos() -> Dict[PackageName, Optional[PackageInfo]]:
+    return {name: read_package_info(name) for name in installed_names()}
 
 
 def get_optional_package_infos() -> Dict[str, PackageInfo]:
@@ -605,7 +668,7 @@ def _get_package_infos(paths: List[Path]) -> Dict[str, PackageInfo]:
                 # Do not make broken files / packages fail the whole mechanism
                 logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
                 continue
-            optional[ensure_str(pkg_path.name)] = package_info
+            optional[pkg_path.name] = package_info
 
     return optional
 
@@ -647,16 +710,22 @@ def read_package_info(pacname: PackageName) -> Optional[PackageInfo]:
         with pkg_info_path.open("r", encoding="utf-8") as f:
             package = parse_package_info(f.read())
         package["name"] = pacname  # do not trust package content
-        num_files = sum([len(fl) for fl in package["files"].values()])
-        package["num_files"] = num_files
         return package
     except IOError:
         return None
     except Exception as e:
-        logger.log(VERBOSE,
-                   "Ignoring invalid package file '%s'. Please remove it from %s! Error: %s",
-                   pkg_info_path, package_dir(), e)
+        logger.log(
+            VERBOSE,
+            "Ignoring invalid package file '%s'. Please remove it from %s! Error: %s",
+            pkg_info_path,
+            package_dir(),
+            e,
+        )
         return None
+
+
+def package_num_files(package: PackageInfo) -> int:
+    return sum([len(fl) for fl in package["files"].values()])
 
 
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:
@@ -666,14 +735,14 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:
     # Handle case where one part-directory lies below another
     taboo_dirs = {p.path for p in get_package_parts() + get_config_parts() if p.ident != part}
     # os.path.realpath would resolve /omd to /opt/omd ...
-    taboo_dirs |= {p.replace('lib/check_mk', 'lib/python3/cmk') for p in taboo_dirs}
+    taboo_dirs |= {p.replace("lib/check_mk", "lib/python3/cmk") for p in taboo_dirs}
     if directory in taboo_dirs:
         return []
 
     result: List[str] = []
     files = os.listdir(directory)
     for f in files:
-        if f in ['.', '..'] or f.startswith('.') or f.endswith('~') or f.endswith(".pyc"):
+        if f in [".", ".."] or f.startswith(".") or f.endswith("~") or f.endswith(".pyc"):
             continue
 
         ignored = package_ignored_files.get(part, [])
@@ -714,7 +783,7 @@ def _package_exists(pacname: PackageName) -> bool:
 def write_package_info(package: PackageInfo) -> None:
     pkg_info_path = package_dir() / package["name"]
     with pkg_info_path.open("w", encoding="utf-8") as f:
-        f.write(ensure_str(pprint.pformat(package) + "\n"))
+        f.write(pprint.pformat(package) + "\n")
 
 
 def _remove_package_info(pacname: PackageName) -> None:
@@ -733,16 +802,15 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-    package_info = get_all_package_infos()
 
     def mkp_of(rule_pack_file: str) -> Any:
         """Find the MKP for the given file"""
-        for mkp, content in package_info.get('installed', {}).items():
-            if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):
-                return mkp
+        for package_name, package in get_installed_package_infos().items():
+            if package and rule_pack_file in package.get("files", {}).get("ec_rule_packs", []):
+                return package_name
         return None
 
-    exported_rule_packs = package_info['parts']['ec_rule_packs']['files']
+    exported_rule_packs = package_part_info()["ec_rule_packs"]["files"]
 
     return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
 
@@ -827,36 +895,41 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
     until_version = package_info["version.usable_until"]
 
     if _is_16_feature_pack_package(package_name, package_info):
-        logger.log(VERBOSE, "[%s]: This is a 1.6 feature pack package: It is outdated. ",
-                   package_name)
+        logger.log(
+            VERBOSE, "[%s]: This is a 1.6 feature pack package: It is outdated. ", package_name
+        )
         return True
 
     if until_version is None:
-        logger.log(VERBOSE, "[%s]: \"Until version\" is not set", package_name)
+        logger.log(VERBOSE, '[%s]: "Until version" is not set', package_name)
         return False
 
     # Normalize daily versions to branch version
     version = _normalize_daily_version(version)
     if version == "master":
-        logger.log(VERBOSE, "[%s]: This is a daily build of master branch, can not decide",
-                   package_name)
+        logger.log(
+            VERBOSE, "[%s]: This is a daily build of master branch, can not decide", package_name
+        )
         return False
 
     until_version = _normalize_daily_version(until_version)
     if until_version == "master":
-        logger.log(VERBOSE, "[%s]: Until daily build of master branch, can not decide",
-                   package_name)
+        logger.log(
+            VERBOSE, "[%s]: Until daily build of master branch, can not decide", package_name
+        )
         return False
 
     try:
         is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
     except Exception:
-        logger.log(VERBOSE,
-                   "[%s]: Could not compare until version %r with current version %r",
-                   package_name,
-                   until_version,
-                   version,
-                   exc_info=True)
+        logger.log(
+            VERBOSE,
+            "[%s]: Could not compare until version %r with current version %r",
+            package_name,
+            until_version,
+            version,
+            exc_info=True,
+        )
         return False
 
     logger.log(VERBOSE, "[%s]: %s > %s = %s", package_name, version, until_version, is_outdated)
@@ -865,23 +938,52 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
 
 def _is_16_feature_pack_package(package_name: PackageName, package_info: PackageInfo) -> bool:
     if package_name not in {
-            "agent_rabbitmq",
-            "azure_ad",
-            "cisco_asa_sessions",
-            "cisco_webex_teams_notifications",
-            "couchbase",
-            "fortigate_sslvpn",
-            "graylog_special_agent",
-            "huawei_switches",
-            "jenkins_special_agent",
-            "jira_special_agent",
-            "k8s_extensions",
-            "mongodb",
-            "prometheus",
-            "pulse_secure",
-            "redis",
-            "tplink_checks",
+        "agent_rabbitmq",
+        "azure_ad",
+        "cisco_asa_sessions",
+        "cisco_webex_teams_notifications",
+        "couchbase",
+        "fortigate_sslvpn",
+        "graylog_special_agent",
+        "huawei_switches",
+        "jenkins_special_agent",
+        "jira_special_agent",
+        "k8s_extensions",
+        "mongodb",
+        "prometheus",
+        "pulse_secure",
+        "redis",
+        "tplink_checks",
     }:
         return False
 
     return package_info.get("version", "").startswith("1.")
+
+
+def _execute_post_package_change_actions(package: PackageInfo) -> None:
+    _build_setup_search_index_background()
+
+    if _package_contains_gui_files(package):
+        _reload_apache()
+
+
+def _build_setup_search_index_background() -> None:
+    subprocess.run(
+        ["init-redis"],
+        check=False,
+    )
+
+
+def _package_contains_gui_files(package: PackageInfo) -> bool:
+    return "gui" in package["files"] or "web" in package["files"]
+
+
+def _reload_apache() -> None:
+    try:
+        subprocess.run(
+            ["omd", "reload", "apache"],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        logger.error("Error reloading apache", exc_info=True)

@@ -1,7 +1,7 @@
 title: Monitoring for zorp firewall connections
 agents: linux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays individual numbers of connections for each connection type as well as the
@@ -9,6 +9,5 @@ description:
  It returns OK/WARN/CRIT in respect to configurable WARN/CRIT values for the total number of
  connections.
 
-inventory:
+discovery:
  One service is created
-

@@ -1,0 +1,69 @@
+---
+- name: Update apt-get repo and cache
+  become: true
+  apt:
+    update_cache: yes
+    upgrade: "yes"
+    force_apt_get: yes
+    cache_valid_time: 30
+
+- name: Copy checkmk package to EC2 instance
+  ansible.builtin.copy:
+    remote_src: no
+    src: "{{ package_dir }}/check-mk-{{cmk_edition}}-{{cmk_version}}_0.{{distro}}_amd64.deb"
+    dest: /home/{{ ansible_ssh_user }}/check-mk-{{cmk_edition}}-{{cmk_version}}_0.{{distro}}_amd64.deb
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: "0660"
+
+- name: Install CMK Server
+  apt:
+    deb: /home/{{ ansible_ssh_user }}/check-mk-{{cmk_edition}}-{{cmk_version}}_0.{{distro}}_amd64.deb
+    state: present
+
+- name: Test if site is already installed
+  become: yes
+  become_user: root
+  become_method: sudo
+  shell: |
+    omd sites | grep {{cmk_site}} -c || true
+  register: site_installed
+
+- name: Create CMK {{cmk_site}} Site
+  become: yes
+  become_user: root
+  become_method: sudo
+  shell: |
+    omd create --admin-password={{cmkadmin_pass}} {{cmk_site}}
+  when: site_installed.stdout == "0"
+
+- name: Ensures dir exists
+  file:
+    path: /omd/sites/{{cmk_site}}/var/check_mk/web/cmkadmin
+    state: directory
+    owner: "{{ cmk_site }}"
+    group: "{{ cmk_site }}"
+    mode: "0770"
+
+- name: Copy getting enforce password
+  template:
+    src: files/enforce_pw_change.mk
+    dest: /omd/sites/{{cmk_site}}/var/check_mk/web/cmkadmin/enforce_pw_change.mk
+    owner: "{{ cmk_site }}"
+    group: "{{ cmk_site }}"
+    mode: "0660"
+
+- name: Copy global settings for setting password policy
+  template:
+    src: files/global.mk
+    dest: /omd/sites/{{cmk_site}}/etc/check_mk/multisite.d/wato/global.mk
+    owner: "{{ cmk_site }}"
+    group: "{{ cmk_site }}"
+    mode: "0660"
+
+- name: Start {{cmk_site}} Site
+  become: yes
+  become_user: root
+  become_method: sudo
+  shell: |
+    omd start {{cmk_site}}

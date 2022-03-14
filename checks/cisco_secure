@@ -7,7 +7,7 @@
 
 def _sanitize_mac(string):
     hx_gen = ("%02s" % hex(ord(m))[2:] for m in string)
-    return ":".join(hx_gen).replace(' ', '0')
+    return ":".join(hx_gen).replace(" ", "0")
 
 
 def parse_cisco_secure(info):
@@ -17,7 +17,7 @@ def parse_cisco_secure(info):
     names = {l[0]: (l[1], l[2]) for l in info[0]}
     for num, is_enabled, status, violation_count, lastmac in info[1]:
         mac = _sanitize_mac(lastmac)
-        enabled_txt = {'1': 'yes', '2': 'no'}.get(is_enabled)
+        enabled_txt = {"1": "yes", "2": "no"}.get(is_enabled)
         try:
             status_int = int(status)
         except ValueError:
@@ -25,8 +25,16 @@ def parse_cisco_secure(info):
         # violationCount is initialized with 0 when security is enabled. When not, the
         # value is reported as empty string. saveint() makes life easier here.
         if num in names:
-            parsed.append((names[num][0], int(names[num][1]), enabled_txt, status_int,
-                           saveint(violation_count), mac))
+            parsed.append(
+                (
+                    names[num][0],
+                    int(names[num][1]),
+                    enabled_txt,
+                    status_int,
+                    saveint(violation_count),
+                    mac,
+                )
+            )
         else:
             parsed.append((num, 0, enabled_txt, status_int, saveint(violation_count), mac))
 
@@ -37,7 +45,7 @@ def inventory_cisco_secure(parsed):
     # search for at least one port with security
     for _name, op_state, is_enabled, status, _violation_count, _lastmac in parsed:
         # if portsecurity enabled and port up OR currently there is sercurity issue`
-        if status == 3 or (is_enabled != 'no' and op_state == 1):
+        if status == 3 or (is_enabled != "no" and op_state == 1):
             return [(None, None)]
 
 
@@ -45,13 +53,17 @@ def check_cisco_secure(_item, _params, parsed):
     secure_states = {
         1: "full Operational",
         2: "could not be enabled due to certain reasons",
-        3: "shutdown due to security violation"
+        3: "shutdown due to security violation",
     }
 
     at_least_one_problem = False
     for name, op_state, is_enabled, status, violation_count, lastmac in parsed:
-        message = "Port %s: %s (violation count: %d, last MAC: %s)" % \
-        ( name, secure_states.get(status, "unknown"), violation_count, lastmac )
+        message = "Port %s: %s (violation count: %d, last MAC: %s)" % (
+            name,
+            secure_states.get(status, "unknown"),
+            violation_count,
+            lastmac,
+        )
 
         if is_enabled is not None:
             # If port cant be enabled and is up and has violations -> WARN
@@ -74,20 +86,23 @@ def check_cisco_secure(_item, _params, parsed):
 
 
 check_info["cisco_secure"] = {
-    "parse_function"        : parse_cisco_secure,
-    "check_function"        : check_cisco_secure,
-    "inventory_function"    : inventory_cisco_secure,
-    "service_description"   : "Port Security",
-    "snmp_scan_function"    : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                              oid(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*"),
-    "snmp_info"  : [(".1.3.6.1.2.1.2.2.1", [OID_END, 2, 8]),
-                                (".1.3.6.1.4.1.9.9.315.1.2.1.1",
-                                                [
-                                                   OID_END,
-                                                  "1", # cpsIfPortSecurityEnable
-                                                  "2", # cpsIfPortSecurityStatus
-                                                  "9", # cpsIfViolationCount
-                                                  "10", # cpsIfSecureLastMacAddress
-                                                ] ),
-                              ]
+    "parse_function": parse_cisco_secure,
+    "check_function": check_cisco_secure,
+    "inventory_function": inventory_cisco_secure,
+    "service_description": "Port Security",
+    "snmp_scan_function": lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*"),
+    "snmp_info": [
+        (".1.3.6.1.2.1.2.2.1", [OID_END, 2, 8]),
+        (
+            ".1.3.6.1.4.1.9.9.315.1.2.1.1",
+            [
+                OID_END,
+                "1",  # cpsIfPortSecurityEnable
+                "2",  # cpsIfPortSecurityStatus
+                "9",  # cpsIfViolationCount
+                "10",  # cpsIfSecureLastMacAddress
+            ],
+        ),
+    ],
 }

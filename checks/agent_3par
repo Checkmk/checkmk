@@ -4,15 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_3par_arguments(params, hostname, ipaddress):
+
+def agent_3par_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = [
         "--user",
         params["user"],
         "--password",
         passwordstore_get_cmdline("%s", params["password"]),
         "--port",
-        params['port'],
+        params["port"],
     ]
     if not params.get("verify_cert", False):
         args.append("--no-cert-check")
@@ -20,9 +24,9 @@ def agent_3par_arguments(params, hostname, ipaddress):
     if "values" in params:
         args += ["--values", ",".join(params["values"])]
 
-    args.append(ipaddress)
+    args.append(ipaddress or hostname)
 
     return args
 
 
-special_agent_info['3par'] = agent_3par_arguments
+special_agent_info["3par"] = agent_3par_arguments

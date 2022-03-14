@@ -28,8 +28,13 @@ def check_juniper_screenos_cpu(_no_item, params, info):
         ("util15", util15, warn, crit),
     ]
 
-    message = "%d%% 1min, %d%% 15min%s (warn/crit at %d%%/%d%%)" % (util1, util15, label15, warn,
-                                                                    crit)
+    message = "%d%% 1min, %d%% 15min%s (warn/crit at %d%%/%d%%)" % (
+        util1,
+        util15,
+        label15,
+        warn,
+        crit,
+    )
     return state, message, perf
 
 
@@ -45,5 +50,6 @@ check_info["juniper_screenos_cpu"] = {
         [
             2,  # jnxOperating1MinLoadAvg
             4,  # jnxOperating15MinLoadAvg
-        ])
+        ],
+    ),
 }

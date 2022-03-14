@@ -1,7 +1,7 @@
 title: FAST LTA Storage Systems: Total Capacity over all Silent Cubes
 agents: snmp
 catalog: hw/storagehw/fastlta
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the total / used capacity over all silent cubes connected to a FAST
@@ -15,6 +15,5 @@ description:
 item:
  The fixed statement {{Total}}
 
-inventory:
+discovery:
  One service is created on every system (head unit).
-

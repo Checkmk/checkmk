@@ -1,0 +1,17 @@
+Title: API: modifying the host and folder update endpoints
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1614929815
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk introduces some changes to the update endpoint of host and folder.
+Providing a non existing remove attribute resulted previously in a 500 error.
+This is fixed to return a more appropriate 400 error. The bulk update code examples
+were updated to reflect the actual content of the endpoint. Similar to the single
+update call, the bulk update now also return a 400 error instead of 500 when
+trying to remove non existing attributes.

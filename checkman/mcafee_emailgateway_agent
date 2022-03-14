@@ -1,12 +1,12 @@
 title: McAfee Email Gateway: Agent Info
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the agent version, hostname and las file update
  of McAfee Email gateways which support the MCAFEE-MEG MIB.
  The check is always OK.
 
-inventory:
+discovery:
  One service is created.

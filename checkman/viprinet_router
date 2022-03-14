@@ -1,7 +1,7 @@
 title: Viprinet: Router Mode
 agents: snmp
 catalog: hw/network/viprinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the current router mode for this host
@@ -16,7 +16,6 @@ description:
  "3" : "Hotspare-Hub replacing another router"
 
 
-inventory:
+discovery:
  One service is created.
  The router mode during the inventory is remembered as a param.
-

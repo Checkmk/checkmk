@@ -33,11 +33,11 @@ def check_avaya_45xx_fan(item, params, info):
 
 
 check_info["avaya_45xx_fan"] = {
-    'check_function': check_avaya_45xx_fan,
-    'inventory_function': inventory_avaya_45xx_fan,
-    'service_description': 'Fan Chassis %s',
-    'has_perfdata': True,
+    "check_function": check_avaya_45xx_fan,
+    "inventory_function": inventory_avaya_45xx_fan,
+    "service_description": "Fan Chassis %s",
+    "has_perfdata": True,
     # S5-CHASSIS-MIB
-    'snmp_info': ('.1.3.6.1.4.1.45.1.6.3.3.1.1.10', [6]),  # FanOperState
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.45.3" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": (".1.3.6.1.4.1.45.1.6.3.3.1.1.10", [6]),  # FanOperState
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.45.3" in oid(".1.3.6.1.2.1.1.2.0"),
 }

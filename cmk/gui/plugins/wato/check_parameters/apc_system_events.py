@@ -5,25 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_apc_system_events():
     return Dictionary(
         title=_("System Events on APX Inrow Devices"),
         elements=[
-            ("state", MonitoringState(
-                title=_("State during active system events"),
-                default_value=2,
-            )),
+            (
+                "state",
+                MonitoringState(
+                    title=_("State during active system events"),
+                    default_value=2,
+                ),
+            ),
         ],
     )
 
@@ -35,4 +35,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_apc_system_events,
         title=lambda: _("APC Inrow System Events"),
-    ))
+    )
+)

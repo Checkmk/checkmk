@@ -1,7 +1,7 @@
 title: Microsoft Azure Storage Accounts: Data Flow
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports metrics regarding data flow of monitored
@@ -13,6 +13,6 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each storage account if all required metrics
  (total_Ingress, total_Egress, total_Transactions) are given.

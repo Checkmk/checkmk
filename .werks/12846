@@ -1,0 +1,46 @@
+Title: Fix inheritance of folder contact groups to services of hosts
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1626860449
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+The assignment of contact groups to hosts and services can be controlled using
+the folder hierarchy of WATO as described in the user manual
+(https://docs.checkmk.com/latest/en/wato_user.html#_allocation_via_folders).
+
+You are only affected by this change in case you use a) the WATO folder hierarchy
+for assigning contact groups to services.
+
+When using the assigning contact groups to services with the following
+settings, this could result in too many groups being assigned to a service:
+
+<ul>
+<li>Add these groups as contacts to all hosts in this folder: Enabled</li>
+<li>Add these groups as contacts to all hosts in all subfolders of this folder: Not enabled</li>
+<li>Always add these groups as contacts to all services in all subfolders of this folder: Enabled</li>
+</ul>
+
+In this situation only the groups from the nearest parent folder should be
+assigned to the services, just like it is done for the hosts. Instead the
+services got the groups assigned from all parent folders which have the
+service assignement enabled.
+
+We now have changed the contact groups of the services to be handled exactly
+like the hosts. Only the contact groups defined in the nearest parent folder
+with the service assignment enabled will be added to the services.
+
+Example:
+
+<code>
+Folder_A (Permission: group1, settings as listed above)
+|_Folder_B (Permission: group2, settings as listed above)
+</code>
+
+In this scenario, a host in the Folder_B gets the contact group "group2"
+assigned. Services got the "group1" and "group2" assingned in previous
+versions.  Now the services get the "group2" assigned, just like the host.

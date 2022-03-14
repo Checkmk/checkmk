@@ -4,19 +4,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib import Check  # type: ignore[import]
-import pytest
+
+from tests.testlib import Check
 
 
 def test_sanitize_line():
     input_ = [
-        u'cephfs_data', u'1', u'N/A', u'N/A', u'1.6', u'GiB', u'1.97', u'77', u'GiB', u'809',
-        u'809', u'33', u'B', u'177', u'KiB', u'4.7', u'GiB'
+        "cephfs_data",
+        "1",
+        "N/A",
+        "N/A",
+        "1.6",
+        "GiB",
+        "1.97",
+        "77",
+        "GiB",
+        "809",
+        "809",
+        "33",
+        "B",
+        "177",
+        "KiB",
+        "4.7",
+        "GiB",
     ]
     expected = [
-        u'cephfs_data', u'1', u'N/A', u'N/A', u'1.6GiB', u'1.97', u'77GiB', u'809', u'809', u'33B',
-        u'177KiB', u'4.7GiB'
+        "cephfs_data",
+        "1",
+        "N/A",
+        "N/A",
+        "1.6GiB",
+        "1.97",
+        "77GiB",
+        "809",
+        "809",
+        "33B",
+        "177KiB",
+        "4.7GiB",
     ]
-    check = Check('ceph_df')
-    sanitize_line = check.context['_sanitize_line']
+    check = Check("ceph_df")
+    sanitize_line = check.context["_sanitize_line"]
     assert expected == sanitize_line(input_)

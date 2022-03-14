@@ -14,7 +14,6 @@
 #include "Column.h"
 #include "MacroExpander.h"
 #include "NagiosCore.h"
-#include "NagiosGlobals.h"
 #include "Row.h"
 #include "Store.h"
 #include "StringColumn.h"
@@ -70,12 +69,11 @@ struct HostMacroExpanderTest : public ::testing::Test {
                     NagiosAuthorization{},
                     Encoding::utf8};
     ColumnOffsets offsets{};
-    StringColumn::Callback<host> oshmc{"funny_column_name", "Cool description!",
-                                       offsets, [this](const host &r) {
-                                           return HostMacroExpander::make(
-                                                      r, &this->core)
-                                               ->expandMacros(r.notes);
-                                       }};
+    StringColumn<host> oshmc{"funny_column_name", "Cool description!", offsets,
+                             [this](const host &r) {
+                                 return HostMacroExpander::make(r, &this->core)
+                                     ->expandMacros(r.notes);
+                             }};
 };
 
 // Second test fixture: A single host with a single service
@@ -92,7 +90,7 @@ struct ServiceMacroExpanderTest : public HostMacroExpanderTest {
                              {{"STATLER", "Boo!"},
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
-    StringColumn::Callback<service> ossmc{
+    StringColumn<service> ossmc{
         "navn", "Beskrivelse", offsets, [this](const service &r) {
             return ServiceMacroExpander::make(r, &this->core)
                 ->expandMacros(r.notes);

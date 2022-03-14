@@ -5,44 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Optional, List
-from six import ensure_str
+from typing import Dict, List, Optional
 
 import livestatus
+from livestatus import SiteId
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.globals import html, request
-from cmk.gui.escaping import escape_text
-
-from cmk.gui.plugins.views import (
+from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.views.commands import PermissionSectionAction
+from cmk.gui.plugins.views.utils import (
+    cmp_simple_number,
+    Command,
+    command_registry,
+    CommandActionResult,
     data_source_registry,
     DataSourceLivestatus,
-    RowTable,
-)
-
-from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
     paint_age,
-    sorter_registry,
+    Painter,
+    painter_registry,
+    RowTable,
     Sorter,
-    cmp_simple_number,
+    sorter_registry,
 )
-
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
-
-from cmk.gui.plugins.views.commands import PermissionSectionAction
-from cmk.gui.plugins.views import (
-    command_registry,
-    Command,
-    CommandActionResult,
-)
-
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -78,24 +64,32 @@ class CrashReportsRowTable(RowTable):
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         rows = []
         for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
-            if raw_row["crash_info"] is None:
+            crash_info = raw_row.get("crash_info")
+            if crash_info is None:
                 continue  # skip broken crash reports
 
-            crash_info_raw = json.loads(raw_row["crash_info"])
-            rows.append({
-                "site": raw_row["site"],
-                "crash_id": raw_row["crash_id"],
-                "crash_type": raw_row["crash_type"],
-                "crash_time": crash_info_raw["time"],
-                "crash_version": crash_info_raw["version"],
-                "crash_exc_type": crash_info_raw["exc_type"],
-                "crash_exc_value": crash_info_raw["exc_value"],
-                "crash_exc_traceback": crash_info_raw["exc_traceback"],
-            })
+            try:
+                crash_info_raw = json.loads(crash_info)
+            except json.JSONDecodeError:
+                continue  # skip broken crash infos like b'' or b'\n'
+
+            rows.append(
+                {
+                    "site": raw_row["site"],
+                    "crash_id": raw_row["crash_id"],
+                    "crash_type": raw_row["crash_type"],
+                    "crash_time": crash_info_raw["time"],
+                    "crash_version": crash_info_raw["version"],
+                    "crash_exc_type": crash_info_raw["exc_type"],
+                    "crash_exc_value": crash_info_raw["exc_value"],
+                    "crash_exc_traceback": crash_info_raw["exc_traceback"],
+                }
+            )
         return sorted(rows, key=lambda r: r["crash_time"])
 
-    def get_crash_report_rows(self, only_sites: Optional[List[config.SiteId]],
-                              filter_headers: str) -> List[Dict[str, str]]:
+    def get_crash_report_rows(
+        self, only_sites: Optional[List[SiteId]], filter_headers: str
+    ) -> List[Dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -119,13 +113,14 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([config.SiteId(ensure_str(crash_info["site"]))])
+                sites.live().set_only_sites([SiteId(crash_info["site"])])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"
                     "Columns: %s\n"
-                    "Filter: id = %s" %
-                    (" ".join(columns), livestatus.lqencode(crash_info["crash_id"])))
+                    "Filter: id = %s"
+                    % (" ".join(columns), livestatus.lqencode(crash_info["crash_id"]))
+                )
             finally:
                 sites.live().set_only_sites(None)
                 sites.live().set_prepend_site(False)
@@ -135,14 +130,15 @@ class CrashReportsRowTable(RowTable):
 
         return rows
 
-    def _get_crash_report_info(self,
-                               only_sites: Optional[List[config.SiteId]],
-                               filter_headers: Optional[str] = None) -> List[Dict[str, str]]:
+    def _get_crash_report_info(
+        self, only_sites: Optional[List[SiteId]], filter_headers: Optional[str] = None
+    ) -> List[Dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)
-            rows = sites.live().query("GET crashreports\nColumns: id component\n%s" %
-                                      (filter_headers or ""))
+            rows = sites.live().query(
+                "GET crashreports\nColumns: id component\n%s" % (filter_headers or "")
+            )
         finally:
             sites.live().set_only_sites(None)
             sites.live().set_prepend_site(False)
@@ -196,7 +192,7 @@ class PainterCrashType(Painter):
         return ["crash_type"]
 
     def render(self, row, cell):
-        return (None, escape_text(row["crash_type"]))
+        return (None, row["crash_type"])
 
 
 @painter_registry.register
@@ -217,7 +213,7 @@ class PainterCrashTime(Painter):
 
     @property
     def painter_options(self):
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row, cell):
         return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
@@ -240,7 +236,7 @@ class PainterCrashVersion(Painter):
         return ["crash_version"]
 
     def render(self, row, cell):
-        return (None, escape_text(row["crash_version"]))
+        return (None, row["crash_version"])
 
 
 @painter_registry.register
@@ -260,8 +256,7 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row, cell):
-        return (None, "%s: %s" %
-                (escape_text(row["crash_exc_type"]), escape_text(row["crash_exc_value"])))
+        return (None, "%s: %s" % (row["crash_exc_type"], row["crash_exc_value"]))
 
 
 @sorter_registry.register
@@ -276,7 +271,7 @@ class SorterCrashTime(Sorter):
 
     @property
     def columns(self):
-        return ['crash_time']
+        return ["crash_time"]
 
     def cmp(self, r1, r2):
         return cmp_simple_number("crash_time", r1, r2)
@@ -289,7 +284,8 @@ PermissionActionDeleteCrashReport = permission_registry.register(
         title=_l("Delete crash reports"),
         description=_l("Delete crash reports created by Checkmk"),
         defaults=["admin"],
-    ))
+    )
+)
 
 
 @command_registry.register
@@ -319,9 +315,10 @@ class CommandDeleteCrashReports(Command):
     def render(self, what):
         html.button("_delete_crash_reports", _("Delete"))
 
-    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-                num_rows: int) -> CommandActionResult:
-        if html.request.has_var("_delete_crash_reports"):
+    def _action(
+        self, cmdtag: str, spec: str, row: dict, row_index: int, num_rows: int
+    ) -> CommandActionResult:
+        if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")
         return None

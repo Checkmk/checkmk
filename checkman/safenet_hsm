@@ -1,12 +1,12 @@
 title: Safenet HSM: Operation Stats
 agents: snmp
 catalog: hw/network/safenet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors operation stats of Safenet HSM devices. Specifically,
  it allows to monitor the rate of operation requests, the rate of operation errors
  and the number of errors since the last reset.
 
-inventory:
+discovery:
  One service is created for each device.

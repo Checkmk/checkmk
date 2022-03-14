@@ -9,21 +9,22 @@ This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 """
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
-import io
-import subprocess
-import re
-import os
 import abc
-import platform
-import sys
+import io
 import logging
+
 # optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
 import optparse  # pylint: disable=W0402
+import os
+import platform
+import re
+import subprocess
+import sys
 
 try:
-    from typing import Any, Dict, List, Optional, Tuple
+    from typing import Any, Dict, Iterable, List, Optional, Tuple
 except ImportError:
     # We need typing only for testing
     pass
@@ -32,10 +33,9 @@ except ImportError:
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
 if sys.version_info[0] >= 3:
-    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
-                                  newline='\n',
-                                  encoding=sys.stdout.encoding,
-                                  errors=sys.stdout.errors)
+    new_stdout = io.TextIOWrapper(
+        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
+    )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
 OS = platform.system()
@@ -81,6 +81,7 @@ class PostgresBase:
     which runs postgres.
     All non-abstract methods are meant to work on all OS types which were subclassed.
     """
+
     __metaclass__ = abc.ABCMeta
     _supported_pg_versions = ["12"]
 
@@ -91,6 +92,7 @@ class PostgresBase:
         self.pg_user = instance["pg_user"]
         self.pg_port = instance["pg_port"]
         self.pg_database = instance["pg_database"]
+        self.pg_passfile = instance.get("pg_passfile", "")
         self.my_env = os.environ.copy()
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
@@ -98,13 +100,9 @@ class PostgresBase:
         self.conn_time = ""  # For caching as conn_time and version are in one query
 
     @abc.abstractmethod
-    def run_sql_as_db_user(self,
-                           sql_cmd,
-                           extra_args="",
-                           field_sep=";",
-                           quiet=True,
-                           rows_only=True,
-                           mixed_cmd=False):
+    def run_sql_as_db_user(
+        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+    ):
         # type: (str, str, str, bool, bool, bool) -> str
         """This method implements the system specific way to call the psql interface"""
 
@@ -136,7 +134,7 @@ class PostgresBase:
 
     def get_server_version(self):
         """Gets the server version"""
-        out = self.run_sql_as_db_user('SHOW server_version;')
+        out = self.run_sql_as_db_user("SHOW server_version;")
         if out == "":
             raise PostgresPsqlError("psql connection returned with no data")
         version_as_string = out.split()[0]
@@ -151,28 +149,30 @@ class PostgresBase:
 
     def get_connections(self):
         """Gets the the idle and active connections"""
-        connection_sql_cmd = ("SELECT datname, "
-                              "(SELECT setting AS mc FROM pg_settings "
-                              "WHERE name = 'max_connections') AS mc, "
-                              "COUNT(state) FILTER (WHERE state='idle') AS idle, "
-                              "COUNT(state) FILTER (WHERE state='active') AS active "
-                              "FROM pg_stat_activity group by 1;")
+        connection_sql_cmd = (
+            "SELECT datname, "
+            "(SELECT setting AS mc FROM pg_settings "
+            "WHERE name = 'max_connections') AS mc, "
+            "COUNT(state) FILTER (WHERE state='idle') AS idle, "
+            "COUNT(state) FILTER (WHERE state='active') AS active "
+            "FROM pg_stat_activity group by 1;"
+        )
 
-        return self.run_sql_as_db_user(connection_sql_cmd,
-                                       rows_only=False,
-                                       extra_args="-P footer=off")
+        return self.run_sql_as_db_user(
+            connection_sql_cmd, rows_only=False, extra_args="-P footer=off"
+        )
 
     def get_sessions(self, row, idle):
         """Gets idle and open sessions"""
         condition = "%s = %s" % (row, idle)
 
-        sql_cmd = ("SELECT %s, count(*) FROM pg_stat_activity "
-                   "WHERE %s IS NOT NULL GROUP BY (%s);") % (condition, row, condition)
+        sql_cmd = (
+            "SELECT %s, count(*) FROM pg_stat_activity " "WHERE %s IS NOT NULL GROUP BY (%s);"
+        ) % (condition, row, condition)
 
-        out = self.run_sql_as_db_user(sql_cmd,
-                                      quiet=False,
-                                      extra_args="--variable ON_ERROR_STOP=1",
-                                      field_sep=" ")
+        out = self.run_sql_as_db_user(
+            sql_cmd, quiet=False, extra_args="--variable ON_ERROR_STOP=1", field_sep=" "
+        )
 
         # line with number of idle sessions is sometimes missing on Postgres 8.x. This can lead
         # to an altogether empty section and thus the check disappearing.
@@ -185,41 +185,49 @@ class PostgresBase:
         # Previously part of simple_queries
 
         if numeric_version > 9.2:
-            querytime_sql_cmd = ("SELECT datname, datid, usename, client_addr, state AS state, "
-                                 "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
-                                 "AS seconds, pid, "
-                                 "regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) "
-                                 "AS current_query FROM pg_stat_activity "
-                                 "WHERE (query_start IS NOT NULL AND "
-                                 "(state NOT LIKE 'idle%' OR state IS NULL)) "
-                                 "ORDER BY query_start, pid DESC;")
+            querytime_sql_cmd = (
+                "SELECT datname, datid, usename, client_addr, state AS state, "
+                "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
+                "AS seconds, pid, "
+                "regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) "
+                "AS current_query FROM pg_stat_activity "
+                "WHERE (query_start IS NOT NULL AND "
+                "(state NOT LIKE 'idle%' OR state IS NULL)) "
+                "ORDER BY query_start, pid DESC;"
+            )
 
         else:
-            querytime_sql_cmd = ("SELECT datname, datid, usename, client_addr, '' AS state,"
-                                 " COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
-                                 "AS seconds, procpid as pid, regexp_replace(current_query, "
-                                 "E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query "
-                                 "FROM pg_stat_activity WHERE "
-                                 "(query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') "
-                                 "ORDER BY query_start, procpid DESC;")
+            querytime_sql_cmd = (
+                "SELECT datname, datid, usename, client_addr, '' AS state,"
+                " COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
+                "AS seconds, procpid as pid, regexp_replace(current_query, "
+                "E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query "
+                "FROM pg_stat_activity WHERE "
+                "(query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') "
+                "ORDER BY query_start, procpid DESC;"
+            )
 
-        return self.run_sql_as_db_user(querytime_sql_cmd,
-                                       rows_only=False,
-                                       extra_args="-P footer=off")
+        return self.run_sql_as_db_user(
+            querytime_sql_cmd, rows_only=False, extra_args="-P footer=off"
+        )
 
     def get_stat_database(self):
         """Gets the database stats"""
         # Previously part of simple_queries
-        sql_cmd = ("SELECT datid, datname, numbackends, xact_commit, xact_rollback, blks_read, "
-                   "blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, "
-                   "pg_database_size(datname) AS datsize FROM pg_stat_database;")
+        sql_cmd = (
+            "SELECT datid, datname, numbackends, xact_commit, xact_rollback, blks_read, "
+            "blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, "
+            "pg_database_size(datname) AS datsize FROM pg_stat_database;"
+        )
         return self.run_sql_as_db_user(sql_cmd, rows_only=False, extra_args="-P footer=off")
 
     def get_locks(self):
         """Get the locks"""
         # Previously part of simple_queries
-        sql_cmd = ("SELECT datname, granted, mode FROM pg_locks l RIGHT "
-                   "JOIN pg_database d ON (d.oid=l.database) WHERE d.datallowconn;")
+        sql_cmd = (
+            "SELECT datname, granted, mode FROM pg_locks l RIGHT "
+            "JOIN pg_database d ON (d.oid=l.database) WHERE d.datallowconn;"
+        )
         return self.run_sql_as_db_user(sql_cmd, rows_only=False, extra_args="-P footer=off")
 
     def get_version(self):
@@ -242,7 +250,8 @@ class PostgresBase:
         """
 
         out = subprocess_check_output(
-            ["%s%spg_isready" % (self.bin_path, self.sep), "-p", self.pg_port],)
+            ["%s%spg_isready" % (self.bin_path, self.sep), "-p", self.pg_port],
+        )
 
         sys.stdout.write("%s\n" % ensure_str(out))
 
@@ -325,13 +334,9 @@ class PostgresBase:
 
 
 class PostgresWin(PostgresBase):
-    def run_sql_as_db_user(self,
-                           sql_cmd,
-                           extra_args="",
-                           field_sep=";",
-                           quiet=True,
-                           rows_only=True,
-                           mixed_cmd=False):
+    def run_sql_as_db_user(
+        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+    ):
         # type: (str, str, str, Optional[bool], Optional[bool],Optional[bool]) -> str
         """This method implements the system specific way to call the psql interface"""
         extra_args += " -U %s" % self.pg_user
@@ -344,14 +349,23 @@ class PostgresWin(PostgresBase):
             extra_args += " -t"
 
         if mixed_cmd:
-            cmd_str = "cmd /c echo %s | cmd /c \"\"%s\" -X %s -A -F\"%s\" -U %s\"" % (
-                sql_cmd, self.psql, extra_args, field_sep, self.db_user)
+            cmd_str = 'cmd /c echo %s | cmd /c ""%s" -X %s -A -F"%s" -U %s"' % (
+                sql_cmd,
+                self.psql,
+                extra_args,
+                field_sep,
+                self.db_user,
+            )
 
         else:
-            cmd_str = "cmd /c \"\"%s\" -X %s -A -F\"%s\" -U %s -c \"%s\"\" " % (
-                self.psql, extra_args, field_sep, self.db_user, sql_cmd)
-
-        proc = subprocess.Popen(
+            cmd_str = 'cmd /c ""%s" -X %s -A -F"%s" -U %s -c "%s"" ' % (
+                self.psql,
+                extra_args,
+                field_sep,
+                self.db_user,
+                sql_cmd,
+            )
+        proc = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd_str,
             env=self.my_env,
             stdout=subprocess.PIPE,
@@ -359,16 +373,48 @@ class PostgresWin(PostgresBase):
         out = ensure_str(proc.communicate()[0])
         return out.rstrip()
 
+    @staticmethod
+    def _call_wmic_logicaldisk():
+        # type: () -> str
+        return ensure_str(
+            subprocess_check_output(
+                [
+                    "wmic",
+                    "logicaldisk",
+                    "get",
+                    "deviceid",
+                ]
+            )
+        )
+
+    @staticmethod
+    def _parse_wmic_logicaldisk(wmic_output):
+        # type: (str) -> Iterable[str]
+        for drive in wmic_output.replace("DeviceID", "").split(":")[:-1]:
+            yield drive.strip()
+
+    @classmethod
+    def _logical_drives(cls):
+        # type: () -> Iterable[str]
+        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
+            yield drive
+
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         """This method returns the system specific psql interface binary as callable string"""
 
         # TODO: Make this more clever...
-        for pg_ver in self._supported_pg_versions:
-            bin_path = "C:\\Program Files\\PostgreSQL\\%s\\bin" % pg_ver
-            psql_path = "%s\\psql.exe" % bin_path
-            if os.path.isfile(psql_path):
-                return psql_path, bin_path
+        for drive in self._logical_drives():
+            for pg_ver in self._supported_pg_versions:
+                for bin_path_pattern in (
+                    "%s:\\Program Files\\PostgreSQL\\%s\\bin",
+                    "%s:\\Program Files (x86)\\PostgreSQL\\%s\\bin",
+                    "%s:\\PostgreSQL\\%s\\bin",
+                ):
+                    bin_path = bin_path_pattern % (drive, pg_ver)
+                    psql_path = "%s\\psql.exe" % bin_path
+                    if os.path.isfile(psql_path):
+                        return psql_path, bin_path
 
         raise IOError("Could not determine psql bin and its path.")
 
@@ -377,14 +423,19 @@ class PostgresWin(PostgresBase):
         """Gets all instances"""
 
         procs_to_match = [
-            re.compile(pattern) for pattern in
-            [r"(.*)bin\\postgres(.*)", r"(.*)bin\\postmaster(.*)", r"(.*)bin\\edb-postgres(.*)"]
+            re.compile(pattern)
+            for pattern in [
+                r"(.*)bin\\postgres(.*)",
+                r"(.*)bin\\postmaster(.*)",
+                r"(.*)bin\\edb-postgres(.*)",
+            ]
         ]
 
         taskslist = ensure_str(
             subprocess_check_output(
-                ["wmic", "process", "get", "processid,commandline",
-                 "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
+                ["wmic", "process", "get", "processid,commandline", "/format:list"]
+            )
+        ).split("\r\r\n\r\r\n\r\r\n")
 
         out = ""
         for task in taskslist:
@@ -405,19 +456,21 @@ class PostgresWin(PostgresBase):
         # The next query had to be slightly modified:
         # As cmd.exe interprets > as redirect and we need <> as "not equal", this was changed to
         # != as it has the same SQL implementation
-        sql_cmd_lastvacuum = ("SELECT "
-                              "current_database() AS datname, nspname AS sname, "
-                              "relname AS tname, CASE WHEN v IS NULL THEN -1 "
-                              "ELSE round(extract(epoch FROM v)) END AS vtime, "
-                              "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) "
-                              "END AS atime FROM (SELECT nspname, relname, "
-                              "GREATEST(pg_stat_get_last_vacuum_time(c.oid), "
-                              "pg_stat_get_last_autovacuum_time(c.oid)) AS v, "
-                              "GREATEST(pg_stat_get_last_analyze_time(c.oid), "
-                              "pg_stat_get_last_autoanalyze_time(c.oid)) AS g "
-                              "FROM pg_class c, pg_namespace n WHERE relkind = 'r' "
-                              "AND n.oid = c.relnamespace AND n.nspname != 'information_schema' "
-                              "ORDER BY 3) AS foo;")
+        sql_cmd_lastvacuum = (
+            "SELECT "
+            "current_database() AS datname, nspname AS sname, "
+            "relname AS tname, CASE WHEN v IS NULL THEN -1 "
+            "ELSE round(extract(epoch FROM v)) END AS vtime, "
+            "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) "
+            "END AS atime FROM (SELECT nspname, relname, "
+            "GREATEST(pg_stat_get_last_vacuum_time(c.oid), "
+            "pg_stat_get_last_autovacuum_time(c.oid)) AS v, "
+            "GREATEST(pg_stat_get_last_analyze_time(c.oid), "
+            "pg_stat_get_last_autoanalyze_time(c.oid)) AS g "
+            "FROM pg_class c, pg_namespace n WHERE relkind = 'r' "
+            "AND n.oid = c.relnamespace AND n.nspname != 'information_schema' "
+            "ORDER BY 3) AS foo;"
+        )
 
         query = "\\pset footer off \\\\ BEGIN;SET statement_timeout=30000;COMMIT;"
 
@@ -439,7 +492,7 @@ class PostgresWin(PostgresBase):
         start_time = time.time()
         out = self.run_sql_as_db_user(cmd)
         diff = time.time() - start_time
-        return out, '%.3f' % diff
+        return out, "%.3f" % diff
 
     def get_bloat(self, databases, numeric_version):
         # type: (List[Any], float) -> str
@@ -510,7 +563,8 @@ class PostgresWin(PostgresBase):
                 "ON cc.relname = rs.relname AND nn.nspname = rs.nspname LEFT "
                 "JOIN pg_index i ON indrelid = cc.oid LEFT JOIN pg_class c2 "
                 "ON c2.oid = i.indexrelid ) AS sml WHERE sml.relpages - otta ^^^> 0 "
-                "OR ipages - iotta ^^^> 10 ORDER BY totalwastedbytes DESC LIMIT 10;")
+                "OR ipages - iotta ^^^> 10 ORDER BY totalwastedbytes DESC LIMIT 10;"
+            )
 
         else:
             bloat_query = (
@@ -570,7 +624,8 @@ class PostgresWin(PostgresBase):
                 "cc.relname = rs.relname AND nn.nspname = rs.nspname LEFT JOIN pg_index i "
                 "ON indrelid = cc.oid LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid) "
                 "AS sml WHERE sml.relpages - otta ^^^> 0 OR ipages - iotta ^^^> 10 ORDER "
-                "BY totalwastedbytes DESC LIMIT 10;")
+                "BY totalwastedbytes DESC LIMIT 10;"
+            )
 
         query = "\\pset footer off \\\\"
 
@@ -585,15 +640,11 @@ class PostgresWin(PostgresBase):
 
 
 class PostgresLinux(PostgresBase):
-    def run_sql_as_db_user(self,
-                           sql_cmd,
-                           extra_args="",
-                           field_sep=";",
-                           quiet=True,
-                           rows_only=True,
-                           mixed_cmd=False):
+    def run_sql_as_db_user(
+        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+    ):
         # type: (str, str, str, bool, bool, bool) -> str
-        base_cmd_list = ["su", "-", self.db_user, "-c", r"""%s -X %s -A -F'%s'%s"""]
+        base_cmd_list = ["su", "-", self.db_user, "-c", r"""PGPASSFILE=%s %s -X %s -A -F'%s'%s"""]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
@@ -607,19 +658,33 @@ class PostgresLinux(PostgresBase):
         # the full cmd string into psql executable
         # see https://www.postgresql.org/docs/9.2/app-psql.html
         if mixed_cmd:
-            cmd_to_pipe = subprocess.Popen(["echo", sql_cmd], stdout=subprocess.PIPE)
-            base_cmd_list[-1] = base_cmd_list[-1] % (self.psql, extra_args, field_sep, "")
+            cmd_to_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["echo", sql_cmd], stdout=subprocess.PIPE
+            )
+            base_cmd_list[-1] = base_cmd_list[-1] % (
+                self.pg_passfile,
+                self.psql,
+                extra_args,
+                field_sep,
+                "",
+            )
 
-            receiving_pipe = subprocess.Popen(base_cmd_list,
-                                              stdin=cmd_to_pipe.stdout,
-                                              stdout=subprocess.PIPE,
-                                              env=self.my_env)
+            receiving_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
+                base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env
+            )
             out = ensure_str(receiving_pipe.communicate()[0])
 
         else:
-            base_cmd_list[-1] = base_cmd_list[-1] % (self.psql, extra_args, field_sep,
-                                                     " -c \"%s\" " % sql_cmd)
-            proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
+            base_cmd_list[-1] = base_cmd_list[-1] % (
+                self.pg_passfile,
+                self.psql,
+                extra_args,
+                field_sep,
+                ' -c "%s" ' % sql_cmd,
+            )
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
+            )
             out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
@@ -627,7 +692,9 @@ class PostgresLinux(PostgresBase):
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         try:
-            proc = subprocess.Popen(["which", "psql"], stdout=subprocess.PIPE)
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["which", "psql"], stdout=subprocess.PIPE
+            )
             out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
             raise RuntimeError("Could not determine psql executable.")
@@ -638,16 +705,22 @@ class PostgresLinux(PostgresBase):
         # type: () -> str
 
         procs_to_match = [
-            re.compile(pattern) for pattern in
-            ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
+            re.compile(pattern)
+            for pattern in [
+                "(.*)bin/postgres(.*)",
+                "(.*)bin/postmaster(.*)",
+                "(.*)bin/edb-postgres(.*)",
+            ]
         ]
 
-        procs_list = ensure_str(subprocess_check_output(["ps", "h", "-eo",
-                                                         "pid:1,command:1"])).split("\n")
+        procs_list = ensure_str(
+            subprocess_check_output(["ps", "h", "-eo", "pid:1,command:1"])
+        ).split("\n")
         out = ""
         for proc in procs_list:
             if any(pat.search(proc) for pat in procs_to_match):
-                if proc.find(self.name) != -1:
+                # the data directory for the instance "main" is not called "main" but "data" on some platforms
+                if self.name in proc or (self.name == "main" and "data" in proc):
                     out += proc + "\n"
         return out.rstrip()
 
@@ -656,43 +729,49 @@ class PostgresLinux(PostgresBase):
         # Previously part of simple_queries
 
         if numeric_version > 9.2:
-            querytime_sql_cmd = ("SELECT datname, datid, usename, client_addr, state AS state, "
-                                 "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
-                                 "AS seconds, pid, "
-                                 "regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS "
-                                 "current_query FROM pg_stat_activity "
-                                 "WHERE (query_start IS NOT NULL AND "
-                                 "(state NOT LIKE 'idle%' OR state IS NULL)) "
-                                 "ORDER BY query_start, pid DESC;")
+            querytime_sql_cmd = (
+                "SELECT datname, datid, usename, client_addr, state AS state, "
+                "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
+                "AS seconds, pid, "
+                "regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS "
+                "current_query FROM pg_stat_activity "
+                "WHERE (query_start IS NOT NULL AND "
+                "(state NOT LIKE 'idle%' OR state IS NULL)) "
+                "ORDER BY query_start, pid DESC;"
+            )
 
         else:
-            querytime_sql_cmd = ("SELECT datname, datid, usename, client_addr, '' AS state, "
-                                 "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
-                                 "AS seconds, procpid as pid, "
-                                 "regexp_replace(current_query, E'[\\n\\r\\u2028]+', ' ', 'g' ) "
-                                 "AS current_query FROM pg_stat_activity WHERE "
-                                 "(query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') "
-                                 "ORDER BY query_start, procpid DESC;")
+            querytime_sql_cmd = (
+                "SELECT datname, datid, usename, client_addr, '' AS state, "
+                "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
+                "AS seconds, procpid as pid, "
+                "regexp_replace(current_query, E'[\\n\\r\\u2028]+', ' ', 'g' ) "
+                "AS current_query FROM pg_stat_activity WHERE "
+                "(query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') "
+                "ORDER BY query_start, procpid DESC;"
+            )
 
-        return self.run_sql_as_db_user(querytime_sql_cmd,
-                                       rows_only=False,
-                                       extra_args="-P footer=off")
+        return self.run_sql_as_db_user(
+            querytime_sql_cmd, rows_only=False, extra_args="-P footer=off"
+        )
 
     def get_stats(self, databases):
         # type: (List[str]) -> str
-        sql_cmd_lastvacuum = ("SELECT "
-                              "current_database() AS datname, nspname AS sname, "
-                              "relname AS tname, CASE WHEN v IS NULL THEN -1 "
-                              "ELSE round(extract(epoch FROM v)) END AS vtime, "
-                              "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM v)) "
-                              "END AS atime FROM (SELECT nspname, relname, "
-                              "GREATEST(pg_stat_get_last_vacuum_time(c.oid), "
-                              "pg_stat_get_last_autovacuum_time(c.oid)) AS v, "
-                              "GREATEST(pg_stat_get_last_analyze_time(c.oid), "
-                              "pg_stat_get_last_autoanalyze_time(c.oid)) AS g "
-                              "FROM pg_class c, pg_namespace n WHERE relkind = 'r' "
-                              "AND n.oid = c.relnamespace AND n.nspname <> 'information_schema' "
-                              "ORDER BY 3) AS foo;")
+        sql_cmd_lastvacuum = (
+            "SELECT "
+            "current_database() AS datname, nspname AS sname, "
+            "relname AS tname, CASE WHEN v IS NULL THEN -1 "
+            "ELSE round(extract(epoch FROM v)) END AS vtime, "
+            "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM v)) "
+            "END AS atime FROM (SELECT nspname, relname, "
+            "GREATEST(pg_stat_get_last_vacuum_time(c.oid), "
+            "pg_stat_get_last_autovacuum_time(c.oid)) AS v, "
+            "GREATEST(pg_stat_get_last_analyze_time(c.oid), "
+            "pg_stat_get_last_autoanalyze_time(c.oid)) AS g "
+            "FROM pg_class c, pg_namespace n WHERE relkind = 'r' "
+            "AND n.oid = c.relnamespace AND n.nspname <> 'information_schema' "
+            "ORDER BY 3) AS foo;"
+        )
 
         query = "\\pset footer off\nBEGIN;\nSET statement_timeout=30000;\nCOMMIT;"
 
@@ -716,7 +795,7 @@ class PostgresLinux(PostgresBase):
         usr_time = usage_end.ru_utime - usage_start.ru_utime
         real = sys_time + usr_time
 
-        return out, '%.3f' % real
+        return out, "%.3f" % real
 
     def get_bloat(self, databases, numeric_version):
         # type: (List[Any], float) -> str
@@ -781,7 +860,8 @@ class PostgresLinux(PostgresBase):
                 "ON cc.relname = rs.relname AND nn.nspname = rs.nspname LEFT JOIN pg_index i "
                 "ON indrelid = cc.oid LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid ) "
                 "AS sml WHERE sml.relpages - otta > 0 OR ipages - iotta > 10 ORDER "
-                "BY totalwastedbytes DESC LIMIT 10;")
+                "BY totalwastedbytes DESC LIMIT 10;"
+            )
         else:
             bloat_query = (
                 "SELECT "
@@ -840,7 +920,8 @@ class PostgresLinux(PostgresBase):
                 "cc.relname = rs.relname AND nn.nspname = rs.nspname LEFT JOIN pg_index i "
                 "ON indrelid = cc.oid LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid) "
                 "AS sml WHERE sml.relpages - otta > 0 OR ipages - iotta > 10 ORDER "
-                "BY totalwastedbytes DESC LIMIT 10;")
+                "BY totalwastedbytes DESC LIMIT 10;"
+            )
 
         query = "\\pset footer off"
 
@@ -873,9 +954,9 @@ def parse_env_file(env_file):
     pg_database = "postgres"  # default value
     for line in open_env_file(env_file):
         line = line.strip()
-        if 'PGDATABASE=' in line:
+        if "PGDATABASE=" in line:
             pg_database = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
-        if 'PGPORT=' in line:
+        if "PGPORT=" in line:
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
@@ -910,13 +991,15 @@ def parse_postgres_cfg(postgres_cfg):
             env_file, pg_user, pg_passfile = value.split(conf_sep)
             env_file = env_file.strip()
             pg_database, pg_port = parse_env_file(env_file)
-            instances.append({
-                "name": env_file.split(os.sep)[-1].split(".")[0],
-                "pg_user": pg_user.strip(),
-                "pg_passfile": pg_passfile.strip(),
-                "pg_database": pg_database,
-                "pg_port": pg_port,
-            })
+            instances.append(
+                {
+                    "name": env_file.split(os.sep)[-1].split(".")[0],
+                    "pg_user": pg_user.strip(),
+                    "pg_passfile": pg_passfile.strip(),
+                    "pg_database": pg_database,
+                    "pg_port": pg_port,
+                }
+            )
     if dbuser is None:
         raise ValueError("DBUSER must be specified in postgres.cfg")
     return dbuser, instances
@@ -924,12 +1007,14 @@ def parse_postgres_cfg(postgres_cfg):
 
 def parse_arguments(argv):
     parser = optparse.OptionParser()
-    parser.add_option('-v', '--verbose', action="count", default=0)
-    parser.add_option("-t",
-                      "--test-connection",
-                      default=False,
-                      action="store_true",
-                      help="Test if postgres is ready")
+    parser.add_option("-v", "--verbose", action="count", default=0)
+    parser.add_option(
+        "-t",
+        "--test-connection",
+        default=False,
+        action="store_true",
+        help="Test if postgres is ready",
+    )
     options, _ = parser.parse_args(argv)
     return options
 
@@ -937,13 +1022,16 @@ def parse_arguments(argv):
 def get_postgres_user_linux():
     for user_id in ("pgsql", "postgres"):
         try:
-            proc = subprocess.Popen(["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             proc.communicate()
             if proc.returncode == 0:
                 return user_id.rstrip()
         except subprocess.CalledProcessError:
             pass
-    raise ValueError("Could not determine postgres user!")
+    LOGGER.warning('Could not determine postgres user, using "postgres" as default')
+    return "postgres"
 
 
 def main(argv=None):
@@ -956,12 +1044,8 @@ def main(argv=None):
 
     logging.basicConfig(
         format="%(levelname)s %(asctime)s %(name)s: %(message)s",
-        datefmt='%Y-%m-%d %H:%M:%S',
-        level={
-            0: logging.WARN,
-            1: logging.INFO,
-            2: logging.DEBUG
-        }.get(opt.verbose, logging.DEBUG),
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(opt.verbose, logging.DEBUG),
     )
 
     if IS_LINUX:
@@ -977,12 +1061,13 @@ def main(argv=None):
     instances = []
     try:
         postgres_cfg_path = os.path.join(os.getenv("MK_CONFDIR", default_path), "postgres.cfg")
-        postgres_cfg = open(postgres_cfg_path).readlines()
+        with open(postgres_cfg_path) as opened_file:
+            postgres_cfg = opened_file.readlines()
         dbuser, instances = parse_postgres_cfg(postgres_cfg)
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging
         LOGGER.debug("try_parse_config: exception: %s", str(e))
-        LOGGER.debug("Using \"%s\" as default postgres user.", dbuser)
+        LOGGER.debug('Using "%s" as default postgres user.', dbuser)
 
     if not instances:
         default_postgres_installation_parameters = {

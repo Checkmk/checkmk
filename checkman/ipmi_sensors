@@ -1,7 +1,7 @@
 title: Freeimpmi: IPMI Sensors
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the information of the utility {ipmi-sensors}
@@ -16,5 +16,5 @@ item:
  by underscores in the sensor name. For example
  {Fan_FAN2_CPU} for a sensor of the group {Fan} with the name {FAN2 CPU}.
 
-inventory:
+discovery:
  One service is created for each sensor that is not in the state {[Unknown]}.

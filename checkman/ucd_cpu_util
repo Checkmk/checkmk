@@ -1,7 +1,7 @@
 title: UCD SNMP Daemon: CPU Utilization
 agents: snmp
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check
@@ -14,11 +14,9 @@ description:
  This daemon is mainly found on Linux and is used by some
  hardware appliances (such as Riverbed Steelhead).
 
-inventory:
+discovery:
  One service is created for each host if the agent supports the UCD-MIB.
  Currently the SNMP scan function will only consider hosts
  with the text {linux} in their system description. You can
  try an explicit inventory with {cmk --checks ucd_cpu_util -I HOSTNAME}
  if that is not the case.
-
-

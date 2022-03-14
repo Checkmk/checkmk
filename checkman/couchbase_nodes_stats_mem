@@ -1,14 +1,14 @@
 title: Couchbase Nodes: Memory Usage
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the memory usage of the nodes.
  Levels for the RAM can be configured using the WATO
  rule "Main memory usage of devices with  modules".
 
-inventory:
+discovery:
  One service is created for each node in the output.
 
 item:

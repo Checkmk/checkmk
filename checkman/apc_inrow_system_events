@@ -1,7 +1,7 @@
 title: APC InRow Cooling Devices: System Events
 agents: snmp
 catalog: hw/environment/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors active system events on an InRow Cooling device.
@@ -10,6 +10,5 @@ description:
 
  This check uses the PowerNet-MIB.
 
-inventory:
+discovery:
  One service is created for each host
-

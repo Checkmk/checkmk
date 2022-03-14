@@ -6,24 +6,33 @@
 
 # Nikolas Hagemann, comNET GmbH - nikolas.hagemann@comnetgmbh.com
 
-#Example output:
-#.1.3.6.1.4.1.12356.118.5.1.1.0 0
-#.1.3.6.1.4.1.12356.118.5.1.2.0 0
-#.1.3.6.1.4.1.12356.118.5.1.3.0 0
-#.1.3.6.1.4.1.12356.118.5.1.4.0 0
-#.1.3.6.1.4.1.12356.118.5.1.5.0 0
-#.1.3.6.1.4.1.12356.118.5.1.6.0 0
-#.1.3.6.1.4.1.12356.118.5.1.7.0 0
-#.1.3.6.1.4.1.12356.118.5.1.8.0 0
-#.1.3.6.1.4.1.12356.118.5.1.9.0 0
-#.1.3.6.1.4.1.12356.118.5.1.10.0 0
-#.1.3.6.1.4.1.12356.118.5.1.11.0 0
+# Example output:
+# .1.3.6.1.4.1.12356.118.5.1.1.0 0
+# .1.3.6.1.4.1.12356.118.5.1.2.0 0
+# .1.3.6.1.4.1.12356.118.5.1.3.0 0
+# .1.3.6.1.4.1.12356.118.5.1.4.0 0
+# .1.3.6.1.4.1.12356.118.5.1.5.0 0
+# .1.3.6.1.4.1.12356.118.5.1.6.0 0
+# .1.3.6.1.4.1.12356.118.5.1.7.0 0
+# .1.3.6.1.4.1.12356.118.5.1.8.0 0
+# .1.3.6.1.4.1.12356.118.5.1.9.0 0
+# .1.3.6.1.4.1.12356.118.5.1.10.0 0
+# .1.3.6.1.4.1.12356.118.5.1.11.0 0
 
 
 def parse_fortisandbox_queues(info):
     queues = [
-        'Executable', 'PDF', 'Office', 'Flash', 'Web', 'Android', 'MAC', 'URL job', 'User defined',
-        'Non Sandboxing', 'Job Queue Assignment'
+        "Executable",
+        "PDF",
+        "Office",
+        "Flash",
+        "Web",
+        "Android",
+        "MAC",
+        "URL job",
+        "User defined",
+        "Non Sandboxing",
+        "Job Queue Assignment",
     ]
 
     return {k: int(v) for k, v in zip(queues, info[0])}
@@ -37,40 +46,41 @@ def inventory_fortisandbox_queues(parsed):
 def check_fortisandbox_queues(item, params, parsed):
     for queue, length in parsed.items():
         if queue == item:
-            warn, crit = params.get('length', (None, None))
+            warn, crit = params.get("length", (None, None))
             state = 0
             if crit and length >= crit:
                 state = 2
             elif warn and length >= warn:
                 state = 1
-            perfdata = [('queue', length, warn, crit)]
-            infotext = 'Queue length: %s' % length
+            perfdata = [("queue", length, warn, crit)]
+            infotext = "Queue length: %s" % length
             if state:
-                infotext += ' (warn/crit at %s/%s)' % (warn, crit)
+                infotext += " (warn/crit at %s/%s)" % (warn, crit)
             return state, infotext, perfdata
 
 
-check_info['fortisandbox_queues'] = {
-    'parse_function': parse_fortisandbox_queues,
-    'inventory_function': inventory_fortisandbox_queues,
-    'check_function': check_fortisandbox_queues,
-    'service_description': 'Pending %s files',
-    'has_perfdata': True,
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.12356.118.1.30006',
-    'snmp_info': (
-        '.1.3.6.1.4.1.12356.118.5.1',
+check_info["fortisandbox_queues"] = {
+    "parse_function": parse_fortisandbox_queues,
+    "inventory_function": inventory_fortisandbox_queues,
+    "check_function": check_fortisandbox_queues,
+    "service_description": "Pending %s files",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.12356.118.1.30006",
+    "snmp_info": (
+        ".1.3.6.1.4.1.12356.118.5.1",
         [
-            '1',  #fsaFTypeExe
-            '2',  #fsaFTypePDF
-            '3',  #fsaFTypeDOC
-            '4',  #fsaFTypeFLASH
-            '5',  #fsaFTypeWEB
-            '6',  #fsaFTypeAndroid
-            '7',  #fsaFTypeMAC
-            '8',  #fsaFTypeURL
-            '9',  #fsaFTypeExtra
-            '10',  #fsaFTypeNOVM
-            '11',  #fsaFTypePre
-        ]),
-    'group': 'fortisandbox_queues',
+            "1",  # fsaFTypeExe
+            "2",  # fsaFTypePDF
+            "3",  # fsaFTypeDOC
+            "4",  # fsaFTypeFLASH
+            "5",  # fsaFTypeWEB
+            "6",  # fsaFTypeAndroid
+            "7",  # fsaFTypeMAC
+            "8",  # fsaFTypeURL
+            "9",  # fsaFTypeExtra
+            "10",  # fsaFTypeNOVM
+            "11",  # fsaFTypePre
+        ],
+    ),
+    "group": "fortisandbox_queues",
 }

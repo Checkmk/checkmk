@@ -1,7 +1,7 @@
 title: Hepta Stratum: Time Sync
 agents: snmp
 catalog: hw/time/hopf
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the Stratum for time synchronization of the device.
@@ -11,7 +11,7 @@ description:
  The check will raise {CRITICAL} if the reported state is "Invalid Stratum", {WARNING} if
  the reported state is "Stratum is using secondary reference (via NTP).
 
-inventory:
+discovery:
  One service is created.
 
 item:

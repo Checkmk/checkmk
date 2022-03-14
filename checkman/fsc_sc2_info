@@ -1,7 +1,7 @@
 title: Fujitsu SC2: Server Info
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays basic server information
@@ -10,6 +10,5 @@ description:
 
  The Check is always in an OK state.
 
-inventory:
+discovery:
  One service is created for each host.
-

@@ -1,7 +1,7 @@
 title: Dell OpenManage: Disks
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health and current Status of
@@ -16,6 +16,5 @@ description:
 item:
  The combination of EnclosureID, Channel and TargetID seperated by colons
 
-inventory:
+discovery:
  One service is created for each Disk.
-

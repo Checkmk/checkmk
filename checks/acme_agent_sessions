@@ -31,16 +31,17 @@ def check_acme_agent_sessions(item, _no_params, info):
             return dev_state, "Status: %s" % dev_state_readable
 
 
-check_info['acme_agent_sessions'] = {
-    'inventory_function': inventory_acme_agent_sessions,
-    'check_function': check_acme_agent_sessions,
-    'service_description': 'Agent sessions %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.2.1.2.2.1',
+check_info["acme_agent_sessions"] = {
+    "inventory_function": inventory_acme_agent_sessions,
+    "check_function": check_acme_agent_sessions,
+    "service_description": "Agent sessions %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.2.1.2.2.1",
         [
             "2",  # APSYSMGMT-MIB::apSipSAStatsSessionAgentHostname
             "3",  # APSYSMGMT-MIB::apSipSAStatsSessionAgentType
             "22",  # APSYSMGMT-MIB::apSipSAStatsSessionAgentStatus
-        ]),
-    'snmp_scan_function': scan_acme,
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
 }

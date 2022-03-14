@@ -1,7 +1,7 @@
 title: 3Com SuperStack 3 Switches: Hardware / FRU Sensors
 agents: snmp
 catalog: hw/network/h3c
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check queries the snmp sensors for internal and addon modules
@@ -13,6 +13,5 @@ description:
 item:
  The description of the sensor as provided by the device.
 
-inventory:
+discovery:
  One service is created for each item found in the switch.
-

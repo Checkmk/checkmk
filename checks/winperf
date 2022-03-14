@@ -8,7 +8,7 @@
 def inventory_win_cpuusage(info):
     for line in info:
         try:
-            if line[0] == '238:6':
+            if line[0] == "238:6":
                 return [(None, {})]
         except Exception:
             pass
@@ -18,12 +18,12 @@ def check_win_cpuusage(item, params, info):
     if isinstance(params, tuple):
         levels = params
     elif isinstance(params, dict):
-        levels = params.get('levels')
+        levels = params.get("levels")
     else:  # legacy: old params may be None
         levels = None
 
     for line in info:
-        if line[0] == '238:6':
+        if line[0] == "238:6":
             this_time = int(float(line[1]))
             # Windows sends one counter for each CPU plus one counter that
             # I've forgotton what's it for (idle?)
@@ -62,7 +62,7 @@ def check_win_cpuusage(item, params, info):
 def inventory_win_diskstat(info):
     for line in info:
         try:
-            if line[0] == '2:16' or line[0] == '2:18':
+            if line[0] == "2:16" or line[0] == "2:18":
                 return [(None, None, None)]
         except Exception:
             pass
@@ -74,9 +74,9 @@ def check_win_diskstat(item, params, info):
     write_bytes_ctr = 0
     this_time = None
     for line in info:
-        if line[0] == '2:16':
+        if line[0] == "2:16":
             read_bytes_ctr = int(line[2])
-        elif line[0] == '2:18':
+        elif line[0] == "2:18":
             write_bytes_ctr = int(line[2])
             this_time = int(float(line[1]))
             break
@@ -94,20 +94,24 @@ def check_win_diskstat(item, params, info):
         raise e
 
     perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]
-    return (0, "reading %.1f MB/s, writing %.1f MB/s" %
-            (read_per_sec / 1024.0**2, write_per_sec / 1024.0**2), perfdata)
+    return (
+        0,
+        "reading %.1f MB/s, writing %.1f MB/s"
+        % (read_per_sec / 1024.0**2, write_per_sec / 1024.0**2),
+        perfdata,
+    )
 
 
 check_info["winperf.cpuusage"] = {
-    'check_function': check_win_cpuusage,
-    'inventory_function': inventory_win_cpuusage,
-    'service_description': 'CPU Usage',
-    'has_perfdata': True,
+    "check_function": check_win_cpuusage,
+    "inventory_function": inventory_win_cpuusage,
+    "service_description": "CPU Usage",
+    "has_perfdata": True,
 }
 
 check_info["winperf.diskstat"] = {
-    'check_function': check_win_diskstat,
-    'inventory_function': inventory_win_diskstat,
-    'service_description': 'Disk IO',
-    'has_perfdata': True,
+    "check_function": check_win_diskstat,
+    "inventory_function": inventory_win_diskstat,
+    "service_description": "Disk IO",
+    "has_perfdata": True,
 }

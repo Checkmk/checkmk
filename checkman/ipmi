@@ -1,7 +1,7 @@
 title: Ipmitool: Hardware Sensors
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the output of {ipmitool} on Linux systems. If the kernel
@@ -22,7 +22,7 @@ item:
  {"Summary"} for summary mode (see below) or the name of the IPMI item for the
  detailed mode.
 
-inventory:
+discovery:
  The check offers two modes for discovering sensors. In summary mode, if at least
  one sensor is found, a single service is discovered. This service summarizes the
  states of all IPMI sensors. In the detailed mode, one service is created for

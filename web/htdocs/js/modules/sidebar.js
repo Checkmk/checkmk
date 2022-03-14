@@ -858,14 +858,22 @@ export function fetch_nagvis_snapin_contents() {
  * Bookmark snapin
  *************************************************/
 
-export function add_bookmark() {
+export function add_bookmark(trans_id = null) {
     const url = parent.frames[0].location;
     const title = parent.frames[0].document.title;
-    ajax.get_url(
-        "add_bookmark.py?title=" + encodeURIComponent(title) + "&url=" + encodeURIComponent(url),
-        utils.update_contents,
-        "snapin_bookmarks"
-    );
+    ajax.call_ajax("add_bookmark.py", {
+        add_ajax_id: false,
+        response_handler: utils.update_contents,
+        handler_data: "snapin_bookmarks",
+        method: "POST",
+        post_data:
+            "title=" +
+            encodeURIComponent(title) +
+            "&url=" +
+            encodeURIComponent(url) +
+            "&_transid=" +
+            encodeURIComponent(trans_id),
+    });
 }
 
 /************************************************
@@ -1014,7 +1022,7 @@ var g_may_ack = false;
 
 export function init_messages_and_werks(interval, may_ack) {
     g_sidebar_notify_interval = interval;
-    create_initial_ids("user", "messages", "user_notify.py");
+    create_initial_ids("user", "messages", "user_message.py");
     // Are there pending messages? Render the initial state of
     // trigger button
     update_messages();
@@ -1024,7 +1032,7 @@ export function init_messages_and_werks(interval, may_ack) {
         return;
     }
 
-    create_initial_ids("help_links", "werks", "version.py?show_unack=1&wo_compatibility=3");
+    create_initial_ids("help_links", "werks", "change_log.py?show_unack=1&wo_compatibility=3");
     update_unack_incomp_werks();
 }
 
@@ -1103,8 +1111,9 @@ export function update_werks_trigger(werks_count, text, tooltip) {
 }
 
 function create_initial_ids(menu, what, start_url) {
-    const mega_menu_help_div = document.getElementById("popup_trigger_mega_menu_" + menu)
-        .firstChild;
+    const mega_menu_help_div = document.getElementById(
+        "popup_trigger_mega_menu_" + menu
+    ).firstChild;
     const help_div = mega_menu_help_div.childNodes[2];
 
     const l = document.createElement("span");

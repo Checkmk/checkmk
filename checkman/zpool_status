@@ -1,7 +1,7 @@
 title: ZFS Storage Pool: Status
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the current state of a ZFS storage pool. The information
@@ -11,5 +11,5 @@ description:
  If the extend state information from zpool status indicates any CRC or
  other errors, the check will go to WARNING.
 
-inventory:
+discovery:
  One service is created for each host if there are any pools.

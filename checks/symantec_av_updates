@@ -17,13 +17,13 @@ symantec_av_updates_default_levels = (259200, 345600)
 
 
 def inventory_symantec_av_updates(info):
-    return [(None, 'symantec_av_updates_default_levels')]
+    return [(None, "symantec_av_updates_default_levels")]
 
 
 def check_symantec_av_updates(_no_item, params, info):
     warn, crit = params
     last_text = info[0][0]
-    if '/' in last_text:
+    if "/" in last_text:
         if len(last_text) == 10:
             last_broken = time.strptime(last_text, "%m/%d/%Y")
         else:

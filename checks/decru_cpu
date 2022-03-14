@@ -14,18 +14,24 @@ def check_decru_cpu(item, _no_params, info):
     user, nice, system, interrupt, idle = [float(x[0]) / 10.0 for x in info]
     user += nice
 
-    perfdata = [("user", "%.3f" % user), ("system", "%.3f" % system),
-                ("interrupt", "%.3f" % interrupt)]
+    perfdata = [
+        ("user", "%.3f" % user),
+        ("system", "%.3f" % system),
+        ("interrupt", "%.3f" % interrupt),
+    ]
 
-    return (0, "user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%" %
-            (user, system, interrupt, idle), perfdata)
+    return (
+        0,
+        "user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%" % (user, system, interrupt, idle),
+        perfdata,
+    )
 
 
 check_info["decru_cpu"] = {
-    'check_function': check_decru_cpu,
-    'inventory_function': inventory_decru_cpu,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.12962.1.1', [8]),
-    'snmp_scan_function': lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower(),
+    "check_function": check_decru_cpu,
+    "inventory_function": inventory_decru_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.12962.1.1", [8]),
+    "snmp_scan_function": lambda oid: "datafort" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

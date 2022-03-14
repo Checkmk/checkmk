@@ -1,7 +1,7 @@
 title: Fujitsu SC2: Network Interfaces
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the network interfaces
@@ -12,6 +12,5 @@ description:
  and states. This check converts them to numeric
  values and passes it on to the if64 check.
 
-inventory:
+discovery:
  One service is created for each interface.
-

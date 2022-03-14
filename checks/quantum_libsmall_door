@@ -17,12 +17,11 @@ def check_quantum_libsmall_door(_no_item, _no_params, info):
     return 3, "Library door status unknown"
 
 
-
-check_info['quantum_libsmall_door'] = {
-    "check_function"          : check_quantum_libsmall_door,
-    "inventory_function"      : inventory_quantum_libsmall_door,
-    "service_description"     : "Tape library door",
-    "snmp_info"               : (".1.3.6.1.4.1.3697.1.10.10.1.15.2", [ "0" ]),
-    "snmp_scan_function"      : lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0", "").lower() \
-                                and "library" in oid(".1.3.6.1.2.1.1.6.0", "").lower(),
+check_info["quantum_libsmall_door"] = {
+    "check_function": check_quantum_libsmall_door,
+    "inventory_function": inventory_quantum_libsmall_door,
+    "service_description": "Tape library door",
+    "snmp_info": (".1.3.6.1.4.1.3697.1.10.10.1.15.2", ["0"]),
+    "snmp_scan_function": lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0", "").lower()
+    and "library" in oid(".1.3.6.1.2.1.1.6.0", "").lower(),
 }

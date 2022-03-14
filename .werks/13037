@@ -1,0 +1,11 @@
+Title: Add dashlet to display inventory attribute
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1629961100
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Add a dashlet to display a single inventory element.

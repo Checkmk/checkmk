@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+
 # Example output from agent (sizes are in bytes). Note: the part
 # [df] in this check is duplicated. We need this information because
 # zfsget does not show pass-through filesystems like '/'. :-(
@@ -158,8 +161,7 @@ def _parse_df(lines, parsed_zfs):
         t_u_a = (root_entry["total"], root_entry["used"], root_entry["available"])
         drop = []
         for mountpoint, entry in parsed.items():
-            if mountpoint != "/" and \
-                t_u_a == (entry["total"], entry["used"], entry["available"]):
+            if mountpoint != "/" and t_u_a == (entry["total"], entry["used"], entry["available"]):
                 drop.append(mountpoint)
         for mp in drop:
             del parsed[mp]
@@ -173,7 +175,7 @@ def parse_zfsget(info):
     if ["[df]"] in info:
         idx = info.index(["[df]"])
         info_zfs = info[:idx]
-        info_df = info[idx + 1:]
+        info_df = info[idx + 1 :]
     else:
         info_zfs = info
         info_df = []
@@ -203,7 +205,7 @@ def inventory_zfsget(parsed):
     for mountpoint in parsed:
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
-    return df_inventory(mplist)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
 def check_zfsget(item, params, parsed):
@@ -224,6 +226,9 @@ def check_zfsget(item, params, parsed):
             fslist.append((mountpoint, total_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)
+
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 check_info["zfsget"] = {

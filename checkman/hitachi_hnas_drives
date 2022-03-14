@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Status of System Drives
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of system drives of Hitachi NAS-Devices.
@@ -17,6 +17,5 @@ description:
  All stati except "Online" and "Unknown" trigger a {CRIT} state of
  the service.  "Online" triggers {OK} and "Unknown" triggers {UNKNOWN}
 
-inventory:
+discovery:
  One service for each drive.
-

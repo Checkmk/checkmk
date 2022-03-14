@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_rds_limits_default_levels'] = {
+
+factory_settings["aws_rds_limits_default_levels"] = {
     "db_instances": (None, 80.0, 90.0),
     "reserved_db_instances": (None, 80.0, 90.0),
     "allocated_storage": (None, 80.0, 90.0),
@@ -42,7 +43,8 @@ def parse_aws_rds_limits(info):
         else:
             human_readable_f = int
         limits_by_region.setdefault(region, []).append(
-            [resource_key, resource_title, limit, amount, human_readable_f])
+            [resource_key, resource_title, limit, amount, human_readable_f]
+        )
     return limits_by_region
 
 
@@ -51,12 +53,12 @@ def check_aws_rds_limits(item, params, region_data):
     return check_aws_limits("rds", params, region_data)
 
 
-check_info['aws_rds_limits'] = {
-    'parse_function': parse_aws_rds_limits,
-    'inventory_function': discover(),
-    'check_function': check_aws_rds_limits,
-    'service_description': 'AWS/RDS Limits %s',
-    'group': 'aws_rds_limits',
-    'default_levels_variable': 'aws_rds_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_rds_limits"] = {
+    "parse_function": parse_aws_rds_limits,
+    "inventory_function": discover(),
+    "check_function": check_aws_rds_limits,
+    "service_description": "AWS/RDS Limits %s",
+    "group": "aws_rds_limits",
+    "default_levels_variable": "aws_rds_limits_default_levels",
+    "has_perfdata": True,
 }

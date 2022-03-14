@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent (German Windows XP)
 # <<<win_netstat>>>
 #
@@ -38,7 +39,7 @@ from cmk.base.check_legacy_includes.netstat import *  # pylint: disable=wildcard
 
 win_netstat_states = {
     # German
-    u"ABH\x99REN": "LISTENING",
+    "ABH\x99REN": "LISTENING",
     "HERGESTELLT": "ESTABLISHED",
     "WARTEND": "TIME_WAIT",
     # Add further states in any required language here. Sorry, Windows
@@ -56,15 +57,21 @@ def parse_win_netstat(info):
             connstate = "LISTEN"
         else:
             continue
-        connections.append((proto, local.rsplit(":", 1), remote.rsplit(":", 1),
-                            win_netstat_states.get(connstate, connstate)))
+        connections.append(
+            (
+                proto,
+                local.rsplit(":", 1),
+                remote.rsplit(":", 1),
+                win_netstat_states.get(connstate, connstate),
+            )
+        )
     return connections
 
 
 check_info["win_netstat"] = {
-    'parse_function': parse_win_netstat,
-    'check_function': check_netstat_generic,
-    'service_description': "TCP Connection %s",
-    'group': "tcp_connections",
-    'has_perfdata': True,
+    "parse_function": parse_win_netstat,
+    "check_function": check_netstat_generic,
+    "service_description": "TCP Connection %s",
+    "group": "tcp_connections",
+    "has_perfdata": True,
 }

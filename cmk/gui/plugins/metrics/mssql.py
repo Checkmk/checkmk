@@ -5,11 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -24,15 +22,16 @@ from cmk.gui.plugins.metrics import (
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
+metric_info["database_job_duration"] = {
+    "title": _("Job Duration"),
+    "unit": "s",
+    "color": "44/c",
+}
 
-def register_mssql_metrics():
-    metric_info["database_job_duration"] = {
-        "title": _("Job Duration"),
-        "unit": "s",
-        "color": "44/c",
-    }
+metric_info["page_life_expectancy"] = {
+    "title": _("Page Life Expectancy"),
+    "unit": "s",
+    "color": "44/c",
+}
 
-
-register_mssql_metrics()
-
-#.
+# .

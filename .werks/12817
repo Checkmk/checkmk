@@ -1,0 +1,17 @@
+Title: mk_postgres: improved error message "Instance DATA not running"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1623688395
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+A postgres instance will be detected as running
+if a process is found that contains a postgres commandline
+which contains the name of the env-file.
+Otherwise the check "SQL Instance" will show the
+following error message "Instance <INSTANCE_NAME> not running or postgres DATADIR name is not identical with instance name.".
+
+

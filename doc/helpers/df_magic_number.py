@@ -24,7 +24,7 @@ def print_levels(level, exp):
     sys.stdout.write("\n")
 
 
-for level_ in [.80, .85, .90, .95]:
+for level_ in [0.80, 0.85, 0.90, 0.95]:
     sys.stdout.write("Level for %.0f GB Normpartition: %d%%\n" % (normsize, int(level_ * 100)))
     for exp_ in [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]:
         print_levels(level_, exp_)

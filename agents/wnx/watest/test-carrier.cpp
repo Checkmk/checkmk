@@ -16,6 +16,9 @@
 using namespace std::chrono_literals;
 
 namespace cma::carrier {
+
+TEST(CarrierTest, NoMaiSlotTracing) { EXPECT_FALSE(IsMailApiTraced()); }
+
 class CarrierTestFixture : public ::testing::Test {
 protected:
     struct TestStorage {
@@ -27,10 +30,10 @@ protected:
 
     static inline TestStorage g_mailslot_storage;
 
-    static bool MailboxCallbackCarrier(const MailSlot* Slot, const void* Data,
-                                       int Len, void* Context) {
+    static bool MailboxCallbackCarrier(const MailSlot *Slot, const void *Data,
+                                       int Len, void *Context) {
         using namespace std::chrono;
-        auto storage = (TestStorage*)Context;
+        auto storage = (TestStorage *)Context;
         if (!storage) {
             return false;
         }
@@ -38,7 +41,7 @@ protected:
         // your code is here
         auto fname = cfg::GetCurrentLogFileName();
 
-        auto dt = static_cast<const CarrierDataHeader*>(Data);
+        auto dt = static_cast<const CarrierDataHeader *>(Data);
         switch (dt->type()) {
             case DataType::kLog:
                 break;
@@ -46,7 +49,7 @@ protected:
             case DataType::kSegment: {
                 nanoseconds duration_since_epoch(dt->answerId());
                 time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
                 g_mailslot_storage.buffer_ = vectorized_data;
@@ -123,7 +126,7 @@ TEST_F(CarrierTestFixture, EstablishShutdown) {
 
 TEST_F(CarrierTestFixture, MailSlotIntegration) {
     auto summary_output = tools::ReadFileInVector(
-        (tst::G_TestPath / L"summary.output").wstring().c_str());
+        (tst::GetUnitTestFilesRoot() / L"summary.output").wstring().c_str());
 
     ASSERT_TRUE(cc_.establishCommunication(internal_port_));
 
@@ -178,7 +181,7 @@ public:
 
         mailbox_server.DismantleThread();
     }
-    const char* name_used{"WinAgentTestLocal"};
+    const char *name_used{"WinAgentTestLocal"};
     MailSlot mailbox_client{name_used, 0};
 
 private:

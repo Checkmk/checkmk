@@ -1,14 +1,14 @@
 title: Couchbase Buckets: Caches Performance
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service reports on the buckets cache performance.
  You may provide levels using the WATO-rule "Couchbase Cache".
  It evaluates the rate of cache misses.
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

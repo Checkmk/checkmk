@@ -7,7 +7,6 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableServiceGroups.h"
@@ -16,21 +15,21 @@
 #include "nagios.h"
 
 namespace {
-struct servicebygroup {
+struct service_and_group {
     const service *svc;
-    const servicegroup *service_group;
+    const servicegroup *group;
 };
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<servicebygroup>()->svc;
+        return r.rawData<service_and_group>()->svc;
     }),
                               true);
     TableServiceGroups::addColumns(
         this, "servicegroup_", offsets.add([](Row r) {
-            return r.rawData<servicebygroup>()->service_group;
+            return r.rawData<service_and_group>()->group;
         }));
 }
 
@@ -39,30 +38,23 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
-    bool requires_authcheck =
-        query->authUser() != nullptr &&
-        core()->groupAuthorization() == AuthorizationKind::strict;
-
-    for (const servicegroup *sg = servicegroup_list; sg != nullptr;
-         sg = sg->next) {
-        if (requires_authcheck &&
-            !is_authorized_for_service_group(core()->groupAuthorization(),
-                                             core()->serviceAuthorization(), sg,
-                                             query->authUser())) {
-            continue;
-        }
-
-        for (const servicesmember *m = sg->members; m != nullptr; m = m->next) {
-            servicebygroup sbg{m->service_ptr, sg};
-            if (!query->processDataset(Row(&sbg))) {
-                return;
+    for (const auto *group = servicegroup_list; group != nullptr;
+         group = group->next) {
+        if (core()->groupAuthorization() == GroupAuthorization::loose ||
+            is_authorized_for_service_group(core()->groupAuthorization(),
+                                            core()->serviceAuthorization(),
+                                            group, query->authUser())) {
+            for (const auto *m = group->members; m != nullptr; m = m->next) {
+                service_and_group sag{m->service_ptr, group};
+                if (!query->processDataset(Row(&sag))) {
+                    return;
+                }
             }
         }
     }
 }
 
 bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
-    const auto *svc = rowData<servicebygroup>(row)->svc;
-    return is_authorized_for(core()->serviceAuthorization(), ctc, svc->host_ptr,
-                             svc);
+    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                 rowData<service_and_group>(row)->svc);
 }

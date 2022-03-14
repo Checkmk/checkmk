@@ -1,7 +1,7 @@
 title: APC Symmetra UPS: Battery Current
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors battery current of APC Symmetra UPS.
@@ -15,5 +15,5 @@ description:
 item:
  The current phase containing the device state, voltage and current.
 
-inventory:
+discovery:
  One service is created for each battery.

@@ -1,13 +1,12 @@
 title: NetApp Filer: 7Mode Global CPU Utilization
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the global CPU utilization (in percent) of NetApp filers running in 7Mode.
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
-inventory:
+discovery:
  One service is created.
-

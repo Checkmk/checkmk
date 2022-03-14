@@ -9,17 +9,10 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.aws import (
-    extract_aws_metrics_by_labels,
-    parse_aws,
-)
+from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
-factory_settings['aws_dynamodb_capacity_defaults'] = {
-    'levels_%s' % op: {
-        'levels_average': {
-            'levels_upper': (80, 90)
-        }
-    } for op in ['read', 'write']
+factory_settings["aws_dynamodb_capacity_defaults"] = {
+    "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
 }
 
 
@@ -28,20 +21,23 @@ def parse_aws_dynamodb_table(info):
     parsed = parse_aws(info)
 
     # the last entry contains the provisioned limits
-    metrics = extract_aws_metrics_by_labels([
-        "Minimum_ConsumedReadCapacityUnits",
-        "Maximum_ConsumedReadCapacityUnits",
-        "Sum_ConsumedReadCapacityUnits",
-        "Minimum_ConsumedWriteCapacityUnits",
-        "Maximum_ConsumedWriteCapacityUnits",
-        "Sum_ConsumedWriteCapacityUnits",
-        "Query_Maximum_SuccessfulRequestLatency",
-        "Query_Average_SuccessfulRequestLatency",
-        "GetItem_Maximum_SuccessfulRequestLatency",
-        "GetItem_Average_SuccessfulRequestLatency",
-        "PutItem_Maximum_SuccessfulRequestLatency",
-        "PutItem_Average_SuccessfulRequestLatency",
-    ], parsed[:-1])
+    metrics = extract_aws_metrics_by_labels(
+        [
+            "Minimum_ConsumedReadCapacityUnits",
+            "Maximum_ConsumedReadCapacityUnits",
+            "Sum_ConsumedReadCapacityUnits",
+            "Minimum_ConsumedWriteCapacityUnits",
+            "Maximum_ConsumedWriteCapacityUnits",
+            "Sum_ConsumedWriteCapacityUnits",
+            "Query_Maximum_SuccessfulRequestLatency",
+            "Query_Average_SuccessfulRequestLatency",
+            "GetItem_Maximum_SuccessfulRequestLatency",
+            "GetItem_Average_SuccessfulRequestLatency",
+            "PutItem_Maximum_SuccessfulRequestLatency",
+            "PutItem_Average_SuccessfulRequestLatency",
+        ],
+        parsed[:-1],
+    )
 
     try:
         metrics = list(metrics.values())[-1]
@@ -51,16 +47,17 @@ def parse_aws_dynamodb_table(info):
         return {}
 
 
-check_info['aws_dynamodb_table'] = {
-    'parse_function': parse_aws_dynamodb_table,
+check_info["aws_dynamodb_table"] = {
+    "parse_function": parse_aws_dynamodb_table,
 }
 
 
 def _capacity_metric_id_to_name_and_unit(metric_id):
-    if metric_id.startswith('Sum'):
-        metric_id = metric_id.split('_')[-1]
+    if metric_id.startswith("Sum"):
+        metric_id = metric_id.split("_")[-1]
     metric_name = "aws_dynamodb_%s" % metric_id.lower().replace(
-        'readcapacityunits', '_rcu').replace('writecapacityunits', '_wcu')
+        "readcapacityunits", "_rcu"
+    ).replace("writecapacityunits", "_wcu")
     unit = metric_name[-3:].upper()
     return metric_name, unit
 
@@ -72,7 +69,7 @@ def _capacity_params_to_levels(params):
 def _check_capacity_minmax_metrics(params, parsed, to_check):
 
     metric_ids = ["Minimum_Consumed%s" % to_check, "Maximum_Consumed%s" % to_check]
-    info_names = ['Min. single-request consumption', 'Max. single-request consumption']
+    info_names = ["Min. single-request consumption", "Max. single-request consumption"]
     params_keys = ["levels_minimum", "levels_maximum"]
 
     for metric_id, infoname, params_key in zip(metric_ids, info_names, params_keys):
@@ -100,53 +97,61 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
 
     metric_name, unit = _capacity_metric_id_to_name_and_unit(metric_id_avg)
 
-    yield 0, 'Avg. consumption: %s' % aws_get_float_human_readable(metric_val_avg, unit=unit), [
+    yield 0, "Avg. consumption: %s" % aws_get_float_human_readable(metric_val_avg, unit=unit), [
         (metric_name, metric_val_avg)
     ]
 
     params_avg = params.get("levels_average", {})
     limit_val = params_avg.get("limit")
     if limit_val is None:
-        limit_val = parsed['provisioned_%s' % capacity_units_to_check]
+        limit_val = parsed["provisioned_%s" % capacity_units_to_check]
 
     if limit_val:
         perc_avg = metric_val_avg / limit_val * 100
-        yield check_levels(perc_avg,
-                           metric_name + '_perc',
-                           _capacity_params_to_levels(params_avg),
-                           infoname='Usage',
-                           human_readable_func=get_percent_human_readable)
+        yield check_levels(
+            perc_avg,
+            metric_name + "_perc",
+            _capacity_params_to_levels(params_avg),
+            infoname="Usage",
+            human_readable_func=get_percent_human_readable,
+        )
 
     for result in _check_capacity_minmax_metrics(params, parsed, capacity_units_to_check):
         yield result
 
 
 def check_aws_dynamodb_read_capacity(item, params, parsed):
-    for result in _check_aws_dynamodb_capacity(params.get('levels_read', {}), parsed,
-                                               "ReadCapacityUnits"):
+    for result in _check_aws_dynamodb_capacity(
+        params.get("levels_read", {}), parsed, "ReadCapacityUnits"
+    ):
         yield result
 
 
 def check_aws_dynamodb_write_capacity(item, params, parsed):
-    for result in _check_aws_dynamodb_capacity(params.get('levels_write', {}), parsed,
-                                               "WriteCapacityUnits"):
+    for result in _check_aws_dynamodb_capacity(
+        params.get("levels_write", {}), parsed, "WriteCapacityUnits"
+    ):
         yield result
 
 
 def inventory_aws_dynamodb_latency(parsed):
-    return inventory_aws_generic_single(parsed, [
-        'Query_Average_SuccessfulRequestLatency', 'GetItem_Average_SuccessfulRequestLatency',
-        'PutItem_Average_SuccessfulRequestLatency'
-    ],
-                                        requirement=any)
+    return inventory_aws_generic_single(
+        parsed,
+        [
+            "Query_Average_SuccessfulRequestLatency",
+            "GetItem_Average_SuccessfulRequestLatency",
+            "PutItem_Average_SuccessfulRequestLatency",
+        ],
+        requirement=any,
+    )
 
 
 def check_aws_dynamodb_latency(item, params, parsed):
 
     go_stale = True
 
-    for operation in ['Query', 'GetItem', 'PutItem']:
-        for statistic in ['Average', 'Maximum']:
+    for operation in ["Query", "GetItem", "PutItem"]:
+        for statistic in ["Average", "Maximum"]:
 
             metric_name = "aws_dynamodb_%s_%s_latency" % (operation.lower(), statistic.lower())
             metric_id = "%s_%s_SuccessfulRequestLatency" % (operation, statistic)
@@ -161,40 +166,44 @@ def check_aws_dynamodb_latency(item, params, parsed):
                 if levels is not None:
                     levels = tuple(level * 1e-3 for level in levels)
 
-                yield check_levels(metric_val,
-                                   metric_name,
-                                   levels,
-                                   infoname='%s latency %s' % (statistic, operation),
-                                   human_readable_func=get_age_human_readable)
+                yield check_levels(
+                    metric_val,
+                    metric_name,
+                    levels,
+                    infoname="%s latency %s" % (statistic, operation),
+                    human_readable_func=get_age_human_readable,
+                )
 
     if go_stale:
         raise MKCounterWrapped("Currently no data from AWS")
 
 
-check_info['aws_dynamodb_table.read_capacity'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(p,
-                                                                 ['Sum_ConsumedReadCapacityUnits']),
-    'check_function': check_aws_dynamodb_read_capacity,
-    'service_description': 'AWS/DynamoDB Read Capacity',
-    'group': 'aws_dynamodb_capacity',
-    'has_perfdata': True,
-    'default_levels_variable': 'aws_dynamodb_capacity_defaults',
+check_info["aws_dynamodb_table.read_capacity"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
+        p, ["Sum_ConsumedReadCapacityUnits"]
+    ),
+    "check_function": check_aws_dynamodb_read_capacity,
+    "service_description": "AWS/DynamoDB Read Capacity",
+    "group": "aws_dynamodb_capacity",
+    "has_perfdata": True,
+    "default_levels_variable": "aws_dynamodb_capacity_defaults",
 }
 
-check_info['aws_dynamodb_table.write_capacity'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
-        p, ['Sum_ConsumedWriteCapacityUnits']),
-    'check_function': check_aws_dynamodb_write_capacity,
-    'service_description': 'AWS/DynamoDB Write Capacity',
-    'group': 'aws_dynamodb_capacity',
-    'has_perfdata': True,
-    'default_levels_variable': 'aws_dynamodb_capacity_defaults',
+check_info["aws_dynamodb_table.write_capacity"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
+        p, ["Sum_ConsumedWriteCapacityUnits"]
+    ),
+    "check_function": check_aws_dynamodb_write_capacity,
+    "service_description": "AWS/DynamoDB Write Capacity",
+    "group": "aws_dynamodb_capacity",
+    "has_perfdata": True,
+    "default_levels_variable": "aws_dynamodb_capacity_defaults",
 }
 
-check_info['aws_dynamodb_table.latency'] = {
-    'inventory_function': inventory_aws_dynamodb_latency,
-    'check_function': check_aws_dynamodb_latency,
-    'service_description': 'AWS/DynamoDB Latency',
-    'group': 'aws_dynamodb_latency',
-    'has_perfdata': True,
+check_info["aws_dynamodb_table.latency"] = {
+    "inventory_function": inventory_aws_dynamodb_latency,
+    "check_function": check_aws_dynamodb_latency,
+    "service_description": "AWS/DynamoDB Latency",
+    "group": "aws_dynamodb_latency",
+    "has_perfdata": True,
 }

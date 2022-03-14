@@ -5,55 +5,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Float, Integer, TextInput, Tuple
 
 
 def _item_spec_sap_dialog():
-    return TextAscii(
+    return TextInput(
         title=_("System ID"),
         help=_("The SAP system ID."),
     )
 
 
 def _parameter_valuespec_sap_dialog():
-    return Dictionary(elements=[
-        ("UsersLoggedIn",
-         Tuple(
-             title=_("Number of Loggedin Users"),
-             elements=[
-                 Integer(title=_("Warning at"), label=_("Users")),
-                 Integer(title=_("Critical at"), label=_("Users"))
-             ],
-         )),
-        ("FrontEndNetTime",
-         Tuple(
-             title=_("Frontend net time"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_('ms')),
-                 Float(title=_("Critical at"), unit=_('ms'))
-             ],
-         )),
-        ("ResponseTime",
-         Tuple(
-             title=_("Response Time"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_('ms')),
-                 Float(title=_("Critical at"), unit=_('ms'))
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "UsersLoggedIn",
+                Tuple(
+                    title=_("Number of Loggedin Users"),
+                    elements=[
+                        Integer(title=_("Warning at"), label=_("Users")),
+                        Integer(title=_("Critical at"), label=_("Users")),
+                    ],
+                ),
+            ),
+            (
+                "FrontEndNetTime",
+                Tuple(
+                    title=_("Frontend net time"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("ms")),
+                        Float(title=_("Critical at"), unit=_("ms")),
+                    ],
+                ),
+            ),
+            (
+                "ResponseTime",
+                Tuple(
+                    title=_("Response Time"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("ms")),
+                        Float(title=_("Critical at"), unit=_("ms")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -64,4 +65,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sap_dialog,
         title=lambda: _("SAP Dialog"),
-    ))
+    )
+)

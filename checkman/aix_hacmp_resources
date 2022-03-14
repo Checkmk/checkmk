@@ -1,7 +1,7 @@
 title: AIX HACMP Cluster Manager: Resource Groups
 agents: aix
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the resource group states on different nodes
@@ -24,5 +24,5 @@ description:
 item:
  The resource group name.
 
-inventory:
+discovery:
  One service is created for each resource group.

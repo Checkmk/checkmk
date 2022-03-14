@@ -5,26 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import Any, List, Mapping
-from collections import namedtuple
+from typing import Any, List, Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
-State = namedtuple("State", ["state", "description"])
+
+class State(NamedTuple):
+    state: str
+    description: str
+
 
 CONFIG_SYNC_DEFAULT_PARAMETERS = {
     "0": 3,
@@ -40,16 +32,16 @@ CONFIG_SYNC_DEFAULT_PARAMETERS = {
 }
 
 CONFIG_SYNC_STATE_NAMES = {
-    '0': "Unknown",
-    '1': "Syncing",
-    '2': "Need Manual Sync",
-    '3': "In Sync",
-    '4': "Sync Failed",
-    '5': "Sync Disconnected",
-    '6': "Standalone",
-    '7': "Awaiting Initial Sync",
-    '8': "Incompatible Version",
-    '9': "Partial Sync",
+    "0": "Unknown",
+    "1": "Syncing",
+    "2": "Need Manual Sync",
+    "3": "In Sync",
+    "4": "Sync Failed",
+    "5": "Sync Disconnected",
+    "6": "Standalone",
+    "7": "Awaiting Initial Sync",
+    "8": "Incompatible Version",
+    "9": "Partial Sync",
 }
 
 
@@ -60,12 +52,12 @@ def discover_f5_bigip_config_sync(section: State) -> DiscoveryResult:
         yield Service()
 
 
-def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> State:
+def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> Optional[State]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_pre_v11([[["0 - Synchronized"]]])
     State(state='0', description='Synchronized')
     """
-    return State(*string_table[0][0][0].split(" - ", 1))
+    return State(*string_table[0][0][0].split(" - ", 1)) if string_table[0] else None
 
 
 # see: 1.3.6.1.4.1.3375.2.1.1.1.1.6.0
@@ -89,8 +81,10 @@ def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckResult:
     elif section.state in {"1", "2"}:
         yield Result(state=state.WARN, summary=section.description)
     else:
-        yield Result(state=state.UNKNOWN,
-                     summary="unexpected output from SNMP Agent %r" % section.description)
+        yield Result(
+            state=state.UNKNOWN,
+            summary="unexpected output from SNMP Agent %r" % section.description,
+        )
 
 
 register.snmp_section(
@@ -118,18 +112,18 @@ register.check_plugin(
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> State:
+def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Optional[State]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_v11_plus([[['3', 'In Sync']]])
     State(state='3', description='In Sync')
     """
-    return State(*string_table[0][0])
+    return State(*string_table[0][0]) if string_table[0] else None
 
 
 def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: State) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
-    ...         params=Mapping[str, Any](CONFIG_SYNC_DEFAULT_PARAMETERS),
+    ...         params=CONFIG_SYNC_DEFAULT_PARAMETERS,
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
     Result(state=<state.OK: 0>, summary='Node [node1] is standby')
@@ -138,7 +132,7 @@ def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: Stat
     status_name = CONFIG_SYNC_STATE_NAMES[section.state]
     infotext = status_name
     if status_name != section.description:
-        infotext += ' - ' + section.description
+        infotext += " - " + section.description
     yield Result(state=state(status), summary=infotext)
 
 
@@ -152,7 +146,8 @@ register.snmp_section(
             oids=[
                 "1.0",  # sysCmSyncStatusId
                 "2.0",  # sysCmSyncStatusStatus
-            ]),
+            ],
+        ),
     ],
 )
 

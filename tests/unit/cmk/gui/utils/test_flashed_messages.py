@@ -5,18 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from werkzeug.test import create_environ
-from testlib.utils import DummyApplication
 
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-from cmk.gui.userdb import on_access, on_succeeded_login
-from cmk.gui.globals import session, AppContext, RequestContext
-from cmk.gui.utils.html import HTML
 import cmk.gui.login as login
-import cmk.gui.htmllib as htmllib
-import cmk.gui.http as http
+from cmk.gui.globals import session
+from cmk.gui.userdb import on_access, on_succeeded_login
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(name="user_id")
@@ -25,23 +22,18 @@ def fixture_user_id(with_user):
 
 
 def test_flash(user_id):
-    environ = create_environ()
     # Execute the first request flash some message
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))) as request, \
-            login.UserSessionContext(user_id):
+    with application_and_request_context(), login.UserSessionContext(user_id):
         session_id = on_succeeded_login(user_id)  # Create and activate session
-        assert request.session is not None
+        assert session is not None
 
         flash("abc")
         assert session.session_info.flashes == ["abc"]
 
     # Now create the second request to get the previously flashed message
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))), \
-            login.UserSessionContext(user_id):
+    with application_and_request_context(), login.UserSessionContext(user_id):
         on_access(user_id, session_id)
-        assert request.session is not None
+        assert session is not None
         assert session.session_info.flashes == ["abc"]
 
         # Get the flashed messages removes the messages from the session
@@ -53,16 +45,14 @@ def test_flash(user_id):
 
     # Now create the third request that should not have access to the flashed messages since the
     # second one consumed them.
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))), \
-            login.UserSessionContext(user_id):
+    with application_and_request_context(), login.UserSessionContext(user_id):
         on_access(user_id, session_id)
-        assert request.session is not None
+        assert session is not None
         assert session.session_info.flashes == []
         assert get_flashed_messages() == []
 
 
-def test_flash_escape_html_in_str(user_id, module_wide_request_context):
+def test_flash_escape_html_in_str(user_id, request_context):
     with login.UserSessionContext(user_id):
         on_succeeded_login(user_id)  # Create and activate session
 
@@ -70,7 +60,7 @@ def test_flash_escape_html_in_str(user_id, module_wide_request_context):
         assert get_flashed_messages() == [HTML("&lt;script&gt;aaa&lt;/script&gt;")]
 
 
-def test_flash_dont_escape_html(user_id, module_wide_request_context):
+def test_flash_dont_escape_html(user_id, request_context):
     with login.UserSessionContext(user_id):
         on_succeeded_login(user_id)  # Create and activate session
 

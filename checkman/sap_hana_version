@@ -1,7 +1,7 @@
 title: SAP HANA: Version
 agents: linux
 catalog: app/sap_hana
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the version of SAP HANA.
@@ -9,5 +9,5 @@ description:
  Note: This check is deprecated and replaced by newer checks.
  See werk 7100 for detailed information.
 
-inventory:
+discovery:
  One service is created.

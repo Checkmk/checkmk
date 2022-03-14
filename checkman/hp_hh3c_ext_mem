@@ -1,7 +1,7 @@
 title: HP Devices: Module Memory
 agents: snmp
 catalog: hw/network/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the memory of modules of HP devices which
@@ -13,5 +13,5 @@ description:
 item:
  The module name from ENTITY-MIB.
 
-inventory:
+discovery:
  One service is created for each module.

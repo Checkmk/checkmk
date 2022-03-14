@@ -1,0 +1,15 @@
+Title: Eliminated rare crash when Windows agent is used to call updater without parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615395876
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Previously, the command <tt>"c:\program files (x86)\checkmk\service\check_mk_agent.exe" updater</tt> may 
+lead in some rare cases to the crash of the Windows agent.
+
+Since this release the error has been fixed.

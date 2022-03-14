@@ -1,0 +1,21 @@
+title: AWS Route53
+agents: aws
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the following Route53 health check metrics:
+ - child health check healthy count: For a calculated health check, the number of health checks that are healthy among the health checks that Route53 is monitoring.
+ - connection time: The average time, in milliseconds, that it took Route53 health checkers to establish a TCP connection with the endpoint.
+ - health check percentage healthy: The percentage of Route53 health checkers that consider the selected endpoint to be healthy.
+ - health check status: The status of the health check endpoint that CloudWatch is checking.
+ - SSL handshake time: The average time, in milliseconds, that it took Route53 health checkers to complete the SSL handshake.
+ - time to first byte: The average time, in milliseconds, that it took Route53 health checkers to receive the first byte of the response to an HTTP or HTTPS request.
+
+ Every health check will be monitored as a separate service.
+
+ To make this checkplugin work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+item:
+ Id of health check.

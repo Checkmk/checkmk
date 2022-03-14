@@ -26,8 +26,13 @@ _g_walk_cache: Dict[HostName, List[str]] = {}
 def initialize_single_oid_cache(snmp_config: SNMPHostConfig, from_disk: bool = False) -> None:
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
-    if (not (_g_single_oid_hostname == snmp_config.hostname and
-             _g_single_oid_ipaddress == snmp_config.ipaddress) or _g_single_oid_cache is None):
+    if (
+        not (
+            _g_single_oid_hostname == snmp_config.hostname
+            and _g_single_oid_ipaddress == snmp_config.ipaddress
+        )
+        or _g_single_oid_cache is None
+    ):
         _g_single_oid_hostname = snmp_config.hostname
         _g_single_oid_ipaddress = snmp_config.ipaddress
         if from_disk:
@@ -48,8 +53,11 @@ def write_single_oid_cache(snmp_config: SNMPHostConfig) -> None:
 
 
 def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> Dict[OID, Optional[SNMPDecodedString]]:
-    cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, snmp_config.hostname,
-                               snmp_config.ipaddress)
+    cache_path = "%s/%s.%s" % (
+        cmk.utils.paths.snmp_scan_cache_dir,
+        snmp_config.hostname,
+        snmp_config.ipaddress,
+    )
     return store.load_object_from_file(cache_path, default={})
 
 
@@ -70,7 +78,7 @@ def cleanup_host_caches() -> None:
 cmk.utils.cleanup.register_cleanup(cleanup_host_caches)
 
 
-def _clear_other_hosts_oid_cache(hostname: Optional[str]) -> None:
+def _clear_other_hosts_oid_cache(hostname: Optional[HostName]) -> None:
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
     if _g_single_oid_hostname != hostname:
         _g_single_oid_cache = None

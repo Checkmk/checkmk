@@ -1,0 +1,13 @@
+Title: Calculated latency levels checked in disk checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1623685356
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If disk check doesn't send latency data, Checkmk calculates it from average read/write wait.
+Until now warn/crit levels weren't checked in this case. Now they are checked.

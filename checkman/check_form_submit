@@ -1,7 +1,7 @@
 title: HTTP Form Check
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -37,4 +37,3 @@ Examples:
  in this response:
 
  ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
-

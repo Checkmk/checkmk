@@ -22,7 +22,7 @@
 #  'maxdsiz'     : (176676864, 1073741824),
 # }
 
-#.
+# .
 #   .--general functions---------------------------------------------------.
 #   |                                                  _                   |
 #   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
@@ -77,14 +77,15 @@ def check_hpux_tunables(info, params, tunable, descr):
 
         if isinstance(params, tuple):
             params = {
-                'levels': params,
+                "levels": params,
             }
         warn, crit = params["levels"]
         warn_perf = float(warn * threshold / 100)
         crit_perf = float(crit * threshold / 100)
 
-        yield 0, "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr), \
-            [ (descr, usage, warn_perf, crit_perf, 0, threshold) ]
+        yield 0, "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr), [
+            (descr, usage, warn_perf, crit_perf, 0, threshold)
+        ]
 
         if perc > crit:
             state = 2
@@ -100,7 +101,7 @@ def check_hpux_tunables(info, params, tunable, descr):
         yield 3, "tunable not found in agent output"
 
 
-#.
+# .
 #   .--nkthread------------------------------------------------------------.
 #   |                    _    _   _                        _               |
 #   |              _ __ | | _| |_| |__  _ __ ___  __ _  __| |              |
@@ -113,7 +114,7 @@ def check_hpux_tunables(info, params, tunable, descr):
 #   '----------------------------------------------------------------------'
 
 factory_settings["hpux_tunables_nkthread_default_levels"] = {
-    'levels': (80.0, 85.0),
+    "levels": (80.0, 85.0),
 }
 
 
@@ -136,7 +137,7 @@ check_info["hpux_tunables.nkthread"] = {
     "default_levels_variable": "hpux_tunables_nkthread_default_levels",
 }
 
-#.
+# .
 #   .--nproc---------------------------------------------------------------.
 #   |                                                                      |
 #   |                     _ __  _ __  _ __ ___   ___                       |
@@ -148,7 +149,7 @@ check_info["hpux_tunables.nkthread"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hpux_tunables_nproc_default_levels"] = {'levels': (90.0, 96.0)}
+factory_settings["hpux_tunables_nproc_default_levels"] = {"levels": (90.0, 96.0)}
 
 
 def inventory_hpux_tunables_nproc(info):
@@ -170,7 +171,7 @@ check_info["hpux_tunables.nproc"] = {
     "default_levels_variable": "hpux_tunables_nproc_default_levels",
 }
 
-#.
+# .
 #   .--maxfiles_lim--------------------------------------------------------.
 #   |                            __ _ _               _ _                  |
 #   |      _ __ ___   __ ___  __/ _(_) | ___  ___    | (_)_ __ ___         |
@@ -182,7 +183,7 @@ check_info["hpux_tunables.nproc"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hpux_tunables_maxfiles_lim_default_levels"] = {'levels': (85.0, 90.0)}
+factory_settings["hpux_tunables_maxfiles_lim_default_levels"] = {"levels": (85.0, 90.0)}
 
 
 def inventory_hpux_tunables_maxfiles_lim(info):
@@ -204,7 +205,7 @@ check_info["hpux_tunables.maxfiles_lim"] = {
     "default_levels_variable": "hpux_tunables_maxfiles_lim_default_levels",
 }
 
-#.
+# .
 #   .--semmni--------------------------------------------------------------.
 #   |                                                   _                  |
 #   |                ___  ___ _ __ ___  _ __ ___  _ __ (_)                 |
@@ -216,7 +217,7 @@ check_info["hpux_tunables.maxfiles_lim"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hpux_tunables_semmni_default_levels"] = {'levels': (85.0, 90.0)}
+factory_settings["hpux_tunables_semmni_default_levels"] = {"levels": (85.0, 90.0)}
 
 
 def inventory_hpux_tunables_semmni(info):
@@ -238,7 +239,7 @@ check_info["hpux_tunables.semmni"] = {
     "default_levels_variable": "hpux_tunables_semmni_default_levels",
 }
 
-#.
+# .
 #   .--shmseg--------------------------------------------------------------.
 #   |                     _                                                |
 #   |                 ___| |__  _ __ ___  ___  ___  __ _                   |
@@ -250,7 +251,7 @@ check_info["hpux_tunables.semmni"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hpux_tunables_shmseg_default_levels"] = {'levels': (85.0, 90.0)}
+factory_settings["hpux_tunables_shmseg_default_levels"] = {"levels": (85.0, 90.0)}
 
 
 def inventory_hpux_tunables_shmseg(info):
@@ -272,7 +273,7 @@ check_info["hpux_tunables.shmseg"] = {
     "default_levels_variable": "hpux_tunables_shmseg_default_levels",
 }
 
-#.
+# .
 #   .--semmns--------------------------------------------------------------.
 #   |                                                                      |
 #   |               ___  ___ _ __ ___  _ __ ___  _ __  ___                 |
@@ -284,7 +285,7 @@ check_info["hpux_tunables.shmseg"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hpux_tunables_semmns_default_levels"] = {'levels': (85.0, 90.0)}
+factory_settings["hpux_tunables_semmns_default_levels"] = {"levels": (85.0, 90.0)}
 
 
 def inventory_hpux_tunables_semmns(info):

@@ -1,0 +1,15 @@
+Title: Views: Painters "Host's children" and "Host's parents" ignore configured links now
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1617002953
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Some painters, like "Host's children" and "Host's parents", list multiple hosts
+and link to the host status view of these hosts. When a view defines a link on
+the whole column, this suppresses the links of the individual hosts. These
+painters now ignore the link configuration to prevent confusions.

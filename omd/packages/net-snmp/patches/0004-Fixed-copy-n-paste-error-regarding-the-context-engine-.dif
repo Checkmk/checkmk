@@ -12,7 +12,7 @@ diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
 index 7dbb0b3..3efb26f 100644
 --- a/python/netsnmp/client_intf.c
 +++ b/python/netsnmp/client_intf.c
-@@ -1213,7 +1213,7 @@ netsnmp_create_session_v3(PyObject *self, PyObject *args)
+@@ -1131,7 +1131,7 @@ netsnmp_create_session_v3(PyObject *self, PyObject *args)
      hex_to_binary2((unsigned char*)sec_eng_id, STRLEN(sec_eng_id),
  		   (char **) &session.securityEngineID);
    session.contextEngineIDLen =
@@ -21,6 +21,6 @@ index 7dbb0b3..3efb26f 100644
  		   (char **) &session.contextEngineID);
    session.engineBoots = eng_boots;
    session.engineTime = eng_time;
--- 
+--
 2.7.4
 

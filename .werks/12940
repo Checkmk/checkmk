@@ -1,0 +1,12 @@
+Title: Agent version ignored if "unknown"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633953294
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If Fritz or VNX agent has a version "unknown", the version will be ignored
+during checking.

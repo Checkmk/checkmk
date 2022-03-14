@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # +------------------------------------------------------------------+
 # | This file has been contributed and is copyrighted by:            |
 # |                                                                  |
@@ -29,71 +31,71 @@ def parse_lparstat_aix(info):
     if not info:
         return {}
     if len(info) < 4:
-        return {'update_required': True}
+        return {"update_required": True}
 
     # get system config:
-    kv_pairs = (word for word in info[0] if '=' in word)
-    parsed = {'system_config': dict(kv.split('=', 1) for kv in kv_pairs)}
+    kv_pairs = (word for word in info[0] if "=" in word)
+    parsed = {"system_config": dict(kv.split("=", 1) for kv in kv_pairs)}
     # from ibm.com: 'If there are two SMT threads, the row is displayed as "on."'
-    if parsed['system_config'].get('smt', '').lower() == 'on':
-        parsed['system_config']['smt'] = '2'
+    if parsed["system_config"].get("smt", "").lower() == "on":
+        parsed["system_config"]["smt"] = "2"
 
     for index, key in enumerate(info[1]):
-        name = key.lstrip('%')
-        uom = '%' if '%' in key else ''
+        name = key.lstrip("%")
+        uom = "%" if "%" in key else ""
         try:
             value = float(info[3][index])
         except (IndexError, ValueError):
             continue
 
-        if name in ('user', 'sys', 'idle', 'wait'):
-            parsed.setdefault('cpu', {})[name] = value
+        if name in ("user", "sys", "idle", "wait"):
+            parsed.setdefault("cpu", {})[name] = value
         else:
-            parsed.setdefault('util', collections.OrderedDict())[name] = (value, uom)
+            parsed.setdefault("util", collections.OrderedDict())[name] = (value, uom)
 
     return parsed
 
 
 def inventory_lparstat(parsed):
-    if parsed and parsed.get('util'):
+    if parsed and parsed.get("util"):
         yield None, {}
 
 
 def check_lparstat(_no_item, _no_params, parsed):
     if not parsed:
         return
-    if parsed.get('update_required'):
+    if parsed.get("update_required"):
         yield 3, "Please upgrade your AIX agent."
         return
 
-    utilization = parsed.get('util', collections.OrderedDict())
+    utilization = parsed.get("util", collections.OrderedDict())
     for name, (value, uom) in utilization.items():
         yield 0, "%s: %s%s" % (name.title(), value, uom), [(name, value)]
 
 
 check_info["lparstat_aix"] = {
-    'parse_function': parse_lparstat_aix,
-    'check_function': check_lparstat,
-    'inventory_function': inventory_lparstat,
-    'service_description': 'lparstat',
-    'has_perfdata': True,
+    "parse_function": parse_lparstat_aix,
+    "check_function": check_lparstat,
+    "inventory_function": inventory_lparstat,
+    "service_description": "lparstat",
+    "has_perfdata": True,
 }
 
 
 def inventory_lparstat_aix_cpu(parsed):
-    if parsed.get('update_required'):
+    if parsed.get("update_required"):
         return [(None, {})]
-    if all(k in parsed.get('cpu', {}) for k in ('user', 'sys', 'wait', 'idle')):
+    if all(k in parsed.get("cpu", {}) for k in ("user", "sys", "wait", "idle")):
         return [(None, {})]
 
 
 def check_lparstat_aix_cpu(_no_item, params, parsed):
-    if parsed.get('update_required'):
+    if parsed.get("update_required"):
         yield 3, "Please upgrade your AIX agent."
         return
 
-    cpu = parsed.get('cpu', {})
-    user, system, wait = cpu.get('user'), cpu.get('sys'), cpu.get('wait')
+    cpu = parsed.get("cpu", {})
+    user, system, wait = cpu.get("user"), cpu.get("sys"), cpu.get("wait")
     if None in (user, system, wait):
         return
 
@@ -101,29 +103,29 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
 
-    values = CPUInfo('', user, 0, system, cpu.get('idle', 0), wait)
+    values = CPUInfo("", user, 0, system, cpu.get("idle", 0), wait)
 
     for util_result in check_cpu_util_unix(values, params, values_counter=False):
         yield util_result
 
     try:
-        cpu_entitlement = float(parsed['system_config']['ent'])
-        phys_cpu_consumption, _unit = parsed['util']['physc']
+        cpu_entitlement = float(parsed["system_config"]["ent"])
+        phys_cpu_consumption, _unit = parsed["util"]["physc"]
     except (KeyError, ValueError):
         return
-    yield check_levels(phys_cpu_consumption,
-                       'cpu_entitlement_util',
-                       None,
-                       infoname="Physical CPU consumption",
-                       unit="CPUs")
-    yield check_levels(cpu_entitlement,
-                       'cpu_entitlement',
-                       None,
-                       infoname="Entitlement",
-                       unit="CPUs")
+    yield check_levels(
+        phys_cpu_consumption,
+        "cpu_entitlement_util",
+        None,
+        infoname="Physical CPU consumption",
+        unit="CPUs",
+    )
+    yield check_levels(
+        cpu_entitlement, "cpu_entitlement", None, infoname="Entitlement", unit="CPUs"
+    )
 
 
-check_info['lparstat_aix.cpu_util'] = {
+check_info["lparstat_aix.cpu_util"] = {
     "check_function": check_lparstat_aix_cpu,
     "inventory_function": inventory_lparstat_aix_cpu,
     "service_description": "CPU utilization",

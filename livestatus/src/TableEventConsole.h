@@ -14,40 +14,40 @@
 #include <string>
 #include <vector>
 
-#include "DoubleColumn.h"
-#include "IntLambdaColumn.h"
-#include "ListLambdaColumn.h"
+#include "IntColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "StringColumn.h"
 #include "Table.h"
-#include "TimeColumn.h"
-#include "nagios.h"
+#include "contact_fwd.h"
+
 class ColumnOffsets;
+template <class T>
+class DoubleColumn;
 class Query;
 class Row;
-
-// NOTE: We have a few "keep" pragmas above to avoid the insane handling of
-// template foward declarations, when the templates have parameters with
-// defaults. Yet another example "simple things gone wrong"... :-/
+template <class T>
+class StringColumn;
+template <class T>
+class TimeColumn;
 
 class ECRow {
 public:
     ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
-    static std::unique_ptr<StringColumn::Callback<ECRow>> makeStringColumn(
+    static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(
+    static std::unique_ptr<IntColumn<ECRow>> makeIntColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<DoubleColumn::Callback<ECRow>> makeDoubleColumn(
+    static std::unique_ptr<DoubleColumn<ECRow>> makeDoubleColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<TimeColumn::Callback<ECRow>> makeTimeColumn(
+    static std::unique_ptr<TimeColumn<ECRow>> makeTimeColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<ListColumn::Callback<ECRow>> makeListColumn(
+    static std::unique_ptr<ListColumn<ECRow>> makeListColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
 

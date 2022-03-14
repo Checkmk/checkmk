@@ -1,7 +1,7 @@
 title: Alcatel Switches: Power Supplies
 agents: snmp
 catalog: hw/network/alcatel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health of power supplies in the following Alcatel
@@ -22,6 +22,5 @@ description:
 item:
  The ID of the power supply as output from the SNMP agent.
 
-inventory:
+discovery:
  One service is created for each power supply.
-

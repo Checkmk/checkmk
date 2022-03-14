@@ -1,7 +1,7 @@
 title: FireEye Appliances: Mails Received
 agents: snmp
 catalog: hw/network/fireeye
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number rate of received
@@ -12,6 +12,5 @@ description:
  The check goes WARN or CRIT if the number of
  received mails exceeds configurable values.
 
-inventory:
+discovery:
  One service is created.
-

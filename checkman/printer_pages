@@ -1,11 +1,11 @@
 title: Generic Printer: Number of Printed Pages
 agents: snmp
 catalog: hw/printer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows how much pages the printer ever printed.
  The printer has to support the generic PRINTER-MIB.
 
-inventory:
+discovery:
  One service is created.

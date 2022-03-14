@@ -1,7 +1,7 @@
 title: Huawei OSN: PSU
 agents: snmp
 catalog: hw/network/huawei
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the current usage of a PSU. The state will change to
@@ -11,5 +11,5 @@ description:
 item:
  The slot ID of the Piu Board ({{BID}})
 
-inventory:
+discovery:
  One service is created for each PSU.

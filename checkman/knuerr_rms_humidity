@@ -1,12 +1,11 @@
 title: Knürr RMS: Humidity
 agents: snmp
 catalog: hw/environment/knuerr
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the humidity Sensor on a Knürr RMS Monitoring System. It's possible to set {WARN} and {CRIT} Levels to monitor to high
  or to low humidity.
 
-inventory:
+discovery:
  One service is created.
-

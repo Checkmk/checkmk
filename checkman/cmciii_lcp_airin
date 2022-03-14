@@ -1,7 +1,7 @@
 title: Rittal CMC-III LCP: Air in and Temperature
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Note: This check is obsolete, the individual temperatures (top, middle, bottom) are
@@ -18,5 +18,5 @@ description:
  in the device are extracted and used as limits for the
  average temperature read from the device.
 
-inventory:
+discovery:
  One service is created for each sensor.

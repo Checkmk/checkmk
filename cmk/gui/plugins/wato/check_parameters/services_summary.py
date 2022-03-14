@@ -5,41 +5,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListOfStrings,
-    MonitoringState,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, ListOfStrings, MonitoringState
 
 
 def _parameter_valuespec_services_summary():
     return Dictionary(
-        title=_('Autostart Services'),
+        title=_("Autostart Services"),
         elements=[
-            ('ignored',
-             ListOfStrings(
-                 title=_("Ignored autostart services"),
-                 help=_('Regular expressions matching the begining of the internal name '
-                        'or the description of the service. '
-                        'If no name is given then this rule will match all services. The '
-                        'match is done on the <i>beginning</i> of the service name. It '
-                        'is done <i>case sensitive</i>. You can do a case insensitive match '
-                        'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
-                        '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
-                        'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
-                 orientation="horizontal",
-             )),
-            ('state_if_stopped',
-             MonitoringState(
-                 title=_("Default state if stopped autostart services are found"),
-                 default_value=0,
-             )),
+            (
+                "ignored",
+                ListOfStrings(
+                    title=_("Ignored autostart services"),
+                    help=_(
+                        "Regular expressions matching the begining of the internal name "
+                        "or the description of the service. "
+                        "If no name is given then this rule will match all services. The "
+                        "match is done on the <i>beginning</i> of the service name. It "
+                        "is done <i>case sensitive</i>. You can do a case insensitive match "
+                        "by prefixing the regular expression with <tt>(?i)</tt>. Example: "
+                        "<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> "
+                        "or <tt>MsSQL</tt> or <tt>mssql</tt> or..."
+                    ),
+                    orientation="horizontal",
+                ),
+            ),
+            (
+                "state_if_stopped",
+                MonitoringState(
+                    title=_("Default state if stopped autostart services are found"),
+                    default_value=0,
+                ),
+            ),
         ],
     )
 
@@ -51,4 +52,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_services_summary,
         title=lambda: _("Windows Service Summary"),
-    ))
+    )
+)

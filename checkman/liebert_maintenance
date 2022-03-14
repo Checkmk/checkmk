@@ -1,12 +1,12 @@
 title: Liebert: Time Left for Next Maintenance
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the time left until next maintenance. The state will
  change to {WARN} if only 10 days are left and to {CRIT} if only 5 days are
  left until next maintenance is scheduled.
 
-inventory:
+discovery:
  One service is created.

@@ -1,7 +1,7 @@
 title: Knürr RMS: Sensors
 agents: snmp
 catalog: hw/environment/knuerr
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the sensor contacts on a Knürr RMS Monitoring System. For each Sensor who is not in a ok state, a {CRITICAL} will be
@@ -10,6 +10,5 @@ description:
 item:
  The name of the sensor as configured in the device
 
-inventory:
+discovery:
  One service is created for each available sensor.
-

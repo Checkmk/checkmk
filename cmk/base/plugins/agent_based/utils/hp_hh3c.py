@@ -7,8 +7,12 @@
 from enum import Enum
 from typing import Dict, List
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"

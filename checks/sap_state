@@ -23,7 +23,7 @@ def check_sap_state(item, _no_parameters, info):
             return value_to_status(value), "Status: %s" % value
 
 
-check_info['sap_state'] = {
+check_info["sap_state"] = {
     "check_function": check_sap_state,
     "inventory_function": inventory_sap_state,
     "service_description": "SAP State %s",

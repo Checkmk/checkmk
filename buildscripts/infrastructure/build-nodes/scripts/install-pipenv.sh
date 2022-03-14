@@ -6,20 +6,25 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-PYTHON_VERSION=3.8.7
-PYTHON_DIR_NAME=Python-${PYTHON_VERSION}
+# read optional command line argument
+if [ "$#" -eq 1 ]; then
+    PYTHON_VERSION=$1
+else
+    PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
+fi
 
-PIPENV_VERSION=2020.6.2
-ARCHIVE_NAME=v${PIPENV_VERSION}.tar.gz
-DIR_NAME=pipenv-${PIPENV_VERSION}
-TARGET_DIR=/opt
+PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
+VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
 
-cd "${TARGET_DIR}"
-mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/archive/${ARCHIVE_NAME}"
-tar xf "${ARCHIVE_NAME}"
-cd "${DIR_NAME}"
-pip3 install .
+pip3 install \
+    pipenv=="$PIPENV_VERSION" \
+    virtualenv=="$VIRTUALENV_VERSION"
 
-ln -sf "${TARGET_DIR}/${PYTHON_DIR_NAME}/bin/pipenv"* /usr/bin
+# link pipenv to /usr/bin to be in PATH. Fallback to /opt/bin if no permissions for writting to /usr/bin.
+#   /opt/bin does not work as default, because `make -C omd deb` requires it to be in /usr/bin.
+#   only /usr/bin does not work, because GitHub Actions do not have permissions to write there.
+PIPENV_PATH="/opt/Python-${PYTHON_VERSION}/bin/pipenv"
+ln -sf "${PIPENV_PATH}"* /usr/bin || ln -sf "${PIPENV_PATH}"* /opt/bin

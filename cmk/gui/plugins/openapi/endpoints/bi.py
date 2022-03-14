@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Business intelligence (BI)
 
-BI is used in Checkmk to setup a tree based on the status of hosts and services as branches and to
+BI is used in Checkmk to set up a tree based on the status of hosts and services as branches and to
 extend with higher level nodes summarizing (or aggregating) the status of the contained objects.
 A BI pack contains the configuration data by means of BI aggregations and BI rules.
 A BI aggregation is a tree of nodes and a BI rule is used to define a node and its status.
@@ -17,30 +17,36 @@ You can find an introduction to BI in the
 import http
 import http.client
 
-from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    response_schemas,
-)
-from cmk.gui.plugins.openapi.utils import ProblemException
-
-from cmk.utils.bi.bi_lib import ReqString, ReqBoolean, ReqList
+from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqString
 from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.gui.bi import get_cached_bi_packs
 from cmk.utils.bi.bi_schema import Schema
 
+from cmk.gui.bi import get_cached_bi_packs
+from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.plugins.openapi.utils import ProblemException
+
+from cmk import fields
+
 BI_RULE_ID = {
-    'rule_id': fields.String(example='rule1'),
+    "rule_id": fields.String(
+        description="The unique id for the rule",
+        example="rule1",
+    ),
 }
 BI_AGGR_ID = {
-    'aggregation_id': fields.String(example="aggregation1"),
+    "aggregation_id": fields.String(
+        description="The unique id for the aggregation",
+        example="aggregation1",
+    ),
 }
 BI_PACK_ID = {
-    'pack_id': fields.String(example="pack1"),
+    "pack_id": fields.String(
+        description="The unique id for the aggregation pack",
+        example="pack1",
+    ),
 }
 
 
@@ -59,14 +65,21 @@ def _bailout_with_message(message):
 
 
 class BIRuleEndpointSchema(BIRuleSchema):
-    pack_id = ReqString(default="", example="pack1")
+    pack_id = ReqString(
+        dump_default="",
+        example="pack1",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
 
 
-@Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
-          'cmk/get_bi_rule',
-          method='get',
-          path_params=[BI_RULE_ID],
-          response_schema=BIRuleEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_rule", "{rule_id}"),
+    "cmk/get_bi_rule",
+    method="get",
+    path_params=[BI_RULE_ID],
+    convert_response=False,
+    response_schema=BIRuleEndpointSchema,
+)
 def get_bi_rule(params):
     """Show a BI rule"""
     bi_packs = get_cached_bi_packs()
@@ -81,25 +94,31 @@ def get_bi_rule(params):
     return constructors.serve_json(data)
 
 
-@Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
-          'cmk/put_bi_rule',
-          method='put',
-          path_params=[BI_RULE_ID],
-          request_schema=BIRuleEndpointSchema,
-          response_schema=BIRuleEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_rule", "{rule_id}"),
+    "cmk/put_bi_rule",
+    method="put",
+    path_params=[BI_RULE_ID],
+    convert_response=False,
+    request_schema=BIRuleEndpointSchema,
+    response_schema=BIRuleEndpointSchema,
+)
 def put_bi_rule(params):
     """Update an existing BI rule"""
     return _update_bi_rule(params, must_exist=True)
 
 
-@Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
-          'cmk/post_bi_rule',
-          method='post',
-          path_params=[BI_RULE_ID],
-          request_schema=BIRuleEndpointSchema,
-          response_schema=BIRuleEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_rule", "{rule_id}"),
+    "cmk/post_bi_rule",
+    method="post",
+    path_params=[BI_RULE_ID],
+    convert_response=False,
+    request_schema=BIRuleEndpointSchema,
+    response_schema=BIRuleEndpointSchema,
+)
 def post_bi_rule(params):
-    """ Create a new BI rule"""
+    """Create a new BI rule"""
     return _update_bi_rule(params, must_exist=False)
 
 
@@ -129,11 +148,14 @@ def _update_bi_rule(params, must_exist: bool):
     return constructors.serve_json(data)
 
 
-@Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
-          'cmk/delete_bi_rule',
-          method='delete',
-          path_params=[BI_RULE_ID],
-          output_empty=True)
+@Endpoint(
+    constructors.object_href("bi_rule", "{rule_id}"),
+    "cmk/delete_bi_rule",
+    method="delete",
+    path_params=[BI_RULE_ID],
+    convert_response=False,
+    output_empty=True,
+)
 def delete_bi_rule(params):
     """Delete BI rule"""
     bi_packs = get_cached_bi_packs()
@@ -159,14 +181,21 @@ def delete_bi_rule(params):
 
 
 class BIAggregationEndpointSchema(BIAggregationSchema):
-    pack_id = ReqString(default="", example="pack1")
+    pack_id = ReqString(
+        dump_default="",
+        example="pack1",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
 
 
-@Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
-          'cmk/get_bi_aggregation',
-          method='get',
-          path_params=[BI_AGGR_ID],
-          response_schema=BIAggregationEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_aggregation", "{aggregation_id}"),
+    "cmk/get_bi_aggregation",
+    method="get",
+    path_params=[BI_AGGR_ID],
+    convert_response=False,
+    response_schema=BIAggregationEndpointSchema,
+)
 def get_bi_aggregation(params):
     """Get a BI aggregation"""
     bi_packs = get_cached_bi_packs()
@@ -181,23 +210,29 @@ def get_bi_aggregation(params):
     return constructors.serve_json(data)
 
 
-@Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
-          'cmk/put_bi_aggregation',
-          method='put',
-          path_params=[BI_AGGR_ID],
-          request_schema=BIAggregationEndpointSchema,
-          response_schema=BIAggregationEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_aggregation", "{aggregation_id}"),
+    "cmk/put_bi_aggregation",
+    method="put",
+    path_params=[BI_AGGR_ID],
+    convert_response=False,
+    request_schema=BIAggregationEndpointSchema,
+    response_schema=BIAggregationEndpointSchema,
+)
 def put_bi_aggregation(params):
     """Update an existing BI aggregation"""
     return _update_bi_aggregation(params, must_exist=True)
 
 
-@Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
-          'cmk/post_bi_aggregation',
-          method='post',
-          path_params=[BI_AGGR_ID],
-          request_schema=BIAggregationEndpointSchema,
-          response_schema=BIAggregationEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_aggregation", "{aggregation_id}"),
+    "cmk/post_bi_aggregation",
+    method="post",
+    path_params=[BI_AGGR_ID],
+    convert_response=False,
+    request_schema=BIAggregationEndpointSchema,
+    response_schema=BIAggregationEndpointSchema,
+)
 def post_bi_aggregation(params):
     """Create a BI aggregation"""
     return _update_bi_aggregation(params, must_exist=False)
@@ -229,11 +264,14 @@ def _update_bi_aggregation(params, must_exist: bool):
     return constructors.serve_json(data)
 
 
-@Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
-          'cmk/delete_bi_aggregation',
-          method='delete',
-          path_params=[BI_AGGR_ID],
-          output_empty=True)
+@Endpoint(
+    constructors.object_href("bi_aggregation", "{aggregation_id}"),
+    "cmk/delete_bi_aggregation",
+    method="delete",
+    path_params=[BI_AGGR_ID],
+    convert_response=False,
+    output_empty=True,
+)
 def delete_bi_aggregation(params):
     """Delete a BI aggregation"""
     bi_packs = get_cached_bi_packs()
@@ -258,10 +296,13 @@ def delete_bi_aggregation(params):
 #   +----------------------------------------------------------------------+
 
 
-@Endpoint(constructors.collection_href("bi_pack"),
-          'cmk/get_bi_packs',
-          method='get',
-          response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(
+    constructors.collection_href("bi_pack"),
+    "cmk/get_bi_packs",
+    method="get",
+    convert_response=False,
+    response_schema=response_schemas.DomainObjectCollection,
+)
 def get_bi_packs(params):
     """Show all BI packs"""
 
@@ -269,27 +310,29 @@ def get_bi_packs(params):
     bi_packs.load_config()
     packs = [
         constructors.collection_item(
-            domain_type='bi_pack',
-            obj={
-                'id': pack.id,
-                'title': pack.title,
-            },
-        ) for pack in bi_packs.packs.values()
+            domain_type="bi_pack",
+            identifier=pack.id,
+            title=pack.title,
+        )
+        for pack in bi_packs.packs.values()
     ]
 
     collection_object = constructors.collection_object(
-        domain_type='bi_pack',
+        domain_type="bi_pack",
         value=packs,
-        links=[constructors.link_rel('self', constructors.collection_href('bi_pack'))],
+        links=[constructors.link_rel("self", constructors.collection_href("bi_pack"))],
     )
     return constructors.serve_json(collection_object)
 
 
-@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
-          'cmk/get_bi_pack',
-          method='get',
-          path_params=[BI_PACK_ID],
-          response_schema=response_schemas.DomainObject)
+@Endpoint(
+    constructors.object_href("bi_pack", "{pack_id}"),
+    "cmk/get_bi_pack",
+    method="get",
+    path_params=[BI_PACK_ID],
+    convert_response=False,
+    response_schema=response_schemas.DomainObject,
+)
 def get_bi_pack(params):
     """Get a BI pack and its rules and aggregations"""
     bi_packs = get_cached_bi_packs()
@@ -299,22 +342,25 @@ def get_bi_pack(params):
         _bailout_with_message("This pack_id does not exist: %s" % params["pack_id"])
     assert bi_pack is not None
 
-    uri = constructors.object_href('bi_pack', bi_pack.id)
+    uri = constructors.object_href("bi_pack", bi_pack.id)
     domain_members = {}
-    for (name, entities) in [("aggregation", bi_pack.get_aggregations()),
-                             ("rule", bi_pack.get_rules())]:
+    for (name, entities) in [
+        ("aggregation", bi_pack.get_aggregations()),
+        ("rule", bi_pack.get_rules()),
+    ]:
         elements = entities.values()  # type: ignore[attr-defined]
         domain_members["%ss" % name] = constructors.object_collection(
             name=name,
             domain_type="bi_" + name,  # type: ignore[arg-type]
             entries=[
                 constructors.link_rel(
-                    rel='.../value',
-                    parameters={'collection': "items"},
+                    rel=".../value",
+                    parameters={"collection": "items"},
                     href=constructors.object_href(
-                        "bi_" + name,  # type: ignore[arg-type]
-                        element.id),
-                ) for element in elements
+                        "bi_" + name, element.id  # type: ignore[arg-type]
+                    ),
+                )
+                for element in elements
             ],
             base=uri,
         )
@@ -325,7 +371,7 @@ def get_bi_pack(params):
         "public": bi_pack.public,
     }
     domain_object = constructors.domain_object(
-        domain_type='bi_pack',
+        domain_type="bi_pack",
         identifier=bi_pack.id,
         title=bi_pack.title,
         extensions=extensions,
@@ -335,11 +381,14 @@ def get_bi_pack(params):
     return constructors.serve_json(domain_object)
 
 
-@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
-          'cmk/delete_bi_pack',
-          method='delete',
-          path_params=[BI_PACK_ID],
-          output_empty=True)
+@Endpoint(
+    constructors.object_href("bi_pack", "{pack_id}"),
+    "cmk/delete_bi_pack",
+    method="delete",
+    path_params=[BI_PACK_ID],
+    convert_response=False,
+    output_empty=True,
+)
 def delete_bi_pack(params):
     """Delete BI pack"""
     bi_packs = get_cached_bi_packs()
@@ -354,36 +403,56 @@ def delete_bi_pack(params):
     num_rules = target_pack.num_rules()
     if num_rules > 0:
         _bailout_with_message(
-            "Cannot delete bi_pack %s. It contains %d rules, which might be used in other packs" %
-            (pack_id, num_rules))
+            "Cannot delete bi_pack %s. It contains %d rules, which might be used in other packs"
+            % (pack_id, num_rules)
+        )
     bi_packs.delete_pack(pack_id)
     bi_packs.save_config()
     return Response(status=204)
 
 
 class BIPackEndpointSchema(Schema):
-    title = ReqString(default="", example="BI Title")
-    contact_groups = ReqList(fields.String(), default=[], example=["contact", "contactgroup_b"])
-    public = ReqBoolean(default=False, example="false")
+    title = ReqString(
+        dump_default="",
+        example="BI Title",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+    contact_groups = ReqList(
+        fields.String(),
+        dump_default=[],
+        example=["contact", "contactgroup_b"],
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+    public = ReqBoolean(
+        dump_default=False,
+        example="false",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
 
 
-@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
-          'cmk/put_bi_pack',
-          method='put',
-          path_params=[BI_PACK_ID],
-          request_schema=BIPackEndpointSchema,
-          response_schema=BIPackEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_pack", "{pack_id}"),
+    "cmk/put_bi_pack",
+    method="put",
+    path_params=[BI_PACK_ID],
+    convert_response=False,
+    request_schema=BIPackEndpointSchema,
+    response_schema=BIPackEndpointSchema,
+)
 def put_bi_pack(params):
     """Update an existing BI pack"""
     return _update_bi_pack(params, must_exist=True)
 
 
-@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
-          'cmk/post_bi_pack',
-          method='post',
-          path_params=[BI_PACK_ID],
-          request_schema=BIPackEndpointSchema,
-          response_schema=BIPackEndpointSchema)
+@Endpoint(
+    constructors.object_href("bi_pack", "{pack_id}"),
+    "cmk/post_bi_pack",
+    method="post",
+    path_params=[BI_PACK_ID],
+    convert_response=False,
+    request_schema=BIPackEndpointSchema,
+    response_schema=BIPackEndpointSchema,
+)
 def post_bi_pack(params):
     """Create a new BI pack"""
     return _update_bi_pack(params, must_exist=False)

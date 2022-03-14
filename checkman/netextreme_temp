@@ -1,7 +1,7 @@
 title: Extreme Networks Switch: Temperature
 agents: snmp
 catalog: hw/network/netextreme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the system temperature of a Extreme Networks Switch
@@ -12,5 +12,5 @@ description:
 item:
  The fixed statement {{System}}
 
-inventory:
+discovery:
  One service is created.

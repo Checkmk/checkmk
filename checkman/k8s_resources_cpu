@@ -1,9 +1,14 @@
 title: Kubernetes: CPU Resources
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_kubernetes) are deprecated
+ and will be removed in Checkmk version 2.2.0.
+
+ Please configure the new special agent using the "Kubernetes" ruleset.
+
  This check monitors the requested CPU as well as the CPU limits and capacity of
  a Kubernetes entity. If at least one container running on a node does not specify
  limits, the node has no applicable limits.
@@ -11,5 +16,5 @@ description:
  The check returns {OK} if the used CPU is below 90%. Below 95% {WARN}
  is returned and otherwise {CRIT}. Custom levels can be defined in WATO.
 
-inventory:
+discovery:
  One service is created.

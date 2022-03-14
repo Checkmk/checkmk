@@ -23,15 +23,16 @@ def parse_huawei_wlc_devs(info):
     return parsed
 
 
-check_info['huawei_wlc_devs'] = {
-    'parse_function': parse_huawei_wlc_devs,
-    'snmp_info': (
-        '.1.3.6.1.4.1.2011.5.25.31.1.1',
+check_info["huawei_wlc_devs"] = {
+    "parse_function": parse_huawei_wlc_devs,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2011.5.25.31.1.1",
         [
             "2.1.13",  # DeviceID
             "1.1.5",  # Device CPU Usage
             "1.1.7",  # Device Mem Usage
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2011.2.240.17" in oid(".1.3.6.1.2.1.1.2.0"),
 }
 
@@ -48,19 +49,21 @@ def check_huawei_wlc_devs_mem(item, params, data):
     lev = params.get("levels")
     val = data.get("%s" % "mem_used_percent")
 
-    yield check_levels(val,
-                       "mem_used_percent",
-                       lev,
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Used")
+    yield check_levels(
+        val,
+        "mem_used_percent",
+        lev,
+        human_readable_func=get_percent_human_readable,
+        infoname="Used",
+    )
 
 
-check_info['huawei_wlc_devs.mem'] = {
-    'inventory_function': discovery_huawei_wlc_devs_mem,
-    'parse_function': parse_huawei_wlc_devs,
-    'check_function': check_huawei_wlc_devs_mem,
-    'service_description': 'Device %s Memory',
-    'default_levels_variable': "huawei_mem_default",
+check_info["huawei_wlc_devs.mem"] = {
+    "inventory_function": discovery_huawei_wlc_devs_mem,
+    "parse_function": parse_huawei_wlc_devs,
+    "check_function": check_huawei_wlc_devs_mem,
+    "service_description": "Device %s Memory",
+    "default_levels_variable": "huawei_mem_default",
     "has_perfdata": True,
 }
 
@@ -77,18 +80,16 @@ def check_huawei_wlc_devs_cpu(item, params, data):
     lev = params.get("levels")
     val = data.get("%s" % "cpu_percent")
 
-    yield check_levels(val,
-                       "cpu_percent",
-                       lev,
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Usage")
+    yield check_levels(
+        val, "cpu_percent", lev, human_readable_func=get_percent_human_readable, infoname="Usage"
+    )
 
 
-check_info['huawei_wlc_devs.cpu'] = {
-    'parse_function': parse_huawei_wlc_devs,
-    'inventory_function': discovery_huawei_wlc_devs_cpu,
-    'check_function': check_huawei_wlc_devs_cpu,
-    'service_description': 'Device %s CPU',
-    'default_levels_variable': "huawei_cpu_default",
+check_info["huawei_wlc_devs.cpu"] = {
+    "parse_function": parse_huawei_wlc_devs,
+    "inventory_function": discovery_huawei_wlc_devs_cpu,
+    "check_function": check_huawei_wlc_devs_cpu,
+    "service_description": "Device %s CPU",
+    "default_levels_variable": "huawei_cpu_default",
     "has_perfdata": True,
 }

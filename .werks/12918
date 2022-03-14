@@ -1,0 +1,17 @@
+Title: ups_capacity: add missing perfometer
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625237468
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The perfometer that was present in version 1.6 was missing in version 2.0.
+The perfometer is now available again and changed to display the reamaining
+time instead of the percentage. This seems to be more useful as the remaining
+percentage may vary a lot. 100% may e.g. represent 1 or 100 minutes. This way
+it is now possible to order the services by the remaining time.
+Furthermore, the colors of the metrics are adapted to improve readability.

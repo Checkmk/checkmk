@@ -50,12 +50,6 @@
 
 #include "common/cfg_info.h"
 
-namespace tst {
-extern const std::filesystem::path G_ProjectPath;
-extern const std::filesystem::path G_SolutionPath;
-extern const std::filesystem::path G_TestPath;
-}  // namespace tst
-
 // definitions required for gtest
 #define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING
 #define _CRT_SECURE_NO_WARNINGS

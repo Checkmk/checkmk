@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_skype_proxy():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the Proxy"),
         help=_("The name of the Data Proxy"),
         allow_empty=False,
@@ -29,21 +23,28 @@ def _item_spec_skype_proxy():
 
 def _parameter_valuespec_skype_proxy():
     return Dictionary(
-        help=_("Warn/Crit levels for various Skype for Business "
-               "(formerly known as Lync) metrics"),
+        help=_(
+            "Warn/Crit levels for various Skype for Business " "(formerly known as Lync) metrics"
+        ),
         elements=[
-            ('throttled_connections',
-             Dictionary(
-                 title=_("Throttled Server Connections"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=3),
-                          Integer(title=_("Critical at"), default_value=6),
-                      ],)),
-                 ],
-                 optional_keys=[],
-             )),
+            (
+                "throttled_connections",
+                Dictionary(
+                    title=_("Throttled Server Connections"),
+                    elements=[
+                        (
+                            "upper",
+                            Tuple(
+                                elements=[
+                                    Integer(title=_("Warning at"), default_value=3),
+                                    Integer(title=_("Critical at"), default_value=6),
+                                ],
+                            ),
+                        ),
+                    ],
+                    optional_keys=[],
+                ),
+            ),
         ],
         optional_keys=[],
     )
@@ -57,4 +58,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_skype_proxy,
         title=lambda: _("Skype for Business Data Proxy"),
-    ))
+    )
+)

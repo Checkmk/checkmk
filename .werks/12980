@@ -1,0 +1,12 @@
+Title: check_http: Fix escaping of URL if "Clickable URLs" option is used
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626274860
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Characters were escaped, e.g. "&" to "&amp", leading to non functional URLs.

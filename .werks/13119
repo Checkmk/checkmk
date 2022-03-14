@@ -1,0 +1,19 @@
+Title: Interface checks: Do not use discovered state and speed in cluster mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1628861738
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The interface checks compare the current state and speed of the interfaces to
+the values which were found during the discovery phase (unless the user
+explicitly configured a different behavior). However, in cluster mode, this
+comparison is not useful because the discovered values correspond to a single
+interface, whereas the the current values correspond to potentially multiple
+interfaces. Therefore, with this werk, this comparison is removed.
+
+Note that, as before, users still have the option to explicitly set the
+expected state and speed, also in cluster mode.

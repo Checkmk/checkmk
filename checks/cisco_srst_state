@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_srst import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9.9.441.1.3.1 CISCO-SRST-MIB::csrstState (1: active, 2: inactive)
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime
 
@@ -26,7 +28,7 @@ def check_cisco_srst_state(_no_item, _no_params, info):
     srst_state, uptime_text = info[0]
 
     # Check the state
-    if srst_state == '1':
+    if srst_state == "1":
         yield 2, "SRST active"
     else:
         yield 0, "SRST inactive"
@@ -35,10 +37,10 @@ def check_cisco_srst_state(_no_item, _no_params, info):
     yield check_uptime_seconds(None, int(uptime_text) * 60)
 
 
-check_info['cisco_srst_state'] = {
-    'inventory_function': inventory_cisco_srst_state,
-    'check_function': check_cisco_srst_state,
-    'service_description': 'SRST State',
-    'snmp_info': (".1.3.6.1.4.1.9.9.441.1.3", ["1", "4"]),
-    'snmp_scan_function': cisco_srst_scan_function,
+check_info["cisco_srst_state"] = {
+    "inventory_function": inventory_cisco_srst_state,
+    "check_function": check_cisco_srst_state,
+    "service_description": "SRST State",
+    "snmp_info": (".1.3.6.1.4.1.9.9.441.1.3", ["1", "4"]),
+    "snmp_scan_function": cisco_srst_scan_function,
 }

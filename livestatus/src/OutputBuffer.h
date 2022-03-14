@@ -8,6 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <functional>
 #include <sstream>
 #include <string>
 class Logger;
@@ -29,10 +30,11 @@ public:
 
     enum class ResponseHeader { off, fixed16 };
 
-    OutputBuffer(int fd, const bool &termination_flag, Logger *logger);
+    OutputBuffer(int fd, std::function<bool()> should_terminate,
+                 Logger *logger);
     ~OutputBuffer();
 
-    bool shouldTerminate() const { return _termination_flag; }
+    bool shouldTerminate() const { return should_terminate_(); }
 
     std::ostream &os() { return _os; }
     std::string str() const { return _os.str(); }
@@ -46,7 +48,7 @@ public:
 
 private:
     const int _fd;
-    const bool &_termination_flag;
+    const std::function<bool()> should_terminate_;
     Logger *const _logger;
     std::ostringstream _os;
     ResponseHeader _response_header;

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["f5_bigip_conns_default_levels"] = {
     "conns": (25000, 30000),
     "ssl_conns": (25000, 30000),
@@ -32,10 +33,12 @@ def get_conn_rate_params(params):
     # Lower bound was not configured, all good
     if isinstance(upper_bound, dict) and lower_bound == (None, None):
         return upper_bound
-    raise ValueError("Can't configure minimum connections per second when the maximum "
-                     "connections per second is setup in predictive levels. Please use the given "
-                     "lower bound specified in the maximum connections, or set maximum "
-                     "connections to use fixed levels.")
+    raise ValueError(
+        "Can't configure minimum connections per second when the maximum "
+        "connections per second is setup in predictive levels. Please use the given "
+        "lower bound specified in the maximum connections, or set maximum "
+        "connections to use fixed levels."
+    )
 
 
 def check_f5_bigip_conns(item, params, info):
@@ -79,8 +82,12 @@ def check_f5_bigip_conns(item, params, info):
     # Current connections
     for val, params_values, perfkey, title in [
         (conns_dict.get("total"), params.get("conns"), "connections", "Connections"),
-        (conns_dict.get("total_ssl"), params.get("ssl_conns"), "connections_ssl",
-         "SSL connections"),
+        (
+            conns_dict.get("total_ssl"),
+            params.get("ssl_conns"),
+            "connections_ssl",
+            "SSL connections",
+        ),
         (total_native_compat_rate, conn_rate_params, "connections_rate", "Connections/s"),
         (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),
     ]:
@@ -93,20 +100,21 @@ def check_f5_bigip_conns(item, params, info):
 
 
 check_info["f5_bigip_conns"] = {
-    'check_function': check_f5_bigip_conns,
-    'inventory_function': inventory_f5_bigip_conns,
-    'service_description': 'Open Connections',
-    'snmp_info': (
-        '.1.3.6.1.4.1.3375.2.1.1.2',
+    "check_function": check_f5_bigip_conns,
+    "inventory_function": inventory_f5_bigip_conns,
+    "service_description": "Open Connections",
+    "snmp_info": (
+        ".1.3.6.1.4.1.3375.2.1.1.2",
         [
-            '1.8',  # F5-BIGIP-SYSTEM-MIB::sysStatClientCurConns
-            '9.2',  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatCurConns
-            '9.6',  # F5-BIGIP-SYSTEM-MIB::sysClientSslStatTotNativeConns
-            '9.9',  # F5-BIGIP-SYSTEM-MIB::sysClientSslStatTotCompatConns
-            '1.56',  # F5-BIGIP-SYSTEM-MIB::sysStatHttpRequests
-        ]),
-    'snmp_scan_function': scan_f5_bigip,
-    'has_perfdata': True,
-    'group': 'f5_connections',
-    'default_levels_variable': 'f5_bigip_conns_default_levels',
+            "1.8",  # F5-BIGIP-SYSTEM-MIB::sysStatClientCurConns
+            "9.2",  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatCurConns
+            "9.6",  # F5-BIGIP-SYSTEM-MIB::sysClientSslStatTotNativeConns
+            "9.9",  # F5-BIGIP-SYSTEM-MIB::sysClientSslStatTotCompatConns
+            "1.56",  # F5-BIGIP-SYSTEM-MIB::sysStatHttpRequests
+        ],
+    ),
+    "snmp_scan_function": scan_f5_bigip,
+    "has_perfdata": True,
+    "group": "f5_connections",
+    "default_levels_variable": "f5_bigip_conns_default_levels",
 }

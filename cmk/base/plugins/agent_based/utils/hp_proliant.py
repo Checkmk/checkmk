@@ -8,27 +8,30 @@ from typing import Final
 from ..agent_based_api.v1 import any_of, contains
 
 MAP_TYPES_MEMORY: Final = {
-    "1": 'other',
-    "2": 'board',
-    "3": 'cpqSingleWidthModule',
-    "4": 'cpqDoubleWidthModule',
-    "5": 'simm',
-    "6": 'pcmcia',
-    "7": 'compaq-specific',
-    "8": 'DIMM',
-    "9": 'smallOutlineDimm',
-    "10": 'RIMM',
-    "11": 'SRIMM',
-    "12": 'FB-DIMM',
-    "13": 'DIMM DDR',
-    "14": 'DIMM DDR2',
-    "15": 'DIMM DDR3',
-    "16": 'DIMM FBD2',
-    "17": 'FB-DIMM DDR2',
-    "18": 'FB-DIMM DDR3',
+    "1": "other",
+    "2": "board",
+    "3": "cpqSingleWidthModule",
+    "4": "cpqDoubleWidthModule",
+    "5": "simm",
+    "6": "pcmcia",
+    "7": "compaq-specific",
+    "8": "DIMM",
+    "9": "smallOutlineDimm",
+    "10": "RIMM",
+    "11": "SRIMM",
+    "12": "FB-DIMM",
+    "13": "DIMM DDR",
+    "14": "DIMM DDR2",
+    "15": "DIMM DDR3",
+    "16": "DIMM FBD2",
+    "17": "FB-DIMM DDR2",
+    "18": "FB-DIMM DDR3",
 }
 
+PRODUCT_NAME_OID = ".1.3.6.1.4.1.232.2.2.4.2.0"
+
 DETECT = any_of(
-    contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
-    contains(".1.3.6.1.4.1.232.2.2.4.2.0", "storeeasy"),
+    contains(PRODUCT_NAME_OID, "proliant"),
+    contains(PRODUCT_NAME_OID, "storeeasy"),
+    contains(PRODUCT_NAME_OID, "synergy"),
 )

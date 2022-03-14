@@ -10,6 +10,7 @@
 # datacenter-41  vms VM-Cluster-Clients-Neu  abl-h1-w7v232   abl-h1-w7v233   abl-h1-w7v236
 
 from typing import Dict
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 

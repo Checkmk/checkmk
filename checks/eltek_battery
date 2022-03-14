@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.12148.9.3.1.0 --> ELTEK-DISTRIBUTED-MIB::batteryName.0
 # .1.3.6.1.4.1.12148.9.3.2.0 5485 --> ELTEK-DISTRIBUTED-MIB::batteryVoltage.0
 # .1.3.6.1.4.1.12148.9.3.3.0 0 --> ELTEK-DISTRIBUTED-MIB::batteryCurrent.0
@@ -35,14 +37,14 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 def parse_eltek_battery(info):
     voltage, current, temp, breaker_status = info[0]
     return {
-        'supply': {
+        "supply": {
             "Supply": {
-                'voltage': float(voltage) / 100,
-                'current': float(current),
+                "voltage": float(voltage) / 100,
+                "current": float(current),
             }
         },
-        'temp': float(temp),
-        'breaker': breaker_status,
+        "temp": float(temp),
+        "breaker": breaker_status,
     }
 
 
@@ -61,23 +63,24 @@ def check_eltek_battery(_no_item, _no_params, parsed):
         return state, "Status: %s" % state_readable
 
 
-check_info['eltek_battery'] = {
-    'parse_function': parse_eltek_battery,
-    'inventory_function': inventory_eltek_battery,
-    'check_function': check_eltek_battery,
-    'service_description': 'Battery Breaker Status',
-    'snmp_info': (
+check_info["eltek_battery"] = {
+    "parse_function": parse_eltek_battery,
+    "inventory_function": inventory_eltek_battery,
+    "check_function": check_eltek_battery,
+    "service_description": "Battery Breaker Status",
+    "snmp_info": (
         ".1.3.6.1.4.1.12148.9.3",
         [
             "2",  # batteryVoltage
             "3",  # batteryCurrent
             "4",  # batteryTemp
             "5",  # batteryBreakerStatus
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12148.9"),
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12148.9"),
 }
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -88,32 +91,32 @@ check_info['eltek_battery'] = {
 #   '----------------------------------------------------------------------'
 
 # suggested by customer
-factory_settings['eltek_battery_temp_default_variables'] = {
-    'levels': (27.0, 35.0),
+factory_settings["eltek_battery_temp_default_variables"] = {
+    "levels": (27.0, 35.0),
 }
 
 
 def inventory_eltek_battery_temp(parsed):
-    if 'temp' in parsed:
+    if "temp" in parsed:
         return [("Battery", {})]
 
 
 def check_eltek_battery_temp(item, params, parsed):
     # For temp checks we need an item but we have only one
-    if 'temp' in parsed:
-        return check_temperature(parsed['temp'], params, "eltek_battery_temp_Battery")
+    if "temp" in parsed:
+        return check_temperature(parsed["temp"], params, "eltek_battery_temp_Battery")
 
 
-check_info['eltek_battery.temp'] = {
-    'inventory_function': inventory_eltek_battery_temp,
-    'check_function': check_eltek_battery_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'group': 'temperature',
-    'default_levels_variable': 'eltek_battery_temp_default_variables',
+check_info["eltek_battery.temp"] = {
+    "inventory_function": inventory_eltek_battery_temp,
+    "check_function": check_eltek_battery_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "eltek_battery_temp_default_variables",
 }
 
-#.
+# .
 #   .--phase---------------------------------------------------------------.
 #   |                           _                                          |
 #   |                     _ __ | |__   __ _ ___  ___                       |
@@ -124,16 +127,16 @@ check_info['eltek_battery.temp'] = {
 #   '----------------------------------------------------------------------'
 
 # suggested by customer
-factory_settings['eltek_battery_phase_default_variables'] = {
-    'voltage': (52, 48),
-    'current': (50, 76),
+factory_settings["eltek_battery_phase_default_variables"] = {
+    "voltage": (52, 48),
+    "current": (50, 76),
 }
 
-check_info['eltek_battery.supply'] = {
-    'inventory_function': lambda parsed: inventory_elphase(parsed["supply"]),
-    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
-    'service_description': 'Battery %s',
-    'has_perfdata': True,
-    'group': 'el_inphase',
-    'default_levels_variable': 'eltek_battery_temp_phase_variables',
+check_info["eltek_battery.supply"] = {
+    "inventory_function": lambda parsed: discover()(parsed["supply"]),
+    "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
+    "service_description": "Battery %s",
+    "has_perfdata": True,
+    "group": "el_inphase",
+    "default_levels_variable": "eltek_battery_phase_default_variables",
 }

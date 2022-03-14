@@ -1,0 +1,15 @@
+Title: ps_check: crash on non-matching enforced service 'State and count of processes'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619016651
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Configuring 'State and count of processes' as enforced service with per-process details set to
+'text' crashes with unhandled "ValueError: 'notice' must be non-empty str or None, got" if the
+specified process could not be found.
+This change avoids this exception by not trying to render a process list without processes found.

@@ -1,7 +1,7 @@
 title: HPE StoreOnce: Cluster Space
 agents: storeonce
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the total capacity of the appliance. All rulesets for
@@ -11,5 +11,5 @@ description:
 item:
  The fixed statement {{Total Capacity}}
 
-inventory:
+discovery:
  One service is created.

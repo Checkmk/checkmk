@@ -1,7 +1,7 @@
 title: AWS EC2: Instance Disk IO
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors
@@ -18,6 +18,6 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each disk if all required metrics
  (ReadOps, WriteOps, ReadBytes and WriteBytes) are given.

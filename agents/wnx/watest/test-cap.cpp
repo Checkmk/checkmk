@@ -113,13 +113,13 @@ TEST_F(CapTestFixture, InstallFileAsCopy) {
     EXPECT_TRUE(fs::exists(target())) << "must be presented";
 }
 
-static bool ValidateInstallYml(const std::filesystem::path& file) {
+static bool ValidateInstallYml(const std::filesystem::path &file) {
     auto yml = YAML::LoadFile(file.u8string());
     if (!yml.IsDefined() || !yml.IsMap()) return false;
     try {
         return yml[groups::kGlobal][vars::kInstall].as<bool>() &&
                yml[groups::kGlobal][vars::kEnabled].as<bool>();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("exception during tests", e.what());
         return false;
     }
@@ -182,8 +182,8 @@ TEST_F(CapTestYamlFixture, Install) {
 }
 
 TEST_F(CapTestYamlFixture, ReInstall) {
-    auto yml_base = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
-                    "check_mk.wato.install.yml";
+    auto yml_base =
+        tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
     ASSERT_TRUE(fs::exists(yml_base));
 
     auto yml_bakery = GetBakeryFile();
@@ -195,7 +195,7 @@ TEST_F(CapTestYamlFixture, ReInstall) {
     EXPECT_FALSE(fs::exists(yml_bakery)) << "must be absent";
     EXPECT_FALSE(fs::exists(yml_target())) << "must be absent";
 
-    // target presented: everнthing is removed
+    // target presented: everything is removed
     // fs::copy_file(yml_base, yml_source());
     tst::CreateWorkFile(yml_target(), "brr1");
     tst::CreateWorkFile(yml_bakery, "brr2");
@@ -215,17 +215,13 @@ TEST_F(CapTestYamlFixture, ReInstall) {
 }
 
 TEST(CapTest, InstallCap) {
-    namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
+    auto temp_fs{tst::TempCfgFs::Create()};
     auto [source, target] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     std::error_code ec;
 
     std::string cap_name = "plugins.cap";
-    fs::path cap_base = cma::cfg::GetUserDir();
-    cap_base /= "plugins.test.cap";
-    fs::path cap_null = cma::cfg::GetUserDir();
-    cap_null /= "plugins_null.test.cap";
+    fs::path cap_base = tst::MakePathToCapTestFiles() / "plugins.test.cap";
+    fs::path cap_null = tst::MakePathToCapTestFiles() / "plugins_null.test.cap";
     ASSERT_TRUE(fs::exists(cap_base, ec));
     auto cap_in = target / cap_name;
     auto cap_out = source / cap_name;
@@ -328,11 +324,10 @@ TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
 
     using namespace std::chrono;
-    if (!cma::ConfigLoaded()) cma::OnStartTest();
 
-    tst::SafeCleanTempDir();
-    auto [work, _] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    auto work = tst::MakeTempFolderInTempPath(wtools::ConvertToUTF16(
+        ::testing::UnitTest::GetInstance()->current_test_info()->name()));
+    fs::create_directories(work);
 
     fs::path ping(R"(c:\windows\system32\ping.exe)");
     if (!fs::exists(ping)) GTEST_SKIP() << "there is no ping.exe";
@@ -357,6 +352,7 @@ TEST(CapTest, StoreFileAgressive) {
     fs::remove(cmk_test_ping, ec);
     ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
     ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
+    wtools::KillProcessFully(cmk_test_ping.filename().wstring());
 }
 
 class CapTestProcessFixture : public ::testing::Test {
@@ -367,7 +363,7 @@ public:
         names_[1] = GetUserPluginsDir() + L"\\mk_inventory.vbs";
     }
 
-    const std::array<std::wstring, 2>& names() const { return names_; };
+    const std::array<std::wstring, 2> &names() const { return names_; };
 
     void makeFilesInPlugins() {
         fs::create_directories(GetUserPluginsDir());
@@ -384,8 +380,7 @@ private:
 };
 
 TEST_F(CapTestProcessFixture, ValidFile) {
-    auto cap =
-        tst::MakePathToCapTestFiles(tst::G_SolutionPath) / "plugins.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     std::vector<std::wstring> files;
     EXPECT_TRUE(Process(cap.u8string(), ProcMode::list, files));
@@ -397,8 +392,7 @@ TEST_F(CapTestProcessFixture, ValidFile) {
 }
 
 TEST_F(CapTestProcessFixture, EmptyFile) {
-    auto cap = tst::MakePathToCapTestFiles(tst::G_SolutionPath) /
-               "plugins_null.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins_null.test.cap";
 
     std::vector<std::wstring> files;
     auto ret = Process(cap.u8string(), ProcMode::list, files);
@@ -408,8 +402,7 @@ TEST_F(CapTestProcessFixture, EmptyFile) {
 
 TEST_F(CapTestProcessFixture, Install) {
     fs::create_directories(GetUserPluginsDir());
-    auto cap =
-        tst::MakePathToCapTestFiles(tst::G_SolutionPath) / "plugins.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     std::vector<std::wstring> files;
     EXPECT_TRUE(Process(cap.u8string(), ProcMode::install, files));
@@ -421,8 +414,7 @@ TEST_F(CapTestProcessFixture, Install) {
 }
 
 TEST_F(CapTestProcessFixture, Remove) {
-    auto cap =
-        tst::MakePathToCapTestFiles(tst::G_SolutionPath) / "plugins.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     makeFilesInPlugins();
 
@@ -448,15 +440,36 @@ TEST_F(CapTestProcessFixture, BadFiles) {
 
     };
 
-    for (auto const& test : data) {
-        auto bad_cap =
-            tst::MakePathToCapTestFiles(tst::G_SolutionPath) / test.first;
+    for (auto const &test : data) {
+        auto bad_cap = tst::MakePathToCapTestFiles() / test.first;
         std::vector<std::wstring> results;
         EXPECT_FALSE(Process(bad_cap.u8string(), ProcMode::list, results));
         ASSERT_EQ(results.size(), test.second)
             << "this file is invalid, but first file should be ok: "
             << test.first;
     }
+}
+
+namespace {
+fs::path CreateInvalidCap() {
+    auto file_name = tst::GetTempDir() / "invalid.cap";
+    std::fstream file;
+    uint8_t name_len = 12;
+    constexpr char name[] = "123456789012";
+    file.open(file_name, std::ios::trunc | std::ios::binary | std::ios::out);
+    file.write(reinterpret_cast<const char *>(&name_len), sizeof(name_len));
+    file.write(name, name_len);
+    uint32_t len = 123000;
+    file.write(reinterpret_cast<const char *>(&len), sizeof(len));
+    file.write(name, name_len);
+    return file_name;
+}
+}  // namespace
+TEST(CapTest, InvalidFile) {
+    auto file_name = CreateInvalidCap();
+    ASSERT_TRUE(fs::exists(file_name));
+    std::vector<std::wstring> files;
+    EXPECT_FALSE(Process(file_name.u8string(), ProcMode::list, files));
 }
 
 TEST(CapTest, GetExampleYmlNames) {
@@ -479,25 +492,18 @@ TEST(CapTest, ReInstallRestoreIntegration) {
     using namespace cma::tools;
     enum class Mode { build, wato };
     for (auto mode : {Mode::build, Mode::wato}) {
-        XLOG::SendStringToStdio("*\n", XLOG::Colors::yellow);
+        auto test_fs = tst::TempCfgFs::Create();
 
-        cma::OnStartTest();
-        tst::SafeCleanTempDir();
-        fs::path r;
-        fs::path u;
-        std::tie(r, u) = tst::CreateInOut();
-        auto root = r.wstring();
-        auto user = u.wstring();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+        ASSERT_TRUE(test_fs->loadFactoryConfig());
 
-        auto old_user = cma::cfg::GetUserDir();
+        auto r = test_fs->root();
+        auto u = test_fs->data();
 
-        fs::path cap_base = old_user;
-        cap_base /= "plugins.test.cap";
-        fs::path yml_b_base = old_user;
-        yml_b_base /= "check_mk.build.install.yml";
-        fs::path yml_w_base = old_user;
-        yml_w_base /= "check_mk.wato.install.yml";
+        fs::path cap_base = tst::MakePathToCapTestFiles() / "plugins.test.cap";
+        fs::path yml_b_base =
+            tst::MakePathToConfigTestFiles() / "check_mk.build.install.yml";
+        fs::path yml_w_base =
+            tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
 
         std::error_code ec;
         try {
@@ -513,15 +519,12 @@ TEST(CapTest, ReInstallRestoreIntegration) {
                 fs::copy_file(yml_w_base,
                               r / dirs::kInstall / files::kInstallYmlFileA);
 
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             ASSERT_TRUE(false) << "can't create file data exception is "
                                << e.what() << "Mode " << static_cast<int>(mode);
         }
 
         // change folders
-        GetCfg().pushFolders(r, u);
-        ON_OUT_OF_SCOPE(GetCfg().popFolders(););
-
         auto user_gen = [u](const std::wstring_view name) -> auto {
             return (u / dirs::kInstall / name).wstring();
         };

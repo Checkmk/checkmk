@@ -4,19 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-fast_lta_headunit_info = [(
-    ".1.3.6.1.4.1.27417.2",
-    [
-        1,  # headUnitStatus
-        2,  # replicationMode
-        5
-    ]  # replicationRunning
-)]
+fast_lta_headunit_info = [
+    (".1.3.6.1.4.1.27417.2", [1, 2, 5])  # headUnitStatus  # replicationMode  # replicationRunning
+]
 
 
 def fast_lta_headunit_scan(oid):
-    return (oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and
-            oid(".1.3.6.1.4.1.27417.2.1"))
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and (
+        oid(".1.3.6.1.4.1.27417.2.1") or oid(".1.3.6.1.4.1.27417.2.1.0")
+    )
 
 
 #   .--status--------------------------------------------------------------.
@@ -80,10 +76,10 @@ check_info["fast_lta_headunit.status"] = {
     "inventory_function": inventory_fast_lta_headunit_status,
     "service_description": "Fast LTA Headunit Status",
     "snmp_info": fast_lta_headunit_info,
-    "snmp_scan_function": fast_lta_headunit_scan
+    "snmp_scan_function": fast_lta_headunit_scan,
 }
 
-#.
+# .
 #   .--replication---------------------------------------------------------.
 #   |                          _ _           _   _                         |
 #   |           _ __ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __              |
@@ -120,8 +116,7 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
         status = 2
 
     if node_replication_mode in head_unit_replication_map:
-        message += " This node is %s." \
-                   % head_unit_replication_map[node_replication_mode]
+        message += " This node is %s." % head_unit_replication_map[node_replication_mode]
     else:
         message += " Replication mode of this node is %s." % node_replication_mode
 
@@ -133,7 +128,7 @@ check_info["fast_lta_headunit.replication"] = {
     "inventory_function": inventory_fast_lta_headunit_replication,
     "service_description": "Fast LTA Replication",
     "snmp_info": fast_lta_headunit_info,
-    "snmp_scan_function": fast_lta_headunit_scan
+    "snmp_scan_function": fast_lta_headunit_scan,
 }
 
-#.
+# .

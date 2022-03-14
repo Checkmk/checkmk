@@ -62,15 +62,26 @@ def check_dell_idrac_disks(item, _no_params, info):
         "3": "global hotspare",
     }
 
-    for disk_name, disk_state, capacity_MB, spare_state, \
-        component_state, smart_alert, diskpower_state, display_name in info:
+    for (
+        disk_name,
+        disk_state,
+        capacity_MB,
+        spare_state,
+        component_state,
+        smart_alert,
+        diskpower_state,
+        display_name,
+    ) in info:
         if disk_name == item:
-            yield 0, "[%s] Size: %s" % \
-                (display_name, get_bytes_human_readable(int(capacity_MB) * 1024 * 1024))
+            yield 0, "[%s] Size: %s" % (
+                display_name,
+                get_bytes_human_readable(int(capacity_MB) * 1024 * 1024),
+            )
 
-            for what, what_key, what_text in [(disk_state, "disk_states", "Disk state"),
-                                              (component_state, "component_states",
-                                               "Component state")]:
+            for what, what_key, what_text in [
+                (disk_state, "disk_states", "Disk state"),
+                (component_state, "component_states", "Component state"),
+            ]:
                 state, state_readable = map_states[what_key][what]
                 yield state, "%s: %s" % (what_text, state_readable)
 
@@ -89,7 +100,7 @@ check_info["dell_idrac_disks"] = {
     "check_function": check_dell_idrac_disks,
     "inventory_function": inventory_dell_idrac_disks,
     "service_description": "Disk %s",
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.5",
     "snmp_info": (
         ".1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1",
         [
@@ -101,5 +112,6 @@ check_info["dell_idrac_disks"] = {
             "31",  # physicalDiskSmartAlertIndication
             "50",  # physicalDiskPowerState
             "55",  # physicalDiskDisplayName
-        ]),
+        ],
+    ),
 }

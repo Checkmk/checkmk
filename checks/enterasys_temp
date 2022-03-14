@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["enterasys_temp_default_levels"] = {"levels": (30, 35)}
 
 
@@ -25,19 +26,19 @@ def check_enterasys_temp(item, params, info):
     if info[0][0] == "0":
         return 3, "Sensor broken or not supported"
 
-    #temp = fahrenheit_to_celsius(int(info[0][0]) / 10.0)
+    # temp = fahrenheit_to_celsius(int(info[0][0]) / 10.0)
     temp = int(info[0][0]) / 10.0
-    return check_temperature(temp, params, "enterasys_temp_%s" % item, dev_unit='f')
+    return check_temperature(temp, params, "enterasys_temp_%s" % item, dev_unit="f")
 
 
 check_info["enterasys_temp"] = {
-    "check_function"          : check_enterasys_temp,
-    "inventory_function"      : inventory_enterasys_temp,
-    "default_levels_variable" : "enterasys_temp_default_levels",
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "snmp_info"               : ( ".1.3.6.1.4.1.52.4.1.1.8.1", [ 1 ]), # chEnvAmbientTemp
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1") \
-                                        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.2"),
-    "group"                   : "temperature",
+    "check_function": check_enterasys_temp,
+    "inventory_function": inventory_enterasys_temp,
+    "default_levels_variable": "enterasys_temp_default_levels",
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.52.4.1.1.8.1", [1]),  # chEnvAmbientTemp
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.2"),
+    "group": "temperature",
 }

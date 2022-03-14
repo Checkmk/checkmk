@@ -5,29 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Mapping
-from .agent_based_api.v1 import (
-    equals,
-    Metric,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+
+from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, Mapping[str, str]]
 
 _KEYS = [
-    'type',
-    'admin_status',
-    'oper_status',
-    'output',
-    'input',
+    "type",
+    "admin_status",
+    "oper_status",
+    "output",
+    "input",
 ]
 
 
@@ -70,18 +59,20 @@ register.snmp_section(
         ),
     ],
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )
 
-_MONITORED_TYPES = ['1', '6', '56']
-_MONITORED_ADMIN_STATES = ['1']
+_MONITORED_TYPES = ["1", "6", "56"]
+_MONITORED_ADMIN_STATES = ["1"]
 
 
 def discover_adva_fsp_if(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item)
-                for item, interface in section.items()
-                if interface['type'] in _MONITORED_TYPES and
-                interface['admin_status'] in _MONITORED_ADMIN_STATES)
+    yield from (
+        Service(item=item)
+        for item, interface in section.items()
+        if interface["type"] in _MONITORED_TYPES
+        and interface["admin_status"] in _MONITORED_ADMIN_STATES
+    )
 
 
 _MAP_OPER_STATUS = {
@@ -110,14 +101,14 @@ def check_adva_fsp_if(
     if not interface:
         return
 
-    admintxt, adminstate = _MAP_OPER_STATUS[interface['admin_status']]
-    opertxt, operstate = _MAP_OPER_STATUS[interface['oper_status']]
+    admintxt, adminstate = _MAP_OPER_STATUS[interface["admin_status"]]
+    opertxt, operstate = _MAP_OPER_STATUS[interface["oper_status"]]
     yield Result(
         state=State.worst(adminstate, operstate),
         summary="Admin/Operational State: %s/%s" % (admintxt, opertxt),
     )
 
-    for power_type in ['output', 'input']:
+    for power_type in ["output", "input"]:
         try:
             power = float(interface[power_type]) / 10
         except ValueError:

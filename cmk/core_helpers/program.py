@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import os
 import signal
 import subprocess
 from contextlib import suppress
-from typing import Any, Dict, Final, Optional, Union
+from typing import Any, Final, Mapping, Optional, Union
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
@@ -29,20 +30,38 @@ class ProgramFetcher(AgentFetcher):
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.program"))
+        super().__init__(
+            file_cache,
+            logging.getLogger("cmk.helper.program"),
+        )
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
         self._process: Optional[subprocess.Popen] = None
 
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
-        return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"cmdline={self.cmdline!r}",
+                    f"stdin={self.stdin!r}",
+                    f"is_cmc={self.is_cmc!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        return cls(
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "cmdline": self.cmdline,
@@ -73,7 +92,7 @@ class ProgramFetcher(AgentFetcher):
             self._process = subprocess.Popen(  # nosec
                 self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
+                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
@@ -83,10 +102,10 @@ class ProgramFetcher(AgentFetcher):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = subprocess.Popen(  # nosec
+            self._process = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
                 self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
+                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=True,
@@ -121,21 +140,27 @@ class ProgramFetcher(AgentFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
-
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._process is None:
             raise MKFetcherError("No process")
+        # ? do they have the default byte type, because in open() none of the "text", "encoding",
+        #  "errors", "universal_newlines" were specified?
         stdout, stderr = self._process.communicate(
-            input=ensure_binary(self.stdin) if self.stdin else None)
+            input=self.stdin.encode() if self.stdin else None
+        )
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!
-            raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
+            # ? exepath is AnyStr
+            raise MKFetcherError(
+                "Program '%s' not found (exit code 127)"
+                % ensure_str(exepath)  # pylint: disable= six-ensure-str-bin-call
+            )
         if self._process.returncode:
-            raise MKFetcherError("Agent exited with code %d: %s" %
-                                 (self._process.returncode, ensure_str(stderr).strip()))
+            raise MKFetcherError(
+                "Agent exited with code %d: %s"
+                % (
+                    self._process.returncode,
+                    ensure_str(stderr).strip(),  # pylint: disable= six-ensure-str-bin-call
+                )
+            )
         return stdout

@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.page_menu import (
+    make_external_link,
+    make_form_submit_link,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuLink,
-    make_simple_link,
-    make_external_link,
-    make_javascript_link,
-    make_form_submit_link,
+    PageMenuTopic,
 )
 
 
@@ -42,30 +42,35 @@ def test_make_form_submit_link():
     item = make_form_submit_link("frm", "btn")
     assert item.link.url is None
     assert item.link.target is None
-    assert item.link.onclick == 'cmk.page_menu.form_submit("frm", "btn");cmk.page_menu.close_active_dropdown();'
+    assert (
+        item.link.onclick
+        == 'cmk.page_menu.form_submit("frm", "btn");cmk.page_menu.close_active_dropdown();'
+    )
 
 
-def test_simple_page_menu(register_builtin_html):
-    pm = PageMenu([
-        PageMenuDropdown(
-            name="hallo",
-            title="HALLO",
-            topics=[
-                PageMenuTopic(
-                    title="Title",
-                    entries=[
-                        PageMenuEntry(
-                            name="abc",
-                            title="Mach das",
-                            description="Ich beschreibe",
-                            icon_name="icon",
-                            item=make_external_link("https://checkmk.com/"),
-                        ),
-                    ],
-                )
-            ],
-        ),
-    ])
+def test_simple_page_menu(request_context):
+    pm = PageMenu(
+        [
+            PageMenuDropdown(
+                name="hallo",
+                title="HALLO",
+                topics=[
+                    PageMenuTopic(
+                        title="Title",
+                        entries=[
+                            PageMenuEntry(
+                                name="abc",
+                                title="Mach das",
+                                description="Ich beschreibe",
+                                icon_name="icon",
+                                item=make_external_link("https://checkmk.com/"),
+                            ),
+                        ],
+                    )
+                ],
+            ),
+        ]
+    )
 
     assert len(pm.dropdowns) == 3  # help, display-options-Dropdowns are added automatically
     assert len(list(pm.shortcuts)) == 0

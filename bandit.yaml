@@ -95,6 +95,7 @@ skips:
   # tests. :-/ We should investigate this further at some point...
   - B303
   - B304
+  - B415  # pyghmi is needed by our core
 
 ### (optional) plugin settings - some test plugins require configuration data
 ### that may be given here, per-plugin. All bandit test plugins have a built in
@@ -402,4 +403,3 @@ weak_cryptographic_key:
   weak_key_size_ec_medium: 224
   weak_key_size_rsa_high: 1024
   weak_key_size_rsa_medium: 2048
-

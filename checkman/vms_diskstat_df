@@ -1,7 +1,7 @@
 title: OpenVMS: Disk Space
 agents: openvms
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the used disk space on OpenVMS. The check
@@ -11,5 +11,5 @@ description:
 item:
  The mountpoint of the filesystem
 
-inventory:
+discovery:
  One service is created for each mountpoint.

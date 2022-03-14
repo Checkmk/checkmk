@@ -1,7 +1,7 @@
 title: MS SQL: Size of Transaction Logs
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the size of transaction logs in MSSQL.
@@ -16,7 +16,7 @@ description:
 item:
  A combination of the instance-, database- and (logical) file-name.
 
-inventory:
+discovery:
  One service is created for each transactionlog.
  Alternatively there is a rule to summarize logs for each database.
  In this case one summary service is created for each database.

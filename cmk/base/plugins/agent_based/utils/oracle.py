@@ -1,4 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Any, Dict, List, Mapping, Optional, Tuple, TypedDict
+
 from ..agent_based_api.v1 import State
 
 
@@ -9,7 +16,7 @@ class DatafilesException(RuntimeError):
 class OraErrors:
     """
     >>> for line in ([""], ["", "FAILURE","ORA-", "foo"], ["", "FAILURE","ORA-"], ["", "FAILURE"],
-    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"]):
+    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"], ["Error", "Message:", "Hello"]):
     ...     [OraErrors(line).ignore,OraErrors(line).has_error,
     ...     OraErrors(line).error_text,OraErrors(line).error_severity]
     [False, False, '', <State.OK: 0>]
@@ -19,7 +26,9 @@ class OraErrors:
     [True, False, '', <State.OK: 0>]
     [False, True, 'Found error in agent output "ORA-bar"', <State.UNKNOWN: 3>]
     [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
+    [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
+
     def __init__(self, line: List[str]):
         # Default values
         self.ignore = False
@@ -38,64 +47,82 @@ class OraErrors:
         if len(line) == 1:
             return
 
-        if line[0].startswith('ORA-'):
+        if line[0].startswith("ORA-"):
             self.has_error = True
-            self.error_text = 'Found error in agent output "%s"' % ' '.join(line)
+            self.error_text = _error_summary_text(" ".join(line))
             self.error_severity = State.UNKNOWN
             return
 
         # Handle error output from new agent
-        if line[1] == 'FAILURE':
+        if line[1] == "FAILURE":
             if len(line) >= 3 and line[2].startswith("ORA-"):
                 self.has_error = True
-                self.error_text = "%s" % ' '.join(line[2:])
+                self.error_text = "%s" % " ".join(line[2:])
                 self.error_severity = State.UNKNOWN
                 return
             self.ignore = True
             return  # ignore other FAILURE lines
 
         # Handle error output from old (pre 1.2.0p2) agent
-        if line[1] in ['select', '*', 'ERROR']:
+        if line[1] in ["select", "*", "ERROR"]:
             self.ignore = True
             return
-        if line[1].startswith('ORA-'):
+        if line[1].startswith("ORA-"):
             self.has_error = True
-            self.error_text = 'Found error in agent output "%s"' % ' '.join(line[1:])
+            self.error_text = _error_summary_text(" ".join(line[1:]))
+            self.error_severity = State.UNKNOWN
+            return
+
+        # Handle error output from 1.6 solaris agent, see SUP-9521
+        if line[0] == "Error":
+            self.has_error = True
+            self.error_text = _error_summary_text(" ".join(line[1:]))
             self.error_severity = State.UNKNOWN
             return
 
 
+def _error_summary_text(agent_output_string: str) -> str:
+    return f'Found error in agent output "{agent_output_string}"'
+
+
 DataFiles = TypedDict(
-    "DataFiles", {
-        'autoextensible': bool,
-        'file_online_status': str,
-        'name': str,
-        'status': str,
-        'ts_status': str,
-        'ts_type': str,
+    "DataFiles",
+    {
+        "autoextensible": bool,
+        "file_online_status": str,
+        "name": str,
+        "status": str,
+        "ts_status": str,
+        "ts_type": str,
         "block_size": Optional[int],
         "size": Optional[int],
         "max_size": Optional[int],
         "used_size": Optional[int],
         "free_space": Optional[int],
         "increment_size": Optional[int],
-    })
+    },
+)
 
 TableSpaces = TypedDict(
-    "TableSpaces", {
-        'amount_missing_filenames': int,
-        'autoextensible': bool,
-        'datafiles': List[DataFiles],
-        'db_version': int,
-        'status': str,
-        'type': str
-    })
+    "TableSpaces",
+    {
+        "amount_missing_filenames": int,
+        "autoextensible": bool,
+        "datafiles": List[DataFiles],
+        "db_version": int,
+        "status": str,
+        "type": str,
+    },
+)
 
 ErrorSids = Dict[str, OraErrors]
-SectionTableSpaces = TypedDict("SectionTableSpaces", {
-    "error_sids": ErrorSids,
-    "tablespaces": Dict[Tuple[str, str], TableSpaces],
-})
+SectionTableSpaces = TypedDict(
+    "SectionTableSpaces",
+    {
+        "error_sids": ErrorSids,
+        "tablespaces": Dict[Tuple[str, str], TableSpaces],
+    },
+)
 
 
 def analyze_datafiles(
@@ -103,7 +130,7 @@ def analyze_datafiles(
     db_version: int,
     sid: str,
     params: Optional[Mapping[str, Any]] = None,
-    raise_on_offline_files: bool = False
+    raise_on_offline_files: bool = False,
 ) -> Tuple[int, int, int, int, int, int, bool, int, int, int, Dict[str, Dict[str, Any]]]:
     num_files = 0
     num_avail = 0
@@ -123,13 +150,19 @@ def analyze_datafiles(
         if df_file_online_status in ["OFFLINE", "RECOVER"] and params:
 
             file_online_states_params = dict(params.get("map_file_online_states", []))
-            if datafile["block_size"] is not None and file_online_states_params and \
-               df_file_online_status in file_online_states_params:
+            if (
+                datafile["block_size"] is not None
+                and file_online_states_params
+                and df_file_online_status in file_online_states_params
+            ):
 
-                file_online_states.setdefault(df_file_online_status, {
-                    "state": file_online_states_params[df_file_online_status],
-                    "sids": [],
-                })
+                file_online_states.setdefault(
+                    df_file_online_status,
+                    {
+                        "state": file_online_states_params[df_file_online_status],
+                        "sids": [],
+                    },
+                )
                 file_online_states[df_file_online_status]["sids"].append(sid)
 
             else:
@@ -137,9 +170,12 @@ def analyze_datafiles(
                     raise DatafilesException("One or more datafiles OFFLINE or RECOVER")
 
         num_files += 1
-        if datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"
-                                 ] and datafile["size"] is not None and datafile[
-                                     "free_space"] is not None and datafile["max_size"] is not None:
+        if (
+            datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"]
+            and datafile["size"] is not None
+            and datafile["free_space"] is not None
+            and datafile["max_size"] is not None
+        ):
             df_size = datafile["size"]
             df_free_space = datafile["free_space"]
             df_max_size = datafile["max_size"]

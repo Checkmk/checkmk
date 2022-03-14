@@ -1,7 +1,7 @@
 title: IBM Tivoli Storage Manager (TSM): Number of Tapes in Scratch Pool
 agents: linux, windows
 catalog: app/tsm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the number of tapes in a tsm scrach pool.
@@ -10,6 +10,5 @@ description:
 item:
  The name of the instance (optional) and the library name seperated by a {{/}}
 
-inventory:
+discovery:
  One service is created for each library.
-

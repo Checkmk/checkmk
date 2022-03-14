@@ -47,9 +47,9 @@ select,
 textarea {
   padding: 3px;
   margin-top: 0;
-  font-family: arial, helvetica, sans-serif;
+  font-family: $font-family-default;
   vertical-align: middle;
-  background-color: rgb(255, 255, 255);
+  background-color: $white;
   border: none;
   outline-style: none;
   outline-width: medium;
@@ -76,7 +76,7 @@ select::-ms-expand {
 }
 
 input[type="file"] {
-  color: rgb(0, 0, 0);
+  color: $font-color-black;
 }
 
 form {
@@ -87,7 +87,7 @@ form {
   }
 
   label.required::after {
-    color: $success;
+    color: $font-color-green;
     content: " (required)";
   }
 }
@@ -114,14 +114,13 @@ input[type="checkbox"] {
     padding: 0;
     margin: -2px 4px 0 0;
     vertical-align: middle;
-    background-color: $inpage-highlight-color;
-    border: 1px $inpage-highlight-color solid;
+    background-color: $input-background-color;
+    border: 1px $input-background-color solid;
     content: "\00a0";
   }
 
   &:checked {
     + label::before {
-      color: $checkbox-checked-color;
       text-align: center;
       content: "\2716";
     }
@@ -142,7 +141,7 @@ input.button,
 table.vs_duallist a.control {
   padding: 2px 6px;
   margin-left: 5px;
-  color: rgb(255, 255, 255);
+  color: $font-color-white;
   cursor: pointer;
   border-radius: $theme-border-radius;
 }
@@ -163,7 +162,7 @@ table.vs_duallist a.control,
   }
 
   &:active {
-    box-shadow: inset 0 0 0.5px rgb(68, 68, 68);
+    box-shadow: inset 0 0 0.5px $grey-3;
   }
 }
 
@@ -176,7 +175,7 @@ input.button:not([type="password"]) {
     &,
     &:hover,
     &:active {
-      color: $font-color-disabled;
+      color: $font-color-dimmed;
       cursor: initial;
       background-color: $input-button-hover-bg-color;
       filter: grayscale(80%);
@@ -188,8 +187,8 @@ button.hot,
 input.button.hot {
   &,
   &:active {
-    color: $hot-font-color;
-    background-color: rgb(17, 189, 123);
+    color: $font-color-light-bg;
+    background-color: $success-dimmed;
   }
 
   &:hover {
@@ -199,72 +198,39 @@ input.button.hot {
 
 /* on/off toggle button */
 .toggle_switch {
-  background: $bg-color;
-  border-radius: 11px;
-  box-shadow: none;
-  box-sizing: border-box;
-
-  /* TODO: Decide whether these .wato div.globalvars styles should stay here
-   *       or rather go to _wato.scss - duplicating the .toggle_switch selector
-   */
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span,
-  .wato div.globalvars & a,
-  .wato div.globalvars & body.main .popup_menu span,
-  body.main .popup_menu .wato div.globalvars & {
+  a {
+    display: block;
+    float: left;
     width: $toggle-switch-width;
     height: $toggle-switch-height;
     font-size: $font-size-small;
     font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
     letter-spacing: $letter-spacing-table;
-    border: none;
-    border-radius: 8px;
-    box-shadow: none;
-  }
-
-  a,
-  .wato div.globalvars & a {
-    display: block;
-    width: 30px;
-    color: $toggle-switch-font-color-on;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    box-shadow: none;
+
+    &:hover {
+      text-decoration: none !important;
+      opacity: 0.5; /* TODO: create a better hover effect */
+    }
   }
 
   &.on {
-    a,
-    .wato div.globalvars & a {
-      float: left;
-      color: $toggle-switch-font-color-on;
+    a {
+      color: $font-color-light-bg !important;
       background-color: $success;
     }
   }
 
   &.off {
-    a,
-    .wato div.globalvars & a {
-      float: left;
-      color: $toggle-switch-font-color-off;
-      background-color: $inpage-highlight-color;
-    }
-  }
-
-  a:hover,
-  .wato div.globalvars & a:hover {
-    /* TODO: create a better hover effect */
-    text-decoration: none;
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
-  }
-
-  table.data & {
-    background-color: rgb(153, 153, 153);
-
     a {
-      color: rgb(255, 255, 255);
+      color: $font-color-dimmed !important;
+      background-color: $input-background-color;
     }
   }
 }
@@ -272,27 +238,12 @@ input.button.hot {
 .dots {
   margin-left: 5px;
   overflow: hidden;
-  color: rgba($font-color, 0.4);
+  color: $font-color-dimmed;
 
   &.required::before {
-    color: $success;
+    color: $font-color-green;
     content: "(required) ";
   }
-}
-
-a.button {
-  height: 24px;
-  padding: 0.1ex 1ex;
-  margin: 2px;
-  font-weight: normal;
-  color: rgb(0, 0, 0);
-  text-decoration: none;
-  background-color: rgb(204, 204, 170);
-  border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 4px;
-  -webkit-border-radius: 4px;
 }
 
 /*for IE8 */
@@ -338,7 +289,7 @@ h1 {
   margin-bottom: 5px;
   margin-left: 5px;
   font-size: $font-size-page-title;
-  color: rgb(255, 255, 255);
+  color: $font-color-white;
 }
 
 div.livestatus.message {
@@ -346,7 +297,6 @@ div.livestatus.message {
   bottom: -10px;
   left: 10px;
   z-index: 20;
-  color: rgb(0, 0, 0);
 }
 
 /*-------------------------------------------------------------------------.
@@ -387,10 +337,6 @@ b.treeangle.title {
   font-weight: bold;
   color: $font-color;
   cursor: pointer;
-
-  table.data & {
-    color: rgb(0, 0, 0);
-  }
 }
 
 div.foldable_wrapper {
@@ -402,12 +348,24 @@ div.foldable_wrapper {
     margin-bottom: 2 * $spacing;
   }
 
-  img.treeangle {
-    margin-left: $spacing;
-  }
+  div.foldable_header {
+    &[onclick] {
+      cursor: pointer;
+    }
 
-  h3 {
-    margin-top: 0;
+    img.treeangle {
+      float: left;
+      margin: $spacing $spacing 0;
+    }
+
+    b.treeangle.title {
+      margin: 6px 0;
+    }
+
+    h3 {
+      padding-left: 0;
+      margin-top: 0;
+    }
   }
 
   ul.treeangle {
@@ -463,7 +421,7 @@ div.warning {
     margin-left: 0;
     font-size: $font-size-large;
     font-weight: $font-weight-bold;
-    color: $white;
+    color: $font-color-white;
   }
 
   input.button {
@@ -477,34 +435,31 @@ div.really {
   &,
   h3,
   body.main & a {
-    color: $black;
+    color: $font-color-black;
     background-color: $warning;
   }
 
   h3 {
-    padding-left: 0;
+    padding: 0;
+    margin: 0;
   }
 }
 
 div.success {
-  color: $primary-font-color;
-  background-color: $base-color;
+  background-color: $headline-color;
 }
 
 div.message {
-  color: $black; // TODO: Check whether this must be $primary-font-color as is for .success
-  background-color: rgb(157, 190, 205);
-  border-color: rgb(0, 68, 136);
+  background-color: $input-background-color;
 }
 
 div.error {
-  color: $lightgrey;
+  color: $font-color-light-grey;
   background-color: $color-state-2-background;
-  border-color: rgb(238, 68, 0);
 
   a,
   a:link {
-    color: rgb(255, 255, 255);
+    color: $font-color-white;
   }
 
   tt {
@@ -514,12 +469,12 @@ div.error {
 
 .warning,
 body.main div.warning {
-  color: $black;
+  color: $font-color-black;
   background-color: $warning;
 
   a,
   a:link {
-    color: $black;
+    color: $font-color-black;
   }
 }
 
@@ -591,7 +546,7 @@ table.dictionary {
     white-space: nowrap;
 
     span.required {
-      color: $success;
+      color: $font-color-green;
     }
 
     div.popup_menu {
@@ -614,9 +569,6 @@ td.dictleft div.dictelement {
   margin-bottom: 10px;
   margin-left: 0;
 
-  * {
-  }
-
   &:empty {
     margin: 0;
   }
@@ -624,7 +576,7 @@ td.dictleft div.dictelement {
   &.indent {
     padding-left: 10px;
     margin-left: 6px;
-    border-left: 2px solid $inpage-highlight-color;
+    border-left: 2px solid $line-color;
 
     ul {
       margin-top: 1px;
@@ -685,33 +637,6 @@ table.vs_date {
 
 table.valuespec_listof {
   width: 100%;
-
-  &.regular {
-    > tbody > tr > td {
-      padding: 3px 0 5px;
-      border-bottom: 1px solid rgb(153, 187, 204);
-
-      &:first-child {
-        padding-bottom: 5px;
-      }
-    }
-
-    > tbody > tr:last-child > td {
-      padding-top: 3px;
-      border-bottom-style: none;
-    }
-
-    td.vlof_buttons {
-      width: 1px;
-      margin-right: 5px;
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-  }
-
-  option[selected] {
-    font-weight: bold;
-  }
 
   .unused {
     display: none;
@@ -786,22 +711,6 @@ table.nform
   border-bottom: none;
 }
 
-table.valuespec_listof.regular > tbody > tr {
-  &:last-child > td {
-    padding-top: 3px;
-    border-bottom-style: none;
-  }
-
-  > td {
-    padding: 3px 0 5px;
-    border-bottom: 1px solid rgb(153, 187, 204);
-
-    &:first-child {
-      padding-bottom: 5px;
-    }
-  }
-}
-
 table.vs_duallist {
   td {
     width: 50%;
@@ -840,7 +749,7 @@ table.vs_duallist {
 }
 
 textarea.tt {
-  font-family: monospace;
+  font-family: $font-family-monospace;
 }
 
 div.listofstrings.horizontal {
@@ -882,27 +791,6 @@ div.popup_container {
   position: relative;
 }
 
-div.popup {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 200;
-  width: -moz-max-content;
-  width: intrinsic;
-  padding: 10px;
-  color: rgb(255, 255, 255);
-  background-color: rgb(69, 130, 157);
-  border: 1px solid rgb(255, 255, 255);
-  border-radius: 5px;
-  -webkit-border-radius: 5px;
-
-  span {
-    display: block;
-    margin-bottom: 5px;
-    color: rgb(255, 255, 255);
-  }
-}
-
 div#hover_menu {
   position: absolute;
   /* The hover menu needs to have a higher z-index than the highest element
@@ -926,7 +814,7 @@ div#hover_menu {
     display: block;
     float: left;
     margin: 0 2px 2px 0;
-    color: $graph-hover-popup-font-color;
+    color: $font-color;
     background-color: $graph-hover-popup-bg-color;
     border: $graph-hover-popup-border;
     box-shadow: $graph-hover-popup-box-shadow;
@@ -987,7 +875,7 @@ div.popup_trigger.colorpicker div.popup_menu {
   .picker {
     width: 150px;
     height: 150px;
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   .slide {
@@ -1002,15 +890,15 @@ div.popup_trigger.colorpicker div.popup_menu {
   .picker-indicator {
     width: 1px;
     height: 1px;
-    background-color: rgb(255, 255, 255);
-    border: 1px solid rgb(0, 0, 0);
+    background-color: $white;
+    border: 1px solid $black;
   }
 
   .slide-indicator {
     left: 0;
     width: 100%;
     height: 2px;
-    background-color: rgb(0, 0, 0);
+    background-color: $black;
   }
 }
 
@@ -1061,90 +949,45 @@ tr.data td.werkcomp {
 }
 
 table.data.werks {
-  td.werkclassfeature,
-  td.werkclassfix,
-  td.werklevel2,
-  td.werklevel3,
-  td.werkcompincomp_ack {
-    color: $dark-font-color;
-  }
-}
-
-table.data.werks {
-  tr {
-    &:nth-child(odd) {
-      td.werklevel2 {
-        background-color: $color-state-5-background;
-      }
-
-      td.werklevel3 {
-        background-color: $color-state-6-background;
-      }
-
-      td.werkclassfeature {
-        background-color: $color-state-success-background;
-      }
-
-      td.werkclassfix {
-        background-color: $yellow;
-      }
-
-      td.werkclasssecurity {
-        background-color: $color-state-2-background;
-      }
-
-      td.werkcompincomp_unack {
-        background-color: $color-state-7-background;
-      }
-
-      td.werkcompincomp_ack {
-        background-color: $color-state-8-background;
-      }
-    }
-
-    &:nth-child(even) {
-      td.werklevel2 {
-        background-color: $color-state-5-background;
-      }
-
-      td.werklevel3 {
-        background-color: $color-state-6-background;
-      }
-
-      td.werkclassfeature {
-        background-color: $color-state-success-background;
-      }
-
-      td.werkclassfix {
-        background-color: $yellow;
-      }
-
-      td.werkclasssecurity {
-        background-color: $color-state-2-background;
-      }
-
-      td.werkcompincomp_unack {
-        background-color: $color-state-7-background;
-      }
-
-      td.werkcompincomp_ack {
-        background-color: $color-state-8-background;
-      }
-    }
-  }
-
   td {
+    &.werkclassfeature,
+    &.werkclassfix,
+    &.werklevel2,
+    &.werklevel3,
+    &.werkcompincomp_ack {
+      color: $font-color-light-bg;
+    }
+
+    &.werklevel2 {
+      background-color: $color-state-5-background;
+    }
+
     &.werklevel3 {
       font-weight: bold;
+      background-color: $color-state-6-background;
+    }
+
+    &.werkclassfeature {
+      background-color: $color-state-success-background;
+    }
+
+    &.werkclassfix {
+      background-color: $color-state-1-background;
     }
 
     &.werkclasssecurity {
       font-weight: bold;
-      color: rgb(255, 255, 255);
+      color: $font-color-white;
+      background-color: $color-state-2-background;
     }
 
     &.werkcompincomp_unack {
       font-weight: bold;
+      background-color: $color-state-7-background;
+    }
+
+    &.werkcompincomp_ack {
+      background-color: $color-state-8-background;
     }
   }
 
@@ -1153,10 +996,8 @@ table.data.werks {
   }
 }
 
-table.werks td a,
-table.werks td body.main .popup_menu span,
-body.main .popup_menu table.werks td span {
-  color: $black;
+table.werks td a {
+  color: $font-color-black;
   text-decoration: underline;
 }
 
@@ -1165,38 +1006,28 @@ td.nowiki {
   h3 {
     font-size: $font-size-large;
     font-weight: bold;
-    color: rgb(0, 0, 0);
   }
 
   pre {
     padding: 3px 8px;
 
     &.code {
-      background-color: rgb(255, 255, 255);
+      color: $font-color-light-bg;
+      background-color: $white;
     }
 
     &.file {
-      background-color: rgb(255, 240, 181);
+      color: $font-color-light-bg;
+      background-color: $info-light;
     }
   }
 
   div.filename {
     padding: 3px 8px;
     margin-bottom: -12px;
-    font-family: Hack, courier;
     font-weight: bold;
-    background-color: rgb(230, 216, 163);
-  }
-
-  table {
-    margin: 10px 0;
-    border: 1px solid rgb(0, 0, 0);
-    border-collapse: collapse;
-
-    table td,
-    table th {
-      border: 1px solid rgb(136, 136, 136);
-    }
+    color: $font-color-light-bg;
+    background-color: $info;
   }
 }
 
@@ -1219,7 +1050,7 @@ table.modifydowntimes > tbody > tr {
 
 .select2-container--default {
   .select2-results {
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
   }
 
   .select2-selection--single {
@@ -1227,7 +1058,7 @@ table.modifydowntimes > tbody > tr {
 
     .select2-selection__rendered {
       line-height: $input-field-height;
-      color: $select2-rendered-color;
+      color: $font-color;
     }
 
     .select2-selection__arrow b {
@@ -1236,68 +1067,27 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $inpage-highlight-color;
-    border: 1px solid $select2-border-color;
+    background-color: $input-background-color;
+    border: 1px solid $input-dropdown-border-color;
   }
 
   .select2-results__option {
-    color: $select2-rendered-color;
-    background-color: $inpage-highlight-color;
+    color: $font-color;
+    background-color: $input-background-color;
   }
 
   .select2-results__option[aria-selected="true"] {
-    background-color: $inpage-highlight-color;
+    background-color: $input-background-color;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    color: $success;
-    background-color: $inpage-highlight-color;
+    color: $font-color-green;
+    background-color: $input-background-color;
   }
 
   .select2-search--dropdown .select2-search__field {
-    background-color: $select2-search-field-color;
-    border: $select2-search-field-border;
-  }
-}
-
-div.vs_autocomplete {
-  height: 22px;
-
-  .error {
-    padding: 0.5em 2em;
-    margin: 0;
-  }
-}
-
-div.metricchoice div.vs_autocomplete .select2-dropdown--below {
-  top: -11px;
-}
-
-span.vs_autocomplete {
-  .select2-dropdown {
-    position: inherit;
+    background-color: $input-nested-background-color;
     border: none;
-  }
-
-  .select2-dropdown--below {
-    top: -7px;
-    border-radius: $theme-border-radius;
-  }
-
-  .select2-search--dropdown {
-    padding: 0;
-    margin: 0;
-  }
-
-  .select2-search__field {
-    height: 22px;
-    padding-left: 6px;
-    border-radius: 4px;
-  }
-
-  .select2-results__options {
-    border: 1px solid $button-bg-color-default;
-    border-radius: 4px;
   }
 }
 
@@ -1334,18 +1124,8 @@ div.graph {
     padding: 4px !important;
   }
 
-  table.legend {
-    td {
-      color: $graph-legend-color;
-    }
-
-    th {
-      border-bottom: $graph-legend-th-border-bottom;
-    }
-  }
-
-  div.time {
-    color: $graph-time-color;
+  table.legend th {
+    border-bottom: $graph-legend-th-border-bottom;
   }
 
   &.brokengraph {
@@ -1358,20 +1138,19 @@ div.graph {
     pre {
       padding: 0 8px 8px;
       margin: 0;
-      color: $graph-time-color;
     }
   }
 }
 
 div.graph_hover_popup {
-  color: $graph-hover-popup-font-color;
+  color: $font-color;
   background-color: $graph-hover-popup-bg-color;
   border: $graph-hover-popup-border;
   box-shadow: $graph-hover-popup-box-shadow;
 }
 
 .graph {
-  background-color: $graph-bg-color;
+  background-color: null;
 }
 
 div.content {
@@ -1399,69 +1178,8 @@ div.content {
   }
 }
 
-table.report_contents td.preview img {
-  border: 1px solid $color-nuance-3;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
 table td {
   vertical-align: middle;
-}
-
-/* Graphs */
-div.graph_with_timeranges {
-  margin-bottom: 32px;
-
-  div.graph {
-    border: 1px solid $color-table-border;
-    box-shadow: none;
-
-    div.title {
-      display: block;
-    }
-
-    canvas {
-      margin-bottom: 8px;
-    }
-
-    &.preview canvas {
-      margin-bottom: 0;
-    }
-
-    &.preview .title {
-      top: 12px;
-      width: calc(100% - 16px);
-      padding: 8px 0;
-      font-weight: $font-weight-default;
-      color: $font-color;
-      text-shadow: none;
-      box-sizing: border-box;
-    }
-
-    table.legend {
-      margin-top: 32px;
-
-      th.scalar {
-        text-align: right;
-      }
-
-      td {
-        background: transparent;
-      }
-    }
-  }
-
-  table.timeranges > tbody > tr > td {
-    padding: 0 8px 4px;
-  }
-}
-
-table.data td > div:first-child div.graph_with_timeranges {
-  margin-top: 8px;
-}
-
-table.data td > div:last-child div.graph_with_timeranges {
-  margin-bottom: 8px;
 }
 
 div.metricchoice select,
@@ -1476,32 +1194,21 @@ td.title {
   display: table-cell;
 }
 
-#form_search input,
-#form_search select,
-#form_search textarea,
-#form_search #mk_side_search_field {
-  width: auto;
-  border: $primary-border;
-}
-
 select.vlof_filter {
   width: auto;
-}
-
-div.timerange {
-  color: $darkgrey;
 }
 
 body.main.visible div.foldable .title {
   color: $font-color;
 }
 
-.hot a,
-.hot body.main .popup_menu span,
-body.main .popup_menu .hot span {
-  color: $hot-font-color;
-  background-color: $hot-bg-color;
-  border-color: $color-nuance-16;
+.hot:not(.entry) {
+  a,
+  span {
+    // highlighted suggestion buttons used e.g. in "Bake agents"
+    color: $font-color-light-bg !important;
+    background-color: $hot-bg-color !important;
+  }
 }
 
 div.info {
@@ -1551,9 +1258,13 @@ tr.hidden {
     width: $simplebar-scrollbar-width;
   }
 
-  &.simplebar-horizontal div.simplebar-scrollbar {
-    top: 3px;
-    height: $simplebar-scrollbar-width;
+  &.simplebar-horizontal {
+    height: $spacing-double;
+
+    div.simplebar-scrollbar {
+      top: 3px;
+      height: $simplebar-scrollbar-width;
+    }
   }
 }
 
@@ -1565,4 +1276,20 @@ div#row_info {
   padding-bottom: $spacing-half;
   font-weight: $font-weight-default;
   text-align: right;
+}
+
+/* Inside a foldable, we need a different color here in order to see a difference w.r.t. the title*/
+div.foldable div.success {
+  background-color: $base-color;
+}
+
+input.hidden_submit {
+  display: none;
+}
+
+@mixin ellipsis-text-overflow {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

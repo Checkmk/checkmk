@@ -4,110 +4,63 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<windows_updates>>>
-# 0 2 5
-# Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830)
-# Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Windows Search 4.0 f�r Windows XP (KB940157); Microsoft Base Smartcard-Kryptografiedienstanbieter-Paket: x86 (KB909520); Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET Framework 3.5-Produktfamilie (KB951847) x86
+import time
 
-# First row:  Reboot_required, num_important, num_optional
-# Second row: List of all important updates (optional)
-# Third row:  List of all optional updates (optional)
-# Last row:  Date and time of forced update (optional)
+from cmk.base.plugins.agent_based.windows_updates import Section
 
 windows_updates_default_params = (0, 0, 0, 0, 604800, 172800, True)
 
 
-def inventory_windows_updates(info):
-    if info and len(info[0]) == 3:
-        return [(None, "windows_updates_default_params")]
+def inventory_windows_updates(section: Section):
+    yield None, "windows_updates_default_params"
 
 
-def check_windows_updates(_no_item, params, info):
-    if info and len(info[0]) == 3:
-        status = 0
-        # Workarround to return errors from the plugin
-        if info[0][0] == 'x':
-            return 2, ' '.join(info[1])
-        reboot_required, num_imp, num_opt = map(saveint, info[0])
-        imp_warn, imp_crit, opt_warn, opt_crit = params[0:4]
-        if len(params) == 7:
-            force_warn, force_crit, verbose = params[4:7]
-        else:
-            force_warn = 604800
-            force_crit = 172800
-            verbose = True
-        important = ''
-        optional = ''
+def check_windows_updates(_no_item, params, section: Section):
+    imp_warn, imp_crit, opt_warn, opt_crit = params[0:4]
+    if len(params) == 7:
+        force_warn, force_crit, verbose = params[4:7]
+    else:
+        force_warn = 604800
+        force_crit = 172800
+        verbose = True
 
-        last = 1
-        if num_imp != 0:
-            important = ' '.join(info[1])
-            last += 1
-        if num_opt != 0 and num_imp != 0:
-            last += 1
-            optional = ' '.join(info[2])
-        elif num_opt != 0:
-            last += 1
-            optional = ' '.join(info[1])
+    yield check_levels(
+        len(section.important_updates),
+        "important",
+        (imp_warn, imp_crit),
+        human_readable_func=lambda x: f"{int(x)}",
+        infoname="Important",
+    )
+    if section.important_updates and verbose:
+        yield 0, f"({'; '.join(section.important_updates)})"  # improve this in new API!
 
-        # the last element may be the forced_reboot time
-        forced_reboot = ""
-        if len(info) - 1 == last and len(info[last]) == 2:
-            forced_reboot = info[last]
+    yield check_levels(
+        len(section.optional_updates),
+        "optional",
+        (opt_warn, opt_crit),
+        human_readable_func=lambda x: f"{int(x)}",
+        infoname="Optional",
+    )
 
-        txt = []
-        perfdata = []
-        for label, updates, cur, warn, crit in [
-            ('important', important, num_imp, imp_warn, imp_crit),
-            ('optional', optional, num_opt, opt_warn, opt_crit)
-        ]:
-            this_txt = '%d %s updates' % (cur, label)
-            if crit and cur >= crit:
-                this_txt += ' >=%d (!!)' % crit
-                if status < 2:
-                    status = 2
-            elif warn and cur >= warn:
-                this_txt += ' >=%d (!)' % warn
-                if status < 1:
-                    status = 1
-            if label == 'important' and cur > 0 and verbose:
-                this_txt += ', (%s) --- ' % updates
-            txt.append(this_txt)
-            perfdata.append((label, cur, warn, crit))
+    if section.reboot_required:
+        yield 1, "Reboot required to finish updates"
 
-        if reboot_required == 1:
-            if status < 1:
-                status = 1
-            txt.append('Reboot required to finish updates(!)')
+    if not section.forced_reboot or (delta := section.forced_reboot - time.time()) < 0:
+        return
 
-        if forced_reboot != "":
-            parsed = time.strptime(" ".join(forced_reboot), "%Y-%m-%d %H:%M:%S")
-            now = int(time.time())
-            delta = time.mktime(parsed) - now
-
-            # check if force_date is in the future
-            if delta >= 0:
-                sym = ""
-                if force_crit and delta <= force_crit:
-                    sym = "(!!)"
-                    status = 2
-                elif force_warn and delta <= force_warn:
-                    sym = "(!)"
-                    status = max(status, 1)
-
-                boot_txt = 'Reboot enforced in %s to finish updates%s' % (
-                    get_age_human_readable(delta), sym)
-                txt.append(boot_txt)
-
-        return (status, ', '.join(txt), perfdata)
-
-    return (3, 'No windows update information provided')
+    yield check_levels(
+        delta,
+        None,
+        (force_warn, force_crit),
+        human_readable_func=get_age_human_readable,
+        infoname="Time to enforced reboot to finish updates",
+    )
 
 
 check_info["windows_updates"] = {
-    'check_function': check_windows_updates,
-    'inventory_function': inventory_windows_updates,
-    'service_description': 'System Updates',
-    'group': 'windows_updates',
-    'has_perfdata': True,
+    "check_function": check_windows_updates,
+    "inventory_function": inventory_windows_updates,
+    "service_description": "System Updates",
+    "group": "windows_updates",
+    "has_perfdata": True,
 }

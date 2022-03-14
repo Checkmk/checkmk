@@ -16,403 +16,812 @@
 # This might be a good source as description of sysctl output:
 # http://people.freebsd.org/~hmp/utilities/satbl/_sysctl.html
 
-# Remove locale settings to eliminate localized outputs where possible
-export LC_ALL=C
-unset LANG
+#
+# BEGIN COMMON AGENT CODE
+#
 
-export MK_LIBDIR="/usr/local/lib/check_mk_agent"
-export MK_CONFDIR="/etc/check_mk"
-export MK_TMPDIR="/var/run/check_mk"
+usage() {
+    cat <<HERE
+Usage: ${0} [OPTION...]
 
-# Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
+The Checkmk agent to monitor *nix style systems.
 
-# Make sure, locally installed binaries are found
-PATH=$PATH:/usr/local/bin:/usr/local/sbin
+Options:
+  -h, --help                 show this message and exit
+  -d, --debug                emit debugging messages
+  -p, --profile              create files containing the execution times
+HERE
+}
 
-# All executables in PLUGINSDIR will simply be executed and their
-# ouput appended to the output of the agent. Plugins define their own
-# sections and must output headers with '<<<' and '>>>'
-PLUGINSDIR=$MK_LIBDIR/plugins
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
 
-# All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. Please refer
-# to online documentation for details.
-LOCALDIR=$MK_LIBDIR/local
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
 
+get_file_mtime() {
+    stat -c %Y "${1}" 2>/dev/null ||
+        stat -f %m "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
+}
 
-# close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
-    set -xv
-else
-    exec </dev/null 2>/dev/null
-fi
+is_valid_plugin() {
+    # test if a file is executable and does not have certain
+    # extensions (remnants from distro upgrades).
+    case "${1:?No plugin defined}" in
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *) [ -f "${1}" ] && [ -x "${1}" ] ;;
+    esac
+}
+
+set_up_process_commandline_arguments() {
+    while [ -n "${1}" ]; do
+        case "${1}" in
+            -d | --debug)
+                set -xv
+                # restore stderr
+                exec 2>&9
+                shift
+                ;;
+
+            -p | --profile)
+                LOG_SECTION_TIME=true
+                # disable caching to get the whole execution time
+                DISABLE_CACHING=true
+                shift
+                ;;
+
+            -h | --help)
+                usage
+                exit 1
+                ;;
+
+            *)
+                shift
+                ;;
+        esac
+    done
+}
+
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+set_variable_defaults() {
+    : "${MK_LIBDIR:=/usr/local/lib/check_mk_agent}"
+    : "${MK_CONFDIR:=/etc/check_mk}"
+    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
+    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
+
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+preamble_1() {
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
+
+    # Make sure, locally installed binaries are found
+    PATH=${PATH}:/usr/local/bin:/usr/local/sbin
+    [ -d /var/qmail/bin ] && PATH=${PATH}:/var/qmail/bin
+
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=${MK_LIBDIR}/plugins
+
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please refer
+    # to online documentation for details.
+    LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply be appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
+}
+
+# encryption not implemented
+optionally_encrypt() { cat; }
+#
+# BEGIN COMMON AGENT CODE
+#
+
+# SC2089: Quotes/backslashes will be treated literally. Use an array.
+# shellcheck disable=SC2089
+MK_DEFINE_LOG_SECTION_TIME='_log_section_time() { "$@"; }'
+finalize_profiling() { :; }
+
+set_up_profiling() {
+
+    PROFILING_CONFIG="${MK_CONFDIR}/profiling.cfg"
+    if [ -e "${PROFILING_CONFIG}" ]; then
+        # Config vars:
+        #   LOG_SECTION_TIME=true/false
+        #   DISABLE_CACHING=true/false
+
+        # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+        # to get the real execution time during operation.
+        # shellcheck disable=SC1090
+        . "${PROFILING_CONFIG}"
+    fi
+
+    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
+
+    if ${LOG_SECTION_TIME:-false}; then
+        mkdir -p "${PROFILING_LOGFILE_DIR}"
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+
+        # SC2016: Expressions don't expand in single quotes, use double quotes for that.
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
+        MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
+            section_func="$@"
+
+            base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
+            profiling_logfile="'"${PROFILING_LOGFILE_DIR}"'/${base_name}.log"
+
+            start="$(perl -MTime::HiRes=time -le "print time()")"
+            { time ${section_func}; } 2>> "${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
+        }'
+
+        finalize_profiling() {
+            pro_log_file="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
+            agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+            echo "runtime $(echo "${agent_end} - ${agent_start}" | bc)" >>"${pro_log_file}"
+        }
+    fi
+
+    eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
+    export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+section_checkmk() {
+    echo "<<<check_mk>>>"
+    echo "Version: 2.2.0i1"
+    echo "AgentOS: freebsd"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: ${MK_CONFDIR}"
+    echo "DataDirectory: ${MK_VARDIR}"
+    echo "SpoolDirectory: ${SPOOLDIR}"
+    echo "PluginsDirectory: ${PLUGINSDIR}"
+    echo "LocalDirectory: ${LOCALDIR}"
+
+    #
+    # BEGIN COMMON AGENT CODE
+    #
+
+    if [ -n "${NO_PYTHON}" ]; then
+        python_fail_msg="No suitable python installation found."
+    elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
+        python_fail_msg="Configured python command not found."
+    fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
+}
+
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
+}
+
+section_checkmk_agent_plugins() {
+    printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
+    printf "pluginsdir %s\n" "${PLUGINSDIR}"
+    printf "localdir %s\n" "${LOCALDIR}"
+    grep -r '^__version__' "${LOCALDIR}" "${PLUGINSDIR}"
+    grep -r '^CMK_VERSION' "${LOCALDIR}" "${PLUGINSDIR}"
+}
+
+section_checkmk_failed_plugin() {
+    ${MK_RUN_SYNC_PARTS} || return
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${1}"
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+section_fileinfo() {
+    # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    perl -e '
+    use File::Glob "bsd_glob";
+    my @patterns = ();
+    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
+        open my $handle, "<", $_ or next;
+        while (<$handle>) {
+            chomp;
+            next if /^\s*(#|$)/;
+            my $pattern = $_;
+            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+            push @patterns, $pattern;
+        }
+        warn "error while reading $_: $!\n" if $!;
+        close $handle;
+    }
+    exit if ! @patterns;
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+
+    foreach (@patterns) {
+        foreach (bsd_glob("$_")) {
+            if (! -f) {
+                print "$_|missing\n" if ! -d;
+            } elsif (my @infos = stat) {
+                print "$_|ok|$infos[7]|$infos[9]\n";
+            } else {
+                print "$_|stat failed: $!\n";
+            }
+        }
+    }
+    ' -- "${MK_CONFDIR}"
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+run_purely_synchronous_sections() {
+
+    section_checkmk
+
+    section_cmk_agent_ctl_status
+
+    section_checkmk_agent_plugins
+
+    osver="$(uname -r)"
+    is_jailed="$(sysctl -n security.jail.jailed)"
+
+    # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
+    # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
+    # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
+    # Server, als auf dem Client ueberwacht werden.
+
+    echo '<<<df>>>'
+    # no special zfs handling so far, the ZFS.pools plugin has been tested to
+    # work on FreeBSD
+    if df -T >/dev/null; then
+        df -kTP -t ufs | grep -v -E '(Filesystem|devfs|procfs|fdescfs|basejail)'
+    else
+        df -kP -t ufs | grep -v -E '(Filesystem|devfs|procfs|fdescfs|basejail)' | awk '{ print $1,"ufs",$2,$3,$4,$5,$6 }'
+    fi
+
+    # Filesystem usage for ZFS
+    if inpath zfs; then
+        echo '<<<zfsget>>>'
+        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type ||
+            zfs get -Hp name,quota,used,avail,mountpoint,type
+        echo '[df]'
+        df -kP -t zfs | sed 1d
+        # arc stats for zfs_arc_cache
+        echo '<<<zfs_arc_cache>>>'
+        sysctl -q kstat.zfs.misc.arcstats | sed -e 's/kstat.zfs.misc.arcstats.//g' -e 's/: / = /g'
+    fi
+
+    # Check NFS mounts by accessing them with stat -f (System
+    # call statfs()). If this lasts more then 2 seconds we
+    # consider it as hanging. We need waitmax.
+    #if inpath waitmax
+    #then
+    #    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+    #    STAT_BROKE="5.3.0"
+    #
+    #    echo '<<<nfsmounts>>>'
+    #    sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+    #        while read MP
+    #  do
+    #   if [ ${STAT_VERSION} != ${STAT_BROKE} ]; then
+    #      waitmax -s 9 2 stat -f -c "${MP} ok %b %f %a %s" "${MP}" || \
+    #    echo "${MP} hanging 0 0 0 0"
+    #   else
+    #      waitmax -s 9 2 stat -f -c "${MP} ok %b %f %a %s" "${MP}" && \
+    #      printf '\n'|| echo "${MP} hanging 0 0 0 0"
+    #   fi
+    #  done
+    #fi
+
+    # Check mount options.
+    # FreeBSD doesn't do remount-ro on errors, but the users might consider
+    # security related mount options more important.
+    echo '<<<mounts>>>'
+    mount -p -t ufs
+
+    # processes including username, without kernel processes
+    echo '<<<ps>>>'
+    COLUMNS=10000
+    if [ "${is_jailed}" = "0" ]; then
+        ps ax -o state,user,vsz,rss,pcpu,command | sed -e 1d -e '/\([^ ]*J\) */d' -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5) /'
+    else
+        ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+    fi
+
+    # Produce compatible load/cpu output to linux agent. Not so easy here.
+    echo '<<<cpu>>>'
+    printf "%s %s %s %s\n" \
+        "$(sysctl -n vm.loadavg | tr -d '{}')" \
+        "$(top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}')" \
+        "$(sysctl -n kern.lastpid)" \
+        "$(sysctl -n hw.ncpu)"
+
+    # Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
+    echo '<<<uptime>>>'
+    up_seconds=$(($(get_epoch) - $(sysctl -n kern.boottime | cut -f1 -d\, | awk '{print $4}')))
+    idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d:)
+    echo "${up_seconds} ${idle_seconds}"
+
+    # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
+    #if inpath cfggen; then
+    #   echo '<<<lsi>>>'
+    #   cfggen 0 DISPLAY | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+    #fi
+
+    # Multipathing is supported in FreeBSD by now
+    # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
+    if kldstat -v | grep g_multipath >/dev/null; then
+        echo '<<<freebsd_multipath>>>'
+        gmultipath status | grep -v ^Name
+    fi
+
+    # Soft-RAID
+    echo '<<<freebsd_geom_mirrors>>>'
+    gmirror status | grep -v ^Name
+
+    # Performancecounter Kernel
+    echo "<<<kernel>>>"
+    get_epoch
+    forks=$(sysctl -n vm.stats.vm.v_forks)
+    vforks=$(sysctl -n vm.stats.vm.v_vforks)
+    rforks=$(sysctl -n vm.stats.vm.v_rforks)
+    kthreads=$(sysctl -n vm.stats.vm.v_kthreads)
+    echo "cpu $(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
+    echo "ctxt $(sysctl -n vm.stats.sys.v_swtch)"
+    echo "processes $((forks + vforks + rforks + kthreads))"
+
+    # Network device statistics (Packets, Collisions, etc)
+    # only the "Link/Num" interface has all counters.
+    echo '<<<netctr>>>'
+    get_epoch
+    if [ "$(echo "${osver}" | cut -f1 -d\.)" -gt "8" ]; then
+        netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
+    else
+        # pad output for freebsd 7 and before
+        netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
+    fi
+
+    # IPMI-Data (Fans, CPU, temperature, etc)
+    # needs the sysutils/ipmitool and kldload ipmi.ko
+    if inpath ipmitool; then
+        echo '<<<ipmi>>>'
+        ipmitool sensor list |
+            grep -v 'command failed' |
+            sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
+            grep -v -E '^[^ ]+ na ' |
+            grep -v ' discrete '
+    fi
+
+    # State of LSI MegaRAID controller via MegaCli.
+    # To install: pkg install megacli
+    if inpath MegaCli; then
+        echo '<<<megaraid_pdisks>>>'
+        MegaCli -PDList -aALL -NoLog </dev/null | grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Predictive Failure Count'
+        echo '<<<megaraid_ldisks>>>'
+        MegaCli -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
+        echo '<<<megaraid_bbu>>>'
+        MegaCli -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
+    fi
+
+    # OpenVPN Clients.
+    # Correct log location unknown, sed call might also be broken
+    if [ -e /var/log/openvpn/openvpn-status.log ]; then
+        echo '<<<openvpn_clients:sep(44)>>>'
+        sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' </var/log/openvpn/openvpn-status.log | sed -e 1,3d -e '$d'
+    fi
+
+    if inpath ntpq; then
+        echo '<<<ntp>>>'
+        # remote heading, make first column space separated
+        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    fi
+
+    # Number of TCP connections in the various states
+    echo '<<<tcp_conn_stats>>>'
+    netstat -na | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+
+    # Postfix mailqueue monitoring
+    #
+    # Only handle mailq when postfix user is present. The mailq command is also
+    # available when postfix is not installed. But it produces different outputs
+    # which are not handled by the check at the moment. So try to filter out the
+    # systems not using postfix by searching for the postfix user.
+    #
+    # Cannot take the whole outout. This could produce several MB of agent output
+    # on blocking queues.
+    # Only handle the last 6 lines (includes the summary line at the bottom and
+    # the last message in the queue. The last message is not used at the moment
+    # but it could be used to get the timestamp of the last message.
+    if inpath postconf; then
+        echo '<<<postfix_mailq>>>'
+        postfix_queue_dir=$(postconf -h queue_directory)
+        postfix_count=$(find "${postfix_queue_dir}/deferred" -type f | wc -l)
+        postfix_size=$(du -ks "${postfix_queue_dir}/deferred" | awk '{print $1 }')
+        if [ "${postfix_count}" -gt 0 ]; then
+            echo -- "${postfix_size} Kbytes in ${postfix_count} Requests."
+        else
+            echo Mail queue is empty
+        fi
+    elif [ -x /usr/sbin/ssmtp ]; then
+        echo '<<<postfix_mailq>>>'
+        mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+    fi
+
+    # Check status of qmail mailqueue
+    if inpath qmail-qstat; then
+        echo "<<<qmail_stats>>>"
+        qmail-qstat
+    fi
+
+    # check zpool status
+    if inpath zpool; then
+        echo "<<<zpool_status>>>"
+        zpool status -x | grep -v "errors: No known data errors"
+    fi
+
+    # Statgrab
+    # To install: pkg install libstatgrab
+    if inpath statgrab; then
+
+        tmpfile="/tmp/statgrab.$$"
+
+        statgrab const. disk. general. page. proc. user. | grep -v md >"${tmpfile}"
+        statgrab mem. swap. >>"${tmpfile}"
+
+        for s in proc disk page; do
+            echo "<<<statgrab_${s}>>>"
+            grep "^${s}\." "${tmpfile}" | cut -d. -f2-99 | sed 's/ *= */ /'
+        done
+
+        echo '<<<statgrab_net>>>'
+        statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
+
+        echo '<<<statgrab_mem>>>'
+        grep -E "^(swap|mem)\." "${tmpfile}" | sed 's/ *= */ /'
+
+        rm -f "${tmpfile}"
+    fi
+}
 
 # Runs a command asynchronous by use of a cache file
 run_cached() {
-    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
-    local NAME=$1
-    local MAXAGE=$2
+    local NAME MAXAGE NOW MTIME
+    NAME=${1}
+    MAXAGE=${2}
     shift 2
-    local CMDLINE="$section$@"
 
-    if [ ! -d $MK_TMPDIR/cache ]; then mkdir -p $MK_TMPDIR/cache ; fi
-    CACHEFILE="$MK_TMPDIR/cache/$NAME.cache"
+    if ${DISABLE_CACHING:-false}; then
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
+        return
+    fi
+
+    if [ ! -d "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-    local NOW=$(date +%s)
-    if [ -e "$CACHEFILE.new" ] ; then
-        local CF_ATIME=$(stat -f "%a" "$CACHEFILE.new")
-        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
+    # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
+    NOW=$(get_epoch)
+    if [ -e "${CACHEFILE}.new" ]; then
+        if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge $((MAXAGE * 2)) ]; then
             return
         fi
     fi
 
     # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ] ; then
-        local MTIME=$(stat -f "%m" "$CACHEFILE")
-        if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
-        # Output the file in any case, even if it is
-        # outdated. The new file will not yet be available
-        CACHE_INFO="cached($MTIME,$MAXAGE)"
-        if [[ $NAME == local_* ]]; then
-            sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
-        else
-            # insert the cache info in the section header (^= after '!'),
-            # if none is present (^= before '!')
-            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+    if [ -s "${CACHEFILE}" ]; then
+        MTIME=$(get_file_mtime "${CACHEFILE}")
+        if [ $((NOW - MTIME)) -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
+
+        if ${MK_RUN_SYNC_PARTS}; then
+            # Output the file even if it is outdated.
+            CACHE_INFO="cached(${MTIME},${MAXAGE})"
+            if [[ ${NAME} == local_* ]]; then
+                # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
+                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            else
+                # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+            fi
         fi
     fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
 
     # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        echo "$CMDLINE" | daemon /usr/local/bin/bash -o noclobber > $CACHEFILE.new && mv $CACHEFILE.new $CACHEFILE || rm -f $CACHEFILE $CACHEFILE.new &
+    if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+        {
+            echo "$*" | daemon /usr/local/bin/bash -o noclobber >"${CACHEFILE}.new" &&
+                mv "${CACHEFILE}.new" "${CACHEFILE}"
+        } || rm -f "${CACHEFILE}" "${CACHEFILE}.new" &
     fi
 }
 
-echo "<<<check_mk>>>"
-echo "Version: 2.1.0i1"
-echo "AgentOS: freebsd"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
-
-osver="$(uname -r)"
-is_jailed="$(sysctl -n security.jail.jailed)"
-
-
-# Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
-# Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
-# Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
-# Server, als auf dem Client ueberwacht werden.
-
-echo '<<<df>>>'
-# no special zfs handling so far, the ZFS.pools plugin has been tested to
-# work on FreeBSD
-if df -T > /dev/null ; then
-    df -kTP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)'
-else
-    df -kP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)' | awk '{ print $1,"ufs",$2,$3,$4,$5,$6 }'
-fi
-
-# Filesystem usage for ZFS
-if type zfs > /dev/null 2>&1 ; then
-    echo '<<<zfsget>>>'
-    zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type || \
-       zfs get -Hp name,quota,used,avail,mountpoint,type
-    echo '[df]'
-    df -kP -t zfs | sed 1d
-    # arc stats for zfs_arc_cache
-    echo '<<<zfs_arc_cache>>>'
-    sysctl -q kstat.zfs.misc.arcstats |  sed -e 's/kstat.zfs.misc.arcstats.//g' -e 's/: / = /g'
-fi
-
-# Check NFS mounts by accessing them with stat -f (System
-# call statfs()). If this lasts more then 2 seconds we
-# consider it as hanging. We need waitmax.
-#if type waitmax >/dev/null
-#then
-#    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
-#    STAT_BROKE="5.3.0"
 #
-#    echo '<<<nfsmounts>>>'
-#    sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
-#        while read MP
-#  do
-#   if [ $STAT_VERSION != $STAT_BROKE ]; then
-#      waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
-#    echo "$MP hanging 0 0 0 0"
-#   else
-#      waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-#      printf '\n'|| echo "$MP hanging 0 0 0 0"
-#   fi
-#  done
-#fi
-
-# Check mount options.
-# FreeBSD doesn't do remount-ro on errors, but the users might consider
-# security related mount options more important.
-echo '<<<mounts>>>'
-mount -p -t ufs
-
-# processes including username, without kernel processes
-echo '<<<ps>>>'
-COLUMNS=10000
-if [ "$is_jailed" = "0" ]; then
-    ps ax -o state,user,vsz,rss,pcpu,command | sed -e 1d  -e '/\([^ ]*J\) */d' -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5) /'
-else
-    ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
-fi
-
-
-# Produce compatible load/cpu output to linux agent. Not so easy here.
-echo '<<<cpu>>>'
-echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n kern.lastpid` `sysctl -n hw.ncpu`
-
-# Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
-echo '<<<uptime>>>'
-up_seconds=$(( `date +%s` - `sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}'`))
-idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d\: )
-echo "$up_seconds $idle_seconds"
-
-# Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
-#if which cfggen > /dev/null ; then
-#   echo '<<<lsi>>>'
-#   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
-#fi
-
-
-# Multipathing is supported in FreeBSD by now
-# http://www.mywushublog.com/2010/06/freebsd-and-multipath/
-if kldstat -v | grep g_multipath > /dev/null ; then
-    echo '<<<freebsd_multipath>>>'
-    gmultipath status | grep -v ^Name
-fi
-
-
-# Soft-RAID
-echo '<<<freebsd_geom_mirrors>>>'
-gmirror status | grep -v ^Name
-
-# Performancecounter Kernel
-echo "<<<kernel>>>"
-date +%s
-forks=`sysctl -n vm.stats.vm.v_forks`
-vforks=`sysctl -n vm.stats.vm.v_vforks`
-rforks=`sysctl -n vm.stats.vm.v_rforks`
-kthreads=`sysctl -n vm.stats.vm.v_kthreads`
-echo "cpu" `sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } '`
-echo "ctxt" `sysctl -n vm.stats.sys.v_swtch`
-echo "processes" `expr $forks + $vforks + $rforks + $kthreads`
-
-# Network device statistics (Packets, Collisions, etc)
-# only the "Link/Num" interface has all counters.
-echo '<<<netctr>>>'
-date +%s
-if [ "$(echo $osver | cut -f1 -d\. )" -gt "8" ]; then
-    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
-else
-    # pad output for freebsd 7 and before
-    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
-fi
-
-
-# IPMI-Data (Fans, CPU, temperature, etc)
-# needs the sysutils/ipmitool and kldload ipmi.ko
-if which ipmitool >/dev/null ; then
-    echo '<<<ipmi>>>'
-    ipmitool sensor list \
-        | grep -v 'command failed' \
-        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-        | egrep -v '^[^ ]+ na ' \
-        | grep -v ' discrete '
-fi
-
-
-# State of LSI MegaRAID controller via MegaCli.
-# To install: pkg install megacli
-if which MegaCli >/dev/null ; then
-    echo '<<<megaraid_pdisks>>>'
-    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Predictive Failure Count'
-    echo '<<<megaraid_ldisks>>>'
-    MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
-    echo '<<<megaraid_bbu>>>'
-    MegaCli -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
-fi
-
-
-# OpenVPN Clients.
-# Correct log location unknown, sed call might also be broken
-if [ -e /var/log/openvpn/openvpn-status.log ] ; then
-    echo '<<<openvpn_clients:sep(44)>>>'
-    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /var/log/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d'
-fi
-
-
-if which ntpq > /dev/null 2>&1 ; then
-   echo '<<<ntp>>>'
-   # remote heading, make first column space separated
-   ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-fi
-
-
-# Number of TCP connections in the various states
-echo '<<<tcp_conn_stats>>>'
-netstat -na | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
-
-
-# Postfix mailqueue monitoring
+# BEGIN COMMON AGENT CODE
 #
-# Only handle mailq when postfix user is present. The mailq command is also
-# available when postfix is not installed. But it produces different outputs
-# which are not handled by the check at the moment. So try to filter out the
-# systems not using postfix by searching for the postfix user.
-#
-# Cannot take the whole outout. This could produce several MB of agent output
-# on blocking queues.
-# Only handle the last 6 lines (includes the summary line at the bottom and
-# the last message in the queue. The last message is not used at the moment
-# but it could be used to get the timestamp of the last message.
-if type postconf >/dev/null ; then
-    echo '<<<postfix_mailq>>>'
-    postfix_queue_dir=$(postconf -h queue_directory)
-    postfix_count=$(find $postfix_queue_dir/deferred -type f | wc -l)
-    postfix_size=$(du -ks $postfix_queue_dir/deferred | awk '{print $1 }')
-    if [ $postfix_count -gt 0 ]
-    then
-       echo -- $postfix_size Kbytes in $postfix_count Requests.
-    else
-       echo Mail queue is empty
+
+run_local_checks() {
+    cd "${LOCALDIR}" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
+        for script in ./*; do
+            if is_valid_plugin "${script}"; then
+                _log_section_time "${script}"
+            fi
+        done
     fi
-elif [ -x /usr/sbin/ssmtp ] ; then
-    echo '<<<postfix_mailq>>>'
-    mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
-fi
 
-# Check status of qmail mailqueue
-if type qmail-qstat >/dev/null
-then
-   echo "<<<qmail_stats>>>"
-   qmail-qstat
-fi
-
-# check zpool status
-if [ -x /sbin/zpool ]; then
-   echo "<<<zpool_status>>>"
-   /sbin/zpool status -x | grep -v "errors: No known data errors"
-fi
-
-
-# Statgrab
-# To install: pkg install libstatgrab
-if type statgrab >/dev/null 2>&1 ; then
-
-    statgrab_vars="const. disk. general. page. proc. user."
-    statgrab_vars_mem="mem. swap."
-    statgrab_sections="proc disk page"
-
-    statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
-    statgrab $statgrab_vars_mem 1>>/tmp/statgrab.$$
-
-
-    for s in $statgrab_sections
-    do
-        echo "<<<statgrab_$s>>>"
-        grep "^${s}\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
+    # Call some local checks only every X'th second
+    for script in [1-9]*/*; do
+        if is_valid_plugin "${script}"; then
+            run_cached "local_${script##*/}" "${script%/*}" "_log_section_time '${script}'"
+        fi
     done
-
-    echo '<<<statgrab_net>>>'
-    statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
-
-    echo '<<<statgrab_mem>>>'
-    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
-
-    [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
-fi
-
-
-# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-perl -e '
-use File::Glob "bsd_glob";
-my @patterns = ();
-foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
-    open my $handle, "<", $_ or next;
-    while (<$handle>) {
-        chomp;
-        next if /^\s*(#|$)/;
-        my $pattern = $_;
-        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
-        push @patterns, $pattern;
-    }
-    warn "error while reading $_: $!\n" if $!;
-    close $handle;
 }
-exit if ! @patterns;
 
-print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+run_spooler() {
+    (
+        cd "${SPOOLDIR}" 2>/dev/null || return
 
-foreach (@patterns) {
-    foreach (bsd_glob("$_")) {
-        if (! -f) {
-            print "$_|missing\n" if ! -d;
-        } elsif (my @infos = stat) {
-            print "$_|ok|$infos[7]|$infos[9]\n";
-        } else {
-            print "$_|stat failed: $!\n";
-        }
-    }
+        now=$(get_epoch)
+
+        for file in *; do
+            [ "${file}" != "*" ] || return
+
+            # If prefixed with a number, then that is the maximum age in seconds.
+            # If the file is older than that, it is ignored.
+            maxage="${file%%[^0-9]*}"
+            if [ "${maxage}" ]; then
+                mtime=$(get_file_mtime "${file}")
+                [ $((now - mtime)) -le "${maxage}" ] || continue
+            fi
+
+            cat "${file}"
+        done
+    )
 }
-' -- "$MK_CONFDIR"
 
+get_plugin_interpreter() {
+    # Return the interpreter (or "") for the plugin file (or fail).
+    # We return the interpreter instead of wrapping the call, so we don't
+    # have to export the function (which is not portable).
 
-# Local checks
-echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR ; then
-    for skript in $(ls) ; do
-        if [ -f "$skript" -a -x "$skript" ] ; then
-            ./$skript
+    # normalize input
+    agent_plugin="${1#./}"
+
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+
+    # Execute all non python plugins with ./foo
+    if [ "${extension}" != "py" ]; then
+        return 0
+    fi
+
+    if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
+            section_checkmk_failed_plugin "${agent_plugin}"
+            return 1
+        fi
+
+        if [ -n "${PYTHON3}" ]; then
+            echo "${PYTHON3}"
+            return 0
+        fi
+
+        if [ ! -e "${filename}_2.py" ]; then
+            section_checkmk_failed_plugin "${agent_plugin} (Missing Python 3 installation)"
+            return 1
+        fi
+
+        # no python3 found, but python2 plugin file present
+        return 1
+    fi
+
+    if [ -x "${filename%??}.py" ] && [ -n "${PYTHON3}" ]; then
+        return 1
+    fi
+
+    if [ -n "${PYTHON2}" ]; then
+        echo "${PYTHON2}"
+        return 0
+    fi
+
+    section_checkmk_failed_plugin "${agent_plugin} (missing Python 2 installation)"
+    return 1
+}
+
+run_plugins() {
+    cd "${PLUGINSDIR}" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for script in ./*; do
+            if is_valid_plugin "${script}"; then
+                if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
+                    # SC2086: We don't want to quote, interpreter is "nothing" if empty, not "''"
+                    # shellcheck disable=SC2086
+                    _log_section_time ${plugin_interpreter} "${script}"
+                fi
+            fi
+        done
+    fi
+
+    # Call some plugins only every X'th second
+    for script in [1-9]*/*; do
+        if is_valid_plugin "${script}"; then
+            if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
+                # shellcheck disable=SC2086
+                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time ${plugin_interpreter} "${script}"
+            fi
         fi
     done
-    # Call some plugins only every X'th minute
-    for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
-            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
-        fi
-    done
-fi
+}
 
-# Plugins
-if cd $PLUGINSDIR; then
-    for skript in $(ls) ; do
-        if [ -f "$skript" -a -x "$skript" ] ; then
-            ./$skript
-        fi
-    done
-    # Call some plugins only every X'th minute
-    for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
-            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
-        fi
-    done
-fi
+#
+# END COMMON AGENT CODE
+#
 
+run_partially_asynchronous_sections() {
+    # kept to keep agents similar. Currently no section in this agent calls run_cached.
+    :
+}
 
-# MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-then
-    echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "$cmdline")
-        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
+run_mrpe_plugins() {
+
+    # currently caching is not supported:
+    ${MK_RUN_SYNC_PARTS} || return
+
+    # MK's Remote Plugin Executor
+    if [ -e "${MK_CONFDIR}/mrpe.cfg" ]; then
+        echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
+        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
+                echo -n "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
+                echo
+            done
+    fi
+}
+
+main_setup() {
+
+    exec </dev/null 9>&2 2>/dev/null
+
+    set_up_process_commandline_arguments "$@"
+
+    set_up_get_epoch
+
+    set_variable_defaults
+
+    unset_locale
+
+    preamble_1
+
+    set_up_profiling
+
+}
+
+main_sync_parts() {
+    run_purely_synchronous_sections
+
+    section_fileinfo
+
+    run_spooler
+}
+
+main_mixed_parts() {
+    run_partially_asynchronous_sections
+
+    run_local_checks
+
+    run_plugins
+
+    run_mrpe_plugins
+}
+
+main_async_parts() {
+    :
+}
+
+main_finalize_sync() {
+    finalize_profiling
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+main() {
+
+    while true; do
+
+        main_setup "$@"
+
+        (
+
+            ${MK_RUN_SYNC_PARTS} && main_sync_parts
+
+            (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+
+            ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+            ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
+
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
+
+        sleep "${MK_LOOP_INTERVAL}"
+
     done
-fi
 
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main "$@"

@@ -8,16 +8,15 @@ import ast
 import math
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base import check_api
 import cmk.base.config as config
-from cmk.base.check_utils import Service
 import cmk.base.plugin_contexts as plugin_contexts
+from cmk.base import check_api
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
@@ -64,82 +63,115 @@ def test_validate_filter():
     assert check_api.validate_filter(None)(1, 4) == 1
 
 
-@pytest.mark.parametrize("parsed, result", [
-    (None, None),
-    ([], None),
-    ({}, None),
-    ([["enabled"]], [(None, {})]),
-    ({
-        "first": "enabled"
-    }, [(None, {})]),
-])
+@pytest.mark.parametrize(
+    "parsed, result",
+    [
+        (None, None),
+        ([], None),
+        ({}, None),
+        ([["enabled"]], [(None, {})]),
+        ({"first": "enabled"}, [(None, {})]),
+    ],
+)
 def test_discover_single(parsed, result):
     assert check_api.discover_single(parsed) == result
 
 
-@pytest.mark.parametrize("parsed, selector, result", [
-    ({}, lambda x: x, None),
-    ({
-        "one": None,
-        "two": None,
-    }, None, [("one", {}), ("two", {})]),
-    ({
-        "one": None,
-        "two": None,
-    }, lambda k, v: k, [("one", {}), ("two", {})]),
-    ({
-        "one": None,
-        "two": None,
-    }, lambda k, v: k.startswith("o"), [("one", {})]),
-    ({
-        "one": None,
-        "two": None,
-    }, lambda k, v: k == "one", [("one", {})]),
-    ({
-        "one": "enabled",
-        "two": {
-            "load": 10,
-            "max": 50
-        },
-        "three": ["load", "capacity"],
-    }, lambda k, values: "load" in values if isinstance(values, dict) else False, [("two", {})]),
-    ({
-        "one": "enabled",
-        "two": {
-            "load": 10,
-            "max": 50,
-            "Innodb_data_read": True
-        },
-    }, lambda k, values: "Innodb_data_read" in values, [("two", {})]),
-    ({
-        "one": "enabled",
-        "two": {
-            "load": 10,
-            "Innodb_data_read": True
-        },
-    }, lambda key, values: all(val in values for val in ["load", "max"]), None),
-    ({
-        "one": [1],
-        "two": [2],
-        "three": [3],
-        "four": (),
-        "five": [],
-    }, lambda k, value: len(value) > 0, [
-        ("one", {}),
-        ("two", {}),
-        ("three", {}),
-    ]),
-    ([['one', 5, 3], ['two', 0, 0], ['three', 2, 8]], lambda line: line[0], [
-        ("one", {}),
-        ("two", {}),
-        ("three", {}),
-    ]),
-    ([['one', 5, 3], ['two', 0, 0], ['three', 2, 8]], lambda line: line[0].upper()
-     if line[1] > 0 else False, [
-         ("ONE", {}),
-         ("THREE", {}),
-     ]),
-])
+@pytest.mark.parametrize(
+    "parsed, selector, result",
+    [
+        ({}, lambda x: x, None),
+        (
+            {
+                "one": None,
+                "two": None,
+            },
+            None,
+            [("one", {}), ("two", {})],
+        ),
+        (
+            {
+                "one": None,
+                "two": None,
+            },
+            lambda k, v: k,
+            [("one", {}), ("two", {})],
+        ),
+        (
+            {
+                "one": None,
+                "two": None,
+            },
+            lambda k, v: k.startswith("o"),
+            [("one", {})],
+        ),
+        (
+            {
+                "one": None,
+                "two": None,
+            },
+            lambda k, v: k == "one",
+            [("one", {})],
+        ),
+        (
+            {
+                "one": "enabled",
+                "two": {"load": 10, "max": 50},
+                "three": ["load", "capacity"],
+            },
+            lambda k, values: "load" in values if isinstance(values, dict) else False,
+            [("two", {})],
+        ),
+        (
+            {
+                "one": "enabled",
+                "two": {"load": 10, "max": 50, "Innodb_data_read": True},
+            },
+            lambda k, values: "Innodb_data_read" in values,
+            [("two", {})],
+        ),
+        (
+            {
+                "one": "enabled",
+                "two": {"load": 10, "Innodb_data_read": True},
+            },
+            lambda key, values: all(val in values for val in ["load", "max"]),
+            None,
+        ),
+        (
+            {
+                "one": [1],
+                "two": [2],
+                "three": [3],
+                "four": (),
+                "five": [],
+            },
+            lambda k, value: len(value) > 0,
+            [
+                ("one", {}),
+                ("two", {}),
+                ("three", {}),
+            ],
+        ),
+        (
+            [["one", 5, 3], ["two", 0, 0], ["three", 2, 8]],
+            lambda line: line[0],
+            [
+                ("one", {}),
+                ("two", {}),
+                ("three", {}),
+            ],
+        ),
+        (
+            [["one", 5, 3], ["two", 0, 0], ["three", 2, 8]],
+            lambda line: line[0].upper() if line[1] > 0 else False,
+            [
+                ("ONE", {}),
+                ("THREE", {}),
+            ],
+        ),
+    ],
+)
 def test_discover_inputs_and_filters(parsed, selector, result):
     items = list(check_api.discover(selector)(parsed))
     for item in items:
@@ -157,7 +189,9 @@ def test_discover_decorator_key_match():
         return key == "hello"
 
     # Pylint does not understand our decorator magic here. Investigate
-    assert list(selector({"hola": "es", "hello": "en"})) == [("hello", {})]  # pylint: disable=no-value-for-parameter
+    assert list(
+        selector({"hola": "es", "hello": "en"})  # pylint:disable=no-value-for-parameter
+    ) == [("hello", {})]
 
 
 def test_discover_decorator_with_params():
@@ -176,26 +210,29 @@ def test_discover_decorator_returned_name():
             return key.upper()
 
     data = {
-        'host': [['mysql', 10, 10], ['home', 5, 8]],
-        'house': [['performance_schema', 5, 7], ['test', 1, 5]],
-        'try': ['used', 'ready', 'total'],
+        "host": [["mysql", 10, 10], ["home", 5, 8]],
+        "house": [["performance_schema", 5, 7], ["test", 1, 5]],
+        "try": ["used", "ready", "total"],
     }
 
     # Pylint does not understand our decorator magic here. Investigate
-    assert list(inventory_thecheck(data)) == [('TRY', {})]  # pylint: disable=no-value-for-parameter
+    assert list(inventory_thecheck(data)) == [("TRY", {})]  # pylint: disable=no-value-for-parameter
 
 
 def test_discover_decorator_with_nested_entries():
     @check_api.discover
     def nested_discovery(instance, values):
         for dbname, used, avail in values:
-            if dbname not in ["information_schema", "mysql", "performance_schema"] \
-               and used != 'NULL' and avail != 'NULL':
+            if (
+                dbname not in ["information_schema", "mysql", "performance_schema"]
+                and used != "NULL"
+                and avail != "NULL"
+            ):
                 yield "%s:%s" % (instance, dbname)
 
     data = {
-        'host': [['mysql', 10, 10], ['home', 5, 8]],
-        'house': [['performance_schema', 5, 7], ['test', 1, 5]]
+        "host": [["mysql", 10, 10], ["home", 5, 8]],
+        "house": [["performance_schema", 5, 7], ["test", 1, 5]],
     }
 
     # Pylint does not understand our decorator magic here. Investigate
@@ -205,58 +242,90 @@ def test_discover_decorator_with_nested_entries():
     ]
 
 
-@pytest.mark.parametrize("parsed, selector, error", [
-    ({
-        "one": None,
-        "two": None,
-    }, lambda k: k, (TypeError, r"takes 1 positional argument but 2 were")),
-    (None, lambda k, v: k.startswith("o"), (ValueError, "and tuples you gave a")),
-    (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
-])
+@pytest.mark.parametrize(
+    "parsed, selector, error",
+    [
+        (
+            {
+                "one": None,
+                "two": None,
+            },
+            lambda k: k,
+            (TypeError, r"takes 1 positional argument but 2 were"),
+        ),
+        (None, lambda k, v: k.startswith("o"), (ValueError, "and tuples you gave a")),
+        (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
+    ],
+)
 def test_discover_exceptions(parsed, selector, error):
     with pytest.raises(error[0], match=error[1]):
         next(check_api.discover(selector)(parsed))
 
 
-@pytest.mark.parametrize("value, levels, representation, unit, result", [
-    (5, (3, 6), int, "", (1, " (warn/crit at 3/6)")),
-    (7, (3, 6), lambda x: "%.1f m" % x, "", (2, " (warn/crit at 3.0 m/6.0 m)")),
-    (7, (3, 6), lambda x: "%.1f" % x, " m", (2, " (warn/crit at 3.0 m/6.0 m)")),
-    (2, (3, 6, 1, 0), int, "", (0, "")),
-    (1, (3, 6, 1, 0), int, "", (0, "")),
-    (0, (3, 6, 1, 0), int, "", (1, " (warn/crit below 1/0)")),
-    (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
-])
+@pytest.mark.parametrize(
+    "value, levels, representation, unit, result",
+    [
+        (5, (3, 6), int, "", (1, " (warn/crit at 3/6)")),
+        (7, (3, 6), lambda x: "%.1f m" % x, "", (2, " (warn/crit at 3.0 m/6.0 m)")),
+        (7, (3, 6), lambda x: "%.1f" % x, " m", (2, " (warn/crit at 3.0 m/6.0 m)")),
+        (2, (3, 6, 1, 0), int, "", (0, "")),
+        (1, (3, 6, 1, 0), int, "", (0, "")),
+        (0, (3, 6, 1, 0), int, "", (1, " (warn/crit below 1/0)")),
+        (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
+    ],
+)
 def test_boundaries(value, levels, representation, unit, result):
     assert check_api._do_check_levels(value, levels, representation, unit) == result
 
 
-@pytest.mark.parametrize("value, dsname, params, kwargs, result", [
-    (5, "battery", None, {
-        "human_readable_func": check_api.get_percent_human_readable
-    }, (0, "5.0%", [("battery", 5, None, None)])),
-    (6, "disk", (4, 8), {
-        "unit": "years",
-        "infoname": "Disk Age"
-    }, (1, "Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)", [("disk", 6.0, 4, 8)])),
-    (5e-7, "H_concentration", (4e-7, 8e-7, 5e-8, 2e-8), {
-        "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
-        "infoname": "Water acidity"
-    }, (
-        1,
-        "Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)",
-        [("H_concentration", 5e-7, 4e-7, 8e-7)],
-    )),
-    (5e-7, "H_concentration", (4e-7, 8e-7, 5e-8, 2e-8), {
-        "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
-        "unit": "??",
-        "infoname": "Water acidity"
-    }, (
-        1,
-        "Water acidity: pH 6.3 ?? (warn/crit at pH 6.4 ??/pH 6.1 ??)",
-        [("H_concentration", 5e-7, 4e-7, 8e-7)],
-    )),
-])
+@pytest.mark.parametrize(
+    "value, dsname, params, kwargs, result",
+    [
+        (
+            5,
+            "battery",
+            None,
+            {"human_readable_func": check_api.get_percent_human_readable},
+            (0, "5.0%", [("battery", 5, None, None)]),
+        ),
+        (
+            6,
+            "disk",
+            (4, 8),
+            {"unit": "years", "infoname": "Disk Age"},
+            (1, "Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)", [("disk", 6.0, 4, 8)]),
+        ),
+        (
+            5e-7,
+            "H_concentration",
+            (4e-7, 8e-7, 5e-8, 2e-8),
+            {
+                "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
+                "infoname": "Water acidity",
+            },
+            (
+                1,
+                "Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)",
+                [("H_concentration", 5e-7, 4e-7, 8e-7)],
+            ),
+        ),
+        (
+            5e-7,
+            "H_concentration",
+            (4e-7, 8e-7, 5e-8, 2e-8),
+            {
+                "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
+                "unit": "??",
+                "infoname": "Water acidity",
+            },
+            (
+                1,
+                "Water acidity: pH 6.3 ?? (warn/crit at pH 6.4 ??/pH 6.1 ??)",
+                [("H_concentration", 5e-7, 4e-7, 8e-7)],
+            ),
+        ),
+    ],
+)
 def test_check_levels(value, dsname, params, kwargs, result):
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
 
@@ -268,7 +337,8 @@ def test_http_proxy(mocker):
 
 
 def test_get_effective_service_level(monkeypatch):
-    ts = Scenario().add_host("testhost1")
+    ts = Scenario()
+    ts.add_host("testhost1")
     ts.add_host("testhost2")
     ts.add_host("testhost3")
     ts.set_ruleset(
@@ -286,29 +356,23 @@ def test_get_effective_service_level(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    with plugin_contexts.current_service(
-            Service(
-                item=None,
-                check_plugin_name=CheckPluginName("cpu_loads"),
-                description="CPU load",
-                parameters={},
-            )):
+    with plugin_contexts.current_service(CheckPluginName("cpu_loads"), "CPU load"):
 
-        with plugin_contexts.current_host("testhost1", write_state=False):
+        with plugin_contexts.current_host("testhost1"):
             assert check_api.get_effective_service_level() == 33
 
-        with plugin_contexts.current_host("testhost2", write_state=False):
+        with plugin_contexts.current_host("testhost2"):
             assert check_api.get_effective_service_level() == 10
 
-        with plugin_contexts.current_host("testhost3", write_state=False):
+        with plugin_contexts.current_host("testhost3"):
             assert check_api.get_effective_service_level() == 0
 
 
 def test_as_float():
-    assert check_api.as_float('8.00') == 8.0
-    assert str(check_api.as_float('inf')) == 'inf'
+    assert check_api.as_float("8.00") == 8.0
+    assert str(check_api.as_float("inf")) == "inf"
 
-    strrep = str(list(map(check_api.as_float, ("8", "-inf", '1e-351'))))
-    assert strrep == '[8.0, -1e309, 0.0]'
+    strrep = str(list(map(check_api.as_float, ("8", "-inf", "1e-351"))))
+    assert strrep == "[8.0, -1e309, 0.0]"
 
-    assert ast.literal_eval(strrep) == [8.0, float('-inf'), 0.0]
+    assert ast.literal_eval(strrep) == [8.0, float("-inf"), 0.0]

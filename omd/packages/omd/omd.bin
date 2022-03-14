@@ -36,8 +36,11 @@ import sys
 # to the newer version "omd" command which made the newer OMD load the old
 # python libraries. Newer versions unset these variables before, so this
 # additional execv() is only needed when updating from older versions.
-if len(sys.argv) > 1 and sys.argv[1] == "update" \
-   and (sys.version_info[0] == 2 and sys.version_info[1] == 7 and sys.version_info[2] < 14):
+if (
+    len(sys.argv) > 1
+    and sys.argv[1] == "update"
+    and (sys.version_info[0] == 2 and sys.version_info[1] == 7 and sys.version_info[2] < 14)
+):
     # Prevent inheriting environment variables from this versions/site environment
     # into the execed omd call. The OMD call must import the python version related
     # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are

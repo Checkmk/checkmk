@@ -1,4 +1,5 @@
 from typing import Any, MutableMapping, Optional, Tuple
+
 from ..agent_based_api.v1 import check_levels, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 
@@ -23,6 +24,14 @@ def tolerance_check(
             yield Result(state=State.OK, notice=f"{label}: N/A (started monitoring)")
         else:
             yield Result(state=State.OK, summary=f"{label}: N/A (started monitoring)")
+        return
+
+    if now - last_sync < 0:
+        yield Result(
+            state=State.CRIT,
+            summary="Cannot reasonably calculate time since last synchronization "
+            "(hosts time is running ahead)",
+        )
         return
 
     yield from check_levels(

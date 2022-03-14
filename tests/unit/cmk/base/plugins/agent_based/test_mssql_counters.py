@@ -6,53 +6,42 @@
 
 # yapf: disable
 from typing import Any, Dict
-import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    Result,
-    Metric,
-    IgnoreResults,
-    State as state,
-)
+import pytest
 
-from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
-    discovery_mssql_counters_cache_hits,
     check_mssql_counters_cache_hits,
-    cluster_check_mssql_counters_cache_hits,
+    discovery_mssql_counters_cache_hits,
 )
 from cmk.base.plugins.agent_based.mssql_counters_file_sizes import (
-    discovery_mssql_counters_file_sizes,
     check_mssql_counters_file_sizes,
-    cluster_check_mssql_counters_file_sizes,
+    discovery_mssql_counters_file_sizes,
+)
+from cmk.base.plugins.agent_based.mssql_counters_locks import _check_base as check_locks_base
+from cmk.base.plugins.agent_based.mssql_counters_locks import discovery_mssql_counters_locks
+from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
+    _check_base as check_locks_per_batch_base,
 )
 from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
     discovery_mssql_counters_locks_per_batch,
-    _check_base as check_locks_per_batch_base,
-    _cluster_check_base as cluster_check_locks_per_batch_base,
 )
-from cmk.base.plugins.agent_based.mssql_counters_locks import (
-    discovery_mssql_counters_locks,
-    _check_base as check_locks_base,
-    _cluster_check_base as cluster_check_locks_base,
+from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
+    _check_base as check_pageactivity_base,
 )
 from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
     discovery_mssql_counters_pageactivity,
-    _check_base as check_pageactivity_base,
-    _cluster_check_base as cluster_check_pageactivity_base,
 )
-from cmk.base.plugins.agent_based.mssql_counters_sqlstats import (
-    discovery_mssql_counters_sqlstats,
-    _check_base as check_sqlstats_base,
-    _cluster_check_base as cluster_check_sqlstats_base,
+from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import _check_base as check_sqlstats_base
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import discovery_mssql_counters_sqlstats
+from cmk.base.plugins.agent_based.mssql_counters_transactions import (
+    _check_base as check_transactions_base,
 )
 from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     discovery_mssql_counters_transactions,
-    _check_base as check_transactions_base,
-    _cluster_check_base as cluster_check_transactions_base,
 )
-
 
 ValueStore = Dict[str, Any]
 
@@ -354,20 +343,6 @@ def test_check_mssql_counters_cache_hits(item, section, expected_results):
     assert results == expected_results
 
 
-@pytest.mark.parametrize("item,section,expected_results", [
-    ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', {
-        "node1": big_parsed_data
-    }, [
-        Result(state=state.OK, summary='[node1] 99.51%'),
-        Metric('cache_hit_ratio', 99.50596864711571),
-    ]),
-])
-def test_cluster_check_mssql_counters_cache_hits(item, section, expected_results):
-    results = list(cluster_check_mssql_counters_cache_hits(item, section))
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
         Service(item='MSSQL_VEEAMSQL2012 tempdb'),
@@ -415,29 +390,6 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
     assert results == expected_results
 
 
-@pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, {
-        "node1": big_parsed_data
-    }, [
-        Result(state=state.OK, summary='[node1] Data files: 161 MiB'),
-        Metric('data_files', 168886272.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Log files total: 13.3 MiB'),
-        Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 629 KiB'),
-        Metric('log_files_used', 644096.0, boundaries=(0.0, None)),
-    ]),
-])
-def test_cluster_check_mssql_counters_file_sizes(item, params, section, expected_results):
-    results = list(
-        cluster_check_mssql_counters_file_sizes(
-            item=item,
-            params=params,
-            section=section,
-        ))
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [Service(item='MSSQL_VEEAMSQL2012')]),
 ])
@@ -458,28 +410,8 @@ def test_check_mssql_locks_per_batch(item, params, section, expected_results):
     # re-run check_locks_per_batch_base() once in order to get rates
     vs: Dict[str, Any] = {}
     results = []
-    for _ in range(2):
-        for result in check_locks_per_batch_base(vs, item, params, section):
-            results.append(result)
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
-@pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012", {}, {
-        "node1": big_parsed_data
-    }, [
-        IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='[node1] 0.0'),
-        Metric('locks_per_batch', 0.0, boundaries=(0.0, None)),
-    ]),
-])
-def test_cluster_check_mssql_locks_per_batch(item, params, section, expected_results):
-    # re-run cluster_check_locks_per_batch_base() once in order to get rates
-    vs: Dict[str, Any] = {}
-    results = []
-    for _ in range(2):
-        for result in cluster_check_locks_per_batch_base(vs, item, params, section):
+    for time in range(2):
+        for result in check_locks_per_batch_base(vs, item, params, section, time*60):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results
@@ -525,36 +457,6 @@ def test_check_mssql_locks(item, params, section, expected_results):
     assert results == expected_results
 
 
-@pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec", {}, {
-        "node1": big_parsed_data
-    }, [
-        IgnoreResults(value="Cannot calculate rates yet"),
-        IgnoreResults(value="Cannot calculate rates yet"),
-        IgnoreResults(value="Cannot calculate rates yet"),
-        IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='[node1] Requests: 0.0/s'),
-        Metric('lock_requests_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Timeouts: 0.0/s'),
-        Metric('lock_timeouts_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Deadlocks: 0.0/s'),
-        Metric('number_of_deadlocks_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Waits: 0.0/s'),
-        Metric('lock_waits_per_second', 0.0, boundaries=(0.0, None))
-    ]),
-])
-def test_cluster_check_mssql_locks(item, params, section, expected_results):
-    # re-run cluster_check_locks_per_batch_base() once in order to get rates
-    vs: ValueStore = {}
-    results = []
-    t0 = 1597839904
-    for i in range(2):
-        for result in cluster_check_locks_base(vs, t0 + i, item, params, section):
-            results.append(result)
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
         Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None'),
@@ -588,30 +490,6 @@ def test_check_mssql_counters_pageactivity(item, params, section, expected_resul
     assert results == expected_results
 
 
-@pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012:Buffer_Manager None", {}, {
-        "node1": big_parsed_data
-    }, [
-        IgnoreResults(value="Cannot calculate rates yet"),
-        IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='[node1] Writes: 0.0/s'),
-        Metric('page_writes_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Lookups: 0.0/s'),
-        Metric('page_lookups_per_second', 0.0, boundaries=(0.0, None)),
-    ]),
-])
-def test_cluster_check_mssql_counters_pageactivity(item, params, section, expected_results):
-    # re-run cluster_check_locks_per_batch_base() once in order to get rates
-    vs: ValueStore = {}
-    results = []
-    t0 = 1597839904
-    for i in range(2):
-        for result in cluster_check_pageactivity_base(vs, t0 + i, item, params, section):
-            results.append(result)
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
         Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None batch_requests/sec'),
@@ -639,27 +517,6 @@ def test_check_mssql_counters_sqlstats(item, params, section, expected_results):
     t0 = 1597839904
     for i in range(2):
         for result in check_sqlstats_base(vs, t0 + i, item, params, section):
-            results.append(result)
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
-@pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, {
-        "node1": big_parsed_data
-    }, [
-        IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='[node1] 0.0/s'),
-        Metric('sql_compilations_per_second', 0.0, boundaries=(0.0, None)),
-    ]),
-])
-def test_cluster_check_mssql_counters_sqlstats(item, params, section, expected_results):
-    # re-run cluster_check_locks_per_batch_base() once in order to get rates
-    vs: ValueStore = {}
-    results = []
-    t0 = 1597839904
-    for i in range(2):
-        for result in cluster_check_sqlstats_base(vs, t0 + i, item, params, section):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results
@@ -701,31 +558,5 @@ def test_check_mssql_counters_transactions(item, params, section, expected_resul
     assert results == expected_results
 
 
-@pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012 tempdb transactions/sec", {}, {
-        "node1": big_parsed_data
-    }, [
-        IgnoreResults(value="Cannot calculate rates yet"),
-        IgnoreResults(value="Cannot calculate rates yet"),
-        IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='[node1] Transactions: 0.0/s'),
-        Metric('transactions_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Write Transactions: 0.0/s'),
-        Metric('write_transactions_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='[node1] Tracked Transactions: 0.0/s'),
-        Metric('tracked_transactions_per_second', 0.0, boundaries=(0.0, None)),
-    ]),
-])
-def test_cluster_check_mssql_counters_transactions(item, params, section, expected_results):
-    # re-run cluster_check_locks_per_batch_base() once in order to get rates
-    vs: ValueStore = {}
-    results = []
-    t0 = 1597839904
-    for i in range(2):
-        for result in cluster_check_transactions_base(vs, t0 + i, item, params, section):
-            results.append(result)
-    print(",\n".join(str(r) for r in results))
-    assert results == expected_results
-
-
-_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])
+if __name__ == "__main__":
+    pytest.main(["-svv", "-T=unit", __file__])

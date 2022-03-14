@@ -1,7 +1,7 @@
 title: Fujitsu ETERNUS DX Storage Systems: Disks
 agents: snmp
 catalog: hw/storagehw/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the reported status of one of a physical disk
@@ -20,6 +20,6 @@ item:
  The index of the device enclosure in the SNMP table. It is of type
  integer. The first module has an index of {0}.
 
-inventory:
+discovery:
  One service is created for each disk
  if the state is not {notavailable} (3).

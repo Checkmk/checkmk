@@ -44,8 +44,10 @@ plantuml = " ".join([
             DOC_ROOT,
             "plantuml.jar",
         )
-    )
+    ),
 ])
+
+plantuml_output_format = "svg"
 
 spelling_show_suggestions = True
 

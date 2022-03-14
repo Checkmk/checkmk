@@ -1,7 +1,7 @@
 title: Bachmann Bluenet Monitored Power Line Connectors: Voltage, Current and Power
 agents: snmp
 catalog: hw/environment/bachmann
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the voltage, current, and active and apparent power
@@ -11,7 +11,7 @@ description:
  Lower and upper warning and critical levels can be configured for this check.
  A non-OK state is triggered according to these levels.
 
-inventory:
+discovery:
  One service is created for each power meter on the device with a non-zero voltage.
 
 item:

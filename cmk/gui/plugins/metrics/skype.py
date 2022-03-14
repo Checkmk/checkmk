@@ -5,14 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info, skype_mobile_devices
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    skype_mobile_devices,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -33,13 +28,13 @@ def register_skype_mobile_metrics():
         metric_info["ucwa_active_sessions_%s" % device] = {
             "title": _("UCWA - Active Sessions (%s)") % name,
             "unit": "count",
-            "color": color
+            "color": color,
         }
 
 
 register_skype_mobile_metrics()
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -53,8 +48,10 @@ register_skype_mobile_metrics()
 
 
 def get_skype_mobile_metrics():
-    return [("active_sessions_%s" % device, idx == 0 and "area" or "stack")
-            for idx, (device, _name, _color) in enumerate(skype_mobile_devices[::-1])]
+    return [
+        ("active_sessions_%s" % device, idx == 0 and "area" or "stack")
+        for idx, (device, _name, _color) in enumerate(skype_mobile_devices[::-1])
+    ]
 
 
 graph_info["active_sessions"] = {

@@ -5,30 +5,45 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _parameter_valuespec_raid_summary():
-    return Dictionary(elements=[
-        ("use_device_states",
-         DropdownChoice(
-             title=_("Use device states and overwrite expected status"),
-             choices=[
-                 (False, _("Ignore")),
-                 (True, _("Use device states")),
-             ],
-             default_value=True,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "use_device_states",
+                DropdownChoice(
+                    title=_("Use device states and overwrite expected status"),
+                    choices=[
+                        (False, _("Ignore")),
+                        (True, _("Use device states")),
+                    ],
+                    default_value=True,
+                ),
+            ),
+        ],
+        ignored_keys=[
+            "available",
+            "broken",
+            "notavailable",
+            "notsupported",
+            "present",
+            "readying",
+            "recovering",
+            "partbroken",
+            "spare",
+            "formatting",
+            "unformated",
+            "notexist",
+            "copying",
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +53,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_raid_summary,
         title=lambda: _("RAID: summary state"),
-    ))
+    )
+)

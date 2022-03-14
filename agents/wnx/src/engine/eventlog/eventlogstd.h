@@ -1,21 +1,25 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef EventLog_h
 #define EventLog_h
 
 #include <map>
+
 #include "EventLogBase.h"
 namespace cma::evl {
 class MessageResolver {
 public:
-    MessageResolver(const std::wstring &logName) : _name(logName) {}
+    MessageResolver(const std::wstring &log_name) : _name(log_name) {}
     MessageResolver(const MessageResolver &) = delete;
     MessageResolver &operator=(const MessageResolver &) = delete;
     ~MessageResolver() {
         for (auto &c : _cache) {
-            if (c.second) FreeLibrary(c.second);
+            if (c.second != nullptr) {
+                FreeLibrary(c.second);
+            }
         }
     }
 
@@ -40,8 +44,8 @@ public:
      */
     EventLog(const std::wstring &Name);
     ~EventLog() {
-        if (handle_) {
-            CloseEventLog(handle_);
+        if (handle_ != nullptr) {
+            ::CloseEventLog(handle_);
             handle_ = nullptr;
         }
     }

@@ -1,0 +1,19 @@
+title: SAP HANA: Database Status
+agents: linux
+catalog: app/sap_hana
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of SAP HANA databases.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ If the status is {OK} the check is {OK}. If it's different than {OK}, the check is {CRIT}.
+
+ This check is also cluster-aware.
+
+item:
+ The sid instance name and database name
+
+discovery:
+ One service is created for each instance.

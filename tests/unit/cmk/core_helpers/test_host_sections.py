@@ -4,139 +4,70 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-import logging
-from typing import Mapping
+from typing import Sequence
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.core_helpers.cache import ABCRawDataSection, PersistedSections, SectionStore
 from cmk.core_helpers.host_sections import HostSections
+from cmk.core_helpers.type_defs import AgentRawDataSection
 
 
-class MockStore(SectionStore):
-    # pylint: disable=super-init-not-called, arguments-differ
-    def __init__(self, data):
-        self._data = data
-
-    def store(self, data):
-        self._data = copy.copy(data)
-
-    def load(self):
-        return copy.copy(self._data)
-
-
-class TestPersistentSectionHandling:
+class TestHostSections:
     @pytest.fixture
     def host_sections(self):
-        return HostSections()
-
-    @pytest.fixture
-    def logger(self):
-        return logging.Logger("tests")
-
-    def test_update_with_empty_store_and_persisted(self, host_sections, logger):
-        sections: Mapping[SectionName, ABCRawDataSection] = {}
-        section_store = MockStore(PersistedSections({}))
-
-        host_sections.add_persisted_sections(
-            sections,
-            section_store=section_store,
-            fetch_interval=lambda section_name: 0,
-            now=0,
-            keep_outdated=True,
-            logger=logger,
+        return HostSections[Sequence[AgentRawDataSection]](
+            {
+                SectionName("section0"): [["first", "line"], ["second", "line"]],
+                SectionName("section1"): [["third", "line"], ["forth", "line"]],
+            },
+            cache_info={
+                SectionName("section0"): (1, 2),
+                SectionName("section1"): (3, 4),
+            },
+            piggybacked_raw_data={
+                HostName("host0"): [b"first line", b"second line"],
+                HostName("host1"): [b"third line", b"forth line"],
+            },
         )
 
-        assert not host_sections.sections
+    def test_add_self_extends_sections(self, host_sections):
+        result = host_sections + host_sections
 
-    def test_update_with_empty_persisted(self, host_sections, logger):
-        stored = SectionName("stored")
+        assert result.sections.keys() == host_sections.sections.keys()
+        assert result.cache_info.keys() == host_sections.cache_info.keys()
+        assert result.piggybacked_raw_data.keys() == host_sections.piggybacked_raw_data.keys()
 
-        sections: Mapping[SectionName, ABCRawDataSection] = {}
-        section_store = MockStore(PersistedSections({stored: (0, 0, [])}))
+        for section in host_sections.sections:
+            assert result.sections[section] == 2 * host_sections.sections[section]
+        assert result.cache_info == host_sections.cache_info
+        for host_name in host_sections.piggybacked_raw_data:
+            assert (
+                result.piggybacked_raw_data[host_name]
+                == 2 * host_sections.piggybacked_raw_data[host_name]
+            )
 
-        host_sections.add_persisted_sections(
-            sections,
-            section_store=section_store,
-            fetch_interval=lambda section_name: 0,
-            now=0,
-            keep_outdated=True,
-            logger=logger,
+    def test_add_other_adds_sections(self, host_sections):
+        other = HostSections[Sequence[AgentRawDataSection]](
+            {
+                SectionName("section2"): [["first", "line"], ["second", "line"]],
+                SectionName("section3"): [["third", "line"], ["forth", "line"]],
+                SectionName("section4"): [["fifth", "line"], ["sixth", "line"]],
+            },
+            cache_info={
+                SectionName("section2"): (1, 2),
+                SectionName("section3"): (3, 4),
+            },
+            piggybacked_raw_data={
+                HostName("host2"): [b"first line", b"second line"],
+                HostName("host3"): [b"third line", b"forth line"],
+            },
         )
 
-        assert stored in host_sections.sections
-
-    def test_update_with_empty_store(self, host_sections, logger):
-        fresh = SectionName("fresh")
-
-        sections: Mapping[SectionName, ABCRawDataSection] = {fresh: [[""]]}
-        section_store = MockStore(PersistedSections({}))
-
-        host_sections.add_persisted_sections(
-            sections,
-            section_store=section_store,
-            fetch_interval=lambda section_name: 0,
-            now=0,
-            keep_outdated=True,
-            logger=logger,
+        result = host_sections + other
+        assert len(result.sections) == len(host_sections.sections) + len(other.sections)
+        assert len(result.cache_info) == len(host_sections.cache_info) + len(other.cache_info)
+        assert len(result.piggybacked_raw_data) == (
+            len(host_sections.piggybacked_raw_data) + len(other.piggybacked_raw_data)
         )
-
-        assert fresh in host_sections.sections
-
-    def test_update_with_persisted_and_store(self, host_sections, logger):
-        stored = SectionName("stored")
-        fresh = SectionName("fresh")
-
-        sections: Mapping[SectionName, ABCRawDataSection] = {fresh: [[""]]}
-        section_store = MockStore(PersistedSections({stored: (0, 0, [])}))
-
-        host_sections.add_persisted_sections(
-            sections,
-            section_store=section_store,
-            fetch_interval=lambda section_name: 0,
-            now=0,
-            keep_outdated=True,
-            logger=logger,
-        )
-
-        assert stored in host_sections.sections
-        assert fresh in host_sections.sections
-
-    def test_update_store_with_newest(self, host_sections, logger):
-        section = SectionName("section")
-
-        sections = {section: [["newest"]]}
-        section_store = MockStore(PersistedSections({
-            section: (0, 0, [["oldest"]]),
-        }))
-
-        host_sections.add_persisted_sections(
-            sections,
-            section_store=section_store,
-            fetch_interval=lambda section_name: 0,
-            now=0,
-            keep_outdated=True,
-            logger=logger,
-        )
-
-        assert host_sections.sections[section] == [["newest"]]
-
-    def test_do_not_keep_outdated(self, host_sections, logger):
-        stored = SectionName("stored")
-
-        sections: Mapping[SectionName, ABCRawDataSection] = {}
-        section_store = MockStore(PersistedSections({stored: (0, 0, [])}))
-
-        host_sections.add_persisted_sections(
-            sections,
-            section_store=section_store,
-            fetch_interval=lambda section_name: 0,
-            now=1,
-            keep_outdated=False,
-            logger=logger,
-        )
-
-        assert not host_sections.sections

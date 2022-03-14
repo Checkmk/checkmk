@@ -1,7 +1,7 @@
 title: Genua: Fan State and RPM
 agents: snmp
 catalog: hw/network/genua
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state and rpm of fans found on genuscreen firewalls.
@@ -11,7 +11,7 @@ description:
  genuas regular enterprise ID 3717 as well as the ID 3137 which was
  introduced in a bug in some versions of genuscreen.
 
-inventory:
+discovery:
  One service is created for the fan
  if the fan
 
@@ -21,4 +21,3 @@ inventory:
 
 item:
  The name of the fan according to the snmp output
-

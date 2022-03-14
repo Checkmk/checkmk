@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-)
-
 import cmk.gui.watolib.automations
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
+from cmk.gui.sites import get_site_config, sitenames, wato_slave_sites
 
 
 @api_call_collection_registry.register
@@ -28,12 +24,12 @@ class APICallExecuteRemoteAutomation(APICallCollection):
         }
 
     def _execute_remote_automation(self, request):
-        if request["site_id"] not in config.sitenames():
+        if request["site_id"] not in sitenames():
             raise MKUserError("site_id", _("This site does not exist."))
 
-        if request["site_id"] not in config.wato_slave_sites():
+        if request["site_id"] not in wato_slave_sites():
             raise MKUserError("site_id", _("This site is not a distributed WATO site."))
 
-        return cmk.gui.watolib.automations.do_remote_automation(config.site(request["site_id"]),
-                                                                request["command"],
-                                                                request["command_args"])
+        return cmk.gui.watolib.automations.do_remote_automation(
+            get_site_config(request["site_id"]), request["command"], request["command_args"]
+        )

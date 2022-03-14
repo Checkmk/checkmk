@@ -6,23 +6,21 @@
 
 import re
 
-import cmk.gui.config as config
-import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import request, response, user
+from cmk.gui.i18n import _
 
 
 @cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose() -> None:
-    tree = html.request.get_str_input_mandatory("tree")
-    name = html.request.get_unicode_input_mandatory("name")
+    tree = request.get_str_input_mandatory("tree")
+    name = request.get_str_input_mandatory("name")
 
-    config.user.set_tree_state(tree, name, html.request.get_str_input("state"))
-    config.user.save_tree_states()
-    html.write('OK')  # Write out something to make debugging easier
+    user.set_tree_state(tree, name, request.get_str_input("state"))
+    user.save_tree_states()
+    response.set_data("OK")  # Write out something to make debugging easier
 
 
 #   .--Row Selector--------------------------------------------------------.
@@ -40,32 +38,32 @@ def ajax_tree_openclose() -> None:
 def init_selection() -> None:
     """Generate the initial selection_id"""
     selection_id()
-    config.user.cleanup_old_selections()
+    user.cleanup_old_selections()
 
 
 def selection_id() -> str:
     """Generates a selection id or uses the given one"""
-    if not html.request.has_var('selection'):
+    if not request.has_var("selection"):
         sel_id = utils.gen_id()
-        html.request.set_var('selection', sel_id)
+        request.set_var("selection", sel_id)
         return sel_id
 
-    sel_id = html.request.get_str_input_mandatory('selection')
+    sel_id = request.get_str_input_mandatory("selection")
 
     # Avoid illegal file access by introducing .. or /
     if not re.match("^[-0-9a-zA-Z]+$", sel_id):
         new_id = utils.gen_id()
-        html.request.set_var('selection', new_id)
+        request.set_var("selection", new_id)
         return new_id
     return sel_id
 
 
 @cmk.gui.pages.register("ajax_set_rowselection")
 def ajax_set_rowselection() -> None:
-    ident = html.request.get_str_input_mandatory('id')
-    action = html.request.get_str_input_mandatory('action', 'set')
-    if action not in ['add', 'del', 'set', 'unset']:
-        raise MKUserError(None, _('Invalid action'))
+    ident = request.get_str_input_mandatory("id")
+    action = request.get_str_input_mandatory("action", "set")
+    if action not in ["add", "del", "set", "unset"]:
+        raise MKUserError(None, _("Invalid action"))
 
-    rows = html.request.get_str_input_mandatory('rows', '').split(',')
-    config.user.set_rowselection(selection_id(), ident, rows, action)
+    rows = request.get_str_input_mandatory("rows", "").split(",")
+    user.set_rowselection(selection_id(), ident, rows, action)

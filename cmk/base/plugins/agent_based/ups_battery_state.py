@@ -5,10 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package
 
 from .agent_based_api.v1 import register
-from .utils.ups import (
-    check_ups_battery_state,
-    discover_ups_battery_state,
-)
+from .utils.ups import check_ups_battery_state, discover_ups_battery_state
 
 register.check_plugin(
     name="ups_battery_state",

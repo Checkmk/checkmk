@@ -36,7 +36,7 @@ constexpr bool is_iterable_v = is_iterable<T>::value;
 namespace cma::cfg::modules {
 
 template <typename T>
-bool Compare(const T& t, const T& v) {
+bool Compare(const T &t, const T &v) {
     static_assert(cma::tools::is_iterable<T>::value);
     if (t.size() != v.size()) return false;
 
@@ -45,10 +45,6 @@ bool Compare(const T& t, const T& v) {
 
 TEST(ModuleCommander, CheckSystemAuto) {
     namespace fs = std::filesystem;
-    using namespace cma::cfg;
-
-    cma::OnStartTest();
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
 
     auto sys_exts = ModuleCommander::GetSystemExtensions();
     ASSERT_TRUE(sys_exts.size() == 1);
@@ -70,11 +66,13 @@ TEST(ModuleCommander, CheckSystemAuto) {
         mc.readConfig(node);
         ASSERT_TRUE(mc.getExtensions().size() == 2);
         EXPECT_TRUE(mc.isModuleScript("z.py"));
+        EXPECT_TRUE(mc.isModuleScript("z.checkmk.py"));
 
         node["modules"]["python"] = "auto";
         mc.readConfig(node);
         ASSERT_TRUE(mc.getExtensions().size() == 2);
         EXPECT_TRUE(mc.isModuleScript("z.py"));
+        EXPECT_TRUE(mc.isModuleScript("z.checkmk.py"));
     }
 
     {
@@ -84,6 +82,7 @@ TEST(ModuleCommander, CheckSystemAuto) {
         mc.readConfig(node);
         ASSERT_TRUE(mc.getExtensions().size() == 1);
         EXPECT_FALSE(mc.isModuleScript("z.py"));
+        EXPECT_TRUE(mc.isModuleScript("z.checkmk.py"));
     }
 }
 
@@ -106,10 +105,15 @@ TEST(ModulesTest, QuickInstallEnabled) {
 
     {
         auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+        ASSERT_TRUE(temp_fs->loadFactoryConfig());
         LoadContentWithoutQuickReinstall();
         EXPECT_FALSE(ModuleCommander::IsQuickReinstallAllowed());
     }
-    EXPECT_TRUE(ModuleCommander::IsQuickReinstallAllowed());
+    {
+        auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+        ASSERT_TRUE(temp_fs->loadFactoryConfig());
+        EXPECT_FALSE(ModuleCommander::IsQuickReinstallAllowed());
+    }
 }
 
 TEST(ModulesTest, Internal) {
@@ -122,7 +126,7 @@ TEST(ModulesTest, Internal) {
     EXPECT_TRUE(m.exts_.empty());
     EXPECT_TRUE(m.name_.empty());
     EXPECT_TRUE(m.bin_.empty());
-    EXPECT_TRUE(m.zip_.empty());
+    EXPECT_TRUE(m.package_.empty());
 
     m.exec_ = L"a";
     m.exts_.emplace_back(".v");
@@ -135,8 +139,8 @@ TEST(ModulesTest, Internal) {
     m.bin_ = "z";
     EXPECT_EQ(m.bin(), "z");
 
-    m.zip_ = "z";
-    EXPECT_EQ(m.zip(), "z");
+    m.package_ = "z";
+    EXPECT_EQ(m.package(), "z");
 
     std::filesystem::path x = GetUserDir();
     EXPECT_EQ(m.buildCommandLine("q.v"), (x / m.exec()).wstring());
@@ -151,7 +155,7 @@ TEST(ModulesTest, Internal) {
     EXPECT_TRUE(m.exec().empty());
     EXPECT_TRUE(m.exts().empty());
     EXPECT_TRUE(m.name().empty());
-    EXPECT_TRUE(m.zip().empty());
+    EXPECT_TRUE(m.package().empty());
     EXPECT_TRUE(m.bin().empty());
 }
 
@@ -311,10 +315,10 @@ TEST(ModuleCommander, ReadConfig) {
         "modules:\n"
         "  enabled: yes\n"
         "  table:\n"
-        "    - name: unzip_test\n"     // valid
+        "    - name: the_module\n"     // valid
         "      exts: ['.test']\n"      //
         "      exec: 'nothing {}'\n"   //
-        "    - name: unzip_test2\n"    // valid
+        "    - name: the_module2\n"    // valid
         "      exts: ['.test2']\n"     //
         "      exec: 'nothing2 {}'\n"  //
         "      dir:  'plugins'\n";
@@ -323,11 +327,11 @@ TEST(ModuleCommander, ReadConfig) {
     auto node = YAML::Load(base);
     mc.readConfig(node);
     ASSERT_TRUE(mc.modules_.size() == 2);
-    EXPECT_EQ(mc.modules_[0].name(), "unzip_test");
-    EXPECT_EQ(mc.modules_[1].name(), "unzip_test2");
+    EXPECT_EQ(mc.modules_[0].name(), "the_module");
+    EXPECT_EQ(mc.modules_[1].name(), "the_module2");
     EXPECT_EQ(mc.modules_[0].exec(), L"nothing {}");
     EXPECT_EQ(mc.modules_[1].exec(), L"nothing2 {}");
-    EXPECT_EQ(mc.modules_[0].dir(), "modules\\unzip_test");
+    EXPECT_EQ(mc.modules_[0].dir(), "modules\\the_module");
     EXPECT_EQ(mc.modules_[1].dir(), "plugins");
 }
 
@@ -353,8 +357,8 @@ protected:
         return {modules_dir, backup_dir};
     }
 
-    ::testing::AssertionResult IsPresented(const fs::path& file,
-                                           const fs::path& dir) {
+    ::testing::AssertionResult IsPresented(const fs::path &file,
+                                           const fs::path &dir) {
         if (!fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " is absent";
@@ -378,8 +382,8 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    ::testing::AssertionResult IsAbsent(const fs::path& file,
-                                        const fs::path& dir) {
+    ::testing::AssertionResult IsAbsent(const fs::path &file,
+                                        const fs::path &dir) {
         if (fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " should be absent";
@@ -393,7 +397,7 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path& zip_file) {
+    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path &zip_file) {
         auto name{zip_file.filename()};
         auto target_folder = temp_fs_->data() / dirs::kUserModules / name;
         target_folder.replace_extension();
@@ -415,9 +419,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork) {
     ASSERT_TRUE(m.loadFrom(YAML::Load(test_1)));
     ASSERT_TRUE(m.name() == "zz" && m.exec() == L"zz.exe {}");
     EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
-    tst::CreateTextFile(backup_dir / (m.name() + kExtension.data()), "zip");
+    tst::CreateTextFile(backup_dir / (m.name() + kExtension.data()), "cab");
     EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
-    EXPECT_EQ(m.zip(), backup_dir / "zz.zip");
+    EXPECT_EQ(m.package(), backup_dir / "zz.cab");
     EXPECT_TRUE(m.buildCommandLine("x.t").empty());
 
     fs::create_directories(modules_dir / m.name());
@@ -453,9 +457,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     ASSERT_EQ(mc.modules_.size(), 2);
 
     mc.prepareToWork();
-    for (auto& m : mc.modules_) {
+    for (auto &m : mc.modules_) {
         ASSERT_TRUE(m.bin().empty());
-        ASSERT_TRUE(m.zip().empty());
+        ASSERT_TRUE(m.package().empty());
     }
 
     tst::CreateTextFile(
@@ -463,9 +467,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     mc.prepareToWork();
     {
         ASSERT_TRUE(mc.modules_[0].bin().empty());
-        ASSERT_FALSE(mc.modules_[0].zip().empty());
+        ASSERT_FALSE(mc.modules_[0].package().empty());
         ASSERT_TRUE(mc.modules_[1].bin().empty());
-        ASSERT_TRUE(mc.modules_[1].zip().empty());
+        ASSERT_TRUE(mc.modules_[1].package().empty());
     }
 
     fs::create_directories(modules_dir / mc.modules_[0].name());
@@ -473,9 +477,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     mc.prepareToWork();
     {
         ASSERT_FALSE(mc.modules_[0].bin().empty());
-        ASSERT_FALSE(mc.modules_[0].zip().empty());
+        ASSERT_FALSE(mc.modules_[0].package().empty());
         ASSERT_TRUE(mc.modules_[1].bin().empty());
-        ASSERT_TRUE(mc.modules_[1].zip().empty());
+        ASSERT_TRUE(mc.modules_[1].package().empty());
     }
 
     EXPECT_TRUE(mc.isModuleScript("cc.t"));
@@ -563,17 +567,16 @@ TEST_F(ModuleCommanderTest, FindModules) {
     // check that name are correctly found in modules list
     EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module"));
     EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module.zi"));
-    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module.zip"));
-    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module2.zip"));
+    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module.cab"));
+    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module2.cab"));
 
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
 TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
-    auto zip_file =
-        tst::MakePathToUnitTestFiles(tst::G_SolutionPath) / tst::zip_to_test;
+    auto zip_file = tst::MakePathToUnitTestFiles() / tst::install_cab_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
-        << "Please make '" << tst::zip_to_test << "' available";
+        << "Please make '" << tst::install_cab_to_test << "' available";
 
     auto user = temp_fs_->data();
     auto root = temp_fs_->root();
@@ -583,7 +586,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
         "modules:\n"
         "  enabled: yes\n"
         "  table:\n"
-        "    - name: unzip_test\n"    // valid
+        "    - name: install_test\n"  // valid
         "      exts: ['.test']\n"     //
         "      exec: 'nothing {}'\n"  //
         ;
@@ -591,115 +594,121 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     ModuleCommander mc;
     auto cfg = YAML::Load(modules_text);
     mc.readConfig(cfg);
-    fs::copy_file(zip_file, install / tst::zip_to_test);
+    fs::copy_file(zip_file, install / tst::install_cab_to_test);
     ASSERT_EQ(mc.findModuleFiles(GetRootDir()), 1);
 
     // BAD MODULE installation
     auto bad_module = mc.modules_[0];
     bad_module.name_ = "zzzz";
-    ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
+    EXPECT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
     tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip", "");
-    ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal))
+    EXPECT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal))
         << "empty file should return false";
 
-    ASSERT_FALSE(mc.UninstallModuleZip(fs::path(bad_module.name()),
+    EXPECT_FALSE(mc.UninstallModuleZip(fs::path(bad_module.name()),
                                        user / dirs::kUserModules))
         << "if file absent returns false";
 
     tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip",
                         "OKYYYYSSD");  // not null file should fail
-    ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
+    (mc.InstallModule(bad_module, root, user, InstallMode::normal));
 
     // Clean install store
-    auto move_dir = ModuleCommander::GetMoveLocation(tst::zip_to_test);
+    auto move_dir = ModuleCommander::GetMoveLocation(tst::install_cab_to_test);
     std::error_code ec;
     fs::remove_all(move_dir, ec);
 
     // NORMAL install
-    ASSERT_TRUE(
+    EXPECT_TRUE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
     auto [zzzz_backup_file, zzzz_target_folder] = makeExpectedPair("zzzz.zip");
-    ASSERT_TRUE(IsAbsent(zzzz_backup_file, zzzz_target_folder));
+    EXPECT_TRUE(IsAbsent(zzzz_backup_file, zzzz_target_folder));
 
-    auto [backup_file, target_folder] = makeExpectedPair(tst::zip_to_test);
-    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+    auto [backup_file, target_folder] =
+        makeExpectedPair(tst::install_cab_to_test);
+    EXPECT_TRUE(IsPresented(backup_file, target_folder));
 
     auto target_postinstall_folder =
-        user / dirs::kUserModules / "unzip_test" / "DLLS";
+        user / dirs::kUserModules / "install_test" / "DLLS";
     EXPECT_TRUE(fs::is_directory(target_postinstall_folder))
         << fmt::format("'{}' is bad or not found", target_postinstall_folder);
 
     // check duplicated install
-    ASSERT_FALSE(
+    EXPECT_FALSE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
-    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+    EXPECT_TRUE(IsPresented(backup_file, target_folder));
     // Check that files removed from the uninstall store
-    ASSERT_TRUE(IsAbsent(move_dir / backup_file.filename(),
+    EXPECT_TRUE(IsAbsent(move_dir / backup_file.filename(),
                          move_dir / mc.modules_[0].name()));
 
     // forced install
-    ASSERT_TRUE(
+    EXPECT_TRUE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::force));
-    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+    EXPECT_TRUE(IsPresented(backup_file, target_folder));
 
     // uninstall store must not be empty(removed from the previous installation)
-    ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
-                            move_dir / mc.modules_[0].name()));
+    if (ModuleCommander::IsQuickReinstallAllowed()) {
+        EXPECT_TRUE(IsPresented(move_dir / backup_file.filename(),
+                                move_dir / mc.modules_[0].name()));
 
-    // Poisoning: create some files/folders simulation old installation
-    auto sim_dir = move_dir / mc.modules_[0].name() / "simulation";
-    auto sim_file = sim_dir / "simulation.dat";
-    fs::create_directories(sim_dir);
-    tst::CreateBinaryFile(sim_file, "a");
-    EXPECT_TRUE(fs::exists(sim_file));
+        // Poisoning: create some files/folders simulation old installation
+        auto sim_dir = move_dir / mc.modules_[0].name() / "simulation";
+        auto sim_file = sim_dir / "simulation.dat";
+        fs::create_directories(sim_dir);
+        tst::CreateBinaryFile(sim_file, "a");
+        EXPECT_TRUE(fs::exists(sim_file));
 
-    // check uninstall
-    auto mod_backup = ModuleCommander::GetModBackup(user);
-    auto mod_install = ModuleCommander::GetModInstall(user);
+        // check uninstall
+        auto mod_backup = ModuleCommander::GetModBackup(user);
+        auto mod_install = ModuleCommander::GetModInstall(user);
 
-    auto installed = ModuleCommander::ScanDir(mod_backup);
+        auto installed = ModuleCommander::ScanDir(mod_backup);
 
-    ASSERT_EQ(installed.size(), 1);
-    ASSERT_TRUE(mc.isBelongsToModules(installed[0]));
-    ASSERT_TRUE(mc.UninstallModuleZip(installed[0], mod_install));
-    installed = ModuleCommander::ScanDir(mod_backup);
+        ASSERT_EQ(installed.size(), 1);
+        EXPECT_TRUE(mc.isBelongsToModules(installed[0]));
+        EXPECT_TRUE(mc.UninstallModuleZip(installed[0], mod_install));
+        installed = ModuleCommander::ScanDir(mod_backup);
 
-    ASSERT_TRUE(installed.empty());
-    ASSERT_TRUE(!fs::exists(backup_file));
+        EXPECT_TRUE(installed.empty());
+        EXPECT_TRUE(!fs::exists(backup_file));
 
-    // check that files/folders from simulated old installation removed
-    ASSERT_TRUE(IsAbsent(sim_file, sim_dir));
+        // check that files/folders from simulated old installation removed
+        EXPECT_TRUE(IsAbsent(sim_file, sim_dir));
+    }
 
     // Simulate full install
     mc.installModules(root, user, InstallMode::normal);
-    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+    EXPECT_TRUE(IsPresented(backup_file, target_folder));
 
     // Simulate install of the empty file(as packaged)
-    tst::CreateTextFile(root / dirs::kFileInstallDir / tst::zip_to_test, "");
+    tst::CreateTextFile(root / dirs::kFileInstallDir / tst::install_cab_to_test,
+                        "");
     mc.installModules(root, user, InstallMode::normal);
-    ASSERT_TRUE(IsAbsent(backup_file, target_folder));
+    EXPECT_TRUE(IsAbsent(backup_file, target_folder));
 
-    // check uninstall store
-    ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
-                            move_dir / mc.modules_[0].name()));
+    if (ModuleCommander::IsQuickReinstallAllowed()) {
+        // check uninstall store
+        EXPECT_TRUE(IsPresented(move_dir / backup_file.filename(),
+                                move_dir / mc.modules_[0].name()));
 
-    // Simulate full install to check quick install
-    fs::copy_file(zip_file, install / tst::zip_to_test,
-                  fs::copy_options::overwrite_existing);
-    mc.installModules(root, user, InstallMode::normal);
-    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+        // Simulate full install to check quick install
+        fs::copy_file(zip_file, install / tst::install_cab_to_test,
+                      fs::copy_options::overwrite_existing);
+        mc.installModules(root, user, InstallMode::normal);
+        EXPECT_TRUE(IsPresented(backup_file, target_folder));
 
-    // Check that files removed from the quick uninstall
-    ASSERT_TRUE(IsAbsent(move_dir / backup_file.filename(),
-                         move_dir / mc.modules_[0].name()));
+        // Check that files removed from the quick uninstall
+        EXPECT_TRUE(IsAbsent(move_dir / backup_file.filename(),
+                             move_dir / mc.modules_[0].name()));
 
-    // Move modules to store, this is part of deinstall process
-    mc.moveModulesToStore(root, user);
-    ASSERT_TRUE(IsAbsent(backup_file, target_folder));
+        // Move modules to store, this is part of deinstall process
+        mc.moveModulesToStore(user);
+        EXPECT_TRUE(IsAbsent(backup_file, target_folder));
 
-    // Check that files removed from the quick uninstall
-    ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
-                            move_dir / mc.modules_[0].name()));
+        // Check that files removed from the quick uninstall
+        EXPECT_TRUE(IsPresented(move_dir / backup_file.filename(),
+                                move_dir / mc.modules_[0].name()));
+    }
 }
 
 }  // namespace cma::cfg::modules

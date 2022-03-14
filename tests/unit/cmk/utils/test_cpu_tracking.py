@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name
 
 import json
 
@@ -38,6 +38,10 @@ class TestCpuTracking:
         assert null == Snapshot.null()
         assert null != now
         assert now != null
+        assert bool(null) is False
+        assert bool(null) is not True
+        assert bool(now) is True
+        assert bool(now) is not False
 
     def test_add_null_null(self, null):
         assert null + null == null

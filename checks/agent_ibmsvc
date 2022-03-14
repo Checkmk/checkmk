@@ -4,16 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_ibmsvc_arguments(params, hostname, ipaddress):
-    args = []
-    args += ["-u", params["user"]]
+
+def agent_ibmsvc_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    args = ["-u", params["user"]]
     if params["accept-any-hostkey"] is True:
-        args.append("--accept-any-hostkey")
-        args += ["-i", ",".join(params["infos"])]
+        args += ["--accept-any-hostkey", "-i", ",".join(params["infos"])]
 
-    args.append(ipaddress)
+    args.append(ipaddress or hostname)
     return args
 
 
-special_agent_info['ibmsvc'] = agent_ibmsvc_arguments
+special_agent_info["ibmsvc"] = agent_ibmsvc_arguments

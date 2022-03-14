@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: Voltages
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -13,6 +13,5 @@ description:
  will only assume the values {OK}, {CRIT} or, in case of a reading error,
  {UNKNOWN}.
 
-inventory:
+discovery:
  One service is created for each voltage reading.
-

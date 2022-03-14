@@ -40,12 +40,15 @@ def check_datapower_ldrive(item, _no_params, info):
         if item == "%s-%s" % (controller, ldrive):
             state, state_txt = datapower_ldrive_status[status]
             raid_level = datapower_ldrive_raid[raid_level]
-            infotext = "Status: %s, RAID Level: %s, Number of Drives: %s"\
-                    % (state_txt, raid_level, num_drives)
+            infotext = "Status: %s, RAID Level: %s, Number of Drives: %s" % (
+                state_txt,
+                raid_level,
+                num_drives,
+            )
             return state, infotext
 
 
-check_info['datapower_ldrive'] = {
+check_info["datapower_ldrive"] = {
     "inventory_function": inventory_datapower_ldrive,
     "check_function": check_datapower_ldrive,
     "service_description": "Logical Drive %s",
@@ -57,6 +60,7 @@ check_info['datapower_ldrive'] = {
             "4",  # dpStatusRaidLogicaldrivetatusRaidLevel
             "5",  # dpStatusRaidLogicaldrivetatusNumPhysicalDrives
             "6",  # dpStatusRaidLogicaldrivetatusState
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
 }

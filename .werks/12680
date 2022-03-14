@@ -1,0 +1,20 @@
+Title: Linux-Agent: Place systemd units at /usr/lib
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627378705
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously, the RPM/DEB owned systemd units were placed at
+/etc/systemd/system. Now, they are placed at /usr/lib/systemd/system/.
+A sysadmin can now drop specific overrides into /etc/systemd/system/
+to customize the units.
+
+With this change users who want to customize specific systemd behaviour
+can follow the officially documented systemd workflow to change only what
+they want, resulting in a cleaner workflow.
+
+This merges Github PR #240. Thanks go to jcpunk for contribution!

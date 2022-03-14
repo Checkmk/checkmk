@@ -77,17 +77,18 @@ def check_oracle_crs_res(item, _no_params, parsed):
     # In case of missing information we assume that the clusterware
     # is not running and we simple skip the result
     if item not in ressources:
-        if item == 'ora.cssd':
+        if item == "ora.cssd":
             yield 2, "Clusterware not running"
-        elif item == 'ora.crsd':
+        elif item == "ora.crsd":
             yield 2, "Cluster Resource Service Daemon not running!"
         else:
             raise MKCounterWrapped(
-                "No ressource details found for %s. Maybe the cssd/crsd is not running" % item)
+                "No ressource details found for %s. Maybe the cssd/crsd is not running" % item
+            )
         return
 
     for nodename, entry in ressources[item].items():
-        resstate = entry["state"].split(' ', 1)[0]
+        resstate = entry["state"].split(" ", 1)[0]
         restarget = entry["target"]
 
         if nodename == "csslocal":
@@ -106,7 +107,7 @@ def check_oracle_crs_res(item, _no_params, parsed):
         yield state, infotext
 
 
-check_info['oracle_crs_res'] = {
+check_info["oracle_crs_res"] = {
     "parse_function": parse_oracle_crs_res,
     "check_function": check_oracle_crs_res,
     "inventory_function": inventory_oracle_crs_res,

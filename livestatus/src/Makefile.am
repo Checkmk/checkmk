@@ -2,36 +2,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-CLANG_VERSION ?= 10
+include $(abs_top_srcdir)/defines.make
 
-CPPCHECK ?= cppcheck
-CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2020.16
-IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
+IWYU_TOOL ?= python3 $(abs_top_srcdir)/scripts/iwyu_tool.py
 RUN_CLANG_TIDY ?= \
-    $(abs_top_srcdir)/scripts/run-clang-tidy.py \
+    python3 $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
-VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30")
+VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-asio-1-18-0
+ASIO_VERSION := asio-asio-1-18-2
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
-RRDTOOL_VERSION := rrdtool-1.7.1
-RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
-RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
-RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
-RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
+RRDTOOL_VERSION := rrdtool-1.7.2
+RRDTOOL_PATH := $(abs_top_srcdir)/omd/build/intermediate_install/$(RRDTOOL_VERSION)
+RRDTOOL_BUILD_LOG := $(RRDTOOL_PATH)/build.log
+RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_PATH)/lib
+RRDTOOL_CPPFLAGS := -I$(RRDTOOL_PATH)/include
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-f3ef7e173f
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation documentation-quick
+.PHONY: unit-test tidy iwyu documentation documentation-quick
 
 AM_CPPFLAGS = \
     -I.. \
@@ -53,9 +51,11 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/TableQueryHelper.cc \
+    test/test_AttributeListColumn.cc \
     test/test_BlobColumn.cc \
+    test/test_BoolColumn.cc \
     test/test_CrashReport.cc \
-    test/test_CustomVarsDictFilter.cc \
+    test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \
     test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
@@ -67,6 +67,7 @@ test_neb_SOURCES = \
     test/test_RegExp.cc \
     test/test_StringColumn.cc \
     test/test_StringUtil.cc \
+    test/test_Table.cc \
     test/test_TimeColumn.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
@@ -100,45 +101,32 @@ liblivestatus_a_LD_FLAGS = \
     $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
-        AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
         Average.cc \
-        BlobColumn.cc \
-        BoolColumn.cc \
         Column.cc \
         ColumnFilter.cc \
-        CommentColumn.cc \
+        CommentRenderer.cc \
         CountAggregator.cc \
         CrashReport.cc \
-        CustomVarsDictColumn.cc \
-        CustomVarsDictFilter.cc \
-        CustomVarsNamesColumn.cc \
-        CustomVarsValuesColumn.cc \
+        DictFilter.cc \
         DoubleFilter.cc \
-        DowntimeColumn.cc \
-        DowntimeOrComment.cc \
-        DynamicColumn.cc \
+        DowntimeRenderer.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
-        DynamicRRDColumn.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
-        HostGroupsColumn.cc \
-        HostListColumn.cc \
+        HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
         InputBuffer.cc \
-        IntColumn.cc \
         IntFilter.cc \
-        ListColumn.cc \
-        ListLambdaColumn.cc \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
         Logfile.cc \
         Logger.cc \
-        LogwatchListColumn.cc \
+        LogwatchList.cc \
         MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
@@ -157,8 +145,7 @@ liblivestatus_a_SOURCES = \
         RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
-        ServiceGroupsColumn.cc \
-        ServiceListColumn.cc \
+        ServiceListRenderer.cc \
         ServiceListState.cc \
         StatsColumn.cc \
         Store.cc \
@@ -202,15 +189,18 @@ liblivestatus_a_SOURCES = \
         strutil.cc
 $(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
+# Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
+all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
+
 $(ASIO_INCLUDE): $(ASIO_VERSION)
-	mkdir -p $(ASIO_INCLUDE)
-	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $(ASIO_VERSION)/asio/include/ $(ASIO_INCLUDE)
-	patch -p0 < $(PACKAGE_ASIO)/asio.diff
+	mkdir -p $@
+	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $</asio/include/ $@
 	touch $@
 
-$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
+$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz $(PACKAGE_ASIO)/asio.diff
 	$(RM) -r $@
 	tar xzf $<
+	patch -p0 < $(PACKAGE_ASIO)/asio.diff
 	touch $@
 
 $(RRDTOOL_VERSION):
@@ -221,13 +211,12 @@ $(RRDTOOL_VERSION):
 # would totally hide any output of our own stuff, so we write it to a log file
 # in case something goes seriously wrong.
 	mkdir -p $$(dirname $(RRDTOOL_BUILD_LOG))
-	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
+	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $(RRDTOOL_PATH)))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
 # NOTE: We don't want the googletest files in our compile_commands.json!
 	$(MAKE) -C $(GOOGLETEST_VERSION) install > /dev/null
-	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $(GOOGLETEST_INCLUDE) $(LIBS_DIR)/libgmock.a $(LIBS_DIR)/libgmock_main.a $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a
 # See: https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
 $(LIBS_DIR)/libgmock.a: $(GOOGLETEST_INCLUDE)
@@ -237,16 +226,17 @@ $(LIBS_DIR)/libgtest_main.a: $(LIBS_DIR)/libgtest.a
 
 $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
 	@cd $(GOOGLETEST_VERSION) && \
-	cmake -DCMAKE_CXX_COMPILER=$(CXX) \
+	cmake -DCMAKE_CXX_COMPILER=$$(echo "$(CXX)" | sed 's/ -.*//') \
         -DCMAKE_INSTALL_PREFIX=.. \
         -DCMAKE_INSTALL_INCLUDEDIR=$(GOOGLETEST_INCLUDE) \
         -DCMAKE_INSTALL_LIBDIR=libs \
         .
 	touch $@
 
-$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz
+$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz $(PACKAGE_GOOGLETEST)/googletest.diff
 	$(RM) -r $(GOOGLETEST_VERSION)
 	tar xzf $<
+	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $@
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
@@ -279,15 +269,6 @@ iwyu: compile_commands.json
 	@echo include-what-you-use information end ======================================
 	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
-# NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
-cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --error-exitcode=2
-
-# We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
-cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
-	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
-
 documentation: compile_commands.json doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
@@ -306,4 +287,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json $(CPPCHECK_NEB_RESULT) test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)
+	rm -rf *~ compile_commands.json test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

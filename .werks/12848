@@ -1,0 +1,25 @@
+Title: Fix remote host renaming timeouts in distributed setups
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1627486464
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Renaming hosts in general is already executed in a background job
+to prevent timeouts. But in distributed setups, when renaming a
+host on a remote site, a longer taking renaming could result in
+timeout errors. Errors like this could appear:
+
+C+:
+MKAutomationException: Got invalid data: Your request timed out after 110
+seconds. This issue may be related to a local configuration problem or a
+request which works with a too large number of objects. But if you think this
+issue is a bug, please send a crash report.
+C-:
+
+With this change also the remote actions are executed asynchronously in a
+background job and as a result will not result in a timeout anymore.

@@ -6,6 +6,6 @@ Date: 1613393585
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The services postgres_sessions, postgres_locks, postgres_query_duration, postgres_connections, postgres_stats, postgres_bloat need a working tcp connection with the psql command line tool. If the connection cannot be established the service goes to stale.

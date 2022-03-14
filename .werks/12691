@@ -1,0 +1,17 @@
+Title: systemd_units: addition of factory default levels for reloading and activating in summary check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1617714969
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, time thresholds for reloading and activating systemd services
+were not part of the default settings for the systemd summary check. This could lead
+to an event where a systemd service remained in an activating state for an undefined amount
+of time while the check continues to display an OK state. This werk includes both time levels
+in the factory default settings in order to prevent such a scenario. This change also introduces
+a delay before displaying a WARN state for reloading services.

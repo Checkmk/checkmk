@@ -1,7 +1,7 @@
 title: Security Master: Smoke
 agents: snmp
 catalog: hw/environment/maykg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors smoke sensors of a security master device.
@@ -10,5 +10,5 @@ description:
 item:
  The ID and name of the sensor.
 
-inventory:
+discovery:
  One service is created for each smoke sensor.

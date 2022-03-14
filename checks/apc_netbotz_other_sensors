@@ -40,15 +40,19 @@ def check_apc_netbotz_other_sensors(_no_item, _no_params, info):
         yield 0, "%d sensors are OK" % count_ok_sensors
 
 
-check_info['apc_netbotz_other_sensors'] = {
-    'inventory_function'        : inventory_apc_netbotz_other_sensors,
-    'check_function'            : check_apc_netbotz_other_sensors,
-    'service_description'       : 'Numeric sensors summary',
-    'snmp_info'                 : (".1.3.6.1.4.1.5528.100.4.2.10.1", [
-                                    "4",    # NETBOTZV2-MIB::otherNumericSensorLabel
-                                    "3",    # NETBOTZV2-MIB::otherNumericSensorErrorStatus
-                                    "7",    # NETBOTZV2-MIB::otherNumericSensorValueStr
-                                  ]),
-    'snmp_scan_function'        : lambda oid: \
-        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5528.100.20.10"),
+check_info["apc_netbotz_other_sensors"] = {
+    "inventory_function": inventory_apc_netbotz_other_sensors,
+    "check_function": check_apc_netbotz_other_sensors,
+    "service_description": "Numeric sensors summary",
+    "snmp_info": (
+        ".1.3.6.1.4.1.5528.100.4.2.10.1",
+        [
+            "4",  # NETBOTZV2-MIB::otherNumericSensorLabel
+            "3",  # NETBOTZV2-MIB::otherNumericSensorErrorStatus
+            "7",  # NETBOTZV2-MIB::otherNumericSensorValueStr
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.5528.100.20.10"
+    ),
 }

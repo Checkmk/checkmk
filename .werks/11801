@@ -1,0 +1,11 @@
+Title: Make oracle_tablespaces cluster compatible again
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618316439
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+

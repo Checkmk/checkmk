@@ -1,0 +1,12 @@
+Title: agent_graylog: Retrieve all sidecars instead of only the first 50
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621942216
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The agent previously accessed an paginated version of the REST API
+that only responded with the first 50 sidecars.

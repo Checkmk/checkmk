@@ -1,0 +1,12 @@
+Title: Logwatch agent plugin correctly works with unicode characters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638805659
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Python2 logwatch agent plugin would crash when log inputs included unicode
+characters.

@@ -1,0 +1,11 @@
+Title: Fixed safenet_hsm and safenet_ntls checks not working on newer Thales HSMs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633681133
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously, safenet_hsm and safenet_ntls services weren't discovered on newer Thales HSMs.

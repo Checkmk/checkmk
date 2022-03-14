@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import check_levels
+
 # Item is a user defined identifier of the connection.
 # Example for params:
 # {
@@ -38,7 +39,10 @@ def check_netstat_generic(item, params, connections):
 
     warn_lower, crit_lower = params.get("min_states", (None, None))
     warn_upper, crit_upper = params.get("max_states", (None, None))
-    yield check_levels(found,
-                       "connections", (warn_upper, crit_upper, warn_lower, crit_lower),
-                       infoname="Matching entries found",
-                       human_readable_func=lambda x: "%d" % x)
+    yield check_levels(
+        found,
+        "connections",
+        (warn_upper, crit_upper, warn_lower, crit_lower),
+        infoname="Matching entries found",
+        human_readable_func=lambda x: "%d" % x,
+    )

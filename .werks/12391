@@ -1,0 +1,130 @@
+Title: HW/SW Inventory History: Improve handling of changed inventory table rows
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1627043648
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Previously table rows were compared successively (if tables had the same
+length) which might have led to unexpected delta tree results.
+Moreover the comparison of two tables (and other operations like merging or
+filtering) was expensive.
+
+In order to speed up these operations and dump above delta tree heuristic, the
+internal table structure changes.
+
+Tables of old or legacy inventory plugins are migrated on-the-fly.
+
+If migrated tables are compared during delta tree calculations there are no
+{{changed}} entries anymore. Instead compared rows are treated as {{new}},
+{{old}} or {{identical}}.
+
+Delta tree calculations of tables generated from newer inventory plugins are
+more exact and don't need the heuristic anymore.
+
+Technical details:
+
+Previous delta tree heuristic:
+
+Assume the following rows which are compared.
+
+C:+
+old_rows = [
+    {
+        "col1": "value 11",
+        "col2": "old value 12",
+        ...
+    },
+    {
+        "col1": "value 21",
+        "col2": "value 22",
+        ...
+    },
+]
+
+new_rows = [
+    {
+        "col1": "value 01",
+        "col2": "value 02",
+        ...
+    },
+    {
+        "col1": "value 11",
+        "col2": "new value 12",
+        ...
+    },
+    {
+        "col1": "value 21",
+        "col2": "value 22",
+        ...
+    },
+]
+C:-
+
+First both lists were filtered, ie. find rows which
+<ul>
+<li>are in both lists,</li>
+<li>are only in the old list,</li>
+<li>are only in the new list.</li>
+</ul>
+
+Then if the remaining lists have the same length both lists are compared
+successively, ie. compare first old row with first new row, compare second old
+row with second new row, and so on. These comparisons generated {{changed}}
+entries in the delta tree.
+
+If the remainings lists have not the same length then all remaining old rows
+are treated as {[removed}} and all remaining new rows are treated as {{new}}.
+
+The delta tree result of the above example is:
+<ul>
+<li>one removed row,</li>
+<li>one identical row,</li>
+<li>two new rows.</li>
+</ul>
+
+Obviously this is not what we expect. The result should be:
+<ul>
+<li>one identical row,</li>
+<li>one changed row entry: "old value 12" -> "new value 12",</li>
+<li>one new row.</li>
+</ul>
+
+Advantages:
+Especially the above filtering of both lists is expensive. We also want to make
+these operations more reliable. For this we need a row identifier which can be
+calculated from the {{key_columns}} declared in newer inventory plugins:
+
+C:+
+TableRow(
+    path=["path", "to", "node"],
+    key_columns = {
+        "col1": "value 11",
+        ...
+    },
+    inventory_columns = {
+        "col2": "value 12",
+        ...
+    },
+    ...
+)
+C:-
+
+Then the internal table structure looks like:
+C:+
+rows = {
+    ('value 11', ...): {
+        "col1": "value 11",
+        "col2": "value 12",
+        ...
+    },
+    ('value 21', ...): {
+        "col1": "value 21",
+        "col2": "value 22",
+        ...
+    },
+}
+C:-

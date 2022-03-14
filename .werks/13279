@@ -1,0 +1,18 @@
+Title: Fixed unintentionally stopping of monitoring core
+Class: fix
+Compatible: compat
+Component: core
+Date: 1633952703
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Fixed race condition which led to a missing monitoring core configuration.
+If several components needed a new configuration at the same time, there was a chance that the configuration for the
+core was lost.
+If the core starts without configuration, it will be stopped again immediately.
+Furthermore, the core remains deactivated in most cases, because it only receives a reload command, which does not include a restart.
+
+The error occurred more often in scenarios where automatic service discovery, the DCD and manual ActivateChanges were used simultaneously.

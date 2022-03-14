@@ -1,0 +1,15 @@
+Title: Notification plugins: Fix proxy setting "Connect without proxy"
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1636543196
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+For some notification plugins, proxy settings can be configured. One
+of the available options is to not use any proxy ("Connect without
+proxy"). This setting is intended to also bypass proxy servers
+defined via environment variables (<tt>HTTP_PROXY</tt>, ...),
+which did not work.

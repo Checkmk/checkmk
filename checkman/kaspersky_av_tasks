@@ -1,7 +1,7 @@
 title: Kaspersky Anti-Virus: Tasks Status
 agents: linux
 catalog: app/kaspersky
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks if the tasks Real-time protection and System EventManger are running.
@@ -11,5 +11,5 @@ description:
 item:
  Name of the job
 
-inventory:
+discovery:
  One service is created for each task.

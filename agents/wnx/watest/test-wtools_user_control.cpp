@@ -33,7 +33,7 @@ NTSTATUS PrintDomainName() {
     };
 
     status = LsaQueryInformationPolicy(policy, PolicyDnsDomainInformation,
-                                       (void**)&ppddi);
+                                       (void **)&ppddi);
 
     if (!LSA_SUCCESS(status)) return status;
 
@@ -51,7 +51,7 @@ NTSTATUS PrintDomainName() {
 
     if (LSA_SUCCESS(
             status = LsaQueryInformationPolicy(
-                policy, PolicyAccountDomainInformation, (void**)&ppadi))) {
+                policy, PolicyAccountDomainInformation, (void **)&ppadi))) {
         XLOG::l("DomainName: '{}'", wtools::ToUtf8(ppadi->DomainName.Buffer));
         LsaFreeMemory(ppadi);
     }
@@ -62,6 +62,13 @@ NTSTATUS PrintDomainName() {
 TEST(WtoolsUserControl, Base) {
     LdapControl lc;
     ASSERT_TRUE(lc.name() == nullptr);
+    ASSERT_EQ(
+        lc.getSpecialUserRegistryPath(),
+        LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList)");
+}
+
+TEST(WtoolsUserControl, DISABLED_Base) {
+    LdapControl lc;
     auto ret = lc.chooseDomain(L"SERG-DELL", L"SERG-DELL");
     if (ret == Status::no_domain_service) {
         XLOG::SendStringToStdio("No Domain Controller - no testing\n",
@@ -78,17 +85,17 @@ TEST(WtoolsUserControl, AddDeleteUser) {
     lc.userDel(u);
     ON_OUT_OF_SCOPE(lc.userDel(u));
     EXPECT_EQ(Status::absent, lc.userDel(u));
-    EXPECT_EQ(Status::success, lc.userAdd(u, L"xufdrgebd_1"));
-    EXPECT_EQ(Status::exists, lc.userAdd(u, L"xufdrgebd_1"));
+    EXPECT_EQ(Status::success, lc.userAdd(u, L"Xufdrgebd 1"));
+    EXPECT_EQ(Status::exists, lc.userAdd(u, L"Xufdrgebd 1"));
     EXPECT_EQ(Status::success, lc.userDel(u));
     EXPECT_EQ(Status::absent, lc.userDel(u));
 }
 
 TEST(WtoolsUserControl, AddDeleteUserToUsers) {
     LdapControl lc;
-    std::wstring_view g = L"Users";
+    auto g = wtools::SidToName(L"S-1-5-32-545", SidTypeGroup);
     std::wstring_view u = L"x_user_name";
-    ASSERT_EQ(Status::success, lc.userAdd(u, L"aaaaasxwxwwxwecfwecwe"));
+    ASSERT_EQ(Status::success, lc.userAdd(u, L"Aaaasxwxwwxwecfwecwe 1"));
     EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
     EXPECT_EQ(Status::success, lc.localGroupDelMembers(g, u));
     EXPECT_EQ(Status::absent, lc.localGroupDelMembers(g, u));
@@ -112,9 +119,13 @@ TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
-TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroup) {
+TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupIntegration) {
     using namespace std::literals::string_literals;
     LdapControl lc;
+    if (wtools::SidToName(L"S-1-5-32-545", SidTypeGroup) != L"Users") {
+        GTEST_SKIP() << "This test is only suitable for English Windows";
+        return;
+    }
     static const std::wstring groups[] = {
         L"Access Control Assistance Operators"s,
         L"Administrators"s,
@@ -135,9 +146,10 @@ TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroup) {
         L"Replicator"s,
         L"System Managed Accounts Group"s,
         L"Users"s};
-    for (auto& g : groups) {
+
+    for (auto &g : groups) {
         //
-        EXPECT_EQ(Status::error, lc.localGroupDel(g));
+        EXPECT_EQ(Status::error, lc.localGroupDel(g)) << "Missing group: " << g;
     }
 }
 
@@ -154,7 +166,7 @@ TEST(WtoolsUserControl, AddDeleteMembers) {
 
     ASSERT_EQ(Status::success, lc.localGroupAdd(g, c));
     EXPECT_EQ(Status::error, lc.localGroupAddMembers(g, u));
-    ASSERT_EQ(Status::success, lc.userAdd(u, L"aaaaasxwxwwxwecfwecwe"));
+    ASSERT_EQ(Status::success, lc.userAdd(u, L"Aaaaasxwxwwxwecfwecwe 1"));
     EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
 
     EXPECT_EQ(Status::success, lc.localGroupDelMembers(g, u));

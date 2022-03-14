@@ -1,7 +1,7 @@
 title: Siemens Octopus E: Global Status
 agents: snmp
 catalog: hw/phone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check queries the global status of local PBX supporting the
@@ -12,5 +12,5 @@ description:
  It knows 5 different states ranging from "normal" to "critical", which are
  mapped into corresponding Nagios states.
 
-inventory:
+discovery:
  One service named "Global Status" is created.

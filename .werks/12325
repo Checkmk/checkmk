@@ -1,0 +1,17 @@
+Title: Stabilize Windows Agent RunAs(User/Group) plugin feature
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626074913
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+Previously, Windows agent supplied as working directory the current one.
+This may lead to failure if the starting plugin in RunAs mode had being 
+executed from the account without valid access rights. 
+
+Since this release the problem has been eliminated. If a plugin is starting 
+in RunAs mode, then Windows Agent supplies to the starting plugin user home 
+directory as a working directory.

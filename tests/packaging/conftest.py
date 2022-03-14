@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+
+import pytest
 
 
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
@@ -13,8 +14,9 @@ import pytest  # type: ignore[import]
 def package_path():
     path = os.environ.get("PACKAGE_PATH")
     if not path:
-        raise Exception("PACKAGE_PATH environment variable pointing to the package "
-                        "to be tested is missing")
+        raise Exception(
+            "PACKAGE_PATH environment variable pointing to the package to be tested is missing"
+        )
     return path
 
 

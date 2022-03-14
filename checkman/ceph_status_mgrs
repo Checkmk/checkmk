@@ -1,7 +1,7 @@
 title: Ceph Storage: MGRs
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the and epoch of MGRs of Ceph storage systems.
@@ -9,5 +9,5 @@ description:
  Epoch levels are configurable. Default levels are 1 and 2
  for a timerange of 5 minutes.
 
-inventory:
+discovery:
  One service is created.

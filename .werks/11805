@@ -1,0 +1,14 @@
+Title: Monitor WuT Web-IO digital Inputs
+Class: feature
+Compatible: incompat
+Component: checks
+Date: 1620219182
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This check monitors the digital input channels of
+a WuT (Wiesemann & Theis) Web-IO (currently EA2x2, EA12x12 and EA2x2 are supported)
+
+In case you've used the legacy check "wut_webio_io.inputs", you need to perform a rediscovery.

@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["hp_proliant_fans"] = {
-    'check_function': check_hp_proliant_fans,
-    'inventory_function': inventory_hp_proliant_fans,
-    'service_description': 'HW FAN%s',
-    'has_perfdata': True,
-    'snmp_info': (
+    "check_function": check_hp_proliant_fans,
+    "inventory_function": inventory_hp_proliant_fans,
+    "service_description": "HW FAN%s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.232.6.2.6.7.1",
         [
             "2",  # cpqHeFltTolFanIndex
@@ -23,7 +24,8 @@ check_info["hp_proliant_fans"] = {
             "6",  # cpqHeFltTolFanSpeed
             "9",  # cpqHeFltTolFanCondition
             "12",  # cpqHeFltTolFanCurrentSpeed
-        ]),
-    'snmp_scan_function': hp_proliant_scan_function,
-    'management_board': HOST_ONLY,
+        ],
+    ),
+    "snmp_scan_function": hp_proliant_scan_function,
+    "management_board": HOST_ONLY,
 }

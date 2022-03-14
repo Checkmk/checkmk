@@ -1,7 +1,7 @@
 title: NetApp Filer: Temperature Sensors
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the state of the temperature sensors for a NetApp filer, grouped by shelfes.
@@ -13,7 +13,6 @@ description:
 item:
  Either {{Internal Shelf}} or {{Ambient Shelf}} followed by the name of the shelf
 
-inventory:
+discovery:
  Two summary services are created for each shelf. One for {Temperature Internal Shelfes}
  and one for {Temperature Ambient Shelfs}.
-

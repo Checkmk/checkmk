@@ -1,0 +1,13 @@
+Title: Migrate ntop integration to APIv2 endpoints
+Class: feature
+Compatible: compat
+Component: ntopng_integration
+Date: 1634049548
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+From ntopng verion 5, a new REST API version (v2) is used. This exposes different endpoints for querying alert information.
+With this werk, the new REST API version is supported.
+

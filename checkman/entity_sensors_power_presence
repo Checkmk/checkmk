@@ -1,0 +1,16 @@
+title: Generic Entity Sensor: Power Presence
+agents: snmp
+catalog: hw/power/generic
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors whether power supply is turned on for devices that support
+ the ENTITY-SENSORS MIB. By default, sensors that detect power is off generate a
+ service that shows a WARN state. This is configurable for individual sensors
+ using the "Power Presence Sensors" monitoring ruleset.
+
+item:
+ The name or index of the sensor.
+
+discovery:
+ One service is created for each sensor.

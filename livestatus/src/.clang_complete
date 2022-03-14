@@ -1,9 +1,10 @@
+-std=c++17
+-DHAVE_CONFIG_H
 -I.
 -I../..
 -I..
 -isystem includes/asio
+-DASIO_DISABLE_CONCEPTS
 -I../../omd/packages/re2/destdir/include
--DHAVE_CONFIG_H
--std=c++17
--Wall
--Wextra
+-Iincludes/googletest
+-I../../omd/build/package_build/rrdtool-1.7.2/src

@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status and usage of MDisksGrps in an IBM SVC / Storwize V3700 / V7000
@@ -21,5 +21,5 @@ description:
 item:
  The name of the MDisksGrp
 
-inventory:
+discovery:
  One service is created for each MDiskGrp.

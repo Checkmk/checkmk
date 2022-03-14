@@ -1,11 +1,10 @@
 title: Bluecat Adonis: DNS Queries
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check currently only returns variables for information. The check will be extended in the future.
 
-inventory:
+discovery:
  One service is created.
-

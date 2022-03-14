@@ -1,0 +1,13 @@
+Title: Add IPMI event "transition to OK" with OK state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627569925
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+"transition to OK" was unknown to the check-plugin and thus defaulted to a CRIT
+state. Now this is fixed.

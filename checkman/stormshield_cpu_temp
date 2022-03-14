@@ -1,7 +1,7 @@
 title: Stormshield: Temperature CPU
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the {STORMSHIELD-SYSTEM-MONITOR-MIB}
@@ -10,5 +10,5 @@ description:
 item:
  The index of the CPU
 
-inventory:
+discovery:
  One service is created for each CPU.

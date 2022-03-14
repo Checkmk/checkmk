@@ -1,7 +1,7 @@
 title: Disk Throughput
 agents: linux, freebsd
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -48,7 +48,7 @@ item:
  up to version 1.1.10 also the items {"read"} and {"write"} are supported.
 
 
-inventory:
+discovery:
   One service is created for each disk if the configuration is set to {"single"}.
   If the configuration is set to {"summary"} one service is created for each host.
   If set to {"legacy"} then two services one for read and one for write
@@ -58,4 +58,3 @@ inventory:
 cluster:
   If configured for clustering, every service will sum up the measurements
   for disks with the same name.
-

@@ -26,12 +26,12 @@ def check_dell_compellent_enclosure(item, _no_params, info):
                 yield state, "State Message: %s" % status_message
 
 
-check_info['dell_compellent_enclosure'] = {
-    'inventory_function': dell_compellent.discover,
-    'check_function': check_dell_compellent_enclosure,
-    'service_description': 'Enclosure %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.674.11000.2000.500.1.2.15.1',
+check_info["dell_compellent_enclosure"] = {
+    "inventory_function": dell_compellent.discover,
+    "check_function": check_dell_compellent_enclosure,
+    "service_description": "Enclosure %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.674.11000.2000.500.1.2.15.1",
         [
             2,  # DELL-STORAGE-SC-MIB::scEnclNbr
             3,  # DELL-STORAGE-SC-MIB::scEnclStatus
@@ -39,6 +39,7 @@ check_info['dell_compellent_enclosure'] = {
             6,  # DELL-STORAGE-SC-MIB::scEnclType
             7,  # DELL-STORAGE-SC-MIB::scEnclModel
             9,  # DELL-STORAGE-SC-MIB::scEnclServiceTag
-        ]),
-    'snmp_scan_function': dell_compellent.scan,
+        ],
+    ),
+    "snmp_scan_function": dell_compellent.scan,
 }

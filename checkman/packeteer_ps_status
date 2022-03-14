@@ -1,10 +1,10 @@
 title: Blue Coat Packet Shaper: Power Supply Status
 agents: snmp
 catalog: hw/network/bluecoat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of power supplies as described in the Packeteer MIB.
 
-inventory:
+discovery:
  One service is created for each power supply.

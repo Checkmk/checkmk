@@ -1,7 +1,7 @@
 title: BDT Tape Library: Status
 agents: snmp
 catalog: hw/storagehw/bdt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the status of the tape library.
@@ -9,6 +9,5 @@ description:
  Non-critical errors will return the status {WARN} and
  critical or non-recoverable errors the status {CRIT}.
 
-inventory:
+discovery:
  One service is created for each host.
-

@@ -1,0 +1,15 @@
+Title: Agent controller: rename <tt>register-surrogate-pull</tt> to <tt>proxy-register</tt>
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1646638111
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+This change is only incompatible for user who scripted tools against the
+2.1.0b1 version of the agent controller <tt>cmk-agent-ctl</tt>.
+The subcommand <tt>register-surrogate-pull</tt> has been renamed to
+<tt>proxy-register</tt>, as it is easier to type and to remember.

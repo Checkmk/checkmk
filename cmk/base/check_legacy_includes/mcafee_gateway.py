@@ -27,10 +27,10 @@ def inventory_mcafee_gateway_generic(info):
 
 
 def scan_mcafee_webgateway(oid):
-    return 'mcafee web gateway' in oid('.1.3.6.1.2.1.1.1.0').lower()
+    return "mcafee web gateway" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-#.
+# .
 #   .--email---------------------------------------------------------------.
 #   |                                           _ _                        |
 #   |                       ___ _ __ ___   __ _(_) |                       |
@@ -41,5 +41,6 @@ def scan_mcafee_webgateway(oid):
 #   '----------------------------------------------------------------------'
 
 
+# migrated to cmk/base/plugins/agent_based/utils/mcafee_gateway.py
 def scan_mcafee_emailgateway(oid):
-    return 'mcafee email gateway' in oid('.1.3.6.1.2.1.1.1.0').lower()
+    return "mcafee email gateway" in oid(".1.3.6.1.2.1.1.1.0").lower()

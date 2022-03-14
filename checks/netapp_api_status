@@ -16,8 +16,9 @@ def check_netapp_api_status(item, _no_params, info):
     data = dict([line for line in info if len(line) == 2])
 
     if data.get("status"):
-        state = 0 if data["status"].lower() in ["ok", "ok-with-suppressed", "ok_with_suppressed"
-                                               ] else 2
+        state = (
+            0 if data["status"].lower() in ["ok", "ok-with-suppressed", "ok_with_suppressed"] else 2
+        )
         yield state, "Status: %s" % data["status"]
         del data["status"]
 
@@ -26,7 +27,7 @@ def check_netapp_api_status(item, _no_params, info):
 
 
 check_info["netapp_api_status"] = {
-    'check_function': check_netapp_api_status,
-    'inventory_function': inventory_netapp_api_status,
-    'service_description': 'Diagnosis Status',
+    "check_function": check_netapp_api_status,
+    "inventory_function": inventory_netapp_api_status,
+    "service_description": "Diagnosis Status",
 }

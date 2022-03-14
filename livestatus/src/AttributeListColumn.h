@@ -8,36 +8,54 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "AttributeListAsIntColumn.h"
 #include "Filter.h"
 #include "ListColumn.h"
-#include "contact_fwd.h"
+#include "Row.h"
 #include "opids.h"
-class ColumnOffsets;
-class Row;
+class IntFilter;
+class Logger;
 
-class AttributeListColumn : public deprecated::ListColumn {
+namespace column::attribute_list {
+struct AttributeBit {
+    AttributeBit(std::size_t i, bool v) : index{i}, value{v} {}
+    std::size_t index;
+    bool value;
+};
+inline bool operator==(const AttributeBit &x, const AttributeBit &y) {
+    return x.index == y.index && x.value == y.value;
+}
+std::string refValueFor(const std::string &value, Logger *logger);
+unsigned long decode(const std::vector<AttributeBit> &mask);
+std::vector<AttributeBit> encode(unsigned long mask);
+std::vector<AttributeBit> encode(const std::vector<std::string> &strs);
+}  // namespace column::attribute_list
+
+namespace column::detail {
+template <>
+std::string serialize(const column::attribute_list::AttributeBit &bit);
+}  // namespace column::detail
+
+template <class T, class U>
+class AttributeListColumn : public ListColumn<T, U> {
 public:
-    AttributeListColumn(const std::string &name, const std::string &description,
-                        const ColumnOffsets &offsets)
-        : deprecated::ListColumn(name, description, offsets)
-        , _int_view_column(name, description, offsets) {}
-
+    using ListColumn<T, U>::ListColumn;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string &value) const override;
-
-    std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
-
-private:
-    AttributeListAsIntColumn _int_view_column;
+        const std::string &value) const override {
+        return std::make_unique<IntFilter>(
+            kind, this->name(),
+            [this](Row row) {
+                return column::attribute_list::decode(
+                    column::attribute_list::encode(
+                        this->getValue(row, nullptr, {})));
+            },
+            relOp, column::attribute_list::refValueFor(value, this->logger()));
+    }
 };
 
-#endif  // AttributeListColumn_h
+#endif

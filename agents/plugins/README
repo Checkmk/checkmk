@@ -1,3 +1,6 @@
+Agent Plugins
+=============
+
 These plugins can be installed in the plugins directory of the Linux agent
 in /usr/lib/check_mk_agent/plugins/. Please only install the plugins that
 you really need.
@@ -14,3 +17,24 @@ In that case the agent will:
  - Store the result of the plugin in a cache file below /etc/check_mk/cache.
  - Use that file for one hour before running the script again.
 
+How to write a parametrized Agent Plugin
+----------------------------------------
+
+For a working Agent Plugin you need:
+
+ * an Agent Plugin
+   The `Agent Plugin` and a `configuration file` will be deployed to the monitored machine.
+ * a Bakery Plugin - this creates the `configuration file` by using the `WATO Rule` to get the data from the user.
+ * a WATO rule - to define the shape and set of data which the Agent Plugin needs
+
+The format in which the Bakery-Plugin writes and the Agent-Plugin reads the configuration is not specified, but
+for new Plugins a `ConfigParser` solution would be preferable.
+
+You should also create an example configuration in ``agents/cfg_examples/`` so
+users of checkmk raw edition know how to configure the Agent-Plugin without
+being able to bake agents.
+
+Recent Examples:
+
+  * mk_docker.py
+  * mk_mongodb.py

@@ -1,7 +1,7 @@
 title: Elasticsearch: Indices
 agents: elasticsearch
 catalog: app/elasticsearch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the special agent for elasticsearch. The document count and
@@ -10,9 +10,8 @@ description:
  will be compared to this average value. Thresholds can be set on how much higher
  the last recent growth can be compared to the average growth.
 
-inventory:
+discovery:
  One service is created for each indice.
 
 item:
  The name of the index
-

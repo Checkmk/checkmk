@@ -1,0 +1,28 @@
+Title: New default dashboards for linux and windows
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1643300120
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+With this werk 4 new default dashboards are added to Checkmk. These are:
+
+* <b>Linux hosts</b>: A default dashboard to be used for a (smaller) group of Linux hosts, e.g. a cluster. You will find this dashboard in the "Overview" topic of the Monitor menu.
+* <b>Windows hosts</b>: A default dashboard like the above but for windows hosts.
+* <b>Single Linux host</b>: A host specific dashboard for Linux hosts. This dashboard is available through the context of a Linux host or though the link of the particular host in the overview dashboard.
+* <b>Single Windows host</b>: A host specific dashboard like the above but for windows hosts.
+
+You will find the group dashboards on Monitor > Overview and below the entry
+"All hosts". Both dashboards are prefilterted to hosts with the according
+operating system. But the scope is a smaller group of related host, e.g. a
+cluster of linux or windows server. Because of that it is recommended, to add
+more filters to get an actual overview of a specifc group of linux/windows
+hosts.
+
+The single host dashboards linked in the host name column, reachable through
+the "Host information" dashlet of the group dashboard. Alternatively you
+can reach them through the host overview itself by the "Host" dropdown at
+the topic "Overview".

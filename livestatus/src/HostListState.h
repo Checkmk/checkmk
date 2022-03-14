@@ -19,15 +19,15 @@
 #ifdef CMC
 #include <unordered_set>
 
-#include "Host.h"
-#include "Object.h"
 #include "ObjectGroup.h"
-#include "cmc.h"
+#include "contact_fwd.h"
+class Host;
 #else
 #include "nagios.h"
 #endif
 
 class HostListState {
+    // TODO(sp) Actually we want an input_range of hosts.
 #ifdef CMC
     using value_type = std::unordered_set<const Host *>;
 #else
@@ -67,17 +67,14 @@ public:
     // NOTE: Due to an ugly technical reason, we have to delay getting the
     // service authorization, for details see the test
     // Store.TheCoreIsNotAccessedDuringConstructionOfTheStore.
-    HostListState(std::function<AuthorizationKind()> get_service_auth,
+    HostListState(std::function<ServiceAuthorization()> get_service_auth,
                   Type logictype)
         : _get_service_auth{std::move(get_service_auth)}
         , _logictype(logictype) {}
 #ifdef CMC
-    int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
-        auto v = value_type(g._objects.size());
-        for (const auto &e : g._objects) {
-            v.emplace(dynamic_cast<value_type::value_type>(e));
-        }
-        return (*this)(v, auth_user);
+    int32_t operator()(const ObjectGroup<Host> &g,
+                       const contact *auth_user) const {
+        return (*this)(value_type{g.begin(), g.end()}, auth_user);
     }
 #else
     int32_t operator()(const hostgroup &g, const contact *auth_user) const {
@@ -87,7 +84,7 @@ public:
     int32_t operator()(const value_type &hsts, const contact *auth_user) const;
 
 private:
-    std::function<AuthorizationKind()> _get_service_auth;
+    std::function<ServiceAuthorization()> _get_service_auth;
     const Type _logictype;
 
     void update(const contact *auth_user, HostState current_state,

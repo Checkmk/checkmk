@@ -1,0 +1,14 @@
+Title: API: adjusting downtime doc examples and fixing downtime objects links
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614946546
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk introduces some changes to the downtime endpoint family.
+It makes some examples more beginner friendly and fixes the linking
+mechanism of the downtime objects.

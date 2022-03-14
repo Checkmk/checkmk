@@ -9,11 +9,12 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 condition_map = {
-    '1': ('other', 3),  # the status could not be determined or not present.
-    '2': ('ok', 0),  # operating normally
-    '3': ('degraded', 2),  # component is outside of normal operating range.
-    '4': ('failed', 2),  # component detects condition that could damage system
+    "1": ("other", 3),  # the status could not be determined or not present.
+    "2": ("ok", 0),  # operating normally
+    "3": ("degraded", 2),  # component is outside of normal operating range.
+    "4": ("failed", 2),  # component detects condition that could damage system
 }
 
 factory_settings["hp_proliant_psu_levels"] = {
@@ -23,9 +24,11 @@ factory_settings["hp_proliant_psu_levels"] = {
 
 def parse_hp_proliant_psu(info):
     parsed = {}
-    Psu = collections.namedtuple("Psu", ['chassis', 'bay', 'condition', 'used', 'max'])
+    Psu = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "Psu", ["chassis", "bay", "condition", "used", "max"]
+    )
     for chassis, bay, present, cond, used, capacity_maximum in info:
-        if present != '3' or capacity_maximum == '0':
+        if present != "3" or capacity_maximum == "0":
             continue
         item = "%s/%s" % (chassis, bay)
         try:
@@ -33,9 +36,12 @@ def parse_hp_proliant_psu(info):
         except ValueError:
             pass
     if parsed:
-        PsuTotal = collections.namedtuple("Psu", ['used', 'max'])
-        parsed['Total'] = PsuTotal(sum(v.used for v in parsed.values()),
-                                   sum(v.max for v in parsed.values()))
+        PsuTotal = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+            "Psu", ["used", "max"]
+        )
+        parsed["Total"] = PsuTotal(
+            sum(v.used for v in parsed.values()), sum(v.max for v in parsed.values())
+        )
     return parsed
 
 
@@ -47,17 +53,17 @@ def inventory_hp_proliant_psu(parsed):
 
 @get_parsed_item_data
 def check_hp_proliant_psu(item, params, psu):
-    if item != 'Total':
+    if item != "Total":
         yield 0, "Chassis %s/Bay %s" % (psu.chassis, psu.bay)
         snmp_state, status = condition_map[psu.condition]
         yield status, 'State: "%s"' % snmp_state
 
     # usage info
-    info = 'Usage: %d Watts' % psu.used
+    info = "Usage: %d Watts" % psu.used
     cap_perc = psu.used * 100.0 / psu.max
     perf_data = [
-        ('power_usage_percentage', cap_perc),
-        ('power_usage', psu.used),
+        ("power_usage_percentage", cap_perc),
+        ("power_usage", psu.used),
     ]
 
     # check for user defined thresholds here
@@ -72,13 +78,13 @@ def check_hp_proliant_psu(item, params, psu):
 
 
 check_info["hp_proliant_psu"] = {
-    'check_function': check_hp_proliant_psu,
-    'inventory_function': inventory_hp_proliant_psu,
-    'parse_function': parse_hp_proliant_psu,
-    'default_levels_variable': "hp_proliant_psu_levels",
-    'service_description': 'HW PSU %s',
-    'group': 'hw_psu',
-    'snmp_info': (
+    "check_function": check_hp_proliant_psu,
+    "inventory_function": inventory_hp_proliant_psu,
+    "parse_function": parse_hp_proliant_psu,
+    "default_levels_variable": "hp_proliant_psu_levels",
+    "service_description": "HW PSU %s",
+    "group": "hw_psu",
+    "snmp_info": (
         ".1.3.6.1.4.1.232.6.2.9.3.1",
         [
             "1",  # cpqHeFltTolPowerSupplyChassis
@@ -87,7 +93,8 @@ check_info["hp_proliant_psu"] = {
             "4",  # cpqHeFltTolPowerSupplyCondition
             "7",  # cpqHeFltTolPowerSupplyCapacityUsed
             "8",  # cpqHeFltTolPowerSupplyCapacityMaximum
-        ]),
-    'snmp_scan_function': hp_proliant_scan_function,
-    'has_perfdata': True,
+        ],
+    ),
+    "snmp_scan_function": hp_proliant_scan_function,
+    "has_perfdata": True,
 }

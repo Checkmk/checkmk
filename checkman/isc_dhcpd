@@ -1,7 +1,7 @@
 title: Linux ISC DHCP-Deamon DHCP Pools: Number of Free Addresses
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check retrieves the information about existing address pools from
@@ -13,5 +13,5 @@ description:
 item:
  The name of the DHCP pool as configured on the DHCP server.
 
-inventory:
+discovery:
  One service is created for each DHCP pool on the DHCP server.

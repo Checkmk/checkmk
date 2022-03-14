@@ -1,7 +1,7 @@
 title: Java Application Server: Memory Usage (deprecated)
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Do not use this plugin. It will be removed soon. Use jolokia_metrics instead.
@@ -30,8 +30,7 @@ item:
  Please note that the current implementation of the agent plugin
  supports only one instance per host.
 
-inventory:
+discovery:
  One service is created for each JMX instance sent by the agent.
  The agent currently supports only one instance, but that might
  be changed in future.
-

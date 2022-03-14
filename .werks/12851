@@ -1,0 +1,26 @@
+Title: Folder/Host permissions: Users could add groups but not remove them afterwards
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1628173655
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Users with the "User" role which are able to manage a folder in "Hosts &
+folders" can add and remove permissions of contact groups on a folder. These
+users should only be able to add / remove contact groups they are a member of.
+
+However, in previous releases it was possible to add one group to the permitted
+groups of a folder he is not a member of. But when trying to remove the group,
+this was denied because the user is not a member of this group.
+
+The logic has now been changed to provide the user a consistent behaviour: In
+the moment a user tries to add OR remove a contact group, it is verified that
+the user is a member of that group. The user can now really only add OR remove
+groups he is a member of.
+
+Groups which are permitted on this folder and are not modified by the user are
+not relevant in this situation.

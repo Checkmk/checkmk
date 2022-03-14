@@ -1,7 +1,7 @@
 title: Skype for Business: SIP Stack
 agents: windows
 catalog: app/skype
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors statistics of the SIP (Session Initiation Protocol)
@@ -35,6 +35,5 @@ description:
 
  Thresholds can be configured for all these counters.
 
-inventory:
+discovery:
  One service is created.
-

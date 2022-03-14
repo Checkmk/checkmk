@@ -1,7 +1,7 @@
 title: SAP R/3: Single Value
 agents: linux
 catalog: app/sap
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the data provided by the {mk_sap} agent plugin, which uses
@@ -17,7 +17,7 @@ item:
  A combination of the SAP system ID and, space separated, the path of the
  node to process the information of.
 
-inventory:
+discovery:
  By default no services are created. You can use the inventory option
  {inventory_sap_values}. This is a hostlist which contains dictionaries
  as parameters.
@@ -30,4 +30,3 @@ inventory:
  node found on the target host.
  If an entry matches one service is created according to the entry
  (if it's not already existing).
-

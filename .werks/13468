@@ -1,0 +1,17 @@
+Title: mrpe: Do not crash upon invalid metrics
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1636375191
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+In Checkmk versions prior to 2.0, invalid performance data strings passed by the MRPE plugin have been ignored.
+
+In Checkmk 2.0 the parsing would find those invalid strings, and crash upon them.
+This is generally the desired behaviour (see <a href=https://docs.checkmk.com/latest/en/devel_check_plugins.html#errors>the documentation</a> for a rationale).
+
+However, since MRPE comprises a lot of different plugins, an all-or-nothing approach is rather inconvenient.
+We now parse everything as good as we can, and issue an <tt>UNKNOWN</tt> state for the affected service.

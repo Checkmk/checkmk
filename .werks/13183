@@ -1,0 +1,17 @@
+Title: Fixed steadily rising CPU due to misconfiguration when cloning builtin dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1630474878
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Wrongly configured update intervals on the <tt>Host statistics</tt> and
+<tt>Service statistics</tt> dashlets lead to an increased CPU load on the
+monitoring server over time. This configuration was applied when cloning
+builtin dashboards that include these dashlets (e.g. <tt>Problem
+dashboard</tt>. This has been fixed. The issue only affects Checkmk version
+2.0. As a workaround, you can remove and readd the dashlets.

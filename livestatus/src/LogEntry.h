@@ -8,10 +8,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <cstdint>
-#include <ctime>
+#include <chrono>
+#include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
+
+#include "StringUtils.h"
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 
@@ -66,6 +69,8 @@ enum class LogEntryKind {
 
 class LogEntry {
 public:
+    // NOTE: We have to keep this enum in sync with the table in
+    // cmk.gui.plugins.visuals.filters.FilterLogClass on the Python side.
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state
@@ -74,41 +79,72 @@ public:
         passivecheck = 4,     // passive checks
         ext_command = 5,      // external commands
         state = 6,            // initial or current states
-        text = 7,             // specific text passages
-        alert_handlers = 8,   // Started and stopped alert handlers
-
-        // TODO(sp): This class sets different logclasses on match -> fix this
-        invalid = 0x7fffffff  // never stored
+        // text = 7,          // specific text passages, seems to be unused
+        alert_handlers = 8,  // Started and stopped alert handlers
     };
-    static constexpr uint32_t all_classes = 0xffffU;
 
-    // TODO(sp): Wrong type, caused by TableLog accessing it via
-    // OffsetIntColumn, should be size_t
-    int _lineno;  // line number in file
-    time_t _time;
-    Class _class;
-    LogEntryKind _kind;
-    std::string _message;  // copy of complete unsplit message
-    const char *_options;  // points into _complete after ':'
-    const char *_type;     // points into _complete or into static data
-    std::string _host_name;
-    std::string _service_description;
-    std::string _command_name;
-    std::string _contact_name;
-    int _state;
-    std::string _state_type;
-    int _attempt;
-    std::string _comment;
-    std::string _plugin_output;
-    std::string _long_plugin_output;
-
-    // NOTE: line gets modified!
+    // Constructed by Logfile::processLogLine(). All instances owned by
+    // Logfile::_entries.
     LogEntry(size_t lineno, std::string line);
+
     [[nodiscard]] std::string state_info() const;
-    static ServiceState parseServiceState(const std::string &str);
-    static HostState parseHostState(const std::string &str);
+    static ServiceState parseServiceState(std::string_view str);
+    static HostState parseHostState(std::string_view str);
+
+    [[nodiscard]] size_t lineno() const { return lineno_; }
+    [[nodiscard]] std::chrono::system_clock::time_point time() const {
+        return time_;
+    }
+    [[nodiscard]] Class log_class() const { return class_; }
+    [[nodiscard]] LogEntryKind kind() const { return kind_; }
+    [[nodiscard]] std::string message() const { return message_; }
+    [[nodiscard]] std::string options() const { return std::string{options_}; }
+    [[nodiscard]] std::string type() const { return std::string{type_}; }
+    [[nodiscard]] std::string host_name() const {
+        return std::string{host_name_};
+    }
+    [[nodiscard]] std::string service_description() const {
+        return std::string{service_description_};
+    }
+    [[nodiscard]] std::string command_name() const {
+        return std::string{command_name_};
+    }
+    [[nodiscard]] std::string contact_name() const {
+        return std::string{contact_name_};
+    }
+    [[nodiscard]] int state() const { return state_; }
+    [[nodiscard]] std::string state_type() const {
+        return std::string{state_type_};
+    }
+    [[nodiscard]] int attempt() const { return attempt_; }
+    [[nodiscard]] std::string comment() const { return std::string{comment_}; }
+    [[nodiscard]] std::string plugin_output() const {
+        return std::string{plugin_output_};
+    }
+    [[nodiscard]] std::string long_plugin_output() const {
+        return mk::to_multi_line(std::string{long_plugin_output_});
+    }
 
 private:
+    size_t lineno_;
+    std::chrono::system_clock::time_point time_;
+    Class class_;
+    LogEntryKind kind_;
+    std::string message_;
+    // NOTE: The string_views below all reference message_.
+    std::string_view options_;
+    std::string_view type_;
+    std::string_view host_name_;
+    std::string_view service_description_;
+    std::string_view command_name_;
+    std::string_view contact_name_;
+    int state_;
+    std::string_view state_type_;
+    int attempt_;
+    std::string_view comment_;
+    std::string_view plugin_output_;
+    std::string_view long_plugin_output_;
+
     enum class Param {
         HostName,
         ServiceDescription,
@@ -137,7 +173,7 @@ private:
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static std::vector<LogDef> log_definitions;
 
-    void assign(Param par, const std::string &field);
+    void assign(Param par, std::string_view field);
     void classifyLogMessage();
     [[nodiscard]] bool textStartsWith(const std::string &what) const;
     [[nodiscard]] bool textContains(const std::string &what) const;

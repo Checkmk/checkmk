@@ -1,0 +1,13 @@
+Title: Improve usability of "Create rule" buttons
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.1.0b1
+Date: 1635324798
+Class: feature
+
+So far the "Create rule" buttons were positioned at the bottom of a ruleset page and did not fit in with the standard
+Checkmk buttons. These buttons are now located at the top of the page as page menu suggestions and yield several more
+intuitive options for preselecting folder, host and service/device before entering the rule properties dialog. Also,
+"Create rule" is reworded to "Add rule".

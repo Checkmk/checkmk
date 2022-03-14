@@ -1,0 +1,12 @@
+Title: dell_compellent_storage_disk: simplified parsing of serial number
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1617009852
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The parsing function of dell_compellent_storage_disk was simplified by using the
+additional OID "DELL-STORAGE-SC-MIB::scDiskConfigNbr".

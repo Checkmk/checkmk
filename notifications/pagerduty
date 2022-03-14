@@ -7,10 +7,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.notification_plugins.pagerduty import pagerduty_msg
-from cmk.notification_plugins.utils import (
-    post_request,
-    process_by_status_code,
-)
+from cmk.notification_plugins.utils import post_request, process_by_status_code
 
 if __name__ == "__main__":
     # PagerDuty replies with 202 because the request is further processed

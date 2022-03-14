@@ -1,0 +1,14 @@
+title: IIS Application Pool Status
+agents: windows
+catalog: app/iis
+license: GPLv2
+distribution: check_mk
+description:
+ This checks queries local performance counters via an agent plugin ({iis_app_pool_state.ps1}).
+ It returns the status for each application pool.
+
+item:
+ The name of the application pool.
+
+discovery:
+ One service is created for each application pool.

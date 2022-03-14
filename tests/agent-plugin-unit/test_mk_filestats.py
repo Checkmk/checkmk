@@ -6,10 +6,12 @@
 
 import ast
 import configparser
+
 # pylint: disable=protected-access,redefined-outer-name
 import os
-import pytest  # type: ignore[import]
 import sys
+
+import pytest
 from utils import import_module
 
 try:
@@ -24,8 +26,8 @@ def configparser_library_name():
         # the configparser library is named ConfigParser in Python 2.6 and below.
         # its name is replaced by the 3to2 tool automatically in-code, but
         # obviously the strings are not replaced
-        return 'ConfigParser'
-    return 'configparser'
+        return "ConfigParser"
+    return "configparser"
 
 
 @pytest.fixture(scope="module")
@@ -57,55 +59,60 @@ def test_lazy_file(mk_filestats):
     assert isinstance(ast.literal_eval(lfile.dumps()), dict)
 
 
-@pytest.mark.parametrize("config", [({}), ({
-    "input_unknown": None
-}), ({
-    "input_one": None,
-    "input_two": None
-})])
+@pytest.mark.parametrize(
+    "config", [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})]
+)
 def test_get_file_iterator_invalid(mk_filestats, config):
     with pytest.raises(ValueError):
         mk_filestats.get_file_iterator(config)
 
 
-@pytest.mark.parametrize("config,pat_list", [
-    ({
-        "input_patterns": "foo"
-    }, ["foo"]),
-    ({
-        "input_patterns": '"foo bar" gee*'
-    }, ["foo bar", "gee*"]),
-])
+@pytest.mark.parametrize(
+    "config,pat_list",
+    [
+        ({"input_patterns": "foo"}, ["foo"]),
+        ({"input_patterns": '"foo bar" gee*'}, ["foo bar", "gee*"]),
+    ],
+)
 def test_get_file_iterator_pattern(mk_filestats, config, pat_list):
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
     assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]
 
 
-@pytest.mark.parametrize("operator,values,results", [
-    ('>', (2000., 1024, "1000"), (True, False, False)),
-    ('>=', (2000., 1024, "1000"), (True, True, False)),
-    ('<', (2000., 1024, "1000"), (False, False, True)),
-    ('<=', (2000., 1024, "1000"), (False, True, True)),
-    ('==', (2000., 1024, "1000"), (False, True, False)),
-])
+@pytest.mark.parametrize(
+    "operator,values,results",
+    [
+        (">", (2000.0, 1024, "1000"), (True, False, False)),
+        (">=", (2000.0, 1024, "1000"), (True, True, False)),
+        ("<", (2000.0, 1024, "1000"), (False, False, True)),
+        ("<=", (2000.0, 1024, "1000"), (False, True, True)),
+        ("==", (2000.0, 1024, "1000"), (False, True, False)),
+    ],
+)
 def test_numeric_filter(mk_filestats, operator, values, results):
-    num_filter = mk_filestats.AbstractNumericFilter('%s1024' % operator)
+    num_filter = mk_filestats.AbstractNumericFilter("%s1024" % operator)
     for value, result in zip(values, results):
         assert result == num_filter._matches_value(value)
 
 
-@pytest.mark.parametrize("invalid_arg", ['<>1024', '<NaN'])
+@pytest.mark.parametrize("invalid_arg", ["<>1024", "<NaN"])
 def test_numeric_filter_raises(mk_filestats, invalid_arg):
     with pytest.raises(ValueError):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
 
-@pytest.mark.parametrize("reg_pat,paths,results", [(
-    r'.*\.txt',
-    ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
-    (True, False, False),
-), (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'), (False, True))])
+@pytest.mark.parametrize(
+    "reg_pat,paths,results",
+    [
+        (
+            r".*\.txt",
+            ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
+            (True, False, False),
+        ),
+        ("[^ð]*ð{2}[^ð]*", ("foðbar", "fððbar"), (False, True)),
+    ],
+)
 def test_path_filter(mk_filestats, reg_pat, paths, results):
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
@@ -113,14 +120,13 @@ def test_path_filter(mk_filestats, reg_pat, paths, results):
         assert result == path_filter.matches(lazy_file)
 
 
-@pytest.mark.parametrize("config", [
-    {
-        "filter_foo": None
-    },
-    {
-        "filter_size": "!=käse"
-    },
-])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"filter_foo": None},
+        {"filter_size": "!=käse"},
+    ],
+)
 def test_get_file_filters_invalid(mk_filestats, config):
     with pytest.raises(ValueError):
         mk_filestats.get_file_filters(config)
@@ -147,17 +153,20 @@ def test_get_ouput_aggregator(mk_filestats, output_value):
     assert aggr is getattr(mk_filestats, "output_aggregator_%s" % output_value)
 
 
-@pytest.mark.parametrize("group_name, expected", [
-    ("myService", "[[[single_file myService]]]"),
-    ("myservice %s", "[[[single_file myservice test_mk_filestats.py]]]"),
-    ("myservice %s %s", "[[[single_file myservice test_mk_filestats.py %s]]]"),
-    ("%s", "[[[single_file test_mk_filestats.py]]]"),
-    ("%s %s", "[[[single_file test_mk_filestats.py %s]]]"),
-    ("%s%s", "[[[single_file test_mk_filestats.py%s]]]"),
-    ("%s%s %s %s", "[[[single_file test_mk_filestats.py%s %s %s]]]"),
-    ("%s myService", "[[[single_file test_mk_filestats.py myService]]]"),
-    ("%s myService %s", "[[[single_file test_mk_filestats.py myService %s]]]"),
-])
+@pytest.mark.parametrize(
+    "group_name, expected",
+    [
+        ("myService", "[[[single_file myService]]]"),
+        ("myservice %s", "[[[single_file myservice test_mk_filestats.py]]]"),
+        ("myservice %s %s", "[[[single_file myservice test_mk_filestats.py %s]]]"),
+        ("%s", "[[[single_file test_mk_filestats.py]]]"),
+        ("%s %s", "[[[single_file test_mk_filestats.py %s]]]"),
+        ("%s%s", "[[[single_file test_mk_filestats.py%s]]]"),
+        ("%s%s %s %s", "[[[single_file test_mk_filestats.py%s %s %s]]]"),
+        ("%s myService", "[[[single_file test_mk_filestats.py myService]]]"),
+        ("%s myService %s", "[[[single_file test_mk_filestats.py myService %s]]]"),
+    ],
+)
 def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group_name, expected):
 
     actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
@@ -165,22 +174,22 @@ def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):
+    def read(self, cfg_file):  # pylint:disable=arguments-differ
         pass
 
 
 class TestConfigParsing:
     @pytest.fixture
     def config_file_name(self):
-        return 'filestats.cfg'
+        return "filestats.cfg"
 
     @pytest.fixture
     def config_options(self):
         return [
-            ('banana', 'input_patterns', '/home/banana/*'),
-            ('banana@penguin', 'grouping_regex', '/home/banana/penguin*'),
-            ('banana@camel', 'grouping_regex', '/home/banana/camel'),
-            ('strawberry', 'input_patterns', '/var/log/*'),
+            ("banana", "input_patterns", "/home/banana/*"),
+            ("banana@penguin", "grouping_regex", "/home/banana/penguin*"),
+            ("banana@camel", "grouping_regex", "/home/banana/camel"),
+            ("strawberry", "input_patterns", "/var/log/*"),
         ]
 
     @pytest.fixture
@@ -199,38 +208,38 @@ class TestConfigParsing:
         mocker,
     ):
         mocker.patch(
-            configparser_library_name() + '.ConfigParser',
+            configparser_library_name() + ".ConfigParser",
             return_value=mocked_configparser,
         )
         actual_results = list(mk_filestats.iter_config_section_dicts(config_file_name))
 
         assert actual_results
-        assert sorted([r[0] for r in actual_results]) == ['banana', 'strawberry']
+        assert sorted([r[0] for r in actual_results]) == ["banana", "strawberry"]
 
-        for section, config_dict in [r for r in actual_results if r[0] == 'banana']:
+        for _section, config_dict in [r for r in actual_results if r[0] == "banana"]:
             assert len(config_dict.items()) == 4
-            assert config_dict['input_patterns'] == '/home/banana/*'
-            assert config_dict['output'] == 'file_stats'
-            assert config_dict['subgroups_delimiter'] == '@'
+            assert config_dict["input_patterns"] == "/home/banana/*"
+            assert config_dict["output"] == "file_stats"
+            assert config_dict["subgroups_delimiter"] == "@"
 
             # test that the order is preserved
-            assert config_dict['grouping'][0][0] == 'penguin'
-            assert config_dict['grouping'][1][0] == 'camel'
+            assert config_dict["grouping"][0][0] == "penguin"
+            assert config_dict["grouping"][1][0] == "camel"
 
-            assert sorted(config_dict['grouping'][0][1].items()) == [
-                ('rule', '/home/banana/penguin*'),
-                ('type', 'regex'),
+            assert sorted(config_dict["grouping"][0][1].items()) == [
+                ("rule", "/home/banana/penguin*"),
+                ("type", "regex"),
             ]
-            assert sorted(config_dict['grouping'][1][1].items()) == [
-                ('rule', '/home/banana/camel'),
-                ('type', 'regex'),
+            assert sorted(config_dict["grouping"][1][1].items()) == [
+                ("rule", "/home/banana/camel"),
+                ("type", "regex"),
             ]
 
-        for section, config_dict in [r for r in actual_results if r[0] == 'strawberry']:
+        for _section, config_dict in [r for r in actual_results if r[0] == "strawberry"]:
             assert len(config_dict.items()) == 3
-            assert config_dict['input_patterns'] == '/var/log/*'
-            assert config_dict['output'] == 'file_stats'
-            assert config_dict['subgroups_delimiter'] == '@'
+            assert config_dict["input_patterns"] == "/var/log/*"
+            assert config_dict["output"] == "file_stats"
+            assert config_dict["subgroups_delimiter"] == "@"
 
 
 class MockedFileStatFile:
@@ -241,75 +250,80 @@ class MockedFileStatFile:
         return self.path == other.path
 
 
-@pytest.mark.parametrize('section_name, files_iter, grouping_conditions, expected_result', [
-    (
-        'banana',
-        iter([
-            MockedFileStatFile('/var/log/syslog'),
-            MockedFileStatFile('/var/log/syslog1'),
-            MockedFileStatFile('/var/log/syslog2'),
-            MockedFileStatFile('/var/log/apport'),
-        ]),
-        [
-            (
-                'raccoon',
-                {
-                    'type': 'regex',
-                    'rule': '/var/log/syslog1',
-                },
-            ),
-            (
-                'colibri',
-                {
-                    'type': 'regex',
-                    'rule': '/var/log/sys*',
-                },
-            ),
-        ],
-        [
-            (
-                'banana raccoon',
-                [MockedFileStatFile('/var/log/syslog1')],
-            ),
-            (
-                'banana colibri',
+@pytest.mark.parametrize(
+    "section_name, files_iter, grouping_conditions, expected_result",
+    [
+        (
+            "banana",
+            iter(
                 [
-                    MockedFileStatFile('/var/log/syslog'),
-                    MockedFileStatFile('/var/log/syslog2'),
-                ],
+                    MockedFileStatFile("/var/log/syslog"),
+                    MockedFileStatFile("/var/log/syslog1"),
+                    MockedFileStatFile("/var/log/syslog2"),
+                    MockedFileStatFile("/var/log/apport"),
+                ]
             ),
-            (
-                'banana',
-                [MockedFileStatFile('/var/log/apport')],
-            ),
-        ],
-    ),
-    (
-        'no_files',
-        iter([]),
-        [
-            (
-                'raccoon',
-                {
-                    'type': 'regex',
-                    'rule': '/var/log/syslog1',
-                },
-            ),
-            (
-                'colibri',
-                {
-                    'type': 'regex',
-                    'rule': '/var/log/sys*',
-                },
-            ),
-        ],
-        [
-            ('no_files', []),
-            ('no_files raccoon', []),
-            ('no_files colibri', []),
-        ],
-    ),
-])
+            [
+                (
+                    "raccoon",
+                    {
+                        "type": "regex",
+                        "rule": "/var/log/syslog1",
+                    },
+                ),
+                (
+                    "colibri",
+                    {
+                        "type": "regex",
+                        "rule": "/var/log/sys*",
+                    },
+                ),
+            ],
+            [
+                (
+                    "banana raccoon",
+                    [MockedFileStatFile("/var/log/syslog1")],
+                ),
+                (
+                    "banana colibri",
+                    [
+                        MockedFileStatFile("/var/log/syslog"),
+                        MockedFileStatFile("/var/log/syslog2"),
+                    ],
+                ),
+                (
+                    "banana",
+                    [MockedFileStatFile("/var/log/apport")],
+                ),
+            ],
+        ),
+        (
+            "no_files",
+            iter([]),
+            [
+                (
+                    "raccoon",
+                    {
+                        "type": "regex",
+                        "rule": "/var/log/syslog1",
+                    },
+                ),
+                (
+                    "colibri",
+                    {
+                        "type": "regex",
+                        "rule": "/var/log/sys*",
+                    },
+                ),
+            ],
+            [
+                ("no_files", []),
+                ("no_files raccoon", []),
+                ("no_files colibri", []),
+            ],
+        ),
+    ],
+)
 def test_grouping_multiple_groups(
     mk_filestats,
     section_name,
@@ -322,9 +336,13 @@ def test_grouping_multiple_groups(
             section_name,
             files_iter,
             grouping_conditions=grouping_conditions,
-        ))
+        )
+    )
     expected_results_list = sorted(expected_result)
-    for results_idx, (section_name, files) in enumerate(results_list):
-        assert section_name == expected_results_list[results_idx][0]
+    for results_idx, (
+        section_name_arg,
+        files,
+    ) in enumerate(results_list):
+        assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert single_file == expected_results_list[results_idx][1][files_idx]

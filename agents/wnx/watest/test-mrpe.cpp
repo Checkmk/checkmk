@@ -65,7 +65,7 @@ void replaceYamlSeq(std::string_view Group, std::string_view SeqName,
 
     Yaml[Group][SeqName].reset();
 
-    for (auto& str : Vec) {
+    for (auto &str : Vec) {
         Yaml[Group][SeqName].push_back(str);
     }
 }
@@ -102,27 +102,27 @@ TEST(SectionProviderMrpe, SmallApi) {
 }
 
 TEST(SectionProviderMrpe, ConfigLoad) {
-    ASSERT_TRUE(true);
-    YamlLoaderMrpe w;
-    using namespace cma::cfg;
+    auto test_fs_ = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(test_fs_->loadFactoryConfig());
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
-    auto yaml = GetLoadedConfig();
+    auto yaml = cfg::GetLoadedConfig();
     ASSERT_TRUE(yaml.IsMap());
 
-    auto mrpe_yaml_optional = GetGroup(yaml, groups::kMrpe);
+    auto mrpe_yaml_optional = cfg::GetGroup(yaml, cfg::groups::kMrpe);
     ASSERT_TRUE(mrpe_yaml_optional.has_value());
     {
-        auto& mrpe_cfg = mrpe_yaml_optional.value();
+        auto &mrpe_cfg = mrpe_yaml_optional.value();
 
-        ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
-        auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
+        ASSERT_TRUE(cfg::GetVal(mrpe_cfg, cfg::vars::kEnabled, false));
+        auto entries =
+            cfg::GetArray<std::string>(mrpe_cfg, cfg::vars::kMrpeConfig);
         EXPECT_EQ(entries.size(), 0)
             << "no mrpe expected";  // include and check
     }
 
     replaceYamlSeq(
-        groups::kMrpe, vars::kMrpeConfig,
+        cfg::groups::kMrpe, cfg::vars::kMrpeConfig,
         {"check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
          "include sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // reference
          "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // valid without space
@@ -132,7 +132,8 @@ TEST(SectionProviderMrpe, ConfigLoad) {
          "chck = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",  // invalid
          "check = 'c:\\windows\\system32\\mode.com' CON CP /STATUS"});  // valid
 
-    auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
+    auto strings =
+        cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
     EXPECT_EQ(strings.size(), 8);
     mrpe.loadConfig();
     ASSERT_EQ(mrpe.includes().size(), 3);
@@ -279,7 +280,7 @@ TEST(SectionProviderMrpe, Run) {
     auto mrpe_yaml_optional = GetGroup(yaml, groups::kMrpe);
     ASSERT_TRUE(mrpe_yaml_optional.has_value());
     {
-        auto& mrpe_cfg = mrpe_yaml_optional.value();
+        auto &mrpe_cfg = mrpe_yaml_optional.value();
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);

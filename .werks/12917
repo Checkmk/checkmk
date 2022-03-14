@@ -1,0 +1,23 @@
+Title: snmp_info: the description is now part of the summary again
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625154526
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Starting from Checkmk version 2.0 the description was only shown in the service details.
+Only the name, location and contact were shown in the service summary.
+
+For many devices the description contains useful information like e.g. the firmware
+version. One use case before the 2.0 was e.g to search for the SNMP Info service of
+devices and compare the information contained in the description. To achieve the same
+result in verion 2.0 until now it was necessary to add the service details to the views.
+
+This werk puts the description in the summary again, along with the location, name, and
+contact.
+
+SUP-6809

@@ -1,0 +1,22 @@
+title: Aruba 2930M: Power Supply Status
+agents: snmp
+catalog: hw/network/aruba
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of power supplies of Aruba 2930M devices.
+
+ The state of the service is given by the device itself:
+
+ - {OK}: Powered, Max
+
+ - {CRIT}: Failed, PermFailure
+
+
+ The check uses the hpicfDcPower-MIB.
+
+item:
+ The model name combined with the index of the power supply.
+
+discovery:
+ One service is created for each power supply not in state NotPresent or NotPlugged.

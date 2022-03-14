@@ -1,0 +1,15 @@
+Title: REST API: respect disabled WATO
+Class: fix
+Compatible: compat
+Component: core
+Date: 1627993381
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+It's possible to disable all configuration modifications in WATO via 'Setup' ->
+'Distributed Monitoring' -> 'Disable remote configuration'. This option is now
+respected by the REST API. It's no longer possible to make configuration
+changes via the REST API if this option is activated.

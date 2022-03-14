@@ -1,7 +1,7 @@
 title: Docker: Container Status
 agents: linux
 catalog: containerization/docker
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the status of docker containers. A status of "running" is treated as OK,
@@ -12,6 +12,6 @@ description:
  If you are configuring the plugin via the configuration file, make sure you do not skip the
  section "docker_containers_client" (the default setting is fine).
 
-inventory:
+discovery:
  One service is created for each container that is running
  or has the restart policy set to 'always'.

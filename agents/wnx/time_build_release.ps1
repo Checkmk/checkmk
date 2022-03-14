@@ -1,1 +1,0 @@
-Measure-Command { .\build_release.cmd | Write-Host }

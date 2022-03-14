@@ -1,0 +1,12 @@
+Title: Tree of folders snapin: Fix default dropdowns
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.1.0b1
+Date: 1641551672
+Class: fix
+
+The snapin's second dropdown was not rendered when initially added to the sidebar. Only after
+choosing an option from the first dropdown, the second one appeared. This behavior is fixed to both
+dropdowns being visible upon the snapin's intial addition to the sidebar.

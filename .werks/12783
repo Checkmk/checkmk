@@ -1,0 +1,14 @@
+Title: inventory: kubernetes endpoint
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1619164511
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this fix the inventory was 'OK' but showed:
+WARNING: k8s_endpoint_info: failed: Unable to convert legacy results. Please migrate plugin to new API
+This werk migrates the plugin to the new API

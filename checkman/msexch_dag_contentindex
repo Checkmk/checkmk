@@ -1,7 +1,7 @@
 title: MS Exchange: DAG ContentIndex State
 agents: windows
 catalog: app/exchange
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the content index of the databases on your
@@ -14,7 +14,7 @@ description:
  The check is {OK} when the {ContentIndexState} parameter is {Healthy}. It
  is {WARN} otherwise.
 
-inventory:
+discovery:
  One service is created for each database on the Mailbox Server.
 
 item:

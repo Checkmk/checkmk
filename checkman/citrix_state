@@ -1,7 +1,7 @@
 title: Citrix XenApp Virtual Machine: State
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors various state variables of Citrix XenApp 7.x VMs.
@@ -10,6 +10,5 @@ description:
  for this to work. Data for the hosts is collected on the controller and
  given to the monitoring server as piggyback data.
 
-inventory:
+discovery:
  One service is created for each controller.
-

@@ -4,12 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_siemens_plc_arguments(params, hostname, ipaddress):
+
+def agent_siemens_plc_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     args = []
 
     if "timeout" in params:
-        args += ['--timeout', params["timeout"]]
+        args += ["--timeout", params["timeout"]]
 
     for device in params["devices"]:
         dev_args = device["host_name"]
@@ -22,15 +26,15 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
             v = []
             for part in value:
                 if isinstance(part, tuple):
-                    v.append(':'.join(map(str, part)))
+                    v.append(":".join(map(str, part)))
                 else:
                     v.append(str(part))
             dev_args += ";%s" % ",".join(v)
 
-        args.append('--hostspec')
+        args.append("--hostspec")
         args.append(dev_args)
 
     return args
 
 
-special_agent_info['siemens_plc'] = agent_siemens_plc_arguments
+special_agent_info["siemens_plc"] = agent_siemens_plc_arguments

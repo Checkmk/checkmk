@@ -5,19 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 mbg_lantime_refclock_refmode_map = {
-    '0': 'notavailable',
-    '1': 'normalOperation',
-    '2': 'trackingSearching',
-    '3': 'antennaFaulty',
-    '4': 'warmBoot',
-    '5': 'coldBoot',
-    '6': 'antennaShortcircuit',
+    "0": "notavailable",
+    "1": "normalOperation",
+    "2": "trackingSearching",
+    "3": "antennaFaulty",
+    "4": "warmBoot",
+    "5": "coldBoot",
+    "6": "antennaShortcircuit",
 }
 
 mbg_lantime_refclock_gpsstate_map = {
-    '0': 'not available',
-    '1': 'synchronized',
-    '2': 'not synchronized',
+    "0": "not available",
+    "1": "synchronized",
+    "2": "not synchronized",
 }
 
 # number of good satellites
@@ -37,51 +37,55 @@ def check_mbg_lantime_refclock(item, params, info):
         state_txt = []
 
         # Handle the reported refclock mode
-        thr_txt = ''
-        if ref_mode in ['0', '3', '6']:
+        thr_txt = ""
+        if ref_mode in ["0", "3", "6"]:
             state = max(state, 2)
-            thr_txt = ' (!!)'
-        elif ref_mode in ['2', '4', '5']:
+            thr_txt = " (!!)"
+        elif ref_mode in ["2", "4", "5"]:
             state = max(state, 1)
-            thr_txt = ' (!)'
-        state_txt.append('Refclock State: %s%s' %
-                         (mbg_lantime_refclock_refmode_map.get(ref_mode, 'UNKNOWN'), thr_txt))
+            thr_txt = " (!)"
+        state_txt.append(
+            "Refclock State: %s%s"
+            % (mbg_lantime_refclock_refmode_map.get(ref_mode, "UNKNOWN"), thr_txt)
+        )
 
         # Handle gps state
-        thr_txt = ''
-        if gps_state in ['0', '2']:
+        thr_txt = ""
+        if gps_state in ["0", "2"]:
             state = max(state, 2)
-            thr_txt = ' (!!)'
-        state_txt.append('GPS State: %s%s' %
-                         (mbg_lantime_refclock_gpsstate_map.get(gps_state, 'UNKNOWN'), thr_txt))
+            thr_txt = " (!!)"
+        state_txt.append(
+            "GPS State: %s%s"
+            % (mbg_lantime_refclock_gpsstate_map.get(gps_state, "UNKNOWN"), thr_txt)
+        )
 
         # Add gps position
         state_txt.append(gps_pos)
 
         # Handle number of satellites
-        thr_txt = ''
+        thr_txt = ""
         if params[0] is not None and int(gps_sat_good) < params[1]:
             state = max(state, 2)
-            thr_txt = ' (!!)'
+            thr_txt = " (!!)"
         elif params[1] is not None and int(gps_sat_good) < params[0]:
             state = max(state, 1)
-            thr_txt = ' (!)'
-        state_txt.append('Satellites: %s/%s%s' % (gps_sat_good, gps_sat_total, thr_txt))
+            thr_txt = " (!)"
+        state_txt.append("Satellites: %s/%s%s" % (gps_sat_good, gps_sat_total, thr_txt))
 
-        perfdata = [('sat_good', gps_sat_good, params[0], params[1]), ('sat_total', gps_sat_total)]
+        perfdata = [("sat_good", gps_sat_good, params[0], params[1]), ("sat_total", gps_sat_total)]
 
-        return (state, ', '.join(state_txt), perfdata)
+        return (state, ", ".join(state_txt), perfdata)
 
-    return (3, 'Got no state information')
+    return (3, "Got no state information")
 
 
 check_info["mbg_lantime_refclock"] = {
-    'check_function': check_mbg_lantime_refclock,
-    'inventory_function': inventory_mbg_lantime_refclock,
-    'service_description': 'LANTIME Refclock',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.5597.3.2',
+    "check_function": check_mbg_lantime_refclock,
+    "inventory_function": inventory_mbg_lantime_refclock,
+    "service_description": "LANTIME Refclock",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.5597.3.2",
         [
             4,  # MBG-SNMP-MIB::mbgLtRefClockModeVal
             6,  # MBG-SNMP-MIB::mbgLtRefGpsStateVal
@@ -89,6 +93,7 @@ check_info["mbg_lantime_refclock"] = {
             9,  # MBG-SNMP-MIB::mbgLtRefGpsSatellitesGood
             10,  # MBG-SNMP-MIB::mbgLtRefGpsSatellitesInView
             16,  # MBG-SNMP-MIB::mbgLtRefGpsModeVal
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3",
 }

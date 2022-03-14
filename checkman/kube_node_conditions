@@ -1,0 +1,17 @@
+title: Kubernetes: Node Conditions
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ A node's status depends on an array of NodeConditions, each with a status
+ defined as either "True", "False" or "Unknown". This check monitors the
+ status of each condition.
+
+ Statuses are OK according to the nature of the condition. Undesired or
+ "Unknown" statuses are considered CRIT by default.
+
+ The state mapping for each condition status is configurable.
+
+discovery:
+ One service is created for each node.

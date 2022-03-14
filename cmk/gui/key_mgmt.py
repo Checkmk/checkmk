@@ -6,51 +6,51 @@
 
 import pprint
 import time
-from typing import Any, Dict
 from pathlib import Path
+from typing import Any, Dict
+
 from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render
 import cmk.utils.store as store
+from cmk.utils.site import omd_site
 
-from cmk.gui.table import table_element
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.valuespec import (
-    Dictionary,
-    Password,
-    TextAreaUnicode,
-    FileUpload,
-    CascadingDropdown,
-    TextUnicode,
-)
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
+from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuTopic,
 )
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FileUpload,
+    Password,
+    TextAreaUnicode,
+    TextInput,
+)
 
 
 class KeypairStore:
     def __init__(self, path: str, attr: str) -> None:
         self._path = Path(path)
         self._attr = attr
-        super(KeypairStore, self).__init__()
+        super().__init__()
 
     def load(self):
         if not self._path.exists():
             return {}
 
         variables: Dict[str, Any] = {self._attr: {}}
-        # TODO: Can be changed to text IO with Python 3
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
         return variables[self._attr]
@@ -84,7 +84,7 @@ class PageKeyManagement:
 
     def __init__(self):
         self.keys = self.load()
-        super(PageKeyManagement, self).__init__()
+        super().__init__()
 
     def title(self):
         raise NotImplementedError()
@@ -112,7 +112,8 @@ class PageKeyManagement:
                                     title=_("Add key"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        makeuri_contextless(request, [("mode", self.edit_mode)])),
+                                        makeuri_contextless(request, [("mode", self.edit_mode)])
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -120,7 +121,8 @@ class PageKeyManagement:
                                     title=_("Upload key"),
                                     icon_name="upload",
                                     item=make_simple_link(
-                                        makeuri_contextless(request, [("mode", self.upload_mode)])),
+                                        makeuri_contextless(request, [("mode", self.upload_mode)])
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -136,8 +138,8 @@ class PageKeyManagement:
         return True
 
     def action(self) -> ActionResult:
-        if self._may_edit_config() and html.request.has_var("_delete"):
-            key_id_as_str = html.request.var("_delete")
+        if self._may_edit_config() and request.has_var("_delete"):
+            key_id_as_str = request.var("_delete")
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
@@ -175,12 +177,14 @@ class PageKeyManagement:
                 table.cell(_("Actions"), css="buttons")
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
-                    if key["owner"] != config.user.id:
-                        message += _("<br><b>Note</b>: this key has created by user <b>%s</b>"
-                                    ) % key["owner"]
+                    if key["owner"] != user.id:
+                        message += (
+                            _("<br><b>Note</b>: this key has created by user <b>%s</b>")
+                            % key["owner"]
+                        )
 
                     delete_url = make_confirm_link(
-                        url=html.makeactionuri([("_delete", key_id)]),
+                        url=makeactionuri(request, transactions, [("_delete", key_id)]),
                         message=message,
                     )
                     html.icon_button(delete_url, _("Delete this key"), "delete")
@@ -189,14 +193,14 @@ class PageKeyManagement:
                     [("mode", self.download_mode), ("key", key_id)],
                 )
                 html.icon_button(download_url, _("Download this key"), "download")
-                table.cell(_("Description"), html.render_text(key["alias"]))
+                table.cell(_("Description"), key["alias"])
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
-                table.cell(_("By"), html.render_text(key["owner"]))
-                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
+                table.cell(_("By"), key["owner"])
+                table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
 
 
 class PageEditKey:
-    back_mode = "keys"
+    back_mode: str
 
     def __init__(self):
         self._minlen = None
@@ -208,22 +212,28 @@ class PageEditKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Key"),
-                                          breadcrumb,
-                                          form_name="key",
-                                          button_name="create",
-                                          save_title=_("Create"))
+        return make_simple_form_page_menu(
+            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Create")
+        )
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
             # which use the current page context will contain the passphrase which could
             # leak the secret information
-            html.request.del_var("key_p_passphrase")
+            request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
-            return redirect(mode_url(self.back_mode))
+            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
+            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
+            #  is obviously a very simple module-layer violation. This whole module should either
+            #    * be moved into cmk.gui.cee.plugins.wato
+            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
+            #  Either way, this is outside my scope right now and shall be fixed.
+            from cmk.gui.plugins.wato.utils.base_modes import mode_url
+
+            return HTTPRedirect(mode_url(self.back_mode))
         return None
 
     def _create_key(self, value):
@@ -244,10 +254,11 @@ class PageEditKey:
         cert = create_self_signed_cert(pkey)
         return {
             "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-            "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
-                                                  passphrase.encode("utf-8")).decode("ascii"),
+            "private_key": crypto.dump_privatekey(
+                crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
+            ).decode("ascii"),
             "alias": alias,
-            "owner": config.user.id,
+            "owner": user.id,
             "date": time.time(),
         }
 
@@ -264,19 +275,24 @@ class PageEditKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextUnicode(
-                    title=_("Description or comment"),
-                    size=64,
-                    allow_empty=False,
-                )),
-                ("passphrase",
-                 Password(
-                     title=_("Passphrase"),
-                     help=self._passphrase_help(),
-                     allow_empty=False,
-                     is_stored_plain=False,
-                     minlen=self._minlen,
-                 )),
+                (
+                    "alias",
+                    TextInput(
+                        title=_("Description or comment"),
+                        size=64,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        help=self._passphrase_help(),
+                        allow_empty=False,
+                        is_stored_plain=False,
+                        minlen=self._minlen,
+                    ),
+                ),
             ],
             optional_keys=False,
             render="form",
@@ -287,7 +303,7 @@ class PageEditKey:
 
 
 class PageUploadKey:
-    back_mode = "keys"
+    back_mode: str
 
     def load(self):
         raise NotImplementedError()
@@ -296,30 +312,38 @@ class PageUploadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Key"),
-                                          breadcrumb,
-                                          form_name="key",
-                                          button_name="upload",
-                                          save_title=_("Upload"))
+        return make_simple_form_page_menu(
+            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Upload")
+        )
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
-            html.request.del_var("key_p_passphrase")
+            request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
             key_file = self._get_uploaded(value, "key_file")
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
-            if not key_file.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----\n") \
-               or "-----END ENCRYPTED PRIVATE KEY-----\n" not in key_file \
-               or "-----BEGIN CERTIFICATE-----\n" not in key_file \
-               or not key_file.endswith("-----END CERTIFICATE-----\n"):
+            if (
+                not key_file.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----\n")
+                or "-----END ENCRYPTED PRIVATE KEY-----\n" not in key_file
+                or "-----BEGIN CERTIFICATE-----\n" not in key_file
+                or not key_file.endswith("-----END CERTIFICATE-----\n")
+            ):
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
-            return redirect(mode_url(self.back_mode))
+            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
+            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
+            #  is obviously a very simple module-layer violation. This whole module should either
+            #    * be moved into cmk.gui.cee.plugins.wato
+            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
+            #  Either way, this is outside my scope right now and shall be fixed.
+            from cmk.gui.plugins.wato.utils.base_modes import mode_url
+
+            return HTTPRedirect(mode_url(self.back_mode), code=302)
         return None
 
     def _get_uploaded(self, cert_spec, key):
@@ -344,15 +368,17 @@ class PageUploadKey:
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
-                    _("The key / certificate already exists (Key: %d, "
-                      "Description: %s)") % (key_id, key["alias"]))
+                    _("The key / certificate already exists (Key: %d, " "Description: %s)")
+                    % (key_id, key["alias"]),
+                )
 
         # Use time from certificate
         def parse_asn1_generalized_time(timestr):
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
         created = time.mktime(
-            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii")))
+            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii"))
+        )
 
         # Check for valid passphrase
         decrypt_private_key(key_file, value["passphrase"])
@@ -366,7 +392,7 @@ class PageUploadKey:
             "certificate": cert_pem,
             "private_key": key_pem,
             "alias": value["alias"],
-            "owner": config.user.id,
+            "owner": user.id,
             "date": created,
         }
 
@@ -385,24 +411,33 @@ class PageUploadKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextUnicode(
-                    title=_("Description or comment"),
-                    size=64,
-                    allow_empty=False,
-                )),
-                ("passphrase",
-                 Password(
-                     title=_("Passphrase"),
-                     help=self._passphrase_help(),
-                     allow_empty=False,
-                     is_stored_plain=False,
-                 )),
-                ("key_file",
-                 CascadingDropdown(title=_("Key"),
-                                   choices=[
-                                       ("upload", _("Upload CRT/PEM File"), FileUpload()),
-                                       ("text", _("Paste PEM Content"), TextAreaUnicode()),
-                                   ])),
+                (
+                    "alias",
+                    TextInput(
+                        title=_("Description or comment"),
+                        size=64,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        help=self._passphrase_help(),
+                        allow_empty=False,
+                        is_stored_plain=False,
+                    ),
+                ),
+                (
+                    "key_file",
+                    CascadingDropdown(
+                        title=_("Key"),
+                        choices=[
+                            ("upload", _("Upload CRT/PEM File"), FileUpload()),
+                            ("text", _("Paste PEM Content"), TextAreaUnicode()),
+                        ],
+                    ),
+                ),
             ],
             optional_keys=False,
             render="form",
@@ -413,7 +448,7 @@ class PageUploadKey:
 
 
 class PageDownloadKey:
-    back_mode = "keys"
+    back_mode: str
 
     def load(self):
         raise NotImplementedError()
@@ -422,18 +457,16 @@ class PageDownloadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Key"),
-                                          breadcrumb,
-                                          form_name="key",
-                                          button_name="download",
-                                          save_title=_("Download"))
+        return make_simple_form_page_menu(
+            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Download")
+        )
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             keys = self.load()
 
             try:
-                key_id_str = html.request.var("key")
+                key_id_str = request.var("key")
                 if key_id_str is None:
                     raise Exception("cannot happen")  # is this really the case?
                 key_id = int(key_id_str)
@@ -455,20 +488,23 @@ class PageDownloadKey:
 
     def _send_download(self, keys, key_id):
         key = keys[key_id]
-        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
-            key_id, key)
-        html.response.headers["Content-type"] = "application/x-pem-file"
-        html.write_text(key["private_key"])
-        html.write_text(key["certificate"])
+        response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
+            key_id, key
+        )
+        response.headers["Content-type"] = "application/x-pem-file"
+        response.set_data(key["private_key"] + key["certificate"])
 
     def _file_name(self, key_id, key):
         raise NotImplementedError()
 
     def page(self):
         html.p(
-            _("To be able to download the key, you need to unlock the key by entering the "
-              "passphrase. This is only done to verify that you are allowed to download the key. "
-              "The key will be downloaded in encrypted form."))
+            _(
+                "To be able to download the key, you need to unlock the key by entering the "
+                "passphrase. This is only done to verify that you are allowed to download the key. "
+                "The key will be downloaded in encrypted form."
+            )
+        )
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
@@ -480,12 +516,14 @@ class PageDownloadKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("passphrase",
-                 Password(
-                     title=_("Passphrase"),
-                     allow_empty=False,
-                     is_stored_plain=False,
-                 )),
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        allow_empty=False,
+                        is_stored_plain=False,
+                    ),
+                ),
             ],
             optional_keys=False,
             render="form",
@@ -494,21 +532,22 @@ class PageDownloadKey:
 
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
-    cert.get_subject().O = "Check_MK Site %s" % config.omd_site()
-    cert.get_subject().CN = config.user.id or "### Check_MK ###"
+    cert.get_subject().O = "Check_MK Site %s" % omd_site()
+    cert.get_subject().CN = user.id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(pkey)
-    cert.sign(pkey, 'sha1')
+    cert.sign(pkey, "sha1")
 
     return cert
 
 
 def decrypt_private_key(encrypted_private_key, passphrase):
     try:
-        return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key,
-                                      passphrase.encode("utf-8"))
+        return crypto.load_privatekey(
+            crypto.FILETYPE_PEM, encrypted_private_key, passphrase.encode("utf-8")
+        )
     except crypto.Error:
         raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

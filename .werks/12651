@@ -1,0 +1,13 @@
+Title: nimble_latency: do not discover if no data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618415032
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The service discovery for nimble devices will no longer discover any services
+if a valid vol_name exists but the associated data is empty.

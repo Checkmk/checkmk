@@ -1,0 +1,15 @@
+Title: Fix crash in omd_status clustered check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625643914
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this werk, a clustered omd_status check may have crashed with
+<tt>KeyError (<i>sitename</i>)</tt>.
+
+This should now be fixed.

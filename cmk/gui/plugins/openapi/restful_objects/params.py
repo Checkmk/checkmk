@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections import abc
 from typing import Dict, ItemsView, List, Optional, Sequence, Type, Union
 
-from marshmallow import fields, Schema
-from marshmallow.schema import SchemaMeta
+from marshmallow import Schema
 
+from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     LocationType,
@@ -17,7 +18,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     translate_to_openapi_keys,
 )
-from cmk.gui.plugins.openapi.utils import BaseSchema
+
+from cmk import fields
 
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 
@@ -122,17 +124,19 @@ def to_openapi(
             raise ValueError(f"Don't recognize parameter of form: {raw_param!r}")
 
         for name, field in _fields:
-            metadata = denilled({
-                'description': field.metadata.get('description'),
-                'example': field.metadata.get('example'),
-                'required': field.required,
-                'allow_empty': field.allow_none,
-                'schema_enum': field.metadata.get('enum'),
-                'schema_string_format': field.metadata.get('format'),
-                'schema_string_pattern': field.metadata.get('pattern'),
-                'schema_num_minimum': field.metadata.get('minimum'),
-                'schema_num_maximum': field.metadata.get('maximum'),
-            })
+            metadata = denilled(
+                {
+                    "description": field.metadata.get("description"),
+                    "example": field.metadata.get("example"),
+                    "required": field.required,
+                    "allow_empty": field.allow_none,
+                    "schema_enum": field.metadata.get("enum"),
+                    "schema_string_format": field.metadata.get("format"),
+                    "schema_string_pattern": field.metadata.get("pattern"),
+                    "schema_num_minimum": field.metadata.get("minimum"),
+                    "schema_num_maximum": field.metadata.get("maximum"),
+                }
+            )
             param = translate_to_openapi_keys(
                 name=name,
                 location=location,
@@ -143,9 +147,8 @@ def to_openapi(
 
 
 def to_schema(
-    params: Optional[Sequence[RawParameter]],
-    required='none',
-) -> Optional[Union[Type[Schema], type]]:
+    params: Optional[Union[Sequence[RawParameter], RawParameter]]
+) -> Optional[Type[Schema]]:
     """
     Examples:
 
@@ -154,20 +157,24 @@ def to_schema(
         >>> to_schema([])
 
         >>> class Foo(Schema):
-        ...       field = fields.String()
+        ...       field = fields.String(description="Foo")
 
         >>> dict(to_schema([Foo])().declared_fields)  # doctest: +ELLIPSIS
         {'field': <fields.String(...)>}
 
-        >>> to_schema(to_openapi([{'name': fields.String()}], 'path'))
+        >>> to_schema({
+        ...     'foo': fields.String(description="Foo")
+        ... })().declared_fields['foo'] # doctest: +ELLIPSIS
+        <fields.String(...)>
+
+        >>> to_schema(to_openapi([{'name': fields.String(description="Foo")}], 'path'))
         <class 'marshmallow.schema.GeneratedSchema'>
 
         >>> s = to_schema(
         ...     [
-        ...         {'name': fields.String()},
-        ...         {'title': fields.String()},
+        ...         {'name': fields.String(description="Foo")},
+        ...         {'title': fields.String(description="Foo")},
         ...     ],
-        ...     'path',
         ... )
         >>> s
         <class 'marshmallow.schema.GeneratedSchema'>
@@ -179,30 +186,58 @@ def to_schema(
 
     Args:
         params:
+            The following types are supported:
+                * dicts with a "name" to "fields.Field" mapping.
+                * marshmallow schemas
+
+            Additonally a heterogenous sequence of one or more of those types is also supported
 
     Returns:
+        A marshmallow schema with all the fields unified
 
     """
+
+    def _validate_fields(name, dict_):
+        for key, field in dict_.items():
+            if "description" not in field.metadata:
+                # FIXME: Add descriptions to all BI fields and schemas
+                if not name.startswith("BI"):
+                    raise ValueError(
+                        f"{name}: field {key} has no description."
+                        f"\n\n{field.metadata!r}"
+                        f"\n\n{dict_!r}"
+                    )
+
+    def _from_dict(dict_):
+        needs_validating = False
+        for value in dict_.values():
+            if isinstance(value, fields.Field):
+                needs_validating = True
+
+        if needs_validating:
+            _validate_fields("dict", dict_)
+        schema_class = BaseSchema.from_dict(dict_)
+        assert issubclass(schema_class, BaseSchema)
+        return schema_class
+
     if not params:
         return None
 
-    if isinstance(params, SchemaMeta):
-        return params
-
-    def _from_dict(dict_):
-        return BaseSchema.from_dict(dict_)
-
-    if isinstance(params, list):
-        p = {}
+    if isinstance(params, abc.Sequence):
+        p: Dict[str, fields.Field] = {}
         for entry in params:
-            if isinstance(entry, SchemaMeta):
-                p.update(entry().declared_fields)
-            else:
+            if isinstance(entry, abc.Mapping):
                 p.update(entry)
+            else:
+                p.update(entry().declared_fields)
         return _from_dict(p)
 
-    # Marshmallow's type is invariant (Dict instead of Mapping) so we have to cast.
-    return _from_dict(params)
+    if isinstance(params, abc.Mapping):
+        return _from_dict(params)
+
+    schema = params()
+    _validate_fields(schema.__class__.__name__, schema.declared_fields)
+    return params
 
 
 def fill_out_path_template(
@@ -234,8 +269,8 @@ def fill_out_path_template(
             raise ValueError(f"Parameter {path_param!r} needed, but not supplied in {parameters!r}")
 
         param_spec = parameters[path_param]
-        if 'example' not in param_spec:
+        if "example" not in param_spec:
             raise ValueError(f"Parameter {path_param!r} of path {orig_path!r} has no example.")
 
-        path = path.replace("{" + path_param + "}", param_spec['example'])
+        path = path.replace("{" + path_param + "}", param_spec["example"])
     return path

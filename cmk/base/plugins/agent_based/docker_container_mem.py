@@ -3,11 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict
-from .agent_based_api.v1.type_defs import StringTable
-
 from .agent_based_api.v1 import register
-from .utils import docker
+from .agent_based_api.v1.type_defs import StringTable
+from .utils import docker, memory
 
 
 def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.MemorySection:
@@ -16,25 +14,32 @@ def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.Memo
     """
     parsed = docker.parse(string_table).data
 
+    # we could get data from a host with cgroup v2, or cgroup v1.
+    stats = parsed.get("stats", {})
+
     try:
-        host_memory_total = parsed['limit']
-        container_memory_limit = parsed['stats']['hierarchical_memory_limit']
-        container_memory_total_inactive_file = parsed['stats']['total_inactive_file']
-        container_memory_usage = parsed['usage']
+        memory_limit = parsed["limit"]
+        container_memory_usage = parsed["usage"]
+        if "hierarchical_memory_limit" in stats and "total_inactive_file" in stats:
+            # cgroup v1
+            container_memory_limit = stats["hierarchical_memory_limit"]
+            container_memory_total_inactive_file = stats["total_inactive_file"]
+            memory_limit = min(memory_limit, container_memory_limit)
+        else:
+            # we assume cgroup v2
+            container_memory_total_inactive_file = stats["inactive_file"]
     except KeyError:
         # `docker stats <CONTAINER>` will show 0/0 so we are compliant.
         return docker.MemorySection(0, 0, 0)
 
-    mem_total = min(host_memory_total, container_memory_limit)
-
     return docker.MemorySection(
-        mem_total=mem_total,
+        mem_total=memory_limit,
         mem_usage=container_memory_usage,
         mem_cache=container_memory_total_inactive_file,
     )
 
 
-def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
+def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUsed:
     """
         >>> import pprint
         >>> pprint.pprint(parse_docker_container_mem([
@@ -78,23 +83,14 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
     version = docker.get_version(string_table)
 
     if version is None:
+        # this is the output of a checkmk agent run inside a docker container
+        # it has to handle only cgroupv1 as cgroupv2 is sent with another section name
         parsed = docker.parse_container_memory(string_table)
     else:
+        # this is the output of mk_docker.py
+        # it has to handle both cgroupv1 and cgroupv2
         parsed = _parse_docker_container_mem_plugin(string_table)
-
-    container_memory_usage = parsed.mem_usage - parsed.mem_cache
-
-    if container_memory_usage < 0:
-        # all container runtimes seem to do it this way:
-        # https://github.com/google/cadvisor/blob/c6ad44633aa0cee60a28430ddec632dca53becac/container/libcontainer/handler.go#L823
-        # https://github.com/containerd/cri/blob/bc08a19f3a44bda9fd141e6ee4b8c6b369e17e6b/pkg/server/container_stats_list_linux.go#L123
-        # https://github.com/docker/cli/blob/70a00157f161b109be77cd4f30ce0662bfe8cc32/cli/command/container/stats_helpers.go#L245
-        container_memory_usage = 0
-
-    return {
-        "MemTotal": parsed.mem_total,
-        "MemFree": parsed.mem_total - container_memory_usage,
-    }
+    return parsed.to_mem_used()
 
 
 register.agent_section(

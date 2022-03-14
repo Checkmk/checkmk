@@ -32,6 +32,8 @@
 #include "macros.h"
 #include "config.h"
 
+NAGIOS_BEGIN_DECL
+
 /*
  * global variables only used in the core. Reducing this list would be
  * a Good Thing(tm).
@@ -416,8 +418,6 @@ extern struct load_control loadctl;
 #define ACTIVE_DOWNTIME                 0       /* active downtime - currently in effect */
 #define PENDING_DOWNTIME                1       /* pending downtime - scheduled for the future */
 
-
-NAGIOS_BEGIN_DECL
 
 /* useful for hosts and services to determine time 'til next check */
 #define normal_check_window(o) ((time_t)(o->check_interval * interval_length))

@@ -19,7 +19,9 @@ check_mk_only_from_default = None
 
 
 def check_only_from(_no_item, _no_params, _no_info):
-    return 3, '''This has been included in the service "Check_MK" (see long output for details).
+    return (
+        3,
+        """This has been included in the service "Check_MK" (see long output for details).
 The functionality of this service has been incorporated in the "Check_MK" service.
  The corresponding global config option "check_mk_only_from_default"
  will no longer work; please remove it from your main.mk file if
@@ -28,108 +30,12 @@ The functionality of this service has been incorporated in the "Check_MK" servic
  ruleset "Allowed IP addresses for agent access" - the same rule that
  will be used for the agent bakery (if available).
  The check state will be displayed as part of the "Check_MK" sercice.
-'''
+""",
+    )
 
 
 check_info["check_mk.only_from"] = {
-    'check_function': check_only_from,
-    'inventory_function': lambda info: [],
-    'service_description': 'Check_MK Agent Access',
-}
-
-#.
-#   .--agent_update--------------------------------------------------------.
-#   |                           _                      _       _           |
-#   |     __ _  __ _  ___ _ __ | |_    _   _ _ __   __| | __ _| |_ ___     |
-#   |    / _` |/ _` |/ _ \ '_ \| __|  | | | | '_ \ / _` |/ _` | __/ _ \    |
-#   |   | (_| | (_| |  __/ | | | |_   | |_| | |_) | (_| | (_| | ||  __/    |
-#   |    \__,_|\__, |\___|_| |_|\__|___\__,_| .__/ \__,_|\__,_|\__\___|    |
-#   |          |___/              |_____|   |_|                            |
-#   '----------------------------------------------------------------------'
-
-# Example output from agent:
-# <<<check_mk>>>
-# AgentUpdate: last_check 1447777834.22 last_update 1447776761.52 aghash e33d0cebcf7404d9 error None
-
-
-def _get_error_deployment_globally_disabled_state(params, error_text):
-    default_state = 1
-    if error_text == "Agent Bakery: Agent deployment is currently globally disabled on the " \
-                     "deployment server.":
-        return params.get("error_deployment_globally_disabled", default_state)
-    return default_state
-
-
-def inventory_cmk_agent_update(info):
-    if "AgentUpdate" in info:
-        return [(None, {})]
-
-
-def check_cmk_agent_update(_no_item, params, info):
-    if "AgentUpdate" not in info:
-        return
-
-    parsed = {}
-    parts = info["AgentUpdate"].split()
-    while parts:
-        key = parts[0]
-        if key == "error":
-            value = " ".join(parts[1:])
-            parts = []
-        else:
-            value = parts[1]
-            if value == "None":
-                value = None
-            parts = parts[2:]
-        parsed[key] = value
-
-    now = time.time()
-
-    if parsed["error"] != "None":
-        error_state = _get_error_deployment_globally_disabled_state(params, parsed["error"])
-        yield error_state, "Error: %s" % parsed["error"]
-    else:
-        yield 0, "No errors"
-
-    if parsed["last_check"]:
-        try:
-            last_check = float(parsed["last_check"])
-            age = now - last_check
-            # Currently there is no crit level
-            warn = 2 * 3600 * 24
-            if age > warn:
-                state = 1
-            else:
-                state = 0
-            if state:
-                levels_text = " (warn at %s)" % (get_age_human_readable(warn))
-            else:
-                levels_text = ""
-            yield state, "Last update check: " + get_timestamp_human_readable(
-                parsed["last_check"]) + levels_text
-        except Exception:
-            yield 1, "No successful connect to server yet"
-
-    if parsed["last_update"]:
-        yield 0, "Last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
-
-    if parsed.get("update_url"):
-        # Note: Transformation of URLs from this check (check_mk-check_mk_agent_update) to icons
-        # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
-        yield 0, "Update URL: %s" % parsed["update_url"]
-
-    if parsed["aghash"]:
-        yield 0, "Agent configuration: %s" % parsed["aghash"][:8]
-
-    if parsed.get("pending_hash"):
-        yield 0, "Pending installation: %s" % parsed["pending_hash"][:8]
-
-    return
-
-
-check_info["check_mk.agent_update"] = {
-    'check_function': check_cmk_agent_update,
-    'inventory_function': inventory_cmk_agent_update,
-    'service_description': 'Check_MK Agent',
-    'group': 'agent_update',
+    "check_function": check_only_from,
+    "inventory_function": lambda info: [],
+    "service_description": "Check_MK Agent Access",
 }

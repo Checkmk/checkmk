@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -26,8 +27,8 @@ std::string unsafe_tolower(const std::string &str);
 std::string unsafe_toupper(const std::string &str);
 #endif
 
-bool starts_with(const std::string &input, const std::string &test);
-bool ends_with(const std::string &input, const std::string &test);
+bool starts_with(std::string_view input, std::string_view test);
+bool ends_with(std::string_view input, std::string_view test);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
 
@@ -60,6 +61,12 @@ inline std::string strip(const std::string &str) {
     return strip(str, whitespace);
 }
 
+struct escape_nonprintable {
+    const std::string_view buffer;
+};
+
+std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp);
+
 std::pair<std::string, std::string> nextField(const std::string &str,
                                               const std::string &chars);
 
@@ -78,7 +85,6 @@ std::string to_multi_line(const std::string &str);
 
 #ifdef CMC
 std::string ipv4ToString(in_addr_t ipv4_address);
-std::string portToString(in_port_t port);
 #endif
 }  // namespace mk
 

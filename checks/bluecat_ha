@@ -14,7 +14,7 @@ factory_settings["bluecat_ha"] = {
 
 def inventory_bluecat_ha(info):
     # Only add if device is not in standalone mode
-    if info[0][0] != '1':
+    if info[0][0] != "1":
         return [(None, None)]
 
 
@@ -32,9 +32,9 @@ def check_bluecat_ha(item, params, info):
     }
 
     state = 0
-    if oper_state in params['oper_states']['warning']:
+    if oper_state in params["oper_states"]["warning"]:
         state = 1
-    elif oper_state in params['oper_states']['critical']:
+    elif oper_state in params["oper_states"]["critical"]:
         state = 2
     yield state, "State is %s" % oper_states[oper_state]
 

@@ -4,25 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    Sequence,
-    Tuple,
-    TypedDict,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    SNMPTree,
-    State as state,
-    type_defs,
-)
+from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple, TypedDict
+
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils.netscaler import SNMP_DETECT
 
 netscaler_vserver_states = {
@@ -109,20 +95,32 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
       'socket': '0.0.0.0:0',
       'tx_bytes': 0})
     """
-    (name, ip, port, svr_type, svr_state, svr_health, svr_entitytype, request_rate, rx_bytes,
-     tx_bytes, full_name) = line
+    (
+        name,
+        ip,
+        port,
+        svr_type,
+        svr_state,
+        svr_health,
+        svr_entitytype,
+        request_rate,
+        rx_bytes,
+        tx_bytes,
+        full_name,
+    ) = line
     vserver: VServer = {
-        'service_state': netscaler_vserver_states.get(svr_state, (1, "unknown")),
-        'entity_service_type': netscaler_vserver_entitytypes.get(svr_entitytype,
-                                                                 "unknown (%s)" % svr_entitytype),
-        'protocol': netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
-        'socket': '%s:%s' % (ip, port),
-        'request_rate': int(request_rate),
-        'rx_bytes': int(rx_bytes),
-        'tx_bytes': int(tx_bytes),
+        "service_state": netscaler_vserver_states.get(svr_state, (1, "unknown")),
+        "entity_service_type": netscaler_vserver_entitytypes.get(
+            svr_entitytype, "unknown (%s)" % svr_entitytype
+        ),
+        "protocol": netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
+        "socket": "%s:%s" % (ip, port),
+        "request_rate": int(request_rate),
+        "rx_bytes": int(rx_bytes),
+        "tx_bytes": int(tx_bytes),
     }
     if svr_entitytype in {"1", "2"}:
-        vserver['health'] = float(svr_health)
+        vserver["health"] = float(svr_health)
     return full_name or name, vserver
 
 
@@ -131,23 +129,23 @@ def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Sectio
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[
     ... ['lb_eas', '0.0.0.0', '0', '14', '7', '100', '1', '0', '0', '0', 'lb_eas'],
-    ... ['citrix.ehg.directory', '10.101.6.11', '443', '14', '7', '0', '3', '0', '0', '0', 'citrix.ehg.directory'],
-    ... ['cag.erwinhymergroup.com', '10.101.6.12', '443', '14', '7', '0', '3', '0', '0', '0', 'cag.erwinhymergroup.com'],
+    ... ['citrix.comp.directory', '1.2.3.4', '443', '14', '7', '0', '3', '0', '0', '0', 'citrix.comp.directory'],
+    ... ['cag.company.com', '1.2.3.5', '443', '14', '7', '0', '3', '0', '0', '0', 'cag.company.com'],
     ... ]]))
-    {'cag.erwinhymergroup.com': {'entity_service_type': 'ssl vpn',
-                                 'protocol': 'ssl',
-                                 'request_rate': 0,
-                                 'rx_bytes': 0,
-                                 'service_state': (0, 'up'),
-                                 'socket': '10.101.6.12:443',
-                                 'tx_bytes': 0},
-     'citrix.ehg.directory': {'entity_service_type': 'ssl vpn',
-                              'protocol': 'ssl',
-                              'request_rate': 0,
-                              'rx_bytes': 0,
-                              'service_state': (0, 'up'),
-                              'socket': '10.101.6.11:443',
-                              'tx_bytes': 0},
+    {'cag.company.com': {'entity_service_type': 'ssl vpn',
+                         'protocol': 'ssl',
+                         'request_rate': 0,
+                         'rx_bytes': 0,
+                         'service_state': (0, 'up'),
+                         'socket': '1.2.3.5:443',
+                         'tx_bytes': 0},
+     'citrix.comp.directory': {'entity_service_type': 'ssl vpn',
+                               'protocol': 'ssl',
+                               'request_rate': 0,
+                               'rx_bytes': 0,
+                               'service_state': (0, 'up'),
+                               'socket': '1.2.3.4:443',
+                               'tx_bytes': 0},
      'lb_eas': {'entity_service_type': 'loadbalancing',
                 'health': 100.0,
                 'protocol': 'ssl',
@@ -189,10 +187,10 @@ def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> import pprint
     >>> pprint.pprint(list(discover_netscaler_vserver({
-    ... 'cag.erwinhymergroup.com': {},
-    ... 'citrix.ehg.directory': {},
+    ... 'cag.company.com': {},
+    ... 'citrix.comp.directory': {},
     ... })))
-    [Service(item='cag.erwinhymergroup.com'), Service(item='citrix.ehg.directory')]
+    [Service(item='cag.company.com'), Service(item='citrix.comp.directory')]
     """
     for srv_name in section:
         yield Service(item=srv_name)
@@ -230,29 +228,33 @@ def _check_netscaler_vservers(
     if not vsevers:
         return
 
-    cluster_status = params.get('cluster_status', 'best')
+    cluster_status = params.get("cluster_status", "best")
     stat_list = []
     req_rate_list, rx_list, tx_list = [0], [0], [0]
 
     for vserver in vsevers:
-        stat_list.append(vserver['service_state'][0])
-        req_rate_list.append(vserver['request_rate'])
-        rx_list.append(vserver['rx_bytes'])
-        tx_list.append(vserver['tx_bytes'])
+        stat_list.append(vserver["service_state"][0])
+        req_rate_list.append(vserver["request_rate"])
+        rx_list.append(vserver["rx_bytes"])
+        tx_list.append(vserver["tx_bytes"])
 
     min_state = min(stat_list)
-    yield from (Result(
-        state=state(min_state if cluster_status == 'best' else vserver['service_state'][0]),
-        summary="Status: %s%s" % (
-            vserver['service_state'][1],
-            " (%s)" % vserver['node'] if 'node' in vserver else "",
-        ),
-    ) for vserver in vsevers)
+    yield from (
+        Result(
+            state=state(min_state if cluster_status == "best" else vserver["service_state"][0]),
+            summary="Status: %s%s"
+            % (
+                vserver["service_state"][1],
+                " (%s)" % vserver["node"] if "node" in vserver else "",
+            ),
+        )
+        for vserver in vsevers
+    )
 
     first_vserver = vsevers[0]
-    if first_vserver['entity_service_type'] in ['loadbalancing', 'loadbalancing group']:
+    if first_vserver["entity_service_type"] in ["loadbalancing", "loadbalancing group"]:
         yield from check_levels(
-            value=first_vserver['health'],
+            value=first_vserver["health"],
             levels_lower=params["health_levels"],
             metric_name="health_perc",
             render_func=render.percent,
@@ -262,10 +264,11 @@ def _check_netscaler_vservers(
 
     yield Result(
         state=state.OK,
-        summary="Type: %s, Protocol: %s, Socket: %s" % (
-            first_vserver['entity_service_type'],
-            first_vserver['protocol'],
-            first_vserver['socket'],
+        summary="Type: %s, Protocol: %s, Socket: %s"
+        % (
+            first_vserver["entity_service_type"],
+            first_vserver["protocol"],
+            first_vserver["socket"],
         ),
     )
 
@@ -312,7 +315,7 @@ def check_netscaler_vserver(
 def cluster_check_netscaler_vserver(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> type_defs.CheckResult:
     """
     >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}
@@ -338,8 +341,10 @@ def cluster_check_netscaler_vserver(
             {
                 # mypy unfortunately only accepts string literals as valid keys for TypedDicts
                 **node_section[item],  # type: ignore[misc]
-                'node': node_name,
-            } for node_name, node_section in section.items() if item in node_section
+                "node": node_name,
+            }
+            for node_name, node_section in section.items()
+            if node_section is not None and item in node_section
         ],
     )
 

@@ -11,7 +11,9 @@
 #include <cerrno>
 #include <cstring>
 #include <ostream>
+#include <utility>
 
+#include "ChronoUtils.h"
 #include "Logger.h"
 #include "Poller.h"
 
@@ -20,7 +22,7 @@ using namespace std::chrono_literals;
 namespace {
 constexpr size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
-constexpr size_t maximum_buffer_size = 500 * 1024 * 1024;
+constexpr size_t maximum_buffer_size = size_t{500} * 1024 * 1024;
 
 bool timeout_reached(const std::chrono::system_clock::time_point &start,
                      const std::chrono::milliseconds &timeout) {
@@ -51,18 +53,18 @@ std::ostream &operator<<(std::ostream &os, const InputBuffer::Result &r) {
     return os;  // never reached
 }
 
-InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
+InputBuffer::InputBuffer(int fd, std::function<bool()> should_terminate,
+                         Logger *logger,
                          std::chrono::milliseconds query_timeout,
                          std::chrono::milliseconds idle_timeout)
     : _fd(fd)
-    , _termination_flag(termination_flag)
+    , should_terminate_{std::move(should_terminate)}
     , _query_timeout(query_timeout)
     , _idle_timeout(idle_timeout)
     , _readahead_buffer(initial_buffer_size)
-    , _logger(logger) {
-    _read_index = 0;   // points to data not yet processed
-    _write_index = 0;  // points to end of data in buffer
-}
+    , _read_index(0)   // points to data not yet processed
+    , _write_index(0)  // points to end of data in buffer
+    , _logger(logger) {}
 
 // read in data enough for one complete request (and maybe more).
 InputBuffer::Result InputBuffer::readRequest() {
@@ -101,14 +103,18 @@ InputBuffer::Result InputBuffer::readRequest() {
                 if (rd == Result::timeout) {
                     if (query_started) {
                         Informational(_logger)
-                            << "Timeout of " << _query_timeout.count()
+                            << "Timeout of "
+                            << mk::ticks<std::chrono::milliseconds>(
+                                   _query_timeout)
                             << " ms exceeded while reading query";
                         return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
                     if (timeout_reached(start_of_idle, _idle_timeout)) {
                         Informational(_logger)
-                            << "Idle timeout of " << _idle_timeout.count()
+                            << "Idle timeout of "
+                            << mk::ticks<std::chrono::milliseconds>(
+                                   _idle_timeout)
                             << " ms exceeded. Going to close connection.";
                         return Result::timeout;
                     }
@@ -205,7 +211,7 @@ InputBuffer::Result InputBuffer::readRequest() {
 // _query_timeout msecs.
 InputBuffer::Result InputBuffer::readData() {
     auto start = std::chrono::system_clock::now();
-    while (!_termination_flag) {
+    while (!shouldTerminate()) {
         if (timeout_reached(start, _query_timeout)) {
             return Result::timeout;
         }

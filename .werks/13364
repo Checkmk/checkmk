@@ -1,0 +1,21 @@
+Title: Dashlets: Use default Timewindows
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1637752191
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+All dashlets now use the default Timerange() valuespec.
+This also enables the usage of "Custom graph timeranges"
+from global settings in dashlets.
+
+Affected dashlets are:
+<ul>
+<li>Single metric graph
+<li>Custom graph
+<li>Combined graph
+<li>Percentage of service problems
+</ul>

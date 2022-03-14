@@ -1,0 +1,18 @@
+Title: webapi: fix TypeError when formatting tags
+Class: fix
+Compatible: compat
+Component: core
+Date: 1614003367
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When formatting an error message, the formatting
+code crashed when the tag contained "None" as a value.
+
+This behavior has been fixed. No further action is needed.
+
+
+

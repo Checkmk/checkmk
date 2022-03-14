@@ -1,0 +1,134 @@
+@startuml
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam monochrome true
+' Remove shadows
+skinparam shadowing false
+scale 0.6
+
+package users {
+    actor "Operator" as operator
+    actor "Admin" as admin
+}
+
+package "API clients" as api_clients {
+    component "WebAPI client" as web_api_client
+    component "REST client" as rest_api_client
+    component "Livestatus client" as external_livestatus_client
+}
+
+package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
+    interface HTTP as http_gui
+    interface HTTP as http_rest_api
+    interface HTTP as http_web_api
+    component apache {
+            component GUI
+            component "REST API" as rest_api
+            component WebAPI
+            component "Livestatus client" as apache_livestatus_client
+    }
+    interface Livestatus as apache_livestatus
+
+    component "[[../arch-comp-core.html Monitoring Core]]" as cmc {
+        component "[[../arch-comp-livestatus.html Livestatus]]" as cmc_livestatus_server
+        component "[[../arch-comp-checkengine.html Check engine]]" as check_engine {
+            component checker
+            component Fetcher
+        }
+        component "Smart ping" as smart_ping {
+            component ICMPReceiver
+            component ICMPSender
+        }
+        component "Notification engine" as notify_engine
+    }
+    interface "call" as call_notification_plugins
+
+    component cron
+
+    component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
+    interface "Livestatus client" as liveproxyd_livestatus_client
+
+    component dcd
+    interface "HTTP" as dcd_web_api_client
+    interface Piggyback as dcd_piggyback
+
+    component mkeventd
+    interface Livestatus as mkeventd_livestatus
+
+    component mknotifyd
+    interface Notification as mknotifyd_notification
+
+    component rrdcached
+    interface "RRD socket" as rrdcached_socket
+}
+interface "mknotifyd other site" as mknotifyd_other_site
+
+package "Notification plugins" as notification_plugins {
+    component Email
+    component SMS
+    component "..."
+}
+
+package "[[../arch-comp-hosts.html hosts]]" as hosts {
+    package agent_based_host
+    package snmp_host
+    package ping_host
+    package api_hosts
+}
+interface TCP
+interface Syslog
+interface SNMP
+interface "SNMP trap" as trap
+interface HTTP as api_hosts_http
+
+users -d- http_gui
+web_api_client -d- http_web_api
+rest_api_client -d- http_rest_api
+
+http_gui -d- GUI
+http_web_api -d- WebAPI
+http_rest_api -d- rest_api
+
+GUI -d- apache_livestatus_client
+WebAPI -d- apache_livestatus_client
+rest_api -d- apache_livestatus_client
+apache_livestatus_client -d- apache_livestatus
+apache_livestatus -d- liveproxyd
+
+liveproxyd -d- liveproxyd_livestatus_client
+liveproxyd_livestatus_client -d- cmc_livestatus_server
+
+dcd -u- dcd_web_api_client
+dcd -d- dcd_piggyback
+dcd_web_api_client -l- WebAPI
+dcd_piggyback -d- check_engine
+
+checker -- Fetcher
+
+external_livestatus_client -d- cmc_livestatus_server
+Fetcher -d- TCP
+TCP -d- agent_based_host
+Fetcher -d- SNMP
+SNMP -d- snmp_host
+Fetcher -d- api_hosts_http
+api_hosts_http -d- api_hosts
+ICMPSender -d- hosts
+ICMPReceiver -d- hosts
+
+cmc -u- rrdcached_socket
+rrdcached_socket -u- rrdcached
+
+notify_engine -d-- call_notification_plugins
+call_notification_plugins -d----- notification_plugins
+notify_engine -d-- mknotifyd_notification
+mknotifyd_notification -d- mknotifyd
+mknotifyd -d- mknotifyd_other_site
+
+cmc_livestatus_server --d- mkeventd_livestatus
+mkeventd_livestatus -d- mkeventd
+mkeventd -d- Syslog
+Syslog -d- agent_based_host
+mkeventd -d- trap
+trap -d- snmp_host
+
+@enduml

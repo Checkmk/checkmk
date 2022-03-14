@@ -1,7 +1,7 @@
 title: SNMP HOST-RESOURCES-MIB: Processes
 agents: snmp
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The {HOST-RESOURCES-MIB} is a standardized MIB provided by many
@@ -16,7 +16,7 @@ description:
 item:
  A user defined name which must be unique.
 
-inventory:
+discovery:
  One service is created for each user defined name.
  Within the discovery rule {Process discovery (only SNMP)} you can specify
  which processes are taken into account.

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_poweredge import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["dell_poweredge_mem"] = {
     "check_function": check_dell_poweredge_mem,
     "inventory_function": inventory_dell_poweredge_mem,
@@ -16,22 +17,23 @@ check_info["dell_poweredge_mem"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.674.10892.5.4.1100.50.1",
         [
-            #"1", # memoryDevicechassisIndex       0
-            #"2", # memoryDeviceIndex              1
-            #"3", # memoryDeviceStateCapabilities
-            #"4", # memoryDeviceStateSettings      0
+            # "1", # memoryDevicechassisIndex       0
+            # "2", # memoryDeviceIndex              1
+            # "3", # memoryDeviceStateCapabilities
+            # "4", # memoryDeviceStateSettings      0
             "5",  # memoryDeviceStatus             0
-            #"6", # memoryDeviceReading
-            #"7", # memoryDeviceType
+            # "6", # memoryDeviceReading
+            # "7", # memoryDeviceType
             "8",  # memoryDeviceLocationName       1
-            #"10", # memoryDeviceBankLocationName
+            # "10", # memoryDeviceBankLocationName
             "14",  # memoryDeviceSize
             "15",  # memoryDeviceSpeed
             "21",  # memoryDeviceManufacturerName
             "22",  # memoryDevicePartNumberName
             "23",  # memoryDeviceSerialNumberName
-            #"26", # memoryDeviceFQDD
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
+            # "26", # memoryDeviceFQDD
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.5",
     "management_board": HOST_ONLY,
 }

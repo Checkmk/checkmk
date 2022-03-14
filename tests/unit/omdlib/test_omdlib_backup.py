@@ -9,10 +9,11 @@
 import tarfile
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
+
 import omdlib
-import omdlib.main
 import omdlib.backup
+import omdlib.main
 
 
 @pytest.fixture()
@@ -33,20 +34,19 @@ def site(tmp_path, monkeypatch):
 def test_backup_site_to_tarfile(site, tmp_path):
     # Write some file for testing the backup procedure
     with Path(site.dir + "/test123").open("w", encoding="utf-8") as f:
-        f.write(u"uftauftauftata")
+        f.write("uftauftauftata")
 
     tar_path = tmp_path / "backup.tar"
     with tar_path.open("wb") as backup_tar:
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
-        sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
-        assert sitename == "unit"
-        assert version == "1.3.3i7.cee"
-
-        names = [tarinfo.name for tarinfo in tar]
-        assert "unit/test123" in names
+        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
+            sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
+            names = [tarinfo.name for tarinfo in tar]
+    assert sitename == "unit"
+    assert version == "1.3.3i7.cee"
+    assert "unit/test123" in names
 
 
 def test_backup_site_to_tarfile_broken_link(site, tmp_path):
@@ -57,10 +57,10 @@ def test_backup_site_to_tarfile_broken_link(site, tmp_path):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
-        _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
+            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
 
-        link = tar.getmember("unit/link")
+            link = tar.getmember("unit/link")
         assert link.linkname == "agag"
 
 
@@ -72,7 +72,9 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
 
     orig_add = omdlib.backup.BackupTarFile.add
 
-    def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):  # pylint: disable=redefined-builtin
+    def add(
+        self, name, arcname=None, recursive=True, exclude=None, filter=None
+    ):  # pylint: disable=redefined-builtin
         if exclude is not None:
             raise DeprecationWarning("TarFile.add's exclude parameter should not be used")
         # The add() was called for test_dir which then calls os.listdir() and
@@ -89,5 +91,5 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
-        _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
+            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)

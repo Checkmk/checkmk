@@ -4,37 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Final, NamedTuple
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    InventoryResult,
-    StringTable,
-)
 
 from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State, TableRow
-from .utils.hp_proliant import MAP_TYPES_MEMORY, DETECT
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .utils.hp_proliant import DETECT, MAP_TYPES_MEMORY
 
 _STATUS_MAP: Final = {
-    '1': "other",
-    '2': "notPresent",
-    '3': "present",
-    '4': "good",
-    '5': "add",
-    '6': "upgrade",
-    '7': "missing",
-    '8': "doesNotMatch",
-    '9': "notSupported",
-    '10': "badConfig",
-    '11': "degraded",
-    '12': "spare",
-    '13': "partial",
+    "1": "other",
+    "2": "notPresent",
+    "3": "present",
+    "4": "good",
+    "5": "add",
+    "6": "upgrade",
+    "7": "missing",
+    "8": "doesNotMatch",
+    "9": "notSupported",
+    "10": "badConfig",
+    "11": "degraded",
+    "12": "spare",
+    "13": "partial",
 }
 
 _CONDITION_MAP: Final = {
-    '1': 'other',
-    '2': 'ok',
-    '3': 'degraded',
-    '4': 'degradedModuleIndexUnknown',
+    "1": "other",
+    "2": "ok",
+    "3": "degraded",
+    "4": "degradedModuleIndexUnknown",
 }
 
 
@@ -54,17 +49,17 @@ Section = Dict[str, Module]
 
 def parse_hp_proliant_mem(string_table: StringTable) -> Section:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_hp_proliant_mem([
-        ...     ['0', '0', '1', '4194304', '15', '', '4', '2'],
-        ...     ['8', '0', '2', '4194304', '15', '', '4', '2'],
-        ...     ['3', '0', '1', '0',       '15', '', '2', '1'],
-        ...     ['9', '0', '2', '0',       '15', '', '2', '1'],
-        ... ]))
-        {'0': Module(number='0', board='0', cpu_num=1, size=4294967296, typ='DIMM DDR3', serial='', status='good', condition='ok'),
-         '3': Module(number='3', board='0', cpu_num=1, size=0, typ='DIMM DDR3', serial='', status='notPresent', condition='other'),
-         '8': Module(number='8', board='0', cpu_num=2, size=4294967296, typ='DIMM DDR3', serial='', status='good', condition='ok'),
-         '9': Module(number='9', board='0', cpu_num=2, size=0, typ='DIMM DDR3', serial='', status='notPresent', condition='other')}
+    >>> from pprint import pprint
+    >>> pprint(parse_hp_proliant_mem([
+    ...     ['0', '0', '1', '4194304', '15', '', '4', '2'],
+    ...     ['8', '0', '2', '4194304', '15', '', '4', '2'],
+    ...     ['3', '0', '1', '0',       '15', '', '2', '1'],
+    ...     ['9', '0', '2', '0',       '15', '', '2', '1'],
+    ... ]))
+    {'0': Module(number='0', board='0', cpu_num=1, size=4294967296, typ='DIMM DDR3', serial='', status='good', condition='ok'),
+     '3': Module(number='3', board='0', cpu_num=1, size=0, typ='DIMM DDR3', serial='', status='notPresent', condition='other'),
+     '8': Module(number='8', board='0', cpu_num=2, size=4294967296, typ='DIMM DDR3', serial='', status='good', condition='ok'),
+     '9': Module(number='9', board='0', cpu_num=2, size=0, typ='DIMM DDR3', serial='', status='notPresent', condition='other')}
 
     """
     section = {}
@@ -109,27 +104,27 @@ register.snmp_section(
 )
 
 _MEM_TEXT2STATE_MAP: Final = {
-    'other': State.UNKNOWN,
-    'notPresent': State.UNKNOWN,
-    'present': State.WARN,
-    'good': State.OK,
-    'add': State.WARN,
-    'upgrade': State.WARN,
-    'missing': State.CRIT,
-    'doesNotMatch': State.CRIT,
-    'notSupported': State.CRIT,
-    'badConfig': State.CRIT,
-    'degraded': State.CRIT,
-    'spare': State.OK,
-    'partial': State.WARN,
+    "other": State.UNKNOWN,
+    "notPresent": State.UNKNOWN,
+    "present": State.WARN,
+    "good": State.OK,
+    "add": State.WARN,
+    "upgrade": State.WARN,
+    "missing": State.CRIT,
+    "doesNotMatch": State.CRIT,
+    "notSupported": State.CRIT,
+    "badConfig": State.CRIT,
+    "degraded": State.CRIT,
+    "spare": State.OK,
+    "partial": State.WARN,
 }
 
 _COND_TEXT2STATE_MAP: Final = {
-    'other': State.UNKNOWN,
-    'ok': State.OK,
-    'degraded': State.CRIT,
-    'failed': State.CRIT,
-    'degradedModuleIndexUnknown': State.UNKNOWN
+    "other": State.UNKNOWN,
+    "ok": State.OK,
+    "degraded": State.CRIT,
+    "failed": State.CRIT,
+    "degradedModuleIndexUnknown": State.UNKNOWN,
 }
 
 
@@ -180,7 +175,7 @@ def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
                 "size": module.size,
                 "serial": module.serial,
                 "type": module.typ,
-                "locator": module.cpu_num
+                "locator": module.cpu_num,
             },
         )
 

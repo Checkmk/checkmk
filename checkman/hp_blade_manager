@@ -1,7 +1,7 @@
 title: HP BladeSystem Enclosures: Manager Boards
 agents: snmp
 catalog: hw/server/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health of the manager boards in HP BladeSysten enclosures.
@@ -20,5 +20,5 @@ description:
 item:
  Number of the manager
 
-inventory:
+discovery:
  One service is created for each manager boards with the state "present".

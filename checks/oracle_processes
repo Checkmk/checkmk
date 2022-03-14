@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.oracle import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 # <<<oracle_processes>>>
@@ -51,9 +52,12 @@ def check_oracle_processes(item, params, info):
             else:
                 state = 0
 
-            return state, "%d of %d processes are used (%d%%, warn/crit at %d%%/%d%%)" \
-                % (processes_num, processes_max, processes_pct, warn, crit), \
-                 [("processes", processes_num, processes_warn, processes_crit)]
+            return (
+                state,
+                "%d of %d processes are used (%d%%, warn/crit at %d%%/%d%%)"
+                % (processes_num, processes_max, processes_pct, warn, crit),
+                [("processes", processes_num, processes_warn, processes_crit)],
+            )
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -61,7 +65,7 @@ def check_oracle_processes(item, params, info):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info['oracle_processes'] = {
+check_info["oracle_processes"] = {
     "check_function": check_oracle_processes,
     "inventory_function": inventory_oracle_processes,
     "service_description": "ORA %s Processes",

@@ -217,9 +217,13 @@ fileinfo:
 logwatch:
     # enabled: yes
     
-    # sendall: no   # this is MANDATORY
+    # sendall: no   # this is MANDATORY, yes is useful only for debugging
     # vista_api: no # this is RECOMMENDED
+    # skip_duplicated: no # if yes the same messages will be replaced with text [the above messages repeated <n> times]
     # max_size: 500000 # default value
+    # max_line_length: -1 # -1 to ignore, or any positive, max length of the line
+    # max_entries: -1     # -1 to ignore, or any positive, max count of lines to receive
+    # timeout: -1         # -1 to ignore, or any positive, in seconds
 
      # entries in the windows eventlog
     logfile:
@@ -347,6 +351,10 @@ modules:
 
 system:
     enabled: yes
+
+    #controller:
+    #    run: yes        # start controller if controller presented
+    #    legacy: yes     # if yes creates data/allow-legacy-pull, if not, deletes it
 
     #firewall:
     #    mode: configure # allowed none, remove, configure

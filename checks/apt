@@ -26,91 +26,62 @@
 # Inst default-jre [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64]) []
 # Inst default-jre-headless [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64])
 
+from cmk.base.plugins.agent_based.utils.apt import NOTHING_PENDING_FOR_INSTALLATION
+
 factory_settings["apt_default_levels"] = {
     "normal": 1,
     "removals": 1,
     "security": 2,
 }
 
-NOTHING_PENDING_FOR_INSTALLATION = "No updates pending for installation"
 
-
-# Check that the apt section is in valid format of mk_apt plugin and not
-# from the apt agent plugin which can be found on the Checkmk exchange.
-def apt_valid_info(info):
-    if not info:
-        return False
-
-    first_line = info[0]
-    if len(first_line) != 1:
-        return False
-
-    if first_line[0] == NOTHING_PENDING_FOR_INSTALLATION:
-        return True
-
-    parts = first_line[0].split()
-    if len(parts) < 3:
-        return False
-
-    action = parts[0]
-    version = parts[2]
-    return action in ('Inst', 'Remv') and version.startswith("[") and version.endswith("]")
-
-
-def inventory_apt(info):
-    if apt_valid_info(info):
-        yield None, {}
+def inventory_apt(section):
+    yield None, {}
 
 
 def _format(action, packages, verbose=False):
-    message = '%d %s' % (len(packages), action)
+    message = "%d %s" % (len(packages), action)
     if verbose and packages:
-        message += ' (%s)' % (', '.join(packages,))
+        message += " (%s)" % (
+            ", ".join(
+                packages,
+            )
+        )
 
     return message
 
 
-def check_apt(_no_item, params, info):
-    if not apt_valid_info(info):
-        return
-
-    if info[0][0] == NOTHING_PENDING_FOR_INSTALLATION:
+def check_apt(_no_item, params, section):
+    if not any(section):
         yield 0, NOTHING_PENDING_FOR_INSTALLATION
         return
 
-    sec_regex = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")
-    updates = []
-    removals = []
-    sec_updates = []
-    for line in info:
-        if not line[0].startswith(("Inst", "Remv")):
-            continue
-        _inst, packet, _version = line[0].split(None, 2)
-        if line[0].startswith("Remv"):
-            removals.append(packet)
-        elif sec_regex.match(line[0]):
-            sec_updates.append(packet)
-        else:
-            updates.append(packet)
+    if section.no_esm_support:
+        yield 2, "System could receive security updates, but needs extended support license"
+        return
 
-    state = 0
-    if updates:
-        state = params["normal"]
-    yield state, _format("normal updates", updates), [("normal_updates", len(updates))]
+    yield (
+        section.updates and params["normal"] or 0,
+        _format("normal updates", section.updates),
+        [("normal_updates", len(section.updates))],
+    )
 
     # Only show removals when necessary as they are very rare.
-    if removals:
-        state = params["removals"]
-        yield state, _format("auto removals", removals, verbose=True), [("removals", len(removals))]
+    if section.removals:
+        yield (
+            params["removals"],
+            _format("auto removals", section.removals, verbose=True),
+            [("removals", len(section.removals))],
+        )
 
-    state = 0
-    if sec_updates:
-        state = params["security"]
-    yield state, _format("security updates", sec_updates,
-                         verbose=True), [("security_updates", len(sec_updates))]
+    yield (
+        section.sec_updates and params["security"] or 0,
+        _format("security updates", section.sec_updates, verbose=True),
+        [("security_updates", len(section.sec_updates))],
+    )
 
 
-check_info['apt'] = {
+check_info["apt"] = {
     "inventory_function": inventory_apt,
     "check_function": check_apt,
     "service_description": "APT Updates",

@@ -1,0 +1,16 @@
+Title: mk_redis: always check all instances
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633002367
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The agent plugin <tt>mk_redis</tt> can query multiple redis instances. Before
+this werk, <tt>mk_redis</tt> would stop after the first instance that can not
+be reached.
+
+Now all redis instances are checked.

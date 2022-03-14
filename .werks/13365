@@ -1,0 +1,15 @@
+Title: Sorting for perf-o-meters after decimal point
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1638345852
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When sorting perf-o-meters only the value before
+the decimal point were respected.
+
+Now the floating point values after the decimal point
+are respected aswell

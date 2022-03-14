@@ -1,0 +1,93 @@
+Title: Add predefined cluster modes for all services
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1628489594
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk changes the behaviour of (some) services on clusters.
+
+Affected services will go to UNKNOWN. To fix this, users must
+explicitly select the cluster mode they wish to use.
+This can be done using the ruleset
+<i>"Aggregation options for clustered services"</i>.
+
+All services written against the old API are affected, and few
+of the modern plugins (see below for a list of the latter).
+
+Since this is the second time the behaviour of clustered services
+changes (1.6 to 2.0 and 2.0 to 2.1), we provide an overview.
+Note that we must consider four types of plugins here:
+Plugins programmed against the old API (refered to as 'legacy')
+or the new API ('modern'), and plugins developed with their
+behaviour on clusters explicitly considered ('native cluster mode')
+or not.
+
+<b>In Checkmk 1.6 and earlier</b> all plugins (now legacy) can be
+configured to run on a cluster. For plugins without a native
+cluster implementation, the behaviour is unspecified.
+They simply operate on the concatenated output of all nodes,
+which may or may not result in the desired behaviour (or even crash).
+
+<b>In Checkmk 2.0</b> the behaviour for legacy plugins is unchanged.
+Modern plugins can only be run on a cluster, if they natively
+implement a cluster mode.
+Otherwise the service will be in a permanent WARNING state,
+telling the user to change their configuration.
+
+<b>In Checkmk 2.1</b> even legacy plugins are no longer run
+on clusters in this unspecified manner.
+By default, all services on a cluster are run in the native
+mode (or issueing a WARNING if it does not exist).
+If the plugin in question does not support a native cluster
+mode, you can use the ruleset
+<i>"Aggregation options for clustered services"</i> to
+select one of three other aggregation modes (<i>"failover"</i>,
+<i>"worst"</i>, <i>"best"</i>), where the results of the
+individual nodes are aggregated in a predetermined way.
+
+For a description of the available modes please refer to the
+mentioned rulesets help.
+
+The native cluster mode should be documented in the plugins
+man page.
+
+As a result some of the native implementations have been removed,
+as they re-implemented one of the other aggregation modes (only
+with fewer options).
+These are the affected plugins and the cluster modes they
+were implicitly operating on:
+
+<ul>
+  <li>apache_status: <i>failover</i></li>
+  <li>cmk_site_statistics: <i>failover</i></li>
+  <li>f5_bigip_vcmpguests: <i>worst</i></li>
+  <li>infoblox_node_services: <i>best</i></li>
+  <li>infoblox_services: <i>best</i></li>
+  <li>job, local: The cluster behaviour has been configurable
+      for these plugins. Choose according to your previous
+      configuration. The options in the plugin specific rulesets
+      are ignored.</li>
+  <li>livestatus_status: <i>failover</i></li>
+  <li>mrpe: <i>best</i></li>
+  <li>mssql_counters_cache_hits, mssql_counters_file_sizes,
+      mssql_counters_locks, mssql_counters_locks_per_batch,
+      mssql_counters_page_life_expectancy,
+      mssql_counters_pageactivity, mssql_counters_sqlstats,
+      mssql_counters_transactions: <i>worst</i></li>
+  <li>mssql_datafiles, mssql_transactionlogs: <i>failover</i></li>
+  <li>netscaler_sslcertificates: <i>worst</i></li>
+  <li>sap_hana_diskusage, sap_hana_ess, 'sap_hana_events,
+      sap_hana_instance_status, sap_hana_memrate,
+      sap_hana_proc, sap_hana_replication_status: <i>best</i></li>
+</ul>
+
+<b>Note to developers:</b> Every plugin you develop will have the
+predefined cluster modes ready to use -- there is nothing you have to
+do. If none of the three modes <i>failover</i>, <i>worst</i> or
+<i>best</i> suit your needs, you can implement your own <i>native</i>
+mode using the <tt>cluster_check_function</tt>. Please refer to the
+sphinx documentation for details.

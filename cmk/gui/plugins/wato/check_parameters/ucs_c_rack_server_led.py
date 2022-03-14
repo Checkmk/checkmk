@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextAscii
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersHardware,
     rulespec_registry,
+    RulespecGroupCheckParametersHardware,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 COLORS_DEF_STATES = [
     ("amber", 1),
@@ -21,7 +21,7 @@ COLORS_DEF_STATES = [
 
 
 def _item_spec_ucs_c_rack_server_led():
-    return TextAscii(
+    return TextInput(
         title=_("LED"),
         help=_("Specify the LED, for example 'Rack Unit 1 0'."),
         allow_empty=False,
@@ -31,11 +31,20 @@ def _item_spec_ucs_c_rack_server_led():
 def _parameter_valuespec_ucs_c_rack_server_led():
     return Dictionary(
         title=_("Mapping of LED color to monitoring state"),
-        help=_("Define a translation of the possible LED colors to monitoring states, i.e. to the "
-               "result of the check. This overwrites the default mapping used by the check."),
-        elements=[(color,
-                   MonitoringState(title=_("Monitoring state if LED color is %s" % color),
-                                   default_value=state)) for color, state in COLORS_DEF_STATES])
+        help=_(
+            "Define a translation of the possible LED colors to monitoring states, i.e. to the "
+            "result of the check. This overwrites the default mapping used by the check."
+        ),
+        elements=[
+            (
+                color,
+                MonitoringState(
+                    title=_("Monitoring state if LED color is %s") % color, default_value=state
+                ),
+            )
+            for color, state in COLORS_DEF_STATES
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -46,4 +55,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ucs_c_rack_server_led,
         title=lambda: _("Cisco UCS C-Series Rack Server LED state"),
-    ))
+    )
+)

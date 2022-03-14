@@ -1,7 +1,7 @@
 title: Intel Rapid Storage Technologie: State of Physical Disks in Raids
 agents: windows
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the physical disks of a raid set up
@@ -20,5 +20,5 @@ description:
 item:
  The name of the raid volume and the drive ID seperated by a {{/}}
 
-inventory:
+discovery:
  One service is created for each disk.

@@ -8,7 +8,9 @@
 # splunk-system-user, , 0.91, False, 61440, False
 # admin, search, 0.101, False, 69632, False
 
-JobCount = collections.namedtuple('JobCount', ['jobs', 'failed', 'zombies', 'output'])
+JobCount = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "JobCount", ["jobs", "failed", "zombies", "output"]
+)
 
 
 def parse_splunk_jobs(info):
@@ -27,13 +29,19 @@ def parse_splunk_jobs(info):
                 zombie_count += 1
 
             long_output += "%s - Author: %s, Application: %s, State: %s, Zombie: %s\n" % (
-                published, author, app, dispatchstate, iszombie)
+                published,
+                author,
+                app,
+                dispatchstate,
+                iszombie,
+            )
 
         except (IndexError, ValueError):
             pass
 
-    parsed.setdefault("job", []).append(JobCount(job_count, failed_count, zombie_count,
-                                                 long_output))
+    parsed.setdefault("job", []).append(
+        JobCount(job_count, failed_count, zombie_count, long_output)
+    )
 
     return parsed
 

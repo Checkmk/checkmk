@@ -34,10 +34,10 @@
 ' -----------------------------------------------------------------------------
 
 Option Explicit
-Const CMK_VERSION = "2.1.0i1"
+Const CMK_VERSION = "2.2.0i1"
 
-Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
-Dim sources, instances, instance, instance_id, instance_name, instance_excluded
+Dim WMI, FSO, objStdout, SHO, items, objItem, prop, instVersion, registry
+Dim sources, instances, instance, instance_id, instance_name, instance_excluded, service_name
 Dim cfg_dir, cfg_file, hostname, tcpport
 
 Const HKLM = &H80000002
@@ -45,13 +45,16 @@ Const HKLM = &H80000002
 ' Directory of all database instance names
 Set instances = CreateObject("Scripting.Dictionary")
 Set FSO = CreateObject("Scripting.FileSystemObject")
+' Request unicode stdout and add a bom so the agent knows we send utf-16
+Set objStdout = FSO.GetStandardStream(1, True)
+objStdout.Write(chrW(&HFEFF))
 Set SHO = CreateObject("WScript.Shell")
 
 hostname = SHO.ExpandEnvironmentStrings("%COMPUTERNAME%")
 cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
 Sub addOutput(text)
-    wscript.echo text
+    objStdout.WriteLine text
 End Sub
 
 Function readIniFile(path)
@@ -106,6 +109,7 @@ sections.add "transactionlogs", "<<<mssql_transactionlogs:sep(124)>>>"
 sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
 sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
 sections.add "jobs", "<<<mssql_jobs:sep(09)>>>"
+sections.add "mirroring", "<<<mssql_mirroring:sep(09)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 sections.add "connections", "<<<mssql_connections>>>"
@@ -214,12 +218,19 @@ For Each rk In regkeys
                 End If
             End If
 
-            addOutput(sections("instance"))
-            addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
+            ' The default instance is named "MSSQLSERVER" and corresponds to its service name
+            ' All other instances's service names have the "MSSQL$" prefix
+            If instance_id = "MSSQLSERVER" Then
+                service_name = instance_id
+            Else
+                service_name = "MSSQL$" & instance_id
+            End If
 
             ' Only collect results for instances which services are currently running
             Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
-                                  "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running' OR Name = 'MSSQLSERVER' AND State = 'Running'")
+                                  "WHERE Name = '" & service_name & "'" & _
+                                  "AND State = 'Running'")
+
             ' Check if instance is in the exclude list.
             instance_excluded = False
             For Each elem In exclude_list
@@ -229,6 +240,8 @@ For Each rk In regkeys
                 End If
             Next
             If Not instance_excluded And service.count > 0 Then
+                addOutput(sections("instance"))
+                addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
                 instances.add instance_id, cluster_name
             End If
         Next
@@ -489,65 +502,76 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
-    Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name
+    Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
     addOutput(sections("backup"))
-    For Each dbName in dbNames.Keys
-        RS.Open "USE [master]", CONN
-        RS.Open "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
-                "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
-                "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
-                "BEGIN " & _
-                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
-                    "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id FROM msdb.dbo.backupset " & _
-                    "WHERE database_name = ''" & dbName & "'' AND  machine_name = SERVERPROPERTY(''Machinename'') " & _
-                    "GROUP BY type, machine_name ' " & _
-                "END " & _
-                "ELSE " & _
-                "BEGIN " & _
-                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
-                    "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id  " & _
-                    "FROM msdb.dbo.backupset b  " & _
-                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
-                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
-                    "WHERE database_name = ''" & dbName & "'' AND (rep.is_local is null or rep.is_local = 1)  " & _
-                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
-                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
-                "END " & _
-                "EXEC (@SQLCommand)", CONN
+    RS.Open "USE [master]", CONN
+    RS.Open "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
+            "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
+            "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
+            "BEGIN " & _
+                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+                "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
+                "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
+                "GROUP BY type, machine_name,database_name ' " & _
+            "END " & _
+            "ELSE " & _
+            "BEGIN " & _
+                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
+                "FROM msdb.dbo.backupset b  " & _
+                "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
+                "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
+                "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
+                "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
+            "END " & _
+            "EXEC (@SQLCommand)", CONN
 
-        errMsg = checkConnErrors(CONN)
-        If Not errMsg = "" Then
-            addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
-                      "|-|-|-|" & errMsg)
-        Else
-            If RS.Eof Then
-                addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
-                          "|-|-|-|no backup found")
+    ' It's easier to go to each line and take a look to which DB a backup
+    ' belongs to than go to every line for each DB as the list of DBs is
+    ' most likely shorter than the list of found backups. We track the DB
+    ' for which we found a backup to execute the last backup section below.
+    Set found_db_backups = CreateObject("Scripting.Dictionary")
+    Do While Not RS.Eof
+        backup_database = Trim(RS("database_name"))
+        if dbNames.Exists(backup_database) Then
+            backup_database = Replace(backup_database, " ", "_")
+            found_db_backups.add backup_database, ""
+
+            lastBackupDate = Trim(RS("last_backup_date"))
+            backup_type = Trim(RS("type"))
+            If backup_type = "" Then
+                backup_type = "-"
             End If
 
-            Do While Not RS.Eof
-                lastBackupDate = Trim(RS("last_backup_date"))
+            replica_id = Trim(RS("replica_id"))
+            is_primary_replica = Trim(RS("is_primary_replica"))
+            backup_machine_name = Trim(RS("machine_name"))
 
-                backup_type = Trim(RS("type"))
-                If backup_type = "" Then
-                    backup_type = "-"
-                End If
-
-                replica_id = Trim(RS("replica_id"))
-                is_primary_replica = Trim(RS("is_primary_replica"))
-                backup_machine_name = Trim(RS("machine_name"))
-
-                If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
-                    addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
-                              "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
-                End If
-
-                RS.MoveNext
-            Loop
+            If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
+                addOutput("MSSQL_" & instance_id & "|" & backup_database & _
+                          "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
+            End If
         End If
+        RS.MoveNext
+    Loop
+    RS.Close
 
-        RS.Close
+    ' Since the data is only fetched one time and we may run into an error, we
+    ' need to take care, that every DB gets the error message or the hint that
+    ' no backup has been found if the RS has been empty or simply no backup for
+    ' a DB exists.
+    errMsg = checkConnErrors(CONN)
+    For Each dbName in DbNames.Keys
+        backup_database = Replace(dbName, " ", "_")
+        If Not errMsg = "" Then
+            addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|" & errMsg)
+        End If
+        If Not found_db_backups.Exists(backup_database) Then
+            addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|no backup found")
+        End If
     Next
+
 
     ' Loop all databases to get the size of the transaction log
     addOutput(sections("transactionlogs"))
@@ -704,6 +728,37 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             " ORDER BY sj.name " &_
             "          ,sjs.next_run_date ASC " &_
             "          ,sjs.next_run_time ASC " &_
+            "; ", CONN
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & " " & errMsg)
+    Else
+        Do While Not RS.Eof
+            'See following documentation for use of parameters and the GetString method:
+            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
+            addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
+        Loop
+        RS.Close
+    End If
+
+    addOutput(sections("mirroring"))
+    RS.Open "USE [master];", CONN
+    RS.Open "SELECT @@SERVERNAME as server_name, " &_
+            "       DB_NAME(database_id) AS [database_name], " &_
+            "       mirroring_state, " &_
+            "       mirroring_state_desc, " &_
+            "       mirroring_role, " &_
+            "       mirroring_role_desc, " &_
+            "       mirroring_safety_level, " &_
+            "       mirroring_safety_level_desc, " &_
+            "       mirroring_partner_name, " &_
+            "       mirroring_partner_instance, " &_
+            "       mirroring_witness_name, " &_
+            "       mirroring_witness_state, " &_
+            "       mirroring_witness_state_desc " &_
+            "  FROM sys.database_mirroring " &_
+            "  WHERE mirroring_state IS NOT NULL " &_
             "; ", CONN
 
     errMsg = checkConnErrors(CONN)

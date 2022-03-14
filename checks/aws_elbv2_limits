@@ -9,16 +9,17 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_elbv2_limits_default_levels'] = {
-    'application_load_balancers': (None, 80.0, 90.0),
-    'application_load_balancer_rules': (None, 80.0, 90.0),
-    'application_load_balancer_listeners': (None, 80.0, 90.0),
-    'application_load_balancer_target_groups': (None, 80.0, 90.0),
-    'application_load_balancer_certificates': (None, 80.0, 90.0),
-    'network_load_balancers': (None, 80.0, 90.0),
-    'network_load_balancer_listeners': (None, 80.0, 90.0),
-    'network_load_balancer_target_groups': (None, 80.0, 90.0),
-    'load_balancer_target_groups': (None, 80.0, 90.0),
+
+factory_settings["aws_elbv2_limits_default_levels"] = {
+    "application_load_balancers": (None, 80.0, 90.0),
+    "application_load_balancer_rules": (None, 80.0, 90.0),
+    "application_load_balancer_listeners": (None, 80.0, 90.0),
+    "application_load_balancer_target_groups": (None, 80.0, 90.0),
+    "application_load_balancer_certificates": (None, 80.0, 90.0),
+    "network_load_balancers": (None, 80.0, 90.0),
+    "network_load_balancer_listeners": (None, 80.0, 90.0),
+    "network_load_balancer_target_groups": (None, 80.0, 90.0),
+    "load_balancer_target_groups": (None, 80.0, 90.0),
 }
 
 
@@ -27,12 +28,12 @@ def check_aws_elbv2_limits(item, params, region_data):
     return check_aws_limits("elbv2", params, region_data)
 
 
-check_info['aws_elbv2_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_elbv2_limits,
-    'service_description': 'AWS/ELBv2 Limits %s',
-    'group': 'aws_elbv2_limits',
-    'default_levels_variable': 'aws_elbv2_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_elbv2_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_elbv2_limits,
+    "service_description": "AWS/ELBv2 Limits %s",
+    "group": "aws_elbv2_limits",
+    "default_levels_variable": "aws_elbv2_limits_default_levels",
+    "has_perfdata": True,
 }

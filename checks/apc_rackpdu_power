@@ -16,11 +16,11 @@ def _scan_apc_rackpdu_power(_oid):
 
 
 check_info["apc_rackpdu_power"] = {
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': 'PDU %s',
-    'has_perfdata': True,
-    'snmp_info': [('.1', ['1'])],  # not used but entry 'snmp_info' must be present
-    'snmp_scan_function': _scan_apc_rackpdu_power,
-    'group': 'el_inphase',
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "PDU %s",
+    "has_perfdata": True,
+    "snmp_info": [(".1", ["1"])],  # not used but entry 'snmp_info' must be present
+    "snmp_scan_function": _scan_apc_rackpdu_power,
+    "group": "el_inphase",
 }

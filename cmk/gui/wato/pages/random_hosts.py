@@ -6,20 +6,20 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
-from typing import List, Tuple, Dict, Optional, Type
-
 import random
+from typing import Dict, List, Optional, Tuple, Type
 
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.plugins.wato import (WatoMode, ActionResult, mode_registry, flash, redirect, mode_url)
 
 
 @mode_registry.register
@@ -40,19 +40,17 @@ class ModeRandomHosts(WatoMode):
         return ModeFolder
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Hosts"),
-                                          breadcrumb,
-                                          form_name="random",
-                                          button_name="start",
-                                          save_title=_("Start!"))
+        return make_simple_form_page_menu(
+            _("Hosts"), breadcrumb, form_name="random", button_name="_save", save_title=_("Start!")
+        )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=watolib.Folder.current().path()))
 
-        count = html.request.get_integer_input_mandatory("count")
-        folders = html.request.get_integer_input_mandatory("folders")
-        levels = html.request.get_integer_input_mandatory("levels")
+        count = request.get_integer_input_mandatory("count")
+        folders = request.get_integer_input_mandatory("folders")
+        levels = request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=watolib.Folder.current().path()))
@@ -80,7 +78,7 @@ class ModeRandomHosts(WatoMode):
             hosts_to_create: List[Tuple[HostName, Dict, None]] = []
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
-                hosts_to_create.append((host_name, {"ipaddress": "127.0.0.1"}, None))
+                hosts_to_create.append((HostName(host_name), {"ipaddress": "127.0.0.1"}, None))
             folder.create_hosts(hosts_to_create)
             return count
 

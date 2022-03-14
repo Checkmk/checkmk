@@ -6,6 +6,6 @@ Date: 1614682322
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this werk, the check could crashed with `KeyError (percpu_usage)`

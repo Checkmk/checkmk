@@ -7,20 +7,16 @@
 import copy
 from typing import Any, Dict, List
 
-import cmk.gui.config as config
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-)
-
+from cmk.gui.globals import config
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     DiscoveryHost,
-    vs_bulk_discovery,
     get_tasks,
+    vs_bulk_discovery,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
 
@@ -33,14 +29,18 @@ class APICallBulkDiscovery(APICallCollection):
                 "handler": self._bulk_discovery_start,
                 "required_keys": ["hostnames"],
                 "optional_keys": [
-                    "mode", "use_cache", "do_scan", "ignore_single_check_errors", "bulk_size"
+                    "mode",
+                    "use_cache",
+                    "do_scan",
+                    "ignore_single_check_errors",
+                    "bulk_size",
                 ],
                 "required_permissions": ["wato.services"],
             },
             "bulk_discovery_status": {
                 "handler": self._bulk_discovery_status,
                 "required_permissions": ["wato.services"],
-            }
+            },
         }
 
     def _bulk_discovery_start(self, request):
@@ -48,8 +48,11 @@ class APICallBulkDiscovery(APICallCollection):
         if job.is_active():
             raise MKUserError(
                 None,
-                _("A bulk discovery job is already running. Please use the "
-                  "\"bulk_discovery_status\" call to get the curent status."))
+                _(
+                    "A bulk discovery job is already running. Please use the "
+                    '"bulk_discovery_status" call to get the curent status.'
+                ),
+            )
 
         mode, do_scan, bulk_size, error_handling = self._get_parameters_from_request(request)
         tasks = get_tasks(self._get_hosts_from_request(request), bulk_size)
@@ -80,8 +83,9 @@ class APICallBulkDiscovery(APICallCollection):
             int(request.get("bulk_size", params["performance"][1])),
         )
 
-        params["error_handling"] = request.get("ignore_single_check_errors",
-                                               params["error_handling"])
+        params["error_handling"] = request.get(
+            "ignore_single_check_errors", params["error_handling"]
+        )
 
         vs_bulk_discovery().validate_value(params, "")
         return (

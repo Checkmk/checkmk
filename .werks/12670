@@ -1,0 +1,15 @@
+Title: API: fixing service show link in services collection endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1617108184
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, calling the 'Show all monitored services'
+endpoint returned a collection where the individual links to the
+respective services were invalid. This werk introduces the appropriate
+endpoint and also fixes the links.

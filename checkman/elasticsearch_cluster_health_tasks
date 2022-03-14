@@ -1,12 +1,11 @@
 title: Elasticsearch: Cluster Tasks
 agents: elasticsearch
 catalog: app/elasticsearch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows informations about tasks of an elasticsearch cluster.
  Available Informations: Pending tasks, Timed out, Task max waiting
 
-inventory:
+discovery:
  One service is created.
-

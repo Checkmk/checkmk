@@ -1,0 +1,13 @@
+Title: Fix possibility to activate changes in read only mode
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1631283218
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Users with a role with the permission "Activate Foreign Changes" could activate
+changes even if the read only mode was set.

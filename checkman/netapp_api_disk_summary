@@ -1,7 +1,7 @@
 title: NetApp Filer: Disk Summary
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check counts the number of disks which are owned by a NetApp Filer.
@@ -10,6 +10,6 @@ description:
  Additionally the check monitors the number of broken and spare disks.
  You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
 
-inventory:
+discovery:
  One service is created for each filer running in 7Mode or
  one service if the filer is running in Cluster-Mode.

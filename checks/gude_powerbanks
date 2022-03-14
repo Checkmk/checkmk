@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.
 # Means each powerbank has 6 outlets. Here we can use ChanStatus in order
@@ -36,8 +37,16 @@ def parse_gude_powerbanks(info):
 
     ports = dict(info[0])
     parsed = {}
-    for oid_idx, dev_state, energy_str, active_power_str, \
-        current_str, volt_str, freq_str, appower_str in info[1]:
+    for (
+        oid_idx,
+        dev_state,
+        energy_str,
+        active_power_str,
+        current_str,
+        volt_str,
+        freq_str,
+        appower_str,
+    ) in info[1]:
 
         oid, idx = oid_idx.split(".")
         device_state = None
@@ -65,33 +74,45 @@ def parse_gude_powerbanks(info):
 
 
 def inventory_gude_powerbanks(parsed):
-    return [(powerbank, {})
-            for powerbank, attrs in parsed.items()
-            if attrs["device_state"][1] not in ["off", "data not active"]]
+    return [
+        (powerbank, {})
+        for powerbank, attrs in parsed.items()
+        if attrs["device_state"][1] not in ["off", "data not active"]
+    ]
 
 
-check_info['gude_powerbanks'] = {
-    'parse_function'          : parse_gude_powerbanks,
-    'inventory_function'      : inventory_gude_powerbanks,
-    'check_function'          : check_elphase,
-    'service_description'     : 'Powerbank %s',
-    'has_perfdata'            : True,
-    'snmp_info'               : [('.1.3.6.1.4.1.28507', ['19', '38'], [
-                                      OID_END,
-                                      "1.3.1.2.1.3",    # GUDEADS=EPC****-MIB::epc****PortState
-                                 ]),
-                                 ('.1.3.6.1.4.1.28507', ['19', '38'], [
-                                      OID_END,
-                                      "1.5.1.2.1.2",    # GUDEADS-EPC****-MIB::epc****ChanStatus
-                                      "1.5.1.2.1.3",    # GUDEADS-EPC****-MIB::epc****AbsEnergyActive
-                                      "1.5.1.2.1.4",    # GUDEADS-EPC****-MIB::epc****PowerActive
-                                      "1.5.1.2.1.5",    # GUDEADS-EPC****-MIB::epc****Current
-                                      "1.5.1.2.1.6",    # GUDEADS-EPC****-MIB::epc****Voltage
-                                      "1.5.1.2.1.7",    # GUDEADS-EPC****-MIB::epc****Frequency
-                                      "1.5.1.2.1.10",   # GUDEADS-EPC****-MIB::epc****PowerApparent
-                                ])],
-    'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19") or \
-                                            oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),
-    'default_levels_variable' : 'gude_powerbank_default_levels',
-    'group'                   : 'el_inphase',
+check_info["gude_powerbanks"] = {
+    "parse_function": parse_gude_powerbanks,
+    "inventory_function": inventory_gude_powerbanks,
+    "check_function": check_elphase,
+    "service_description": "Powerbank %s",
+    "has_perfdata": True,
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.28507",
+            ["19", "38"],
+            [
+                OID_END,
+                "1.3.1.2.1.3",  # GUDEADS=EPC****-MIB::epc****PortState
+            ],
+        ),
+        (
+            ".1.3.6.1.4.1.28507",
+            ["19", "38"],
+            [
+                OID_END,
+                "1.5.1.2.1.2",  # GUDEADS-EPC****-MIB::epc****ChanStatus
+                "1.5.1.2.1.3",  # GUDEADS-EPC****-MIB::epc****AbsEnergyActive
+                "1.5.1.2.1.4",  # GUDEADS-EPC****-MIB::epc****PowerActive
+                "1.5.1.2.1.5",  # GUDEADS-EPC****-MIB::epc****Current
+                "1.5.1.2.1.6",  # GUDEADS-EPC****-MIB::epc****Voltage
+                "1.5.1.2.1.7",  # GUDEADS-EPC****-MIB::epc****Frequency
+                "1.5.1.2.1.10",  # GUDEADS-EPC****-MIB::epc****PowerApparent
+            ],
+        ),
+    ],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),
+    "default_levels_variable": "gude_powerbank_default_levels",
+    "group": "el_inphase",
 }

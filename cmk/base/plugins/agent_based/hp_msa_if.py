@@ -4,14 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
-from .utils import (
-    hp_msa,
-    interfaces,
-)
+from .agent_based_api.v1 import register, type_defs
+from .utils import hp_msa, interfaces
 
 # <<<hp_msa_if>>>
 # port 3 durable-id hostport_A1
@@ -111,49 +105,37 @@ from .utils import (
 
 
 def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
-    """
-    >>> from pprint import pprint
-    >>> pprint(parse_hp_msa_if([
-    ... ['port', '3', 'durable-id', 'hostport_A1'],
-    ... ['port', '3', 'port', 'A1'],
-    ... ['port', '3', 'status', 'Up'],
-    ... ['port', '3', 'actual-speed', '8Gb'],
-    ... ['host-port-statistics', '1', 'data-read-numeric', '453669561808896'],
-    ... ['host-port-statistics', '1', 'data-written-numeric', '372010525295104'],
-    ... ['host-port-statistics', '1', 'queue-depth', '0'],
-    ... ]))
-    [Interface(index='1', descr='A1', alias='', type='6', speed=8000000000, oper_status='1', in_octets=453669561808896, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=372010525295104, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=825680087104000)]
-    """
     parsed = []
     for idx, (_key, values) in enumerate(sorted(hp_msa.parse_hp_msa(string_table).items())):
         try:
-            speed = int(values['actual-speed'].replace('Gb', '')) * 10**9
+            speed = int(values["actual-speed"].replace("Gb", "")) * 10**9
         except ValueError:
             speed = 0
 
-        if values['status'] == 'Up':
-            status = '1'
+        if values["status"] == "Up":
+            status = "1"
         else:
-            status = '2'
+            status = "2"
 
         parsed.append(
             interfaces.Interface(
                 index=str(idx + 1),
-                descr=values['port'],
+                descr=values["port"],
                 alias="",
                 type="6",
                 speed=speed,
                 oper_status=status,
-                in_octets=int(values['data-read-numeric']),
-                out_octets=int(values['data-written-numeric']),
-                out_qlen=int(values['queue-depth']),
-            ))
+                in_octets=int(values["data-read-numeric"]),
+                out_octets=int(values["data-written-numeric"]),
+                out_qlen=int(values["queue-depth"]),
+            )
+        )
 
     return parsed
 
 
 register.agent_section(
-    name='hp_msa_if',
+    name="hp_msa_if",
     parse_function=parse_hp_msa_if,
     parsed_section_name="interfaces",
 )

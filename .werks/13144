@@ -1,0 +1,15 @@
+Title: Add builtin host label "cmk/site"
+Class: feature
+Compatible: comp
+Component: core
+Date: 1631785285
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Every host now discovers a builtin host label
+<tt>cmk/site:[sitename]</tt>.
+
+This can be used in rule conditions to filter
+for hosts on specific sites

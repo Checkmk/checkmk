@@ -9,18 +9,24 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 # <<<aix_paging>>>
 # Page Space      Physical Volume   Volume Group    Size %Used   Active    Auto    Type   Chksum
 # hd6                   hdisk11                rootvg       10240MB    23        yes        yes       lv       0
 
-AIXPaging = collections.namedtuple("AIXPaging",
-                                   ["group", "size_mb", "usage_perc", "active", "auto", "type"])
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+AIXPaging = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "AIXPaging", ["group", "size_mb", "usage_perc", "active", "auto", "type"]
+)
 
 
 def parse_aix_paging(info):
@@ -45,8 +51,10 @@ def parse_aix_paging(info):
         except ValueError:
             continue
         paging_type = map_type.get(line[7], "unknown[%s]" % line[7])
-        parsed.setdefault("%s/%s" % (line[0], line[1]),
-                          AIXPaging(line[2], size, usage, line[5], line[6], paging_type))
+        parsed.setdefault(
+            "%s/%s" % (line[0], line[1]),
+            AIXPaging(line[2], size, usage, line[5], line[6], paging_type),
+        )
     return parsed
 
 
@@ -54,15 +62,15 @@ def parse_aix_paging(info):
 def check_aix_paging(item, params, data):
     avail_mb = data.size_mb * (1 - data.usage_perc / 100.0)
     yield df_check_filesystem_single(item, data.size_mb, avail_mb, 0, None, None, params)
-    yield 0, 'Active: %s, Auto: %s, Type: %s' % (data.active, data.auto, data.type)
+    yield 0, "Active: %s, Auto: %s, Type: %s" % (data.active, data.auto, data.type)
 
 
-check_info['aix_paging'] = {
-    'parse_function': parse_aix_paging,
-    'inventory_function': discover(),
-    'check_function': check_aix_paging,
-    'service_description': 'Page Space %s',
-    'has_perfdata': True,
-    'group': "filesystem",
-    'default_levels_variable': 'filesystem_default_levels',
+check_info["aix_paging"] = {
+    "parse_function": parse_aix_paging,
+    "inventory_function": discover(),
+    "check_function": check_aix_paging,
+    "service_description": "Page Space %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

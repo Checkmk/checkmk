@@ -1,7 +1,7 @@
 title: Jolokia: Generic Numeric MBean Value
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs a generic numeric value from the java virtual machine.
@@ -22,5 +22,5 @@ description:
 item:
  The name of the instance and the MBean value
 
-inventory:
+discovery:
  One service is created for each numeric MBean value sent by the agent.

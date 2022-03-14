@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import Check  # type: ignore[import]
+from tests.testlib import Check
 
 AGENT_OUTPUT = [
     [
-        '@docker_version_info',
-        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.2", "ApiVersion": "1.41"}'
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.2", "ApiVersion": "1.41"}',
     ],
     ['{"count": 5, "active": 5, "type": "images", "reclaimable": 0, "size": 325130565}'],
     ['{"count": 7, "active": 2, "type": "containers", "reclaimable": 39196, "size": 39196}'],
@@ -20,13 +20,13 @@ AGENT_OUTPUT = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 def test_check_docker_node_disk_usage():
     check = Check("docker_node_disk_usage")
-    result = list(check.run_check('volumes', {}, check.run_parse(AGENT_OUTPUT)))
+    result = list(check.run_check("volumes", {}, check.run_parse(AGENT_OUTPUT)))
     assert result == [
-        (0, 'Size: 229.67 kB', [('size', 235177, None, None)]),
-        (0, 'Reclaimable: 93.00 B', [('reclaimable', 93, None, None)]),
-        (0, 'Count: 7', [('count', 7, None, None)]),
-        (0, 'Active: 5', [('active', 5, None, None)]),
+        (0, "Size: 229.67 kB", [("size", 235177, None, None)]),
+        (0, "Reclaimable: 93.00 B", [("reclaimable", 93, None, None)]),
+        (0, "Count: 7", [("count", 7, None, None)]),
+        (0, "Active: 5", [("active", 5, None, None)]),
     ]

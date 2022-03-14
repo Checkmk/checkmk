@@ -1,0 +1,16 @@
+Title: cisco_mem_asa: raises IndexError() on bad SNMP data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617085957
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+cisco_mem_asa disvovery and check functions would crash when parsing empty SNMP lines.
+Additionally the plugin uses two distinct functions for parsing different versions of
+input data.
+This change brings both parsing functions together and makes the new one check for empty
+input and thus fix the described bug.

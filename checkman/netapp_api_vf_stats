@@ -1,7 +1,7 @@
 title: NetApp Filer 7Mode: vFiler CPU Utilization
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization (in percent) of a vFiler in a 7Mode
@@ -17,5 +17,5 @@ description:
 item:
  Name of the vFiler.
 
-inventory:
+discovery:
  One service is created for each vFiler.

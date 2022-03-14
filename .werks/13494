@@ -1,0 +1,17 @@
+Title: <tt>mongodb_counters</tt>: Fix "ValueError: too many values to unpack (expected 3)"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636974617
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In certain cases, the check plugin <tt>mongodb_counters</tt> crashed with
+"ValueError: too many values to unpack (expected 3)".
+
+The reason for this crash is that depending on the version,
+<tt>db.serverStatus().opcounters</tt> can contain a counter named
+"deprecated", which does not follow the syntax of the other counters.
+This counter is now skipped.

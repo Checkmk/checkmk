@@ -1,0 +1,107 @@
+@charset "UTF-8";
+// Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+// Common variables used across all themes
+
+// -----------------------------------------------------------------------------
+// Colors
+// The colors defined here represents the color palette of Checkmk. Use them in
+// variable definitions for fonts, backgrounds, borders etc. Do NOT use them
+// directly to style CSS.
+// -----------------------------------------------------------------------------
+
+// TODO: Extend list below by all currently used color definitions. Drop
+// unnecessary colors.
+$white: rgb(255, 255, 255);
+$black: rgb(0, 0, 0);
+$warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
+$danger: rgb(255, 50, 50);
+$danger-dimmed: darken($danger, 25%);
+$success: rgb(19, 211, 137);
+$success-dimmed: darken($success, 5%);
+$success-dimmed-2: darken($success, 15%);
+$info: rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
+$info-light: lighten($info, 10%);
+$grey-1: rgb(250, 250, 250);
+$midgrey: rgb(220, 220, 220);
+$middarkgrey: rgb(202, 202, 202);
+$grey-2: rgb(189, 189, 189);
+$darkgrey: rgb(131, 131, 131); // dark grey
+$grey-3: rgb(68, 68, 68);
+$grey-4: rgb(51, 51, 51);
+$grey-5: rgb(40, 40, 40);
+$grey-6: rgb(33, 33, 33);
+$green-1: rgb(170, 255, 187);
+$orange-1: rgb(255, 160, 66);
+$orange-2: darken($orange-1, 15%);
+$red-1: rgb(247, 197, 197);
+$red-2: rgb(130, 50, 50);
+$blue: rgb(25, 90, 230);
+$flapping: rgb(255, 0, 255);
+$hostdown: rgb(0, 102, 170);
+$downtime: rgb(0, 170, 255);
+$chaos: rgb(136, 68, 255);
+$site-state-unknown: rgb(169, 99, 148);
+$site-state-partial: rgb(189, 138, 63);
+
+// -----------------------------------------------------------------------------
+// Fonts
+// Theme specific font colors are in _variables.scss.
+// -----------------------------------------------------------------------------
+$font-family-default: "Lato", "Roboto", Helvetica, Arial, sans-serif;
+$font-family-monospace: monospace, sans-serif;
+$font-family-courier: courier, monospace;
+
+$font-color-white: $white;
+$font-color-black: $black;
+$font-color-red: $danger;
+$font-color-blue-1: rgb(90, 103, 130);
+$font-color-blue-2: rgb(0, 0, 153);
+
+$font-size-page-title: 18px;
+$font-size-large: 14px;
+$font-size-normal: 12px;
+$font-size-small: 10px;
+
+$font-weight-default: 400;
+$font-weight-bold: 700;
+
+$letter-spacing-default: 0.5px;
+$letter-spacing-table: 1px;
+
+// -----------------------------------------------------------------------------
+// Spacings
+// -----------------------------------------------------------------------------
+$spacing: 10px;
+$spacing-half: (0.5 * $spacing);
+$spacing-quarter: (0.25 * $spacing);
+$spacing-double: (2 * $spacing);
+$menu-item-spacing: (2.2 * $spacing);
+
+$theme-border-radius: 4px;
+$single-column-mega-menu-width: 360px;
+$theme-snapin-width: 240px;
+$timerange-width: 800px;
+/* TODO: There are two implementations of toggle switches. One in _wato.scss
+ * and one in _main.scss. Can we use just one implementation?
+*/
+$toggle-switch-height: 13px;
+$toggle-switch-width: 30px;
+$tag-padding: 0.1em 0.3em;
+$page-header-height: 58px;
+$popup-filters-border-radius: 2px;
+$simplebar-scrollbar-width: 5px;
+$megamenu-navbar-height: 60px;
+$megamenu-spacing-bottom: 20px;
+$dashlet-anchor-size: 26px;
+$dashlet-anchor-on-size: 40px;
+$dashlet-anchor-size-slim: 20px;
+$dashlet-editor-icon-size: 22px;
+$dashlet-resize-handle-width: 32px;
+$dashlet-resize-handle-height: 16px;
+$dashlet-resize-handle-width-slim: 12px;
+$dashlet-resize-handle-height-slim: 6px;
+$input-field-height: 21px; // also for tactical overview
+$input-field-margin: 0 $spacing-half $spacing-half 0;

@@ -1,7 +1,7 @@
 title: QLogic SANbox Fibre Channel Switches: Fibre Channel Ports
 agents: snmp
 catalog: hw/storagehw/qlogic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Fibre Channel Ports in QLogic SANbox Fibre Channel Switches.
@@ -23,10 +23,9 @@ item:
  The Port ID taken from SNMP. It contains 2 numbers separated by a dot,
  e. g. 1.1
 
-inventory:
+discovery:
  One service is created for each FC Port found by SNMP in AdminStatus "online" or
  "testing" and Operational Status "online" or "testing".
 
  To change this behavior, please edit the configuration variables, see section
  "configuration".
-

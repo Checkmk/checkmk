@@ -1,7 +1,7 @@
 title: Couchbase Buckets: Memory Usage
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the average amount of memory used
@@ -9,7 +9,7 @@ description:
  Levels can be defined using the WATO rule "Main memory usage
  of devices with modules".
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

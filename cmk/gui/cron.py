@@ -4,46 +4,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 import time
-from typing import Union
+from pathlib import Path
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.config as config
-from cmk.gui.globals import html
-from cmk.gui.log import logger
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import response
+from cmk.gui.log import logger
+from cmk.gui.utils.logged_in import SuperUserContext
 
-# Things imported here are used by pre legacy (pre 1.6) cron plugins
-from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
-    multisite_cronjobs, register_job,
-)
+multisite_cronjobs = []
 
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
-loaded_with_language: Union[bool, None, str] = False
+def register_job(cron_job):
+    multisite_cronjobs.append(cron_job)
 
 
 def _lock_file() -> Path:
     return Path(cmk.utils.paths.tmp_dir) / "cron.lastrun"
 
 
-# Load all view plugins
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("cron", globals())
 
-    loaded_with_language = cmk.gui.i18n.get_current_language()
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from main module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.cron as api_module
+
+    api_module.__dict__.update(
+        {
+            "multisite_cronjobs": multisite_cronjobs,
+            "register_job": register_job,
+        }
+    )
 
 
 # Page called by some external trigger (usually cron job in OMD site)
@@ -67,14 +78,12 @@ def page_run_cron() -> None:
     with lock_file.open("wb"):
         pass  # touches the file
 
-    with store.locked(lock_file):
-        # The cron page is accessed unauthenticated. After leaving the page_run_cron area
-        # into the job functions we always want to have a user context initialized to keep
-        # the code free from special cases (if no user logged in, then...).
-        # The jobs need to be run in privileged mode in general. Some jobs, like the network
-        # scan, switch the user context to a specific other user during execution.
-        config.set_super_user()
-
+    # The cron page is accessed unauthenticated. After leaving the page_run_cron area
+    # into the job functions we always want to have a user context initialized to keep
+    # the code free from special cases (if no user logged in, then...).
+    # The jobs need to be run in privileged mode in general. Some jobs, like the network
+    # scan, switch the user context to a specific other user during execution.
+    with store.locked(lock_file), SuperUserContext():
         logger.debug("Starting cron jobs")
 
         for cron_job in multisite_cronjobs:
@@ -85,8 +94,8 @@ def page_run_cron() -> None:
                 cron_job()
                 logger.debug("Finished [%s]", job_name)
             except Exception:
-                html.write("An exception occured. Take a look at the web.log.\n")
+                response.set_data("An exception occured. Take a look at the web.log.\n")
                 logger.exception("Exception in cron job [%s]", job_name)
 
         logger.debug("Finished all cron jobs")
-        html.write("OK\n")
+        response.set_data("OK\n")

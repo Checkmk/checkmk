@@ -9,30 +9,31 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['alcatel_temp'] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 alcatel_power_aos7_operability_to_status_mapping = {
-    '1': "up",
-    '2': "down",
-    '3': "testing",
-    '4': "unknown",
-    '5': "secondary",
-    '6': "not present",  # no check status required
-    '7': "unpowered",
-    '8': "master",
-    '9': "idle",
-    '10': "power save",
+    "1": "up",
+    "2": "down",
+    "3": "testing",
+    "4": "unknown",
+    "5": "secondary",
+    "6": "not present",  # no check status required
+    "7": "unpowered",
+    "8": "master",
+    "9": "idle",
+    "10": "power save",
 }
 
 alcatel_power_aos7_no_power_supply = "no power supply"
 
 alcatel_power_aos7_power_type_mapping = {
-    '0': alcatel_power_aos7_no_power_supply,
-    '1': "AC",
-    '2': "DC",
+    "0": alcatel_power_aos7_no_power_supply,
+    "1": "AC",
+    "2": "DC",
 }
 
-PowerSupplyEntry = collections.namedtuple('PowerSupplyEntry', 'status_readable power_supply_type')
+PowerSupplyEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "PowerSupplyEntry", "status_readable power_supply_type"
+)
 
 
 def parse_alcatel_power_aos7(info):
@@ -43,19 +44,22 @@ def parse_alcatel_power_aos7(info):
                 power_supply_type,
                 alcatel_power_aos7_no_power_supply,
             ),
-        ) for (item, operability_status, power_supply_type) in info
+        )
+        for (item, operability_status, power_supply_type) in info
     }
 
 
 @discover
 def inventory_alcatel_power_aos7(_oidend, device):
-    return (device.power_supply_type != alcatel_power_aos7_no_power_supply and
-            device.status_readable != "not present")
+    return (
+        device.power_supply_type != alcatel_power_aos7_no_power_supply
+        and device.status_readable != "not present"
+    )
 
 
 @get_parsed_item_data
 def check_alcatel_power_aos7(item, _no_params, device):
-    if device.status_readable == 'up':
+    if device.status_readable == "up":
         status = 0
     else:
         status = 2
@@ -74,5 +78,6 @@ check_info["alcatel_power_aos7"] = {
             OID_END,
             2,  # MIB object "chasEntPhysOperStatus"
             35,  # MIB object "chasEntPhysPowerType"
-        ]),
+        ],
+    ),
 }

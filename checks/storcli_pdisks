@@ -36,7 +36,7 @@ def parse_storcli_pdisks(info):
             eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
             parsed["C%i.%s-%s" % (controller_num, eid_and_slot, device)] = {
                 "state": statenames.get(state, state),
-                "size": (float(size), size_unit)
+                "size": (float(size), size_unit),
             }
         if separator_count == 3:
             # each controller has 3 separators, reset count and continue
@@ -52,6 +52,8 @@ def inventory_storcli_pdisks(parsed):
 
 
 def check_storcli_pdisks(item, params, parsed):
+    if item not in parsed:
+        return
 
     infotext = "Size: %f %s" % parsed[item]["size"]
 

@@ -1,7 +1,7 @@
 title: Stormshield: Cluster Member
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the {STORMSHIELD-HA-MIB} for collecting information
@@ -13,5 +13,5 @@ description:
 item:
  The index of the cluster node
 
-inventory:
+discovery:
  One service is created which holds information about the other member.

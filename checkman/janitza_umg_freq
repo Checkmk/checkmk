@@ -1,7 +1,7 @@
 title: Janitza Power Analyzer: Frequency
 agents: snmp
 catalog: hw/power/janitza
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors frequency as measured by Janitza Power Analyzers. This currently
@@ -11,6 +11,5 @@ description:
 item:
  The fixed statement {{1}}
 
-inventory:
+discovery:
  One service is created.
-

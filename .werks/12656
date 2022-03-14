@@ -1,0 +1,12 @@
+Title: Fixed incorrect sorted nodes within BI aggregations
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1625648195
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The generated nodes were not sorted alphabetically.

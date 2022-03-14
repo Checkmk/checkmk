@@ -1,0 +1,29 @@
+Title: Activate Livestatus TCP socket with systemd on recent enough systems
+Class: feature
+Compatible: compat
+Component: core
+Date: 1635237623
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The Livestatus socket can be configured to be reachable over the
+network (details can be found under
+https://docs.checkmk.com/latest/en/livestatus.html#network).
+This is needed for, e.g., building distributed environments with Checkmk.
+
+In previous releases this network connection was managed by a
+site-specific xinetd instance.  Since xinetd is not available on newer
+Linux distributions, we have added an alternative mode of managing
+the socket using systemd.
+
+All Checkmk sites on Linux distributions with a systemd version newer or
+equal to version 235 that have the LIVESTATUS_TCP option enabled (see
+abover for a link to the manual) automatically and seamlessly switch to
+the new systemd-managed socket after upgrading to Checkmk 2.1.  Older
+Linux distributions keep using xinetd.
+
+Users are advised to double-check the systemd configuration under
+<tt>$OMD_ROOT/etc/mk-livestatus/livestatus.socket</tt> and
+<tt>$OMD_ROOT/etc/mk-livestatus/livestatus@.service</tt>.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With Checkmk 2.0 the audit logging of the setup has been extended to be more
 detailed. We added the general capability of tracking changes to configuration

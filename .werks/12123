@@ -6,7 +6,7 @@ Date: 1613390197
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, it was not possible to upgrade from a
 pre 2.0.0 version without running into a problem with activemq's

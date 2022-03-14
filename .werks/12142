@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agent encryption ruleset must be able to display previously stored
 secrets. Previous 2.0 versions were hiding the configured password which

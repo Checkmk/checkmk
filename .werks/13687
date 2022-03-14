@@ -1,0 +1,16 @@
+Title: mssql_blocked_sessions: Duplicate service description
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1643014774
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Some users may encounter the warning <i>"Duplicate service description
+(auto check) 'MSSQLBlocked Sessions'"</i>, when updating the services
+of said plugin.
+
+If this affects you, have to select <i>"MSSQL Blocked Sessions"</i> in the rule
+set <i>"Use new service descriptions"</i>.

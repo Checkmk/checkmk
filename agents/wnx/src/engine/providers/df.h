@@ -17,7 +17,6 @@
 namespace cma {
 
 namespace provider {
-
 constexpr char kDfSeparator = section::kTabSeparator;
 constexpr auto kDfSeparatorString = section::kTabSeparatorString;
 
@@ -25,14 +24,10 @@ class Df : public Asynchronous {
 public:
     Df() : Asynchronous(cma::section::kDfName, '\t') {}
 
-    Df(const std::string& Name, char Separator)
-        : Asynchronous(Name, Separator) {}
-
 private:
     std::string makeBody() override;
 };
 
-// internal df functionality
 namespace df {
 std::pair<std::string, std::string> GetNamesByVolumeId(
     std::string_view volume_id);

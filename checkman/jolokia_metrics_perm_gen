@@ -1,7 +1,7 @@
 title: Java Virtual Machine: Perm Space Usage
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is deprecated and has been replaced by the plugin
@@ -18,6 +18,5 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-inventory:
+discovery:
  One service is created for each Jolokia instance sent by the agent.
-

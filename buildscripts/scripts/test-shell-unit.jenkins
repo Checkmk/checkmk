@@ -4,54 +4,40 @@ properties([
 ])
 
 def NODE = ''
-def DOCKER_TAG_DEFAULT
 withFolderProperties{
     NODE = env.BUILD_NODE
-    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
-node (NODE) {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        // We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
-        // Always use the default docker tag we got from the environment.
-        def CHECKOUT_IMAGE = docker.image('ubuntu-20.04:' + DOCKER_TAG_DEFAULT)
-        CHECKOUT_IMAGE.pull()
-        // The commands are executed with the 1001:1000 UID:GID (non-root).
-        // This is the UID of the jenkins user on the node which does not exist
-        // in the container. For the moment this does not look like a problem.
-        // But it may be that we get to the point where we need an existing
-        // user in the container.
-        CHECKOUT_IMAGE.inside('--ulimit nofile=1024:1024') {
-            stage('checkout sources') {
-                checkout(scm)
-            }
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
-            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-        }
-    }
-}
-
-try {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            def TEST_IMAGE = docker.image('ubuntu-20.04:' + versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT))
-            TEST_IMAGE.pull()
-            // The commands are executed with the 1001:1000 UID:GID (non-root).
-            // This is the UID of the jenkins user on the node which does not exist
-            // in the container. For the moment this does not look like a problem.
-            // But it may be that we get to the point where we need an existing
-            // user in the container.
-            TEST_IMAGE.inside("--ulimit nofile=1024:1024 --init") {
-                stage('test python3 unit') {
-                    dir ('tests') {
-                        ansiColor('css') {
-                            sh "bash -c \"make test-unit-sh\""
+        stage('checkout sources') {
+            checkout(scm)
+        }
+        notify = load 'buildscripts/scripts/lib/notify.groovy'
+        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+    }
+    
+    try {
+        node (NODE) {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
+                // The commands are executed with the 1001:1000 UID:GID (non-root).
+                // This is the UID of the jenkins user on the node which does not exist
+                // in the container. For the moment this does not look like a problem.
+                // But it may be that we get to the point where we need an existing
+                // user in the container.
+                TEST_IMAGE.inside("--ulimit nofile=1024:1024 --init") {
+                    stage('test python3 unit') {
+                        dir ('tests') {
+                            ansiColor('css') {
+                                sh "bash -c \"make test-unit-shell\""
+                            }
                         }
                     }
                 }
             }
         }
+    } catch(Exception e) {
+        notify.notify_error(e)
     }
-}catch(Exception e) {
-    notify.notify_error(e)
 }

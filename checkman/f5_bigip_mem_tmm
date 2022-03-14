@@ -1,7 +1,7 @@
 title: F5 Big-IP: Usage of TMM Memory
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the memory usage of the TMM (Traffic Management Module)
@@ -13,5 +13,5 @@ description:
 item:
  One of the two statements: {{total}} or {{TMM}}
 
-inventory:
+discovery:
  One service is created for the target host.

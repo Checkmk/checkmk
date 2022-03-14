@@ -1,7 +1,7 @@
 title: Plesk: Configured Domains
 agents: linux
 catalog: app/plesk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Plesk is a commercial webhosting management software. It allows you to
@@ -16,6 +16,5 @@ description:
  {plesk_domains} on the host wich runs Plesk in the
  directory {/usr/lib/check_mk_agent/plugins}.
 
-inventory:
+discovery:
  One service is created for each system.
-

@@ -1,0 +1,14 @@
+Title: ps section parser: crash on KeyError() when host is using busybox' ps implementation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617948227
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Busybox' ps implementation does not provide the columns needed for the ps check, so the section
+parser crashes on missing colums (of which the first is 'user', resulting in KeyError(user).
+This change checks for the existence of all needed columns and aborts otherwise.

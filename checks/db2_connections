@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_connections>>>
 # [[[db2taddm:CMDBS1]]]
 # port 50214
@@ -44,13 +45,13 @@ def check_db2_connections(item, params, parsed):
     yield 0, "Port: %s" % data["port"]
 
     if "latency" in data:
-        latency = data['latency']
-        if ':' not in latency:
+        latency = data["latency"]
+        if ":" not in latency:
             ms = int(latency)
         else:  # handle old time format: 'min:seconds.milliseconds'
             minutes, rest = data["latency"].split(":")
             # handle different locale settings
-            if ',' in rest:
+            if "," in rest:
                 seconds, mseconds = rest.split(",")
             else:
                 seconds, mseconds = rest.split(".")
@@ -59,7 +60,7 @@ def check_db2_connections(item, params, parsed):
         yield 0, "Latency: %.2f ms" % ms, [("latency", ms)]
 
 
-check_info['db2_connections'] = {
+check_info["db2_connections"] = {
     "parse_function": parse_db2_dbs,
     "service_description": "DB2 Connections %s",
     "check_function": check_db2_connections,

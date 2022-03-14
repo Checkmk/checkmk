@@ -19,6 +19,6 @@ def inv_infoblox_systeminfo(info):
     node["version"] = version
 
 
-inv_info['infoblox_systeminfo'] = {
-    'inv_function': inv_infoblox_systeminfo,
+inv_info["infoblox_systeminfo"] = {
+    "inv_function": inv_infoblox_systeminfo,
 }

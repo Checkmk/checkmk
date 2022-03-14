@@ -1,0 +1,29 @@
+Title: Distributed monitoring: Improve version compatibility validation
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1634845903
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+In distributed setups with sites using different Checkmk versions we can
+not ensure that all versions are compatible with each other. To clarify
+the compatibility between version we've now added more version checks that
+ensure the central and remote sites are using compatible versions.
+
+Allowed are connections:
+
+<ul>
+<li>Between same major versions (e.g. 2.0.0p1 to 2.0.0p3)</li>
+<li>From previous to newer major version (e.g. 1.6.0 central to 2.0.0 remote site)</li>
+</ul>
+
+Disallowed are connections:
+
+<ul>
+<li>From pre-pre to new major version (e.g. 1.6.0 central to 2.1.0 remote site)</li>
+<li>From new to old (e.g. 2.0.0p1 to 1.6.0p21)</li>
+<li>Between CME and other editions</li>
+</ul>

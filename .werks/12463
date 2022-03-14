@@ -1,0 +1,12 @@
+Title: BI computation: Aggregations are no longer repeatedly computed if a remote site has no hosts
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1619091177
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

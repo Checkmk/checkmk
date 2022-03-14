@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['keepalived_default_levels'] = {
-    'master': '0',
-    'unknown': '3',
-    'init': '0',
-    'backup': '0',
-    'fault': '2',
+factory_settings["keepalived_default_levels"] = {
+    "master": "0",
+    "unknown": "3",
+    "init": "0",
+    "backup": "0",
+    "fault": "2",
 }
 
 
@@ -18,10 +18,10 @@ def hex2ip(hexstr):
     Can parse strings in this form:
     17 20 16 00 00 01
     """
-    hexstr = hexstr.replace(' ', '')
-    blocks = (''.join(block) for block in zip(*[iter(hexstr)] * 2))
+    hexstr = hexstr.replace(" ", "")
+    blocks = ("".join(block) for block in zip(*[iter(hexstr)] * 2))
     blocks = (int(block, 16) for block in blocks)
-    return '.'.join(str(block) for block in blocks)
+    return ".".join(str(block) for block in blocks)
 
 
 def inventory_keepalived(info):
@@ -46,26 +46,34 @@ def check_keepalived(item, params, info):
         hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
-            infotext = "This node is %s. IP Address: %s" % (map_state[str(
-                entry[1])], hex2ip(hexaddr))
+            infotext = "This node is %s. IP Address: %s" % (
+                map_state[str(entry[1])],
+                hex2ip(hexaddr),
+            )
     yield int(status), infotext
 
-check_info['keepalived'] = {
-    'inventory_function'      : inventory_keepalived,
-    'default_levels_variable' : 'keepalived_default_levels',
-    'check_function'          : check_keepalived,
-    'service_description'     : 'VRRP Instance %s',
-    'snmp_info'               : [('.1.3.6.1.4.1.9586.100.5.2.3.1', [
-                                        '2', #vrrpInstance
-                                        '4', #vrrpInstanceState
-                                        ]
-                                 ),
-                                 ('.1.3.6.1.4.1.9586.100.5.2', [
-                                        '6.1.3', #vrrpAddressValue
-                                        ]
-                                 )
-                                ],
-    'snmp_scan_function'      : lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                                oid(".1.3.6.1.4.1.9586.100.5.1.1.0") is not None,
-    'group'                   : 'keepalived',
+
+check_info["keepalived"] = {
+    "inventory_function": inventory_keepalived,
+    "default_levels_variable": "keepalived_default_levels",
+    "check_function": check_keepalived,
+    "service_description": "VRRP Instance %s",
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.9586.100.5.2.3.1",
+            [
+                "2",  # vrrpInstance
+                "4",  # vrrpInstanceState
+            ],
+        ),
+        (
+            ".1.3.6.1.4.1.9586.100.5.2",
+            [
+                "6.1.3",  # vrrpAddressValue
+            ],
+        ),
+    ],
+    "snmp_scan_function": lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.4.1.9586.100.5.1.1.0") is not None,
+    "group": "keepalived",
 }

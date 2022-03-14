@@ -1,7 +1,7 @@
 title: Sansymphony: Alerts
 agents: windows
 catalog: app/sansymphony
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the current amount of unacknowlegded alerts reported by the sansymphony management.
@@ -9,5 +9,5 @@ description:
 
  The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins.
 
-inventory:
+discovery:
  One service is created.

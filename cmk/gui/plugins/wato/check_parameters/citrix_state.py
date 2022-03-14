@@ -5,32 +5,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_citrix_state():
-    return Dictionary(elements=[(
-        "registrationstate",
-        Dictionary(
-            title=_("Interpretation of Registration States"),
-            elements=[
-                ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
-                ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
-                ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
-                ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
-            ],
-            optional_keys=False,
-        ),
-    )],)
+    return Dictionary(
+        elements=[
+            (
+                "registrationstate",
+                Dictionary(
+                    title=_("Interpretation of Registration States"),
+                    elements=[
+                        ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
+                        ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
+                        ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
+                        ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
+                    ],
+                    optional_keys=False,
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -40,4 +40,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_citrix_state,
         title=lambda: _("Citrix VM state"),
-    ))
+    )
+)

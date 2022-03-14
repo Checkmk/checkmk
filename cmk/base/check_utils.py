@@ -4,95 +4,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Mapping, NamedTuple, Optional, Tuple
 
-from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
+from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceName
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels
+from cmk.base.discovered_labels import ServiceLabel
 
 ServiceID = Tuple[CheckPluginName, Item]
-CheckTable = Dict[ServiceID, 'Service']
 
 
-class Service:
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
+class ConfiguredService(NamedTuple):
+    """A service with all information derived from the config"""
 
-    def __init__(
-        self,
-        check_plugin_name: CheckPluginName,
-        item: Item,
-        description: str,
-        parameters: LegacyCheckParameters,
-        service_labels: Optional[DiscoveredServiceLabels] = None,
-    ) -> None:
-        self._check_plugin_name = check_plugin_name
-        self._item = item
-        self._description = description
-        self._service_labels = service_labels or DiscoveredServiceLabels()
-        self._parameters = parameters
-
-    @property
-    def check_plugin_name(self) -> CheckPluginName:
-        return self._check_plugin_name
-
-    @property
-    def item(self) -> Item:
-        return self._item
-
-    @property
-    def description(self) -> str:
-        return self._description
-
-    @property
-    def parameters(self) -> LegacyCheckParameters:
-        return self._parameters
-
-    @property
-    def service_labels(self) -> DiscoveredServiceLabels:
-        return self._service_labels
+    check_plugin_name: CheckPluginName
+    item: Item
+    description: ServiceName
+    parameters: TimespecificParameters
+    # Explicitly optional b/c enforced services don't have disocvered params.
+    discovered_parameters: Optional[LegacyCheckParameters]
+    service_labels: Mapping[str, ServiceLabel]
 
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
 
-    def __lt__(self, other: Any) -> bool:
+    def sort_key(self) -> Tuple[CheckPluginName, str]:
         """Allow to sort services
 
         Basically sort by id(). Unfortunately we have plugins with *AND* without
         items.
         """
-        if not isinstance(other, Service):
-            raise TypeError("Can only be compared with other Service objects")
-        return (self.check_plugin_name, self.item or "") < (other.check_plugin_name, other.item or
-                                                            "")
-
-    def __eq__(self, other: Any) -> bool:
-        """Is used during service discovery list computation to detect and replace duplicates
-        For this the parameters and similar need to be ignored."""
-        if not isinstance(other, Service):
-            raise TypeError("Can only be compared with other Service objects")
-        return self.id() == other.id()
-
-    def __hash__(self) -> int:
-        """Is used during service discovery list computation to detect and replace duplicates
-        For this the parameters and similar need to be ignored."""
-        return hash(self.id())
-
-    def __repr__(self) -> str:
-        return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_labels=%r)" % (
-            self._check_plugin_name, self._item, self._description, self._parameters,
-            self._service_labels)
-
-    def dump_autocheck(self) -> str:
-        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
-            str(self.check_plugin_name),
-            self.item,
-            self.parameters,
-            self.service_labels.to_dict(),
-        )
-
-
-# Management board checks
-# These are only used in the legacy check_api.py and checking._legacy_mode.
-MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
+        return self.check_plugin_name, self.item or ""

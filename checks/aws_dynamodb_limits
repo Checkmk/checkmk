@@ -9,10 +9,11 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_dynamodb_limits_default_levels'] = {
-    'number_of_tables': (None, 80.0, 90.0),
-    'read_capacity': (None, 80.0, 90.0),
-    'write_capacity': (None, 80.0, 90.0),
+
+factory_settings["aws_dynamodb_limits_default_levels"] = {
+    "number_of_tables": (None, 80.0, 90.0),
+    "read_capacity": (None, 80.0, 90.0),
+    "write_capacity": (None, 80.0, 90.0),
 }
 
 
@@ -21,12 +22,12 @@ def check_aws_dynamodb_limits(item, params, region_data):
     return check_aws_limits("dynamodb", params, region_data)
 
 
-check_info['aws_dynamodb_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_dynamodb_limits,
-    'service_description': 'AWS/DynamoDB Limits %s',
-    'group': 'aws_dynamodb_limits',
-    'default_levels_variable': 'aws_dynamodb_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_dynamodb_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_dynamodb_limits,
+    "service_description": "AWS/DynamoDB Limits %s",
+    "group": "aws_dynamodb_limits",
+    "default_levels_variable": "aws_dynamodb_limits_default_levels",
+    "has_perfdata": True,
 }

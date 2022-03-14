@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.3717.2.1.3.1.1.1 1
 # .1.3.6.1.4.1.3717.2.1.3.1.1.2 2
 # .1.3.6.1.4.1.3717.2.1.3.1.1.3 3
@@ -46,19 +47,23 @@ def check_genua_vpn(item, params, info):
             if ip_opposite:
                 ip_info += " (%s)" % ip_opposite
 
-            infotext = "Hostname: %s%s, VPN private: %s, VPN remote: %s" % \
-                       (hostname_opposite, ip_info, vpn_private, vpn_remote)
+            infotext = "Hostname: %s%s, VPN private: %s, VPN remote: %s" % (
+                hostname_opposite,
+                ip_info,
+                vpn_private,
+                vpn_remote,
+            )
 
-            if vpn_state == '2':
+            if vpn_state == "2":
                 return 0, "Connected, %s" % infotext
             return 2, "Disconnected, %s" % infotext
 
 
-check_info['genua_vpn'] = {
-    'inventory_function': inventory_genua_vpn,
-    'check_function': check_genua_vpn,
-    'service_description': 'VPN %s',
-    'snmp_info': (
+check_info["genua_vpn"] = {
+    "inventory_function": inventory_genua_vpn,
+    "check_function": check_genua_vpn,
+    "service_description": "VPN %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.3717.2.1.3.1",
         [
             "1",  # vpn id
@@ -67,6 +72,7 @@ check_info['genua_vpn'] = {
             "4",  # vpn private
             "5",  # vpn remote
             "6",  # vpn status (2:OK, 1:FAULT)
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_genua,
 }

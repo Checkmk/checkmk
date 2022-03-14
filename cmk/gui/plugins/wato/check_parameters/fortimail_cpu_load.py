@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
@@ -19,7 +19,7 @@ def _parameter_valuespec_fortimail_cpu_load():
             (
                 "cpu_load",
                 Tuple(
-                    [
+                    elements=[
                         Float(title=_("Warning at")),
                         Float(title=_("Critical at")),
                     ],
@@ -38,4 +38,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_fortimail_cpu_load,
         title=lambda: _("Fortinet FortiMail CPU load"),
-    ))
+    )
+)

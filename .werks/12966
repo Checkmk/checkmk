@@ -1,0 +1,14 @@
+Title: Fix predictive icon link in distributed setups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624457324
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If the predictive icon was used in distributed setups on services that are
+located on remote sites, the link of that icon opened a tab with a link to the
+remote site. From now on, the predictive page of the service is shown on the
+central site.

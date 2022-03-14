@@ -7,10 +7,13 @@
 # <<<elasticsearch_indices>>>
 # filebeat-6.5.4 11492614 801366929
 
-ElasticIndex = collections.namedtuple("ElasticIndex", [
-    "count",
-    "size",
-])
+ElasticIndex = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "ElasticIndex",
+    [
+        "count",
+        "size",
+    ],
+)
 
 
 def parse_elasticsearch_indices(info):
@@ -24,10 +27,13 @@ def parse_elasticsearch_indices(info):
                 parsed[index] = parsed[index]._replace(count=parsed[index].count + float(count))
                 parsed[index] = parsed[index]._replace(size=parsed[index].size + float(size))
             else:
-                parsed.setdefault(index, ElasticIndex(
-                    float(count),
-                    float(size),
-                ))
+                parsed.setdefault(
+                    index,
+                    ElasticIndex(
+                        float(count),
+                        float(size),
+                    ),
+                )
         except (IndexError, ValueError):
             pass
 
@@ -46,32 +52,38 @@ def check_elasticsearch_indices(item, params, item_data):
         else:
             avg = 30
 
-        yield check_levels(value,
-                           name, (None, None),
-                           human_readable_func=hr_func,
-                           unit=unit,
-                           infoname="Total %s" % infotext)
+        yield check_levels(
+            value,
+            name,
+            (None, None),
+            human_readable_func=hr_func,
+            unit=unit,
+            infoname="Total %s" % infotext,
+        )
 
         this_time = time.time()
         rate = get_rate("elasticsearch_indices.%s.%s" % (name, item), this_time, value) * 60
 
-        avg_rate = get_average("elasticsearch_indices.%s.%s.avg" % (name, item), this_time, rate,
-                               avg)
+        avg_rate = get_average(
+            "elasticsearch_indices.%s.%s.avg" % (name, item), this_time, rate, avg
+        )
 
         if params.get("%s_rate" % name):
             warn, crit, avg = params["%s_rate" % name]
-            avg_rate_warn = (avg_rate * (warn / 100.0 + 1))
-            avg_rate_crit = (avg_rate * (crit / 100.0 + 1))
+            avg_rate_warn = avg_rate * (warn / 100.0 + 1)
+            avg_rate_crit = avg_rate * (crit / 100.0 + 1)
             params_avg = (avg_rate_warn, avg_rate_crit)
         else:
             params_avg = (None, None)
 
-        yield check_levels(rate,
-                           "%s_rate" % name,
-                           params_avg,
-                           human_readable_func=hr_func,
-                           unit="%s per Minute" % unit,
-                           infoname="Average %s" % infotext)
+        yield check_levels(
+            rate,
+            "%s_rate" % name,
+            params_avg,
+            human_readable_func=hr_func,
+            unit="%s per Minute" % unit,
+            infoname="Average %s" % infotext,
+        )
 
 
 check_info["elasticsearch_indices"] = {

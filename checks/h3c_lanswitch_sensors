@@ -6,7 +6,7 @@
 
 
 def inventory_h3c_lanswitch_sensors(info):
-    return [(h3c_lanswitch_genitem(line[0]), None) for line in info if line[1] in ['1', '2']]
+    return [(h3c_lanswitch_genitem(line[0]), None) for line in info if line[1] in ["1", "2"]]
 
 
 def check_h3c_lanswitch_sensors(item, params, info):
@@ -21,8 +21,12 @@ def check_h3c_lanswitch_sensors(item, params, info):
     return (3, "Sensor %s not found" % item)
 
 
-check_info["h3c_lanswitch_sensors"] = (check_h3c_lanswitch_sensors, "%s", 0,
-                                       inventory_h3c_lanswitch_sensors)
+check_info["h3c_lanswitch_sensors"] = (
+    check_h3c_lanswitch_sensors,
+    "%s",
+    0,
+    inventory_h3c_lanswitch_sensors,
+)
 
 
 def h3c_lanswitch_genitem(endoid):
@@ -44,8 +48,12 @@ def h3c_lanswitch_genitem(endoid):
 #
 #
 # finally,just check fan status
-snmp_info["h3c_lanswitch_sensors"] = (".1.3.6.1.4.1.43.45.1.2.23.1.9.1", ["1.1",
-                                                                          "2.1"], [OID_END, "2"])
+snmp_info["h3c_lanswitch_sensors"] = (
+    ".1.3.6.1.4.1.43.45.1.2.23.1.9.1",
+    ["1.1", "2.1"],
+    [OID_END, "2"],
+)
 
-snmp_scan_functions["h3c_lanswitch_sensors"] = lambda oid: '3com s' in oid(".1.3.6.1.2.1.1.1.0"
-                                                                          ).lower()
+snmp_scan_functions["h3c_lanswitch_sensors"] = (
+    lambda oid: "3com s" in oid(".1.3.6.1.2.1.1.1.0").lower()
+)

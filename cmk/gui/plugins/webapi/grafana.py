@@ -8,24 +8,19 @@ from typing import Tuple
 
 import livestatus
 
-from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-)
-
-import cmk.gui.sites as sites
-import cmk.gui.config as config
 import cmk.gui.availability as availability
-from cmk.gui.i18n import _
+import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.plugins.metrics.utils import (
-    perfvar_translation,
-    metric_info,
-    get_graph_template_choices,
-)
+from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
-from cmk.gui.plugins.views.utils import (
-    data_source_registry,)
+from cmk.gui.plugins.metrics.utils import (
+    get_graph_template_choices,
+    metric_info,
+    perfvar_translation,
+)
+from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
+from cmk.gui.visuals import cleanup_context_filters, get_filter_headers
 
 
 @api_call_collection_registry.register
@@ -66,7 +61,7 @@ class APICallGrafanaConnector(APICallCollection):
         }
 
     def _get_user_sites(self, request):
-        return config.sorted_sites()
+        return sites.sorted_sites()
 
     def _get_host_names(self, request):
         return self._query_for_host_names(request.get("site_id"))
@@ -82,9 +77,11 @@ class APICallGrafanaConnector(APICallCollection):
         if not host_name:
             return {}
 
-        query = ("GET services\n"
-                 "Columns: description check_command metrics\n"
-                 "Filter: host_name = %s\n" % livestatus.lqencode(host_name))
+        query = (
+            "GET services\n"
+            "Columns: description check_command metrics\n"
+            "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
+        )
 
         response = {}
 
@@ -126,10 +123,15 @@ class APICallGrafanaConnector(APICallCollection):
             raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
 
         if "presentation" not in request:
-            request['presentation'] = 'sum'
+            request["presentation"] = "sum"
         presentation = request["presentation"]
         if presentation not in combined_graph_presentations:
             raise MKGeneralException(_("The requested item %s does not exist") % presentation)
+
+        # Because grafana connector <= 1.1.0 sends empty string when no site filter is
+        # applied, yet cmk takes takes context['site'] as enforced thus "" is an applied site filter
+        if "site" in request["context"] and not request["context"]["site"]:
+            request["context"].pop("site")
 
         # The grafana connector needs the template title for making them
         # selectable by the user. We extend the graph identification here.
@@ -137,13 +139,15 @@ class APICallGrafanaConnector(APICallCollection):
         response = []
         for graph_identification in matching_combined_graphs(request):
             graph_template_id = graph_identification[1]["graph_template"]
-            graph_title = dict(get_graph_template_choices()).get(graph_template_id,
-                                                                 graph_template_id)
-
-            response.append({
-                "identification": graph_identification,
-                "title": graph_title,
-            })
+            graph_title = dict(get_graph_template_choices()).get(
+                graph_template_id, graph_template_id
+            )
+            response.append(
+                {
+                    "identification": graph_identification,
+                    "title": graph_title,
+                }
+            )
         return response
 
     def _get_graph_annotations(self, request):
@@ -152,9 +156,11 @@ class APICallGrafanaConnector(APICallCollection):
         else:
             single_infos = []
 
-        filter_headers, only_sites = self._get_filter_headers_of_context(datasource_name="services",
-                                                                         context=request["context"],
-                                                                         single_infos=single_infos)
+        context = cleanup_context_filters(request["context"], single_infos)
+
+        filter_headers, only_sites = self._get_filter_headers_of_context(
+            datasource_name="services", context=context, single_infos=single_infos
+        )
 
         return {
             "availability_timelines": self._get_availability_timelines(
@@ -171,17 +177,7 @@ class APICallGrafanaConnector(APICallCollection):
         context,
         single_infos,
     ) -> Tuple[str, livestatus.OnlySites]:
-        try:
-            from cmk.gui.cee.plugins.metrics.graphs import get_filter_and_filterheaders_of_context
-        except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
-
-        _filters, filterheaders, selected_sites = get_filter_and_filterheaders_of_context(
-            data_source_registry[datasource_name]().infos,
-            context,
-            single_infos,
-        )
-        return filterheaders, selected_sites
+        return get_filter_headers("", data_source_registry[datasource_name]().infos, context)
 
     def _get_availability_timelines(self, start_time, end_time, only_sites, filter_headers):
         avoptions = availability.get_default_avoptions()
@@ -200,7 +196,7 @@ class APICallGrafanaConnector(APICallCollection):
             avoptions=avoptions,
         )
 
-        av_data = availability.compute_availability(what="service",
-                                                    av_rawdata=av_rawdata,
-                                                    avoptions=avoptions)
+        av_data = availability.compute_availability(
+            what="service", av_rawdata=av_rawdata, avoptions=avoptions
+        )
         return av_data

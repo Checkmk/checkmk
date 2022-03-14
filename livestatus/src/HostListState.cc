@@ -8,6 +8,7 @@
 #ifdef CMC
 #include <memory>
 
+#include "Host.h"
 #include "State.h"
 #endif
 
@@ -16,21 +17,20 @@ int32_t HostListState::operator()(const value_type &hsts,
     int32_t result = 0;
 #ifdef CMC
     for (const auto *hst : hsts) {
-        if (auth_user == nullptr || hst->hasContact(auth_user)) {
+        if (is_authorized_for_hst(auth_user, hst)) {
             const auto *state = hst->state();
             auto svcs = ServiceListState::value_type(hst->_services.size());
             for (const auto &s : hst->_services) {
                 svcs.emplace(s.get());
             }
-            update(auth_user, static_cast<HostState>(state->_current_state),
-                   state->_has_been_checked, svcs, hst->handled(), result);
+            update(auth_user, static_cast<HostState>(state->current_state_),
+                   state->has_been_checked_, svcs, hst->handled(), result);
         }
     }
 #else
     for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
-        if (auth_user == nullptr ||
-            is_authorized_for(_get_service_auth(), auth_user, hst, nullptr)) {
+        if (is_authorized_for_hst(auth_user, hst)) {
             update(auth_user, static_cast<HostState>(hst->current_state),
                    hst->has_been_checked != 0, hst->services,
                    hst->problem_has_been_acknowledged != 0 ||

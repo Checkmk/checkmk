@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Current server status
 # vserver["status"]
 # 0 - NONE:   disabled
@@ -18,19 +19,19 @@ from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcar
 # 4 - BLUE:   availability is unknown
 # 5 - GREY:   unlicensed
 MAP_SERVER_STATUS = {
-    '0': (1, "is disabled"),
-    '1': (0, "is up and available"),
-    '2': (2, "is currently not available"),
-    '3': (2, "is not available"),
-    '4': (1, "availability is unknown"),
-    '5': (3, "is unlicensed")
+    "0": (1, "is disabled"),
+    "1": (0, "is up and available"),
+    "2": (2, "is currently not available"),
+    "3": (2, "is not available"),
+    "4": (1, "availability is unknown"),
+    "5": (3, "is unlicensed"),
 }
 
 MAP_ENABLED = {
-    '0': "NONE",
-    '1': "enabled",
-    '2': "disabled",
-    '3': "disabled by parent",
+    "0": "NONE",
+    "1": "enabled",
+    "2": "disabled",
+    "3": "disabled by parent",
 }
 
 # Check configured limits
@@ -48,7 +49,11 @@ def get_ip_address_human_readable(ip_addr):
     """
     u'\xc2;xJ'  ->  '194.59.120.74'
     """
-    ip_addr_binary = bytes(ord(x) for x in ip_addr)
+    try:
+        ip_addr_binary = bytes(ord(x) for x in ip_addr)
+    except ValueError:
+        return "-"
+
     if len(ip_addr_binary) == 4:
         return socket.inet_ntop(socket.AF_INET, ip_addr_binary)
     if len(ip_addr_binary) == 16:
@@ -60,12 +65,14 @@ def parse_f5_bigip_vserver(info):
     vservers = {}
     for line in info:
         instance = vservers.setdefault(
-            line[0], {
+            line[0],
+            {
                 "status": line[1],
                 "enabled": line[2],
                 "detail": line[3],
                 "ip_address": get_ip_address_human_readable(line[4]),
-            })
+            },
+        )
 
         for key, index, factor in [
             ("connections_duration_min", 5, 0.001),
@@ -89,7 +96,7 @@ def parse_f5_bigip_vserver(info):
 
 def inventory_f5_bigip_vserver(parsed):
     for name, vserver in parsed.items():
-        if vserver["status"] in ('1', '4'):  # Green and Blue
+        if vserver["status"] in ("1", "4"):  # Green and Blue
             yield name, {}
 
 
@@ -98,8 +105,12 @@ def get_aggregated_values(vserver):
     now = time.time()
 
     counter_keys = {
-        "if_in_pkts", "if_out_pkts", "if_in_octets", "if_out_octets", "connections_rate",
-        "packet_velocity_asic"
+        "if_in_pkts",
+        "if_out_pkts",
+        "if_in_octets",
+        "if_out_octets",
+        "connections_rate",
+        "packet_velocity_asic",
     }
     # Calculate counters
     for what in counter_keys & set(vserver):
@@ -147,15 +158,16 @@ def check_f5_bigip_vserver(_item, params, data):
     enabled_txt = MAP_ENABLED.get(data["enabled"], "in unknown state")
     yield enabled_state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled_txt)
 
-    state_map = params.get('state', {})
-    state, state_readable = MAP_SERVER_STATUS.get(data["status"],
-                                                  (3, "Unhandled status (%s)" % data["status"]))
-    state = state_map.get(state_readable.replace(' ', '_'), state)
+    state_map = params.get("state", {})
+    state, state_readable = MAP_SERVER_STATUS.get(
+        data["status"], (3, "Unhandled status (%s)" % data["status"])
+    )
+    state = state_map.get(state_readable.replace(" ", "_"), state)
 
     detail = data["detail"]
     # Special handling: Statement from the network team:
     # Not available => uncritical when the childrens are down
-    if data["status"] == '3' and detail.lower() == "the children pool member(s) are down":
+    if data["status"] == "3" and detail.lower() == "the children pool member(s) are down":
         state = state_map.get("children_pool_members_down_if_not_available", 0)
 
     yield state, "State %s, Detail: %s" % (state_readable, detail)
@@ -211,6 +223,7 @@ check_info["f5_bigip_vserver"] = {
             "2.3.1.11",  # 12 Client Total Connections
             "2.3.1.12",  # 13 Client Current Connections
             "2.3.1.25",  # 14 packet_velocity_asic Total Connections
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_f5_bigip,
 }

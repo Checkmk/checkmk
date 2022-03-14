@@ -1,14 +1,14 @@
 title: Couchbase Nodes: Size of Documents
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the size of couchbase documents on a cluster node.
  The space on disk as well as the actual data size is reported.
  Levels can be defined using the WATO rule "Couchbase Node: Size of documents".
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

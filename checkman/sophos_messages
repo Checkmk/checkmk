@@ -1,7 +1,7 @@
 title: Sophos Email Appliance: Inbound and Outbound Messages
 agents: snmp
 catalog: hw/mail/sophos
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the rate of the inbound and outbound messages
@@ -10,5 +10,5 @@ description:
 item:
  The name of the messagetype (i.e. {{Legit}}, {{Blocked}}, etc.).
 
-inventory:
+discovery:
  One service is created for each messagetype.

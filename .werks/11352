@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In case a changed iptable config - which results in {CRIT} - was acknowledged, the ACK vanished after a <tt>omd update</tt> or <tt>omd restart</tt>.
 The reason therfore is that the check will go to state {OK} for one checkinterval after the update/restart and then become {CRIT} again.

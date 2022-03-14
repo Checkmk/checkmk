@@ -29,15 +29,18 @@ def check_blade_bx_powermod(item, _no_param, info):
     return state, "%s Status is %s" % (product_name, state_readable)
 
 
-check_info['blade_bx_powermod'] = {
-    "inventory_function"    : inventory_blade_bx_powermod,
-    "check_function"        : check_blade_bx_powermod,
-    "service_description"   : "Power Module %s",
-    "snmp_info"             : (".1.3.6.1.4.1.7244.1.1.1.3.2.4.1", [
-                                                      1, # s31SysPowerSupplyUnitId
-                                                      2, # s31SysPowerSupplyUnitStatus
-                                                      4, # s31SysPowerSupplyUnitProductName
-   ]),
-   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
-                            or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
+check_info["blade_bx_powermod"] = {
+    "inventory_function": inventory_blade_bx_powermod,
+    "check_function": check_blade_bx_powermod,
+    "service_description": "Power Module %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.7244.1.1.1.3.2.4.1",
+        [
+            1,  # s31SysPowerSupplyUnitId
+            2,  # s31SysPowerSupplyUnitStatus
+            4,  # s31SysPowerSupplyUnitProductName
+        ],
+    ),
+    "snmp_scan_function": lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0")
+    or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
 }

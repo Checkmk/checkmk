@@ -1,7 +1,7 @@
 title: Arbor Pravail: Memory and Swap
 agents: snmp
 catalog: hw/network/arbor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors disk usage on Arbor Pravail devices.
@@ -16,9 +16,8 @@ description:
 
  This check uses the PRAVAIL-MIB.
 
-inventory:
+discovery:
  One service is created.
 
 item:
  The sole item is named "/".
-

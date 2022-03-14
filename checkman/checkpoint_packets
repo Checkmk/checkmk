@@ -1,13 +1,12 @@
 title: Checkpoint Firewalls: Packet Statistics
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the packet rates for the following types of packets:
  accepted, rejected, dropped, logged, espEncrypted, espDecrypted.  Warning and critical levels for
  the packet rates may be configured.
 
-inventory:
+discovery:
  One service is created.
-

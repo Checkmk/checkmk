@@ -1,0 +1,13 @@
+Title: RESTAPI: fix endpoint "Update the phase of a service"
+Class: fix
+Compatible: compat
+Component: core
+Date: 1634824346
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Before this fix the endpoint only worked for <tt>target_phase=refresh</tt>. Now
+all other target_phase are supported, too.

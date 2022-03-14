@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: PSU (voltage)
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about the voltage status of an UCS C-Series Rack Servers racks power supply unit (PSU).
@@ -40,7 +40,7 @@ description:
  - {UNKNOWN} in case the voltage status is one of:
    unknown
 
-inventory:
+discovery:
  One service is created for each server rack included in the agent plugin output.
 
 item:

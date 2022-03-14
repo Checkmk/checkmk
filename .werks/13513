@@ -1,0 +1,14 @@
+Title: check_http: Fix replacement of HOSTALIAS in service description
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1640698777
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you used the macro "$HOSTALIAS$" in section "Service name" of the rule
+"Check HTTP service", the macro was not replaced by the hosts alias, the
+service description showed "HTTP $HOSTALIAS$" instead.

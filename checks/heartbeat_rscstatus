@@ -28,7 +28,7 @@ def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
 
     if not isinstance(params, dict):
         # old params comes styled with double qoutes
-        params = {"discovered_state": params.replace("\"", "")}
+        params = {"discovered_state": params.replace('"', "")}
 
     expected_state = params.get("discovered_state")
     if "expected_state" in params:
@@ -41,9 +41,9 @@ def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
 
 
 check_info["heartbeat_rscstatus"] = {
-    'parse_function': parse_heartbeat_rscstatus,
-    'check_function': check_heartbeat_rscstatus,
-    'inventory_function': inventory_heartbeat_rscstatus,
-    'service_description': 'Heartbeat Ressource Status',
-    'group': 'heartbeat_rscstatus',
+    "parse_function": parse_heartbeat_rscstatus,
+    "check_function": check_heartbeat_rscstatus,
+    "inventory_function": inventory_heartbeat_rscstatus,
+    "service_description": "Heartbeat Ressource Status",
+    "group": "heartbeat_rscstatus",
 }

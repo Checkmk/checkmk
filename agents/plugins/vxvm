@@ -9,30 +9,29 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # This plugin has been tested on Linux and HPUX.
 
-
 if type vxdmpadm >/dev/null 2>&1; then
     echo '<<<vxvm_enclosures>>>'
-    vxdmpadm listenclosure all | grep -v -w -e ^[dD]isk -e ^other_disks -e ^ENCLR_NAME -e \^=
+    vxdmpadm listenclosure all | grep -v -w -e "^[dD]isk" -e "^other_disks" -e "^ENCLR_NAME" -e "\^="
     echo '<<<vxvm_multipath>>>'
-    ENCS=$( vxdmpadm listenclosure all | grep -v -w -e ^[dD]isk -e ENCLR_NAME -e \^= | awk '{print $1}')
+    ENCS=$(vxdmpadm listenclosure all | grep -v -w -e "^[dD]isk" -e "ENCLR_NAME" -e "\^=" | awk '{print $1}')
 
-    echo "$ENCS" | while read enc ; do
-      vxdmpadm getdmpnode enclosure=$enc | grep -v -e \^= -e NAME
+    echo "$ENCS" | while read -r enc; do
+        vxdmpadm getdmpnode enclosure="${enc}" | grep -v -e "\^=" -e NAME
     done
 fi
 
 if type vxdg >/dev/null 2>&1; then
-   echo '<<<vxvm_objstatus>>>'
-   # Get a list of the in-use disk groups.
-   DGS=$(vxdg list | grep enabled | awk '{print $1}')
-   # Deported or otherwise inactive needs no performance monitoring
-   if [ "X${DGS}" != "X"  ]; then
-     for DG in $DGS ; do
-         vxprint -g $DG -v -q -Q  -F "%type %dgname %name %admin_state %kstate"
-     done
-   fi
+    echo '<<<vxvm_objstatus>>>'
+    # Get a list of the in-use disk groups.
+    DGS=$(vxdg list | grep "enabled" | awk '{print $1}')
+    # Deported or otherwise inactive needs no performance monitoring
+    if [ "X${DGS}" != "X" ]; then
+        for DG in $DGS; do
+            vxprint -g "${DG}" -v -q -Q -F "%type %dgname %name %admin_state %kstate"
+        done
+    fi
 fi

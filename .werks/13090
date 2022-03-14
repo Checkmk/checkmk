@@ -1,0 +1,14 @@
+Title: Fixed 'transitions' and 'next_transition' columns in timeperiods table.
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1634736621
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Both columns didn't take the local time zone offset into account.
+Furthermore, 'next_transition' was off by a factor of 1e9, leading
+to funny 32bit overflow effects most of the time.
+

@@ -1,0 +1,18 @@
+Title: <tt>mtr</tt>: Fix performance graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630665518
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The performance graphs of the check plugin <tt>mtr</tt>, which
+monitors network diagnostiscs produced by MTR, were crashing
+with
+
+Cannot calculate graph recipes
+Syntax error in expression ...
+
+This has been fixed.

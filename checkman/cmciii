@@ -1,7 +1,7 @@
 title: Rittal CMC-III Units: General State
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the general status of the units attached to the
@@ -13,7 +13,10 @@ description:
  Otherwise the check is {UNKNOWN}.
 
 item:
- Name of the device
+ By default the name of the device is used. If the discovery option
+ "Use sensor description" from the ruleset "Rittal CMC III discovery"
+ is active, the number of the device followed by the name of the device
+ is used.
 
-inventory:
+discovery:
  One service is created for each state.

@@ -1,7 +1,7 @@
 title: Bachmann Bluenet2 Powerrail: Temperature Sensors
 agents: snmp
 catalog: hw/environment/bachmann
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature sensors of Bachmann Bluenet2
@@ -11,7 +11,7 @@ description:
  Upper default levels are set to 30, 35 degree celsius.
  Upper and lower levels are configurable.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.
 
 item:

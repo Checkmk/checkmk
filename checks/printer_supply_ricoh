@@ -99,7 +99,7 @@ def check_printer_supply_ricoh(item, params, parsed):
             return state, infotext, perfdata
 
 
-check_info['printer_supply_ricoh'] = {
+check_info["printer_supply_ricoh"] = {
     "parse_function": parse_printer_supply_ricoh,
     "inventory_function": inventory_printer_supply_ricoh,
     "check_function": check_printer_supply_ricoh,

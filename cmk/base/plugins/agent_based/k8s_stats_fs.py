@@ -3,30 +3,19 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping, MutableMapping
 import collections
 from contextlib import suppress
+from typing import Any, Mapping, MutableMapping
 
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    GetRateError,
-    get_value_store,
-)
+from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.k8s import Filesystem, Section, to_filesystem
 
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-)
-from .utils.k8s import (
-    Section,
-    Filesystem,
-    to_filesystem,
-)
-from .utils.df import (
-    df_check_filesystem_single,
-    FILESYSTEM_DEFAULT_LEVELS,
-)
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 
 
 def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
@@ -43,8 +32,11 @@ def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
         Service(item=device)
         for device in section["filesystem"]
         if device not in {"tmpfs", "rootfs", "/dev/shm"}
-        if not (isinstance(device, str) and (device.startswith("/var/lib/docker/") or  #
-                                             device.startswith("overlay"))))
+        if not (
+            isinstance(device, str)
+            and (device.startswith("/var/lib/docker/") or device.startswith("overlay"))  #
+        )
+    )
 
 
 def _check__k8s_stats_fs__core(
@@ -69,10 +61,13 @@ def _check__k8s_stats_fs__core(
     Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0%')
     Metric('trend', 0.0, boundaries=(0.0, 687.1832682291666))
     """
-    now = section['timestamp']
+    now = section["timestamp"]
     disk: Filesystem = to_filesystem(
-        sum((collections.Counter(interface) for interface in section["filesystem"][item]),
-            collections.Counter()))
+        sum(
+            (collections.Counter(interface) for interface in section["filesystem"][item]),
+            collections.Counter(),
+        )
+    )
 
     with suppress(GetRateError):
         yield from df_check_filesystem_single(

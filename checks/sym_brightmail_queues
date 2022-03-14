@@ -34,8 +34,15 @@
 
 def parse_sym_brightmail_queues(info):
     parsed = {}
-    for descr, connections, dataRate, deferredMessages, \
-        messageRate, queueSize, queuedMessages in info:
+    for (
+        descr,
+        connections,
+        dataRate,
+        deferredMessages,
+        messageRate,
+        queueSize,
+        queuedMessages,
+    ) in info:
         for k, v in [
             ("connections", connections),
             ("dataRate", dataRate),
@@ -67,8 +74,8 @@ def check_sym_brightmail_queues(item, params, parsed):
         ("dataRate", "Data rate"),
         ("deferredMessages", "Deferred messages"),
         ("messageRate", "Message rate"),
-            # Symantec did not document the Unit for the queue. You can still set
-            # some level if you wish.
+        # Symantec did not document the Unit for the queue. You can still set
+        # some level if you wish.
         ("queueSize", "Queue size"),
         ("queuedMessages", "Queued messages"),
     ]:
@@ -78,20 +85,23 @@ def check_sym_brightmail_queues(item, params, parsed):
 
 
 check_info["sym_brightmail_queues"] = {
-     "parse_function"       : parse_sym_brightmail_queues,
-     "inventory_function"   : inventory_sym_brightmail_queues,
-     "check_function"       : check_sym_brightmail_queues,
-     "service_description"  : "Queue %s",
-     "snmp_scan_function"   : lambda oid: "el5_sms" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-                                          "el6" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-     "snmp_info"            : (".1.3.6.1.4.1.393.200.130.2", [
-                "2.1.1.2", # InstanceDescr
-                "2.1.1.3", # Connections
-                "2.1.1.4", # dataRate
-                "2.1.1.5", # deferedMessages
-                "2.1.1.6", # messageRate
-                "2.1.1.7", # queueSize
-                "2.1.1.8", # queuedMessages
-     ]),
-     "group"                : "sym_brightmail_queues",
+    "parse_function": parse_sym_brightmail_queues,
+    "inventory_function": inventory_sym_brightmail_queues,
+    "check_function": check_sym_brightmail_queues,
+    "service_description": "Queue %s",
+    "snmp_scan_function": lambda oid: "el5_sms" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    or "el6" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "snmp_info": (
+        ".1.3.6.1.4.1.393.200.130.2",
+        [
+            "2.1.1.2",  # InstanceDescr
+            "2.1.1.3",  # Connections
+            "2.1.1.4",  # dataRate
+            "2.1.1.5",  # deferedMessages
+            "2.1.1.6",  # messageRate
+            "2.1.1.7",  # queueSize
+            "2.1.1.8",  # queuedMessages
+        ],
+    ),
+    "group": "sym_brightmail_queues",
 }

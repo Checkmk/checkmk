@@ -1,0 +1,22 @@
+Title: REST API: make optimistic locking via ETags configurable
+Class: feature
+Compatible: compat
+Component: core
+Date: 1613652848
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When multiple HTTP clients want to update an object at the same time,
+it can happen that the slower client will overwrite changes by the faster one.
+This is commonly referred to as the 'lost update problem'. To prevent this
+situation from happening, Checkmk's REST API does 'optimistic locking' using
+HTTP ETag headers. In this case the object's ETag has to be sent to the server
+with an HTTP If-Match header, for the object to be modified.
+
+For simplified usage in small installations this behavior can now be deactivated,
+but this also deactivates the 'lost update problem' prevention. In that case there
+should only be one script which sends updates via the REST API running at a time,
+to prevent data from getting lost.

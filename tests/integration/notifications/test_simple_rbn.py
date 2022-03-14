@@ -4,79 +4,82 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import os
-import pytest  # type: ignore[import]
+import time
+from typing import Iterator
 
-from testlib import WatchLog
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+import pytest
+
+from tests.testlib import WatchLog
+from tests.testlib.site import Site
 
 
 @pytest.fixture(name="fake_sendmail")
-def fake_sendmail_fixture(site):
-    site.write_file("local/bin/sendmail", "#!/bin/bash\n"
-                    "set -e\n"
-                    "echo \"sendmail called with: $@\"\n")
+def fake_sendmail_fixture(site: Site) -> Iterator[None]:
+    site.write_text_file(
+        "local/bin/sendmail", "#!/bin/bash\n" "set -e\n" 'echo "sendmail called with: $@"\n'
+    )
     os.chmod(site.path("local/bin/sendmail"), 0o775)
     yield
     site.delete_file("local/bin/sendmail")
 
 
-@pytest.fixture(name="test_log",
-                params=[
-                    ("nagios", "var/log/nagios.log"),
-                    ("cmc", "var/check_mk/core/history"),
-                ])
-def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint: disable=redefined-outer-name
-    core, log = request.param
-    site.set_config("CORE", core, with_restart=True)
-
+@pytest.fixture(name="test_log")
+def test_log_fixture(site: Site, fake_sendmail) -> Iterator[WatchLog]:
     users = {
         "hh": {
-            "alias": "Harry Hirsch",
+            "fullname": "Harry Hirsch",
             "password": "1234",
-            "email": u"%s@localhost" % web.site.id,
-            'contactgroups': ['all'],
+            "email": f"{site.id}@localhost",
+            "contactgroups": ["all"],
         },
     }
 
-    expected_users = set(["cmkadmin", "automation"] + list(users.keys()))
-    web.add_htpasswd_users(users)
-    all_users = web.get_all_users()
-    assert not expected_users - set(all_users.keys())
+    initial_users = site.openapi.get_all_users()
+    assert len(initial_users) == 2  # expect cmkadmin and automation user
+
+    for name, user_dict in users.items():
+        site.openapi.create_user(username=name, **user_dict)  # type: ignore
+    all_users = site.openapi.get_all_users()
+    assert len(all_users) == len(initial_users) + len(users)
 
     site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
     site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
 
-    web.add_host("notify-test", attributes={
-        "ipaddress": "127.0.0.1",
-    })
-    web.activate_changes()
+    site.openapi.create_host(
+        "notify-test",
+        attributes={
+            "ipaddress": "127.0.0.1",
+        },
+    )
+    site.activate_changes_and_wait_for_core_reload()
 
-    with WatchLog(site, log, default_timeout=20) as l:
+    with WatchLog(site, default_timeout=20) as l:
         yield l
 
     site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
     site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
-    web.delete_host("notify-test")
-    web.delete_htpasswd_users(list(users.keys()))
-    web.activate_changes()
+    site.openapi.delete_host("notify-test")
+    for username in users:
+        site.openapi.delete_user(username)
+    site.activate_changes_and_wait_for_core_reload()
 
 
-def test_simple_rbn_host_notification(test_log, site):
+def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
-        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN")
+        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN"
+    )
     test_log.check_logged("] HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN")
     test_log.check_logged(
         "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;"
     )
 
 
-def test_simple_rbn_service_notification(test_log, site):
+def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
     site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution

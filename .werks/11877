@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In sites that have been upgraded from pre 2.0 versions to 2.0.0i1 or 2.0.0b1 the SNMP data source for host could fail if the host had some SNMP walks cached.
 

@@ -13,13 +13,13 @@ from cmk.base.check_legacy_includes.bvip import *  # pylint: disable=wildcard-im
 
 def inventory_bvip_video_alerts(info):
     for cam, _alerts in info:
-        yield cam.replace('\x00', ""), None
+        yield cam.replace("\x00", ""), None
 
 
 def check_bvip_video_alerts(item, _no_params, info):
     for cam, alerts in info:
-        if cam.replace('\x00', "") == item:
-            if alerts != '0':
+        if cam.replace("\x00", "") == item:
+            if alerts != "0":
                 return 2, "Device on Alarm State"
             return 0, "No alarms"
 

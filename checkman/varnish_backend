@@ -1,7 +1,7 @@
 title: HTTP Accelerator Statistics via Varnishstat on Linux: Backend
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the backend information of Varnish Server provided by 'varnishstat -1'.
@@ -10,5 +10,5 @@ description:
  No default levels are set. Upper levels can be set for "backend connections busy/too many",
  "backend connections failures" and "backend connections unhealthy/not attempted".
 
-inventory:
+discovery:
  One service is created.

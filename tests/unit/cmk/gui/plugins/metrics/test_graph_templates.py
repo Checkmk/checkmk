@@ -10,16 +10,11 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.gui.plugins.metrics import graph_templates
+from cmk.gui.plugins.metrics.utils import GraphTemplate
 
 _GRAPH_TEMPLATES = [
-    {
-        "id": "1",
-        "title": "Graph 1"
-    },
-    {
-        "id": "2",
-        "title": "Graph 2"
-    },
+    {"id": "1", "title": "Graph 1"},
+    {"id": "2", "title": "Graph 2"},
 ]
 
 
@@ -72,7 +67,7 @@ _GRAPH_TEMPLATES = [
 def test_matching_graph_templates(
     monkeypatch: MonkeyPatch,
     graph_id_info: Mapping[str, str],
-    expected_result: Sequence[Tuple[int, Mapping[str, str]]],
+    expected_result: Sequence[Tuple[int, GraphTemplate]],
 ) -> None:
     monkeypatch.setattr(
         graph_templates,

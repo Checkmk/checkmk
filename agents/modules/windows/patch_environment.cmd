@@ -9,7 +9,7 @@ if not exist %save_dir% powershell Write-Host "`'%save_dir%`' absent" -foregroun
 
 cd %save_dir%
 powershell Write-Host "Patching environment" -foreground green
-echo home = C:\ProgramData\checkmk\agent\modules\python-3.8>.venv\pyvenv.cfg
+echo home = C:\ProgramData\checkmk\agent\modules\python-3>.venv\pyvenv.cfg
 echo version_info = %PY_VER%.%PY_SUBVER%>>.venv\pyvenv.cfg
 echo include-system-site-packages = false>>.venv\pyvenv.cfg
 

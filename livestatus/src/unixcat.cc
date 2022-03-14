@@ -20,6 +20,8 @@
 
 #include "Poller.h"
 
+using namespace std::chrono_literals;
+
 int copy_data(int from, int to);
 
 struct thread_info {
@@ -51,8 +53,8 @@ void *copy_thread(void *info) {
 
     char read_buffer[65536];
     while (true) {
-        ssize_t r = read_with_timeout(from, read_buffer, sizeof(read_buffer),
-                                      std::chrono::microseconds(1000000));
+        ssize_t r =
+            read_with_timeout(from, read_buffer, sizeof(read_buffer), 1s);
         if (r == -1) {
             printErrno("Error reading from " + std::to_string(from));
             break;

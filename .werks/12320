@@ -1,0 +1,18 @@
+Title: Hosts will use Classic SNMP backend for SNMP-v1 datasource
+Class: fix
+Compatible: compat
+Component: core
+Date: 1617115776
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+It was discovered that using SNMP-v1 datasource with default(Inline) backend may 
+lead to memory leak in fetcher processes.
+
+Since this release a host configured with datasources SNMP-v1 will use Classic SNMP 
+backend thus eliminating the problem.
+
+To enable the fix you may need to update site configuration using WATO or command 
+line.

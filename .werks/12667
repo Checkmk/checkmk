@@ -1,0 +1,15 @@
+Title: API agent: fixing the download agent endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1616587085
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, the download agent endpoint
+did not work and raised a 500 error. This werk fixes
+this behavior and additionally updates the code example
+in the REST API documentation.

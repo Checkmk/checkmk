@@ -1,7 +1,7 @@
 title: Check Logfiles for Relevant New Messages
 agents: linux, windows, aix, solaris
 catalog: os/files
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check processes the output of agents with the logwatch plugin. The windows agent has built
@@ -24,7 +24,7 @@ item:
  For Windows this is the name as shown in the windows event log, for example {Application}
  (case sensitive!).
 
-inventory:
+discovery:
  One service is created for each logfile when the option {logwatch_forward_to_ec}
  is not configured or set to {False}.
  Please use standard inventory configuration methods if you want to ignore certain log files.

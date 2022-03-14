@@ -15,14 +15,24 @@ def parse_f5_bigip_snat(info):
     snats = {}
     for line in info:
         name = line[0]
-        snats.setdefault(name, {})
-        snats[name].setdefault("if_in_pkts", []).append(int(line[1]))
-        snats[name].setdefault("if_out_pkts", []).append(int(line[2]))
-        snats[name].setdefault("if_in_octets", []).append(int(line[3]))
-        snats[name].setdefault("if_out_octets", []).append(int(line[4]))
-        snats[name].setdefault("connections_rate", []).append(int(line[5]))
-        snats[name].setdefault("connections", []).append(int(line[6]))
-    return snats
+        snat_info = snats.setdefault(name, {})
+        for index, stat in enumerate(
+            (
+                "if_in_pkts",
+                "if_out_pkts",
+                "if_in_octets",
+                "if_out_octets",
+                "connections_rate",
+                "connections",
+            ),
+            start=1,
+        ):
+            try:
+                stat_value = int(line[index])
+            except ValueError:
+                continue
+            snat_info.setdefault(stat, []).append(stat_value)
+    return {name: stats for name, stats in snats.items() if stats}
 
 
 def inventory_f5_bigip_snat(parsed):
@@ -38,13 +48,15 @@ def check_f5_bigip_snat(item, params, parsed):
         now = time.time()
         # Calculate counters
         for what in [
-                "if_in_pkts",
-                "if_out_pkts",
-                "if_in_octets",
-                "if_out_octets",
-                "connections_rate",
+            "if_in_pkts",
+            "if_out_pkts",
+            "if_in_octets",
+            "if_out_octets",
+            "connections_rate",
         ]:
             summed_values.setdefault(what, 0)
+            if what not in snat:
+                continue
             for idx, entry in enumerate(snat[what]):
                 rate = get_rate("%s.%s" % (what, idx), now, entry)
                 summed_values[what] += rate
@@ -72,8 +84,9 @@ def check_f5_bigip_snat(item, params, parsed):
             "if_out_pkts": "Outgoing Packets",
             "if_total_pkts": "Total Packets",
         }
-        summed_values[
-            "if_total_octets"] = summed_values["if_in_octets"] + summed_values["if_out_octets"]
+        summed_values["if_total_octets"] = (
+            summed_values["if_in_octets"] + summed_values["if_out_octets"]
+        )
         summed_values["if_total_pkts"] = summed_values["if_in_pkts"] + summed_values["if_out_pkts"]
         for param_var, levels in params.items():
             if param_var.endswith("_lower") and isinstance(levels, tuple):
@@ -84,8 +97,10 @@ def check_f5_bigip_snat(item, params, parsed):
                 param_var,
                 levels,
                 human_readable_func=lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0)
-                if "octets" in p else str(x),
-                infoname=map_paramvar_to_text[param_var.rstrip("_lower")])
+                if "octets" in p
+                else str(x),
+                infoname=map_paramvar_to_text[param_var.rstrip("_lower")],
+            )
             if state:
                 yield state, infotext
 
@@ -100,13 +115,14 @@ check_info["f5_bigip_snat"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.3375.2.2.9.2.3.1",
         [
-            "1",  #ltmSnatStatName
-            "2",  #ltmSnatStatClientPktsIn
-            "3",  #ltmSnatStatClientBytesIn
-            "4",  #ltmSnatStatClientPktsOut
-            "5",  #ltmSnatStatClientBytesOut
-            "7",  #ltmSnatStatClientTotConns
-            "8",  #ltmSnatStatClientCurConns
-        ]),
+            "1",  # ltmSnatStatName
+            "2",  # ltmSnatStatClientPktsIn
+            "3",  # ltmSnatStatClientBytesIn
+            "4",  # ltmSnatStatClientPktsOut
+            "5",  # ltmSnatStatClientBytesOut
+            "7",  # ltmSnatStatClientTotConns
+            "8",  # ltmSnatStatClientCurConns
+        ],
+    ),
     "snmp_scan_function": scan_f5_bigip,
 }

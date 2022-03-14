@@ -1,0 +1,12 @@
+Title: Log error messages from the ICMP sender again.
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1626685054
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+The CMC didn't pick up any error messages from the ICMP sender, which could
+in turn result in blocking the sender. This was a regression from 1.6.0.

@@ -1,7 +1,7 @@
 title: Thermal Sensors Supported by Linux Kernel
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature provided by the kernel in
@@ -10,6 +10,5 @@ description:
 item:
  "Zone "+(The ID of the thermal zone)
 
-inventory:
+discovery:
  One service is created for each thermal zone.
-

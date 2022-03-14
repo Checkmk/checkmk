@@ -31,15 +31,21 @@ def parse_ucd_mem(string_table):
     # mandatory memory values
     try:
         parsed = {
-            'MemTotal': _info_str_to_bytes(info[0][0]),
-            'MemAvail': _info_str_to_bytes(info[0][1]),
+            "MemTotal": _info_str_to_bytes(info[0][0]),
+            "MemAvail": _info_str_to_bytes(info[0][1]),
         }
     except (IndexError, ValueError):
         return {}
 
     # optional memory values
     optional_keys_bytes = [
-        'SwapTotal', 'SwapFree', 'MemFree', 'SwapMinimum', 'Shared', 'Buffer', 'Cached'
+        "SwapTotal",
+        "SwapFree",
+        "MemFree",
+        "SwapMinimum",
+        "Shared",
+        "Buffer",
+        "Cached",
     ]
     for key, val in zip(optional_keys_bytes, info[0][2:-3]):
         try:
@@ -49,25 +55,26 @@ def parse_ucd_mem(string_table):
 
     # optional other values
     try:
-        parsed['error_swap'] = int(info[0][-3])
+        parsed["error_swap"] = int(info[0][-3])
     except ValueError:
         pass
 
-    for key, val in zip(['error', 'error_swap_msg'], info[0][-2:]):
+    for key, val in zip(["error", "error_swap_msg"], info[0][-2:]):
         parsed[key] = val
 
     # additional memory values that need to be calculated
     parsed["MemUsed"] = parsed["MemTotal"] - parsed["MemAvail"]
-    for key in ['Buffer', 'Cached']:
+    for key in ["Buffer", "Cached"]:
         try:
             parsed["MemUsed"] -= parsed[key]  # Buffer and cache count as as free memory
         except KeyError:
             pass
 
-    for target_key, (source_key_1, source_key_2), oper in \
-        zip(["SwapUsed", "TotalTotal", "TotalUsed"],
-            [("SwapTotal", "SwapFree"), ("MemTotal", "SwapTotal"), ("MemUsed", "SwapUsed")],
-            [operator.sub, operator.add, operator.sub],):
+    for target_key, (source_key_1, source_key_2), oper in zip(
+        ["SwapUsed", "TotalTotal", "TotalUsed"],
+        [("SwapTotal", "SwapFree"), ("MemTotal", "SwapTotal"), ("MemUsed", "SwapUsed")],
+        [operator.sub, operator.add, operator.sub],
+    ):
         try:
             parsed[target_key] = oper(parsed[source_key_1], parsed[source_key_2])
         except KeyError:

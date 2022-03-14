@@ -6,8 +6,10 @@
 
 import os
 
+from tests.testlib.site import Site
 
-def test_init_scripts(site):
+
+def test_init_scripts(site: Site):
     scripts = [
         "apache",
         "core",
@@ -19,8 +21,10 @@ def test_init_scripts(site):
         "pnp_gearman_worker",
         "rrdcached",
         "xinetd",
+        "systemd",
         "stunnel",
         "redis",
+        "agent-receiver",
     ]
 
     if site.version.edition() == "enterprise":

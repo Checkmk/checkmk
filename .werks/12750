@@ -1,0 +1,18 @@
+Title: Change sort order of setup search results
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1619172414
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+If you searched e.g. for "Proxmox", the first search entries after sections
+"Hosts" and "Setup" shown were from "Service monitoring rules", what is
+difficult to understand, especially for new users.
+
+The search results will now show section "VM, Cloud, Container" entries first,
+because this section contains the rule to to start monitoring Proxmox.
+
+This change also applies for rules in section "Other integrations".

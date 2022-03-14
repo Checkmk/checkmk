@@ -1,0 +1,15 @@
+Title: msexch_database.ps1: extended support for locales
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1620379093
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The agent plugin msexch_database.ps1 can now support more locales.
+This is achieved by using the default values from locale "en-*".
+This will work for most locales (e.g. nl-NL) out of the box.
+You have to redeploy the agent plugin in order to apply this feature.

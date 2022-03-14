@@ -1,0 +1,15 @@
+Title: Overlapping label inputs (label conditions)
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1628167850
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When entering invalid labels the width of the input
+field was calculated incorrectly.
+This caused the following label input field to overlap
+with the current one.

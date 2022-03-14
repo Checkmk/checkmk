@@ -1,7 +1,7 @@
 title: Microsoft Azure: Virtual Machines
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about VMs configured in the Microsoft Azure cloud.
@@ -15,7 +15,7 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each VM, on every Checkmk host that receives information
  about the VMs via the piggyback mechanism.
  To configure which those are, see the configuration of the Azure agent.

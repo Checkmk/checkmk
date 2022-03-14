@@ -1,0 +1,12 @@
+Title: <tt>logwatch_groups</tt>: Re-add "Open Log" to action menu
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620111230
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The action "Open Log" was missing for grouped log file services.
+This has been fixed.

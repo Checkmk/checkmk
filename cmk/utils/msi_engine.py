@@ -12,12 +12,12 @@
 # TODO: The refactoring is mandatory.
 
 import os
-from pathlib import Path
 import re
 import shutil
 import sys
 import tempfile
 import uuid
+from pathlib import Path
 
 from cmk.utils import msi_patch
 
@@ -36,21 +36,22 @@ def bail_out(text):
 
 def msi_file_table():
     # we have to sort the table, the table is created by MSI installer
-    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
+    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"]
 
 
 def msi_component_table():
     # we have to sort the table, the table is created by MSI installer too
-    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"]
+    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.cab"]
 
 
 def remove_cab(path_to_msibuild, msi):
     verbose("Removing product.cab from %s" % msi)
-    cmd_line = (path_to_msibuild +
-                "msibuild %s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") % msi
+    cmd_line = (
+        path_to_msibuild + "msibuild %s -q \"DELETE FROM _Streams where Name = 'product.cab'\""
+    ) % msi
 
     if os.system(cmd_line) != 0:  # nosec
-        bail_out('msibuild is failed on remove cab')
+        bail_out("msibuild is failed on remove cab")
 
 
 def create_new_cab(working_dir, file_dir):
@@ -63,16 +64,18 @@ def create_new_cab(working_dir, file_dir):
     cmd_line = "lcab -n %s %s/product.cab > nul" % (files, working_dir)
 
     if os.system(cmd_line) != 0:  # nosec
-        bail_out('lcab is failed in create new cab')
+        bail_out("lcab is failed in create new cab")
 
 
 def add_cab(path_to_msibuild, new_msi_filename, working_dir):
     verbose("Add modified product.cab")
-    cmd_line = (path_to_msibuild + "msibuild %s -a product.cab %s/product.cab") % (new_msi_filename,
-                                                                                   working_dir)
+    cmd_line = (path_to_msibuild + "msibuild %s -a product.cab %s/product.cab") % (
+        new_msi_filename,
+        working_dir,
+    )
 
     if os.system(cmd_line) != 0:  # nosec
-        bail_out('msi build is failed')
+        bail_out("msi build is failed")
 
 
 # tested
@@ -82,7 +85,7 @@ def update_package_code(new_msi_file, package_code_hash=None):
 
 
 def read_file_as_lines(f_to_read):
-    with f_to_read.open('r', newline='', encoding='utf8') as in_file:
+    with f_to_read.open("r", newline="", encoding="utf8") as in_file:
         return in_file.readlines()
 
 
@@ -92,9 +95,9 @@ def patch_msi_files(dir_name, version_build):
     name = "File.idt"
     lines_file_idt = read_file_as_lines(use_dir / name)
 
-    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
+    with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
         # first three lines of the table write back
-        to_write = u"".join(lines_file_idt[:3])
+        to_write = "".join(lines_file_idt[:3])
         out_file.write(to_write)
 
         for l in lines_file_idt[3:]:
@@ -113,8 +116,8 @@ def patch_msi_files(dir_name, version_build):
                     break  # always leaving internal loop
 
             # The version of this file is different from the msi installer version !
-            words[4] = version_build if words[4] else ''
-            out_file.write(u"\t".join(words))
+            words[4] = version_build if words[4] else ""
+            out_file.write("\t".join(words))
 
 
 def patch_msi_components(dir_name):
@@ -123,8 +126,8 @@ def patch_msi_components(dir_name):
     name = "Component.idt"
     lines_component_idt = read_file_as_lines(use_dir / name)
 
-    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
-        out_file.write(u"".join(lines_component_idt[:3]))
+    with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
+        out_file.write("".join(lines_component_idt[:3]))
 
         for l in lines_component_idt[3:]:
             words = l.split("\t")
@@ -138,8 +141,8 @@ def patch_msi_properties(dir_name, product_code, version_build):
 
     name = "Property.idt"
     lines_property_idt = read_file_as_lines(use_dir / name)
-    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
-        out_file.write(u"".join(lines_property_idt[:3]))
+    with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
+        out_file.write("".join(lines_property_idt[:3]))
 
         for line in lines_property_idt[3:]:
             tokens = line.split("\t")
@@ -172,17 +175,17 @@ def copy_or_create(src_file, dst_file, text):
         return
 
     # fallback
-    with dst_file.open('w', newline='', encoding='utf8') as d:
+    with dst_file.open("w", newline="", encoding="utf8") as d:
         d.write(text)
 
 
 # tested
 def generate_product_version(version, revision_text):
-    major, minor, build = '1', '0', '0'
+    major, minor, build = "1", "0", "0"
     try:
         major, minor, build = [x.lstrip("0") for x in version.split("-")[0].split(".")[:3]]
-        minor = '0' if minor == '' else minor
-        build = '0' if build == '' else build
+        minor = "0" if minor == "" else minor
+        build = "0" if build == "" else build
         if len(major) > 3:
             # Looks like a daily build.. 2015.03.05
             major = major[2:].lstrip("0")
@@ -196,7 +199,7 @@ def generate_product_version(version, revision_text):
     # The original version name is also still visible in the list of programs
     match = re.search("[a-z]", product_version)
     if match:
-        result = product_version[:match.start(0)]
+        result = product_version[: match.start(0)]
         if result[-1] == ".":
             result += "0"
         result += ".%s" % revision_text
@@ -210,24 +213,25 @@ def export_msi_file(exe_path_prefix, entry_in, msi_in, out_dir):
     verbose("Export table %s from file %s" % (entry_in, msi_in))
     exe = exe_path_prefix + "msiinfo"
     if not Path(exe).exists():
-        bail_out('{} is absent'.format(exe))
+        bail_out("{} is absent".format(exe))
 
     command = (exe + " export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % {
         "msi_file": msi_in,
         "property": entry_in,
-        "work_dir": out_dir
+        "work_dir": out_dir,
     }
     result = os.system(command)  # nosec
     if result != 0:
-        bail_out('Failed to unpack msi table {} from {}, code is {}'.format(
-            entry_in, msi_in, result))
+        bail_out(
+            "Failed to unpack msi table {} from {}, code is {}".format(entry_in, msi_in, result)
+        )
 
 
 # tested
 def parse_command_line(argv):
     try:
         global opt_verbose
-        if argv[1] == '-v':
+        if argv[1] == "-v":
             opt_verbose = True
             del argv[1]
         else:
@@ -259,7 +263,9 @@ def parse_command_line(argv):
     except Exception as ex:
         bail_out(
             "Usage: {} msi_file_name.msi SourceDir BuildNumber VersionText [aghash], '{}'".format(
-                sys.argv[0], ex))
+                sys.argv[0], ex
+            )
+        )
 
 
 def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code_base=None):
@@ -294,13 +300,14 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 
         yml_file = Path(src_dir, "check_mk.install.yml")
         yml_target = Path(file_dir, "check_mk_install_yml")
-        copy_or_create(yml_file, yml_target,
-                       u"# test file\r\nglobal:\r\n  enabled: yes\r\n  install: no\r\n")
+        copy_or_create(
+            yml_file, yml_target, "# test file\r\nglobal:\r\n  enabled: yes\r\n  install: no\r\n"
+        )
 
         if src_dir != file_dir:
             shutil.copy(src_dir + "/checkmk.dat", file_dir + "/checkmk.dat")
         shutil.copy(src_dir + "/plugins.cap", file_dir + "/plugins_cap")
-        shutil.copy(src_dir + "/python-3.8.zip", file_dir + "/python_3.8.zip")
+        shutil.copy(src_dir + "/python-3.cab", file_dir + "/python_3.cab")
 
         patch_msi_files(work_dir, new_version_build)
         patch_msi_components(work_dir)
@@ -317,13 +324,14 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
             p.rename(p.with_suffix(""))
 
         for entry in ["Property", "File", "Component"]:
-            if os.system(  # nosec
-                (path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % {
-                    "new_msi_file": new_msi_file,
-                    "work_dir": work_dir,
-                    "file": entry
-                }) != 0:
-                bail_out('failed main msibuild')
+            if (
+                os.system(  # nosec
+                    (path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt")
+                    % {"new_msi_file": new_msi_file, "work_dir": work_dir, "file": entry}
+                )
+                != 0
+            ):
+                bail_out("failed main msibuild")
 
         # Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
         # In this step we replace the package code with a new uuid. This uuid is important, because it is
@@ -343,7 +351,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         shutil.rmtree(work_dir)
         verbose("Successfully created file " + new_msi_file)
     except Exception as e:
-        #if work_dir and os.path.exists(work_dir):
+        # if work_dir and os.path.exists(work_dir):
         #    shutil.rmtree(work_dir)
         bail_out("Error on creating msi file: {}, work_dir is {}".format(str(e), str(work_dir)))
 
@@ -354,7 +362,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 # msi-update -v ../../wnx/test_files/msibuild/msi/check_mk_agent.msi ../../wnx/test_files/msibuild . 1.7.0i1
 
 # MAIN:
-if __name__ == '__main__':
+if __name__ == "__main__":
     # package code can be None: used in Windows Build machine to generate something random
     # in bakery we are sending aghash to generate package code
     msi_file, source_dir, revision, version_name, config_hash = parse_command_line(sys.argv)

@@ -1,0 +1,12 @@
+Title: Small adjustments to the Evenc Console menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1639047569
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The menu entry "Add one or multiple MIBs" is now a suggested action
+and the entry "Settings" is only suggested in the EC main page.

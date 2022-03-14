@@ -4,18 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
 import json
+from typing import Any, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
     register,
+    render,
     Result,
     Service,
     State,
-    render,
-    Metric,
 )
-
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -45,7 +44,7 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
     Result(state=<State.OK: 0>, summary='50.00% used (1.07 GB of 2.15 GB)')
     """
     used_bytes, total_bytes = section.get("disk", 0), section.get("max_disk", 0)
-    warn, crit = params.get("levels", (0., 0.))
+    warn, crit = params.get("levels", (0.0, 0.0))
     warn_bytes, crit_bytes = (warn / 100 * total_bytes, crit / 100 * total_bytes)
 
     if total_bytes == 0:
@@ -70,11 +69,21 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
         boundaries=(0.0, 100.0),
     )
 
-    yield Result(state=(State.CRIT if used_bytes >= crit_bytes else
-                        State.WARN if used_bytes >= warn_bytes else State.OK),
-                 summary="%s used (%s of %s)" %
-                 (render.percent(100.0 * used_bytes / total_bytes), render.disksize(used_bytes),
-                  render.disksize(total_bytes)))
+    yield Result(
+        state=(
+            State.CRIT
+            if used_bytes >= crit_bytes
+            else State.WARN
+            if used_bytes >= warn_bytes
+            else State.OK
+        ),
+        summary="%s used (%s of %s)"
+        % (
+            render.percent(100.0 * used_bytes / total_bytes),
+            render.disksize(used_bytes),
+            render.disksize(total_bytes),
+        ),
+    )
 
 
 register.agent_section(
@@ -88,5 +97,5 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_proxmox_ve_disk_usage,
     check_ruleset_name="proxmox_ve_disk_percentage_used",
-    check_default_parameters={"levels": (80., 90.)},
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

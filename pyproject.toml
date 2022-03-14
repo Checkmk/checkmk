@@ -1,0 +1,35 @@
+[tool.isort]
+known_testlib = "tests.testlib"
+known_unittests = "tests.unit"
+known_livestatus = "livestatus"
+known_omd = "omdlib"
+known_cmk_utils = "cmk.utils"
+known_cmk_automations = "cmk.automations"
+known_cmk_base = "cmk.base"
+known_cmk_ec = "cmk.ec"
+known_cmk_gui = "cmk.gui"
+known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
+known_cmk_notification_plugins = "cmk.notification_plugins"
+known_cmk_snmplib = "cmk.snmplib"
+known_cmk_core_helpers = "cmk.core_helpers"
+known_first_party = "cmk"
+
+# Order sections according to our layering.
+sections = """FUTURE,STDLIB,THIRDPARTY,TESTLIB,UNITTESTS,LIVESTATUS,OMD,CMK_UTILS,CMK_AUTOMATIONS,
+CMK_SNMPLIB,CMK_CORE_HELPERS,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,
+LOCALFOLDER"""
+
+# configuration options compatible with black
+multi_line_output = 3
+include_trailing_comma = "True"
+force_grid_wrap = 0
+use_parentheses = "True"
+ensure_newline_before_comments = "True"
+order_by_type = "False"
+line_length = 100
+py_version = "39"
+
+
+[tool.black]
+line-length = 100
+target-version = ['py39']

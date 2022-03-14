@@ -1,7 +1,7 @@
 title: DIVA Content Storage Management: Objects
 agents: snmp
 catalog: hw/storagehw/oraclehw
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of managed objects and the consumed size on
@@ -9,6 +9,5 @@ description:
 
  This check is always {OK}.
 
-inventory:
+discovery:
  One service is created.
-

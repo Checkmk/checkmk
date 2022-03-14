@@ -1,0 +1,24 @@
+Title: Cascading livestatus proxy can now open encrypted sockets
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1618587104
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The livestatus proxy can be configured to cascade livestatus connections. The
+feature was introduced with 1.5.0 by werk #5970 which describes how this can
+be used.
+
+In previous versions the livestatus proxy was always offering a plain text
+livestatus connection. Even if the site configuration offered the option
+"Encrypt communication". Changing the option simply did not have any effect.
+Trying to connect to this socket using a livestatus client with encryption
+enabled simply failed all the time.
+
+With this change the livestatus proxy is now respecting the "Encrypt
+communication" and offering a TLS encrypted server socket using the certificate
+of the site where the livestatus proxy is running on.

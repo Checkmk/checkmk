@@ -1,7 +1,7 @@
 title: Iptables Modifications
 agents: linux
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check computes the differences between the current output of the
@@ -12,6 +12,5 @@ description:
  is shown in the long output. If a user wants to accept the diff a
  service rediscovery can be performed.
 
-inventory:
+discovery:
  One service is created for each system if the agent plugin mk_iptables was deployed.
-

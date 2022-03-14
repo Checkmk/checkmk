@@ -1,0 +1,15 @@
+Title: Do not log multiple exceptions on failed login of LDAP user
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1634821521
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If a user with LDAP connection entered the wrong credentials on login, multiple
+exceptions were written to ~/var/log/web.log.
+
+From now on, only one log entry per failed login will be created.

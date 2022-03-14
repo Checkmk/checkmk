@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Information about the Storage Processor
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports information about the Storage Processor like the network name,
@@ -12,6 +12,6 @@ description:
  The information is retrieved by the special agent agent_emcvnx which uses
  EMC's command line tool naviseccli.
 
-inventory:
+discovery:
  One service is created for each EMC VNX storage system
  called EMC VNX Storage Processor.

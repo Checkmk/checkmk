@@ -1,0 +1,11 @@
+Title: Cisco IE: addition of new check plugin for temperature monitoring
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1643268720
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk introduces the new temperature check for Cisco IE devices.

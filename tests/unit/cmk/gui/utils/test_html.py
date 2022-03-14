@@ -5,40 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import json.encoder
 
-import pytest  # type: ignore[import]
-from six import ensure_str
+import pytest
 
 from cmk.gui.utils.html import HTML
 
 
-# TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
-# the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
-# custom subclass of the JSONEncoder.
-#
-# Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
-def _default(self: json.JSONEncoder, obj: object) -> str:
-    # ignore attr-defined: See hack below
-    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
-
-
-# TODO: suppress mypy warnings for this monkey patch right now. See also:
-# https://github.com/python/mypy/issues/2087
-# Save unmodified default:
-_default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
-# replacement:
-json.JSONEncoder.default = _default  # type: ignore[assignment]
-
-
-@pytest.mark.parametrize("value", [
-    None,
-    "",
-    123,
-    123.4,
-    "one",
-    "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
-])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "one",
+        "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
+    ],
+)
 def test_class_HTML_value(value):
     assert isinstance(HTML(value).value, str)
     assert HTML(HTML(value)) == HTML(value)
@@ -49,20 +29,20 @@ def test_class_HTML():
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
     c = "Three"
-    d = str('u')
+    d = str("u")
 
     A = HTML(a)
     B = HTML(b)
     C = HTML(c)
     D = HTML(d)
 
-    assert HTML() == HTML('')
+    assert HTML() == HTML("")
     assert HTML(HTML()) == HTML()
     # One day we will fix this!
-    assert str(A) == ensure_str(a), str(A)
-    assert "%s" % A == ensure_str(a), "%s" % A
+    assert str(A) == a, str(A)
+    assert "%s" % A == a, "%s" % A
     assert json.loads(json.dumps(A)) == A
-    assert repr(A) == 'HTML(\"%s\")' % ensure_str(A.value)
+    assert repr(A) == 'HTML("%s")' % A.value
     assert len(B) == len(b)
     assert str(B) == str(b)
 
@@ -74,26 +54,26 @@ def test_class_HTML():
     assert HTML().join([a, b]) == a + b
     assert HTML("jo").join([A, B]) == A + "jo" + B
     assert HTML("jo").join([a, b]) == a + "jo" + b
-    assert ''.join(map(str, [A, B])) == A + B
+    assert "".join(map(str, [A, B])) == A + B
 
     assert isinstance(A, HTML), type(A)
     #    assert isinstance(A, str), type(A)
     assert not isinstance(A, str), type(A)
-    assert isinstance(u"%s" % A, str), u"%s" % A
+    assert isinstance("%s" % A, str), "%s" % A
     # One day we will fix this!
-    assert isinstance(u"%s" % A, str), u"%s" % A
+    assert isinstance("%s" % A, str), "%s" % A
     assert isinstance(A + B, HTML), type(A + B)
-    assert isinstance(HTML('').join([A, B]), HTML)
+    assert isinstance(HTML("").join([A, B]), HTML)
     assert isinstance(HTML().join([A, B]), HTML)
-    assert isinstance(HTML('').join([a, b]), HTML)
+    assert isinstance(HTML("").join([a, b]), HTML)
     # TODO: Investigate
     assert isinstance("TEST" + HTML(), HTML)  # type: ignore[type-var]
     assert isinstance(HTML() + "TEST", HTML)
     # TODO: Investigate
     assert isinstance("TEST" + HTML() + "TEST", HTML)  # type: ignore[type-var]
 
-    #assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
-    #assert HTML().join(["<div>", HTML("</br>"), HTML("<input/>"), "</div>"]) ==\
+    # assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
+    # assert HTML().join(["<div>", HTML("</br>"), HTML("<input/>"), "</div>"]) ==\
     #        "&lt;div&gt;</br><input/>&lt;/div&gt;"
 
     A += B
@@ -111,7 +91,7 @@ def test_class_HTML():
 
     assert A == a
 
-    assert ("%s" % A) == ensure_str(a)
+    assert ("%s" % A) == a
 
     assert B + C != C + B
 
@@ -128,7 +108,7 @@ def test_class_HTML():
     assert isinstance("%s" % HTML(HTML(A)), str)
 
     assert isinstance(A, HTML)
-    A += (" JO PICASSO! ")
+    A += " JO PICASSO! "
     assert isinstance(A, HTML)
 
     assert isinstance(A + "TEST", HTML)
@@ -139,7 +119,7 @@ def test_class_HTML():
 
     assert D == d
     assert "%s" % D == "%s" % d
-    assert isinstance(u"%s" % D, str)
+    assert isinstance("%s" % D, str)
     assert isinstance("%s" % D, str)
 
     E = A + B

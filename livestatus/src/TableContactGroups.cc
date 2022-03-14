@@ -9,26 +9,25 @@
 #include <vector>
 
 #include "Column.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "nagios.h"
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
-        "name", "The name of the contactgroup", offsets,
+    addColumn(std::make_unique<StringColumn<contactgroup>>(
+        "name", "Name of the contact group", offsets,
         [](const contactgroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
-    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
-        "alias", "The alias of the contactgroup", offsets,
+    addColumn(std::make_unique<StringColumn<contactgroup>>(
+        "alias", "An alias of the contact group", offsets,
         [](const contactgroup &r) {
             return r.alias == nullptr ? "" : r.alias;
         }));
-    addColumn(std::make_unique<ListColumn::Callback<contactgroup>>(
+    addColumn(std::make_unique<ListColumn<contactgroup>>(
         "members", "A list of all members of this contactgroup", offsets,
         [](const contactgroup &r) {
             std::vector<std::string> names;

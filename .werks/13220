@@ -1,0 +1,19 @@
+Title: Filesize unit labels
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1632215709
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In various WATO rules the configurable file sizes have been
+labeled wrongly. Labels read <i>KBytes</i>, <i>MBytes</i> and
+so on (suggesting the 10 based units where 1 kB is 1000 bytes),
+while internally the 2 based system had been used (where 1 KiB
+corresponds to 1024 bytes).
+This is now refleced by the use of the more appropriate labels
+<i>KiB</i>, <i>MiB</i> and so forth.
+Don't be alaramed: No values or computations are changed - only
+the labelling is improved.

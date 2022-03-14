@@ -1,7 +1,7 @@
 title: Aerohive Hivemanager: NG Devices
 agents: special
 catalog: hw/network/aerohive
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check connects to a Hivemanager NG cloud account and get a list of all connected devices.
@@ -13,5 +13,5 @@ description:
 item:
  The hostname of the device
 
-inventory:
+discovery:
  One service is created for each device.

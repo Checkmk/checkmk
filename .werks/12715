@@ -1,0 +1,14 @@
+Title: oracle_performance: could crash with KeyError (Shared IO Pool Size)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620745000
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In case the `Shared IO Pool Size` was not provided by the `oracle_performance` section the check
+would crash with a KeyError.
+This change just checks for the existence of `Shared IO Pool Size` prior to accessing it.

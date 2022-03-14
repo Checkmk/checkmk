@@ -5,77 +5,53 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import Iterator, Union, List
-from six import ensure_binary
+from typing import Iterator, List
 
 from cmk.gui.http import Response
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.utils.html import HTML
-
-# TODO: Almost HTMLContent, only None is missing, but that would be OK, too...
-OutputFunnelInput = Union[int, "HTML", str]
 
 
 class OutputFunnel:
-    """
-    Provides the write functionality. The method _lowlevel_write needs
-    to be overwritten in the specific subclass!
+    """Provides writing to the response object or a plugged response
 
-     Usage of plugged context:
-             with html.plugged():
-                html.write("something")
-                html_code = html.drain()
-             print html_code
+    Manages a stack of response objects. Calls to write() will always
+    write the given string to the topmost request object. It is used
+    like this:
+
+        # Write "xyz" to response which is sent to the client
+        html.write_text("xyz")
+
+        # Write "something" to a "plugged" response and print it to stdout
+        with output_funnel.plugged() as plug:
+           html.write_text("something")
+           html_code = html.drain()
+        print(html_code)
     """
+
     def __init__(self, response: Response) -> None:
-        super(OutputFunnel, self).__init__()
-        self._response = response
-        self.plug_text: List[List[str]] = []
+        self._response_stack: List[Response] = [response]
 
-    def write(self, text: OutputFunnelInput) -> None:
-        if not text:
-            return
-
-        if isinstance(text, HTML):
-            text = "%s" % text
-        elif isinstance(text, int):
-            text = str(text)
-
-        if not isinstance(text, str):
-            raise MKGeneralException(
-                _('Type Error: html.write accepts str and unicode input objects only!'))
-
-        if self._is_plugged():
-            self.plug_text[-1].append(text)
-        else:
-            self._lowlevel_write(ensure_binary(text))
-
-    # Please note that this does not work with the plugs at the moment (The plugs store text)
-    def write_binary(self, data: bytes) -> None:
-        self._response.stream.write(data)
-
-    def _lowlevel_write(self, text: bytes) -> None:
-        self._response.stream.write(text)
+    def write(self, data: bytes) -> None:
+        self._response_stack[-1].stream.write(data)
 
     @contextmanager
     def plugged(self) -> Iterator[None]:
-        self.plug_text.append([])
+        self._response_stack.append(Response())
         try:
             yield
         finally:
-            text = self.drain()
-            self.plug_text.pop()
-            self.write(text)
+            response = self._response_stack.pop()
+            # Rest of popped response is written to now topmost request.
+            # TODO: Investigate call sites whether or not this is a used feature
+            self.write(response.get_data())
 
     def _is_plugged(self) -> bool:
-        return bool(self.plug_text)
+        return len(self._response_stack) > 1
 
     def drain(self) -> str:
-        """Get the sink content in order to do something with it."""
-        if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
-            return ''
+        """Return the content of the topmost response object"""
+        if not self._is_plugged():
+            return ""
 
-        text = "".join(self.plug_text.pop())
-        self.plug_text.append([])
+        text = self._response_stack.pop().get_data(as_text=True)
+        self._response_stack.append(Response())
         return text

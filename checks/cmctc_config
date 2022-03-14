@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.2606.4.3.1.1.0 1
 # .1.3.6.1.4.1.2606.4.3.1.2.0 1
 # .1.3.6.1.4.1.2606.4.3.1.3.0 1
@@ -22,30 +23,30 @@ def inventory_cmctc_config(info):
 
 def check_cmctc_config(_no_item, _no_params, info):
     temp_unit_map = {
-        '1': 'celsius',
-        '2': 'fahrenheit',
+        "1": "celsius",
+        "2": "fahrenheit",
     }
 
     beeper_map = {
-        '1': 'on',
-        '2': 'off',
+        "1": "on",
+        "2": "off",
     }
 
     acknowledge_map = {
-        '1': 'disabled',
-        '2': 'enabled',
+        "1": "disabled",
+        "2": "enabled",
     }
 
     alarm_relay_map = {
-        '1': 'pick up',
-        '2': 'release',
-        '3': 'off',
+        "1": "pick up",
+        "2": "release",
+        "3": "off",
     }
 
     web_access_map = {
-        '1': 'view only',
-        '2': 'full',
-        '3': 'disables',
+        "1": "view only",
+        "2": "full",
+        "3": "disables",
     }
 
     temp_id, beeper_id, ack_id, relay_logic_id, web_access_id = info[0]
@@ -56,14 +57,15 @@ def check_cmctc_config(_no_item, _no_params, info):
     relay_logic = alarm_relay_map.get(relay_logic_id)
     web_access = web_access_map.get(web_access_id)
 
-    infotext = ('Web access: %s, Beeper: %s, Acknowledging: %s, '
-                'Alarm relay logic in case of alarm: %s, Temperature unit: %s') % (
-                    web_access, beeper, acknowledging, relay_logic, temperature_unit)
+    infotext = (
+        "Web access: %s, Beeper: %s, Acknowledging: %s, "
+        "Alarm relay logic in case of alarm: %s, Temperature unit: %s"
+    ) % (web_access, beeper, acknowledging, relay_logic, temperature_unit)
 
     return 0, infotext
 
 
-check_info['cmctc_config'] = {
+check_info["cmctc_config"] = {
     "inventory_function": inventory_cmctc_config,
     "check_function": check_cmctc_config,
     "service_description": "TC configuration",
@@ -76,5 +78,6 @@ check_info['cmctc_config'] = {
             "3",  # cmcTcQuitRelay
             "4",  # cmcTcLogicRelay
             "5",  # cmcTcWebAccess
-        ]),
+        ],
+    ),
 }

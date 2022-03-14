@@ -1,0 +1,15 @@
+Title: agent_netapp: Fix unhandled error "TypeError" causing the agent to break
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630499593
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In some circumstances, the NetApp API delivers XML data with invalid characters
+to the special agent agent_netapp. This event caused the agent to throw an
+error with the message "TypeError: cannot use a string pattern on a bytes-like
+object". It stopped and could not write out any section. This has been fixed.

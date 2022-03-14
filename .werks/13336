@@ -1,0 +1,25 @@
+Title: Windows Services works if Services states has no elements
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631620608
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This Bug affects users, if they created the rule <i>Setup > Services > Service monitoring
+rules > Windows Services > New rule: Windows Services</i> with the following two properties:
+LI: they added the option <i>Service states</i>
+LI: they did not create any new elements within this option
+Creating this rule caused services, which check the current state of a <i>Windows Service<\i> to
+crash with the error <tt>UnboundLocalError: local variable 'this_state' referenced before assignment
+<\tt>. The problem is alleviated if any of the two properties above are changed. This patch
+eliminates the crash alltogether. The state of the service will now show <i>State if no entry
+matches</i>, if this option is specified. Otherwise, it shows <i>CRIT</i>.
+
+The previous version of <tt>services.py</tt> falsely assumed that if params contains the key 
+"states", that the corresponding entry contains at least one element matching the service. However,
+ this assumption is violated if ones species a rule without any elements. In this params["states"] 
+is the empty list [].
+

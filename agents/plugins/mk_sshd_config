@@ -9,15 +9,15 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 SSHD_CONFIG=/etc/ssh/sshd_config
 
-drop_comments_whitespace(){
-    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' $1
+drop_comments_whitespace() {
+    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' "$1"
 }
 
-if [ -f $SSHD_CONFIG ] ; then
+if [ -f $SSHD_CONFIG ]; then
     echo "<<<sshd_config>>>"
     drop_comments_whitespace $SSHD_CONFIG
 fi

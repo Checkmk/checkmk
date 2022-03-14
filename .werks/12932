@@ -1,0 +1,15 @@
+Title: <tt>df</tt>: Show volume name in service output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1631524879
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+It is now possible to see the volume name in the output of a Filesystem service
+for Linux and Windows hosts.
+
+To configure this set the option <tt>Show volume name in service output</tt> in Setup -> Services ->
+Service monitoring rules -> Filesystems (used space and growth) to enabled.

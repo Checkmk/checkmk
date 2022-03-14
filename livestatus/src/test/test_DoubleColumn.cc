@@ -3,7 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <functional>
+#include <initializer_list>
+#include <memory>
 #include <string>
 
 #include "DoubleColumn.h"
@@ -12,62 +13,33 @@
 
 using namespace std::string_literals;
 
+struct DummyValue {};
+
 struct DummyRow : Row {
     using Row::Row;
 };
 
-struct DummyValue {};
-
-TEST(DoubleColumn, ConstantDouble) {
-    const auto v = 5.0;
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = DoubleColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-}
-
-TEST(DoubleColumn, ConstantDefaultRow) {
-    const auto v = 5.0;
-    const auto row = DummyRow{nullptr};
-    const auto col = DoubleColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-}
-
-TEST(DoubleColumn, Reference) {
-    auto v = 5.0;
-    const auto row = DummyRow{nullptr};
-    const auto col = DoubleColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-
-    v *= 2.0;
-    EXPECT_EQ(v, col.getValue(row));
-}
-
 TEST(DoubleColumn, GetValueLambda) {
-    const auto v = 5.0;
+    const DummyValue val{};
+    const DummyRow row{&val};
+    for (const auto v : {-42, 0, 1337}) {
+        const DoubleColumn<DummyRow> col{
+            "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
+                return v;
+            }};
 
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = DoubleColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
-            return v;
-        }};
-
-    EXPECT_EQ(v, col.getValue(row));
+        EXPECT_EQ(v, col.getValue(row));
+    }
 }
 
 TEST(DoubleColumn, GetValueDefault) {
-    const auto v = 5.0;
+    const DummyRow row{nullptr};
+    for (const auto v : {-42, 0, 1337}) {
+        const DoubleColumn<DummyRow> col{
+            "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
+                return v;
+            }};
 
-    const auto row = DummyRow{nullptr};
-    const auto col = DoubleColumn::Callback<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
-            return v;
-        }};
-
-    EXPECT_NE(v, col.getValue(row));
-    EXPECT_EQ(0.0, col.getValue(row));
+        EXPECT_EQ(0.0, col.getValue(row));
+    }
 }

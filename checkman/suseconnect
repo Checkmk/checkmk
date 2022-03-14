@@ -1,7 +1,7 @@
 title: SuSE Linux Enterprise Server: License Information
 agents: linux
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check parses the information provided by the SUSEConnect command.
@@ -15,6 +15,5 @@ description:
 
  The check can be configured via the corresponding WATO rule {SLES License}.
 
-inventory:
+discovery:
  One service named {SLES license} is created.
-

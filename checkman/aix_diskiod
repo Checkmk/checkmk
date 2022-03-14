@@ -1,7 +1,7 @@
 title: AIX Hard Disks: Throughput
 agents: aix
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the disk IO of hard disks on AIX.
@@ -18,7 +18,7 @@ item:
  Either {"SUMMARY"} for a summarized check of alls LUNs or the
  name of the disk device, e.g. {"hdisk15"}.
 
-inventory:
+discovery:
   The inventory is configured via {diskstat_inventory_mode}. If this is set
   to {"single"} (the default), then one service will be created for each
   disk. If it is set to {"summary"} then only one service per host will be

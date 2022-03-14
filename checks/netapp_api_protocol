@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_protocol:sep(9)>>>
 # protocol nfs nfsv3_write_ops 0   instance_name nfs   nfsv3_read_ops 0
 # protocol nfsv4   instance_name nfsv4 nfsv4_read_ops 0    nfsv4_write_ops 0
@@ -33,14 +34,15 @@ def check_netapp_api_protocol(item, _no_params, parsed):
         for what in ["read", "write"]:
             if key.endswith("%s_ops" % what):
                 per_sec = get_rate(key, now, int(value))
-                yield 0, "%s OPs: %s" % (what.title(), per_sec), [("%s_%s_ios" % (item, what),
-                                                                   per_sec)]
+                yield 0, "%s OPs: %s" % (what.title(), per_sec), [
+                    ("%s_%s_ios" % (item, what), per_sec)
+                ]
 
 
 check_info["netapp_api_protocol"] = {
-    'parse_function': netapp_api_parse_lines,
-    'check_function': check_netapp_api_protocol,
-    'inventory_function': inventory_netapp_api_protocol,
-    'service_description': 'Protocol %s',
-    'has_perfdata': True,
+    "parse_function": netapp_api_parse_lines,
+    "check_function": check_netapp_api_protocol,
+    "inventory_function": inventory_netapp_api_protocol,
+    "service_description": "Protocol %s",
+    "has_perfdata": True,
 }

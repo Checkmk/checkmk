@@ -1,0 +1,12 @@
+Title: agent_aws: added optional parameter "--vcrtrace"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1633421865
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The special agent AWS does now understand the optional parameter "--vcrtrace".
+This parameter supports better debugging.

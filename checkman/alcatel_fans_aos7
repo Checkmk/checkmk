@@ -1,7 +1,7 @@
 title: Alcatel Switches (>=AOS7): Fan Status
 agents: snmp
 catalog: hw/network/alcatel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -33,5 +33,5 @@ description:
 item:
  Number of the fan based on the order in info entries
 
-inventory:
+discovery:
  One service is created for each fan

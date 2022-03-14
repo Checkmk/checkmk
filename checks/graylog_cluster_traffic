@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import calendar
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_cluster_traffic>>>
 # {"to": "2019-09-20T12:00:00.000Z", "output": {"2019-09-17T03:00:00.000Z":
 # 6511247, "2019-09-18T14:00:00.000Z": 176026381, "2019-09-08T08:00:00.000Z":
@@ -24,9 +27,6 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # 180571316, "2019-09-17T09:00:00.000Z": 17555409, "2019-09-16T09:00:00.000Z":
 # 15022425, "2019-09-10T21:00:00.000Z": 7688443}}
 
-import calendar
-import json
-
 
 def check_graylog_cluster_traffic(no_item, params, parsed):
     if parsed is None:
@@ -41,15 +41,17 @@ def check_graylog_cluster_traffic(no_item, params, parsed):
         traffic_value = parsed.get(key, []).get(parsed["to"])
         if traffic_value is not None:
 
-            yield check_levels(traffic_value,
-                               "graylog_%s" % key,
-                               params.get(key),
-                               infoname=infotext,
-                               human_readable_func=get_bytes_human_readable)
+            yield check_levels(
+                traffic_value,
+                "graylog_%s" % key,
+                params.get(key),
+                infoname=infotext,
+                human_readable_func=get_bytes_human_readable,
+            )
 
     last_updated = parsed.get("to")
     if last_updated is not None:
-        local_timestamp = calendar.timegm(time.strptime(last_updated, '%Y-%m-%dT%H:%M:%S.%fZ'))
+        local_timestamp = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%S.%fZ"))
 
         yield 0, "Last updated: %s" % get_timestamp_human_readable(local_timestamp)
 

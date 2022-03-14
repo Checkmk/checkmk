@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.ps as ps
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -13,14 +14,15 @@ from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-
 discovery_hr_processes_rules = []
 
 hr_ps_status_map = {
-    '1': ('running', 'running', ''),
-    '2': ('runnable', 'runnable', 'waiting for resource'),
-    '3': ('not_runnable', 'not runnable', 'loaded but waiting for event'),
-    '4': ('invalid', 'invalid', 'not loaded'),
+    "1": ("running", "running", ""),
+    "2": ("runnable", "runnable", "waiting for resource"),
+    "3": ("not_runnable", "not runnable", "loaded but waiting for event"),
+    "4": ("invalid", "invalid", "not loaded"),
 }
 
-HRProcess = collections.namedtuple('HRProcess',
-                                   ['name', 'path', 'state_key', 'state_short', 'state_long'])
+HRProcess = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "HRProcess", ["name", "path", "state_key", "state_short", "state_long"]
+)
 
 factory_settings["hr_ps_default_levels"] = {
     "levels": (1, 1, 99999, 99999),
@@ -30,7 +32,7 @@ factory_settings["hr_ps_default_levels"] = {
 def parse_hr_ps(info):
     parsed = []
     for name, path, status in info:
-        key, short, long_ = hr_ps_status_map.get(status, (status, 'unknown[%s]' % status, ''))
+        key, short, long_ = hr_ps_status_map.get(status, (status, "unknown[%s]" % status, ""))
         parsed.append(HRProcess(name.strip(":"), path, key, short, long_))
     return parsed
 
@@ -40,34 +42,38 @@ def discovery_hr_ps(parsed):
     discovered_items = {}
     for process in parsed:
         for rule in discovery_rules:
-            match_name_or_path = rule.get('match_name_or_path')
-            match_status = rule.get('match_status')
+            match_name_or_path = rule.get("match_name_or_path")
+            match_status = rule.get("match_status")
 
             matches = _match_hr_process(process, match_name_or_path, match_status)
             if not matches:
                 continue
 
-            if hasattr(matches, 'groups'):
+            if hasattr(matches, "groups"):
                 match_groups = [g if g else "" for g in matches.groups()]
             else:
                 match_groups = []
 
-            service_descr = ps.replace_service_description(rule['descr'], match_groups,
-                                                           match_name_or_path)
+            service_descr = ps.replace_service_description(
+                rule["descr"], match_groups, match_name_or_path
+            )
 
             discovered_items.setdefault(
-                service_descr, '%r' % {
-                    'match_name_or_path': match_name_or_path,
-                    'match_status': match_status,
-                    'match_groups': match_groups,
-                })
+                service_descr,
+                "%r"
+                % {
+                    "match_name_or_path": match_name_or_path,
+                    "match_status": match_status,
+                    "match_groups": match_groups,
+                },
+            )
     return list(discovered_items.items())
 
 
 def check_hr_ps(item, params, parsed):
-    match_name_or_path = params.get('match_name_or_path')
-    match_status = params.get('match_status')
-    match_groups = params.get('match_groups')
+    match_name_or_path = params.get("match_name_or_path")
+    match_status = params.get("match_status")
+    match_groups = params.get("match_groups")
 
     count_processes = 0
     processes_by_state = {}
@@ -75,15 +81,15 @@ def check_hr_ps(item, params, parsed):
         if _match_hr_process(process, match_name_or_path, match_status, match_groups):
             count_processes += 1
             processes_by_state.setdefault(
-                (process.state_key, process.state_short, process.state_long), []).append(process)
+                (process.state_key, process.state_short, process.state_long), []
+            ).append(process)
 
-    lc, lw, uw, uc = params.get('levels', (None, None, None, None))
-    yield check_levels(count_processes,
-                       "processes", (uw, uc, lw, lc),
-                       unit='processes',
-                       human_readable_func=int)
+    lc, lw, uw, uc = params.get("levels", (None, None, None, None))
+    yield check_levels(
+        count_processes, "processes", (uw, uc, lw, lc), unit="processes", human_readable_func=int
+    )
 
-    process_state_map = dict(params.get('status', []))
+    process_state_map = dict(params.get("status", []))
     for (state_key, state_short, state_long), processes in processes_by_state.items():
         state = process_state_map.get(state_key, 0)
         if state_long:
@@ -102,8 +108,8 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
 
     match_type, match_pattern = match_name_or_path
     pattern_to_match = {
-        'match_name': process.name,
-        'match_path': process.path,
+        "match_name": process.name,
+        "match_path": process.path,
     }.get(match_type)
 
     if match_pattern is not None and match_pattern.startswith("~"):
@@ -120,19 +126,20 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
     return pattern_to_match == match_pattern
 
 
-check_info['hr_ps'] = {
-    'parse_function': parse_hr_ps,
-    'inventory_function': discovery_hr_ps,
-    'check_function': check_hr_ps,
-    'service_description': 'Process %s',
-    'snmp_scan_function': is_hr,
-    'snmp_info': (
-        '.1.3.6.1.2.1.25.4.2.1',
+check_info["hr_ps"] = {
+    "parse_function": parse_hr_ps,
+    "inventory_function": discovery_hr_ps,
+    "check_function": check_hr_ps,
+    "service_description": "Process %s",
+    "snmp_scan_function": is_hr,
+    "snmp_info": (
+        ".1.3.6.1.2.1.25.4.2.1",
         [  # HOST-RESOURCES-MIB
-            '2',  # hrSWRunName
-            '4',  # hrSWRunPath
-            '7',  # hrSWRunStatus
-        ]),
-    'group': 'hr_ps',
-    'default_levels_variable': 'hr_ps_default_levels',
+            "2",  # hrSWRunName
+            "4",  # hrSWRunPath
+            "7",  # hrSWRunStatus
+        ],
+    ),
+    "group": "hr_ps",
+    "default_levels_variable": "hr_ps_default_levels",
 }

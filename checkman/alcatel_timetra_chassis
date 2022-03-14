@@ -1,7 +1,7 @@
 title: Alcatel Switches: Chassis Components
 agents: snmp
 catalog: hw/network/alcatel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check Monitors the
@@ -39,6 +39,5 @@ description:
 item:
  The name of the device.
 
-inventory:
+discovery:
  One service is created for each active device.
-

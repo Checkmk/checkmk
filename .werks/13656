@@ -1,0 +1,15 @@
+Title: Fix already used error using host and service label conditions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1642168096
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you used label conditions in rules and the same key was used for host and
+service labels, the error "Only one value per KEY can be used at a time.foo:bar
+is already used." ocurred. From now on, each label type will be validated
+seperatly.

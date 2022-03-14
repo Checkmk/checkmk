@@ -1,7 +1,7 @@
 title: Solaris: Fault Class
 agents: solaris
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the name and severity of the fault class on Solaris systems using
@@ -11,5 +11,5 @@ description:
  The check is OK if there are no faults. Otherwise there are three types of
  faults: minor will be WARN, major and critical will be CRIT.
 
-inventory:
+discovery:
  One service is created.

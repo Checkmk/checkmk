@@ -1,7 +1,7 @@
 title: DECRU NAS: Power Supply
 agents: snmp
 catalog: hw/network/decru
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks if a power supply of a DECRU NAS
@@ -10,6 +10,5 @@ description:
 item:
  The name of the power supply as defined in the SNMP data.
 
-inventory:
+discovery:
  One service is created for each power supply.
-

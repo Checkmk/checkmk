@@ -34,12 +34,8 @@ class NodeVisualization {
         this.datasource_manager.schedule();
     }
 
-    set_initial_overlays_config(overlay_config) {
-        this._initial_overlay_config = overlay_config;
-    }
-
-    get_initial_overlays_config() {
-        return this._initial_overlay_config;
+    update_browser_url() {
+        // The browser url can be used as bookmark
     }
 
     _initialize_components() {
@@ -98,10 +94,6 @@ export class BIVisualization extends NodeVisualization {
 export class TopologyVisualization extends NodeVisualization {
     constructor(div_id, mode) {
         super(div_id);
-        this._mode = mode;
-        this._mesh_depth = 0; // Number of hops from growth root
-        this._max_nodes = 200; // Maximum allowed nodes
-        this._growth_auto_max_nodes = null; // Automatically stop growth when this limit is reached (handled on server side)
         this.custom_topology_fetch_parameters = {}; // Custom parameter, added to each fetch request
 
         // Parameters used for throttling the GUI update
@@ -109,42 +101,31 @@ export class TopologyVisualization extends NodeVisualization {
         this._update_request_timer_active = false;
     }
 
-    show_topology(list_of_hosts) {
+    update_browser_url() {
+        return;
+    }
+
+    show_topology(topology_settings) {
+        this._topology_settings = topology_settings;
+
         let topo_ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
         topo_ds.enable();
         topo_ds.set_update_interval(30);
-        //this.viewport.current_viewport.always_update_layout = true
 
-        topo_ds.subscribe_new_data(d => this._show_topology(list_of_hosts));
+        topo_ds.subscribe_new_data(d => this._show_topology());
+        for (let idx in topology_settings.overlays_config) {
+            this.viewport.current_viewport.set_overlay_config(
+                idx,
+                topology_settings.overlays_config[idx]
+            );
+        }
 
-        this.add_depth_slider();
-        this.add_max_nodes_slider();
-
-        this.update_sliders();
-        topo_ds.fetch_hosts({
-            growth_root_nodes: list_of_hosts,
-            growth_auto_max_nodes: this._growth_auto_max_nodes,
-            mesh_depth: this._mesh_depth,
-            max_nodes: this._max_nodes,
-            mode: this._mode,
-        });
+        topo_ds.fetch_hosts(topology_settings);
     }
 
-    set_growth_auto_max_nodes(value) {
-        this._growth_auto_max_nodes = value;
-    }
-
-    set_max_nodes(value) {
-        this._max_nodes = value;
-    }
-
-    set_mesh_depth(value) {
-        this._mesh_depth = value;
-    }
-
-    _show_topology(list_of_hosts) {
+    _show_topology() {
         let topo_ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
@@ -167,131 +148,34 @@ export class TopologyVisualization extends NodeVisualization {
         d3.select("label#max_nodes_error_text").text(errors);
     }
 
-    add_depth_slider() {
-        let slider = d3
-            .select("div#toolbar_controls div#custom")
-            .selectAll("div.mesh_depth_slider")
-            .data([null]);
-        let slider_enter = slider.enter().append("div").classed("topology_slider", true);
-
-        slider_enter
-            .append("label")
-            .style("padding-left", "12px")
-            .text("Number of hops")
-            .classed("noselect", true);
-        slider_enter
-            .append("input")
-            .classed("mesh_depth_slider", true)
-            .style("pointer-events", "all")
-            .attr("type", "range")
-            .attr("step", 1)
-            .attr("min", d => 0)
-            .attr("max", d => 20)
-            .on("input", () => {
-                this._mesh_depth = d3.select("input.mesh_depth_slider").property("value");
-                this.update_sliders();
-                this.update_data();
-            })
-            .property("value", this._mesh_depth);
-        slider_enter.append("label").attr("id", "mesh_depth_text");
-
-        d3.select("form#form_filter input[name=topology_mesh_depth]").remove();
-        d3.select("form#form_filter")
-            .append("input")
-            .attr("name", "topology_mesh_depth")
-            .attr("type", "hidden")
-            .property("value", this._mesh_depth);
-    }
-
-    add_max_nodes_slider() {
-        let slider = d3
-            .select("div#toolbar_controls div#custom")
-            .selectAll("div.max_nodes_slider")
-            .data([null]);
-        let slider_enter = slider.enter().append("div").classed("topology_slider", true);
-
-        slider_enter
-            .append("label")
-            .style("padding-left", "12px")
-            .text("Maximum number of nodes")
-            .classed("noselect", true);
-        slider_enter
-            .append("input")
-            .classed("max_nodes_slider", true)
-            .style("pointer-events", "all")
-            .attr("type", "range")
-            .attr("step", 10)
-            .attr("min", d => 20)
-            .attr("max", d => 2000)
-            .on("input", () => {
-                this._max_nodes = d3.select("input.max_nodes_slider").property("value");
-                this.update_sliders();
-                this.update_data();
-            })
-            .property("value", this._max_nodes);
-        slider_enter.append("label").attr("id", "max_nodes_text").text(this._max_nodes);
-        slider_enter
-            .append("label")
-            .attr("id", "max_nodes_error_text")
-            .style("color", "red")
-            .style("display", "block")
-            .style("margin-left", "12px")
-            .style("margin-top", "-5px");
-
-        d3.select("form#form_filter input[name=topology_max_nodes]").remove();
-        d3.select("form#form_filter")
-            .append("input")
-            .attr("name", "topology_max_nodes")
-            .attr("type", "hidden")
-            .property("value", this._max_nodes);
-    }
-
-    update_sliders() {
-        d3.select("#max_nodes_slider").property("value", this._max_nodes);
-        d3.select("#max_nodes_text").text(this._max_nodes);
-        d3.select("form#form_filter input[name=topology_max_nodes]").property(
-            "value",
-            this._max_nodes
-        );
-
-        d3.select("#mesh_depth_slider").property("value", this._mesh_depth);
-        d3.select("#mesh_depth_text").text(this._mesh_depth);
-        d3.select("form#form_filter input[name=topology_mesh_depth]").property(
-            "value",
-            this._mesh_depth
-        );
-    }
-
     update_data() {
         if (this._throttle_update()) return;
 
-        let growth_root_nodes = [];
-        let growth_forbidden_nodes = [];
-        let growth_continue_nodes = [];
+        this._topology_settings.overlays_config =
+            this.viewport.current_viewport.get_overlay_configs();
+        this._topology_settings.growth_root_nodes = [];
+        this._topology_settings.growth_forbidden_nodes = [];
+        this._topology_settings.growth_continue_nodes = [];
 
         this.viewport.current_viewport.get_all_nodes().forEach(node => {
-            if (node.data.growth_root) growth_root_nodes.push(node.data.hostname);
-            if (node.data.growth_forbidden) growth_forbidden_nodes.push(node.data.hostname);
-            if (node.data.growth_continue) growth_continue_nodes.push(node.data.hostname);
+            if (node.data.growth_root)
+                this._topology_settings.growth_root_nodes.push(node.data.hostname);
+            if (node.data.growth_forbidden)
+                this._topology_settings.growth_forbidden_nodes.push(node.data.hostname);
+            if (node.data.growth_continue)
+                this._topology_settings.growth_continue_nodes.push(node.data.hostname);
         });
 
         let ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
 
-        let config = {
-            growth_root_nodes: growth_root_nodes,
-            mesh_depth: this._mesh_depth,
-            max_nodes: this._max_nodes,
-            growth_forbidden_nodes: growth_forbidden_nodes,
-            growth_continue_nodes: growth_continue_nodes,
-            mode: this._mode,
-        };
-
         for (let key in this.custom_topology_fetch_parameters) {
-            config[key] = this.custom_topology_fetch_parameters[key];
+            this._topology_settings[key] = this.custom_topology_fetch_parameters[key];
         }
-        ds.fetch_hosts(config);
+
+        this.update_browser_url();
+        ds.fetch_hosts(this._topology_settings);
     }
 
     _throttle_update() {

@@ -5,16 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextAscii
-from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesApplications,
+from cmk.gui.plugins.wato.utils import (
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesApplications,
 )
+from cmk.gui.valuespec import TextInput
 
 
 def _item_spec_omd_status():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the OMD site"),
         help=_("The name of the OMD site to check the status for"),
     )
@@ -26,4 +26,5 @@ rulespec_registry.register(
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_omd_status,
         title=lambda: _("OMD site status"),
-    ))
+    )
+)

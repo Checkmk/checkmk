@@ -1,7 +1,7 @@
 title: Age and Size of Files (mk_filestats)
 agents: windows, linux, freebsd, macosx, solaris, aix
 catalog: os/files
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the size, age and count of specific
@@ -29,6 +29,5 @@ item:
  One item is created per configured section using the
  'file_stats' output, with the sections name as item.
 
-inventory:
+discovery:
  One service is created for each section that the agent sends.
-

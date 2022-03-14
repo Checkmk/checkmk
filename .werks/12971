@@ -1,0 +1,15 @@
+Title: Fix host selection when using inpage search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624881608
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you used the inpage search on the "Setup" - "Hosts" page and searched for
+pattern that matched other columns as "Hostname", e.g. "Monitored on site", all
+bulk operations on found hosts showed the error "Please select some hosts
+before doing bulk operations on hosts", even if checkboxes were selected.

@@ -26,19 +26,79 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+# .service
+#             A service unit describes how to manage a service or application on the
+#             server. This will include how to start or stop the service, under which
+#             circumstances it should be automatically started, and the dependency and
+#             ordering information for related software.
+# .socket
+#             A socket unit file describes a network or IPC socket, or a FIFO buffer
+#             that systemd uses for socket-based activation. These always have an
+#             associated .service file that will be started when activity is seen on the
+#             socket that this unit defines.
+# .device
+#             A unit that describes a device that has been designated as needing
+#             systemd management by udev or the sysfs filesystem. Not all devices will
+#             have .device files. Some scenarios where .device units may be necessary are
+#             for ordering, mounting, and accessing the devices.
+# .mount
+#             This unit defines a mountpoint on the system to be managed by systemd.
+#             These are named after the mount path, with slashes changed to dashes.
+#             Entries within /etc/fstab can have units created automatically.
+# .automount
+#             An .automount unit configures a mountpoint that will be automatically
+#             mounted. These must be named after the mount point they refer to and must
+#             have a matching .mount unit to define the specifics of the mount.
+# .swap
+#             This unit describes swap space on the system. The name of these units
+#             must reflect the device or file path of the space.
+# .target
+#             A target unit is used to provide synchronization points for other units
+#             when booting up or changing states. They also can be used to bring the
+#             system to a new state. Other units specify their relation to targets to
+#             become tied to the target's operations.
+# .path
+#             This unit defines a path that can be used for path-based activation. By
+#             default, a .service unit of the same base name will be started when the
+#             path reaches the specified state. This uses inotify to monitor the path for
+#             changes.
+# .timer
+#             A .timer unit defines a timer that will be managed by systemd, similar to
+#             a cron job for delayed or scheduled activation. A matching unit will be
+#             started when the timer is reached.
+# .snapshot
+#             A .snapshot unit is created automatically by the systemctl snapshot
+#             command. It allows you to reconstruct the current state of the system after
+#             making changes. Snapshots do not survive across sessions and are used to
+#             roll back temporary states.
+# .slice
+#             A .slice unit is associated with Linux Control Group nodes, allowing
+#             resources to be restricted or assigned to any processes associated with the
+#             slice. The name reflects its hierarchical position within the cgroup tree.
+#             Units are placed in certain slices by default depending on their type.
+# .scope
+#             Scope units are created automatically by systemd from information
+#             received from its bus interfaces. These are used to manage sets of system
+#             processes that are created externally.
+
+from typing import Iterable, List, NamedTuple, Tuple
+
+CheckResult = Iterable[Tuple[int, str, List[Tuple]]]
+
+
 _SYSTEMD_UNITS = [
-    '.service ',  # A service unit describes how to manage a service or application on the server. This will include how to start or stop the service, under which circumstances it should be automatically started, and the dependency and ordering information for related software.
-    '.socket ',  # A socket unit file describes a network or IPC socket, or a FIFO buffer that systemd uses for socket-based activation. These always have an associated .service file that will be started when activity is seen on the socket that this unit defines.
-    '.device ',  # A unit that describes a device that has been designated as needing systemd management by udev or the sysfs filesystem. Not all devices will have .device files. Some scenarios where .device units may be necessary are for ordering, mounting, and accessing the devices.
-    '.mount ',  # This unit defines a mountpoint on the system to be managed by systemd. These are named after the mount path, with slashes changed to dashes. Entries within /etc/fstab can have units created automatically.
-    '.automount ',  # An .automount unit configures a mountpoint that will be automatically mounted. These must be named after the mount point they refer to and must have a matching .mount unit to define the specifics of the mount.
-    '.swap ',  # This unit describes swap space on the system. The name of these units must reflect the device or file path of the space.
-    '.target ',  # A target unit is used to provide synchronization points for other units when booting up or changing states. They also can be used to bring the system to a new state. Other units specify their relation to targets to become tied to the target's operations.
-    '.path ',  # This unit defines a path that can be used for path-based activation. By default, a .service unit of the same base name will be started when the path reaches the specified state. This uses inotify to monitor the path for changes.
-    '.timer ',  # A .timer unit defines a timer that will be managed by systemd, similar to a cron job for delayed or scheduled activation. A matching unit will be started when the timer is reached.
-    '.snapshot ',  # A .snapshot unit is created automatically by the systemctl snapshot command. It allows you to reconstruct the current state of the system after making changes. Snapshots do not survive across sessions and are used to roll back temporary states.
-    '.slice ',  # A .slice unit is associated with Linux Control Group nodes, allowing resources to be restricted or assigned to any processes associated with the slice. The name reflects its hierarchical position within the cgroup tree. Units are placed in certain slices by default depending on their type.
-    '.scope ',  # Scope units are created automatically by systemd from information received from its bus interfaces. These are used to manage sets of system processes that are created externally.
+    ".service ",
+    ".socket ",
+    ".device ",
+    ".mount ",
+    ".automount ",
+    ".swap ",
+    ".target ",
+    ".path ",
+    ".timer ",
+    ".snapshot ",
+    ".slice ",
+    ".scope ",
 ]
 
 _SYSTEMD_UNIT_FILE_STATES = [
@@ -57,24 +117,34 @@ _SYSTEMD_UNIT_FILE_STATES = [
 ]
 
 
+class UnitEntry(NamedTuple):
+    name: str
+    unit_type: str
+    loaded_status: str
+    active_status: str
+    current_state: str
+    description: str
+    enabled_status: str
+
+
 def parse_systemd_units(info):
     if not info:
         return {}
 
     iter_info = iter(info)
-    target_states = {}
+    enabled_status_collection = {}
 
     line = next(iter_info)
 
     if line[0] == "[list-unit-files]":
         for line in iter_info:
-            if line[0].startswith('['):
+            if line[0].startswith("["):
                 break
             if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES:
-                target_states[line[0]] = line[1]
+                enabled_status_collection[line[0]] = line[1]
 
     parsed = {}
-    if line[0] == '[all]':
+    if line[0] == "[all]":
         try:
             line = next(iter_info)
 
@@ -82,35 +152,43 @@ def parse_systemd_units(info):
         except StopIteration:
             return parsed
 
-        UnitEntry = collections.namedtuple(
-            "UnitEntry", ['name', 'type', 'load', 'active', 'sub', 'description', 'state'])
-
         for row in iter_info:
-            if row[0] == '*':
+            if row[0] in {"●", "*"}:
                 row.pop(0)
-            line = ' '.join(row)
+            line = " ".join(row)
             for unit_marker in _SYSTEMD_UNITS:
-                utype = unit_marker.strip(' ')
+                utype = unit_marker.strip(" ")
                 if row[0].endswith(utype):
-                    unit_type = unit_marker.strip('. ')
+                    unit_type = unit_marker.strip(". ")
                     name, remains = line.split(unit_marker, 1)
                     if "@" in name:
                         pos = name.find("@")
-                        temp = name[:pos + 1]
+                        temp = name[: pos + 1]
                     else:
                         temp = name
-                    state = target_states.get("%s.%s" % (temp, unit_type), "unknown")
-                    load, active, sub, descr = remains.split(' ', 3)
-                    unit = UnitEntry(name, unit_type, load, active, sub, descr, state)
-                    parsed.setdefault(unit.type, {})[unit.name] = unit
+                    enabled_status = enabled_status_collection.get(
+                        "%s.%s" % (temp, unit_type),
+                        "unknown",
+                    )
+                    loaded_status, active_status, current_state, descr = remains.split(" ", 3)
+                    unit = UnitEntry(
+                        name,
+                        unit_type,
+                        loaded_status,
+                        active_status,
+                        current_state,
+                        descr,
+                        enabled_status,
+                    )
+                    parsed.setdefault(unit.unit_type, {})[unit.name] = unit
                     break
     return parsed
 
 
-#.
+# .
 
-check_info['systemd_units'] = {
-    'parse_function': parse_systemd_units,
+check_info["systemd_units"] = {
+    "parse_function": parse_systemd_units,
 }
 
 #   .--services------------------------------------------------------------.
@@ -139,13 +217,23 @@ factory_settings["systemd_services_summary_default_levels"] = {
         "failed": 2,
     },
     "states_default": 2,
+    "activating_levels": (30, 60),
+    "deactivating_levels": (30, 60),
+    "reloading_levels": (30, 60),
 }
 
 discovery_systemd_units_services_rules = []
 
 
 def discovery_systemd_units_services(parsed):
-    services = parsed.get('service', {})
+
+    # Filter out volatile systemd service units created by the Checkmk agent which appear and
+    # disappear frequently. No matter what the user configures, we do not want to discover them.
+    filtered_services = [
+        service
+        for service in parsed.get("service", {}).values()
+        if not regex("^check-mk-agent@.+").match(service.name)
+    ]
 
     def regex_match(what, name):
         if not what:
@@ -168,36 +256,39 @@ def discovery_systemd_units_services(parsed):
         descriptions = settings.get("descriptions", [])
         names = settings.get("names", [])
         states = settings.get("states", [])
-        for service in services.values():
-            if (regex_match(descriptions, service.description) and
-                    regex_match(names, service.name) and state_match(states, service.active)):
+        for service in filtered_services:
+            if (
+                regex_match(descriptions, service.description)
+                and regex_match(names, service.name)
+                and state_match(states, service.active_status)
+            ):
                 yield service.name, {}
 
 
 def check_systemd_units_services(item, params, parsed):
-    services = parsed.get('service', {})
+    services = parsed.get("service", {})
     service = services.get(item, None)
     if service is None:
         yield params["else"], "Service not found"
         return
 
-    state = params["states"].get(service.active, params["states_default"])
-    yield state, "Status: %s" % service.active
+    state = params["states"].get(service.active_status, params["states_default"])
+    yield state, "Status: %s" % service.active_status
     yield 0, service.description
 
 
-check_info['systemd_units.services'] = {
-    'inventory_function': discovery_systemd_units_services,
-    'check_function': check_systemd_units_services,
-    'service_description': 'Systemd Service %s',
-    'group': 'systemd_services',
-    'default_levels_variable': 'systemd_services_default_levels',
+check_info["systemd_units.services"] = {
+    "inventory_function": discovery_systemd_units_services,
+    "check_function": check_systemd_units_services,
+    "service_description": "Systemd Service %s",
+    "group": "systemd_services",
+    "default_levels_variable": "systemd_services_default_levels",
 }
 
 
 def discovery_systemd_units_services_summary(parsed):
     if parsed:
-        yield 'Summary', {}
+        yield "Summary", {}
 
 
 def _services_split(services, blacklist):
@@ -206,25 +297,28 @@ def _services_split(services, blacklist):
         "excluded": [],
         "disabled": [],
         "activating": [],
+        "deactivating": [],
         "reloading": [],
-        "static": []
+        "static": [],
     }
     compiled_patterns = [regex(p) for p in blacklist]
     for service in services:
         if any(expr.match(service.name) for expr in compiled_patterns):
             services_organised["excluded"].append(service)
             continue
-        if service.active == "activating":
-            services_organised["activating"].append(service)
-        elif service.state in ("reloading", "disabled", "static", "indirect"):
-            service_type = "disabled" if service.state == "indirect" else service.state
+        if service.active_status in ("activating", "deactivating"):
+            services_organised[service.active_status].append(service)
+        elif service.enabled_status in ("reloading", "disabled", "static", "indirect"):
+            service_type = (
+                "disabled" if service.enabled_status == "indirect" else service.enabled_status
+            )
             services_organised[service_type].append(service)
         else:
             services_organised["included"].append(service)
     return services_organised
 
 
-def _check_temporary_state(services, params, service_state):
+def _check_temporary_state(services, params, service_state) -> CheckResult:
     previous_state = get_item_state(service_state, {})
     now = int(time.time())
     current_state = {}
@@ -233,19 +327,21 @@ def _check_temporary_state(services, params, service_state):
         state_since = previous_state.get(service.name, now)
         current_state[service.name] = state_since
         elapsed_time = now - state_since
-        yield check_levels(elapsed_time,
-                           None,
-                           levels,
-                           human_readable_func=get_age_human_readable,
-                           infoname="Service '%s' %s for" % (service.name, service_state))
+        yield check_levels(
+            elapsed_time,
+            None,
+            levels,
+            human_readable_func=get_age_human_readable,
+            infoname="Service '%s' %s for" % (service.name, service_state),
+        )
 
-        set_item_state(service_state, current_state)
+    set_item_state(service_state, current_state)
 
 
-def _check_non_ok_services(systemd_services, params, output_string):
+def _check_non_ok_services(systemd_services, params, output_string) -> CheckResult:
     servicenames_by_status = {}
     for service in systemd_services:
-        servicenames_by_status.setdefault(service.active, []).append(service.name)
+        servicenames_by_status.setdefault(service.active_status, []).append(service.name)
 
     for status, service_names in sorted(servicenames_by_status.items()):
         state = params["states"].get(status, params["states_default"])
@@ -256,25 +352,26 @@ def _check_non_ok_services(systemd_services, params, output_string):
         services_text = ", ".join(sorted(service_names))
         info = output_string % (count, "" if count == 1 else "s", status, services_text)
 
-        yield state, info
+        yield state, info, []
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):
-    services = parsed.get('service', {}).values()
-    blacklist = params.get('ignored', [])
+    services = parsed.get("service", {}).values()
+    blacklist = params.get("ignored", [])
     yield 0, "Total: %d" % len(services)
 
     services_organised = _services_split(services, blacklist)
 
     yield 0, "Disabled: %d" % len(services_organised["disabled"])
     # some of the failed ones might be ignored, so this is OK:
-    yield 0, "Failed: %d" % sum(s.active == "failed" for s in services)
+    yield 0, "Failed: %d" % sum(s.active_status == "failed" for s in services)
 
-    long_output = []
+    long_output: List[Tuple[int, str, List[Tuple]]] = []
 
     included_template = "%d service%s %s (%s)"
-    for subresult in _check_non_ok_services(services_organised["included"], params,
-                                            included_template):
+    for subresult in _check_non_ok_services(
+        services_organised["included"], params, included_template
+    ):
         if subresult[0]:
             yield subresult
         else:
@@ -287,9 +384,10 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         else:
             long_output.append(subresult)
 
-    for temporary_type in ("activating", "reloading"):
-        for subresult in _check_temporary_state(services_organised[temporary_type], params,
-                                                temporary_type):
+    for temporary_type in ("activating", "reloading", "deactivating"):
+        for subresult in _check_temporary_state(
+            services_organised[temporary_type], params, temporary_type
+        ):
             if subresult[0]:
                 yield subresult
             else:
@@ -298,15 +396,15 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     if services_organised["excluded"]:
         yield 0, "\nIgnored: %d" % len(services_organised["excluded"])
 
-    yield from long_output
+    yield from ((s, f"\n{t}", m) for s, t, m in long_output)
 
 
-check_info['systemd_units.services_summary'] = {
-    'inventory_function': discovery_systemd_units_services_summary,
-    'check_function': check_systemd_units_services_summary,
-    'service_description': 'Systemd Service %s',
-    'group': 'systemd_services_summary',
-    'default_levels_variable': 'systemd_services_summary_default_levels',
+check_info["systemd_units.services_summary"] = {
+    "inventory_function": discovery_systemd_units_services_summary,
+    "check_function": check_systemd_units_services_summary,
+    "service_description": "Systemd Service %s",
+    "group": "systemd_services_summary",
+    "default_levels_variable": "systemd_services_summary_default_levels",
 }
 
-#.
+# .

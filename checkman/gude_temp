@@ -1,7 +1,7 @@
 title: GUDE Power Control: Temperature
 agents: snmp
 catalog: hw/power/gude
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature of a GUDE Power
@@ -14,5 +14,5 @@ description:
 item:
  The name of the temperature sensor
 
-inventory:
+discovery:
  One service is created.

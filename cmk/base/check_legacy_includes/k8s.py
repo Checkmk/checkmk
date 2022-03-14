@@ -9,4 +9,5 @@
 
 def parse_k8s(info):
     import json
+
     return json.loads(info[0][0])

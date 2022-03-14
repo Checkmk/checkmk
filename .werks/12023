@@ -6,7 +6,7 @@ Date: 1612543627
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk fixes a bug in the active check 'Check Email Delivery'.
 Previously, emails with a matching subject which contained 'Re:'

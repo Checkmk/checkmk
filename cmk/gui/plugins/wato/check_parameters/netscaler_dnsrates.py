@@ -5,23 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 
 def _parameter_valuespec_netscaler_dnsrates():
     return Dictionary(
-        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
-               "Appliances"),
+        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer " "Appliances"),
         elements=[
             (
                 "query",
@@ -29,7 +23,7 @@ def _parameter_valuespec_netscaler_dnsrates():
                     title=_("Upper Levels for Total Number of DNS queries"),
                     elements=[
                         Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
-                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
+                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec"),
                     ],
                 ),
             ),
@@ -39,7 +33,7 @@ def _parameter_valuespec_netscaler_dnsrates():
                     title=_("Upper Levels for Total Number of DNS replies"),
                     elements=[
                         Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
-                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
+                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec"),
                     ],
                 ),
             ),
@@ -54,4 +48,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_dnsrates,
         title=lambda: _("Citrix Netscaler DNS counter rates"),
-    ))
+    )
+)

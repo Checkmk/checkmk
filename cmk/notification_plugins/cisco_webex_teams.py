@@ -24,32 +24,41 @@ def cisco_webex_teams_msg(context: Dict) -> Dict:
     # notification about a service
     if context.get("WHAT", None) == "SERVICE":
         monitored_type = "Service"
-        host_service_info = "Host: %s (IP: %s)  \nService: %s" % \
-                            (utils.format_link("<%s|%s>", utils.host_url_from_context(context),
-                                               context["HOSTNAME"]),
-                             context["HOSTADDRESS"],
-                             utils.format_link("<%s|%s>", utils.service_url_from_context(context),
-                                               context["SERVICEDESC"]))
+        host_service_info = "Host: %s (IP: %s)  \nService: %s" % (
+            utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
+            context["HOSTADDRESS"],
+            utils.format_link(
+                "<%s|%s>", utils.service_url_from_context(context), context["SERVICEDESC"]
+            ),
+        )
         state = "State: %s" % context["SERVICESTATE"]
         output = context["SERVICEOUTPUT"]
 
     # notification about a host
     else:
         monitored_type = "Host"
-        host_service_info = "Host: %s (IP: %s)" % \
-                            (utils.format_link("<%s|%s>", utils.host_url_from_context(context),
-                                               context["HOSTNAME"]), context["HOSTADDRESS"])
+        host_service_info = "Host: %s (IP: %s)" % (
+            utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
+            context["HOSTADDRESS"],
+        )
         state = "State: %s" % context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
 
-    markdown = "#### " + monitored_type + " " + notification_type \
-               + "  \n" + host_service_info \
-               + "  \n" + state \
-               + "  \n#### Additional Info" \
-               + "  \n" + output \
-               + "  \nPlease take a look: " \
-               + ", ".join(["@" + contact_name for contact_name in
-                            context["CONTACTNAME"].split(",")]) \
-               + "  \nCheck_MK notification: %s" % context["LONGDATETIME"]
+    markdown = (
+        "#### "
+        + monitored_type
+        + " "
+        + notification_type
+        + "  \n"
+        + host_service_info
+        + "  \n"
+        + state
+        + "  \n#### Additional Info"
+        + "  \n"
+        + output
+        + "  \nPlease take a look: "
+        + ", ".join(["@" + contact_name for contact_name in context["CONTACTNAME"].split(",")])
+        + "  \nCheck_MK notification: %s" % context["LONGDATETIME"]
+    )
 
     return {"markdown": markdown}

@@ -5,28 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_fireeye_content():
-    return Dictionary(elements=[(
-        "update_time_levels",
-        Tuple(title=_("Upper levels for the age of the update"),
-              elements=[
-                  Age(title=_("Warning at")),
-                  Age(title=_("Critical at")),
-              ]),
-    )])
+    return Dictionary(
+        elements=[
+            (
+                "update_time_levels",
+                Tuple(
+                    title=_("Upper levels for the age of the update"),
+                    elements=[
+                        Age(title=_("Warning at")),
+                        Age(title=_("Critical at")),
+                    ],
+                ),
+            )
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -36,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_content,
         title=lambda: _("Fireeye Security Content"),
-    ))
+    )
+)

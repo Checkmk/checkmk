@@ -1,19 +1,20 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-CMK_VERSION=$(basename $(readlink $ROOT/version))
+CMK_VERSION=$(basename "$(readlink "$ROOT"/version)")
 CMK_VERSION=${CMK_VERSION%.*}
 
-# Needed by managed/cmk/.f12 to set the correct edition after .f12
+# Needed by {managed,plus}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
-    export ORIG_EDITION=$(sudo su - $SITE -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition_short())'")
+    ORIG_EDITION=$(sudo su - "$SITE" -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)'")
+    export ORIG_EDITION
 fi
 
 echo "Update site $SITE..."
@@ -22,52 +23,15 @@ PYTHON3_PATHS=(
     gui
     snmplib
     utils
+    fields
     ec
     notification_plugins
-    special_agents/utils
-    special_agents/__init__.py
-    special_agents/agent_3par.py
-    special_agents/agent_activemq.py
-    special_agents/agent_allnet_ip_sensoric.py
-    special_agents/agent_appdynamics.py
-    special_agents/agent_aws.py
-    special_agents/agent_azure.py
-    special_agents/agent_bi.py
-    special_agents/agent_couchbase.py
-    special_agents/agent_ddn_s2a.py
-    special_agents/agent_elasticsearch.py
-    special_agents/agent_emcvnx.py
-    special_agents/agent_fritzbox.py
-    special_agents/agent_graylog.py
-    special_agents/agent_hivemanager.py
-    special_agents/agent_hivemanager_ng.py
-    special_agents/agent_hp_msa.py
-    special_agents/agent_ibmsvc.py
-    special_agents/agent_innovaphone.py
-    special_agents/agent_ipmi_sensors.py
-    special_agents/agent_jenkins.py
-    special_agents/agent_jira.py
-    special_agents/agent_jolokia.py
-    special_agents/agent_kubernetes.py
-    special_agents/agent_netapp.py
-    special_agents/agent_prism.py
-    special_agents/agent_prometheus.py
-    special_agents/agent_proxmox_ve.py
-    special_agents/agent_rabbitmq.py
-    special_agents/agent_random.py
-    special_agents/agent_ruckus_spot.py
-    special_agents/agent_salesforce.py
-    special_agents/agent_siemens_plc.py
-    special_agents/agent_splunk.py
-    special_agents/agent_storeonce.py
-    special_agents/agent_tinkerforge.py
-    special_agents/agent_ucs_bladecenter.py
-    special_agents/agent_vnx_quotas.py
-    special_agents/agent_vsphere.py
-    special_agents/agent_zerto.py
-    special_agents/agent_cisco_prime.py
+    special_agents
+    post_rename_site
     update_rrd_fs_names.py
     update_config.py
+    automations
+    base
 )
 
 echo "Copy CRE files..."
@@ -78,21 +42,53 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
+    --exclude=cpe \
+    --exclude=cpe.py \
     -aR \
     "${PYTHON3_PATHS[@]}" \
-    $ROOT/lib/python3/cmk/
+    "$ROOT"/lib/python3/cmk/
 
-# Ensure cmk is a namespace package
+# Transform required packages to namespace package
 sudo rm -f \
     "$ROOT/lib/python3/cmk/__init__.py" \
-    "$ROOT/lib/python3/cmk/__init__.pyc"
+    "$ROOT/lib/python3/cmk/special_agents/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/post_rename_site/__init__.py" \
+    "$ROOT/lib/python3/cmk/post_rename_site/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/dashboard/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/config/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/cron/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/userdb/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/bi/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/webapi/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/watolib/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/openapi/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/sidebar/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/views/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/views/icons/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/visuals/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/metrics/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/wato/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py"
 
 # Restore site version after .f12
-sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py
+sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
 
 # Also deploy all other directories of same type
-if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
+if [ "${ALL_EDITIONS:-1}" != 0 ]; then
+    for WHAT in enterprise managed plus; do
         if [ -e ../$WHAT/cmk/.f12 ]; then
             (
                 cd ../$WHAT/cmk
@@ -104,8 +100,8 @@ fi
 
 if [ -z "$ONLY_COPY" ]; then
     (
-        cd $ROOT/lib/python3/cmk
-        sudo $ROOT/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
+        cd "$ROOT"/lib/python3/cmk
+        sudo "$ROOT"/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
     )
 fi
 

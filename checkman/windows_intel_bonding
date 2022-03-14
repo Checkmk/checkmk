@@ -1,7 +1,7 @@
 title: Windows: Intel Bonding Network Interface
 agents: windows
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the current state of a Windows intel bonding interface.
@@ -13,6 +13,5 @@ description:
 item:
  The name of the bonding interface
 
-inventory:
+discovery:
  One service is created for each {active} bonding interface.
-

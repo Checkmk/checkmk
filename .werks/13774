@@ -1,0 +1,13 @@
+Title: Update list of available Infoblox services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646252637
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Parsing of infoblox_services section would previously crash in case of "bfd" and
+"outbound" services. "bfd" and "outbound" are now added to the list of service
+IDs for infoblox devices.

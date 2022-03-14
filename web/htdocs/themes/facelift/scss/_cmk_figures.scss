@@ -69,21 +69,21 @@ div.cmk_tab {
 
   rect.bar.bar_chart {
     fill: $bar-fill-color;
-    stroke: rgba(0, 0, 0, 0.2);
+    stroke: rgba($black, 0.2);
 
     &:hover {
       fill: $bar-hover-fill-color;
-      stroke: rgb(0, 0, 0);
+      stroke: $black;
     }
   }
 
   rect.bar.bar_chart.barbar_chart {
     fill: $barbar-fill-color;
-    stroke: rgba(0, 0, 0, 0.3);
+    stroke: rgba($black, 0.3);
 
     &:hover {
       fill: $barbar-hover-fill-color;
-      stroke: rgb(0, 0, 0);
+      stroke: $black;
     }
   }
 }
@@ -111,14 +111,17 @@ div.cmk_figure {
     position: absolute;
     z-index: 1;
     padding: 10px;
-    color: $graph-hover-popup-font-color;
+    color: $font-color;
     pointer-events: none;
     background-color: $graph-hover-popup-bg-color;
     border: $graph-hover-popup-border;
     box-shadow: $graph-hover-popup-box-shadow;
     border-radius: 5px;
 
-    td {
+    div.loading_img {
+      left: 0;
+      width: 24px;
+      height: 24px;
     }
   }
 
@@ -144,8 +147,7 @@ div.cmk_figure {
   }
 
   g.axis {
-    // axis edges invisible because designer made them so
-    color: $bg-color-secondary;
+    color: transparent; // graph axis edges are invisible
   }
 
   &.average_scatterplot {
@@ -203,20 +205,12 @@ div.cmk_figure {
           }
         }
 
-        tr.mean td:nth-child(2) {
-          color: $dc-graph-color-1;
-        }
-
-        tr.median td:nth-child(2) {
-          color: $dc-graph-color-2;
-        }
-
         tr.top_matches td:nth-child(2) {
-          color: rgb(255, 40, 40);
+          color: $font-color-red;
         }
 
         tr.bottom_matches td:nth-child(2) {
-          color: rgb(31, 150, 240);
+          color: $font-color-green;
         }
       }
 
@@ -254,7 +248,7 @@ div.cmk_figure {
     }
 
     path.host.hilite {
-      stroke: rgb(70, 130, 180);
+      stroke: $scatterplot-hilite-color;
     }
 
     circle.scatterdot {
@@ -346,7 +340,7 @@ div.dc_table .options {
       }
 
       input:disabled {
-        color: $grey-2;
+        color: $font-color-dimmed;
       }
 
       input:active,

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.4.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 152 136" style="enable-background:new 0 0 152 136;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#B894EE;}
+	.st1{fill:#5A24AB;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#303946;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#ED3B3B;}
+	.st4{fill-rule:evenodd;clip-rule:evenodd;fill:#FAD90D;}
+	.st5{fill-rule:evenodd;clip-rule:evenodd;fill:#52D300;}
+</style>
+<g id="Icons">
+	<g id="menuicons_Configure" transform="translate(-61.000000, -817.000000)">
+		<g id="Host-state" transform="translate(61.000000, 817.000000)">
+			<g id="icon_folder" transform="translate(31.525834, -0.000000)">
+				<path id="Path" class="st0" d="M112,0H8.5C3.8,0,0,3.8,0,8.5v119c0,4.7,3.8,8.5,8.5,8.5H112c4.7,0,8.5-3.8,8.5-8.5V8.8
+					C120.8,3.8,116.7,0,112,0z"/>
+				<ellipse id="Oval" class="st1" cx="60.4" cy="114.5" rx="8.5" ry="8.5"/>
+				<path id="Path_00000176022184892789607120000017642576534048631471_" class="st1" d="M101.3,36.6H19.5c-1.3,0-2.2-0.6-2.2-1.9
+					V17.4c0-0.9,0.9-1.9,2.2-1.9h81.8c1.3,0,2.2,0.6,2.2,1.9V35C103.5,35.7,102.5,36.6,101.3,36.6z"/>
+				<ellipse id="Oval_00000124146562849158058410000006266112770333697193_" class="st0" cx="90.6" cy="25.9" rx="4.4" ry="4.4"/>
+				<path id="Path_00000018225497529303682880000004154951133687283090_" class="st1" d="M101.3,63.7H19.5c-1.3,0-2.2-0.6-2.2-1.9
+					V44.2c0-0.9,0.9-1.9,2.2-1.9h81.8c1.3,0,2.2,0.6,2.2,1.9v17.7C103.5,62.8,102.5,63.7,101.3,63.7z"/>
+				<ellipse id="Oval_00000151526327588261155140000012568622372932648872_" class="st0" cx="90.6" cy="53" rx="4.4" ry="4.4"/>
+				<path id="Path_00000021084349167127098600000014421189986406296719_" class="st1" d="M101.3,90.6H19.5c-1.3,0-2.2-0.6-2.2-1.9
+					V71c0-0.9,0.9-1.9,2.2-1.9h81.8c1.3,0,2.2,0.6,2.2,1.9v17.7C103.5,89.9,102.5,90.6,101.3,90.6z"/>
+				<ellipse id="Oval_00000023244257724972448660000004004700801536882105_" class="st0" cx="90.6" cy="80.1" rx="4.4" ry="4.4"/>
+			</g>
+			<g id="status" transform="translate(0.000000, 8.439583)">
+				<path id="Rectangle" class="st2" d="M15,0h9.9c8.3,0,15,6.7,15,15v70.2c0,8.3-6.7,15-15,15H15c-8.3,0-15-6.7-15-15V15
+					C0,6.7,6.7,0,15,0z"/>
+				<path id="Rectangle_00000168813185408735083810000016500908301379793797_" class="st3" d="M20,10L20,10c5.5,0,10,4.5,10,10v0.1
+					c0,5.5-4.5,10-10,10l0,0c-5.5,0-10-4.5-10-10V20C10,14.5,14.5,10,20,10z"/>
+				<path id="Rectangle_00000037686335364337193020000017680687403593148040_" class="st4" d="M20,40.1L20,40.1c5.5,0,10,4.5,10,10
+					v0.1c0,5.5-4.5,10-10,10l0,0c-5.5,0-10-4.5-10-10v-0.1C10,44.5,14.5,40.1,20,40.1z"/>
+				<path id="Rectangle_00000077320866486547750400000017769532212122500003_" class="st5" d="M20,70.1L20,70.1c5.5,0,10,4.5,10,10
+					v0.1c0,5.5-4.5,10-10,10l0,0c-5.5,0-10-4.5-10-10v-0.1C10,74.6,14.5,70.1,20,70.1z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

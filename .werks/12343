@@ -1,0 +1,19 @@
+Title: fix missing __id in folders after upgrade from 1.6.0
+Class: fix
+Compatible: compat
+Component: core
+Date: 1619616947
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When upgrading from 1.6.0 to 2.0.0 until 2.0.0p3, only the
+root-folder got assigned a __id key which is required for the
+folder endpoints of the REST API. Access to other folders with
+the REST API would result in a HTTP 500 error with an error message.
+
+During the upgrade to 2.0.0p4, these folders will be fixed.
+
+No further action (apart from upgrading) is necessary.

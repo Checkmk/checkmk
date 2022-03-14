@@ -1,0 +1,37 @@
+Title: k8s_pods_memory, k8s_pods_cpu, k8s_pods_fs: deprecate check plugins
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1621508557
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The performance problems described below only affect you, if your Kubernetes cluster
+exposes metrics in custom.metrics.k8s.io.
+
+The deprecations of the plugins only affect you, if you applied the YAML files
+mentioned in ~/share/doc/check_mk/treasures/kubernetes/readme.md and services with
+the description "Memory usage for pods in NAMESPACE namespace", "CPU usage for pods in
+NAMESPACE namespace" or "CPU usage for Pods in NAMESPACE namespace" are present in
+your cluster where NAMESPACE is the name of a namespace in your cluster.
+
+Previous versions of the Kubernetes special agent processed metrics delivered by the
+custom.metrics.k8s.io endpoint. The metrics were provided e.g. by applying the YAML
+files mentioned in ~/share/doc/check_mk/treasures/kubernetes/readme.md.
+
+The special agent of Kubernetes could run into performance problems and timeouts if
+metrics were present under custom.metrics.k8s.io. Furthermore, the custom metrics
+were not compatible with newer versions of Kubernetes and scrape targets of the more
+recent special agent for Prometheus delivers data for CPU, Filesystems, Disk IO and
+Memory, as well. Additionally, the Prometheus agent is capable to execute
+custom PromQL queries for advanced use cases.
+
+For this reason the Kubernetes special agent does not process custom metrics anymore
+and the accompanying check plugins and rulesets are deprecated. The corresponding
+services and rules should be removed. Instructions on how to use the Prometheus
+special agent can be found in the user guide:
+
+https://docs.checkmk.com/latest/en/monitoring_prometheus.html

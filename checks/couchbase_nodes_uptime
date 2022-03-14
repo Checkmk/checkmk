@@ -16,7 +16,7 @@ def parse_couchbase_uptime(info):
     for line in info:
         if len(line) < 2:
             continue
-        uptime, node = line[0], ' '.join(line[1:])
+        uptime, node = line[0], " ".join(line[1:])
         try:
             parsed[node] = float(uptime)
         except ValueError:
@@ -29,11 +29,11 @@ def check_couchbase_nodes_uptime(_item, params, uptime):
     return check_uptime_seconds(params, uptime)
 
 
-check_info['couchbase_nodes_uptime'] = {
-    'parse_function': parse_couchbase_uptime,
-    'inventory_function': discover(),
-    'check_function': check_couchbase_nodes_uptime,
-    'service_description': 'Couchbase %s Uptime',
-    'group': 'uptime_multiitem',
-    'has_perfdata': True,
+check_info["couchbase_nodes_uptime"] = {
+    "parse_function": parse_couchbase_uptime,
+    "inventory_function": discover(),
+    "check_function": check_couchbase_nodes_uptime,
+    "service_description": "Couchbase %s Uptime",
+    "group": "uptime_multiitem",
+    "has_perfdata": True,
 }

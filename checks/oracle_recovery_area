@@ -40,10 +40,19 @@ def check_oracle_recovery_area(item, params, info):
                 state = 0
 
             mb = 1024 * 1024
-            return state, "%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable" \
-                % (get_bytes_human_readable(used_mb*mb), get_bytes_human_readable(size_mb*mb), \
-                   perc_used, warn, crit, get_bytes_human_readable(reclaimable_mb*mb)), \
-                   [('used', used_mb, warn_mb, crit_mb, 0, size_mb), ('reclaimable', reclaimable_mb)]
+            return (
+                state,
+                "%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable"
+                % (
+                    get_bytes_human_readable(used_mb * mb),
+                    get_bytes_human_readable(size_mb * mb),
+                    perc_used,
+                    warn,
+                    crit,
+                    get_bytes_human_readable(reclaimable_mb * mb),
+                ),
+                [("used", used_mb, warn_mb, crit_mb, 0, size_mb), ("reclaimable", reclaimable_mb)],
+            )
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -51,7 +60,7 @@ def check_oracle_recovery_area(item, params, info):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info['oracle_recovery_area'] = {
+check_info["oracle_recovery_area"] = {
     "check_function": check_oracle_recovery_area,
     "inventory_function": inventory_oracle_recovery_area,
     "service_description": "ORA %s Recovery Area",

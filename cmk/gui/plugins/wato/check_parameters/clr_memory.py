@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _item_spec_clr_memory():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the Application"),
         help=_("The name of the DotNet (.Net) application or _Global_"),
         allow_empty=False,
@@ -29,17 +23,21 @@ def _item_spec_clr_memory():
 
 def _parameter_valuespec_clr_memory():
     return Dictionary(
-        help=_("This rule allows to set the warn and crit levels of the memory "
-               "metrics of the DotNet (.Net) Runtime"),
+        help=_(
+            "This rule allows to set the warn and crit levels of the memory "
+            "metrics of the DotNet (.Net) Runtime"
+        ),
         elements=[
-            ("upper",
-             Tuple(
-                 title=_("Percent time spent in garbage collection"),
-                 elements=[
-                     Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
-                     Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
-                 ],
-             )),
+            (
+                "upper",
+                Tuple(
+                    title=_("Percent time spent in garbage collection"),
+                    elements=[
+                        Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
+                        Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -52,4 +50,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_clr_memory,
         title=lambda: _("DotNet (.Net) runtime memory levels"),
-    ))
+    )
+)

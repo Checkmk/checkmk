@@ -1,7 +1,7 @@
 title: AWS CloudWatch: Alarms Limits
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the AWS/CloudWatch alarms limits, ie. the
@@ -16,5 +16,5 @@ description:
  If limits are enabled all alarms are fetched regardless of
  possibly configured restriction to names.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

@@ -1,0 +1,24 @@
+Title: Notes URL is now always opened in new tab or window
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616488893
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+You can configure a "Custom notes URL" for host and services.  A link to this
+notes URL appears in the host or service context menu in the GUI.
+
+With the introduction of the Content Security Policy (which is configured in
+etc/apache/conf.d/security.conf), it is now not possible anymore to follow
+external links within the GUI frameset without changing the policy to allow
+links to the linked domain.
+
+In such a case the browser console shows something like "Content Security
+Policy: The page’s settings blocked the loading of a resource ...".
+
+To make the "Custom notes" link work by default we now changed that link to
+open the link target in a new tab.

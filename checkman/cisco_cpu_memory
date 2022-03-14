@@ -1,7 +1,7 @@
 title: Cisco Devices: CPU Memory
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -13,5 +13,5 @@ description:
  kernel reserved memory while occupied memory incorporates it along with used
  memory.
 
-inventory:
+discovery:
  One service is created for each Cisco device.

@@ -1,0 +1,13 @@
+Title: Fix missing context if "Add context information to title" is used
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1630932124
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If the report option "Add context information to title" was used, the context
+information was not added to the report title.

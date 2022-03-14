@@ -1,7 +1,7 @@
 title: SAP HANA: Backup
 agents: linux
 catalog: app/sap_hana
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status and age of SAP HANA backups.
@@ -21,7 +21,7 @@ description:
 item:
  The sid instance name and backup type seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each instance and backup type.
 
 cluster:

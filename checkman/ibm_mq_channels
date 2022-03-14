@@ -1,7 +1,7 @@
 title: IBM MQ: State of Channels
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the IBM MQ Channels. For SDR channels the XMIT queue is
@@ -18,5 +18,5 @@ description:
 item:
  The name of the channel, prefixed by the queue manager name.
 
-inventory:
+discovery:
  One service is created for each queue manager.

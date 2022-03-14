@@ -7,13 +7,13 @@
 see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
       szier-m8-106.cisco.com/webacs/api/v1/data/AccessPointscc3b.html
 """
+import collections
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-import collections
 
 factory_settings["cisco_prime_wifi_access_points"] = {
     "levels": (20, 40),
@@ -25,7 +25,7 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
     indicated by 'count')"""
     counts = collections.Counter(k["status"] for k in parsed.values())
     count_total, count_critical = len(parsed), counts["CRITICAL"]
-    critical_percent = 100. * count_critical / count_total
+    critical_percent = 100.0 * count_critical / count_total
     yield check_levels(
         critical_percent,
         "ap_devices_percent_unhealthy",

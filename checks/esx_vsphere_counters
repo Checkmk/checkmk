@@ -4,22 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_LEVELS
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -47,7 +51,7 @@ import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 # ...
 # sys.uptime||630664|second
 
-#.
+# .
 #   .--Datastore IO--------------------------------------------------------.
 #   |        ____        _            _                   ___ ___          |
 #   |       |  _ \  __ _| |_ __ _ ___| |_ ___  _ __ ___  |_ _/ _ \         |
@@ -72,8 +76,13 @@ esx_vsphere_get_average = esx_vsphere_counters.average_parsed_data
 def esx_vsphere_counters_get_item_mapping(parsed):
     map_instance_to_item = {}
     for counter in [
-            "read", "write", "datastoreReadIops", "datastoreWriteIops", "totalReadLatency",
-            "totalWriteLatency", "sizeNormalizedDatastoreLatency"
+        "read",
+        "write",
+        "datastoreReadIops",
+        "datastoreWriteIops",
+        "totalReadLatency",
+        "totalWriteLatency",
+        "sizeNormalizedDatastoreLatency",
     ]:
         for instance in parsed.get("datastore." + counter, {}):
             map_instance_to_item[instance] = instance
@@ -86,7 +95,8 @@ def esx_vsphere_counters_get_item_mapping(parsed):
 
 def inventory_esx_vsphere_counters_datastoreio(parsed):
     return inventory_diskstat_generic(
-        [[None, x] for x in esx_vsphere_counters_get_item_mapping(parsed).values()])
+        [[None, x] for x in esx_vsphere_counters_get_item_mapping(parsed).values()]
+    )
 
 
 def check_esx_vsphere_counters_datastoreio(item, params, parsed):
@@ -116,15 +126,15 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
     return check_diskstat_dict(item, params, datastores)
 
 
-check_info['esx_vsphere_counters'] = {
-    'inventory_function': inventory_esx_vsphere_counters_datastoreio,
-    'check_function': check_esx_vsphere_counters_datastoreio,
-    'service_description': 'Datastore IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat'
+check_info["esx_vsphere_counters"] = {
+    "inventory_function": inventory_esx_vsphere_counters_datastoreio,
+    "check_function": check_esx_vsphere_counters_datastoreio,
+    "service_description": "Datastore IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }
 
-#.
+# .
 #   .--Uptime--------------------------------------------------------------.
 #   |                  _   _       _   _                                   |
 #   |                 | | | |_ __ | |_(_)_ __ ___   ___                    |
@@ -149,15 +159,15 @@ def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
     return check_uptime_seconds(params, uptime)
 
 
-check_info['esx_vsphere_counters.uptime'] = {
-    'inventory_function': inventory_esx_vsphere_counters_uptime,
-    'check_function': check_esx_vsphere_counters_uptime,
-    'service_description': 'Uptime',
-    'has_perfdata': True,
-    'group': 'uptime',
+check_info["esx_vsphere_counters.uptime"] = {
+    "inventory_function": inventory_esx_vsphere_counters_uptime,
+    "check_function": check_esx_vsphere_counters_uptime,
+    "service_description": "Uptime",
+    "has_perfdata": True,
+    "group": "uptime",
 }
 
-#.
+# .
 #   .--Ramdisk-------------------------------------------------------------.
 #   |                ____                     _ _     _                    |
 #   |               |  _ \ __ _ _ __ ___   __| (_)___| | __                |
@@ -171,14 +181,14 @@ check_info['esx_vsphere_counters.uptime'] = {
 # -> To get size infos about unknown ramdisks, connect to the ESX host via
 #    SSH and check the size of the disk via "du" command
 esx_vsphere_counters_ramdisk_sizes = {
-    'root': 32,
-    'etc': 28,
-    'tmp': 192,
-    'hostdstats': 319,
-    'snmptraps': 1,
-    'upgradescratch': 300,
-    'ibmscratch': 300,
-    'sfcbtickets': 1,
+    "root": 32,
+    "etc": 28,
+    "tmp": 192,
+    "hostdstats": 319,
+    "snmptraps": 1,
+    "upgradescratch": 300,
+    "ibmscratch": 300,
+    "sfcbtickets": 1,
 }
 
 
@@ -186,10 +196,10 @@ def inventory_esx_vsphere_counters_ramdisk(parsed):
     ramdisks = []
 
     for instance in parsed.get("sys.resourceMemConsumed", {}):
-        if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
-            ramdisks.append(instance.split('/')[-1])
+        if instance.startswith("host/system/kernel/kmanaged/visorfs/"):
+            ramdisks.append(instance.split("/")[-1])
 
-    return df_inventory(ramdisks)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), ramdisks)
 
 
 def check_esx_vsphere_counters_ramdisk(item, params, parsed):
@@ -198,13 +208,13 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
 
     ramdisks = []
     for instance in parsed.get("sys.resourceMemConsumed"):
-        if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
-            name = instance.split('/')[-1]
+        if instance.startswith("host/system/kernel/kmanaged/visorfs/"):
+            name = instance.split("/")[-1]
             try:
                 size_mb = esx_vsphere_counters_ramdisk_sizes[name]
             except KeyError:
                 if item == name:
-                    return 3, 'Unhandled ramdisk found (%s)' % name
+                    return 3, "Unhandled ramdisk found (%s)" % name
                 else:
                     continue
             used_mb = float(parsed["sys.resourceMemConsumed"][instance][0][0][-1]) / 1000.0
@@ -214,13 +224,16 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
     return df_check_filesystem_list(item, params, ramdisks)
 
 
-check_info['esx_vsphere_counters.ramdisk'] = {
-    'inventory_function': inventory_esx_vsphere_counters_ramdisk,
-    'check_function': check_esx_vsphere_counters_ramdisk,
-    'service_description': 'Ramdisk %s',
-    'has_perfdata': True,
-    'group': 'filesystem',
-    'default_levels_variable': 'filesystem_default_levels',
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+check_info["esx_vsphere_counters.ramdisk"] = {
+    "inventory_function": inventory_esx_vsphere_counters_ramdisk,
+    "check_function": check_esx_vsphere_counters_ramdisk,
+    "service_description": "Ramdisk %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }
 
 #   .--swap----------------------------------------------------------------.
@@ -237,9 +250,9 @@ def _parse_esx_vsphere_counters_swap(parsed):
 
     swap_values = {}
 
-    for agent_key, key in (('mem.swapin', 'in'), ('mem.swapout', 'out'), ('mem.swapused', 'used')):
+    for agent_key, key in (("mem.swapin", "in"), ("mem.swapout", "out"), ("mem.swapused", "used")):
         try:
-            swap_values[key] = parsed[agent_key][''][0][0][0]
+            swap_values[key] = parsed[agent_key][""][0][0][0]
         except (KeyError, IndexError, TypeError, ValueError):
             continue
 
@@ -256,7 +269,7 @@ def inventory_esx_vsphere_counters_swap(parsed):
 def check_esx_vsphere_counters_swap(item, params, parsed):
     SWAP = _parse_esx_vsphere_counters_swap(parsed)
 
-    for key in ('in', 'out', 'used'):
+    for key in ("in", "out", "used"):
         if SWAP.get(key):
             value = get_bytes_human_readable(float(SWAP[key]), unit="KB")
         else:
@@ -265,9 +278,9 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
         yield 0, "Swap %s: %s" % (key, value)
 
 
-check_info['esx_vsphere_counters.swap'] = {
-    'inventory_function': inventory_esx_vsphere_counters_swap,
-    'check_function': check_esx_vsphere_counters_swap,
-    'service_description': 'VMKernel Swap',
-    'has_perfdata': False,
+check_info["esx_vsphere_counters.swap"] = {
+    "inventory_function": inventory_esx_vsphere_counters_swap,
+    "check_function": check_esx_vsphere_counters_swap,
+    "service_description": "VMKernel Swap",
+    "has_perfdata": False,
 }

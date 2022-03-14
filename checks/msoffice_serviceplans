@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#Example output:
-#<<<msoffice_serviceplans>>>
-#msonline:VISIOCLIENT ONEDRIVE_BASIC Success
-#msonline:VISIOCLIENT VISIOONLINE Success
-#msonline:VISIOCLIENT EXCHANGE_S_FOUNDATION Success
-#msonline:VISIOCLIENT VISIO_CLIENT_SUBSCRIPTION Success
-#msonline:POWER_BI_PRO EXCHANGE_S_FOUNDATION Success
-#msonline:POWER_BI_PRO BI_AZURE_P2 Success
-#msonline:WINDOWS_STORE EXCHANGE_S_FOUNDATION Success
-#msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
+# Example output:
+# <<<msoffice_serviceplans>>>
+# msonline:VISIOCLIENT ONEDRIVE_BASIC Success
+# msonline:VISIOCLIENT VISIOONLINE Success
+# msonline:VISIOCLIENT EXCHANGE_S_FOUNDATION Success
+# msonline:VISIOCLIENT VISIO_CLIENT_SUBSCRIPTION Success
+# msonline:POWER_BI_PRO EXCHANGE_S_FOUNDATION Success
+# msonline:POWER_BI_PRO BI_AZURE_P2 Success
+# msonline:WINDOWS_STORE EXCHANGE_S_FOUNDATION Success
+# msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
 
 
 def inventory_msoffice_serviceplans(info):

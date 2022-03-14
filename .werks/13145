@@ -1,0 +1,16 @@
+Title: Add Host/Service state summary dashlet
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1631798601
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+New dashlet that shows a summary of Services/Hosts
+in a certain state.
+
+It displays the amount of Services/Hosts in the selected
+state and the total amount of Services/Hosts within the
+configured context.

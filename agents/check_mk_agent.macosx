@@ -5,6 +5,17 @@
 
 # NOTE: This agent has beed adapted from the Checkmk linux agent.
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 # Remove locale settings to eliminate localized outputs where possible
 # Author: Christian Zigotzky <info@xenosoft.de>
 export LC_ALL=C
@@ -17,111 +28,117 @@ export MK_CONFDIR="/to/be/changed"
 #export TMPDIR=
 
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
 fi
 
-
-echo "<<<check_mk>>>"
-echo "Version: 2.1.0i1"
-echo "AgentOS: macosx"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
-
-osver="$(uname -r)"
-
-echo '<<<df>>>'
-df -kPT hfs,apfs | sed 1d | \
-while read DEV REST; do
-    TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
-    echo "$DEV $TYPE $REST"
-done
-
-echo '<<<cpu>>>';
-echo `sysctl -n vm.loadavg | tr -d '{}'` `top -l 1 -n 1 | egrep ^Processes: |
-awk '{print $4"/"$2;}'` `echo 'echo $$' | bash` `sysctl -n hw.ncpu`
-
-echo '<<<mem>>>'
-echo "MemTotal: $(echo $(sysctl -n hw.memsize)/1024 | bc) kB"
-echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $(vm_stat | grep Mach | awk '{print $8}') / 1024" | bc) kB"
-echo "SwapTotal: 0 kB"
-echo "SwapFree: 0 kB"
-# FIXME: Just call vm_stat here, write a check plugin that uses that
-# navite output of vm_stat
-
-echo '<<<uptime>>>';
-echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' |
-tr -d ' '` | bc
-# FIXME: use sysctl -a for outputting *all* kernel values. Write
-# checks plugins with subchecks for parsing that output. Maybe reduce
-# the output size by grepping away totally useless parts
-
-echo '<<<netctr>>>';
-date +'%s'; netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{
-print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
-# FIXME: send netstat -inb plain, write proper check plugins for
-# clean parsing of the output
-
-echo '<<<ps>>>'
-ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
-
-# NTP seems to be enabled as a default
-if which ntpq >/dev/null; then
-    echo '<<<ntp>>>'
-    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-fi
-
-# TCP Conn stats
-echo '<<<tcp_conn_stats>>>'
-netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
-
-
-# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-perl -e '
-use File::Glob "bsd_glob";
-my @patterns = ();
-foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
-    open my $handle, "<", $_ or next;
-    while (<$handle>) {
-        chomp;
-        next if /^\s*(#|$)/;
-        my $pattern = $_;
-        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
-        push @patterns, $pattern;
-    }
-    warn "error while reading $_: $!\n" if $!;
-    close $handle;
+section_checkmk() {
+    echo "<<<check_mk>>>"
+    echo "Version: 2.2.0i1"
+    echo "AgentOS: macosx"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: $MK_CONFDIR"
+    echo "DataDirectory: $MK_VARDIR"
+    echo "SpoolDirectory: $SPOOLDIR"
+    echo "PluginsDirectory: $PLUGINSDIR"
+    echo "LocalDirectory: $LOCALDIR"
 }
-exit if ! @patterns;
 
-print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+run_purely_synchronous_sections() {
 
-foreach (@patterns) {
-    foreach (bsd_glob("$_")) {
-        if (! -f) {
-            print "$_|missing\n" if ! -d;
-        } elsif (my @infos = stat) {
-            print "$_|ok|$infos[7]|$infos[9]\n";
-        } else {
-            print "$_|stat failed: $!\n";
+    section_checkmk
+
+    echo '<<<df>>>'
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
+    df -kPT hfs,apfs | sed 1d |
+        while read DEV REST; do
+            TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
+            echo "$DEV $TYPE $REST"
+        done
+
+    echo '<<<cpu>>>'
+    echo "$(sysctl -n vm.loadavg | tr -d '{}') $(top -l 1 -n 1 | grep -E ^Processes: |
+        awk '{ print $4"/"$2; }') $(echo 'echo $$' | bash) $(sysctl -n hw.ncpu)"
+
+    echo '<<<mem>>>'
+    echo "MemTotal: $(echo "$(sysctl -n hw.memsize)/1024" | bc) kB"
+    echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $(vm_stat | grep Mach | awk '{print $8}') / 1024" | bc) kB"
+    echo "SwapTotal: 0 kB"
+    echo "SwapFree: 0 kB"
+    # FIXME: Just call vm_stat here, write a check plugin that uses that
+    # navite output of vm_stat
+
+    echo '<<<uptime>>>'
+    echo "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' |
+        tr -d ' ')" | bc
+    # FIXME: use sysctl -a for outputting *all* kernel values. Write
+    # checks plugins with subchecks for parsing that output. Maybe reduce
+    # the output size by grepping away totally useless parts
+
+    echo '<<<netctr>>>'
+    date +'%s'
+    netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{
+    print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
+    # FIXME: send netstat -inb plain, write proper check plugins for
+    # clean parsing of the output
+
+    echo '<<<ps>>>'
+    ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+
+    # NTP seems to be enabled as a default
+    if inpath ntpq; then
+        echo '<<<ntp>>>'
+        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    fi
+
+    # TCP Conn stats
+    echo '<<<tcp_conn_stats>>>'
+    netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+
+    # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    perl -e '
+    use File::Glob "bsd_glob";
+    my @patterns = ();
+    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
+        open my $handle, "<", $_ or next;
+        while (<$handle>) {
+            chomp;
+            next if /^\s*(#|$)/;
+            my $pattern = $_;
+            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+            push @patterns, $pattern;
+        }
+        warn "error while reading $_: $!\n" if $!;
+        close $handle;
+    }
+    exit if ! @patterns;
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+
+    foreach (@patterns) {
+        foreach (bsd_glob("$_")) {
+            if (! -f) {
+                print "$_|missing\n" if ! -d;
+            } elsif (my @infos = stat) {
+                print "$_|ok|$infos[7]|$infos[9]\n";
+            } else {
+                print "$_|stat failed: $!\n";
+            }
         }
     }
+    ' -- "$MK_CONFDIR"
+
+    if type tmutil >/dev/null; then
+        echo '<<<timemachine>>>'
+        tmutil latestbackup 2>&1
+    fi
+
 }
-' -- "$MK_CONFDIR"
-
-
-if type tmutil >/dev/null
-then
-    echo '<<<timemachine>>>'
-    tmutil latestbackup 2>&1
-fi
 
 ###############################
 # Things up for takers:
@@ -133,17 +150,30 @@ fi
 # *Rewrite cpu / ps check to be faster - takes >1s on my laptop
 # ioreg -l zeigt etliche interessante Inventurdaten
 
+run_mrpe_plugins() {
+    if [ -e "/etc/mrpe.cfg" ]; then
+        echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
+        grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+                echo
+            done
+    fi
+}
 
-# MK's Remote Plugin Executor
-if [ -e "/etc/mrpe.cfg" ]
-then
-    echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" | \
-    while read descr cmdline
-    do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "$cmdline")
-        echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
-    done
-fi
+main() {
+
+    run_purely_synchronous_sections
+
+    run_mrpe_plugins
+
+    return 0
+}
+
+main

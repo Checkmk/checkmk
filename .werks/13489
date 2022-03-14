@@ -1,0 +1,14 @@
+Title: <tt>mem_win</tt>: Fix missing levels in service graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636136531
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The metrics produced by the Windows memory check, <tt>mem_win</tt>,
+were missing levels and boundaries. They have been added, s.t.
+the levels are now drawn into the graphs shown in the service
+output.

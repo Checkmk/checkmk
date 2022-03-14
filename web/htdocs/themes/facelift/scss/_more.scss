@@ -88,7 +88,7 @@ a.more {
     font-size: $font-size-small;
 
     &:hover {
-      color: $success;
+      color: $font-color-green;
 
       div.show_more::after {
         content: url("images/icon_show_more_green.svg");

@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: VPN IPsec Tunnel Status
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -10,5 +10,5 @@ item:
 description:
  This check verifies the Tunnel status and raises a Warning if tunnel is in
  "Init" or "Destroy" state and Critical if it is in "Phase1" or "Down" state.
-inventory:
+discovery:
  One service is created for each VPN tunnel.

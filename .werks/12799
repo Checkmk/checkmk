@@ -1,0 +1,20 @@
+Title: Raw Edition: Allow round brackets in service descriptions
+Class: fix
+Compatible: compat
+Component: core
+Date: 1621580901
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The Checkmk Raw Edition now allows service descriptions to use round brackets.
+Previously this was inconsistent with the Checkmk Enterprise Editions
+and has now been consolidated.
+
+Services which were often affected by this issue were the logfiles monitored on Windows
+systems.
+When a path contains round brackets, the service description was not named as expected.
+
+Illegal characters for Nagios:  `;~!$%^&*|\'"<>?,=
+Illegal character for CMC:         \t

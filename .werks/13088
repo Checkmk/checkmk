@@ -1,0 +1,13 @@
+Title: Handle old syslog messages without a tag.
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1633686115
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The event console could not parse a RFC-3164-style message where
+the CONTENT did not start with a TAG.  The TAG is specified as
+optional, so we handle that case now, too.

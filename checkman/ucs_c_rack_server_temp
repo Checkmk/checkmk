@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: Processor Temperature
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides information about the temperatures of processors, motherboards and
@@ -35,7 +35,7 @@ description:
 
  - {CRIT} in case the monitored temperature is equal or higher than the configured crit value.
 
-inventory:
+discovery:
  One service is created for each rack unit of the rack server.
 
 item:

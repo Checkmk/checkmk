@@ -5,39 +5,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Percentage,
-    TextAscii,
-    Tuple,
-    Dictionary,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_couchbase_fragmentation():
     return Dictionary(
         title=_("Couchbase Fragmentation"),
         elements=[
-            ("docs",
-             Tuple(
-                 title="Documents fragmentation",
-                 elements=[
-                     Percentage(title="warn"),
-                     Percentage(title="crit"),
-                 ],
-             )),
-            ("views",
-             Tuple(
-                 title="Views fragmentation",
-                 elements=[
-                     Percentage(title="warn"),
-                     Percentage(title="crit"),
-                 ],
-             )),
+            (
+                "docs",
+                Tuple(
+                    title="Documents fragmentation",
+                    elements=[
+                        Percentage(title="warn"),
+                        Percentage(title="crit"),
+                    ],
+                ),
+            ),
+            (
+                "views",
+                Tuple(
+                    title="Views fragmentation",
+                    elements=[
+                        Percentage(title="warn"),
+                        Percentage(title="crit"),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -47,7 +46,8 @@ rulespec_registry.register(
         check_group_name="couchbase_fragmentation",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Bucket name')),
+        item_spec=lambda: TextInput(title=_("Bucket name")),
         parameter_valuespec=_parameter_valuespec_couchbase_fragmentation,
         title=lambda: _("Couchbase Fragmentation"),
-    ))
+    )
+)

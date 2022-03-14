@@ -5,10 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict
-from testlib import Check  # type: ignore[import]
-import pytest  # type: ignore[import]
+
+import pytest
+
+from tests.testlib import Check
+
 from cmk.base.check_api import MKCounterWrapped  # noqa: F401 # pylint: disable=unused-import
-from test_ibm_mq_include import parse_info
+from cmk.base.plugins.agent_based.ibm_mq_managers import parse_ibm_mq_managers
+
+from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
 
@@ -28,23 +33,21 @@ QMNAME(THE.SLEEPING.ONE)                                  STATUS(ENDED NORMALLY)
 QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTEDLY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation2) INSTPATH(/opt/mqm9) INSTVER(9.0.0.6) HA() DRROLE()
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
     assert len(parsed) == 5
 
     attrs = parsed["THE.LOCAL.ONE"]
-    assert attrs['STATUS'] == 'RUNNING'
-    assert [(u'sb112233', u'ACTIVE')] == attrs['INSTANCES']
+    assert attrs["STATUS"] == "RUNNING"
+    assert [("sb112233", "ACTIVE")] == attrs["INSTANCES"]
 
     attrs = parsed["THE.MULTI.INSTANCE.ONE"]
-    assert [(u'sb112233', u'ACTIVE'), (u'sb112255', u'STANDBY')] \
-            == attrs['INSTANCES']
+    assert [("sb112233", "ACTIVE"), ("sb112255", "STANDBY")] == attrs["INSTANCES"]
 
     attrs = parsed["THE.CRASHED.ONE"]
-    assert attrs['QMNAME'] == 'THE.CRASHED.ONE'
-    assert attrs['STATUS'] == 'ENDED UNEXPECTEDLY'
-    assert attrs['STANDBY'] == 'NOT APPLICABLE'
-    assert 'INSTANCES' not in attrs
+    assert attrs["QMNAME"] == "THE.CRASHED.ONE"
+    assert attrs["STATUS"] == "ENDED UNEXPECTEDLY"
+    assert attrs["STANDBY"] == "NOT APPLICABLE"
+    assert "INSTANCES" not in attrs
 
 
 def test_check_single_instance_running():
@@ -54,19 +57,19 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
 
     attrs = parsed["THE.LOCAL.ONE"]
-    assert attrs['QMNAME'] == 'THE.LOCAL.ONE'
-    assert attrs['STATUS'] == 'RUNNING'
+    assert attrs["QMNAME"] == "THE.LOCAL.ONE"
+    assert attrs["STATUS"] == "RUNNING"
 
     params: Dict[str, Any] = {}
-    actual = list(check.run_check('THE.LOCAL.ONE', params, parsed))
+    actual = list(check.run_check("THE.LOCAL.ONE", params, parsed))
     expected = [
-        (0, u'Status: RUNNING'),
-        (0, u'Version: 8.0.0.6'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
-        (0, u'Single-Instance: sb112233=ACTIVE'),
+        (0, "Status: RUNNING"),
+        (0, "Version: 8.0.0.6"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        (0, "Single-Instance: sb112233=ACTIVE"),
     ]
     assert expected == actual
 
@@ -79,19 +82,19 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
 
     attrs = parsed["THE.RDQM.ONE"]
-    assert attrs['QMNAME'] == 'THE.RDQM.ONE'
-    assert attrs['STATUS'] == 'RUNNING'
+    assert attrs["QMNAME"] == "THE.RDQM.ONE"
+    assert attrs["STATUS"] == "RUNNING"
 
     params: Dict[str, Any] = {}
-    actual = list(check.run_check('THE.RDQM.ONE', params, parsed))
+    actual = list(check.run_check("THE.RDQM.ONE", params, parsed))
     expected = [
-        (0, u'Status: RUNNING'),
-        (0, u'Version: 9.1.0.4'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
-        (0, u'High availability: replicated, Instance: sb008877'),
+        (0, "Status: RUNNING"),
+        (0, "Version: 9.1.0.4"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        (0, "High availability: replicated, Instance: sb008877"),
     ]
     assert expected == actual
 
@@ -102,13 +105,14 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
+
     params: Dict[str, Any] = {}
-    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
-        (1, u'Status: ENDED PREEMPTIVELY'),
-        (0, u'Version: 7.5.0.2'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (1, "Status: ENDED PREEMPTIVELY"),
+        (0, "Version: 7.5.0.2"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -116,12 +120,14 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.1)
 """
     section = parse_info(lines, chr(10))
-    parsed = check.run_parse(section)
-    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    check = Check(CHECK_NAME)
+    parsed = parse_ibm_mq_managers(section)
+
+    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
-        (1, u'Status: ENDED PRE-EMPTIVELY'),
-        (0, u'Version: 8.0.0.1'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (1, "Status: ENDED PRE-EMPTIVELY"),
+        (0, "Version: 8.0.0.1"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -132,38 +138,38 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
 
     # Factory defaults
     params: Dict[str, Any] = {}
-    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
-        (1, u'Status: ENDED PRE-EMPTIVELY'),
-        (0, u'Version: 7.5.0.2'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (1, "Status: ENDED PRE-EMPTIVELY"),
+        (0, "Version: 7.5.0.2"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
     # Override factory defaults
-    params = {'mapped_states': [('ended_pre_emptively', 2)]}
-    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    params = {"mapped_states": [("ended_pre_emptively", 2)]}
+    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
-        (2, u'Status: ENDED PRE-EMPTIVELY'),
-        (0, u'Version: 7.5.0.2'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (2, "Status: ENDED PRE-EMPTIVELY"),
+        (0, "Version: 7.5.0.2"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
     # Override-does-not-match configuration
     params = {
-        'mapped_states': [('running_as_standby', 2)],
-        'mapped_states_default': 3,
+        "mapped_states": [("running_as_standby", 2)],
+        "mapped_states_default": 3,
     }
-    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
-        (3, u'Status: ENDED PRE-EMPTIVELY'),
-        (0, u'Version: 7.5.0.2'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (3, "Status: ENDED PRE-EMPTIVELY"),
+        (0, "Version: 7.5.0.2"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -174,13 +180,14 @@ QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAUL
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
+
     params: Dict[str, Any] = {}
-    params.update({'version': (('at_least', '8.0'), 2)})
-    actual = list(check.run_check('THE.RUNNING.ONE', params, parsed))
+    params.update({"version": (("at_least", "8.0"), 2)})
+    actual = list(check.run_check("THE.RUNNING.ONE", params, parsed))
     expected = [
-        (0, u'Status: RUNNING'),
-        (2, u'Version: 7.5.0.2 (should be at least 8.0)'),
-        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (0, "Status: RUNNING"),
+        (2, "Version: 7.5.0.2 (should be at least 8.0)"),
+        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual

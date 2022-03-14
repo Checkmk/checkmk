@@ -10,21 +10,26 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 @get_parsed_item_data
 def check_k8s_storage_classes(_no_item, _no_params, storage):
-    reclaim_policy = storage.get('reclaim_policy')
+    reclaim_policy = storage.get("reclaim_policy")
     if reclaim_policy:
-        yield 0, 'Reclaim policy: %s' % reclaim_policy
+        yield 0, "Reclaim policy: %s" % reclaim_policy
 
-    provisioner = storage.get('provisioner')
+    provisioner = storage.get("provisioner")
     if provisioner:
-        yield 0, 'Provisioner: %s' % provisioner
+        yield 0, "Provisioner: %s" % provisioner
 
 
-check_info['k8s_storage_classes'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': discover(),
-    'check_function': check_k8s_storage_classes,
-    'service_description': 'Storage class %s',
+check_info["k8s_storage_classes"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": discover(),
+    "check_function": check_k8s_storage_classes,
+    "service_description": "Storage class %s",
 }

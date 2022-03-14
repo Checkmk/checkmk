@@ -1,7 +1,7 @@
 title: McAfee Web Gateway: Miscellaneous
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the clients and open network sockets of McAfee web gateway
@@ -10,5 +10,5 @@ description:
  No default levels are set. Upper levels for clients and open network sockets
  are configurable.
 
-inventory:
+discovery:
  One service is created.

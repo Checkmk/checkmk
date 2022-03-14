@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings.update({
-    'jolokia_jvm_memory': {
-        'perc_heap': (80., 90.),
-        'perc_nonheap': (80., 90.),
-        'perc_total': (80., 90.),
-    },
-    'jolokia_jvm_memory_pools': {
-        'perc_used': (80., 90.),
-    },
-})
+
+factory_settings.update(
+    {
+        "jolokia_jvm_memory": {
+            "perc_heap": (80.0, 90.0),
+            "perc_nonheap": (80.0, 90.0),
+            "perc_total": (80.0, 90.0),
+        },
+        "jolokia_jvm_memory_pools": {
+            "perc_used": (80.0, 90.0),
+        },
+    }
+)
 
 MB = 1024 * 1024
 
@@ -27,7 +30,7 @@ def parse_jolokia_jvm_memory(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = jolokia_mbean_attribute('type', mbean)
+        type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
         parsed_data.update(data)
 
@@ -81,11 +84,11 @@ def _iter_type_value_max(mem_data):
         totalmax = None
 
     if heap is not None:
-        yield 'heap', heap, heapmax
+        yield "heap", heap, heapmax
     if nonheap is not None:
-        yield 'nonheap', nonheap, nonheapmax
+        yield "nonheap", nonheap, nonheapmax
     if heap is not None and nonheap is not None:
-        yield 'total', heap + nonheap, totalmax
+        yield "total", heap + nonheap, totalmax
 
 
 @get_parsed_item_data
@@ -107,7 +110,7 @@ check_info["jolokia_jvm_memory"] = {
     "group": "jvm_memory",
 }
 
-#.
+# .
 #   .--Memory Pools--------------------------------------------------------.
 #   |   __  __                                   ____             _        |
 #   |  |  \/  | ___ _ __ ___   ___  _ __ _   _  |  _ \ ___   ___ | |___    |

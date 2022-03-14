@@ -4,34 +4,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+
+from .utils_inventory import sort_inventory_result
 
 AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}
 {"NodeName": "klappben"}"""
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_container_node_name():
+def test_inv_docker_container_node_name(fix_register):
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    plugin = agent_based_register.get_inventory_plugin(
-        InventoryPluginName('docker_container_node_name'))
-    assert plugin
-    assert list(plugin.inventory_function(info)) == [
-        Attributes(path=['software', 'applications', 'docker', 'container'],
-                   inventory_attributes={'node_name': 'klappben'},
-                   status_attributes={})
-    ]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_container_node_name")]
+    assert sort_inventory_result(plugin.inventory_function(info)) == sort_inventory_result(
+        [
+            Attributes(
+                path=["software", "applications", "docker", "container"],
+                inventory_attributes={"node_name": "klappben"},
+                status_attributes={},
+            )
+        ]
+    )
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_container_node_name_legacy_agent_output():
-    plugin = agent_based_register.get_inventory_plugin(
-        InventoryPluginName('docker_container_node_name'))
-    assert plugin
+def test_inv_docker_container_node_name_legacy_agent_output(fix_register):
+    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_container_node_name")]
     with pytest.raises(AgentOutputMalformatted):
-        list(plugin.inventory_function([['node_name']]))
+        list(plugin.inventory_function([["node_name"]]))

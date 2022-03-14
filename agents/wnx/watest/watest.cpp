@@ -4,20 +4,15 @@
 //
 #include "pch.h"
 
-#include <filesystem>
-#include <iostream>
+#include <processthreadsapi.h>  // for GetCurrentProcess, SetPriorityClass
+#include <winbase.h>            // for HIGH_PRIORITY_CLASS
 
-#include "carrier.h"
-#include "cfg.h"
-#include "cfg_details.h"
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
-#include "common/wtools.h"
-#include "common/yaml.h"
-#include "read_file.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-#include "tools/_tgt.h"
+#include "carrier.h"  // for CarrierDataHeader, CoreCarrier, DataType, DataType::kLog, carrier
+#include "common/mailslot_transport.h"  // for MailSlot
+#include "common/wtools.h"  // for SecurityLevel, SecurityLevel::admin, SecurityLevel::standard
+#include "gtest/gtest.h"  // for InitGoogleTest, RUN_ALL_TESTS
+#include "logger.h"       // for ColoredOutputOnStdio
+#include "on_start.h"     // for OnStart, AppType, AppType::test
 
 using namespace std::chrono_literals;
 namespace carrier = cma::carrier;
@@ -26,18 +21,6 @@ namespace cma {
 AppType AppDefaultType() { return AppType::test; }
 
 }  // namespace cma
-
-namespace cma::cfg::details {
-TEST(StartTest, CheckStatus) {
-    OnStart(cma::AppType::test);
-    auto& info = GetCfg();
-    ASSERT_TRUE(!info.exe_command_paths_.empty());
-    ASSERT_TRUE(!info.config_dirs_.empty());
-    ASSERT_TRUE(!info.getDataDir().empty());
-    ASSERT_TRUE(!info.getRootDir().empty());
-    ASSERT_TRUE(info.getConfig().IsMap());
-}
-}  // namespace cma::cfg::details
 
 namespace {
 struct WatestMailSlot {
@@ -50,7 +33,7 @@ struct WatestMailSlot {
             mailbox_.DismantleThread();
         }
     }
-    bool makeSlot(wtools::SecurityLevel sl, bool& thread_exit) {
+    bool makeSlot(wtools::SecurityLevel sl, bool &thread_exit) {
         if (maked_) {
             return true;
         }
@@ -67,7 +50,7 @@ struct WatestMailSlot {
         return established_;
     }
     bool sendLog(std::string_view text) {
-        return cc_.sendLog("watest", static_cast<const void*>(text.data()),
+        return cc_.sendLog("watest", static_cast<const void *>(text.data()),
                            text.length());
     }
 
@@ -76,9 +59,9 @@ protected:
         return carrier::BuildPortName(carrier::kCarrierMailslotName,
                                       mailbox_.GetName());
     }
-    static bool ThreadCallback(const cma::MailSlot* slot, const void* data,
-                               int length, void* context) {
-        auto dt = static_cast<const carrier::CarrierDataHeader*>(data);
+    static bool ThreadCallback(const cma::MailSlot *slot, const void *data,
+                               int length, void *context) {
+        auto dt = static_cast<const carrier::CarrierDataHeader *>(data);
         switch (dt->type()) {
             case carrier::DataType::kLog: {
                 if (dt->data() == nullptr) {
@@ -86,13 +69,13 @@ protected:
                     break;
                 }
 
-                auto data = static_cast<const char*>(dt->data());
+                auto data = static_cast<const char *>(dt->data());
                 std::string to_log;
                 to_log.assign(data, data + dt->length());
                 XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(), to_log);
 
                 if (to_log == "exit") {
-                    *static_cast<bool*>(context) = true;
+                    *static_cast<bool *>(context) = true;
                 }
                 break;
             }
@@ -137,7 +120,7 @@ void SendToMailSlot() {
 
 }  // namespace
 
-int wmain(int argc, wchar_t** argv) {
+int wmain(int argc, wchar_t **argv) {
     using namespace std::literals;
     if (argc == 2 && argv[1] == L"wait"s) {
         cma::tools::sleep(1h);
@@ -199,6 +182,6 @@ int wmain(int argc, wchar_t** argv) {
     //::testing::GTEST_FLAG(filter) = "EncryptionT*";
 #endif
     auto r = RUN_ALL_TESTS();
-    if (!r) XLOG::stdio.crit("Win Agent is exited with {}.", r);
+    if (!r) XLOG::stdio("Win Agent is exited with {}.", r);
     return r;
 }

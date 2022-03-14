@@ -18,10 +18,10 @@ def check_jolokia_info(item, _no_params, data):
     line = data[0]
     # Inform user of non-working agent plugin, eg. missing json library
     if item == "Error:":
-        return 3, ' '.join(line)
+        return 3, " ".join(line)
 
-    if line[0] == 'ERROR' or len(line) < 3:
-        return 2, ' '.join(line) or "Unknown error in plugin"
+    if line[0] == "ERROR" or len(line) < 3:
+        return 2, " ".join(line) or "Unknown error in plugin"
 
     product = line[0]
     jolokia_version = line[-1]

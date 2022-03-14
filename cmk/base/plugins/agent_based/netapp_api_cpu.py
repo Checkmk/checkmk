@@ -56,6 +56,6 @@ def parse_netapp_api_cpu(string_table: type_defs.StringTable) -> CPUSection:
 
 
 register.agent_section(
-    name='netapp_api_cpu',
+    name="netapp_api_cpu",
     parse_function=parse_netapp_api_cpu,
 )

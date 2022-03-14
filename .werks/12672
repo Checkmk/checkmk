@@ -1,0 +1,41 @@
+Title: real-time-checks: Provide default password
+Class: security
+Compatible: compat
+Component: checks
+Date: 1617283591
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This Werk fixes a security issue that may arise from a misconfiguration
+of real-time checks.
+
+As mentioned in Werk <a href=https://checkmk.com/werk/8350>#8350</a>
+(Introduction of real-time checks), a password has to be provided when
+configuring real-time checks.<br>
+When using the agent bakery, the ruleset "Encryption" is used to
+provide the encryption password, while the real-time checks itself are
+activated for the agents via the ruleset "Send data for real-time checks".
+If the real-time checks get activated without providing a password, this
+will result in an empty password, that will nevertheless be used by the agent
+to encrypt the real-time check data on the host.<br>
+While the user would most likely fix this situation, because real-time checks
+won't work (A password is mandatory to activate real-time checks in CMC),
+the real-time check data can be decrypted without a password/key in this case,
+resulting in a security issue.
+
+This is now fixed with the following mechanism:
+<ul>
+<li>The agent bakery will read the default password from the global setting
+"Monitoring core/Enable handling of real-time checks" and bake it into the
+agents that have the rule "Send data for real-time checks" activated. Accordingly,
+a changed global setting will lead to new agents on next bake.</li>
+<li>The agent bakery will keep to package the password from the "Encryption" rule,
+and the Linux agent will prefer it over the default password from the CMC configuration.</li>
+<li>If none of the two passwords are configured, but the "Send data for real-time checks"
+rule is active, the agent bakery will refuse to bake agents.</li>
+<li>If the Linux agent is requested to send encrypted real-time check data, but no password
+is deployed, the sending be inhibited. However, up from now, this may only happen
+if real-time checks are configured without the agent bakery.</li>
+</ul>

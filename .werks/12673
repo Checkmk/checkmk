@@ -1,0 +1,15 @@
+Title: cisco_nexus_cpu: Remove duplicated service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619102058
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When discovering services on a Cisco Nexus device, a duplicated "CPU utilization"
+service may be discovered, with check commands check_mk-cisco_cpu and
+check_mk-cisco_nexus_cpu.
+
+This is fixed now by only discovering the check_mk-cisco_nexus_cpu based service.

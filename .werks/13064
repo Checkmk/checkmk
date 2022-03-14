@@ -1,0 +1,11 @@
+Title: proxmox_ve_vm_snapshot_age: new check to monitor the age of proxmox snapshots
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1626334921
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+Add a new check to monitor the age of Proxmox VE VM snapshots.

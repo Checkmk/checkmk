@@ -31,5 +31,6 @@ check_info["juniper_screenos_fan"] = {
         [
             3,  # Fan Description
             2,  # Fan Status 1 Good, 2 Error
-        ])
+        ],
+    ),
 }

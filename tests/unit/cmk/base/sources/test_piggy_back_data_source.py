@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result
+from cmk.utils.type_defs import HostAddress, HostName, result
 
-from cmk.core_helpers.agent import AgentHostSections
+from cmk.core_helpers.agent import AgentRawDataSection
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode
 
 from cmk.base.sources.piggyback import PiggybackSource
@@ -21,15 +23,16 @@ def mode_fixture(request):
     return request.param
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_attribute_defaults(monkeypatch, ipaddress, mode):
-    hostname = "testhost"
-    Scenario().add_host(hostname).apply(monkeypatch)
+@pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])
+def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress, mode: Mode) -> None:
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
-    source = PiggybackSource(hostname, ipaddress, mode=mode)
+    source = PiggybackSource(hostname, ipaddress)
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
-    assert source.mode is mode
     assert source.description.startswith("Process piggyback data from")
-    assert source.summarize(result.OK(AgentHostSections())) == (0, "")
+    assert not source.summarize(result.OK(HostSections[AgentRawDataSection]()), mode=mode)
     assert source.id == "piggyback"

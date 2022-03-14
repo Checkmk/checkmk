@@ -5,33 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_printer_input():
     return Dictionary(
         elements=[
-            ('capacity_levels',
-             Tuple(
-                 title=_('Capacity remaining'),
-                 elements=[
-                     Percentage(title=_("Warning at"), default_value=0.0),
-                     Percentage(title=_("Critical at"), default_value=0.0),
-                 ],
-             )),
+            (
+                "capacity_levels",
+                Tuple(
+                    title=_("Capacity remaining"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=0.0),
+                        Percentage(title=_("Critical at"), default_value=0.0),
+                    ],
+                ),
+            ),
         ],
-        default_keys=['capacity_levels'],
+        default_keys=["capacity_levels"],
     )
 
 
@@ -39,8 +35,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="printer_input",
         group=RulespecGroupCheckParametersPrinters,
-        item_spec=lambda: TextAscii(title=_('Unit Name'), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Unit Name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_printer_input,
         title=lambda: _("Printer Input Units"),
-    ))
+    )
+)

@@ -17,6 +17,7 @@ export CHROOT_BUILD_DIR="/mnt"
 
 cleanup_chroot() {
     PIDS=$(lsof -Fp $CHROOT_PATH 2>/dev/null | cut -dp -f2)
+    # shellcheck disable=2086
     [ -n "$PIDS" ] && kill -9 $PIDS 2>&1
 
     [ -e $CHROOT_PATH/dev/pts/ptmx ] && umount $CHROOT_PATH/dev/pts && sleep 2
@@ -34,7 +35,7 @@ unset LANG
 
 echo "+ CLEANING UP CHROOT"
 cleanup_chroot
-rm -rf $CHROOT_PATH/*
+rm -rf ${CHROOT_PATH:?}/*
 
 export DEBIAN_FRONTEND=noninteractive
 package_names=(
@@ -101,12 +102,15 @@ package_names=(
     ssh-askpass
     unzip
     uuid-dev
-# TODO: Need to install wine separately in order to use --force-overwrite, see
-# https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
-# Cannot pass --force-overwrite through debootstrap.
-#    wine-stable
+    # TODO: Need to install wine separately in order to use --force-overwrite, see
+    # https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
+    # Cannot pass --force-overwrite through debootstrap.
+    #    wine-stable
 )
-packages=$(IFS=,; echo "${package_names[*]}")
+packages=$(
+    IFS=,
+    echo "${package_names[*]}"
+)
 
 echo "+ INSTALLING SYSTEM (PHASE 1)"
 
@@ -124,22 +128,22 @@ sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
 cat $CHROOT_PATH/etc/passwd
 
 # Need to be installed for installation.
-cat <<EOF > $CHROOT_PATH/etc/fstab
+cat <<EOF >$CHROOT_PATH/etc/fstab
 # created by container build script
 /dev/sda1 / ext2 rw,noatime,nodiratime,errors=continue 0 1
 EOF
 
 # Prevent startup of daemons during package installation
-echo exit 101 > $CHROOT_PATH/usr/sbin/policy-rc.d
+echo exit 101 >$CHROOT_PATH/usr/sbin/policy-rc.d
 chmod +x $CHROOT_PATH/usr/sbin/policy-rc.d
 
 cp /etc/resolv.conf $CHROOT_PATH/etc/resolv.conf
 
 # Deploy fake hostname binary
-if [ ! -e $CHROOT_PATH/bin/hostname.bin ] ; then
+if [ ! -e $CHROOT_PATH/bin/hostname.bin ]; then
     mv $CHROOT_PATH/bin/hostname{,.bin}
 fi
-cat <<EOF > $CHROOT_PATH/bin/hostname
+cat <<EOF >$CHROOT_PATH/bin/hostname
 echo $HOSTNAME
 EOF
 chmod +x $CHROOT_PATH/bin/hostname
@@ -153,14 +157,14 @@ chroot $CHROOT_PATH /usr/bin/env bash -c 'apt-get -y -o Dpkg::Options::="--force
 # We need to enable 32bit Wine
 chroot $CHROOT_PATH /usr/bin/env bash -c 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'
 
-cat <<EOF > $CHROOT_PATH/root/.bashrc
+cat <<EOF >$CHROOT_PATH/root/.bashrc
 debian_chroot=$(hostname)
 PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
 PS1="\[\e]0;\${debian_chroot:+(\$debian_chroot)}\u@\h: \w\a\]\$PS1"
 EOF
 
 # Debian pkg installation does not seem to link python executable
-if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
+if [ ! -h $CHROOT_PATH/usr/bin/python ]; then
     ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
 
@@ -175,8 +179,10 @@ chroot $CHROOT_PATH /usr/bin/env bash -c "$CHROOT_BUILD_DIR/agents/windows/extra
 echo "+ CLEANING UP"
 
 # Raeume apt-cache auf
-ls $CHROOT_PATH/var/cache/apt/archives/*.deb >/dev/null 2>&1 \
-    && rm $CHROOT_PATH/var/cache/apt/archives/*.deb 2>&1 || true
+{
+    ls $CHROOT_PATH/var/cache/apt/archives/*.deb >/dev/null 2>&1 &&
+        rm $CHROOT_PATH/var/cache/apt/archives/*.deb 2>&1
+} || true
 
 # Alle Prozesse aus dem chroot killen
 cleanup_chroot
@@ -185,6 +191,7 @@ cleanup_chroot
 tar cfz $docker_image.tgz -C $CHROOT_PATH .
 
 ### import this tar archive into a docker image:
+# shellcheck disable=SC2002
 cat $docker_image.tgz | docker import - $docker_image
 
 ### cleanup

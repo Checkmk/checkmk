@@ -4,22 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import itertools
 import json
 import logging
-from typing import Any, Dict, Final, List, Optional, Sequence, Tuple
+from typing import Any, Final, List, Mapping, Optional, Sequence, Tuple
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
-from cmk.utils.type_defs import (
-    AgentRawData,
-    ExitSpec,
-    HostAddress,
-    HostName,
-    ServiceState,
-    ServiceDetails,
-)
+from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
 
-from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, NoCache
+from .agent import AgentFetcher, AgentRawDataSection, AgentSummarizer, NoCache
+from .host_sections import HostSections
 from .type_defs import Mode
 
 
@@ -32,20 +28,38 @@ class PiggybackFetcher(AgentFetcher):
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.piggyback"))
+        super().__init__(
+            file_cache,
+            logging.getLogger("cmk.helper.piggyback"),
+        )
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
         self._sources: List[PiggybackRawDataInfo] = []
 
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
-        return cls(
-            NoCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"hostname={self.hostname!r}",
+                    f"address={self.address!r}",
+                    f"time_settings={self.time_settings!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        return cls(
+            NoCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "hostname": self.hostname,
@@ -59,12 +73,6 @@ class PiggybackFetcher(AgentFetcher):
 
     def close(self) -> None:
         self._sources.clear()
-
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         return AgentRawData(b"" + self._get_main_section() + self._get_source_labels_section())
@@ -90,13 +98,13 @@ class PiggybackFetcher(AgentFetcher):
             return AgentRawData(b"")
 
         labels = {"cmk/piggyback_source_%s" % src.source_hostname: "yes" for src in self._sources}
-        return AgentRawData(b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8"))
+        return AgentRawData(b"<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels).encode("utf-8"))
 
     @staticmethod
     def _raw_data(
         hostname: Optional[str],
         time_settings: PiggybackTimeSettings,
-    ) -> List[PiggybackRawDataInfo]:
+    ) -> Sequence[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)
 
 
@@ -128,15 +136,15 @@ class PiggybackSummarizer(AgentSummarizer):
 
     def summarize_success(
         self,
-        host_sections: AgentHostSections,
+        host_sections: HostSections[AgentRawDataSection],
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
         if mode is not Mode.CHECKING:
-            return 0, ''
+            return []
 
         sources: Final[Sequence[PiggybackRawDataInfo]] = list(
             itertools.chain.from_iterable(
@@ -145,12 +153,11 @@ class PiggybackSummarizer(AgentSummarizer):
                 # sneakily use cached data.  At minimum, we should group all cache
                 # handling performed after the parser.
                 get_piggyback_raw_data(origin, self.time_settings)
-                for origin in (self.hostname, self.ipaddress)))
+                for origin in (self.hostname, self.ipaddress)
+            )
+        )
         if not sources:
             if self.always:
-                return 1, "Missing data"
-            return 0, ''
-        return (
-            max(src.reason_status for src in sources),
-            ", ".join(src.reason for src in sources if src.reason),
-        )
+                return [ActiveCheckResult(1, "Missing data")]
+            return []
+        return [ActiveCheckResult(src.reason_status, src.reason) for src in sources if src.reason]

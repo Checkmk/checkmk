@@ -1,7 +1,7 @@
 title: Apache Web Server: Performance Indicators
 agents: linux
 catalog: app/apache
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check parses the information provided by the Apache status module.
@@ -47,9 +47,8 @@ description:
  With the optional item 'page' its posible to change the status page from server-status to a
  name you want
 
-inventory:
+discovery:
  One service is created for each Apache server.
 
 item:
  A string-combination of servername and port, e.g. {127.0.0.1:5000}.
-

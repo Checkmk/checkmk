@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -18,23 +19,23 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def parse_raritan_emx(info):
     raritan_map_type = {
-        '0': ('temp', 'Air'),
-        '1': ('temp', 'Water'),
-        '2': ('fanspeed', ''),
-        '3': ('binary', ''),
-        '4': ('valve', ''),
+        "0": ("temp", "Air"),
+        "1": ("temp", "Water"),
+        "2": ("fanspeed", ""),
+        "3": ("binary", ""),
+        "4": ("valve", ""),
     }
     parsed = {}
     for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in info:
         rack_type, rack_type_readable = raritan_map_type[sensor_number]
 
         extra_name = ""
-        if rack_type_readable != '':
+        if rack_type_readable != "":
             extra_name += " " + rack_type_readable
 
         rack_name = ("Rack %s%s %s" % (rack_id, extra_name, rack_name)).replace("DC", "").strip()
 
-        if rack_type in ['binary', '']:
+        if rack_type in ["binary", ""]:
             rack_value = None
         else:
             if rack_type == "temp":
@@ -91,15 +92,17 @@ def check_raritan_emx_temp(item, params, parsed):
         rack_value = parsed[item]["rack_value"]
         rack_unit = parsed[item]["rack_unit"]
         state, state_readable = parsed[item]["state"]
-        return check_temperature(rack_value,
-                                 params,
-                                 item,
-                                 dev_unit=rack_unit,
-                                 dev_status=state,
-                                 dev_status_name=state_readable)
+        return check_temperature(
+            rack_value,
+            params,
+            item,
+            dev_unit=rack_unit,
+            dev_status=state,
+            dev_status_name=state_readable,
+        )
 
 
-check_info['raritan_emx'] = {
+check_info["raritan_emx"] = {
     "parse_function": parse_raritan_emx,
     "inventory_function": inventory_raritan_emx_temp,
     "check_function": check_raritan_emx_temp,
@@ -114,12 +117,13 @@ check_info['raritan_emx'] = {
             "2.1.1.3",  # Value
             "1.4.1.1.5",  # Unit
             "2.1.1.2",  # State
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.13742.8"],
     "group": "temperature",
 }
 
-#.
+# .
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
 #   |                           / _| __ _ _ __                             |
@@ -138,13 +142,13 @@ def check_raritan_emx_fan(item, _no_params, parsed):
         return state, "Speed: %d%s, status: %s" % (fan_speed, fan_unit, state_readable)
 
 
-check_info['raritan_emx.fan'] = {
+check_info["raritan_emx.fan"] = {
     "inventory_function": lambda parsed: inventory_raritan_emx(parsed, "fanspeed"),
     "check_function": check_raritan_emx_fan,
     "service_description": "Fan %s",
 }
 
-#.
+# .
 #   .--binary--------------------------------------------------------------.
 #   |                   _     _                                            |
 #   |                  | |__ (_)_ __   __ _ _ __ _   _                     |
@@ -154,7 +158,7 @@ check_info['raritan_emx.fan'] = {
 #   |                                            |___/                     |
 #   '----------------------------------------------------------------------'
 
-check_info['raritan_emx.binary'] = {
+check_info["raritan_emx.binary"] = {
     "inventory_function": lambda parsed: inventory_raritan_emx(parsed, "binary"),
     "check_function": check_raritan_sensors_binary,
     "service_description": "Door %s",

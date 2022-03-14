@@ -1,0 +1,31 @@
+Title: Change xinetd/systemd unit names in Linux agent of Checkmk Raw Edition
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1643376274
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This werk changes the systemd or xinetd unit names of the agent
+package.
+
+Users of the packages created by the Agent Bakery (Enterprise
+and Managed Service Edition only) are not affected.
+
+Until now the xinetd service name had been <tt>check_mk</tt>,
+and the systemd units names were <tt>check_mk@.service</tt>
+<tt>check_km.socket</tt> and <tt>check_mk-async.service</tt>.
+
+In all of these, the "<i>check_mk</i>" bit has been replaced
+with "<i>check-mk-agent</i>", to be consistent with the baked
+packages of the CEE/CME.
+
+Upon update, an existing configuration file
+<tt>/etc/xinetd.d/check_mk</tt> will be migrated, and/or the
+new systemd unit files are deployed.
+
+If you have customized you systemd units (for instance by
+placing files to <tt>/etc/systemd/system/</tt>), you must
+rename them accordingly!

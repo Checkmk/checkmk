@@ -6,22 +6,23 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 MIRROR_URL="https://ftp.gnu.org/gnu/"
 
-GCC_MAJOR="10"
-GCC_MINOR="1"
-GCC_PATCHLEVEL="0"
+GCC_MAJOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MAJOR)
+GCC_MINOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MINOR)
+GCC_PATCHLEVEL=$(get_version "$SCRIPT_DIR" GCC_VERSION_PATCHLEVEL)
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 GCC_ARCHIVE_NAME="gcc-${GCC_VERSION}.tar.gz"
 GCC_URL="${MIRROR_URL}gcc/gcc-${GCC_VERSION}/${GCC_ARCHIVE_NAME}"
 
-BINUTILS_VERSION="2.34"
+BINUTILS_VERSION="2.36.1"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="9.2"
+GDB_VERSION="11.1"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
@@ -48,8 +49,8 @@ download_sources() {
         log "File not available from ${MIRROR_URL}, creating"
 
         tar xzf "${GCC_ARCHIVE_NAME}"
-        (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
-        tar czf ${FILE_NAME} gcc-${GCC_VERSION}
+        (cd "gcc-${GCC_VERSION}" && ./contrib/download_prerequisites)
+        tar czf "${FILE_NAME}" "gcc-${GCC_VERSION}"
 
         _upload_to_mirror "${FILE_NAME}" "${MIRROR_BASE_URL}" "${MIRROR_CREDENTIALS}"
     fi
@@ -62,7 +63,7 @@ build_binutils() {
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
     ../binutils-${BINUTILS_VERSION}/configure \
-        --prefix=${PREFIX}
+        --prefix="${PREFIX}"
     make -j4
     make install
 }
@@ -70,12 +71,12 @@ build_binutils() {
 build_gcc() {
     log "Build gcc-${GCC_VERSION}"
     cd ${BUILD_DIR}
-    tar xzf gcc-${GCC_VERSION}-with-prerequisites.tar.gz
-    mkdir gcc-${GCC_VERSION}-build
-    cd gcc-${GCC_VERSION}-build
-    ../gcc-${GCC_VERSION}/configure \
-        --prefix=${PREFIX} \
-        --program-suffix=-${GCC_MAJOR} \
+    tar xzf "gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
+    mkdir "gcc-${GCC_VERSION}-build"
+    cd "gcc-${GCC_VERSION}-build"
+    "../gcc-${GCC_VERSION}/configure" \
+        --prefix="${PREFIX}" \
+        --program-suffix=-"${GCC_MAJOR}" \
         --enable-linker-build-id \
         --disable-multilib \
         --enable-languages=c,c++
@@ -90,9 +91,9 @@ build_gdb() {
     mkdir gdb-${GDB_VERSION}-build
     cd gdb-${GDB_VERSION}-build
     ../gdb-${GDB_VERSION}/configure \
-        --prefix=${PREFIX} \
-        CC=${PREFIX}/bin/gcc-${GCC_MAJOR} \
-        CXX=${PREFIX}/bin/g++-${GCC_MAJOR} \
+        --prefix="${PREFIX}" \
+        CC="${PREFIX}/bin/gcc-${GCC_MAJOR}" \
+        CXX="${PREFIX}/bin/g++-${GCC_MAJOR}" \
         "$(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")"
     make -j4
     make install
@@ -100,9 +101,20 @@ build_gdb() {
 
 set_symlinks() {
     log "Set symlink"
-    ln -sf ${PREFIX}/bin/* /usr/bin
-    ln -sf ${PREFIX}/bin/gcc-${GCC_MAJOR} /usr/bin/gcc
-    ln -sf ${PREFIX}/bin/g++-${GCC_MAJOR} /usr/bin/g++
+
+    # Save distro executables under [name]-orig. It is used by some build steps
+    # later that need to use the distro original compiler. For some platforms
+    # we need this to fix the libstdc++ dependency (e.g. protobuf, grpc)
+    [ -e /usr/bin/gcc ] && mv /usr/bin/gcc /usr/bin/gcc-orig
+    [ -e /usr/bin/g++ ] && mv /usr/bin/g++ /usr/bin/g++-orig
+
+    ln -sf "${PREFIX}/bin/"* /usr/bin
+    ln -sf "${PREFIX}/bin/gcc-${GCC_MAJOR}" /usr/bin/gcc
+    ln -sf "${PREFIX}/bin/g++-${GCC_MAJOR}" /usr/bin/g++
+
+    # not really a symlink, but almost...
+    echo "${PREFIX}/lib64" >"/etc/ld.so.conf.d/gcc-${GCC_VERSION}.conf"
+    ldconfig
 }
 
 build_package() {

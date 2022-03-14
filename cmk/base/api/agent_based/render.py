@@ -7,45 +7,44 @@
 
 These are meant to be exposed in the API
 """
-from typing import Iterable, Optional, Tuple
 import math
 import time
+from typing import Iterable, Optional, Tuple
 
 _DATE_FORMAT = "%b %d %Y"
 
 _TIME_UNITS = [
-    ('years', 31536000),
-    ('days', 86400),
-    ('hours', 3600),
-    ('minutes', 60),
-    ('seconds', 1),
-    ('milliseconds', 1e-3),
-    ('microseconds', 1e-6),
-    ('nanoseconds', 1e-9),
-    ('picoseconds', 1e-12),
-    ('femtoseconds', 1e-15),
+    ("years", 31536000),
+    ("days", 86400),
+    ("hours", 3600),
+    ("minutes", 60),
+    ("seconds", 1),
+    ("milliseconds", 1e-3),
+    ("microseconds", 1e-6),
+    ("nanoseconds", 1e-9),
+    ("picoseconds", 1e-12),
+    ("femtoseconds", 1e-15),
     # and while we're at it:
-    ('attoseconds', 1e-18),
-    ('zeptoseconds', 1e-21),
-    ('yoctoseconds', 1e-24),
+    ("attoseconds", 1e-18),
+    ("zeptoseconds", 1e-21),
+    ("yoctoseconds", 1e-24),
 ]
 
 # Karl Marx Gave The Proletariat Eleven Zeppelins, Yo!
-_SIZE_PREFIXES_SI = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+_SIZE_PREFIXES_SI = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
 _SIZE_PREFIXES_IEC = _SIZE_PREFIXES_SI[:]
-_SIZE_PREFIXES_IEC[1] = 'K'
-
-_PERCENT_MAX_DIGITS = 12  # arbitrarily chosen, and borderline ridiculous.
+_SIZE_PREFIXES_IEC[1] = "K"
 
 
 def date(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date
 
     Example:
-        >>> date(1606721022)
-        'Nov 30 2020'
         >>> date(None)
         'never'
+        >>> _ = date(1606721022)
+
+        The latter will return something like 'Nov 30 2020', depending on the time zone.
 
     """
     if epoch is None:
@@ -57,13 +56,12 @@ def datetime(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date and time
 
     Example:
-        >>> import time
-        >>> # fix test environment timing issues:
-        >>> offset = (time.localtime().tm_hour - time.gmtime().tm_hour) * 3600
-        >>> datetime(1606721022 - offset)
-        'Nov 30 2020 07:23:42'
         >>> datetime(None)
         'never'
+        >>> _ = datetime(1606721022)
+
+        The latter will return something like 'Nov 30 2020 07:23:42',
+        depending on the time zone.
 
     """
     if epoch is None:
@@ -80,7 +78,7 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
     except StopIteration:
         start = len(_TIME_UNITS) - 1
 
-    for unit, scale in _TIME_UNITS[start:start + nchunks]:
+    for unit, scale in _TIME_UNITS[start : start + nchunks]:
         last_chunk = unit.endswith("seconds")
         value = (round if last_chunk else int)(seconds / scale)  # type: ignore[operator]
         yield "%.0f %s" % (value, unit if value != 1 else unit[:-1])
@@ -135,7 +133,7 @@ def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True)
     exponent = min(max(log_value, 0), len(size_prefixes) - 1)
     unit = size_prefixes[exponent]
     if add_bytes_prefix:
-        unit = (unit + ("B" if use_si_units else "iB")).lstrip('i')
+        unit = (unit + ("B" if use_si_units else "iB")).lstrip("i")
     scaled_value = float(value) / base**exponent
     fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)
     return fmt % scaled_value, unit
@@ -159,7 +157,7 @@ def disksize(bytes_: float) -> str:
       '1.02 kB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=True)
-    return "%s %s" % (value_str if unit != "B" else value_str.split('.')[0], unit)
+    return "%s %s" % (value_str if unit != "B" else value_str.split(".")[0], unit)
 
 
 def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
@@ -170,7 +168,7 @@ def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
       '1.00 MiB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=False)
-    return "%s %s" % (value_str if unit != "B" else value_str.split('.')[0], unit)
+    return "%s %s" % (value_str if unit != "B" else value_str.split(".")[0], unit)
 
 
 def filesize(bytes_: float) -> str:
@@ -183,8 +181,8 @@ def filesize(bytes_: float) -> str:
     val_str = "%.0f" % float(bytes_)
     offset = len(val_str) % 3
 
-    groups = [val_str[0:offset]] + [val_str[i:i + 3] for i in range(offset, len(val_str), 3)]
-    return "%s B" % ','.join(groups).strip(',')
+    groups = [val_str[0:offset]] + [val_str[i : i + 3] for i in range(offset, len(val_str), 3)]
+    return "%s B" % ",".join(groups).strip(",")
 
 
 def networkbandwidth(octets_per_sec: float) -> str:
@@ -201,7 +199,7 @@ def nicspeed(octets_per_sec: float) -> str:
 
     """
     value_str, unit = _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
-    if '.' in value_str:
+    if "." in value_str:
         value_str = value_str.rstrip("0").rstrip(".")
     return "%s %sit/s" % (value_str, unit)
 

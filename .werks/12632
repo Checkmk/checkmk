@@ -1,0 +1,17 @@
+Title: entity_sensors_temp: remove default temperature levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617096950
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The check entity_sensors_temp monitors temperature sensors on devices mapped to
+the ENTITY-MIB. These sensors monitor the temperature of different hardware
+components: CPU, chassis ambient, and accelerator. It does not make sense to
+define a default upper temperature limit, as acceptable temperature levels vary
+greatly across the different components. Default levels have therefore been
+removed. It is still possible to configure upper temperature levels for each of
+the sensors.

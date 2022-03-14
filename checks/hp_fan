@@ -35,17 +35,18 @@ def check_hp_fan(item, _no_params, parsed):
     return statemap[parsed[item]]
 
 
-check_info['hp_fan'] = {
-    'parse_function': parse_hp_fan,
-    'inventory_function': inventory_hp_fan,
-    'check_function': check_hp_fan,
-    'service_description': 'Fan %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1',
+check_info["hp_fan"] = {
+    "parse_function": parse_hp_fan,
+    "inventory_function": inventory_hp_fan,
+    "check_function": check_hp_fan,
+    "service_description": "Fan %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1",
         [  # FAN-MIB - hpicfFanEntry: Per fan in the switch entity.
             OID_END,  # HpicfDcFanIndex is not-accessible, so this will have to do.
             "2",  # hpicfFanTray: Tray number in which the fan is docked.
             "4",  # hpicfFanState
-        ]),
-    'snmp_scan_function': scan_hp,
+        ],
+    ),
+    "snmp_scan_function": scan_hp,
 }

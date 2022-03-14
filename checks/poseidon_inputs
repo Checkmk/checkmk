@@ -10,8 +10,8 @@ def parse_poseidon_inputs(info):
     if info:
         for line_number, line in enumerate(info, 1):
             input_value, input_name, input_alarm_setup, input_alarm_state = line
-            if input_name == '':
-                input_name = 'Eingang %d' % line_number
+            if input_name == "":
+                input_name = "Eingang %d" % line_number
             try:
                 input_value = int(input_value)
             except ValueError:
@@ -25,28 +25,28 @@ def parse_poseidon_inputs(info):
             except ValueError:
                 input_alarm_state = 3
             parsed[input_name] = {
-                'input_value': input_value,
-                'input_alarm_setup': input_alarm_setup,
-                'input_alarm_state': input_alarm_state,
+                "input_value": input_value,
+                "input_alarm_setup": input_alarm_setup,
+                "input_alarm_state": input_alarm_state,
             }
         return parsed
 
 
 @get_parsed_item_data
 def check_poseidon_inputs(item, params, data):
-    alarm_setup = {0: 'inactive', 1: 'activeOff', 2: 'activeOn', 3: 'unkown'}
-    input_values = {0: 'off', 1: 'on', 3: 'unkown'}
-    alarm_states = {0: 'normal', 1: 'alarm', 3: 'unkown'}
-    txt = '%s: AlarmSetup: %s' % (item, alarm_setup[data.get('input_alarm_setup', 3)])
+    alarm_setup = {0: "inactive", 1: "activeOff", 2: "activeOn", 3: "unkown"}
+    input_values = {0: "off", 1: "on", 3: "unkown"}
+    alarm_states = {0: "normal", 1: "alarm", 3: "unkown"}
+    txt = "%s: AlarmSetup: %s" % (item, alarm_setup[data.get("input_alarm_setup", 3)])
     yield 0, txt
 
-    state = data.get('input_alarm_state', 3)
-    txt = 'Alarm State: %s' % alarm_states[state]
+    state = data.get("input_alarm_state", 3)
+    txt = "Alarm State: %s" % alarm_states[state]
     if state == 1:
         state = 2
     yield state, txt
 
-    yield 0, "Values %s" % input_values.get(data.get('input_value', 3), 'unknown')
+    yield 0, "Values %s" % input_values.get(data.get("input_value", 3), "unknown")
 
 
 check_info["poseidon_inputs"] = {
@@ -55,6 +55,6 @@ check_info["poseidon_inputs"] = {
     "inventory_function": discover(),
     "service_description": "%s",
     "has_perfdata": False,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith('.1.3.6.1.4.1.21796.3'),
-    "snmp_info": (".1.3.6.1.4.1.21796.3.3.1.1", ['2', '3', '4', '5']),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.21796.3"),
+    "snmp_info": (".1.3.6.1.4.1.21796.3.3.1.1", ["2", "3", "4", "5"]),
 }

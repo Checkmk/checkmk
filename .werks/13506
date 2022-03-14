@@ -1,0 +1,19 @@
+Title: Fix possible unhandled exception if site connection is encrypted
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1638519594
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you used the option "Encrypt data using TLS" for remote sites, the
+connection could not be established, showing the error "Unhandled exception:
+30s while reading data from socket. Received data:
+{data.getbuffer().nbytes}/{size} bytes".
+
+This affected all encrypted livestatus connections in the Raw Edition and the
+connections in the Enterprise edition that did not use the Livestatus proxy
+daemon.

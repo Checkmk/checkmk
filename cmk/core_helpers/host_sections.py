@@ -4,42 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
-import logging
-from typing import Callable, cast, Dict, Generic, List, Mapping, MutableMapping, Optional, TypeVar
+import copy
+from typing import Final, Generic, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.core_helpers.cache import PersistedSections, SectionStore, TRawDataSection
-
-from .type_defs import SectionCacheInfo
-
-THostSections = TypeVar("THostSections", bound="HostSections")
+from cmk.core_helpers.cache import TRawDataSection
 
 
-class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
-    """A wrapper class for the host information read by the data sources
+class HostSections(Generic[TRawDataSection], abc.ABC):
+    """Host informations from the sources."""
 
-    It contains the following information:
-
-        1. sections:                A dictionary from section_name to a list of rows,
-                                    the section content
-        2. piggybacked_raw_data:    piggy-backed data for other hosts
-        3. cache_info:              Agent cache information
-                                    (dict section name -> (cached_at, cache_interval))
-    """
     def __init__(
         self,
-        sections: Optional[MutableMapping[SectionName, TRawDataSection]] = None,
+        sections: Optional[Mapping[SectionName, Sequence[TRawDataSection]]] = None,
         *,
-        cache_info: Optional[SectionCacheInfo] = None,
-        # For `piggybacked_raw_data`, List[bytes] is equivalent to AgentRawData.
-        piggybacked_raw_data: Optional[Dict[HostName, List[bytes]]] = None,
+        cache_info: Optional[Mapping[SectionName, Tuple[int, int]]] = None,
+        # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
+        piggybacked_raw_data: Optional[Mapping[HostName, Sequence[bytes]]] = None,
     ) -> None:
         super().__init__()
-        self.sections = sections if sections else {}
-        self.cache_info = cache_info if cache_info else {}
-        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
+        self.sections: Final = sections if sections else {}
+        self.cache_info: Final = cache_info if cache_info else {}
+        self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 
     def __repr__(self):
         return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
@@ -49,94 +39,30 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             self.piggybacked_raw_data,
         )
 
-    # TODO: It should be supported that different sources produce equal sections.
-    # this is handled for the self.sections data by simply concatenating the lines
-    # of the sections, but for the self.cache_info this is not done. Why?
-    # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
-    #       Would this be correct here?
-    def add(self, host_sections: "HostSections") -> None:
-        """Add the content of `host_sections` to this HostSection."""
-        for section_name, section_content in host_sections.sections.items():
-            self.sections.setdefault(
-                section_name,
-                cast(TRawDataSection, []),
-            ).extend(section_content)
+    def __add__(self, other: HostSections[TRawDataSection]) -> HostSections[TRawDataSection]:
+        new_sections = copy.deepcopy(dict(self.sections))
+        for section_name, section_content in other.sections.items():
+            s = new_sections.get(section_name)
+            new_sections[section_name] = (
+                (list(s) + list(section_content)) if s else list(section_content)
+            )
 
-        for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
-            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
+        new_piggybacked_raw_data: MutableMapping[HostName, List[bytes]] = {
+            k: list(v) for k, v in self.piggybacked_raw_data.items()
+        }
+        for hostname, raw_lines in other.piggybacked_raw_data.items():
+            new_piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
 
-        if host_sections.cache_info:
-            self.cache_info.update(host_sections.cache_info)
+        # TODO: It should be supported that different sources produce equal sections.
+        # this is handled for the self.sections data by simply concatenating the lines
+        # of the sections, but for the self.cache_info this is not done. Why?
+        # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
+        #       Would this be correct here?
+        new_cache_info = dict(self.cache_info)
+        new_cache_info.update(other.cache_info)
 
-    def add_persisted_sections(
-        self,
-        sections: Mapping[SectionName, TRawDataSection],
-        *,
-        section_store: SectionStore[TRawDataSection],
-        fetch_interval: Callable[[SectionName], Optional[int]],
-        now: int,
-        keep_outdated: bool,
-        logger: logging.Logger,
-    ) -> None:
-        # TODO: This is not race condition free when modifying the data. Either remove
-        # the possible write here and simply ignore the outdated sections or lock when
-        # reading and unlock after writing
-        persisted_sections = section_store.load()
-        persisted_sections.update(PersistedSections[TRawDataSection].from_sections(
-            sections,
-            {section_name: fetch_interval(section_name) for section_name in sections},
-            cached_at=now,
-        ))
-        if not keep_outdated:
-            for section_name in tuple(persisted_sections):
-                interval = fetch_interval(section_name)
-                if interval is None:
-                    continue
-                if persisted_sections.cached_at(section_name) < now - interval:
-                    del persisted_sections[section_name]
-
-        section_store.store(persisted_sections)
-
-        self._add_cache_info(persisted_sections)
-        self._add_persisted_sections(persisted_sections, logger=logger)
-
-    def _add_cache_info(
-        self,
-        persisted_sections: PersistedSections[TRawDataSection],
-    ) -> None:
-        # This method is on the wrong class.
-        #
-        # The HostSections should get the cache_info (provided
-        # it is any useful: it is presently redundant with
-        # the persisted_sections) in `__init__()` and not
-        # modify it just after instantiation.
-        self.cache_info.update({
-            section_name: (entry[0], entry[1] - entry[0])
-            for section_name, entry in persisted_sections.items()
-            if section_name not in self.sections
-        })
-
-    def _add_persisted_sections(
-        self,
-        persisted_sections: PersistedSections[TRawDataSection],
-        *,
-        logger: logging.Logger,
-    ) -> None:
-        # This method is on the wrong class.
-        #
-        # A more logical structure would be to update the
-        # `Mapping[SectionName, TRawDataSection]` *before* passing it to
-        # HostSections.  This way, we could make `sections` here unmutable
-        # and final.
-        """Add information from previous persisted infos."""
-        for section_name, entry in persisted_sections.items():
-            if len(entry) == 2:
-                continue  # Skip entries of "old" format
-
-            # Don't overwrite sections that have been received from the source with this call
-            if section_name in self.sections:
-                logger.debug("Skipping persisted section %r, live data available", section_name)
-                continue
-
-            logger.debug("Using persisted section %r", section_name)
-            self.sections[section_name] = entry[-1]
+        return HostSections[TRawDataSection](
+            new_sections,
+            cache_info=new_cache_info,
+            piggybacked_raw_data=new_piggybacked_raw_data,
+        )

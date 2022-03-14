@@ -5,30 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_saprouter_cert_age():
-    return Dictionary(elements=[
-        ("validity_age",
-         Tuple(
-             title=_('Lower levels for certificate age'),
-             elements=[
-                 Age(title=_("Warning below"), default_value=30 * 86400),
-                 Age(title=_("Critical below"), default_value=7 * 86400),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "validity_age",
+                Tuple(
+                    title=_("Lower levels for certificate age"),
+                    elements=[
+                        Age(title=_("Warning below"), default_value=30 * 86400),
+                        Age(title=_("Critical below"), default_value=7 * 86400),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_saprouter_cert_age,
         title=lambda: _("SAP router certificate time settings"),
-    ))
+    )
+)

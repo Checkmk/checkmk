@@ -1,0 +1,18 @@
+Title: Host / service labels: Prevent to use label conditions in referred predefined conditions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1625565998
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The rulesets "Host labels" and "Service labels" can not use host or service
+labels as conditions.  However, previous Checkmk versions allowed it to refer
+to predefined conditions which have label conditions. In case this was
+configured, this lead to exceptions during config creation.
+
+With this change, this configuration issue is now validated and an error
+message is displayed in the moment one tries to assign a predefined condition
+with labels to a "Host labels" or "service labels" rule.

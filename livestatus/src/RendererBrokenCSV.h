@@ -42,14 +42,14 @@ private:
 // versions.
 class RendererBrokenCSV : public Renderer {
 public:
-    RendererBrokenCSV(std::ostream& os, Logger* logger,
+    RendererBrokenCSV(std::ostream &os, Logger *logger,
                       CSVSeparators separators, Encoding data_encoding)
         : Renderer(os, logger, data_encoding)
         , _separators(std::move(separators)) {}
 
     void outputNull() override;
-    void outputBlob(const std::vector<char>& value) override;
-    void outputString(const std::string& value) override;
+    void outputBlob(const std::vector<char> &value) override;
+    void outputString(const std::string &value) override;
 
     void beginQuery() override;
     void separateQueryElements() override;

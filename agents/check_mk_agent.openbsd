@@ -9,6 +9,17 @@
 
 # NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
 unset LANG
@@ -32,218 +43,222 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
-
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
 fi
 
-echo "<<<check_mk>>>"
-echo "Version: 2.1.0i1"
-echo "AgentOS: openbsd"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
+# We're suppressing this, so we can enable the shellchecker.
+# TODO: Find out if this is working, and why. Are we implicitily assuming a specific shell?
+# shellcheck disable=SC2039 # In POSIX sh, set flag -A is undefined.
+section_misc_sections() {
+    echo "<<<check_mk>>>"
+    echo "Version: 2.2.0i1"
+    echo "AgentOS: openbsd"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: $MK_CONFDIR"
+    echo "DataDirectory: $MK_VARDIR"
+    echo "SpoolDirectory: $SPOOLDIR"
+    echo "PluginsDirectory: $PLUGINSDIR"
+    echo "LocalDirectory: $LOCALDIR"
 
-osver="$(uname -r)"
+    echo '<<<df>>>'
+    df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
 
-echo '<<<df>>>'
-df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
+    # processes including username, without kernel processes
+    echo '<<<ps>>>'
+    COLUMNS=10000
+    ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
-# processes including username, without kernel processes
-echo '<<<ps>>>'
-COLUMNS=10000
-ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+    echo '<<<cpu>>>'
+    echo "$(sysctl -n vm.loadavg | tr -d '{}') $(top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{ print $3"/"$1 }') $(sysctl -n hw.ncpu)"
 
-echo '<<<cpu>>>'
-echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n hw.ncpu`
+    echo '<<<uptime>>>'
+    echo "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' ')" | bc
 
-echo '<<<uptime>>>'
-echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
+    echo "<<<openbsd_mem>>>"
+    MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
+    MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
+    MEM_TOTAL=$(echo "$MEM_TOTAL/1024" | bc)
 
-echo "<<<mem>>>"
-MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
-MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
-MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)
+    SWAPCTL_OUTPUT=$(swapctl -k -s)
+    SWAP_FREE=$(echo "$SWAPCTL_OUTPUT" | awk '{ print $7 }')
+    SWAP_TOTAL=$(echo "$SWAPCTL_OUTPUT" | awk '{ print $2 }')
 
-SWAPCTL_OUTPUT=$(swapctl -k -s)
-SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
-SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
-
-# if there is no swap space swap values are 0
-if [ -z "$SWAPCTL_OUTPUT" ]
-        then
+    # if there is no swap space swap values are 0
+    if [ -z "$SWAPCTL_OUTPUT" ]; then
         SWAP_FREE=0
         SWAP_TOTAL=0
-fi
-
-echo "MemTotal:\t" $MEM_TOTAL kB
-echo "MemFree:\t" $MEM_FREE kB
-echo "SwapTotal:\t" $SWAP_TOTAL kB
-echo "SwapFree:\t" $SWAP_FREE kB
-
-echo '<<<lnx_if:sep(58)>>>'
-# MC= MAC address
-# BI= Bytes in
-# PI= Packets in
-# EI= Errors in
-# EO= Errors out
-# BO= Bytes out
-# PO= Packets out
-# CO= Colls
-# NI= Number of interfaces
-# INTERFACES= Array of interfaces
-
-set -A INTERFACES
-set -A MC
-set -A BI
-set -A BO
-set -A PI
-set -A PO
-set -A EI
-set -A EO
-set -A CO
-
-NI=0
-# special (lo/pfsync/pflog/enc) and inactive (*) interfaces are not needed
-NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
-NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
-
-# adjust internal field separator to get lines from netstat and backup it before
-OFS=$IFS
-IFS='
-'
-# collect netstat values and interface number
-for NS in $NETSTAT_OUTPUT
-    do
-    NI=$(($NI+1))
-    INTERFACES[$NI]=$(echo $NS | awk '{print $1}')
-    MC[$NI]=$(echo $NS | awk '{print $4}')
-    PI[$NI]=$(echo $NS | awk '{print $5}')
-    EI[$NI]=$(echo $NS | awk '{print $6}')
-    PO[$NI]=$(echo $NS | awk '{print $7}')
-    EO[$NI]=$(echo $NS | awk '{print $8}')
-    CO[$NI]=$(echo $NS | awk '{print $9}')
-done
-
-# need NIC counter again for byte values - reset it
-NI=0
-for NS in $NETSTAT_OUTPUT_BYTES
-    do
-    NI=$(($NI+1))
-    BI[$NI]=$(echo $NS | awk '{print $5}')
-    BO[$NI]=$(echo $NS | awk '{print $6}')
-done
-
-# what is this for?
-[ "${NI}" -ge 1 ] || NI=15
-
-# jot is OpenBSD "range"
-for i in $(jot $NI)
-    do
-    echo "${INTERFACES[$i]}:${BI[$i]} ${PI[$i]} ${EI[$i]} 0 0 0 0 0 ${BO[$i]} ${PO[$i]} ${EO[$i]} 0 0 ${CO[$i]} 0 0"
-done
-
-for IF in $(jot $NI)
-	do
-	echo \[${INTERFACES[$IF]}\]
-
-	IFCONFIG_OUTPUT=$(ifconfig ${INTERFACES[$IF]})
-	for IO in $IFCONFIG_OUTPUT
-		do
-		# Speed
-		SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
-		if [ "$SP" ]
-			then
-			echo "\tSpeed: "$SP"Mb/s"
-		fi
-		# Detect duplexity - in reality only available for physical devices but
-		# virtual ones like CARP devices will get at least a half duplex
-		if [ "$(echo "$IO" | egrep "media:.*full-duplex")" ]
-			then
-			echo "\tDuplex: Full"
-		elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]
-			then
-			echo "\tDuplex: Half"
-		fi
-		# Auto-negotiation
-		if [ "$(echo "$IO" | egrep "media:.*autoselect")" ]
-			then
-			echo "\tAuto-negotiation: on"
-		elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]
-			then
-			echo "\tAuto-negotiation: off"
-		fi
-		# Detect detected link
-		if [ "$(echo "$IO" | grep "status:" | egrep "active|backup|master")" ]
-			then
-			echo "\tLink detected: yes"
-		fi
-	done
-
-	echo "\tAddress: "${MC[$IF]}
-
-done
-
-# reset IFS to default
-IFS=$OFS
-
-# IPMI-Data (Fans, CPU, temperature, etc)
-# needs the sysutils/ipmitool and kldload ipmi.ko
-if which ipmitool >/dev/null ; then
-    echo '<<<ipmi>>>'
-    ipmitool sensor list \
-        | grep -v 'command failed' \
-        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-        | egrep -v '^[^ ]+ na ' \
-        | grep -v ' discrete '
-fi
-
-if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
-  echo '<<<postfix_mailq>>>'
-  mailq | tail -n 6
-fi
-
-
-# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
     fi
-  done
-fi
 
-# Lokale Einzelchecks
-echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
+    printf "MemTotal:\t %s kB\n" "$MEM_TOTAL"
+    printf "MemFree:\t %s kB\n" "$MEM_FREE"
+    printf "SwapTotal:\t %s kB\n" "$SWAP_TOTAL"
+    printf "SwapFree:\t %s kB\n" "$SWAP_FREE"
 
-# MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-then
-    echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "$cmdline")
-        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
+    echo '<<<lnx_if:sep(58)>>>'
+    # MC= MAC address
+    # BI= Bytes in
+    # PI= Packets in
+    # EI= Errors in
+    # EO= Errors out
+    # BO= Bytes out
+    # PO= Packets out
+    # CO= Colls
+    # NI= Number of interfaces
+    # INTERFACES= Array of interfaces
+
+    set -A INTERFACES
+    set -A MC
+    set -A BI
+    set -A BO
+    set -A PI
+    set -A PO
+    set -A EI
+    set -A EO
+    set -A CO
+
+    NI=0
+    # special (lo/pfsync/pflog/enc) and inactive (*) interfaces are not needed
+    NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | grep -v -E "\*|lo|pfsync|enc")
+    NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | grep -v -E "\*|lo|pfsync|enc")
+
+    # adjust internal field separator to get lines from netstat and backup it before
+    OFS=$IFS
+    IFS='
+    '
+    # collect netstat values and interface number
+    for NS in $NETSTAT_OUTPUT; do
+        NI=$((NI + 1))
+        INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
+        MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
+        PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
+        EI[$NI]=$(echo "$NS" | awk '{ print $6 }')
+        PO[$NI]=$(echo "$NS" | awk '{ print $7 }')
+        EO[$NI]=$(echo "$NS" | awk '{ print $8 }')
+        CO[$NI]=$(echo "$NS" | awk '{ print $9 }')
     done
-fi
+
+    # need NIC counter again for byte values - reset it
+    NI=0
+    for NS in $NETSTAT_OUTPUT_BYTES; do
+        NI=$((NI + 1))
+        BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
+        BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
+    done
+
+    # what is this for?
+    [ "${NI}" -ge 1 ] || NI=15
+
+    # jot is OpenBSD "range"
+    for i in $(jot $NI); do
+        echo "${INTERFACES[$i]}:${BI[$i]} ${PI[$i]} ${EI[$i]} 0 0 0 0 0 ${BO[$i]} ${PO[$i]} ${EO[$i]} 0 0 ${CO[$i]} 0 0"
+    done
+
+    for IF in $(jot $NI); do
+        echo "[${INTERFACES[$IF]}]"
+
+        IFCONFIG_OUTPUT=$(ifconfig "${INTERFACES[$IF]}")
+        for IO in $IFCONFIG_OUTPUT; do
+            # Speed
+            SP=$(echo "$IO" | grep -E "media:.*base" | cut -d\( -f2 | cut -db -f1)
+            if [ "$SP" ]; then
+                printf "\tSpeed: %sMb/s\n" "${SP}"
+            fi
+            # Detect duplexity - in reality only available for physical devices but
+            # virtual ones like CARP devices will get at least a half duplex
+            if echo "$IO" | grep -q -E "media:.*full-duplex"; then
+                printf "\tDuplex: Full\n"
+            elif echo "$IO" | grep "media:" | grep -q -v "full-duplex"; then
+                printf "\tDuplex: Half\n"
+            fi
+            # Auto-negotiation
+            if echo "$IO" | grep -q -E "media:.*autoselect"; then
+                printf "\tAuto-negotiation: on\n"
+            elif echo "$IO" | grep "media:" | grep -q -v "autoselect"; then
+                printf "\tAuto-negotiation: off\n"
+            fi
+            # Detect detected link
+            if echo "$IO" | grep "status:" | grep -q -E "active|backup|master"; then
+                printf "\tLink detected: yes\n"
+            fi
+        done
+
+        printf "\tAddress: %s\n" "${MC[$IF]}"
+
+    done
+
+    # reset IFS to default
+    IFS=$OFS
+
+    # IPMI-Data (Fans, CPU, temperature, etc)
+    # needs the sysutils/ipmitool and kldload ipmi.ko
+    if inpath ipmitool; then
+        echo '<<<ipmi>>>'
+        ipmitool sensor list |
+            grep -v 'command failed' |
+            sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
+            grep -v -E '^[^ ]+ na ' |
+            grep -v ' discrete '
+    fi
+
+    if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
+        echo '<<<postfix_mailq>>>'
+        mailq | tail -n 6
+    fi
+}
+
+run_plugins() {
+    (
+        cd "${PLUGINSDIR}" || return
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+        done
+    )
+}
+
+run_local_checks() {
+    (
+        cd "${LOCALDIR}" || return
+        echo '<<<local:sep(0)>>>'
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+        done
+    )
+}
+
+# TODO: sync with linux agent
+run_mrpe_plugins() {
+    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
+        echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                printf "(%s) %s %s %s" "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
+                echo
+            done
+    fi
+}
+
+main() {
+
+    section_misc_sections
+
+    run_plugins
+
+    run_local_checks
+
+    run_mrpe_plugins
+
+    return 0
+}
+
+main

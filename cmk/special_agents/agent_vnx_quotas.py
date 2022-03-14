@@ -12,8 +12,9 @@ import cmk.utils.password_store
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
     parser.add_argument("-p", "--password", required=True, help="The password.")
@@ -25,6 +26,7 @@ def parse_arguments(argv):
 def get_client_connection(args):
     try:
         import paramiko  # type: ignore[import] # pylint: disable=import-outside-toplevel
+
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(args.hostname, username=args.username, password=args.password, timeout=5)
@@ -44,11 +46,11 @@ def main(args=None):
     nas_db_env = "export NAS_DB=%s; " % args.nas_db
     queries = {
         "quotas": nas_db_env + "/nas/bin/nas_fs -query:* "
-                  "-fields:TreeQuotas -format:'%q' -query:* "
-                  "-fields:rwvdms,filesystem,path,BlockUsage,BlockHardLimit "
-                  "-format:'%L|%s|%s|%d|%L\\n'",
+        "-fields:TreeQuotas -format:'%q' -query:* "
+        "-fields:rwvdms,filesystem,path,BlockUsage,BlockHardLimit "
+        "-format:'%L|%s|%s|%d|%L\\n'",
         "fs": nas_db_env + "/nas/bin/nas_fs -query:inuse==y:IsRoot==False "
-              "-fields:Name,SizeValues -format:'%L|%s\\n'",
+        "-fields:Name,SizeValues -format:'%L|%s\\n'",
     }
 
     client = get_client_connection(args)
@@ -69,11 +71,14 @@ def main(args=None):
     results: Dict[str, Dict[str, Any]] = {}
     for query_type, query in queries.items():
         stdin, stdout, stderr = client.exec_command(query)
-        results.setdefault(query_type, {
-            "stdin": stdin,
-            "stdout": stdout,
-            "stderr": stderr,
-        })
+        results.setdefault(
+            query_type,
+            {
+                "stdin": stdin,
+                "stdout": stdout,
+                "stderr": stderr,
+            },
+        )
         stdin.close()
 
     for query_type, result in results.items():

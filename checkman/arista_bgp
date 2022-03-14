@@ -1,7 +1,7 @@
 title: Arista BGP
 agents: snmp
 catalog: hw/network/arista
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Generates service info from basic BGP information provided via SNMP (LocalAddr, LocalIdentifier,
@@ -12,6 +12,5 @@ description:
 item:
  One service is created for each IP (TODO: what is the semantic of the IP in OID?) address
 
-inventory:
+discovery:
  One service identified
-

@@ -1,0 +1,12 @@
+Title: cisco_wlc, cisco_wlc_clients: add support for Aironet 1815 devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1629119793
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+

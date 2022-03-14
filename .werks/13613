@@ -1,0 +1,18 @@
+Title: Admin can edit report schedules for reports not published to them
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1643296363
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Users with permission "Manage all scheduled reports", usually admins, can edit
+scheduled reports. However, due to werk 12991, if the report itself is not
+published for the user doing the edit, he will not find it and he will be unable
+to edit it. This werk fixes that incompatibility as the admin user can edit the
+report and its schedule. Still compatible with werk 12991, if the report is not
+published to the user, he will not be able to schedule that report for himself.
+He would first need to clone the report, or edit the report to publish it to
+other users, both of which he can do as an admin.

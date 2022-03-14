@@ -35,6 +35,7 @@ struct NagiosPaths {
     std::string _pnp;
     std::string _mk_inventory;
     std::string _structured_status;
+    std::filesystem::path _robotmk_var_path;
     std::filesystem::path _crash_reports_path;
     std::filesystem::path _license_usage_history_path;
     std::string _mk_logwatch;
@@ -48,12 +49,12 @@ struct NagiosPaths {
 struct NagiosLimits {
     size_t _max_cached_messages{500000};
     size_t _max_lines_per_logfile{1000000};
-    size_t _max_response_size{100 * 1024 * 1024};
+    size_t _max_response_size{size_t{100} * 1024 * 1024};
 };
 
 struct NagiosAuthorization {
-    AuthorizationKind _service{AuthorizationKind::loose};
-    AuthorizationKind _group{AuthorizationKind::strict};
+    ServiceAuthorization _service{ServiceAuthorization::loose};
+    GroupAuthorization _group{GroupAuthorization::strict};
 };
 
 class NagiosCore : public MonitoringCore {
@@ -81,13 +82,10 @@ public:
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;
 
-    std::vector<DowntimeData> downtimes_for_host(
-        const Host *host) const override;
-    std::vector<DowntimeData> downtimes_for_service(
-        const Service *service) const override;
-    std::vector<CommentData> comments_for_host(const Host *host) const override;
-    std::vector<CommentData> comments_for_service(
-        const Service *service) const override;
+    std::vector<DowntimeData> downtimes(const Host *host) const override;
+    std::vector<DowntimeData> downtimes(const Service *service) const override;
+    std::vector<CommentData> comments(const Host *host) const override;
+    std::vector<CommentData> comments(const Service *service) const override;
 
     bool mkeventdEnabled() override;
 
@@ -95,6 +93,7 @@ public:
     std::filesystem::path mkLogwatchPath() const override;
     std::filesystem::path mkInventoryPath() const override;
     std::filesystem::path structuredStatusPath() const override;
+    std::filesystem::path robotMkVarPath() const override;
     std::filesystem::path crashReportPath() const override;
     std::filesystem::path licenseUsageHistoryPath() const override;
     std::filesystem::path pnpPath() const override;
@@ -106,8 +105,8 @@ public:
     size_t maxResponseSize() override;
     size_t maxCachedMessages() override;
 
-    AuthorizationKind serviceAuthorization() const override;
-    AuthorizationKind groupAuthorization() const override;
+    ServiceAuthorization serviceAuthorization() const override;
+    GroupAuthorization groupAuthorization() const override;
 
     Logger *loggerLivestatus() override;
     Logger *loggerRRD() override;

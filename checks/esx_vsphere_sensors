@@ -24,8 +24,17 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     mulitline = ["All sensors are in normal state", "Sensors operating normal are:"]
     mod_msg = " (Alert state has been modified by Check_MK rule)"
 
-    for name, _base_units, _current_reading, _sensor_type, _unit_modifier, \
-        _rate_units, health_key, health_label, health_summary in info:
+    for (
+        name,
+        _base_units,
+        _current_reading,
+        _sensor_type,
+        _unit_modifier,
+        _rate_units,
+        health_key,
+        health_label,
+        health_summary,
+    ) in info:
 
         sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
         txt = "%s: %s (%s)" % (name, health_label, health_summary)
@@ -42,12 +51,12 @@ def check_esx_vsphere_sensors(_no_item, params, info):
             mulitline[:2] = "", "At least one sensor reported. Sensors readings are:"
         mulitline.append(txt)
 
-    yield 0, '\n'.join(mulitline)
+    yield 0, "\n".join(mulitline)
 
 
-check_info['esx_vsphere_sensors'] = {
+check_info["esx_vsphere_sensors"] = {
     "inventory_function": inventory_esx_vsphere_sensors,
     "check_function": check_esx_vsphere_sensors,
     "service_description": "Hardware Sensors",
-    "group": "hostsystem_sensors"
+    "group": "hostsystem_sensors",
 }

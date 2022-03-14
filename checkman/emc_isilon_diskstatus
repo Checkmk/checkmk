@@ -1,7 +1,7 @@
 title: EMC Isilon: Disk Status
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Status of Disks in EMC Isilon Storage Systems.
@@ -11,6 +11,5 @@ description:
 item:
  The ID of the disk bay.
 
-inventory:
+discovery:
  One service is created for each disk in an EMC Isilon Storage.
-

@@ -1,12 +1,12 @@
 title: Symantec Antiivirus: Update Status
 agents: linux
 catalog: app/symantec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check will trigger a warning state if the Antivirus updates are outdated.
  The default level for Warning is 3 and for Critical 5 Days. The levels must be specified in seconds.
  You just need to install the plugin {symantec_av} into the {plugins} directory of your agent.
 
-inventory:
+discovery:
  One service is created for each system.

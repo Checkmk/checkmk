@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _item_spec_ibm_svc_total_latency():
@@ -26,22 +22,33 @@ def _item_spec_ibm_svc_total_latency():
             ("VDisks", _("Total latency for all VDisks")),
         ],
         title=_("Disk/Drive type"),
-        help=_("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."))
+        help=_("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."),
+    )
 
 
 def _parameter_valuespec_ibm_svc_total_latency():
-    return Dictionary(elements=[
-        ("read",
-         Levels(title=_("Read latency"),
-                unit=_("ms"),
-                default_value=None,
-                default_levels=(50.0, 100.0))),
-        ("write",
-         Levels(title=_("Write latency"),
-                unit=_("ms"),
-                default_value=None,
-                default_levels=(50.0, 100.0))),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "read",
+                Levels(
+                    title=_("Read latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0),
+                ),
+            ),
+            (
+                "write",
+                Levels(
+                    title=_("Write latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -52,4 +59,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_total_latency,
         title=lambda: _("IBM SVC Total Disk Latency"),
-    ))
+    )
+)

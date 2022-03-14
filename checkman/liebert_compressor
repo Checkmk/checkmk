@@ -1,7 +1,7 @@
 title: Liebert: Compressor
 agents: snmp
 catalog: hw/environment/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the head pressure of all found compressors. The service
@@ -11,5 +11,5 @@ description:
 item:
  The item will be the data label of the OID
 
-inventory:
+discovery:
  One service is created for each compressor.

@@ -1,7 +1,7 @@
 title: Stormshield: Updates
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the {STORMSHIELD-AUTOUPDATE-MIB} for checking if the services update
@@ -13,6 +13,6 @@ description:
 item:
  The name of the subsystem
 
-inventory:
+discovery:
  One service is created for each subsystem
  if it is not in state (not available).

@@ -57,7 +57,7 @@
 # QUEUE_deferred 0 0
 # QUEUE_active 0 0
 
-factory_settings['postfix_mailq_default_levels'] = {
+factory_settings["postfix_mailq_default_levels"] = {
     "deferred": (10, 20),
     "active": (200, 300),  # may become large for big mailservers
 }
@@ -65,11 +65,11 @@ factory_settings['postfix_mailq_default_levels'] = {
 
 def postfix_mailq_to_bytes(value, uom):
     uom = uom.lower()
-    if uom == 'kbytes':
+    if uom == "kbytes":
         return value * 1024
-    elif uom == 'mbytes':
+    elif uom == "mbytes":
         return value * 1024 * 1024
-    elif uom == 'gbytes':
+    elif uom == "gbytes":
         return value * 1024 * 1024 * 1024
 
 
@@ -94,11 +94,11 @@ def parse_postfix_mailq(info):
 
             queueinfo = line[0].split("_")[1], size, length
 
-        elif " ".join(line[-2:]) == 'is empty':
+        elif " ".join(line[-2:]) == "is empty":
             queueinfo = "empty", 0, 0
 
-        elif line[0] == '--' or line[0:2] == ['Total', 'requests:']:
-            if line[0] == '--':
+        elif line[0] == "--" or line[0:2] == ["Total", "requests:"]:
+            if line[0] == "--":
                 size = postfix_mailq_to_bytes(float(line[1]), line[2])
                 length = int(line[4])
             else:
@@ -154,15 +154,15 @@ def check_postfix_mailq(item, params, parsed):
             yield state, infotext, [(length_var, length, warn, crit), (size_var, size)]
 
         elif what == "empty":
-            yield 0, 'The mailqueue is empty', [('length', 0, warn, crit), ('size', 0)]
+            yield 0, "The mailqueue is empty", [("length", 0, warn, crit), ("size", 0)]
 
 
 check_info["postfix_mailq"] = {
-    'parse_function': parse_postfix_mailq,
-    'inventory_function': inventory_postfix_mailq,
-    'check_function': check_postfix_mailq,
-    'service_description': 'Postfix Queue %s',
-    'default_levels_variable': 'postfix_mailq_default_levels',
-    'group': "mail_queue_length",
-    'has_perfdata': True,
+    "parse_function": parse_postfix_mailq,
+    "inventory_function": inventory_postfix_mailq,
+    "check_function": check_postfix_mailq,
+    "service_description": "Postfix Queue %s",
+    "default_levels_variable": "postfix_mailq_default_levels",
+    "group": "mail_queue_length",
+    "has_perfdata": True,
 }

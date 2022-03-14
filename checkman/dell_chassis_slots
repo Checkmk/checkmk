@@ -1,7 +1,7 @@
 title: Dell PowerEdge Chassis: State of the Blade Slots
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the blade slots of the chassis of Dell PowerEdge Servers.
@@ -17,6 +17,5 @@ description:
 item:
  The name of the slot as given by drsServerSlotNumber
 
-inventory:
+discovery:
  One service is created for each slot if the state is not "absent".
-

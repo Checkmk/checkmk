@@ -1,7 +1,7 @@
 title: Brocade NetIron MLX / ADX / FGS / ICX Devices: Module Overall Status
 agents: snmp
 catalog: hw/network/brocade
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the overall status of modules in Brocade NetIron MLX / ADX / FGS /
@@ -16,5 +16,5 @@ item:
  If a module description is delivered by SNMP, the item is build from the
  module ID plus the description. Otherwise it is just the ID.
 
-inventory:
+discovery:
  One service is created for each NI-MLX or BR-MLX module.

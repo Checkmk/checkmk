@@ -13,31 +13,32 @@ def check_bdtms_tape_info(_no_item, _no_params, info):  # pylint: disable=functi
     _activity_id, health_id = info[0]
 
     health = {
-        '1': 'unknown',
-        '2': 'ok',
-        '3': 'warning',
-        '4': 'critical',
-    }.get(health_id, 'unknown')
+        "1": "unknown",
+        "2": "ok",
+        "3": "warning",
+        "4": "critical",
+    }.get(health_id, "unknown")
 
     status = {
-        'unknown': 3,
-        'ok': 0,
-        'warning': 1,
-        'critical': 2,
+        "unknown": 3,
+        "ok": 0,
+        "warning": 1,
+        "critical": 2,
     }.get(health, 3)
 
     return status, health
 
 
-check_info['bdtms_tape_status'] = {
-    'inventory_function': inventory_bdtms_tape_info,
-    'check_function': check_bdtms_tape_info,
-    'service_description': "Tape Library Status",
-    'snmp_scan_function': lambda oid: ('.1.3.6.1.4.1.20884.77.83.1' in oid('.1.3.6.1.2.1.1.2.0')),
-    'snmp_info': (
-        '.1.3.6.1.4.1.20884.2',
+check_info["bdtms_tape_status"] = {
+    "inventory_function": inventory_bdtms_tape_info,
+    "check_function": check_bdtms_tape_info,
+    "service_description": "Tape Library Status",
+    "snmp_scan_function": lambda oid: (".1.3.6.1.4.1.20884.77.83.1" in oid(".1.3.6.1.2.1.1.2.0")),
+    "snmp_info": (
+        ".1.3.6.1.4.1.20884.2",
         [
-            '1',  # bdtDeviceStatAct
-            '3',  # bdtDeviceStatHealth
-        ]),
+            "1",  # bdtDeviceStatAct
+            "3",  # bdtDeviceStatHealth
+        ],
+    ),
 }

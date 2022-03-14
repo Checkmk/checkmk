@@ -1,0 +1,17 @@
+Title: Fix synchronisation of config changes to remote sites
+Class: fix
+Compatible: incomp
+Component: ec
+Date: 1618842289
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you changed event console rules in a distributed setup with enabled event
+console on remote sites, the changes were not shown on the "Activate changes"
+page for the remote sites. That way you could not synchronize this event
+console changes unless other changes were made that need a synchronisation.
+
+If you discover problems with regard to event console rules on remote sites,
+save the corresponding event console rule again and activate the changes.

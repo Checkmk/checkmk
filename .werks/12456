@@ -1,0 +1,15 @@
+Title: API Hosttag configuration: Fixed exception on changing tag configuration
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1617011520
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Changing the tag configuration via the Web API triggered an error
+<tt>The following tags are still used but are not listed in the updated configuration: test:None</tt>.
+when a taggroup with just one toggleable option was explicitly not set on hosts.
+

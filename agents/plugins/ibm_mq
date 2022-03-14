@@ -10,7 +10,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 #
 # Collects monitoring information of all IBM MQ Queue Managers.
@@ -84,9 +84,8 @@ echo "version: $CMK_VERSION"
 check_tool dspmq
 check_tool runmqsc
 
-dspmq -n | while read -r dspmqline
-do
-    now=$(date +'%Y-%m-%dT%H:%M:%S%z')
+dspmq -n | while read -r dspmqline; do
+    now=$(date +'%Y-%m-%dT%H:%M:%S')
     QM=$(echo "$dspmqline" | sed 's,QMNAME(\([^)]*\).*,\1,')
     if is_qm_monitored "$QM"; then
         echo '<<<ibm_mq_channels:sep(10)>>>'

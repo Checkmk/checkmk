@@ -31,13 +31,19 @@ def check_vms_queuejobs(_no_item, params, info):
         minutes, seconds = divmod(max_cpu_secs, 60)
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
-        infotext += ', most CPU used by %s (%d days, %02d:%02d:%02d.%02d)' % \
-                (max_cpu_job, days, hours, minutes, int(seconds), int(seconds * 100))
+        infotext += ", most CPU used by %s (%d days, %02d:%02d:%02d.%02d)" % (
+            max_cpu_job,
+            days,
+            hours,
+            minutes,
+            int(seconds),
+            int(seconds * 100),
+        )
 
     return 0, infotext
 
 
-check_info['vms_queuejobs'] = {
+check_info["vms_queuejobs"] = {
     "check_function": check_vms_queuejobs,
     "inventory_function": inventory_vms_queuejobs,
     "service_description": "Queue Jobs",

@@ -5,16 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Iterable, Iterator, List, Mapping, Set
-from contextlib import suppress
 import enum
+from contextlib import suppress
+from typing import Iterable, Iterator, Mapping, Set
 
-from cmk.utils.check_utils import maincheckify
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
-
-from cmk.base.check_utils import Service, ServiceID
+from cmk.base.check_utils import ConfiguredService, ServiceID
 
 
 class FilterMode(enum.Enum):
@@ -23,15 +22,15 @@ class FilterMode(enum.Enum):
     INCLUDE_CLUSTERED = enum.auto()
 
 
-class HostCheckTable(Mapping[ServiceID, Service]):
+class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
     def __init__(
         self,
         *,
-        services: Iterable[Service],
+        services: Iterable[ConfiguredService],
     ) -> None:
         self._data = {s.id(): s for s in services}
 
-    def __getitem__(self, key: ServiceID) -> Service:
+    def __getitem__(self, key: ServiceID) -> ConfiguredService:
         return self._data[key]
 
     def __len__(self) -> int:
@@ -51,7 +50,7 @@ def _aggregate_check_table_services(
     skip_autochecks: bool,
     skip_ignored: bool,
     filter_mode: FilterMode,
-) -> Iterable[Service]:
+) -> Iterable[ConfiguredService]:
 
     sfilter = _ServiceFilter(
         config_cache=config_cache,
@@ -64,14 +63,18 @@ def _aggregate_check_table_services(
     # in search (single host) or that might match the host.
     if not (skip_autochecks or host_config.is_ping_host):
         yield from (
-            s for s in config_cache.get_autochecks_of(host_config.hostname) if sfilter.keep(s))
+            s for s in config_cache.get_autochecks_of(host_config.hostname) if sfilter.keep(s)
+        )
 
-    yield from (s for s in _get_static_check_entries(host_config) if sfilter.keep(s))
+    yield from (s for s in _get_static_check_entries(config_cache, host_config) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
     if host_config.is_cluster:
-        yield from (s for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
-                    if sfilter.keep(s))
+        yield from (
+            s
+            for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
+            if sfilter.keep(s)
+        )
 
 
 class _ServiceFilter:
@@ -95,12 +98,12 @@ class _ServiceFilter:
         self._mode = mode
         self._skip_ignored = skip_ignored
 
-    def keep(self, service: Service) -> bool:
+    def keep(self, service: ConfiguredService) -> bool:
 
         if self._skip_ignored and config.service_ignored(
-                self._host_name,
-                service.check_plugin_name,
-                service.description,
+            self._host_name,
+            service.check_plugin_name,
+            service.description,
         ):
             return False
 
@@ -115,7 +118,7 @@ class _ServiceFilter:
             service.description,
             part_of_clusters=self._host_part_of_clusters,
         )
-        svc_is_mine = (self._host_name == host_of_service)
+        svc_is_mine = self._host_name == host_of_service
 
         if self._mode is FilterMode.NONE:
             return svc_is_mine
@@ -124,33 +127,30 @@ class _ServiceFilter:
         return not svc_is_mine
 
 
-def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
-    entries: List[Service] = []
-    for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
-        # TODO (mo): centralize maincheckify: CMK-4295
-        check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
-
-        if config.has_timespecific_params(params):
-            timespec_params = [params]
-            params = {}
-        else:
-            timespec_params = []
-
-        new_params = config.compute_check_parameters(
-            host_config.hostname,
-            check_plugin_name,
-            item,
-            params,
-            for_static_checks=True,
-        )
-
-        if timespec_params:
-            params = config.set_timespecific_param_list(timespec_params, new_params)
-        else:
-            params = new_params
+def _get_static_check_entries(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+) -> Iterator[ConfiguredService]:
+    entries = []
+    for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
 
         descr = config.service_description(host_config.hostname, check_plugin_name, item)
-        entries.append(Service(check_plugin_name, item, descr, params))
+        entries.append(
+            ConfiguredService(
+                check_plugin_name=check_plugin_name,
+                item=item,
+                description=descr,
+                parameters=config.compute_check_parameters(
+                    config_cache.host_of_clustered_service(host_config.hostname, descr),
+                    check_plugin_name,
+                    item,
+                    {},
+                    configured_parameters=TimespecificParameters((params,)),
+                ),
+                discovered_parameters=None,
+                service_labels={},
+            )
+        )
 
     # Note: We need to reverse the order of the static_checks. This is
     # because users assume that earlier rules have precedence over later
@@ -163,38 +163,26 @@ def _get_clustered_services(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     skip_autochecks: bool,
-) -> Iterable[Service]:
+) -> Iterable[ConfiguredService]:
     for node in host_config.nodes or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
         node_config = config_cache.get_host_config(node)
-        node_checks = list(_get_static_check_entries(node_config))
+        node_checks = list(_get_static_check_entries(config_cache, node_config))
         if not (skip_autochecks or host_config.is_ping_host):
             node_checks += config_cache.get_autochecks_of(node)
 
-        for service in node_checks:
-            services_host = config_cache.host_of_clustered_service(node, service.description)
-            if services_host != host_config.hostname:
-                continue
-
-            cluster_params = config.compute_check_parameters(
-                host_config.hostname,
-                service.check_plugin_name,
-                service.item,
-                service.parameters,
-            )
-            yield Service(
-                service.check_plugin_name,
-                service.item,
-                service.description,
-                cluster_params,
-                service.service_labels,
-            )
+        yield from (
+            service
+            for service in node_checks
+            if config_cache.host_of_clustered_service(node, service.description)
+            == host_config.hostname
+        )
 
 
 def get_check_table(
-    hostname: str,
+    hostname: HostName,
     *,
     use_cache: bool = True,
     skip_autochecks: bool = False,
@@ -204,20 +192,23 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    # TODO (mo): find out why skip_ignored is ignored here. That seems wrong to me.
-    cache_key = (host_config.hostname, filter_mode, skip_autochecks) if use_cache else None
+    cache_key = (
+        (host_config.hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
+    )
 
     if cache_key:
         with suppress(KeyError):
             return config_cache.check_table_cache[cache_key]
 
-    host_check_table = HostCheckTable(services=_aggregate_check_table_services(
-        config_cache=config_cache,
-        host_config=host_config,
-        skip_autochecks=skip_autochecks,
-        skip_ignored=skip_ignored,
-        filter_mode=filter_mode,
-    ))
+    host_check_table = HostCheckTable(
+        services=_aggregate_check_table_services(
+            config_cache=config_cache,
+            host_config=host_config,
+            skip_autochecks=skip_autochecks,
+            skip_ignored=skip_ignored,
+            filter_mode=filter_mode,
+        )
+    )
 
     if cache_key:
         config_cache.check_table_cache[cache_key] = host_check_table

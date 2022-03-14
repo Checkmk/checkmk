@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_psu>>>
 # power-supplies 1 durable-id psu_1.1
 # power-supplies 1 enclosure-id 1
@@ -58,14 +60,14 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
-check_info['hp_msa_psu'] = {
-    'parse_function': parse_hp_msa,
-    'inventory_function': inventory_hp_msa_health,
-    'check_function': check_hp_msa_health,
-    'service_description': 'Power Supply Health %s',
+check_info["hp_msa_psu"] = {
+    "parse_function": parse_hp_msa,
+    "inventory_function": inventory_hp_msa_health,
+    "check_function": check_hp_msa_health,
+    "service_description": "Power Supply Health %s",
 }
 
-#.
+# .
 #   .--voltage-------------------------------------------------------------.
 #   |                             _ _                                      |
 #   |                 __   _____ | | |_ __ _  __ _  ___                    |
@@ -93,31 +95,33 @@ def inventory_hp_msa_psu(parsed):
     If the PSU is freezing and has no voltage we assume
     that means data is not valid
     """
-    indicators = ('dc12v', 'dc5v', 'dc33v', 'dc12i', 'dc5i', 'dctemp')
+    indicators = ("dc12v", "dc5v", "dc33v", "dc12i", "dc5i", "dctemp")
     for item, data in parsed.items():
-        if any(data.get(i) != '0' for i in indicators):
+        if any(data.get(i) != "0" for i in indicators):
             yield item, {}
 
 
 @get_parsed_item_data
 def check_hp_msa_psu(_item, params, data):
-    for psu_type, psu_type_readable, levels_type in [("dc12v", "12 V", "levels_12v_"),
-                                                     ("dc5v", "5 V", "levels_5v_"),
-                                                     ("dc33v", "3.3 V", "levels_33v_")]:
+    for psu_type, psu_type_readable, levels_type in [
+        ("dc12v", "12 V", "levels_12v_"),
+        ("dc5v", "5 V", "levels_5v_"),
+        ("dc33v", "3.3 V", "levels_33v_"),
+    ]:
         psu_voltage = float(data[psu_type]) / 100
         levels = params[levels_type + "upper"] + params[levels_type + "lower"]
-        yield check_levels(psu_voltage, None, levels, unit='V', infoname=psu_type_readable)
+        yield check_levels(psu_voltage, None, levels, unit="V", infoname=psu_type_readable)
 
 
-check_info['hp_msa_psu.sensor'] = {
-    'inventory_function': inventory_hp_msa_psu,
-    'check_function': check_hp_msa_psu,
-    'service_description': 'Power Supply Voltage %s',
-    'default_levels_variable': "hp_msa_psu_default_levels",
-    'group': 'hp_msa_psu_voltage',
+check_info["hp_msa_psu.sensor"] = {
+    "inventory_function": inventory_hp_msa_psu,
+    "check_function": check_hp_msa_psu,
+    "service_description": "Power Supply Voltage %s",
+    "default_levels_variable": "hp_msa_psu_default_levels",
+    "group": "hp_msa_psu_voltage",
 }
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -137,11 +141,11 @@ def check_hp_msa_psu_temp(item, params, data):
     return check_temperature(float(data["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
 
 
-check_info['hp_msa_psu.temp'] = {
-    'inventory_function': inventory_hp_msa_psu,
-    'check_function': check_hp_msa_psu_temp,
-    'service_description': 'Temperature Power Supply %s',
-    'has_perfdata': True,
-    'group': 'temperature',
-    'default_levels_variable': 'hp_msa_psu_temp_default_levels',
+check_info["hp_msa_psu.temp"] = {
+    "inventory_function": inventory_hp_msa_psu,
+    "check_function": check_hp_msa_psu_temp,
+    "service_description": "Temperature Power Supply %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "hp_msa_psu_temp_default_levels",
 }

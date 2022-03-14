@@ -1,0 +1,15 @@
+Title: fileinfo_groups, sap_hana_fileinfo_groups: migration to the new check API
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1627649999
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+This werk is incompatible if you have fileinfo_groups or sap_hana_fileinfo_groups
+enforced services. In that case you have to go to the enforced service parameters
+and add group patterns for file grouping.
+
+Nothing has changed in the check logic.

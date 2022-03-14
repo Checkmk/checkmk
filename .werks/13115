@@ -1,0 +1,15 @@
+Title: Fix UnicodeDecodeError on fallback notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1630502925
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If locales with non UTF-8 characters were used, fallback notifications
+could fail with an error like "UnicodeDecodeError: 'utf-8' codec can't decode
+byte 0xe5 in position 1079: invalid continuation byte". This was seen on RHEL
+based systems.

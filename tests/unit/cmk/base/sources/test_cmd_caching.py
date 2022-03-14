@@ -11,39 +11,34 @@
 
 from functools import partial
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.utils import is_enterprise_repo
-from testlib.base import Scenario
-from testlib.debug_utils import cmk_debug_enabled
+from tests.testlib.base import Scenario
+from tests.testlib.utils import is_enterprise_repo
 
 import cmk.utils.paths
 from cmk.utils.log import logger
+from cmk.utils.type_defs import HostName
+
+from cmk.core_helpers.agent import NoCache
+from cmk.core_helpers.cache import MaxAge
 
 import cmk.base.automations
 import cmk.base.automations.check_mk
 import cmk.base.config as config
 import cmk.base.inventory_plugins
+import cmk.base.license_usage as license_usage
 import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.sources import Source
 from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
-import cmk.base.license_usage as license_usage
 
 
 @pytest.fixture(autouse=True)
 def mock_license_usage(monkeypatch):
     monkeypatch.setattr(license_usage, "try_history_update", lambda: None)
-
-
-@pytest.fixture(scope="module", autouse=True)
-def enable_debug_mode():
-    # `debug.disabled()` hides exceptions and makes it
-    # *impossible* to debug anything.
-    with cmk_debug_enabled():
-        yield
 
 
 @pytest.fixture(name="scenario")
@@ -78,9 +73,8 @@ def _patch_data_source(mocker, **kwargs):
     defaults = {
         "maybe": False,
         "use_outdated": False,
-        "max_age": 0,  # check_max_cachefile_age
+        "max_age": config.max_cachefile_age(),
         "disabled": False,
-        "snmp_disabled": False,
         "use_only_cache": False,
         "use_outdated_persisted_sections": False,
         "on_error": "raise",
@@ -92,8 +86,13 @@ def _patch_data_source(mocker, **kwargs):
 
         file_cache = self._make_file_cache()
 
-        assert file_cache.disabled == ((defaults["disabled"] or defaults["snmp_disabled"])
-                                       if isinstance(self, SNMPSource) else defaults["disabled"])
+        assert file_cache.disabled == (
+            True
+            if isinstance(file_cache, NoCache)
+            else defaults["disabled"]
+            if isinstance(self, SNMPSource)
+            else defaults["disabled"]
+        ), repr(file_cache)
 
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]
@@ -102,7 +101,8 @@ def _patch_data_source(mocker, **kwargs):
             assert self.use_only_cache == defaults["use_only_cache"]
         if isinstance(self, AgentSource):
             assert (
-                self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"])
+                self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"]
+            )
 
         elif isinstance(self, SNMPSource):
             assert self._on_snmp_scan_error == defaults["on_error"]
@@ -127,7 +127,7 @@ def patch_data_source(mocker):
 
 @pytest.fixture
 def without_inventory_plugins(monkeypatch):
-    monkeypatch.setattr(cmk.base.api.agent_based.register, 'iter_all_inventory_plugins', lambda: ())
+    monkeypatch.setattr(cmk.base.api.agent_based.register, "iter_all_inventory_plugins", lambda: ())
 
 
 # When called without hosts, it uses all hosts and defaults to using the data source cache
@@ -139,13 +139,13 @@ def without_inventory_plugins(monkeypatch):
         (
             ["ds-test-host1"],
             {
-                "max_age": 0
+                "max_age": config.max_cachefile_age(),
             },
         ),
         (
             ["ds-test-cluster1"],
             {
-                "max_age": 90
+                "max_age": config.max_cachefile_age(),
             },
         ),
         ([], {}),
@@ -156,23 +156,15 @@ def without_inventory_plugins(monkeypatch):
     ("cache"),
     [
         (None, {}),
-        (True, {
-            "maybe": True,
-            "use_outdated": True
-        }),
-        (False, {
-            "maybe": False,
-            "disabled": True
-        }),
+        (True, {"maybe": True, "use_outdated": True}),
+        (False, {"maybe": False, "disabled": True}),
     ],
     ids=["cache=None", "cache=True", "cache=False"],
 )
 @pytest.mark.parametrize(
     ("force"),
     [
-        (True, {
-            "use_outdated_persisted_sections": True
-        }),
+        (True, {"use_outdated_persisted_sections": True}),
         (False, {}),
     ],
     ids=["force=True", "force=False"],
@@ -210,7 +202,7 @@ def test_mode_inventory_caching(hosts, cache, force, mocker):
     else:
         valid_hosts = hosts[0]
 
-    num_runs = (len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster]) * 2)
+    num_runs = len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster]) * 2
 
     assert Source.parse.call_count == num_runs  # type: ignore[attr-defined]
 
@@ -219,54 +211,61 @@ def test_mode_inventory_caching(hosts, cache, force, mocker):
 @pytest.mark.usefixtures("patch_data_source")
 @pytest.mark.usefixtures("without_inventory_plugins")
 def test_mode_inventory_as_check():
-    assert cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
+    assert cmk.base.modes.check_mk.mode_inventory_as_check({}, HostName("ds-test-host1")) == 0
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_marked_hosts(mocker):
-    _patch_data_source(mocker, max_age=120)  # inventory_max_cachefile_age
+    _patch_data_source(
+        mocker,
+        max_age=config.max_cachefile_age(),
+    )  # inventory_max_cachefile_age
     # TODO: First configure auto discovery to make this test really work
     cmk.base.modes.check_mk.mode_discover_marked_hosts()
     # assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
-    _patch_data_source(mocker, max_age=0)
-    assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
+    _patch_data_source(mocker, max_age=MaxAge(checking=0, discovery=0, inventory=120))
+    assert cmk.base.modes.check_mk.mode_check_discovery(HostName("ds-test-host1")) == 1
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_cached(mocker):
     _patch_data_source(
         mocker,
-        max_age=120,
+        max_age=config.max_cachefile_age(),
         use_outdated=True,
         maybe=True,
     )
 
     cmk.base.modes.check_mk.option_cache()
-    assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
+    assert cmk.base.modes.check_mk.mode_check_discovery(HostName("ds-test-host1")) == 1
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_all_hosts(mocker):
-    _patch_data_source(mocker, maybe=True, max_age=120)
+    _patch_data_source(
+        mocker,
+        maybe=True,
+        use_outdated=True,
+        max_age=config.max_cachefile_age(),
+    )
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, [])
     active_real_hosts = config.get_config_cache().all_active_realhosts()
-    assert Source.parse.call_count == (  # type: ignore[attr-defined]
-        len(active_real_hosts) * 2)
+    assert Source.parse.call_count == (len(active_real_hosts) * 2)  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts(mocker):
     # TODO: Is it correct that no cache is used here?
-    _patch_data_source(mocker, max_age=0)
+    _patch_data_source(mocker, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
@@ -275,7 +274,7 @@ def test_mode_discover_explicit_hosts(mocker):
 def test_mode_discover_explicit_hosts_cache(mocker):
     _patch_data_source(
         mocker,
-        max_age=120,
+        max_age=config.max_cachefile_age(),
         maybe=True,
         use_outdated=True,
     )
@@ -286,7 +285,7 @@ def test_mode_discover_explicit_hosts_cache(mocker):
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_no_cache(mocker):
-    _patch_data_source(mocker, disabled=True, max_age=0)
+    _patch_data_source(mocker, disabled=True, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
@@ -309,34 +308,43 @@ def test_mode_check_explicit_host_cache(mocker):
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_explicit_host_no_cache(mocker):
-    _patch_data_source(mocker, disabled=True, max_age=0)
+    _patch_data_source(
+        mocker,
+        disabled=True,
+        max_age=config.max_cachefile_age(),
+    )
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
     cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
-@pytest.mark.usefixtures("patch_data_source")
-def test_mode_dump_agent_explicit_host(capsys):
-    cmk.base.modes.check_mk.mode_dump_agent("ds-test-host1")
+def test_mode_dump_agent_explicit_host(mocker, capsys):
+    _patch_data_source(mocker, max_age=config.max_cachefile_age())
+    cmk.base.modes.check_mk.mode_dump_agent(HostName("ds-test-host1"))
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_dump_agent_explicit_host_cache(mocker, capsys):
-    _patch_data_source(mocker, maybe=True, use_outdated=True)
+    _patch_data_source(
+        mocker,
+        max_age=config.max_cachefile_age(),
+        maybe=True,
+        use_outdated=True,
+    )
     cmk.base.modes.check_mk.option_cache()
-    cmk.base.modes.check_mk.mode_dump_agent("ds-test-host1")
+    cmk.base.modes.check_mk.mode_dump_agent(HostName("ds-test-host1"))
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
-    _patch_data_source(mocker, disabled=True, max_age=0)
+    _patch_data_source(mocker, disabled=True, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
-    cmk.base.modes.check_mk.mode_dump_agent("ds-test-host1")
+    cmk.base.modes.check_mk.mode_dump_agent(HostName("ds-test-host1"))
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
@@ -347,20 +355,18 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@noscan",
             {
-                "snmp_disabled": False,
                 "disabled": False,
                 "use_only_chache": True,  # TCP
-                "max_age": 120,  # default discovery cache file age
+                "max_age": config.max_cachefile_age(),
                 "use_outdated": True,
             },
         ),
         (
             "@scan",
             {
-                "snmp_disabled": True,
                 "disabled": False,  # TCP
                 "use_only_chache": True,  # TCP
-                "max_age": 120,  # default discovery cache file age
+                "max_age": config.max_cachefile_age(),
                 "use_outdated": True,
             },
         ),
@@ -370,17 +376,12 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
 @pytest.mark.parametrize(
     ("raise_errors"),
     [
-        ("@raiseerrors", {
-            "on_error": "raise"
-        }),
-        (None, {
-            "on_error": "ignore"
-        }),
+        ("@raiseerrors", {"on_error": "raise"}),
+        (None, {"on_error": "ignore"}),
     ],
     ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
-@pytest.mark.usefixtures("scenario")
-@pytest.mark.usefixtures("reset_log_level")
+@pytest.mark.usefixtures("scenario", "reset_log_level", "initialised_item_state")
 def test_automation_try_discovery_caching(scan, raise_errors, mocker):
     kwargs = {}
     kwargs.update(scan[1])
@@ -399,12 +400,8 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
 @pytest.mark.parametrize(
     ("raise_errors"),
     [
-        ("@raiseerrors", {
-            "on_error": "raise"
-        }),
-        (None, {
-            "on_error": "ignore"
-        }),
+        ("@raiseerrors", {"on_error": "raise"}),
+        (None, {"on_error": "ignore"}),
     ],
     ids=["raise_errors=@raiserrors", "raise_errors=none"],
 )
@@ -421,11 +418,9 @@ def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs.update(raise_errors[1])
     # The next options come from the call to `_set_cache_opts_of_checkers()`
     # in `AutomationDiscovery`.
-    use_cached_snmp_data = scan != "@scan"
     kwargs.update(
         use_outdated=True,
-        snmp_disabled=not use_cached_snmp_data,
-        max_age=120,
+        max_age=config.max_cachefile_age(),
     )
 
     _patch_data_source(mocker, **kwargs)

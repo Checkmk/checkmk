@@ -5,13 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
+###########################################################################
+# NOTE: These metrics (and associated special agent/checks) are deprecated and
+#       will be removed in Checkmk version 2.2.
+###########################################################################
 
-#.
+
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -26,7 +28,7 @@ from cmk.gui.plugins.metrics import (
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["k8s_nodes"] = {
+metric_info["k8s_nodes"] = {  # legacy kubernetes checks
     "title": _("Nodes"),
     "unit": "count",
     "color": "11/a",
@@ -47,7 +49,15 @@ metric_info["k8s_pods_allocatable"] = {
 metric_info["k8s_pods_capacity"] = {
     "title": _("Capacity"),
     "unit": "count",
-    "color": "c0c0c0",
+    "color": "#c0c0c0",
+}
+
+metric_info["k8s_pods_pending"] = {"title": _("Pending"), "unit": "count", "color": "#d1d4e8"}
+
+metric_info["k8s_pods_running"] = {
+    "title": _("Running"),
+    "unit": "count",
+    "color": "#93a2ee",
 }
 
 metric_info["k8s_cpu_request"] = {
@@ -75,6 +85,13 @@ metric_info["k8s_cpu_capacity"] = {
 }
 
 metric_info["k8s_memory_request"] = {
+    "title": _("Request"),
+    "unit": "bytes",
+    "color": "42/b",
+}
+
+
+metric_info["k8s_memory_requests"] = {
     "title": _("Request"),
     "unit": "bytes",
     "color": "42/b",
@@ -109,6 +126,21 @@ metric_info["k8s_memory_usage"] = {
     "unit": "%",
     "color": "31/a",
 }
+
+
+metric_info["k8s_mem_used"] = {
+    "color": "#80ff40",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
+
+metric_info["k8s_mem_used_percent"] = {
+    "color": "#80ff40",
+    "title": _("Memory used %"),
+    "unit": "%",
+}
+
 
 metric_info["k8s_cpu_usage"] = {
     "title": _("CPU request"),
@@ -170,7 +202,20 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
-#.
+metric_info["ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["total_replicas"] = {
+    "title": _("Total replicas"),
+    "unit": "",
+    "color": "35/a",
+}
+
+
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -188,6 +233,16 @@ graph_info["k8s_resources.pods"] = {
         ("k8s_pods_capacity", "area"),
         ("k8s_pods_allocatable", "area"),
         ("k8s_pods_request", "area"),
+    ],
+}
+
+graph_info["k8s_resources.pod"] = {
+    "title": _("Pod resources"),
+    "metrics": [
+        ("k8s_pods_allocatable", "line"),
+        ("k8s_pods_capacity", "line"),
+        ("k8s_pods_running", "area"),
+        ("k8s_pods_pending", "stack"),
     ],
 }
 
@@ -213,10 +268,34 @@ graph_info["k8s_resources.memory"] = {
     "optional_metrics": ["k8s_memory_capacity", "k8s_memory_allocatable", "k8s_memory_limit"],
 }
 
+
+graph_info["k8s_memory_usage"] = {
+    "title": _("Memory usage"),
+    "metrics": [
+        ("k8s_memory_requests", "line"),
+        ("k8s_memory_limit", "line"),
+        ("k8s_mem_used", "area"),
+    ],
+    "optional_metrics": ["k8s_memory_request", "k8s_memory_limit"],
+}
+
+
 graph_info["k8s_pod_container"] = {
     "title": _("Ready containers"),
     "metrics": [
         ("docker_all_containers", "line"),
         ("ready_containers", "area"),
+    ],
+}
+
+
+graph_info["replicas"] = {
+    "title": _("Replicas"),
+    "metrics": [
+        ("ready_replicas", "area"),
+        ("total_replicas", "line"),
+    ],
+    "scalars": [
+        "ready_replicas:crit",
     ],
 }

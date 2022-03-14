@@ -1,7 +1,7 @@
 title: Oracle Database: Locks
 agents: linux, solaris, hpux
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the wait time for locks in Oracle. Per default the checks
@@ -11,5 +11,5 @@ description:
 item:
  Name of the device
 
-inventory:
+discovery:
  One service is created for each running database.

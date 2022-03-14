@@ -1,7 +1,7 @@
 title: Generic Printer: Alerts Reported
 agents: snmp
 catalog: hw/printer
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the alerts reported by printers supporting the
@@ -14,6 +14,5 @@ description:
  the alert code and the state of the check. This table is hardcoded. If you find
  any possible improvements or shortcomings of the table, feel free to contact us.
 
-inventory:
+discovery:
  One service is created for each device.
-

@@ -47,8 +47,12 @@ def check_jar_signature(item, _no_params, info):
         elif in_block and line.startswith("X.509"):
             in_cert = True
             cert = [line]
-        elif in_block and in_cert and line.startswith(
-                "[") and not line.startswith("[entry was signed on"):
+        elif (
+            in_block
+            and in_cert
+            and line.startswith("[")
+            and not line.startswith("[entry was signed on")
+        ):
             in_cert = False
             cert.append(line)
             details.append(cert)
@@ -67,7 +71,7 @@ def check_jar_signature(item, _no_params, info):
         expiry_date_text = cert_valid.split("expired on ", 1)[1][:-1]
     else:
         expiry_date_text = cert_valid.split("to ", 1)[1][:-1]
-    expiry_date = time.mktime(time.strptime(expiry_date_text, '%m/%d/%y %I:%M %p'))
+    expiry_date = time.mktime(time.strptime(expiry_date_text, "%m/%d/%y %I:%M %p"))
     expired_since = time.time() - expiry_date
 
     warn, crit = 60 * 86400, 30 * 86400
@@ -75,24 +79,30 @@ def check_jar_signature(item, _no_params, info):
     state = 0
     if expired_since >= 0:
         status_text = "Certificate expired on %s (%s ago) " % (
-            expiry_date_text, get_age_human_readable(expired_since))
+            expiry_date_text,
+            get_age_human_readable(expired_since),
+        )
         state = 2
 
     else:
         status_text = "Certificate will expire on %s (in %s)" % (
-            expiry_date_text, get_age_human_readable(-expired_since))
+            expiry_date_text,
+            get_age_human_readable(-expired_since),
+        )
         if -expired_since <= crit:
             state = 2
         elif -expired_since <= warn:
             state = 1
         if state:
-            status_text += " (warn/crit below %s/%s)" % (get_age_human_readable(warn),
-                                                         get_age_human_readable(crit))
+            status_text += " (warn/crit below %s/%s)" % (
+                get_age_human_readable(warn),
+                get_age_human_readable(crit),
+            )
 
     return state, status_text
 
 
-check_info['jar_signature'] = {
+check_info["jar_signature"] = {
     "service_description": "Jar-Signature %s",
     "check_function": check_jar_signature,
     "inventory_function": inventory_jar_signature,

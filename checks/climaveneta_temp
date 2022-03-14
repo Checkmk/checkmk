@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 climaveneta_sensors = {
     1: "Room",
     3: "Outlet Air 1",
@@ -34,14 +35,14 @@ factory_settings["climaveneta_temp_default_levels"] = {"levels": (28, 30)}
 
 def inventory_climaveneta_temp(info):
     for sensor_id, value in info:
-        sensor_id = int(sensor_id.split('.')[0])
+        sensor_id = int(sensor_id.split(".")[0])
         if sensor_id in climaveneta_sensors and int(value) > 0:
             yield climaveneta_sensors[sensor_id], {}
 
 
 def check_climaveneta_temp(item, params, info):
     for sensor_id, sensor_value in info:
-        sensor_id = int(sensor_id.split('.')[0])
+        sensor_id = int(sensor_id.split(".")[0])
         if climaveneta_sensors.get(sensor_id) == item:
             sensor_value = int(sensor_value) / 10.0
             return check_temperature(sensor_value, params, "climaveneta_temp_%s" % item)
@@ -55,5 +56,5 @@ check_info["climaveneta_temp"] = {
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "pCO Gateway",
     "snmp_info": (".1.3.6.1.4.1.9839.2.1", [OID_END, 2]),
     "group": "temperature",
-    "default_levels_variable": "climaveneta_temp_default_levels"
+    "default_levels_variable": "climaveneta_temp_default_levels",
 }

@@ -32,7 +32,7 @@ public:
     enum Kind { row, stats, wait_condition };
 
     explicit Filter(Kind kind) : _kind(kind) {}
-    virtual ~Filter();
+    virtual ~Filter() = default;
     [[nodiscard]] Kind kind() const { return _kind; }
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;

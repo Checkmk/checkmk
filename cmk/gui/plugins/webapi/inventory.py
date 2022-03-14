@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.inventory import inventory_of_host
-
-from cmk.gui.plugins.webapi import (
-    api_call_collection_registry,
-    APICallCollection,
-)
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 
 
 @api_call_collection_registry.register

@@ -1,0 +1,18 @@
+Title: lsi_array, lsi_disk: fix crash of RAID array and RAID disk services
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1625488179
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Due to a compatibility issue of the plugins with the new check plugin API
+the services of the lsi_array plugin and the discovery service crashed after
+an update to the 2.0. On the service discovery page all services of the
+plugins were shown as vanished.
+
+The services are now discovered correctly again. You have to rediscover the
+services on the affected hosts.

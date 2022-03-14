@@ -14,58 +14,62 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
+
+from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.logwatch import ItemData, Section
 
-from .agent_based_api.v1 import register
-
 
 def _extract_error_message(line: str) -> Optional[str]:
-    '''Check line for error message
+    """Check line for error message
     Return None if no error message is found, error_message otherwise
-    '''
+    """
     if not line.startswith("CANNOT READ CONFIG FILE: "):
         return None
     return "Error in agent configuration: %s" % line[25:]
 
 
 def _extract_item_attribute(line: str) -> Optional[Tuple[str, str]]:
-    '''Check line for next item subsection
+    """Check line for next item subsection
     Return None if no item subsection is found,
     (item, attribute) otherwise
-    '''
+    """
     if line[:3] != "[[[" or line[-3:] != "]]]":
         return None
     logfile_name = line[3:-3]
-    if logfile_name.endswith(':missing') or logfile_name.endswith(':cannotopen'):
-        logfile_name, attribute = logfile_name.rsplit(':', 1)
+    if logfile_name.endswith(":missing") or logfile_name.endswith(":cannotopen"):
+        logfile_name, attribute = logfile_name.rsplit(":", 1)
     else:
-        attribute = 'ok'
+        attribute = "ok"
     return logfile_name, attribute
 
 
 def parse_logwatch(string_table: StringTable) -> Section:
     """
-        >>> import pprint
-        >>> pprint.pprint(parse_logwatch([
-        ...     ['[[[mylog]]]'],
-        ...     ['C', 'whoha!', 'Someone', 'mooped!'],
-        ...     ['[[[missinglog:missing]]]'],
-        ...     ['[[[unreadablelog:cannotopen]]]'],
-        ...     ['[[[empty.log]]]'],
-        ...     ['[[[my_other_log]]]'],
-        ...     ['W', 'watch', 'your', 'step!'],
-        ... ]))
-        {'errors': [],
-         'logfiles': {'empty.log': {'attr': 'ok', 'lines': []},
-                      'missinglog': {'attr': 'missing', 'lines': []},
-                      'my_other_log': {'attr': 'ok', 'lines': ['W watch your step!']},
-                      'mylog': {'attr': 'ok', 'lines': ['C whoha! Someone mooped!']},
-                      'unreadablelog': {'attr': 'cannotopen', 'lines': []}}}
+    >>> import pprint
+    >>> section = parse_logwatch([
+    ...     ['[[[mylog]]]'],
+    ...     ['C', 'whoha!', 'Someone', 'mooped!'],
+    ...     ['[[[missinglog:missing]]]'],
+    ...     ['[[[unreadablelog:cannotopen]]]'],
+    ...     ['[[[empty.log]]]'],
+    ...     ['[[[my_other_log]]]'],
+    ...     ['W', 'watch', 'your', 'step!'],
+    ... ])
+    >>> pprint.pprint(section.errors)
+    []
+    >>> pprint.pprint(section.logfiles)
+    {'empty.log': {'attr': 'ok', 'lines': []},
+     'missinglog': {'attr': 'missing', 'lines': []},
+     'my_other_log': {'attr': 'ok', 'lines': ['W watch your step!']},
+     'mylog': {'attr': 'ok', 'lines': ['C whoha! Someone mooped!']},
+     'unreadablelog': {'attr': 'cannotopen', 'lines': []}}
     """
 
-    section: Section = {"errors": [], "logfiles": {}}
+    errors = []
+    logfiles: Dict[str, ItemData] = {}
+
     item_data: Optional[ItemData] = None
 
     for raw_line in string_table:
@@ -73,19 +77,19 @@ def parse_logwatch(string_table: StringTable) -> Section:
 
         error_msg = _extract_error_message(line)
         if error_msg is not None:
-            section['errors'].append(error_msg)
+            errors.append(error_msg)
             continue
 
         item_attribute = _extract_item_attribute(line)
         if item_attribute is not None:
             item, attribute = item_attribute
-            item_data = section['logfiles'].setdefault(item, {'attr': attribute, 'lines': []})
+            item_data = logfiles.setdefault(item, {"attr": attribute, "lines": []})
             continue
 
         if item_data is not None:
-            item_data['lines'].append(line)
+            item_data["lines"].append(line)
 
-    return section
+    return Section(errors=errors, logfiles=logfiles)
 
 
 register.agent_section(

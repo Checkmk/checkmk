@@ -18,7 +18,7 @@ def parse_atto_fibrebridge_sas(info):
         1: "online",
         2: "offline",
         # From the MIB: "Degraded state is entered when fewer than all four PHYs are online."
-        3: "degraded,"
+        3: "degraded,",
     }
 
     sas_adminstates = {
@@ -73,12 +73,13 @@ check_info["atto_fibrebridge_sas"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.4547.2.3.3.3.1",
         [
-            "2",  #sasPortPortNumber
-            "3",  #sasPortOperationalState
-            "4",  #sasPortPhy1State
-            "5",  #sasPortPhy2State
-            "6",  #sasPortPhy3State
-            "7",  #sasPortPhy4State
-            "8",  #sasPortAdminState
-        ]),
+            "2",  # sasPortPortNumber
+            "3",  # sasPortOperationalState
+            "4",  # sasPortPhy1State
+            "5",  # sasPortPhy2State
+            "6",  # sasPortPhy3State
+            "7",  # sasPortPhy4State
+            "8",  # sasPortAdminState
+        ],
+    ),
 }

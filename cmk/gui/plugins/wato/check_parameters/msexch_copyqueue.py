@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_msexch_copyqueue():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("The database name on the Mailbox Server."),
     )
@@ -28,11 +23,12 @@ def _item_spec_msexch_copyqueue():
 def _parameter_valuespec_msexch_copyqueue():
     return Tuple(
         title=_("Upper Levels for CopyQueue Length"),
-        help=_("This rule sets upper levels to the number of transaction logs waiting to be copied "
-               "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
-               "(DAG). This is also known as the CopyQueue length."),
-        elements=[Integer(title=_("Warning at")),
-                  Integer(title=_("Critical at"))],
+        help=_(
+            "This rule sets upper levels to the number of transaction logs waiting to be copied "
+            "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
+            "(DAG). This is also known as the CopyQueue length."
+        ),
+        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
     )
 
 
@@ -43,4 +39,5 @@ rulespec_registry.register(
         item_spec=_item_spec_msexch_copyqueue,
         parameter_valuespec=_parameter_valuespec_msexch_copyqueue,
         title=lambda: _("MS Exchange DAG CopyQueue"),
-    ))
+    )
+)

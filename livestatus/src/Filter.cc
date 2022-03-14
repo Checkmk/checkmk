@@ -5,27 +5,25 @@
 
 #include "Filter.h"
 
-Filter::~Filter() = default;
-
 std::optional<std::string> Filter::stringValueRestrictionFor(
-    const std::string& /* column_name */) const {
+    const std::string & /* column_name */) const {
     return {};
 }
 
 std::optional<int32_t> Filter::greatestLowerBoundFor(
-    const std::string& /* column_name */,
+    const std::string & /* column_name */,
     std::chrono::seconds /* timezone_offset */) const {
     return {};
 }
 
 std::optional<int32_t> Filter::leastUpperBoundFor(
-    const std::string& /* column_name */,
+    const std::string & /* column_name */,
     std::chrono::seconds /* timezone_offset */) const {
     return {};
 }
 
 std::optional<std::bitset<32>> Filter::valueSetLeastUpperBoundFor(
-    const std::string& /* column_name */,
+    const std::string & /* column_name */,
     std::chrono::seconds /* timezone_offset */) const {
     return {};
 }

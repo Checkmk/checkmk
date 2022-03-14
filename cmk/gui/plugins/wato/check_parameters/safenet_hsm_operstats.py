@@ -5,46 +5,49 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    Integer,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
+    Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    Levels,
 )
+from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
 
 
 def _parameter_valuespec_safenet_hsm_operstats():
-    return Dictionary(elements=[
-        ("error_rate",
-         Tuple(
-             title=_("Error rate"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=0.01, unit=_("1/s")),
-                 Float(title=_("Critical at"), default_value=0.05, unit=_("1/s")),
-             ],
-         )),
-        ("request_rate", Levels(
-            title=_("Request rate"),
-            unit=_("1/s"),
-            default_value=None,
-        )),
-        ("operation_errors",
-         Tuple(
-             title=_("Operation errors"),
-             help=_("Sets levels on total operation errors since last counter reset."),
-             elements=[
-                 Integer(title=_("Warning at"), default_value=0),
-                 Integer(title=_("Critical at"), default_value=1),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "error_rate",
+                Tuple(
+                    title=_("Error rate"),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=0.01, unit=_("1/s")),
+                        Float(title=_("Critical at"), default_value=0.05, unit=_("1/s")),
+                    ],
+                ),
+            ),
+            (
+                "request_rate",
+                Levels(
+                    title=_("Request rate"),
+                    unit=_("1/s"),
+                    default_value=None,
+                ),
+            ),
+            (
+                "operation_errors",
+                Tuple(
+                    title=_("Operation errors"),
+                    help=_("Sets levels on total operation errors since last counter reset."),
+                    elements=[
+                        Integer(title=_("Warning at"), default_value=0),
+                        Integer(title=_("Critical at"), default_value=1),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -54,4 +57,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_safenet_hsm_operstats,
         title=lambda: _("Safenet HSM Operation Stats"),
-    ))
+    )
+)

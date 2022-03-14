@@ -1,0 +1,24 @@
+Title: ServiceNow: Clearer assignment in distributed environments
+Class: fix
+Compatible: incomp
+Component: notifications
+Date: 1619768611
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If ServiceNow notifications are used in distributed environments the host and
+service problem ID might not be unique, because every site core creates own
+host and service problem IDs. This could lead to problems with ticket creation
+if the notifications end up at the same ServiceNow instance because the problem
+ID might already have been used.
+
+If you use such setup, please configure the new option "Use site ID prefix" in the
+notification rule for ServiceNow. The notification script will then set the
+host and service problem ID and the site name on creation.
+
+If ServiceNow notifications are send from one site to one ServiceNow instance
+or from different sites to different ServiceNow instances, no action is
+required. The Script will use the old mechanism of setting and checking for
+host and service problem IDs.

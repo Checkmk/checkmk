@@ -1,0 +1,11 @@
+Title: Correctly display timerange of Forecast Graphs in graph collections
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1618309966
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["akcp_daisy_temp_defaultlevels"] = {"levels": (28, 32)}
 
 
@@ -16,7 +17,7 @@ def inventory_akcp_daisy_temp(info):
     for _port, subport, name, _temp in info:
         # Ignore sensors that are found by the non-daisychaining-version of
         # this check (akcp_sensor_temp)
-        if subport not in ['-1', '0']:
+        if subport not in ["-1", "0"]:
             yield name, {}
 
 
@@ -28,24 +29,24 @@ def check_akcp_daisy_temp(item, params, info):
 
 
 check_info["akcp_daisy_temp"] = {
-    'check_function'          : check_akcp_daisy_temp,
-    'inventory_function'      : inventory_akcp_daisy_temp,
-    'service_description'     : 'Temperature %s',
-    'has_perfdata'            : True,
-    'snmp_info'               : (
+    "check_function": check_akcp_daisy_temp,
+    "inventory_function": inventory_akcp_daisy_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.3854.1.2.2.1.19.33",
-            [ 1, 2, 3, 4, 5, 6, 7, 8 ],
-            [
-             OID_END, # SPAGENT-MIB::Port/Subport
-             "2.1.1", # SPAGENT-MIB::Index
-             "2.1.2", # SPAGENT-MIB::Description
-             "2.1.14", # SPAGENT-MIB::DegreeRaw
-            ]
+        [1, 2, 3, 4, 5, 6, 7, 8],
+        [
+            OID_END,  # SPAGENT-MIB::Port/Subport
+            "2.1.1",  # SPAGENT-MIB::Index
+            "2.1.2",  # SPAGENT-MIB::Description
+            "2.1.14",  # SPAGENT-MIB::DegreeRaw
+        ],
     ),
-    'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ] \
-                         and not oid('.1.3.6.1.4.1.3854.2.*') \
-                         and oid('.1.3.6.1.4.1.3854.1.2.2.1.19.*'),
-    'group'                   : 'temperature',
-    'default_levels_variable' : 'akcp_daisy_temp_defaultlevels'
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
+    in [".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1"]
+    and not oid(".1.3.6.1.4.1.3854.2.*")
+    and oid(".1.3.6.1.4.1.3854.1.2.2.1.19.*"),
+    "group": "temperature",
+    "default_levels_variable": "akcp_daisy_temp_defaultlevels",
 }

@@ -1,7 +1,7 @@
 title: Fortinet WLAN Controller APs: Number of Wifi Access Points
 agents: snmp
 catalog: hw/network/fortinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks displays the amount of connected access points on the controller.
@@ -37,6 +37,5 @@ description:
 item:
  The name of the access point.
 
-inventory:
+discovery:
  One service is created for each access point which is successfully connected.
-

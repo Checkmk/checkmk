@@ -2,7 +2,7 @@ title: Sansymphony: Serverstatus
 agents: windows
 catalog: app/sansymphony
 distribution: check_mk
-license: GPL
+license: GPLv2
 description:
 
  This check measures the status of the server and cache state reported by the sansymphony management.
@@ -11,5 +11,5 @@ description:
 
  The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins.
 
-inventory:
+discovery:
  One service is created.

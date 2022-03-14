@@ -9,9 +9,9 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
-if type SUSEConnect > /dev/null ; then
+if type SUSEConnect >/dev/null; then
     echo '<<<suseconnect:sep(58)>>>'
     SUSEConnect --status-text | sed -e '/^-/ d'
 fi

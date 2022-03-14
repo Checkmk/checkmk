@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.1916.1.1.1.8.0 31 --> EXTREME-SYSTEM-MIB::extremeCurrentTemperature.0
 
 # Just an assumption
@@ -25,13 +26,13 @@ def check_netextreme_temp(item, params, info):
     return check_temperature(float(info[0][0]), params, "netextreme_temp_System")
 
 
-check_info['netextreme_temp'] = {
-    'inventory_function': inventory_netextreme_temp,
-    'check_function': check_netextreme_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.1916.1.1.1.8", [""]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
-    'group': 'temperature',
-    'default_levels_variable': "netextreme_temp_default_levels",
+check_info["netextreme_temp"] = {
+    "inventory_function": inventory_netextreme_temp,
+    "check_function": check_netextreme_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.1916.1.1.1.8", [""]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
+    "group": "temperature",
+    "default_levels_variable": "netextreme_temp_default_levels",
 }

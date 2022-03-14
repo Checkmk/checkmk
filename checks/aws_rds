@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -29,26 +31,26 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['aws_rds_cpu_util'] = {
-    'levels': (80.0, 90.0),
+factory_settings["aws_rds_cpu_util"] = {
+    "levels": (80.0, 90.0),
 }
 
 
 @get_parsed_item_data
 def check_aws_rds(item, params, metrics):
-    return check_cpu_util(metrics['CPUUtilization'], params, time.time())
+    return check_cpu_util(metrics["CPUUtilization"], params, time.time())
 
 
-check_info['aws_rds'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['CPUUtilization']),
-    'check_function': check_aws_rds,
-    'service_description': 'AWS/RDS %s CPU Utilization',
-    'group': 'cpu_utilization_multiitem',
-    'default_levels_variable': 'aws_rds_cpu_util',
-    'has_perfdata': True,
+check_info["aws_rds"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["CPUUtilization"]),
+    "check_function": check_aws_rds,
+    "service_description": "AWS/RDS %s CPU Utilization",
+    "group": "cpu_utilization_multiitem",
+    "default_levels_variable": "aws_rds_cpu_util",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--CPU credits---------------------------------------------------------.
 #   |           ____ ____  _   _                     _ _ _                 |
 #   |          / ___|  _ \| | | |   ___ _ __ ___  __| (_) |_ ___           |
@@ -78,40 +80,43 @@ check_info['aws_rds'] = {
 
 @get_parsed_item_data
 def check_aws_rds_cpu_credits(item, params, metrics):
-    yield 0, "CPU Credit Usage: %.2f" % metrics['CPUCreditUsage']
+    yield 0, "CPU Credit Usage: %.2f" % metrics["CPUCreditUsage"]
     warn, crit = params.get("balance_levels_lower", (None, None))
     yield check_levels(
-        metrics['CPUCreditBalance'],
+        metrics["CPUCreditBalance"],
         "aws_cpu_credit_balance",
         (None, None, warn, crit),
         human_readable_func=lambda x: "%.2f" % x,
-        infoname='CPU Credit Balance',
+        infoname="CPU Credit Balance",
     )
 
-    burst_balance = metrics.get('BurstBalance')
+    burst_balance = metrics.get("BurstBalance")
     if burst_balance is not None:
         warn, crit = params.get("burst_balance_levels_lower", (None, None))
         yield check_levels(
-            metrics['BurstBalance'],
+            metrics["BurstBalance"],
             "aws_burst_balance",
             (None, None, warn, crit),
             human_readable_func=get_percent_human_readable,
-            infoname='Burst Balance',
+            infoname="Burst Balance",
         )
 
 
-check_info['aws_rds.cpu_credits'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, [
-        'CPUCreditUsage',
-        'CPUCreditBalance',
-    ]),
-    'check_function': check_aws_rds_cpu_credits,
-    'service_description': 'AWS/RDS %s CPU Credits',
-    'group': 'aws_rds_cpu_credits',
-    'has_perfdata': True,
+check_info["aws_rds.cpu_credits"] = {
+    "inventory_function": lambda p: inventory_aws_generic(
+        p,
+        [
+            "CPUCreditUsage",
+            "CPUCreditBalance",
+        ],
+    ),
+    "check_function": check_aws_rds_cpu_credits,
+    "service_description": "AWS/RDS %s CPU Credits",
+    "group": "aws_rds_cpu_credits",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--bin log usage-------------------------------------------------------.
 #   |     _     _         _                                                |
 #   |    | |__ (_)_ __   | | ___   __ _   _   _ ___  __ _  __ _  ___       |
@@ -124,29 +129,31 @@ check_info['aws_rds.cpu_credits'] = {
 
 @get_parsed_item_data
 def check_aws_rds_bin_log_usage(item, params, metrics):
-    bin_log_usage = metrics['BinLogDiskUsage']
+    bin_log_usage = metrics["BinLogDiskUsage"]
     yield 0, get_bytes_human_readable(bin_log_usage)
 
     try:
-        usage = 100.0 * bin_log_usage / metrics['AllocatedStorage']
+        usage = 100.0 * bin_log_usage / metrics["AllocatedStorage"]
     except (KeyError, ZeroDivisionError):
-        yield 1, 'Cannot calculate usage'
+        yield 1, "Cannot calculate usage"
     else:
-        yield check_levels(usage,
-                           "aws_rds_bin_log_disk_usage",
-                           params.get('levels'),
-                           human_readable_func=get_percent_human_readable)
+        yield check_levels(
+            usage,
+            "aws_rds_bin_log_disk_usage",
+            params.get("levels"),
+            human_readable_func=get_percent_human_readable,
+        )
 
 
-check_info['aws_rds.bin_log_usage'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['BinLogDiskUsage']),
-    'check_function': check_aws_rds_bin_log_usage,
-    'service_description': 'AWS/RDS %s Binary Log Usage',
-    'has_perfdata': True,
-    'group': 'aws_rds_disk_usage',
+check_info["aws_rds.bin_log_usage"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["BinLogDiskUsage"]),
+    "check_function": check_aws_rds_bin_log_usage,
+    "service_description": "AWS/RDS %s Binary Log Usage",
+    "has_perfdata": True,
+    "group": "aws_rds_disk_usage",
 }
 
-#.
+# .
 #   .--transaction logs usage----------------------------------------------.
 #   |        _                                  _   _                      |
 #   |       | |_ _ __ __ _ _ __  ___  __ _  ___| |_(_) ___  _ __           |
@@ -165,35 +172,35 @@ check_info['aws_rds.bin_log_usage'] = {
 
 @get_parsed_item_data
 def check_aws_rds_transaction_logs_usage(item, params, metrics):
-    transaction_logs_space = metrics['TransactionLogsDiskUsage']
+    transaction_logs_space = metrics["TransactionLogsDiskUsage"]
     yield 0, get_bytes_human_readable(transaction_logs_space)
 
     try:
-        usage = 100.0 * transaction_logs_space / metrics['AllocatedStorage']
+        usage = 100.0 * transaction_logs_space / metrics["AllocatedStorage"]
     except (KeyError, ZeroDivisionError):
-        yield 1, 'Cannot calculate usage'
+        yield 1, "Cannot calculate usage"
     else:
         yield check_levels(
             usage,
             "aws_rds_transaction_logs_disk_usage",
-            params.get('levels'),
+            params.get("levels"),
             human_readable_func=get_percent_human_readable,
         )
 
-    generation = metrics.get('TransactionLogsGeneration')
+    generation = metrics.get("TransactionLogsGeneration")
     if generation:
-        yield 0, 'Generation rate: %s' % aws_get_bytes_rate_human_readable(generation)
+        yield 0, "Generation rate: %s" % aws_get_bytes_rate_human_readable(generation)
 
 
-check_info['aws_rds.transaction_logs_usage'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['TransactionLogsDiskUsage']),
-    'check_function': check_aws_rds_transaction_logs_usage,
-    'service_description': 'AWS/RDS %s Transaction Logs Usage',
-    'has_perfdata': True,
-    'group': 'aws_rds_disk_usage',
+check_info["aws_rds.transaction_logs_usage"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["TransactionLogsDiskUsage"]),
+    "check_function": check_aws_rds_transaction_logs_usage,
+    "service_description": "AWS/RDS %s Transaction Logs Usage",
+    "has_perfdata": True,
+    "group": "aws_rds_disk_usage",
 }
 
-#.
+# .
 #   .--replication slot usage----------------------------------------------.
 #   |                 _ _           _   _                   _       _      |
 #   |  _ __ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __    ___| | ___ | |_    |
@@ -212,31 +219,31 @@ check_info['aws_rds.transaction_logs_usage'] = {
 
 @get_parsed_item_data
 def check_aws_rds_replication_slot_usage(item, params, metrics):
-    replication_slot_space = metrics['ReplicationSlotDiskUsage']
+    replication_slot_space = metrics["ReplicationSlotDiskUsage"]
     yield 0, get_bytes_human_readable(replication_slot_space)
 
     try:
-        usage = 100.0 * replication_slot_space / metrics['AllocatedStorage']
+        usage = 100.0 * replication_slot_space / metrics["AllocatedStorage"]
     except (KeyError, ZeroDivisionError):
-        yield 1, 'Cannot calculate usage'
+        yield 1, "Cannot calculate usage"
     else:
         yield check_levels(
             usage,
             "aws_rds_replication_slot_disk_usage",
-            params.get('levels'),
+            params.get("levels"),
             human_readable_func=get_percent_human_readable,
         )
 
 
-check_info['aws_rds.replication_slot_usage'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['ReplicationSlotDiskUsage']),
-    'check_function': check_aws_rds_replication_slot_usage,
-    'service_description': 'AWS/RDS %s Replication Slot Usage',
-    'has_perfdata': True,
-    'group': 'aws_rds_disk_usage',
+check_info["aws_rds.replication_slot_usage"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["ReplicationSlotDiskUsage"]),
+    "check_function": check_aws_rds_replication_slot_usage,
+    "service_description": "AWS/RDS %s Replication Slot Usage",
+    "has_perfdata": True,
+    "group": "aws_rds_disk_usage",
 }
 
-#.
+# .
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
 #   |                      __| (_)___| | __ |_ _/ _ \                      |
@@ -252,12 +259,12 @@ def check_aws_rds_disk_io(item, params, parsed):
     for disk_name, metrics in parsed.items():
         disk = disks.setdefault(disk_name, {})
         for key, metric_key, scale in [
-            ('read_ios', 'ReadIOPS', 1.0),
-            ('write_ios', 'WriteIOPS', 1.0),
-            ('read_throughput', 'ReadThroughput', 1.0),
-            ('write_throughput', 'WriteThroughput', 1.0),
-            ('read_latency', 'ReadLatency', 1000.0),
-            ('write_latency', 'WriteLatency', 1000.0),
+            ("read_ios", "ReadIOPS", 1.0),
+            ("write_ios", "WriteIOPS", 1.0),
+            ("read_throughput", "ReadThroughput", 1.0),
+            ("write_throughput", "WriteThroughput", 1.0),
+            ("read_latency", "ReadLatency", 1000.0),
+            ("write_latency", "WriteLatency", 1000.0),
         ]:
             metric = metrics.get(metric_key)
             if metric is None:
@@ -266,23 +273,26 @@ def check_aws_rds_disk_io(item, params, parsed):
     return check_diskstat_dict(item, params, disks)
 
 
-check_info['aws_rds.disk_io'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, [
-        'DiskQueueDepth',
-        'ReadIOPS',
-        'ReadLatency',
-        'ReadThroughput',
-        'WriteIOPS',
-        'WriteLatency',
-        'WriteThroughput',
-    ]),
-    'check_function': check_aws_rds_disk_io,
-    'service_description': 'AWS/RDS %s Disk IO',
-    'group': 'diskstat',
-    'has_perfdata': True,
+check_info["aws_rds.disk_io"] = {
+    "inventory_function": lambda p: inventory_aws_generic(
+        p,
+        [
+            "DiskQueueDepth",
+            "ReadIOPS",
+            "ReadLatency",
+            "ReadThroughput",
+            "WriteIOPS",
+            "WriteLatency",
+            "WriteThroughput",
+        ],
+    ),
+    "check_function": check_aws_rds_disk_io,
+    "service_description": "AWS/RDS %s Disk IO",
+    "group": "diskstat",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--connections---------------------------------------------------------.
 #   |                                        _   _                         |
 #   |         ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -295,21 +305,23 @@ check_info['aws_rds.disk_io'] = {
 
 @get_parsed_item_data
 def check_aws_rds_connections(item, params, metrics):
-    yield check_levels(metrics['DatabaseConnections'],
-                       "aws_rds_connections",
-                       params.get('levels'),
-                       infoname="In use")
+    yield check_levels(
+        metrics["DatabaseConnections"],
+        "aws_rds_connections",
+        params.get("levels"),
+        infoname="In use",
+    )
 
 
-check_info['aws_rds.connections'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['DatabaseConnections']),
-    'check_function': check_aws_rds_connections,
-    'service_description': 'AWS/RDS %s Connections',
-    'has_perfdata': True,
-    'group': 'aws_rds_connections',
+check_info["aws_rds.connections"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["DatabaseConnections"]),
+    "check_function": check_aws_rds_connections,
+    "service_description": "AWS/RDS %s Connections",
+    "has_perfdata": True,
+    "group": "aws_rds_connections",
 }
 
-#.
+# .
 #   .--agent jobs----------------------------------------------------------.
 #   |                                 _       _       _                    |
 #   |           __ _  __ _  ___ _ __ | |_    (_) ___ | |__  ___            |
@@ -322,7 +334,7 @@ check_info['aws_rds.connections'] = {
 
 @get_parsed_item_data
 def check_aws_rds_agent_jobs(item, params, metrics):
-    failed_agent_jobs = metrics['FailedSQLServerAgentJobsCount']
+    failed_agent_jobs = metrics["FailedSQLServerAgentJobsCount"]
     if failed_agent_jobs > 0:
         state = 1
     else:
@@ -330,13 +342,13 @@ def check_aws_rds_agent_jobs(item, params, metrics):
     yield state, "Rate of failing jobs: %s" % aws_get_counts_rate_human_readable(failed_agent_jobs)
 
 
-check_info['aws_rds.agent_jobs'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['FailedSQLServerAgentJobsCount']),
-    'check_function': check_aws_rds_agent_jobs,
-    'service_description': 'AWS/RDS %s SQL Server Agent Jobs',
+check_info["aws_rds.agent_jobs"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["FailedSQLServerAgentJobsCount"]),
+    "check_function": check_aws_rds_agent_jobs,
+    "service_description": "AWS/RDS %s SQL Server Agent Jobs",
 }
 
-#.
+# .
 #   .--replica lag---------------------------------------------------------.
 #   |                           _ _             _                          |
 #   |            _ __ ___ _ __ | (_) ___ __ _  | | __ _  __ _              |
@@ -350,28 +362,30 @@ check_info['aws_rds.agent_jobs'] = {
 @get_parsed_item_data
 def check_aws_rds_replica_lag(item, params, metrics):
     yield check_levels(
-        metrics['ReplicaLag'],
+        metrics["ReplicaLag"],
         "aws_rds_replica_lag",
-        params.get('lag_levels'),
+        params.get("lag_levels"),
         human_readable_func=get_age_human_readable,
         infoname="Lag",
     )
 
-    oldest_replica_lag_space = metrics.get('OldestReplicationSlotLag')
+    oldest_replica_lag_space = metrics.get("OldestReplicationSlotLag")
     if oldest_replica_lag_space is not None:
         yield check_levels(
             oldest_replica_lag_space,
             "aws_rds_oldest_replication_slot_lag",
-            params.get('slot_levels',),
+            params.get(
+                "slot_levels",
+            ),
             human_readable_func=get_bytes_human_readable,
             infoname="Oldest replication slot lag",
         )
 
 
-check_info['aws_rds.replica_lag'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['ReplicaLag']),
-    'check_function': check_aws_rds_replica_lag,
-    'service_description': 'AWS/RDS %s Replica Lag',
-    'has_perfdata': True,
-    'group': 'aws_rds_replica_lag',
+check_info["aws_rds.replica_lag"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["ReplicaLag"]),
+    "check_function": check_aws_rds_replica_lag,
+    "service_description": "AWS/RDS %s Replica Lag",
+    "has_perfdata": True,
+    "group": "aws_rds_replica_lag",
 }

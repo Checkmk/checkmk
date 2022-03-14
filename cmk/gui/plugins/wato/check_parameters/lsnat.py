@@ -5,27 +5,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_lsnat():
     return Dictionary(
         elements=[
-            ("current_bindings",
-             Tuple(title=_("Number of current LSNAT bindings"),
-                   elements=[
-                       Integer(title=_("Warning at"), size=10, unit=_("bindings")),
-                       Integer(title=_("Critical at"), size=10, unit=_("bindings")),
-                   ])),
+            (
+                "current_bindings",
+                Tuple(
+                    title=_("Number of current LSNAT bindings"),
+                    elements=[
+                        Integer(title=_("Warning at"), size=10, unit=_("bindings")),
+                        Integer(title=_("Critical at"), size=10, unit=_("bindings")),
+                    ],
+                ),
+            ),
         ],
         optional_keys=False,
     )
@@ -38,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_lsnat,
         title=lambda: _("Enterasys LSNAT Bindings"),
-    ))
+    )
+)

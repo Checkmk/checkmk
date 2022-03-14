@@ -1,4 +1,4 @@
-:: Uninstall legacy Python using omd/packages/Python3/windows/python-3.4.4.msi
+:: Uninstall legacy Python using omd/packages/Python/windows/python-3.4.4.msi
 :: May be called only from exec_cmd.bat
 @echo off
 

@@ -9,14 +9,16 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.11.3.1.1.0 Good --> FE-FIREEYE-MIB::fePowerSupplyOverallStatus.0
 # .1.3.6.1.4.1.25597.11.3.1.2.0 1 --> FE-FIREEYE-MIB::fePowerSupplyOverallIsHealthy.0
 
 
 def check_fireeye_powersupplies(_no_item, _no_params, info):
     status, health = info[0]
-    for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
-                                                               (health, 'Health')]).items():
+    for text, (state, state_readable) in check_fireeye_states(
+        [(status, "Status"), (health, "Health")]
+    ).items():
         yield state, "%s: %s" % (text, state_readable)
 
 
@@ -29,6 +31,7 @@ check_info["fireeye_powersupplies"] = {
         [
             "1",  # FE-FIREEYE-MIB::fePowerSupplyOverallStatus
             "2",  # FE-FIREEYE-MIB::fePowerSupplyOverallIsHealthy
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_fireeye,
 }

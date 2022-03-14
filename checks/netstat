@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent (Linux) - note missing LISTENING column for UDP
 # <<netstat>>>
 # tcp        0      0 0.0.0.0:6556            0.0.0.0:*               LISTENING
@@ -68,9 +69,9 @@ def parse_netstat(info):
 
 
 check_info["netstat"] = {
-    'parse_function': parse_netstat,
-    'check_function': check_netstat_generic,
-    'service_description': "TCP Connection %s",
-    'group': "tcp_connections",
-    'has_perfdata': True,
+    "parse_function": parse_netstat,
+    "check_function": check_netstat_generic,
+    "service_description": "TCP Connection %s",
+    "group": "tcp_connections",
+    "has_perfdata": True,
 }

@@ -9,21 +9,27 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_aggr:sep(9)>>>
 # aggregation aggr0_root_n1       size-available 940666880        size-total 1793064960
 # aggregation aggr0_root_n2       size-available 940556288        size-total 1793064960
 # aggregation aggr1_n1    size-available 2915315712       size-total 9437184000
 # aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
+
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 def inventory_netapp_api_aggr(parsed):
@@ -43,11 +49,11 @@ def check_netapp_api_aggr(item, params, aggr):
 
 
 check_info["netapp_api_aggr"] = {
-    'check_function': check_netapp_api_aggr,
-    'parse_function': netapp_api_parse_lines,
-    'inventory_function': inventory_netapp_api_aggr,
-    'service_description': 'Aggregation %s',
-    'group': 'filesystem',
-    'has_perfdata': True,
-    'default_levels_variable': 'filesystem_default_levels',
+    "check_function": check_netapp_api_aggr,
+    "parse_function": netapp_api_parse_lines,
+    "inventory_function": inventory_netapp_api_aggr,
+    "service_description": "Aggregation %s",
+    "group": "filesystem",
+    "has_perfdata": True,
+    "default_levels_variable": "filesystem_default_levels",
 }

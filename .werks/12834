@@ -1,0 +1,19 @@
+Title: Do not fail on not existing time periods in "Check period for passive Check_MK services"
+Class: fix
+Compatible: compat
+Component: core
+Date: 1621926625
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When time periods are configured in the ruleset "Check period for passive
+Check_MK services", this made the cmc fail on start. The normal behaviour of
+Checkmk is to create a warning message like "WARNING: The
+cmc_passive_check_period "ding" used by service "old;Check_MK Discovery" does
+not exist, falling back to 24x7." and continue.
+
+This is done for all other time period references, but did not work for this
+specific option. The fallback has now also been added to this options.

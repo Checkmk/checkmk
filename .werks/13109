@@ -1,0 +1,16 @@
+Title: Fix missing rows in builtin view "Unmonitored services"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1629821826
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+If you opened the view "Unmonitored services", the shown row count was 0 or an
+exceeded limit was shown. The Reason was missing filters in the context of the
+view definition.
+
+A workaround was, to use the "Filter" button and "Apply filters".

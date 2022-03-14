@@ -5,40 +5,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Filesize,
-    Tuple,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Filesize, Tuple
 
 
 def _parameter_valuespec_graylog_cluster_traffic():
-    return Dictionary(elements=[
-        ("input",
-         Tuple(
-             title=_("Absolute levels for input traffic"),
-             elements=[Filesize(title=_("Warning at")),
-                       Filesize(title=_("Critical at"))],
-         )),
-        ("output",
-         Tuple(
-             title=_("Absolute levels for output traffic"),
-             elements=[Filesize(title=_("Warning at")),
-                       Filesize(title=_("Critical at"))],
-         )),
-        ("decoded",
-         Tuple(
-             title=_("Absolute levels for decoded traffic"),
-             elements=[Filesize(title=_("Warning at")),
-                       Filesize(title=_("Critical at"))],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "input",
+                Tuple(
+                    title=_("Absolute levels for input traffic"),
+                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                ),
+            ),
+            (
+                "output",
+                Tuple(
+                    title=_("Absolute levels for output traffic"),
+                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                ),
+            ),
+            (
+                "decoded",
+                Tuple(
+                    title=_("Absolute levels for decoded traffic"),
+                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -48,4 +48,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_cluster_traffic,
         title=lambda: _("Graylog cluster traffic"),
-    ))
+    )
+)

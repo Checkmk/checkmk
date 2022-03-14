@@ -5,36 +5,41 @@
 
 #include "Metric.h"
 
+#include <fstream>
+#include <regex>
 #include <sstream>
-#include <system_error>
 
 #include "Logger.h"
-#include "StringUtils.h"
 
-Metric::Names scan_rrd(const std::filesystem::path& basedir,
-                       const std::string& desc, Logger* logger) {
+namespace {
+const std::regex label_regex{
+    R"(\s+<LABEL>(.+)</LABEL>)",
+    std::regex_constants::ECMAScript | std::regex_constants::icase};
+}  // namespace
+
+Metric::Names scan_rrd(const std::filesystem::path &basedir,
+                       const std::string &desc, Logger *logger) {
     Informational(logger) << "scanning for metrics of " << desc << " in "
                           << basedir;
-    std::string base = pnp_cleanup(desc + " ");
     Metric::Names names;
-    try {
-        for (const auto& entry : std::filesystem::directory_iterator(basedir)) {
-            if (entry.path().extension() == ".rrd") {
-                auto stem = entry.path().filename().stem().string();
-                if (mk::starts_with(stem, base)) {
-                    // NOTE: This is the main reason for mangling: The part of
-                    // the file name after the stem is considered a mangled
-                    // metric name.
-                    names.emplace_back(stem.substr(base.size()));
-                }
-            }
+    std::string line;
+    auto path = basedir / pnp_cleanup(desc + ".xml");
+    auto infile = std::ifstream{path};
+    if (!infile.is_open()) {
+        const auto ge = generic_error{"cannot open " + path.string()};
+        Debug(logger) << ge;
+        return {};
+    }
+    while (std::getline(infile, line)) {
+        std::smatch label;
+        std::regex_search(line, label, label_regex);
+        if (!label.empty()) {
+            names.emplace_back(label[1]);
         }
-    } catch (const std::filesystem::filesystem_error& e) {
-        if (e.code() == std::errc::no_such_file_or_directory) {
-            Debug(logger) << "directory " << basedir << " does not exist yet";
-        } else {
-            Warning(logger) << "scanning directory for metrics: " << e.what();
-        }
+    }
+    if (infile.bad()) {
+        const auto ge = generic_error{"cannot read " + path.string()};
+        Warning(logger) << ge;
     }
     return names;
 }

@@ -1,7 +1,7 @@
 title: Windows: State and Performance of Network Interfaces
 agents: windows
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, packet
@@ -37,7 +37,7 @@ item:
  There are three allowed ways to specify an interface: its index, which simply
  enumerates the interfaces, its description and its alias.
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {Connected} and are of
@@ -47,13 +47,3 @@ inventory:
  interface but a group of interfaces that together form a pool.
  This check supports such pools by defining groups. The data of all members is
  accumulated and put together in a single grouped interface service.
-
-cluster:
- In the case where single (ungrouped) interfaces are clustered, the corresponding
- services report only the results from the node with the highest outgoing traffic,
- since this node is likely the active node.
- In the case where interface groups are clustered, the grouping is applied across
- all nodes, potentially combining interfaces from different nodes. Note that the
- rules defining the interface groups must be configured to apply to the nodes, not
- to the cluster host (the latter has no effect). In case the grouping configurations
- vary across the nodes, the last node wins.

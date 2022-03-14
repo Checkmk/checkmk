@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import FSBlocks
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlocks
 
 
 def _sanitize_line(line):
@@ -36,81 +37,247 @@ def parse_ceph_df(info) -> FSBlocks:
     pools_headers = None
 
     for line in info:
-        if line[0] in ["GLOBAL:", "RAW"] or re.sub("[-: ]", "", ''.join(line)) == 'RAWSTORAGE':
+        if line[0] in ["GLOBAL:", "RAW"] or re.sub("[-: ]", "", "".join(line)) == "RAWSTORAGE":
             section = "global"
             continue
-        elif re.sub("[-: ]", "", ''.join(line)) == "POOLS":
+        elif re.sub("[-: ]", "", "".join(line)) == "POOLS":
             section = "pools"
             continue
 
         line = _sanitize_line(line)
         if section == "global":
-            if line == ['SIZE', 'AVAIL', 'RAW', 'USED', '%RAW', 'USED', 'OBJECTS']:
-                global_headers = ['SIZE', 'AVAIL', 'RAW USED', '%RAW USED', 'OBJECTS']
+            if line == ["SIZE", "AVAIL", "RAW", "USED", "%RAW", "USED", "OBJECTS"]:
+                global_headers = ["SIZE", "AVAIL", "RAW USED", "%RAW USED", "OBJECTS"]
 
-            elif line == ['CLASS', 'SIZE', 'AVAIL', 'USED', 'RAW', 'USED', '%RAW', 'USED']:
-                global_headers = ['CLASS', 'SIZE', 'AVAIL', 'USED', 'RAW USED', '%RAW USED']
+            elif line == ["CLASS", "SIZE", "AVAIL", "USED", "RAW", "USED", "%RAW", "USED"]:
+                global_headers = ["CLASS", "SIZE", "AVAIL", "USED", "RAW USED", "%RAW USED"]
 
             elif global_headers is not None:
                 parsed.setdefault("SUMMARY", dict(zip(global_headers, line)))
 
         elif section == "pools":
             if line == [
-                    'NAME', 'ID', 'CATEGORY', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'USED', '%USED',
-                    'MAX', 'AVAIL', 'OBJECTS', 'DIRTY', 'READ', 'WRITE', 'RAW', 'USED'
+                "NAME",
+                "ID",
+                "CATEGORY",
+                "QUOTA",
+                "OBJECTS",
+                "QUOTA",
+                "BYTES",
+                "USED",
+                "%USED",
+                "MAX",
+                "AVAIL",
+                "OBJECTS",
+                "DIRTY",
+                "READ",
+                "WRITE",
+                "RAW",
+                "USED",
             ]:
                 pools_headers = [
-                    'NAME', 'ID', 'CATEGORY', 'QUOTA OBJECTS', 'QUOTA BYTES', 'USED', '%USED',
-                    'MAX AVAIL', 'OBJECTS', 'DIRTY', 'READ', 'WRITE', 'RAW USED'
+                    "NAME",
+                    "ID",
+                    "CATEGORY",
+                    "QUOTA OBJECTS",
+                    "QUOTA BYTES",
+                    "USED",
+                    "%USED",
+                    "MAX AVAIL",
+                    "OBJECTS",
+                    "DIRTY",
+                    "READ",
+                    "WRITE",
+                    "RAW USED",
                 ]
 
             elif line == [
-                    'NAME', 'ID', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'USED', '%USED', 'MAX',
-                    'AVAIL', 'OBJECTS', 'DIRTY', 'READ', 'WRITE', 'RAW', 'USED'
+                "NAME",
+                "ID",
+                "QUOTA",
+                "OBJECTS",
+                "QUOTA",
+                "BYTES",
+                "USED",
+                "%USED",
+                "MAX",
+                "AVAIL",
+                "OBJECTS",
+                "DIRTY",
+                "READ",
+                "WRITE",
+                "RAW",
+                "USED",
             ]:
                 pools_headers = [
-                    'NAME', 'ID', 'QUOTA OBJECTS', 'QUOTA BYTES', 'USED', '%USED', 'MAX AVAIL',
-                    'OBJECTS', 'DIRTY', 'READ', 'WRITE', 'RAW USED'
+                    "NAME",
+                    "ID",
+                    "QUOTA OBJECTS",
+                    "QUOTA BYTES",
+                    "USED",
+                    "%USED",
+                    "MAX AVAIL",
+                    "OBJECTS",
+                    "DIRTY",
+                    "READ",
+                    "WRITE",
+                    "RAW USED",
                 ]
 
             elif line == [
-                    'POOL', 'ID', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL', 'QUOTA',
-                    'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+                "POOL",
+                "ID",
+                "STORED",
+                "OBJECTS",
+                "USED",
+                "%USED",
+                "MAX",
+                "AVAIL",
+                "QUOTA",
+                "OBJECTS",
+                "QUOTA",
+                "BYTES",
+                "DIRTY",
+                "USED",
+                "COMPR",
+                "UNDER",
+                "COMPR",
             ]:
                 pools_headers = [
-                    'POOL', 'ID', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL',
-                    'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                    "POOL",
+                    "ID",
+                    "STORED",
+                    "OBJECTS",
+                    "USED",
+                    "%USED",
+                    "MAX AVAIL",
+                    "QUOTA OBJECTS",
+                    "QUOTA BYTES",
+                    "DIRTY",
+                    "USED COMPR",
+                    "UNDER COMPR",
                 ]
 
             elif line == [
-                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL',
-                    'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+                "POOL",
+                "ID",
+                "PGS",
+                "STORED",
+                "OBJECTS",
+                "USED",
+                "%USED",
+                "MAX",
+                "AVAIL",
+                "QUOTA",
+                "OBJECTS",
+                "QUOTA",
+                "BYTES",
+                "DIRTY",
+                "USED",
+                "COMPR",
+                "UNDER",
+                "COMPR",
             ]:
                 pools_headers = [
-                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL',
-                    'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                    "POOL",
+                    "ID",
+                    "PGS",
+                    "STORED",
+                    "OBJECTS",
+                    "USED",
+                    "%USED",
+                    "MAX AVAIL",
+                    "QUOTA OBJECTS",
+                    "QUOTA BYTES",
+                    "DIRTY",
+                    "USED COMPR",
+                    "UNDER COMPR",
                 ]
 
             elif line == [
-                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
-                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
-                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+                "POOL",
+                "ID",
+                "STORED",
+                "(DATA)",
+                "(OMAP)",
+                "OBJECTS",
+                "USED",
+                "(DATA)",
+                "(OMAP)",
+                "%USED",
+                "MAX",
+                "AVAIL",
+                "QUOTA",
+                "OBJECTS",
+                "QUOTA",
+                "BYTES",
+                "DIRTY",
+                "USED",
+                "COMPR",
+                "UNDER",
+                "COMPR",
             ]:
                 pools_headers = [
-                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
-                    '(OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY',
-                    'USED COMPR', 'UNDER COMPR'
+                    "POOL",
+                    "ID",
+                    "STORED",
+                    "(DATA)",
+                    "(OMAP)",
+                    "OBJECTS",
+                    "USED",
+                    "(DATA)",
+                    "(OMAP)",
+                    "%USED",
+                    "MAX AVAIL",
+                    "QUOTA OBJECTS",
+                    "QUOTA BYTES",
+                    "DIRTY",
+                    "USED COMPR",
+                    "UNDER COMPR",
                 ]
 
             elif line == [
-                    'POOL', 'ID', 'PGS', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
-                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
-                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+                "POOL",
+                "ID",
+                "PGS",
+                "STORED",
+                "(DATA)",
+                "(OMAP)",
+                "OBJECTS",
+                "USED",
+                "(DATA)",
+                "(OMAP)",
+                "%USED",
+                "MAX",
+                "AVAIL",
+                "QUOTA",
+                "OBJECTS",
+                "QUOTA",
+                "BYTES",
+                "DIRTY",
+                "USED",
+                "COMPR",
+                "UNDER",
+                "COMPR",
             ]:
                 pools_headers = [
-                    'POOL', 'ID', 'PGS', 'STORED', 'STORED (DATA)', 'STORED (OMAP)', 'OBJECTS',
-                    'USED', 'USED (DATA)', 'USED (OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS',
-                    'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                    "POOL",
+                    "ID",
+                    "PGS",
+                    "STORED",
+                    "STORED (DATA)",
+                    "STORED (OMAP)",
+                    "OBJECTS",
+                    "USED",
+                    "USED (DATA)",
+                    "USED (OMAP)",
+                    "%USED",
+                    "MAX AVAIL",
+                    "QUOTA OBJECTS",
+                    "QUOTA BYTES",
+                    "DIRTY",
+                    "USED COMPR",
+                    "UNDER COMPR",
                 ]
 
             elif pools_headers is not None:
@@ -135,7 +302,7 @@ def parse_ceph_df(info) -> FSBlocks:
             return float(value_str[:-1])
         elif value_str.lower().endswith("k"):
             return float(value_str[:-1]) / 1024
-        elif value_str == 'N/A':
+        elif value_str == "N/A":
             return 0.0
         return float(value_str) / (1024**2)
 
@@ -153,21 +320,30 @@ def parse_ceph_df(info) -> FSBlocks:
             avail_mb = parse_byte_values(data["AVAIL"])
         else:
             avail_mb = parse_byte_values(data["MAX AVAIL"])
-            size_mb = avail_mb + parse_byte_values(data["USED"])
+
+            # from ceph version pacific STORED is a notional amount of data stored
+            # USED is the total data stored (incl. replication)
+            # https://docs.ceph.com/en/latest/rados/operations/monitoring/
+            # werk 12199
+            used_size = data["STORED"] if "STORED" in data else data["USED"]
+            size_mb = avail_mb + parse_byte_values(used_size)
         mps.append((mp, size_mb, avail_mb, 0))
     return mps
 
 
 def inventory_ceph_df(mps):
-    return df_inventory([x[0] for x in mps])
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), [x[0] for x in mps])
 
 
-check_info['ceph_df'] = {
-    'parse_function': parse_ceph_df,
-    'inventory_function': inventory_ceph_df,
-    'check_function': df_check_filesystem_list,
-    'service_description': 'Ceph Pool %s',
-    'has_perfdata': True,
-    'group': 'filesystem',
-    'default_levels_variable': 'filesystem_default_levels',
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+check_info["ceph_df"] = {
+    "parse_function": parse_ceph_df,
+    "inventory_function": inventory_ceph_df,
+    "check_function": df_check_filesystem_list,
+    "service_description": "Ceph Pool %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

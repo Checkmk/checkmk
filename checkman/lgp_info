@@ -1,7 +1,7 @@
 title: Liebert MPH/MPX Devices: General Information
 agents: snmp
 catalog: hw/power/emerson
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors information provided by Liebert MPH/MPX
@@ -15,5 +15,5 @@ description:
  The check displays information about the model, firmware, serial number
  and connected devices.
 
-inventory:
+discovery:
  One service is created on each device.

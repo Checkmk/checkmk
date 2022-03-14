@@ -1,0 +1,15 @@
+Title: Fix cache usage for clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1623230485
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The cache was not used properly for clusters.  This resulted
+in performance problems such that, if an host was part of <i>n</i>
+clusters, it would be contacted <i>n + 1</i> times.  Now,
+we make sure that the host is contacted a single time and that
+checking for the clusters use locally cached data.

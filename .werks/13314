@@ -1,0 +1,41 @@
+Title: Distributed monitoring: Do not log site secret on remote site
+Class: security
+Compatible: compat
+Component: wato
+Date: 1634910575
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+This issue only affects you in case you are using a distributed monitoring setup
+and only affects the remote sites of a distributed setup.
+
+When the central site is communicating with a remote site, this access from the
+central site to a remote system is authenticated used the so called site
+secret. This secret is handed over to the remote site with each remote call and
+validated.
+
+Previous Checkmk versions were sending the site secret via GET parameters to
+the remote site. Which made the secret visible in the access log of the remote
+site apache (var/log/apache/access_log).
+
+As these log files are normally only readable by the site user and the site
+secret is also known by the site user, this alone is not a information
+disclosure.
+
+Of course it might happen that you forward a log, e.g. for error diagnosis,
+then this issue might be a real problem.
+
+Therefore, we recommend all users to update to the next version to eliminate
+the problem for the future. Afterwards we recommend to check the log files
+(var/log/apache/access_log and var/log/apache/access_log.*.gz) and to remove
+problematic log entries. If your logs could be viewed by non Checkmk admins,
+you should also change the site secret.
+
+If you change the site secret of a remote site, you will have to navigate to
+"Setup > Distributed monitoring", then "Logout" the remote site and "Login" the
+site again to make the central site know the new site secret.
+
+CVSS:3.0/AV:L/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:L
+(https://www.first.org/cvss/calculator/3.0#CVSS:3.0/AV:L/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:L)

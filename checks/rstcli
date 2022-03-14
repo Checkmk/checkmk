@@ -65,11 +65,12 @@ def parse_rstcli_sections(info):
 # interpret the volumes section
 def parse_rstcli_volumes(rows):
     volumes = {}
-    current_volume = None
+    current_volume = {}
 
     for row in rows:
         if row[0] == "Name":
-            volumes[row[1].strip()] = current_volume = {}
+            current_volume = {}
+            volumes[row[1].strip()] = current_volume
         else:
             current_volume[row[0]] = row[1].strip()
 
@@ -79,7 +80,7 @@ def parse_rstcli_volumes(rows):
 # interpret the disks section
 def parse_rstcli_disks(rows):
     disks = []
-    current_disk = None
+    current_disk = {}
 
     for row in rows:
         if row[0] == "ID":
@@ -92,7 +93,7 @@ def parse_rstcli_disks(rows):
 
 
 def parse_rstcli(info):
-    if info == [['rstcli not found']]:
+    if info == [["rstcli not found"]]:
         return {}
 
     rstcli_sections = parse_rstcli_sections(info)
@@ -105,7 +106,7 @@ def parse_rstcli(info):
             volumes = parse_rstcli_volumes(section[1])
         elif section[0].startswith("DISKS IN VOLUME"):
             volume = section[0].split(":")[1].strip()
-            volumes[volume]['Disks'] = parse_rstcli_disks(section[1])
+            volumes[volume]["Disks"] = parse_rstcli_disks(section[1])
         else:
             raise MKGeneralException("invalid section in rstcli output: %s" % section[0])
 
@@ -118,45 +119,53 @@ def inventory_rstcli(parsed):
 
 # Help! There is no documentation, what are the possible values?
 rstcli_states = {
-    'Normal': 0,
+    "Normal": 0,
 }
 
 
 @get_parsed_item_data
 def check_rstcli(_item, _no_params, volume):
-    return rstcli_states.get(volume['State'], 3), "RAID %s, %d disks (%s), state %s" % \
-        (volume['Raid Level'], int(volume['Num Disks']),
-         volume['Size'], volume['State'])
+    return rstcli_states.get(volume["State"], 3), "RAID %s, %d disks (%s), state %s" % (
+        volume["Raid Level"],
+        int(volume["Num Disks"]),
+        volume["Size"],
+        volume["State"],
+    )
 
 
 check_info["rstcli"] = {
-    'check_function': check_rstcli,
-    'inventory_function': inventory_rstcli,
-    'parse_function': parse_rstcli,
-    'service_description': 'RAID Volume %s',
+    "check_function": check_rstcli,
+    "inventory_function": inventory_rstcli,
+    "parse_function": parse_rstcli,
+    "service_description": "RAID Volume %s",
 }
 
 
 def inventory_rstcli_pdisks(parsed):
     for key, volume in parsed.items():
-        for disk in volume['Disks']:
-            yield "%s/%s" % (key, disk['ID']), None
+        for disk in volume["Disks"]:
+            yield "%s/%s" % (key, disk["ID"]), None
 
 
 def check_rstcli_pdisks(item, _no_params, parsed):
-    volume, disk_id = item.rsplit('/', 1)
+    volume, disk_id = item.rsplit("/", 1)
 
-    disks = parsed.get(volume, {}).get('Disks', [])
+    disks = parsed.get(volume, {}).get("Disks", [])
     for disk in disks:
-        if disk['ID'] == disk_id:
-            infotext = "%s (unit: %s, size: %s, type: %s, model: %s, serial: %s)" % \
-                       (disk['State'], volume, disk['Size'], disk['Disk Type'],
-                        disk['Model'], disk['Serial Number'])
-            return rstcli_states.get(disk['State'], 2), infotext
+        if disk["ID"] == disk_id:
+            infotext = "%s (unit: %s, size: %s, type: %s, model: %s, serial: %s)" % (
+                disk["State"],
+                volume,
+                disk["Size"],
+                disk["Disk Type"],
+                disk["Model"],
+                disk["Serial Number"],
+            )
+            return rstcli_states.get(disk["State"], 2), infotext
 
 
 check_info["rstcli.pdisks"] = {
-    'check_function': check_rstcli_pdisks,
-    'inventory_function': inventory_rstcli_pdisks,
-    'service_description': 'RAID Disk %s',
+    "check_function": check_rstcli_pdisks,
+    "inventory_function": inventory_rstcli_pdisks,
+    "service_description": "RAID Disk %s",
 }

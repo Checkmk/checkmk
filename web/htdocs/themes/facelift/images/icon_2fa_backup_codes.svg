@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 415 280" style="enable-background:new 0 0 415 280;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#CFD8DC;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#37474F;}
+	.st2{filter:url(#Adobe_OpacityMaskFilter);}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st4{mask:url(#mask-2_1_);fill-rule:evenodd;clip-rule:evenodd;fill:#546E7A;}
+	.st5{filter:url(#Adobe_OpacityMaskFilter_1_);}
+	.st6{mask:url(#mask-2_2_);fill-rule:evenodd;clip-rule:evenodd;fill:#546E7A;}
+	.st7{filter:url(#Adobe_OpacityMaskFilter_2_);}
+	.st8{mask:url(#mask-2_3_);fill-rule:evenodd;clip-rule:evenodd;fill:#FAFAFA;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-498.000000, -593.000000)">
+		<g id="backups" transform="translate(498.000000, 593.000000)">
+			<polygon id="Fill-1" class="st0" points="11.2,212.8 403.2,212.8 403.2,56 11.2,56 			"/>
+			<g id="Group-8">
+				<path id="Fill-2" class="st1" d="M120.9,156.8c-12.4,0-22.4-10-22.4-22.4c0-12.4,10-22.4,22.4-22.4s22.4,10,22.4,22.4
+					C143.3,146.8,133.3,156.8,120.9,156.8 M194,67.2H59.1c-17.2,17.2-27.8,41-27.8,67.2s10.6,50,27.8,67.2H194
+					c17.1-17.2,27.8-41,27.8-67.2S211.1,84.4,194,67.2 M288.9,156.8c-12.4,0-22.4-10-22.4-22.4c0-12.4,10-22.4,22.4-22.4
+					s22.4,10,22.4,22.4C311.3,146.8,301.3,156.8,288.9,156.8 M350.8,67.2H227.1c-17.2,17.2-27.8,41-27.8,67.2s10.6,50,27.8,67.2
+					h123.7c17.2-17.2,27.8-41,27.8-67.2S367.9,84.4,350.8,67.2"/>
+				<g id="Clip-5">
+				</g>
+				<defs>
+					<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="0" y="0" width="414.4" height="280">
+						<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+					</filter>
+				</defs>
+				<mask maskUnits="userSpaceOnUse" x="0" y="0" width="414.4" height="280" id="mask-2_1_">
+					<g class="st2">
+						<polygon id="path-1_1_" class="st3" points="0,280 414.4,280 414.4,0 0,0 						"/>
+					</g>
+				</mask>
+				<path id="Fill-4" class="st4" d="M22.4,201.6H392V67.2H22.4V201.6z M0,280h414.4V0H0V280z"/>
+				<defs>
+					<filter id="Adobe_OpacityMaskFilter_1_" filterUnits="userSpaceOnUse" x="156.8" y="56" width="100.8" height="156.8">
+						<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+					</filter>
+				</defs>
+				<mask maskUnits="userSpaceOnUse" x="156.8" y="56" width="100.8" height="156.8" id="mask-2_2_">
+					<g class="st5">
+						<polygon id="path-1_2_" class="st3" points="0,280 414.4,280 414.4,0 0,0 						"/>
+					</g>
+				</mask>
+				<polygon id="Fill-6" class="st6" points="156.8,212.8 257.6,212.8 257.6,56 156.8,56 				"/>
+				<defs>
+					<filter id="Adobe_OpacityMaskFilter_2_" filterUnits="userSpaceOnUse" x="179.2" y="67.2" width="56" height="134.4">
+						<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+					</filter>
+				</defs>
+				<mask maskUnits="userSpaceOnUse" x="179.2" y="67.2" width="56" height="134.4" id="mask-2_3_">
+					<g class="st7">
+						<polygon id="path-1_3_" class="st3" points="0,280 414.4,280 414.4,0 0,0 						"/>
+					</g>
+				</mask>
+				<polygon id="Fill-7" class="st8" points="179.2,201.6 235.2,201.6 235.2,67.2 179.2,67.2 				"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

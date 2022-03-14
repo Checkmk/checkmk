@@ -31,16 +31,19 @@ def check_blade_bx_blades(item, _no_params, info):
             return state, "%s Status: %s" % (name_info, state_readable)
 
 
-check_info['blade_bx_blades'] = {
-    "inventory_function"    : inventory_blade_bx_blades,
-    "check_function"        : check_blade_bx_blades,
-    "service_description"   : "Blade %s",
-    "snmp_info"             : (".1.3.6.1.4.1.7244.1.1.1.4.2.1.1", [
-                                    1,  # bladeId
-                                    2,  # bladestatus
-                                    5,  # Serialnumber
-                                    21, # Name
-                              ]),
-   "snmp_scan_function"     : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
-                                  or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
+check_info["blade_bx_blades"] = {
+    "inventory_function": inventory_blade_bx_blades,
+    "check_function": check_blade_bx_blades,
+    "service_description": "Blade %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.7244.1.1.1.4.2.1.1",
+        [
+            1,  # bladeId
+            2,  # bladestatus
+            5,  # Serialnumber
+            21,  # Name
+        ],
+    ),
+    "snmp_scan_function": lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0")
+    or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
 }

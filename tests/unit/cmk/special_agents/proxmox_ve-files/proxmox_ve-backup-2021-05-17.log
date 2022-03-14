@@ -1,0 +1,31 @@
+INFO: starting new backup job: vzdump --all 1 --storage pbs-fra --quiet 1 --mailnotification always --mailto admin@tribe29.com --mode snapshot
+INFO: skip external VMs: 100, 101, 102, 104, 105, 111, 112, 113, 114, 115, 119, 123, 124, 125, 126, 127, 128, 131, 132, 134, 135, 136, 138, 139, 140, 141, 142, 143, 145, 146, 150, 154, 156, 157, 158, 159, 160, 9000
+INFO: Starting Backup of VM 103 (lxc)
+INFO: Backup started at 2021-05-17 20:15:02
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+/dev/rbd12
+INFO: creating Proxmox Backup Server archive 'ct/103/2021-05-17T18:15:02Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp3420812_103/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 103 --backup-time 1621275302 --repository pvecluster-hetzner@pbs@abc.def.de:backup
+INFO: Starting backup: ct/103/2021-05-17T18:15:02Z
+INFO: Client name: pve-fra-001
+INFO: Starting backup protocol: Mon May 17 20:15:02 2021
+INFO: Downloading previous manifest (Mon May 17 12:00:01 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp3420812_103/etc/vzdump/pct.conf' to 'pvecluster-hetzner@pbs@abc.def.de:8007:backup' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster-hetzner@pbs@abc.def.de:8007:backup' as root.pxar.didx
+INFO: root.pxar: had to backup 26.94 MiB of 2.51 GiB (compressed 9.10 MiB) in 24.72s
+INFO: root.pxar: average backup speed: 1.09 MiB/s
+INFO: root.pxar: backup was done incrementally, reused 2.49 GiB (99.0%)
+INFO: Uploaded backup catalog (662.00 KiB)
+INFO: Duration: 32.54s
+INFO: End Time: Mon May 17 20:15:35 2021
+INFO: cleanup temporary 'vzdump' snapshot
+Removing snap: 100% complete...done.
+INFO: Finished Backup of VM 103 (00:00:34)
+INFO: Backup finished at 2021-05-17 20:15:36
+INFO: Backup job finished with errors
+

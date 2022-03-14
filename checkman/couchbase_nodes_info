@@ -1,7 +1,7 @@
 title: Couchbase Nodes: Information
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the health status of a cluster node.
@@ -16,7 +16,7 @@ description:
  It also monitors the cluster membership state, counfigurable in the rule.
  By default inactive added notes go to WARN and inactive failed notes to CRIT.
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

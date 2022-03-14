@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesOperatingSystem,
+from cmk.gui.plugins.wato.utils import (
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesOperatingSystem,
 )
 
 rulespec_registry.register(
@@ -16,4 +16,5 @@ rulespec_registry.register(
         check_group_name="zypper",
         group=RulespecGroupEnforcedServicesOperatingSystem,
         title=lambda: _("Zypper Updates"),
-    ))
+    )
+)

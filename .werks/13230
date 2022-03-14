@@ -1,0 +1,16 @@
+Title: systemd_units: Handling of 'deactivating' services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634469710
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Previously systemd services in the 'deactivating' state immediately led to a critical Checkmk service.
+Now it is ok for any systemd service to be in this state once, or for a configured interval.
+
+Note that this behaviour in particular affected users who monitored their hosts from
+two Checkmk sites, as the <tt>check_mk_agent</tt> would be 'deactivating'
+from time to time (which is expected).

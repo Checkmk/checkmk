@@ -70,17 +70,17 @@ def check_postgres_stat_database(item, params, parsed):
             warn, crit = params[what]
             if rate >= crit:
                 status = 2
-                infos[-1] += '(!!)'
+                infos[-1] += "(!!)"
             elif rate >= warn:
                 status = max(status, 1)
-                infos[-1] += '(!)'
+                infos[-1] += "(!)"
         else:
             warn, crit = None, None
         perfdata.append((what, rate, warn, crit))
     return (status, ", ".join(infos), perfdata)
 
 
-check_info['postgres_stat_database'] = {
+check_info["postgres_stat_database"] = {
     "parse_function": parse_postgres_stat_database,
     "inventory_function": inventory_postgres_stat_database,
     "check_function": check_postgres_stat_database,
@@ -102,7 +102,7 @@ def check_postgres_stat_database_size(item, _no_params, parsed):
     return (0, "Size is %s" % get_bytes_human_readable(size), [("size", size)])
 
 
-check_info['postgres_stat_database.size'] = {
+check_info["postgres_stat_database.size"] = {
     "check_function": check_postgres_stat_database_size,
     "inventory_function": inventory_postgres_stat_database,
     "service_description": "PostgreSQL DB %s Size",

@@ -4,10 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional, Sequence
 
-def agent_hivemanager_arguments(params, hostname, ipaddress):
+
+def agent_hivemanager_arguments(
+    params: tuple, hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     # User, Password
-    return [ipaddress, params[0], params[1]]
+    return [ipaddress or hostname, params[0], params[1]]
 
 
-special_agent_info['hivemanager'] = agent_hivemanager_arguments
+special_agent_info["hivemanager"] = agent_hivemanager_arguments

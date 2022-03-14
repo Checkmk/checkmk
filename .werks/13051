@@ -1,0 +1,12 @@
+Title: kaspersky_av_client: unhandled execption IndexError (list index out of range) in parse function
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625496736
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+
+Fixes an unhandled IndexError expection in kaspersky_av_client parse function when a signature update time was missing.

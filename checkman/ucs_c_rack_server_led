@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: Health Status of Fans
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the LEDs of UCS C-Series Rack Servers. By default, the state of
@@ -39,5 +39,5 @@ description:
 item:
  {{Rack unit}} followed by the index of the rack followed by the index of the LED.
 
-inventory:
+discovery:
  One service is created for each LED.

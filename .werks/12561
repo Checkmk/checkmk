@@ -1,0 +1,16 @@
+Title: Fix KeyError (site_id) crash on host properties page (2.0.0p2 regression)
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1619418104
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+When opening the host properties page in the setup an exception KeyError
+("site_id") could appear in distributed setups. This issue was triggered when a
+folder has a site attribute configured which does not have a site specific
+global setting defined. This situation is now cleanly handled to prevent this
+exception.

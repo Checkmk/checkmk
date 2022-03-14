@@ -1,0 +1,17 @@
+Title: <tt>apt</tt>: Handle Security Updates Line
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626420898
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+Newer versions of the Linux command <tt>apt</tt> display something like
+"10 standard security updates" or "3 esm-infra security updates" if security
+updates are available. Up to now, the corresponding check plugin <tt>apt</tt>
+was not able to handle this line. If such a line was present, the service
+"APT Updates" was not discovered or went stale if already discovered.
+
+This has been fixed.

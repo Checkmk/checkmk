@@ -1,0 +1,11 @@
+Title: Update mod_wsgi to 4.9.0
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1634041484
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+

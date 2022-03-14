@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.arris_cmts import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 arris_cmts_cpu_default_levels = (90, 95)
 
 
@@ -17,11 +18,11 @@ def inventory_arris_cmts_cpu(info):
         # Sadly the cpu_id seams empty. Referring to
         # the MIB, its slot id
         if cpu_id:
-            yield cpu_id, 'arris_cmts_cpu_default_levels'
+            yield cpu_id, "arris_cmts_cpu_default_levels"
         else:
             # Fallback to the oid end
             item = str(int(oid_id) - 1)
-            yield item, 'arris_cmts_cpu_default_levels'
+            yield item, "arris_cmts_cpu_default_levels"
 
 
 def check_arris_cmts_cpu(item, params, info):
@@ -38,7 +39,7 @@ def check_arris_cmts_cpu(item, params, info):
         if citem == item:
             # We get the IDLE percentage, but need the usage
             cpu_util = 100 - int(cpu_idle_util)
-            warn, crit = params['levels']
+            warn, crit = params["levels"]
 
             infotext = "Current utilization is: %d %% " % cpu_util
             levels = " (warn/crit at %.1f/%.1f %%)" % (warn, crit)
@@ -64,6 +65,7 @@ check_info["arris_cmts_cpu"] = {
             OID_END,
             1,  # cadCpuCardId
             8,  # cadIdleCpuRecentPercent
-        ]),
+        ],
+    ),
     "group": "cpu_utilization_multiitem",
 }

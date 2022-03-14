@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Alias: TCP port number for agent-receiver server
+# Menu: Basic
+# Description:
+#  Configure the port on which agent-receiver server
+#  will listen to requests. If the port isn't
+#  available, the next available port will be chosen.
+
+case "$1" in
+    default)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used AGENT_RECEIVER_PORT 8000)
+        echo "$PORT"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used AGENT_RECEIVER_PORT $2)
+
+        if [ "$PORT" != "$2" ]; then
+            echo "agent-receiver port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_AGENT_RECEIVER" = on ]
+    ;;
+esac

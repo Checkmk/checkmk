@@ -1,7 +1,7 @@
 title: Barracuda SPAM Firewall: Mail Latency
 agents: snmp
 catalog: app/barracuda
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the mail latency of a Barracuda SPAM Firewall.
@@ -9,5 +9,5 @@ description:
  Upper levels of the mail latency are configurable. Default levels are
  set to 40, 60 seconds.
 
-inventory:
+discovery:
  One service is created.

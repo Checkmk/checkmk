@@ -1,0 +1,14 @@
+Title: agent_proxmox_ve: Crash with KeyError('started_time') when corresponding backup job failed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618323865
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In case a backup job failed, unfinished VM backup logs do not contain `started_time`, which would
+result in unhandled KeyError('started_time') when sorting backup entries.
+This change will make `agent_proxmox_ve` use the time the job failed at as `started_time` for
+each VM in order to be able to assign a failed backup to a certain point in time.

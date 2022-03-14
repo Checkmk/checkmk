@@ -1,0 +1,16 @@
+Title: inventory: solaris_pkginfo: failed: '<' not supported between instances of 'str' and 'NoneType'
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1618820007
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The solaris_pkginfo inventory plugin was not working and showed the following message:
+
+WARNING: solaris_pkginfo: failed: '<' not supported between instances of 'str' and 'NoneType'
+
+This should now be fixed.

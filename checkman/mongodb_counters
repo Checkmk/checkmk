@@ -1,7 +1,7 @@
 title: MongoDB: Operation Counters
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of operations and replicated
@@ -14,6 +14,6 @@ description:
 item:
  One of the two statement {{Operations}} or {{Replica Operations}}.
 
-inventory:
+discovery:
  One service is created for the {Operations} and another one for
  {Replica Operations} (if applicable).

@@ -4,16 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping
-from .agent_based_api.v1 import (
-    check_levels,
-    type_defs,
-    register,
-    State as state,
-    Result,
-    Service,
-    Metric,
-)
+from typing import Any, Dict, List, Mapping, Optional
+
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 
 # <<<tsm_stagingpools>>>
 # tsmfarm2       SL8500_STGPOOL_05       99.9
@@ -112,8 +107,10 @@ def check_tsm_stagingpools(
         levels_lower=params.get("levels", (None, None)),
         metric_name="free",
         render_func=lambda v: "%d" % v,
-        label=(f"Total tapes: {num_tapes}, Utilization: {utilization:.1f} tapes, "
-               f"Tapes less then {params['free_below']}% full"),
+        label=(
+            f"Total tapes: {num_tapes}, Utilization: {utilization:.1f} tapes, "
+            f"Tapes less then {params['free_below']}% full"
+        ),
         boundaries=(0, num_tapes),
     )
 
@@ -124,12 +121,12 @@ def check_tsm_stagingpools(
 def cluster_check_tsm_stagingspools(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, SECTION],
+    section: Mapping[str, Optional[SECTION]],
 ) -> type_defs.CheckResult:
 
     datasets, nodeinfos = [], []
     for node, data in section.items():
-        if item in data:
+        if data is not None and item in data:
             datasets.append(tuple(data[item]))
             nodeinfos.append(node)
 

@@ -1,7 +1,7 @@
 title: Janitza Power Analyzer: Input Phases
 agents: snmp
 catalog: hw/power/janitza
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors voltage, current, power, apparent power and energy on Janitza Power
@@ -11,6 +11,5 @@ description:
 item:
  The identifier of the phase ({"Phase 1"}, {"Phase 2"}, {"Phase 3"}).
 
-inventory:
+discovery:
  One service is created for each input phase (three or four).
-

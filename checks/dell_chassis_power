@@ -22,8 +22,12 @@ def check_dell_chassis_power(item, _no_params, info):
     }
     infotext, state = state_table.get(status, ("unknown state, ", 3))
 
-    infotext += "Power: %.1f W, PotentialPower: %.1f W, MaxPower: %.1f W, Current: %.1f A" \
-        % ( savefloat(power), savefloat(PotentialPower), savefloat(MaxPowerSpec), savefloat(current) )
+    infotext += "Power: %.1f W, PotentialPower: %.1f W, MaxPower: %.1f W, Current: %.1f A" % (
+        savefloat(power),
+        savefloat(PotentialPower),
+        savefloat(MaxPowerSpec),
+        savefloat(current),
+    )
 
     perfdata = [("power", power + "Watt", 0, PotentialPower, "", MaxPowerSpec)]
 
@@ -43,6 +47,7 @@ check_info["dell_chassis_power"] = {
             "4.1.1.4.1",  # drsMaxPowerSpecification 2
             "4.1.1.13.1",  # drsWattsReading         3
             "4.1.1.14.1",  # drsAmpsReading          4
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.2",
 }

@@ -14,18 +14,15 @@ from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-i
 @get_data_or_go_stale
 def check_azure_virtualnetworkgateways(_item, params, resource):
     for metric_key, cmk_key, displ in (
-        ('maximum_P2SConnectionCount', 'connections', 'Point-to-site connections'),
-        ('average_P2SBandwidth', 'p2s_bandwidth', 'Point-to-site bandwidth'),
-        ('average_AverageBandwidth', 's2s_bandwidth', 'Site-to-site bandwidth'),
+        ("maximum_P2SConnectionCount", "connections", "Point-to-site connections"),
+        ("average_P2SBandwidth", "p2s_bandwidth", "Point-to-site bandwidth"),
+        ("average_AverageBandwidth", "s2s_bandwidth", "Site-to-site bandwidth"),
     ):
         levels_l = params.get("%s_levels_lower" % cmk_key, (None, None))
         levels_u = params.get("%s_levels_upper" % cmk_key, (None, None))
-        mcheck = check_azure_metric(resource,
-                                    metric_key,
-                                    cmk_key,
-                                    displ,
-                                    levels=levels_u,
-                                    levels_lower=levels_l)
+        mcheck = check_azure_metric(
+            resource, metric_key, cmk_key, displ, levels=levels_u, levels_lower=levels_l
+        )
         if mcheck:
             yield mcheck
 
@@ -33,11 +30,11 @@ def check_azure_virtualnetworkgateways(_item, params, resource):
         yield 0, "%s: %s" % kv_pair
 
 
-check_info['azure_virtualnetworkgateways'] = {
-    'parse_function': parse_azure,
-    'inventory_function': discover(),
-    'check_function': check_azure_virtualnetworkgateways,
-    'service_description': "VNet Gateway %s",
-    'has_perfdata': True,
-    'group': 'azure_virtualnetworkgateways',
+check_info["azure_virtualnetworkgateways"] = {
+    "parse_function": parse_azure,
+    "inventory_function": discover(),
+    "check_function": check_azure_virtualnetworkgateways,
+    "service_description": "VNet Gateway %s",
+    "has_perfdata": True,
+    "group": "azure_virtualnetworkgateways",
 }

@@ -7,16 +7,14 @@
 
 from typing import List, Optional, Tuple
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
+from cmk.utils.type_defs import AgentRawData, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -24,9 +22,9 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def get(self,
-            oid: OID,
-            context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:
+    def get(
+        self, oid: OID, context_name: Optional[SNMPContextName] = None
+    ) -> Optional[SNMPRawValue]:
         walk = self.walk(oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -36,11 +34,13 @@ class StoredWalkSNMPBackend(SNMPBackend):
             return walk[0][1]
         return None
 
-    def walk(self,
-             oid: OID,
-             check_plugin_name: Optional[CheckPluginNameStr] = None,
-             table_base_oid: Optional[OID] = None,
-             context_name: Optional[SNMPContextName] = None) -> SNMPRowInfo:
+    def walk(
+        self,
+        oid: OID,
+        section_name: Optional[SectionName] = None,
+        table_base_oid: Optional[OID] = None,
+        context_name: Optional[SNMPContextName] = None,
+    ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]
 
@@ -107,7 +107,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def _compare_oids(a: OID, b: OID) -> int:
         aa = StoredWalkSNMPBackend._to_bin_string(a)
         bb = StoredWalkSNMPBackend._to_bin_string(b)
-        if len(aa) <= len(bb) and bb[:len(aa)] == aa:
+        if len(aa) <= len(bb) and bb[: len(aa)] == aa:
             result = 0
         else:
             result = (aa > bb) - (aa < bb)
@@ -121,8 +121,9 @@ class StoredWalkSNMPBackend(SNMPBackend):
             raise MKGeneralException("Invalid OID %s" % oid)
 
     @staticmethod
-    def _collect_until(oid: OID, oid_prefix: OID, lines: List[str], index: int,
-                       direction: int) -> SNMPRowInfo:
+    def _collect_until(
+        oid: OID, oid_prefix: OID, lines: List[str], index: int, direction: int
+    ) -> SNMPRowInfo:
         rows = []
         # Handle case, where we run after the end of the lines list
         if index >= len(lines):
@@ -133,17 +134,20 @@ class StoredWalkSNMPBackend(SNMPBackend):
             line = lines[index]
             parts = line.split(None, 1)
             o = parts[0]
-            if o.startswith('.'):
+            if o.startswith("."):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
                     # FIXME: This encoding ping-pong os horrible...
-                    value = ensure_str(
-                        agent_simulator.process(AgentRawData(ensure_binary(parts[1]),),),)
+                    value = agent_simulator.process(
+                        AgentRawData(
+                            parts[1].encode(),
+                        ),
+                    ).decode()
                 else:
                     value = ""
                 # Fix for missing starting oids
-                rows.append(('.' + o, strip_snmp_value(value)))
+                rows.append(("." + o, strip_snmp_value(value)))
                 index += direction
                 if index < 0 or index >= len(lines):
                     break

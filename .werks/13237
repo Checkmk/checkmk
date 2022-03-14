@@ -1,0 +1,18 @@
+Title: Validate input for recurring downtimes on "same day of the month"
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1631028566
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Recurring downtimes with option "same day of the month" are only handled by the
+core for days 1-28 of month. The GUI will now validate the input for that
+kind of downtime.
+
+Please note that you have to revise existing recurring downtimes. Please change
+the start date if it is currently 29, 30 or 31 day of month. Otherwise these downtimes
+will be executed on day 28 in months without these days.

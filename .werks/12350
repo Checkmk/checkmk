@@ -1,0 +1,15 @@
+Title: API: addition of get single downtime endpoint
+Class: feature
+Compatible: compat
+Component: core
+Date: 1614950055
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+This werk adds the get single downtime endpoint. It was already
+possible to get a single downtime using the query functionality
+in the show all downtimes endpoint. The new endpoint offers a
+more simple alternative.

@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Storage Pools Tiering Types
 agents: emc
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check reports user, consumed, available capacity,
@@ -13,5 +13,5 @@ description:
 item:
  Pool name
 
-inventory:
+discovery:
  One service is created for each pool.

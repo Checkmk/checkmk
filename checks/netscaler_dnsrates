@@ -17,7 +17,7 @@ factory_settings["netscaler_dnsrates_default_levels"] = {
 
 def inventory_netscaler_dnsrates(info):
     if info:
-        return [(None, 'netscaler_dnsrates_default_levels')]
+        return [(None, "netscaler_dnsrates_default_levels")]
 
 
 def check_netscaler_dnsrates(_no_item, params, info):
@@ -53,7 +53,8 @@ check_info["netscaler_dnsrates"] = {
         [  # nsDnsServerStatsGroup
             1,  # dnsTotQueries
             2,  # dnsTotAnswers
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
     "default_levels_variable": "netscaler_dnsrates_default_levels",
 }

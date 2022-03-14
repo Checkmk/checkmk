@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ovs_bonding:sep(58)>>>
 # [bond1]
 # bond_mode: active-backup
@@ -22,13 +23,13 @@ from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard
 # slave eth1: enabled
 # active slave
 
-factory_settings['bonding_default_levels'] = BONDING_CHECK_DEFAULT_PARAMETERS
+factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_ovs_bonding(info):
     bonds = {}
     for line in info:
-        if line[0][0] == '[':
+        if line[0][0] == "[":
             bond = line[0][1:-1]
             bonds[bond] = {"active": None}
         elif len(line) == 2:
@@ -43,13 +44,13 @@ def parse_ovs_bonding(info):
                 last_interface = eth
             else:
                 bonds[bond][left] = right
-        elif line[0] == 'active slave':
+        elif line[0] == "active slave":
             bonds[bond]["active"] = last_interface
 
     parsed = {}
     for bond, status in bonds.items():
         all_down = True
-        if not status['active']:
+        if not status["active"]:
             continue
         for st in status["interfaces"].values():
             if st["status"] == "up":
@@ -66,7 +67,7 @@ def parse_ovs_bonding(info):
     return parsed
 
 
-check_info['ovs_bonding'] = {
+check_info["ovs_bonding"] = {
     "parse_function": parse_ovs_bonding,
     "check_function": check_bonding,
     "inventory_function": inventory_bonding,

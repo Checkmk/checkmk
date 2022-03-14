@@ -1,7 +1,7 @@
 title: Oracle Database: Custom SQLs
 agents: linux, aix, solaris
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check processes the output of the {{<<<oracle_sql>>>}}
@@ -17,5 +17,5 @@ description:
 item:
  The SID and SQL name or specified item name.
 
-inventory:
+discovery:
  One service is created for each SQL.

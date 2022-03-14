@@ -1,0 +1,14 @@
+Title: API: addition of downtime management in distributed monitoring setup
+Class: feature
+Compatible: compat
+Component: core
+Date: 1625836065
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+In the previous version, the API allowed to only manage downtimes in a
+non distributed monitoring setup. This werk resolves this restriction and
+allows the user to equally handle downtimes in a distributed environment.

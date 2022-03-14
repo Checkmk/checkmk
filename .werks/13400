@@ -1,0 +1,14 @@
+Title: discover additional 'average' service for cisco_cpu_multiitem
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1636619166
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+It's now possible to configure the cisco_cpu_multiitem to include a
+<tt>average</tt> service to show the average CPU utilization of all individual
+CPUs. The discovery rule is called "CPU multi item discovery". The default
+behaviour of discovering the individual CPUs only is not altered.

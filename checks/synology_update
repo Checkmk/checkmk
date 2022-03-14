@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.synology import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["synology_update_levels"] = {
     "ok_states": [2],
     "warn_states": [5],
@@ -31,11 +32,11 @@ def check_synology_update(_no_item, params, info):
     version, device_state = info[0]
     device_state = int(device_state)
     state = 3
-    if device_state in params['ok_states']:
+    if device_state in params["ok_states"]:
         state = 0
-    elif device_state in params['warn_states']:
+    elif device_state in params["warn_states"]:
         state = 1
-    elif device_state in params['crit_states']:
+    elif device_state in params["crit_states"]:
         state = 2
     elif device_state == 3:
         # to prevent flapping between update avail and Connection
@@ -51,9 +52,10 @@ check_info["synology_update"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.6574.1.5",
         [
-            3,  #Version
-            4,  #Status
-        ]),
+            3,  # Version
+            4,  # Status
+        ],
+    ),
     "default_levels_variable": "synology_update_levels",
     "group": "synology_update",
 }

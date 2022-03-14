@@ -1,0 +1,11 @@
+Title: Microcore config generation: made exceptions from worker processes more clear
+Class: feature
+Compatible: compat
+Component: core
+Date: 1646383018
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+

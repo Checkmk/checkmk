@@ -1,0 +1,23 @@
+Title: Fix 'only from' monitoring in Check_MK services for systemd hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630739315
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The <i>Check_MK</i> service did not report the <i>only-from</i>
+configuration if the used super server was <tt>systemd</tt> and
+the socket unit name did not start with 'check-mk-agent'.
+This can either be the case if you are using the Checkmk <b>raw</b>
+edition, or you have changed the agent package name via the WATO.
+
+While the <i>only-from</i> setting was enforced correctly,
+the agent did not report it back to the monitoring server.
+
+If the agent reports back the effective <i>only-from</i>, the
+monitoring server will compare it to the configured value,
+and issues a WARNING if the allowed IP addresses deviate from
+the expected ones.

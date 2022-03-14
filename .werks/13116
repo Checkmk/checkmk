@@ -1,0 +1,22 @@
+Title: PostgreSQL Agent Plugin: Run On Additional Systems (Windows)
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1627314410
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+On Windows systems, the PostgreSQL agent plugin (<tt>mk_postgres</tt>) now looks
+for the PostgreSQL binary <tt>psql.exe</tt> in additional places. Before, the
+plugin only checked <tt>C:\Program Files\PostgreSQ\</tt>. Now, the plugin checks
+<ul>
+<li><tt>Program Files\PostgreSQL\</tt></li>
+<li><tt>Program Files (x86)\PostgreSQL\</tt></li>
+<li><tt>PostgreSQL\</tt></li>
+</ul>
+for every logical drive and uses the first found binary.
+
+This means that the plugin might now run on systems it previously didn't run on.
+Note that you first have to update the Checkmk agent of affected hosts.

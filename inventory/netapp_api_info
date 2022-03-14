@@ -42,11 +42,11 @@ def inv_netapp_api_info(info):
         ("system-machine-type", "product", hw_system),
         ("system-serial-number", "serial", hw_system),
         ("system-id", "id", hw_system),
-            # TODO: find good location for the configurable system name
-            #                                 ("system-name",                "system_name",     sw_os),
+        # TODO: find good location for the configurable system name
+        #                                 ("system-name",                "system_name",     sw_os),
         ("vendor-id", "vendor", sw_os),
         ("number-of-processors", "cores", hw_cpu),
-        ("cpu-processor-type", "model", hw_cpu)
+        ("cpu-processor-type", "model", hw_cpu),
     ]:
         if what in info_dict:
             where_to[name] = info_dict[what]
@@ -64,6 +64,6 @@ def inv_netapp_api_info(info):
 #                node_dict[node][tokens[0]] = tokens[1]
 #
 
-inv_info['netapp_api_info'] = {
+inv_info["netapp_api_info"] = {
     "inv_function": inv_netapp_api_info,
 }

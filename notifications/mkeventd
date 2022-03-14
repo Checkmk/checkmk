@@ -20,18 +20,19 @@ FACILITY=16
 REMOTE=""
 
 # Old-style parameters
-if [ "$NOTIFY_PARAMETER_1" ] ; then FACILITY="${NOTIFY_PARAMETER_1}" ; fi
-if [ "$NOTIFY_PARAMETER_2" ] ; then REMOTE="${NOTIFY_PARAMETER_2}" ; fi
+if [ "$NOTIFY_PARAMETER_1" ]; then FACILITY="${NOTIFY_PARAMETER_1}"; fi
+if [ "$NOTIFY_PARAMETER_2" ]; then REMOTE="${NOTIFY_PARAMETER_2}"; fi
 
 # New-style parameters
-if [ -n "$NOTIFY_PARAMETER_FACILITY" ] ; then FACILITY="${NOTIFY_PARAMETER_FACILITY}" ; fi
-if [ -n "$NOTIFY_PARAMETER_REMOTE" ] ;   then REMOTE="${NOTIFY_PARAMETER_REMOTE}" ; fi
+if [ -n "$NOTIFY_PARAMETER_FACILITY" ]; then FACILITY="${NOTIFY_PARAMETER_FACILITY}"; fi
+if [ -n "$NOTIFY_PARAMETER_REMOTE" ]; then REMOTE="${NOTIFY_PARAMETER_REMOTE}"; fi
 
-
-if [ "$NOTIFY_WHAT" = HOST ]
-then
+if [ "$NOTIFY_WHAT" = HOST ]; then
+    # supression: It's been like that; I am not sure. Never touch a running system.
+    # shellcheck disable=SC2086 #  Double quote to prevent globbing and word splitting.
     mkevent -n "$FACILITY" "$REMOTE" $NOTIFY_HOSTSTATEID "$NOTIFY_HOSTNAME" "" "$NOTIFY_HOSTOUTPUT" "$NOTIFY_HOST_SL" "$NOTIFY_HOST_EC_CONTACT"
 else
+    # supression: It's been like that; I am not sure. Never touch a running system.
+    # shellcheck disable=SC2086 #  Double quote to prevent globbing and word splitting.
     mkevent -n "$FACILITY" "$REMOTE" $NOTIFY_SERVICESTATEID "$NOTIFY_HOSTNAME" "$NOTIFY_SERVICEDESC" "$NOTIFY_SERVICEOUTPUT" "$NOTIFY_SERVICE_SL" "$NOTIFY_SERVICE_EC_CONTACT" "$NOTIFY_HOST_SL" "$NOTIFY_HOST_EC_CONTACT"
 fi
-

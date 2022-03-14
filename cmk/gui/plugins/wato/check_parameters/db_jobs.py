@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    DropdownChoice,
-    MonitoringState,
-    Tuple,
-)
+from cmk.gui.valuespec import Age, DropdownChoice, MonitoringState, Tuple
 
 run_duration = Tuple(
     title=_("Maximum run duration for last execution"),
-    help=_("Here you can define an upper limit for the run duration of "
-           "last execution of the job."),
+    help=_(
+        "Here you can define an upper limit for the run duration of " "last execution of the job."
+    ),
     elements=[
         Age(title=_("warning at")),
         Age(title=_("critical at")),
@@ -44,7 +40,9 @@ status_missing_jobs = MonitoringState(
 missinglog = MonitoringState(
     default_value=1,
     title=_("State in case of Job has no log information"),
-    help=_("It is possible that a job has no log information. This also means "
-           "that the job has no last running state as this is obtained from the log. "
-           "The last run state is ignored when no log information is found."),
+    help=_(
+        "It is possible that a job has no log information. This also means "
+        "that the job has no last running state as this is obtained from the log. "
+        "The last run state is ignored when no log information is found."
+    ),
 )

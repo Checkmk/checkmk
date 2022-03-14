@@ -1,0 +1,13 @@
+Title: Fix error on connection tests page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1619618421
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If the rule "Individual program call instead of agent access" was used and the
+connection test was executed for the related host, the section "Agent" showed
+an error "Program '5' not found (exit code 127)".

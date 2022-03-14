@@ -1,7 +1,7 @@
 title: 3ware ATA RAID Controller: General Information
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check check information about 3ware ATA RAID Controller:
@@ -23,5 +23,5 @@ description:
 item:
  The name of the controller, e.g. {c5} or {c0}.
 
-inventory:
+discovery:
  One service is created for each controller.

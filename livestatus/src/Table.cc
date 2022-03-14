@@ -13,7 +13,6 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
-#include "nagios.h"
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 

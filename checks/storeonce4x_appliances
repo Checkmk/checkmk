@@ -4,16 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -27,18 +30,43 @@ def parse_storeonce4x_appliances(info):
     app_state_map = {"Reachable": 0}
 
     # Currently used metrics
-    properties_federation = ("hostname", "address", "productName", "serialNumber", "localhost",
-                             "applianceState", "stateUpdatedDate", "federationApiVersion",
-                             "applianceStateString", "sinceStateUpdatedSeconds")
+    properties_federation = (
+        "hostname",
+        "address",
+        "productName",
+        "serialNumber",
+        "localhost",
+        "applianceState",
+        "stateUpdatedDate",
+        "federationApiVersion",
+        "applianceStateString",
+        "sinceStateUpdatedSeconds",
+    )
 
-    properties_dashboard = ("softwareUpdateRecommended", "softwareVersion", "localFreeBytes",
-                            "localCapacityBytes", "cloudFreeBytes", "cloudCapacityBytes",
-                            "metricsCpuTotal", "metricsMemoryUsedPercent",
-                            "metricsDataDiskUtilisationPercent", "applianceStatusString",
-                            "dataServicesStatusString", "licenseStatus", "licenseStatusString",
-                            "userStorageStatusString", "hardwareStatusString", "catStoresSummary",
-                            "cloudBankStoresSummary", "nasSharesSummary", "vtlLibrariesSummary",
-                            "nasRepMappingSummary", "vtlRepMappingSummary", "dedupeRatio")
+    properties_dashboard = (
+        "softwareUpdateRecommended",
+        "softwareVersion",
+        "localFreeBytes",
+        "localCapacityBytes",
+        "cloudFreeBytes",
+        "cloudCapacityBytes",
+        "metricsCpuTotal",
+        "metricsMemoryUsedPercent",
+        "metricsDataDiskUtilisationPercent",
+        "applianceStatusString",
+        "dataServicesStatusString",
+        "licenseStatus",
+        "licenseStatusString",
+        "userStorageStatusString",
+        "hardwareStatusString",
+        "catStoresSummary",
+        "cloudBankStoresSummary",
+        "nasSharesSummary",
+        "vtlLibrariesSummary",
+        "nasRepMappingSummary",
+        "vtlRepMappingSummary",
+        "dedupeRatio",
+    )
 
     federation_json = json.loads(info[0][0])
     dashboard_json_list = [json.loads(json_obj[0]) for json_obj in info[1:]]
@@ -62,10 +90,9 @@ def parse_storeonce4x_appliances(info):
 
         # Calculate missing metrics (which where previously available in REST API 3x)
         for name in ("Free", "Capacity"):
-            parsed[hostname]["combined%sBytes" %
-                             name] = parsed[hostname]["cloud%sBytes" %
-                                                      name] + parsed[hostname]["local%sBytes" %
-                                                                               name]
+            parsed[hostname]["combined%sBytes" % name] = (
+                parsed[hostname]["cloud%sBytes" % name] + parsed[hostname]["local%sBytes" % name]
+            )
 
     return parsed
 
@@ -78,16 +105,20 @@ def discovery_storeonce4x_appliances(parsed):
 @get_parsed_item_data
 def check_storeonce4x_appliances(item, params, data):
     yield data[
-        "cmk_state"], "State: %s, Serial Number: %s, Software version: %s, Product Name: %s" % (
-            data["applianceStateString"], data["serialNumber"], data["softwareVersion"],
-            data["productName"])
+        "cmk_state"
+    ], "State: %s, Serial Number: %s, Software version: %s, Product Name: %s" % (
+        data["applianceStateString"],
+        data["serialNumber"],
+        data["softwareVersion"],
+        data["productName"],
+    )
 
 
 check_info["storeonce4x_appliances"] = {
-    'parse_function': parse_storeonce4x_appliances,
-    'inventory_function': discovery_storeonce4x_appliances,
-    'check_function': check_storeonce4x_appliances,
-    'service_description': 'Appliance %s Status',
+    "parse_function": parse_storeonce4x_appliances,
+    "inventory_function": discovery_storeonce4x_appliances,
+    "check_function": check_storeonce4x_appliances,
+    "service_description": "Appliance %s Status",
 }
 
 
@@ -97,12 +128,12 @@ def check_storeonce4x_appliances_storage(item, params, data):
 
 
 check_info["storeonce4x_appliances.storage"] = {
-    'parse_function': parse_storeonce4x_appliances,
-    'inventory_function': discovery_storeonce4x_appliances,
-    'check_function': check_storeonce4x_appliances_storage,
-    'service_description': 'Appliance %s Storage',
-    'group': "filesystem",
-    'has_perfdata': True,
+    "parse_function": parse_storeonce4x_appliances,
+    "inventory_function": discovery_storeonce4x_appliances,
+    "check_function": check_storeonce4x_appliances_storage,
+    "service_description": "Appliance %s Storage",
+    "group": "filesystem",
+    "has_perfdata": True,
 }
 
 
@@ -114,10 +145,10 @@ def check_storeonce4x_appliances_license(item, params, data):
 
 
 check_info["storeonce4x_appliances.license"] = {
-    'parse_function': parse_storeonce4x_appliances,
-    'inventory_function': discovery_storeonce4x_appliances,
-    'check_function': check_storeonce4x_appliances_license,
-    'service_description': 'Appliance %s License',
+    "parse_function": parse_storeonce4x_appliances,
+    "inventory_function": discovery_storeonce4x_appliances,
+    "check_function": check_storeonce4x_appliances_license,
+    "service_description": "Appliance %s License",
 }
 
 
@@ -140,8 +171,8 @@ def check_storeonce4x_appliances_summaries(item, param, data):
 
 
 check_info["storeonce4x_appliances.summaries"] = {
-    'parse_function': parse_storeonce4x_appliances,
-    'inventory_function': discovery_storeonce4x_appliances,
-    'check_function': check_storeonce4x_appliances_summaries,
-    'service_description': 'Appliance %s Summaries',
+    "parse_function": parse_storeonce4x_appliances,
+    "inventory_function": discovery_storeonce4x_appliances,
+    "check_function": check_storeonce4x_appliances_summaries,
+    "service_description": "Appliance %s Summaries",
 }

@@ -1,0 +1,11 @@
+Title: Fixed table background color and border in statistics dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1630055613
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In dashlets "Host statistics", "Service statistics" and "Event statistics" the table styling was broken. Their background color and borders are fixed again.

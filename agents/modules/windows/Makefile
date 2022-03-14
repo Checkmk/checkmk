@@ -3,21 +3,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-# Builds CPython for Windows as zip file
+# Builds CPython for Windows as a cab file
 # Expected some Python installed, used by python build toolchain
 # Expected python.exe is python3 reasonably updated
 #
 # Usage:
 #  make 
 
+include ../../../defines.make
 # commandline
-PY_VER             ?= 3.8
-PY_SUBVER          ?= 7
+PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
+PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
 MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 
 # internal dirs:
 PYTHON_SRC_DIR     := python\$(PY_VER)
 PYTHON_TMP_DIR     := tmp\$(PY_VER)
+PYTHON_TMP_DIR_344 := tmp\3.4
 PYTHON_SYSTEM_EXE  := python.exe
 
 PYTHON_INSTALL_DIR := $(PYTHON_TMP_DIR)\to_install
@@ -25,13 +27,14 @@ PYTHON_SAVE_DIR    := $(PYTHON_TMP_DIR)\to_save
 
 # external paths
 ROOT_CMK_PATH      := ..\..\..
-OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python3
+OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python
 ARTEFACTS_DIR      := $(ROOT_CMK_PATH)\artefacts
-SRC_PIPFILE_DIR    := $(ROOT_CMK_PATH)\virtual-envs\windows\$(PY_VER)
+SRC_PIPFILE_DIR    := pipfiles\3
 
 # names
 OMD_PYTHON_NAME    := Python-$(PY_VER).$(PY_SUBVER)
-PYTHON_MODULE_NAME := python-$(PY_VER).zip
+PYTHON_MODULE_NAME := python-$(PY_VER).cab
+PYTHON_MODULE_NAME_344 := python-3.4.cab
 
 # files
 PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).timestamp
@@ -43,19 +46,24 @@ SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
 PYTHON_PIPFILE     := $(PYTHON_SAVE_DIR)\Pipfile
 PYTHON_PIPFILE_LOCK:= $(PYTHON_PIPFILE).lock
 
-ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME)
+ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\python-3.cab
+ARTEFACT_MODULE_344:= $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME_344)
 PYTHON_MODULE      := $(PYTHON_TMP_DIR)\$(PYTHON_MODULE_NAME)
+PYTHON_MODULE_344  := $(PYTHON_TMP_DIR_344)\$(PYTHON_MODULE_NAME_344)
 
 
 
-.PHONY: clean venv 7zip unpack build python_install
+.PHONY: clean venv 7zip unpack build python_install usage python_version integration
 
 .DEFAULT_GOAL = usage
 
 usage:
 	@powershell Write-Host "Define build parameters, for example:"
-	@powershell Write-Host "make build PY_VER=3.8 PY_SUVBER=7" -foreground Green 
+	@powershell Write-Host "make build PY_VER=3.9 PY_SUVBER=7" -foreground Green 
 	@powershell Write-Host "make python_344 PY_VER=3.4 PY_SUVBER=4" -foreground Green 
+
+python_version:
+	@echo $(PY_VER) $(PY_SUBVER)
 
 $(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
 	@powershell Write-Host "$@ is to be processed" -foreground White
@@ -112,7 +120,7 @@ venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
 	
 	
-$(PYTHON_MODULE): venv ## zipping venv
+$(PYTHON_MODULE): venv ## compressing venv
 	@powershell Write-Host "+Target $@" -foreground white
 	@powershell Write-Host "*CAB*" -foreground white
 	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
@@ -141,9 +149,9 @@ python_344:
 	exec_cmd.bat uninstall_legacy.cmd 3.4 4
 	exec_cmd.bat clean_environment.cmd 3.4 4
 	exec_cmd.bat patch_environment.cmd 3.4 4
-	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
+	python_to_cab.cmd $(PYTHON_TMP_DIR_344) $(PYTHON_MODULE_NAME_344) to_save
 	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul
-	@copy /Y $(PYTHON_MODULE) $(ARTEFACT_MODULE)
+	@copy /Y $(PYTHON_MODULE_344) $(ARTEFACT_MODULE_344)
 	@powershell Write-Host -foreground Green "Python 3.4.4 is saved"
 
 integration:

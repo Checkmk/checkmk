@@ -1,0 +1,15 @@
+Title: Title alignment in report graphs
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1635876599
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+For readability purposes of long titles in graphs, the titles are now left
+aligned instead of being centered.
+
+Additionally for forecast graphs, the title is cropped after 64 characters.

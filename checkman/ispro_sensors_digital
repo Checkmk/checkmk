@@ -1,7 +1,7 @@
 title: Interseptor Pro Devices: Digital Input Sensors
 agents: snmp
 catalog: hw/environment/ispro
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the state of digital sensors of
@@ -13,5 +13,5 @@ description:
 item:
  The name of the digital input sensor
 
-inventory:
+discovery:
  One service is created for each sensor.

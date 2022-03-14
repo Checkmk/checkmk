@@ -6,41 +6,42 @@
 
 import json
 import time
-from typing import TYPE_CHECKING
+from typing import Dict, List, TYPE_CHECKING, Union
 
-from six import ensure_str
-
-import cmk.gui.escaping as escaping
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
-from cmk.gui.type_defs import Rows
-from cmk.gui.plugins.views import (
-    exporter_registry,
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.globals import request, response
+from cmk.gui.plugins.views.utils import (
+    ExportCellContent,
     Exporter,
+    exporter_registry,
     join_row,
     output_csv_headers,
 )
+from cmk.gui.type_defs import Rows
 
 if TYPE_CHECKING:
     from cmk.gui.views import View
 
 
 def _export_python_raw(view: "View", rows: Rows) -> None:
-    html.write(repr(rows))
+    response.set_data(repr(rows))
 
 
-exporter_registry.register(Exporter(
-    name="python-raw",
-    handler=_export_python_raw,
-))
+exporter_registry.register(
+    Exporter(
+        name="python-raw",
+        handler=_export_python_raw,
+    )
+)
 
 
 def _export_python(view: "View", rows: Rows) -> None:
-    html.write_text("[\n")
-    html.write(repr([cell.export_title() for cell in view.row_cells]))
-    html.write_text(",\n")
+    resp = []
+    resp.append("[\n")
+    resp.append(repr([cell.export_title() for cell in view.row_cells]))
+    resp.append(",\n")
     for row in rows:
-        html.write_text("[")
+        resp.append("[")
         for cell in view.row_cells:
             joined_row = join_row(row, cell)
             content = cell.render_for_export(joined_row)
@@ -48,23 +49,26 @@ def _export_python(view: "View", rows: Rows) -> None:
             # The aggr_treestate painters are returning a dictionary data structure (see
             # paint_aggregated_tree_state()) in case the output_format is not HTML. Only
             # remove the HTML tags from the top level strings produced by painters.
-            if isinstance(content, (HTML, str)):
+            if isinstance(content, str):
                 content = escaping.strip_tags(content)
 
-            html.write(repr(content))
-            html.write_text(",")
-        html.write_text("],")
-    html.write_text("\n]\n")
+            resp.append(repr(content))
+            resp.append(",")
+        resp.append("],")
+    resp.append("\n]\n")
+    response.set_data("".join(resp))
 
 
-exporter_registry.register(Exporter(
-    name="python",
-    handler=_export_python,
-))
+exporter_registry.register(
+    Exporter(
+        name="python",
+        handler=_export_python,
+    )
+)
 
 
-def _show_json(view: "View", rows: Rows) -> None:
-    painted_rows = []
+def _get_json_body(view: "View", rows: Rows) -> str:
+    painted_rows: List[List] = []
 
     header_row = []
     for cell in view.row_cells:
@@ -72,92 +76,102 @@ def _show_json(view: "View", rows: Rows) -> None:
     painted_rows.append(header_row)
 
     for row in rows:
-        painted_row = []
+        painted_row: List[Union[str, Dict]] = []
         for cell in view.row_cells:
             joined_row = join_row(row, cell)
             content = cell.render_for_export(joined_row)
-            if isinstance(content, (list, dict)):
+            if isinstance(content, dict):
                 # Allow painters to return lists and dicts, then json encode them
                 # as such data structures without wrapping them into strings
                 pass
 
             else:
-                content = escaping.strip_tags(str(content).replace("<br>", "\n"))
+                content = escaping.strip_tags(content.replace("<br>", "\n"))
 
             painted_row.append(content)
 
         painted_rows.append(painted_row)
 
-    html.write(json.dumps(painted_rows, indent=True))
+    return json.dumps(painted_rows, indent=True)
 
 
 def _export_json(view: "View", rows: Rows) -> None:
-    _show_json(view, rows)
+    response.set_data(_get_json_body(view, rows))
 
 
-exporter_registry.register(Exporter(
-    name="json",
-    handler=_export_json,
-))
+exporter_registry.register(
+    Exporter(
+        name="json",
+        handler=_export_json,
+    )
+)
 
 
 def _export_json_export(view: "View", rows: Rows) -> None:
-    filename = '%s-%s.json' % (view.name,
-                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
-        filename)
+    filename = "%s-%s.json" % (
+        view.name,
+        time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
+    )
+    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
 
-    _show_json(view, rows)
+    response.set_data(_get_json_body(view, rows))
 
 
-exporter_registry.register(Exporter(
-    name="json_export",
-    handler=_export_json_export,
-))
+exporter_registry.register(
+    Exporter(
+        name="json_export",
+        handler=_export_json_export,
+    )
+)
 
 
 def _export_jsonp(view: "View", rows: Rows) -> None:
-    html.write("%s(\n" % html.request.var('jsonp', 'myfunction'))
-    _show_json(view, rows)
-    html.write_text(");\n")
+    response.set_data(
+        "%s(\n%s);\n" % (request.var("jsonp", "myfunction"), _get_json_body(view, rows))
+    )
 
 
-exporter_registry.register(Exporter(
-    name="jsonp",
-    handler=_export_jsonp,
-))
+exporter_registry.register(
+    Exporter(
+        name="jsonp",
+        handler=_export_jsonp,
+    )
+)
 
 
 class CSVRenderer:
     def show(self, view: "View", rows: Rows) -> None:
-        csv_separator = html.request.get_str_input_mandatory("csv_separator", ";")
+        csv_separator = request.get_str_input_mandatory("csv_separator", ";")
         first = True
+        resp = []
         for cell in view.group_cells + view.row_cells:
             if first:
                 first = False
             else:
-                html.write(csv_separator)
-            content = cell.export_title()
-            html.write('"%s"' % self._format_for_csv(content))
+                resp.append(csv_separator)
+            title = cell.export_title()
+            resp.append('"%s"' % self._format_for_csv(title))
 
         for row in rows:
-            html.write_text("\n")
+            resp.append("\n")
             first = True
             for cell in view.group_cells + view.row_cells:
                 if first:
                     first = False
                 else:
-                    html.write(csv_separator)
+                    resp.append(csv_separator)
                 joined_row = join_row(row, cell)
                 content = cell.render_for_export(joined_row)
-                html.write('"%s"' % self._format_for_csv(content))
+                resp.append('"%s"' % self._format_for_csv(content))
 
-    def _format_for_csv(self, raw_data):
+        response.set_data("".join(resp))
+
+    def _format_for_csv(self, raw_data: ExportCellContent) -> str:
         # raw_data can also be int, float, dict (labels)
         if isinstance(raw_data, dict):
-            return ', '.join(["%s: %s" % (key, value) for key, value in raw_data.items()])
+            return ", ".join(["%s: %s" % (key, value) for key, value in raw_data.items()])
 
-        return escaping.strip_tags(str(raw_data)).replace('\n', '').replace('"', '""')
+        return escaping.strip_tags(raw_data).replace("\n", "").replace('"', '""')
 
 
 def _export_csv_export(view: "View", rows: Rows) -> None:
@@ -165,17 +179,21 @@ def _export_csv_export(view: "View", rows: Rows) -> None:
     CSVRenderer().show(view, rows)
 
 
-exporter_registry.register(Exporter(
-    name="csv_export",
-    handler=_export_csv_export,
-))
+exporter_registry.register(
+    Exporter(
+        name="csv_export",
+        handler=_export_csv_export,
+    )
+)
 
 
 def _export_csv(view: "View", rows: Rows) -> None:
     CSVRenderer().show(view, rows)
 
 
-exporter_registry.register(Exporter(
-    name="csv",
-    handler=_export_csv,
-))
+exporter_registry.register(
+    Exporter(
+        name="csv",
+        handler=_export_csv,
+    )
+)

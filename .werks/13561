@@ -1,0 +1,42 @@
+Title: agent_kubernetes: deprecate special agent and associated checks
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1643742329
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+As of Checkmk version 2.1.0, the special agent "agent_kubernetes" is deprecated
+and will be removed in Checkmk version 2.2.0. This also affects the associated
+checks and inventory plugins:<br>
+<br>
+<ul>
+<li>k8s_assigned_pods</li>
+<li>k8s_component_statuses</li>
+<li>k8s_conditions</li>
+<li>k8s_daemon_pod_containers</li>
+<li>k8s_daemon_pods</li>
+<li>k8s_endpoint_info</li>
+<li>k8s_ingress_infos</li>
+<li>k8s_job_container</li>
+<li>k8s_job_info</li>
+<li>k8s_namespaces</li>
+<li>k8s_nodes</li>
+<li>k8s_persistent_volume_claims</li>
+<li>k8s_persistent_volumes</li>
+<li>k8s_pod_container</li>
+<li>k8s_replicas</li>
+<li>k8s_resources (including pods, cpu and memory)</li>
+<li>k8s_roles</li>
+<li>k8s_service_port</li>
+<li>k8s_stateful_set_replicas</li>
+<li>k8s_stats_fs</li>
+<li>k8s_stats_network</li>
+<li>k8s_storage_classes</li>
+</ul>
+<br>
+The special agent and checks continue to function in Checkmk version 2.1.0.
+Please refer to the user guide for detailed instructions on how to set up the
+new special agent for Kubernetes.

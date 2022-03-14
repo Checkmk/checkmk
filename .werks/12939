@@ -1,0 +1,11 @@
+Title: Fix crash in virtual host tree if there are no tags
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633951860
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+When creating a virtual Host tree there was an AttributeError when no TAGS are set.

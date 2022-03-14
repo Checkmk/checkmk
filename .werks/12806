@@ -1,0 +1,13 @@
+Title: agent_aws: crashes with KeyError:'AvailabilityZone'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619525146
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+agent_aws crashed with the error message "KeyError: 'AvailabilityZone'" if the AvailabiltyZone is not available.
+If 'AvailabiltyZone' is not available the data will not be evaluated.

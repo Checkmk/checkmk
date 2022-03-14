@@ -1,7 +1,7 @@
 title: MongoDB Replica Set: Replication Lag
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors replication lag between the primary and its members.
@@ -9,5 +9,5 @@ description:
  Replication lag is a delay between an operation on the primary and the application of that operation
  from the oplog to the secondary.
 
-inventory:
+discovery:
  One service is created named 'MongoDB Replication Lag'.

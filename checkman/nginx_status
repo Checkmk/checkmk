@@ -1,7 +1,7 @@
 title: NGINX: Performance Indicators
 agents: linux
 catalog: app/nginx
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check parses the information provided by the NGINX stub status module.
@@ -45,9 +45,8 @@ description:
  {/etc/check_mk/nginx_status.cfg} and configure your servers in that file.
  You find an example of that file in your agent directory ({share/check_mk/agents}).
 
-inventory:
+discovery:
  One service is created for each web server.
 
 item:
  The servername and the port seperated by a colon, e.g. {127.0.0.1:80}.
-

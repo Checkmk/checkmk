@@ -6,16 +6,16 @@
 
 # example output
 #
-#y.y.y.y:/mount/name mounted on /var/log/da:
+# y.y.y.y:/mount/name mounted on /var/log/da:
 #
 # op/s         rpc bklog
-#2579.20            0.00
-#read:             ops/s            kB/s           kB/op         retrans         avg RTT (ms)    avg exe (ms)
+# 2579.20            0.00
+# read:             ops/s            kB/s           kB/op         retrans         avg RTT (ms)    avg exe (ms)
 #                0.000           0.000           0.000        0 (0.0%)           0.000           0.000
-#write:            ops/s            kB/s           kB/op         retrans         avg RTT (ms)    avg exe (ms)
+# write:            ops/s            kB/s           kB/op         retrans         avg RTT (ms)    avg exe (ms)
 #              2578.200        165768.087       64.296        0 (0.0%)          21.394         13980.817
 #
-#x.x.x.x:/mount/name mounted on /data:
+# x.x.x.x:/mount/name mounted on /data:
 # ...
 
 param_name = {
@@ -49,9 +49,10 @@ param_name = {
 
 
 def parse_nfsiostat(info):
-    #removes double list
+    # removes double list
     [new_info] = info
     import re
+
     # Result is a dictionary with mountpoint as key and a list of (currently 16)
     # metrics. Metrics are in the same order, from left to right, top to bottom,
     # as in the output of nfsiostat.
@@ -60,8 +61,14 @@ def parse_nfsiostat(info):
     # Future expandibility or changes to the nfsiostat command will require
     # at most a re-ordering of these values (in check_nfsiostat_parames) and
     # changing the check to include new metrics (via swtiches/flags)
-    parsed = {m[0]: m[1:] for m in re.findall(r'(\S+:/\S+)%s' % \
-        (r'.*?(\d+\.\d+|\d+)' * 16), str(new_info).strip('[]'), flags=re.DOTALL)}
+    parsed = {
+        m[0]: m[1:]
+        for m in re.findall(
+            r"(\S+:/\S+)%s" % (r".*?(\d+\.\d+|\d+)" * 16),
+            str(new_info).strip("[]"),
+            flags=re.DOTALL,
+        )
+    }
     return parsed
 
 
@@ -103,11 +110,11 @@ def check_nfsiostat(item, params, parsed):
                 count = count + 1
 
 
-check_info['nfsiostat'] = {
-    'parse_function': parse_nfsiostat,
-    'inventory_function': inventory_nfsiostat,
-    'check_function': check_nfsiostat,
-    'service_description': 'NFS IO stats %s',
-    'group': 'nfsiostats',
-    'has_perfdata': True,
+check_info["nfsiostat"] = {
+    "parse_function": parse_nfsiostat,
+    "inventory_function": inventory_nfsiostat,
+    "check_function": check_nfsiostat,
+    "service_description": "NFS IO stats %s",
+    "group": "nfsiostats",
+    "has_perfdata": True,
 }

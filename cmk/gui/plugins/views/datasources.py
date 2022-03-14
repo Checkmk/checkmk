@@ -5,14 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.views import (
-    data_source_registry,
+from cmk.gui.plugins.views.utils import (
     ABCDataSource,
+    data_source_registry,
     DataSourceLivestatus,
+    query_livestatus,
     RowTable,
     RowTableLivestatus,
-    query_livestatus,
 )
 
 
@@ -46,7 +45,7 @@ class DataSourceHosts(DataSourceLivestatus):
     def link_filters(self):
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
-        # info, which is in fact the name of the wanted hostgroup
+        # info, which is in fact the name of the wanted host group
         return {
             "hostgroup": "opthostgroup",
         }
@@ -109,7 +108,7 @@ class DataSourceServices(DataSourceLivestatus):
     def link_filters(self):
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
-        # info, which is in fact the name of the wanted hostgroup
+        # info, which is in fact the name of the wanted host group
         return {
             "hostgroup": "opthostgroup",
             "servicegroup": "optservicegroup",
@@ -170,7 +169,7 @@ class DataSourceHostGroups(DataSourceLivestatus):
 
     @property
     def title(self):
-        return _("Hostgroups")
+        return _("Host groups")
 
     @property
     def infos(self):
@@ -188,13 +187,14 @@ class DataSourceHostGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
+
     @property
     def ident(self):
         return "merged_hostgroups"
 
     @property
     def title(self):
-        return _("Hostgroups, merged")
+        return _("Host groups, merged")
 
     @property
     def table(self):
@@ -225,7 +225,7 @@ class DataSourceServiceGroups(DataSourceLivestatus):
 
     @property
     def title(self):
-        return _("Servicegroups")
+        return _("Service groups")
 
     @property
     def infos(self):
@@ -243,13 +243,14 @@ class DataSourceServiceGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceMergedServiceGroups(ABCDataSource):
     """Merged groups across sites"""
+
     @property
     def ident(self):
         return "merged_servicegroups"
 
     @property
     def title(self):
-        return _("Servicegroups, merged")
+        return _("Service groups, merged")
 
     @property
     def table(self):
@@ -419,7 +420,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
 
     @property
     def id_keys(self):
-        return ['host_name', 'service_description']
+        return ["host_name", "service_description"]
 
     @property
     def ignore_limit(self):
@@ -503,11 +504,13 @@ class ServiceDiscoveryRowTable(RowTable):
                     continue
 
                 this_row = row.copy()
-                this_row.update({
-                    "discovery_state": state,
-                    "discovery_check": check,
-                    "discovery_service": service_description
-                })
+                this_row.update(
+                    {
+                        "discovery_state": state,
+                        "discovery_check": check,
+                        "discovery_service": service_description,
+                    }
+                )
                 rows.append(this_row)
 
         return rows

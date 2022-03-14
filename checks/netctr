@@ -10,7 +10,13 @@ linux_nic_check = "lnx_if"
 netctr_default_params = (0.01, 0.1)
 
 netctr_counters = [
-    'rx_bytes', 'tx_bytes', 'rx_packets', 'tx_packets', 'rx_errors', 'tx_errors', 'tx_collisions'
+    "rx_bytes",
+    "tx_bytes",
+    "rx_packets",
+    "tx_packets",
+    "rx_errors",
+    "tx_errors",
+    "tx_collisions",
 ]
 
 # Check counters from network interfaces
@@ -19,23 +25,23 @@ netctr_counters = [
 
 netctr_counter_indices = {
     # Receive
-    'rx_bytes': 0,
-    'rx_packets': 1,
-    'rx_errors': 2,
-    'rx_drop': 3,
-    'rx_fifo': 4,
-    'rx_frame': 5,
-    'rx_compressed': 6,
-    'rx_multicast': 7,
+    "rx_bytes": 0,
+    "rx_packets": 1,
+    "rx_errors": 2,
+    "rx_drop": 3,
+    "rx_fifo": 4,
+    "rx_frame": 5,
+    "rx_compressed": 6,
+    "rx_multicast": 7,
     # Transmit
-    'tx_bytes': 8,
-    'tx_packets': 9,
-    'tx_errors': 10,
-    'tx_drop': 11,
-    'tx_fifo': 12,
-    'tx_collisions': 13,
-    'tx_carrier': 14,
-    'tx_compressed': 15
+    "tx_bytes": 8,
+    "tx_packets": 9,
+    "tx_errors": 10,
+    "tx_drop": 11,
+    "tx_fifo": 12,
+    "tx_collisions": 13,
+    "tx_carrier": 14,
+    "tx_compressed": 15,
 }
 
 
@@ -44,9 +50,11 @@ def inventory_netctr_combined(info):
         return []
     if len(info) == 0:
         return []
-    return [(l[0], '', 'netctr_default_params')
-            for l in info[1:]
-            if l[0] != 'lo' and not l[0].startswith("sit")]
+    return [
+        (l[0], "", "netctr_default_params")
+        for l in info[1:]
+        if l[0] != "lo" and not l[0].startswith("sit")
+    ]
 
 
 def check_netctr_combined(nic, params, info):
@@ -75,10 +83,10 @@ def check_netctr_combined(nic, params, info):
                 problems_per_sec += items_per_sec
             elif countername in ["rx_packets", "tx_packets"]:
                 packets_per_sec += items_per_sec
-            if countername == 'rx_bytes':
-                infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024 * 1024))
-            elif countername == 'tx_bytes':
-                infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024 * 1024))
+            if countername == "rx_bytes":
+                infotxt += " - Receive: %.2f MB/sec" % (float(items_per_sec) / float(1024 * 1024))
+            elif countername == "tx_bytes":
+                infotxt += " - Send: %.2f MB/sec" % (float(items_per_sec) / float(1024 * 1024))
 
         error_percentage = 0.0
         if problems_per_sec > 0:
@@ -96,8 +104,8 @@ def check_netctr_combined(nic, params, info):
 check_config_variables.append("netctr_counters")
 
 check_info["netctr.combined"] = {
-    'check_function': check_netctr_combined,
-    'inventory_function': inventory_netctr_combined,
-    'service_description': 'NIC %s counters',
-    'has_perfdata': True,
+    "check_function": check_netctr_combined,
+    "inventory_function": inventory_netctr_combined,
+    "service_description": "NIC %s counters",
+    "has_perfdata": True,
 }

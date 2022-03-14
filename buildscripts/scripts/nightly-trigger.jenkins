@@ -1,63 +1,136 @@
 BRANCH_NAME = scm.branches[0].name
-FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/')
 
 def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
+def EDITION_DEFAULT = ''
+def DEPLOY_TO_WEBSITE = false
+def JOB_EDITION = JOB_BASE_NAME.split("-")[-1]
+def ENABLE_NIGHTLY_TRIGGER = false
+
 withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    switch (JOB_EDITION) {
+        case 'cee':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+            EDITION_DEFAULT = 'enterprise'
+            START_HOUR = '0'
+            RUN_TESTS = true
+            DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
+            BUILD_IMAGE = true
+            BUILD_AMI_IMAGE = false
+            break
+        case 'cre':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
+            EDITION_DEFAULT = 'raw'
+            START_HOUR = '2'
+            RUN_TESTS = true
+            DEPLOY_TO_WEBSITE = false
+            BUILD_IMAGE = true
+            BUILD_AMI_IMAGE = false
+            break
+        case 'cfe':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
+            EDITION_DEFAULT = 'free'
+            // TODO (tbc): As we're now building AMI in 2.1.0 *and* master, we may start two EC2 instances at the same
+            // time.
+            // Workaround: move the trigger in master two hours later so that we avoid the situation and fix it in CMK-9862
+            START_HOUR = '6'
+            RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
+            DEPLOY_TO_WEBSITE = false
+            BUILD_IMAGE = false
+            BUILD_AMI_IMAGE = true
+            break
+        case 'cpe':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CPE
+            EDITION_DEFAULT = 'plus'
+            START_HOUR = '4'
+            // Enable this later when we have CPE specific integration tests.
+            // Until then it's similar to the CEE.
+            RUN_TESTS = false
+            // Do not publish anything, no docker and no AMI images. We only
+            // use the packages for our own tests - for now.
+            DEPLOY_TO_WEBSITE = false
+            BUILD_IMAGE = false
+            BUILD_AMI_IMAGE = false
+            break
+        default:
+            throw new Exception('unknown trigger job')
+    }
     NODE = env.BUILD_NODE
+    ENABLE_NIGHTLY_TRIGGER = env.ENABLE_NIGHTLY_TRIGGER == "True"
 }
 
 properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     parameters([
         string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
-        string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
+        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise, managed or plus' )
     ]),
-    pipelineTriggers([
-        cron('H 3 * * *')
-    ])
+    pipelineTriggers(
+        ENABLE_NIGHTLY_TRIGGER ? [cron("0 ${START_HOUR} * * *")] : []
+    )
 ])
 
 node: {
     label 'NODE'
     stage('Build Packages') {
-        build(job: "${FOLDER_ID}/nightly_build_containerized",
+        build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-packages",
               parameters: [
                 [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
+                [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE', value: DEPLOY_TO_WEBSITE],
             ]
         )
     }
-    stage('Build CMK Container') {
-        build(job: "${FOLDER_ID}/nightly_cmk_container")
-    }
-    parallel([
-        'Integration Test for Packages': {
-            stage('Integration Test for Packages') {
-                build(job: "${FOLDER_ID}/nightly_test_integration-pipeline",
-                      parameters: [
-                        [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                    ]
-                )
-            }
-        },
-        'Integration Test for Docker Container': {
-            stage('Integration Test for Docker Container') {
-                build(job: "${FOLDER_ID}/docker_integration")
-            }
-        },
-
-        'Composition Test for Packages': {
-            stage('Composition Test for Packages') {
-                build(job: "${FOLDER_ID}/test-composition",
-                      parameters: [
-                        [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                    ]
-                )
-            }
+    if (BUILD_IMAGE) {
+        stage('Build CMK IMAGE') {
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-image",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
         }
-    ])
+    }
+    if (BUILD_AMI_IMAGE) {
+        stage('Build AMI Image') {
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-aws",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
+        }
+    }
+    if (RUN_TESTS) {
+        parallel([
+            'Integration Test for Docker Container': {
+                stage('Integration Test for Docker Container') {
+                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
+                        parameters: [
+                            [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                        ]
+                    )
+                }
+            },
+
+            'Composition Test for Packages': {
+                stage('Composition Test for Packages') {
+                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
+                        parameters: [
+                            [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                            [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                        ]
+                    )
+                }
+            }
+        ])
+
+        stage('Integration Test for Packages') {
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
+        }
+    }
 }

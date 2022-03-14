@@ -1,7 +1,7 @@
 title: F5 Big-IP: Active/Active or Passive/Active vCMP Guest Failover Status
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) to identify
@@ -9,7 +9,7 @@ description:
  You can configure the expected behaviour via a WATO rule.
  It will issue a warning if the cluster setup differs from the expected setup.
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

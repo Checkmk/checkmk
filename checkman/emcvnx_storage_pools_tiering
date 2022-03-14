@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Storage Pools Tiering
 agents: emc
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports fast cache, relocation status, relocation rate,
@@ -14,5 +14,5 @@ description:
 item:
  Pool name
 
-inventory:
+discovery:
  One service is created for each pool.

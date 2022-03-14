@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example Agent Output:
 # GENUA-MIB:
 # .1.3.6.1.4.1.3717.2.1.1.6.1 = INTEGER: 300000
@@ -31,9 +32,9 @@ def inventory_genua_pfstate(info):
 
 def pfstate(st):
     names = {
-        '0': 'notOK',
-        '1': 'OK',
-        '2': 'unknown',
+        "0": "notOK",
+        "1": "OK",
+        "2": "unknown",
     }
     return names.get(st, st)
 
@@ -69,13 +70,18 @@ def check_genua_pfstate(item, params, info):
         usedsym = "(!)"
 
     pfstatus = pfstate(str(pfstateStatus))
-    infotext = "PF State: %s%s States used: %d%s States max: %d" \
-                % (pfstatus, statussym, pfstateUsed, usedsym, pfstateMax )
+    infotext = "PF State: %s%s States used: %d%s States max: %d" % (
+        pfstatus,
+        statussym,
+        pfstateUsed,
+        usedsym,
+        pfstateMax,
+    )
     perfdata = [("statesused", pfstateUsed, None, pfstateMax)]
     return (state, infotext, perfdata)
 
 
-check_info['genua_pfstate'] = {
+check_info["genua_pfstate"] = {
     "inventory_function": inventory_genua_pfstate,
     "check_function": check_genua_pfstate,
     "service_description": "Paketfilter Status",
@@ -88,14 +94,16 @@ check_info['genua_pfstate'] = {
                 1,  # "pfstateMax"
                 2,  # "pfstateUsed"
                 3,  # "pfstateStatus"
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.3137.2.1.1.6",
             [
                 1,  # "pfstateMax"
                 2,  # "pfstateUsed"
                 3,  # "pfstateStatus"
-            ])
+            ],
+        ),
     ],
     "snmp_scan_function": scan_genua,
 }

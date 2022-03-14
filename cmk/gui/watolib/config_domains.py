@@ -7,46 +7,59 @@
 import errno
 import logging
 import os
-import re
-from pathlib import Path
 import signal
 import subprocess
 import traceback
-from typing import Any, Dict, List, Tuple, Set
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
-from six import ensure_binary, ensure_str
-
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
+from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.process import pid_from_file, send_signal
+from cmk.utils.site import omd_site
+from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
-import cmk.gui.config as config
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.log import logger
+from cmk.gui.config import get_default_config
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-
-from cmk.gui.watolib.changes import log_audit
-from cmk.gui.watolib.utils import (
-    wato_root_dir,
-    liveproxyd_config_dir,
-    multisite_dir,
-)
-from cmk.gui.plugins.watolib import (
-    config_domain_registry,
+from cmk.gui.log import logger
+from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
+    config_domain_registry,
+    DomainRequest,
+    SerializedSettings,
 )
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.watolib.changes import log_audit
+from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
+
+
+@dataclass
+class ConfigDomainCoreSettings:
+    hosts_to_update: List[HostName] = field(default_factory=list)
+
+    def validate(self) -> None:
+        for hostname in self.hosts_to_update:
+            if not isinstance(hostname, HostName):
+                raise MKGeneralException(f"Invalid hostname type in ConfigDomain: {self}")
+
+    def __post_init__(self) -> None:
+        self.validate()
 
 
 @config_domain_registry.register
 class ConfigDomainCore(ABCConfigDomain):
-    needs_sync = True
-    needs_activation = True
-
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return "check_mk"
@@ -54,16 +67,46 @@ class ConfigDomainCore(ABCConfigDomain):
     def config_dir(self):
         return wato_root_dir()
 
-    def activate(self):
+    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         # TODO: Cleanup
-        from cmk.gui.watolib.automations import check_mk_local_automation
-        return check_mk_local_automation(config.wato_activation_method)
+        from cmk.gui.watolib.check_mk_automations import reload, restart
+
+        return {"restart": restart, "reload": reload,}[
+            config.wato_activation_method
+        ](self._parse_settings(settings).hosts_to_update).config_warnings
+
+    def _parse_settings(
+        self, activate_settings: Optional[SerializedSettings]
+    ) -> ConfigDomainCoreSettings:
+        if activate_settings is None:
+            activate_settings = {}
+
+        return ConfigDomainCoreSettings(**activate_settings)
 
     def default_globals(self):
         # TODO: Cleanup
-        from cmk.gui.watolib.automations import check_mk_local_automation
-        return check_mk_local_automation("get-configuration", [],
-                                         self._get_global_config_var_names())
+        from cmk.gui.watolib.check_mk_automations import get_configuration
+
+        return get_configuration(*self._get_global_config_var_names()).result
+
+    @classmethod
+    def generate_hosts_to_update_settings(cls, hostnames: Iterable[HostName]) -> SerializedSettings:
+        return {"hosts_to_update": hostnames}
+
+    @classmethod
+    def generate_domain_settings(cls, hostnames: Iterable[HostName]) -> SerializedSettings:
+        return {cls.ident(): cls.generate_hosts_to_update_settings(hostnames)}
+
+    @classmethod
+    def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
+        # The incremental activate only works, if all changes use the hosts_to_update option
+        hosts_to_update: Set[HostName] = set()
+        for setting in settings:
+            if len(setting.get("hosts_to_update", [])) == 0:
+                return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings([]))
+            hosts_to_update.update(setting["hosts_to_update"])
+
+        return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings(hosts_to_update))
 
 
 @config_domain_registry.register
@@ -78,11 +121,11 @@ class ConfigDomainGUI(ABCConfigDomain):
     def config_dir(self):
         return multisite_dir()
 
-    def activate(self):
-        pass
+    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+        return []
 
     def default_globals(self):
-        return config.default_config
+        return get_default_config()
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible
@@ -107,12 +150,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         return liveproxyd_config_dir()
 
     def save(self, settings, site_specific=False, custom_site_path=None):
-        super(ConfigDomainLiveproxy, self).save(settings,
-                                                site_specific=site_specific,
-                                                custom_site_path=custom_site_path)
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
         self.activate()
 
-    def activate(self):
+    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         log_audit("liveproxyd-activate", _("Activating changes of Livestatus Proxy configuration"))
 
         try:
@@ -121,7 +162,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                 with pidfile.open(encoding="utf-8") as f:
                     pid = int(f.read().strip())
 
-                os.kill(pid, signal.SIGUSR1)
+                os.kill(pid, signal.SIGHUP)
             except OSError as e:
                 # ENOENT: No liveproxyd running: No reload needed.
                 # ESRCH: PID in pidfiles does not exist: No reload needed.
@@ -137,8 +178,13 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         except Exception as e:
             logger.exception("error reloading liveproxyd")
             raise MKGeneralException(
-                _("Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
-                  "for further information.") % e)
+                _(
+                    "Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
+                    "for further information."
+                )
+                % e
+            )
+        return []
 
     # TODO: Move default values to common module to share
     # the defaults between the GUI code an liveproxyd.
@@ -147,8 +193,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             "liveproxyd_log_levels": {
                 "cmk.liveproxyd": logging.INFO,
             },
-            "liveproxyd_default_connection_params":
-                ConfigDomainLiveproxy.connection_params_defaults(),
+            "liveproxyd_default_connection_params": ConfigDomainLiveproxy.connection_params_defaults(),
         }
 
     @staticmethod
@@ -180,12 +225,13 @@ class ConfigDomainEventConsole(ABCConfigDomain):
     def config_dir(self):
         return str(ec.rule_pack_dir())
 
-    def activate(self):
+    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         if getattr(config, "mkeventd_enabled", False):
-            mkeventd.execute_command("RELOAD", site=config.omd_site())
+            mkeventd.execute_command("RELOAD", site=omd_site())
             log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
-            if hooks.registered('mkeventd-activate-changes'):
+            if hooks.registered("mkeventd-activate-changes"):
                 hooks.call("mkeventd-activate-changes")
+        return []
 
     def default_globals(self):
         return ec.default_config()
@@ -197,7 +243,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
 
-    trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.utils.paths.omd_root
+    trusted_cas_file = cmk.utils.paths.trusted_ca_file
 
     # This is a list of directories that may contain .pem files of trusted CAs.
     # The contents of all .pem files will be contantenated together and written
@@ -207,9 +253,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/ssl/certs",  # Ubuntu/Debian/SLES
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
-
-    _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
-                         b"", re.DOTALL)
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -224,14 +267,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
     def save(self, settings, site_specific=False, custom_site_path=None):
-        super(ConfigDomainCACertificates, self).save(settings,
-                                                     site_specific=site_specific,
-                                                     custom_site_path=custom_site_path)
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
-        current_config = settings.get("trusted_certificate_authorities", {
-            "use_system_wide_cas": True,
-            "trusted_cas": [],
-        })
+        current_config = settings.get(
+            "trusted_certificate_authorities",
+            {
+                "use_system_wide_cas": True,
+                "trusted_cas": [],
+            },
+        )
 
         # We need to activate this immediately to make syncs to WATO slave sites
         # possible right after changing the option
@@ -242,34 +286,42 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         if not site_specific and custom_site_path is None:
             self._update_trusted_cas(current_config)
 
-        if ConfigDomainLiveproxy.enabled():
-            ConfigDomainLiveproxy().activate()
-
-    def activate(self):
+    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
-            return self._update_trusted_cas(config.trusted_certificate_authorities)
+            warnings = self._update_trusted_cas(config.trusted_certificate_authorities)
+            stunnel_pid = pid_from_file(
+                cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
+            )
+            if stunnel_pid:
+                send_signal(stunnel_pid, signal.SIGHUP)
+            return warnings
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
-                "Failed to create trusted CA file '%s': %s" %
-                (self.trusted_cas_file, traceback.format_exc())
+                "Failed to create trusted CA file '%s': %s"
+                % (self.trusted_cas_file, traceback.format_exc())
             ]
 
-    def _update_trusted_cas(self, current_config):
-        trusted_cas: List[bytes] = []
-        errors: List[str] = []
+    def _update_trusted_cas(self, current_config) -> ConfigurationWarnings:
+        trusted_cas: List[str] = []
+        errors: ConfigurationWarnings = []
 
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
+        trusted_cas += current_config["trusted_cas"]
 
-        store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
+        store.save_text_to_file(
+            self.trusted_cas_file,
+            # we sort to have a deterministic output, s.t. for example liveproxyd can reliably check
+            # if the file changed
+            "\n".join(sorted(trusted_cas)),
+        )
         return errors
 
-    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[bytes], List[str]]:
-        trusted_cas: Set[bytes] = set()
+    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[str], List[str]]:
+        trusted_cas: Set[str] = set()
         errors: List[str] = []
         for p in self.system_wide_trusted_ca_search_paths:
             cert_path = Path(p)
@@ -283,7 +335,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     if entry.suffix not in [".pem", ".crt"]:
                         continue
 
-                    trusted_cas.update(self._get_certificates_from_file(cert_file_path))
+                    trusted_cas.update(raw_certificates_from_file(cert_file_path))
                 except (IOError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -298,26 +350,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
                     logger.exception("Error reading certificates from %s", cert_file_path)
 
-                    errors.append("Failed to add certificate '%s' to trusted CA certificates. "
-                                  "See web.log for details." % cert_file_path)
+                    errors.append(
+                        "Failed to add certificate '%s' to trusted CA certificates. "
+                        "See web.log for details." % cert_file_path
+                    )
 
             break
 
         return list(trusted_cas), errors
-
-    def _get_certificates_from_file(self, path: Path) -> List[bytes]:
-        try:
-            # This IO is done as binary IO, even if the files are text files. Since we work with
-            # arbitrary files here, we can not be sure about the encoding of these files. Since we
-            # only want to concatenate them to a Checkmk global file, it is OK to treat them all as
-            # binary.
-            with path.open("rb") as f:
-                return [match.group(0) for match in self._PEM_RE.finditer(f.read())]
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                # Silently ignore e.g. dangling symlinks
-                return []
-            raise
 
     def default_globals(self):
         return {
@@ -335,8 +375,8 @@ class ConfigDomainOMD(ABCConfigDomain):
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
-        super(ConfigDomainOMD, self).__init__()
-        self._logger = logger.getChild("config.omd")
+        super().__init__()
+        self._logger: logging.Logger = logger.getChild("config.omd")
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -348,47 +388,48 @@ class ConfigDomainOMD(ABCConfigDomain):
     def default_globals(self):
         return self._from_omd_config(self._load_site_config())
 
-    def activate(self):
+    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         current_settings = self._load_site_config()
 
         settings = {}
         settings.update(self._to_omd_config(self.load()))
         settings.update(self._to_omd_config(self.load_site_globals()))
 
-        config_change_commands = []
+        config_change_commands: List[str] = []
         self._logger.debug("Set omd config: %r" % settings)
 
         for key, val in settings.items():
             if key not in current_settings:
                 continue  # Skip settings unknown to current OMD
 
-            if current_settings[key] == settings[key]:
+            if current_settings[key] == val:
                 continue  # Skip unchanged settings
 
             config_change_commands.append("%s=%s" % (key, val))
 
         if not config_change_commands:
             self._logger.debug("Got no config change commands...")
-            return
+            return []
 
-        self._logger.debug("Executing \"omd config change\"")
+        self._logger.debug('Executing "omd config change"')
         self._logger.debug("  Commands: %r" % config_change_commands)
-        p = subprocess.Popen(
-            ["omd", "config", "change"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-        )
-        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
-        self._logger.debug("  Exit code: %d" % p.returncode)
-        self._logger.debug("  Output: %r" % stdout)
-        if p.returncode != 0:
-            raise MKGeneralException(
-                _("Failed to activate changed site "
-                  "configuration.\nExit code: %d\nConfig: %s\nOutput: %s") %
-                (p.returncode, config_change_commands, stdout))
+
+        # We need a background job on remote sites to wait for the restart, so
+        # that the central site can gather the result of the activation.
+        # On a central site, the waiting for the end of the restart is already
+        # taken into account by the activate changes background job within
+        # async_progress.js. Just execute the omd config change command
+        if is_wato_slave_site():
+            job = OMDConfigChangeBackgroundJob()
+            if job.is_active():
+                raise MKUserError(None, _("Another omd config change job is already running."))
+
+            job.set_function(job.do_execute, config_change_commands)
+            job.start()
+        else:
+            _do_config_change(config_change_commands, self._logger)
+
+        return []
 
     def _load_site_config(self):
         return self._load_omd_config("%s/site.conf" % self.omd_config_dir)
@@ -404,7 +445,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         try:
             with file_path.open(encoding="utf-8") as f:
                 for line in f:
-                    line = ensure_str(line.strip())
+                    line = line.strip()
 
                     if line == "" or line.startswith("#"):
                         continue
@@ -453,8 +494,9 @@ class ConfigDomainOMD(ABCConfigDomain):
                 settings.setdefault("LIVESTATUS_TCP_ONLY_FROM", "0.0.0.0")
 
                 if settings["LIVESTATUS_TCP_ONLY_FROM"] != "0.0.0.0":
-                    settings["LIVESTATUS_TCP"]["only_from"] = \
-                        settings["LIVESTATUS_TCP_ONLY_FROM"].split()
+                    settings["LIVESTATUS_TCP"]["only_from"] = settings[
+                        "LIVESTATUS_TCP_ONLY_FROM"
+                    ].split()
 
                 del settings["LIVESTATUS_TCP_ONLY_FROM"]
             else:
@@ -494,7 +536,8 @@ class ConfigDomainOMD(ABCConfigDomain):
 
                 if "only_from" in settings["LIVESTATUS_TCP"]:
                     settings["LIVESTATUS_TCP_ONLY_FROM"] = " ".join(
-                        settings["LIVESTATUS_TCP"]["only_from"])
+                        settings["LIVESTATUS_TCP"]["only_from"]
+                    )
                 else:
                     settings["LIVESTATUS_TCP_ONLY_FROM"] = "0.0.0.0"
 
@@ -527,3 +570,51 @@ class ConfigDomainOMD(ABCConfigDomain):
                 omd_config[key] = "%s" % value
 
         return omd_config
+
+
+@gui_background_job.job_registry.register
+class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
+    job_prefix = "omd-config-change"
+
+    @classmethod
+    def gui_title(cls):
+        return _("Apply OMD config changes")
+
+    def __init__(self):
+        super().__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+        )
+
+    def do_execute(self, config_change_commands: List[str], job_interface):
+        _do_config_change(config_change_commands, self._logger)
+        job_interface.send_result_message(_("OMD config changes have been applied."))
+
+
+def _do_config_change(config_change_commands: List[str], omd_logger: logging.Logger) -> None:
+    completed_process = subprocess.run(
+        ["omd", "config", "change"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        encoding="utf-8",
+        input="\n".join(config_change_commands),
+        check=False,
+    )
+
+    omd_logger.debug("  Exit code: %d" % completed_process.returncode)
+    omd_logger.debug("  Output: %r" % completed_process.stdout)
+    if completed_process.returncode:
+        raise MKGeneralException(
+            _(
+                "Failed to activate changed site "
+                "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
+            )
+            % (
+                completed_process.returncode,
+                config_change_commands,
+                completed_process.stdout,
+            )
+        )

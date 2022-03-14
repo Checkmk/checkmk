@@ -5,25 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-)
-
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer
 
 
 def _parameter_valuespec_fireeye_mail():
-    return Dictionary(elements=[
-        (
-            "interval",
-            Integer(title="Timespan for mail rate computation", default_value=60, unit="minutes"),
-        ),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "interval",
+                Integer(
+                    title="Timespan for mail rate computation", default_value=60, unit="minutes"
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +33,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_mail,
         title=lambda: _("Fireeye Mail Rate Average"),
-    ))
+    )
+)

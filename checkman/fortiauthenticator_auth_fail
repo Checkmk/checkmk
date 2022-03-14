@@ -1,7 +1,7 @@
 title: Fortinet FortiAuthenticator: Authentication Failures
 agents: snmp
 catalog: hw/network/fortinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check plugin monitors the amount of authentication failures within
@@ -11,5 +11,5 @@ description:
  FortiAuthenticator Authentication Failures"). The default levels are 100,
  200 failures.
 
-inventory:
+discovery:
  One service is created per FortiAuthenticator device.

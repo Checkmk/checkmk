@@ -1,7 +1,7 @@
 title: EMC Isilon: Used and Available Quotas
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the configured quotas in EMC Isilon storage devices. The logic of
@@ -12,5 +12,5 @@ description:
 item:
  The path of the quota
 
-inventory:
+discovery:
  One service is created for each quota.

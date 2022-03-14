@@ -1,0 +1,13 @@
+Title: ibm_mq: Agent doesn't return a version
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1619792877
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Agent ibm_mq didn't return a version which resulted with a CRIT state.
+Cmk version is now returned from an agent.

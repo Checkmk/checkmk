@@ -1,0 +1,15 @@
+Title: SNMP caching bug leading to UNKNOWN services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633119136
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+An SNMP related caching bug could lead to services in the state UNKNOWN.
+While this has only been observed affecting interface services, it could also affect other services in principle.
+While the services reported <i>"Item not found in monitoring data"</i>, a service discovery would report the services to be OK, and <b>not</b> resolve the issue.
+(Users that have a version prior to this werk can resolve the issue by removing the monitoring sites folder <tt>var/check_mk/snmp_cache/HOSTNAME</tt>)

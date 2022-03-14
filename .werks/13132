@@ -1,0 +1,16 @@
+Title: mk_filestats: Deploy agent plugin without config
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1639564463
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+It's now possible to bake agents with agent rule
+"Count, size and age of files - mk_filestat (Linux)" while selecting
+"Deploy the filestats plugin without configuration.
+
+This fixes a regression introduced with Checkmk 2.0.0 that lead to a crash when
+baking agents.

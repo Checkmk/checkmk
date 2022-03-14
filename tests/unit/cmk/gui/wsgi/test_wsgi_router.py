@@ -5,26 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import typing
+from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
+import cmk.utils.store as store
+from cmk.utils.site import omd_site
 
 if typing.TYPE_CHECKING:
     import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 
-def test_profiling(wsgi_app, mocker):
+def test_profiling(wsgi_app):
     var_dir = cmk.utils.paths.var_dir
     assert not os.path.exists(var_dir + "/multisite.py")
     assert not os.path.exists(var_dir + "/multisite.profile")
     assert not os.path.exists(var_dir + "/multisite.cachegrind")
 
-    config = mocker.patch("cmk.gui.config")
-    config.profile = True
+    store.save_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", "profile = True\n"
+    )
 
-    _ = wsgi_app.get('/NO_SITE/check_mk/login.py')
+    _ = wsgi_app.get("/NO_SITE/check_mk/login.py")
 
     assert os.path.exists(var_dir + "/multisite.py")
     assert os.path.exists(var_dir + "/multisite.profile")
@@ -33,95 +36,119 @@ def test_profiling(wsgi_app, mocker):
 
 def test_webserver_auth(wsgi_app, with_user):
     username, _ = with_user
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
+    )
 
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
-                 status=401,
-                 extra_environ={'REMOTE_USER': 'unknown_random_dude'})
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=401,
+        extra_environ={"REMOTE_USER": "unknown_random_dude"},
+    )
 
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
-                 status=200,
-                 extra_environ={'REMOTE_USER': username})
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=200,
+        extra_environ={"REMOTE_USER": username},
+    )
+
+    wsgi_app.set_authorization(("Basic", ("unknown_random_dude", "foobazbar")))
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=401,
+        extra_environ={"REMOTE_USER": username},
+    )
 
 
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
+    )
 
-    login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
-    login.form['_username'] = username
-    login.form['_password'] = password
-    resp = login.form.submit('_login', index=1)
+    # Add a failing Basic Auth to check if the other types will succeed.
+    wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
+
+    login: "webtest.TestResponse" = wsgi_app.get("/NO_SITE/check_mk/login.py")
+    login.form["_username"] = username
+    login.form["_password"] = password
+    resp = login.form.submit("_login", index=1)
 
     assert "Invalid credentials." not in resp.text
 
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
+    )
 
 
 def test_openapi_version(wsgi_app, with_automation_user):
     username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
-    assert resp.json['site'] == cmk_version.omd_site()
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    resp = wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
+    )
+    assert resp.json["site"] == omd_site()
 
 
 def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
-    assert 'detail' in resp.json
-    assert 'title' in resp.json
-    assert 'crash_report' in resp.json
-    assert 'check_mk' in resp.json['crash_report']['href']
-    assert 'crash_id' in resp.json
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    resp = wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version?fail=1",
+        headers={"Accept": "application/json"},
+        status=500,
+    )
+    assert "detail" in resp.json
+    assert "title" in resp.json
+    assert "crash_report" in resp.json
+    assert "check_mk" in resp.json["crash_report"]["href"]
+    assert "crash_id" in resp.json
 
 
 @pytest.mark.skip
 def test_legacy_webapi(wsgi_app, with_automation_user):
     username, password = with_automation_user
     wsgi_app.set_credentials(username, password)
-    hostname = 'foobar'
+    hostname = "foobar"
 
     try:
-        ipaddress = '127.0.0.1'
+        ipaddress = "127.0.0.1"
         wsgi_app.api_request(
-            'add_host',
+            "add_host",
             {
                 "hostname": hostname,
-                "folder": 'eins/zwei',
+                "folder": "eins/zwei",
                 # Optional
-                "attributes": {
-                    'ipaddress': ipaddress
-                },
+                "attributes": {"ipaddress": ipaddress},
                 "create_folders": True,
                 "nodes": [],
-            })
-
-        resp = wsgi_app.api_request(
-            'foo_host',
-            {'hostname': hostname},
-        )
-        assert "Unknown API action" in resp['result']
-        assert resp['result_code'] == 1
-
-        resp = wsgi_app.api_request(
-            'get_host',
-            {
-                'hostname': hostname,
             },
-            output_format='python',
+        )
+
+        resp = wsgi_app.api_request(
+            "foo_host",
+            {"hostname": hostname},
+        )
+        assert "Unknown API action" in resp["result"]
+        assert resp["result_code"] == 1
+
+        resp = wsgi_app.api_request(
+            "get_host",
+            {
+                "hostname": hostname,
+            },
+            output_format="python",
         )
         assert isinstance(resp, dict), resp
-        assert isinstance(resp['result'], dict), resp['result']
-        assert resp['result']['hostname'] == hostname
-        assert resp['result']['attributes']['ipaddress'] == ipaddress
+        assert isinstance(resp["result"], dict), resp["result"]
+        assert resp["result"]["hostname"] == hostname
+        assert resp["result"]["attributes"]["ipaddress"] == ipaddress
 
     finally:
-
-        def _remove(filename):
-            if os.path.exists(filename):
-                os.unlink(filename)
 
         # FIXME: Testing of delete_host can't be done until the local automation call doesn't call
         #        out to "check_mk" via subprocess anymore. In order to not break the subsequent
@@ -129,12 +156,16 @@ def test_legacy_webapi(wsgi_app, with_automation_user):
         #        unit/cmk/base/test_config.py::test_get_config_file_paths_with_confd again if
         #        more files should be created by add_host in the future.
 
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/fs_cap.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/global.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/groups.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/notifications.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/tags.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/eins/zwei/hosts.mk")
+        (Path(cmk.utils.paths.check_mk_config_dir) / "fs_cap.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/global.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/groups.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/notifications.mk").unlink(
+            missing_ok=True
+        )
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/tags.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/eins/zwei/hosts.mk").unlink(
+            missing_ok=True
+        )
 
 
 def test_cmk_run_cron(wsgi_app):
@@ -150,9 +181,11 @@ def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.text.startswith("You are not allowed")
 
-    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py",
-                        status=200,
-                        extra_environ={'REMOTE_ADDR': '127.0.0.1'})
+    resp = wsgi_app.get(
+        "/NO_SITE/check_mk/ajax_graph_images.py",
+        status=200,
+        extra_environ={"REMOTE_ADDR": "127.0.0.1"},
+    )
     assert resp.text == ""
 
 

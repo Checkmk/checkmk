@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<emcvnx_raidgroups>>>
 #
@@ -75,23 +77,42 @@ def parse_emcvnx_raidgroups(info):
             disks.append(disk)
             rg["disks"] = disks
             append = True
-        elif append is True and len(
-                line) > 5 and line[0] == "Bus" and line[2] == "Enclosure" and line[4] == "Disk":
+        elif (
+            append is True
+            and len(line) > 5
+            and line[0] == "Bus"
+            and line[2] == "Enclosure"
+            and line[4] == "Disk"
+        ):
             disk = line[1] + "/" + line[3] + " Disk " + line[5]
             disks.append(disk)
         elif append is True:
             append = False
-        elif len(
-                line) > 3 and line[0] == "Raw" and line[1] == "Capacity" and line[2] == "(Blocks):":
+        elif (
+            len(line) > 3 and line[0] == "Raw" and line[1] == "Capacity" and line[2] == "(Blocks):"
+        ):
             rg["capacity_raw_blocks"] = line[3]
-        elif len(line
-                ) > 3 and line[0] == "Logical" and line[1] == "Capacity" and line[2] == "(Blocks):":
+        elif (
+            len(line) > 3
+            and line[0] == "Logical"
+            and line[1] == "Capacity"
+            and line[2] == "(Blocks):"
+        ):
             rg["capacity_logical_blocks"] = line[3]
-        elif len(line) > 3 and line[0] == "Free" and line[1] == "Capacity" and line[
-                2] == "(Blocks,non-contiguous):":
+        elif (
+            len(line) > 3
+            and line[0] == "Free"
+            and line[1] == "Capacity"
+            and line[2] == "(Blocks,non-contiguous):"
+        ):
             rg["capacity_free_total_blocks"] = line[3]
-        elif len(line) > 6 and line[0] == "Free" and line[1] == "contiguous" and line[
-                4] == "unbound" and line[5] == "segments:":
+        elif (
+            len(line) > 6
+            and line[0] == "Free"
+            and line[1] == "contiguous"
+            and line[4] == "unbound"
+            and line[5] == "segments:"
+        ):
             rg["capacity_free_contiguous_blocks"] = line[6]
     return parsed
 
@@ -121,13 +142,13 @@ def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
     return 0, "List of LUNs: " + parsed[item]["luns"]
 
 
-check_info['emcvnx_raidgroups.list_luns'] = {
+check_info["emcvnx_raidgroups.list_luns"] = {
     "inventory_function": inventory_emcvnx_raidgroups,
     "check_function": check_emcvnx_raidgroups_list_luns,
-    "service_description": "RAID Group %s LUNs"
+    "service_description": "RAID Group %s LUNs",
 }
 
-#.
+# .
 #   .--list of disks-------------------------------------------------------.
 #   |           _ _     _            __       _ _     _                    |
 #   |          | (_)___| |_    ___  / _|   __| (_)___| | _____             |
@@ -148,7 +169,7 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
     for disk in sorted(parsed[item]["disks"]):
         if message != "":
             message += ", "
-        enc_id, disk_id = disk.split(' ', 1)
+        enc_id, disk_id = disk.split(" ", 1)
         if enc_id == enc:
             message += disk_id
         else:
@@ -158,13 +179,13 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
     return 0, "List of Disks: " + message
 
 
-check_info['emcvnx_raidgroups.list_disks'] = {
+check_info["emcvnx_raidgroups.list_disks"] = {
     "inventory_function": inventory_emcvnx_raidgroups,
     "check_function": check_emcvnx_raidgroups_list_disks,
-    "service_description": "RAID Group %s Disks"
+    "service_description": "RAID Group %s Disks",
 }
 
-#.
+# .
 #   .--capacity------------------------------------------------------------.
 #   |                                          _ _                         |
 #   |                ___ __ _ _ __   __ _  ___(_) |_ _   _                 |
@@ -201,12 +222,21 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
     rc, message, perfdata = df_check_filesystem_list(item, params, fslist)
     # note: on very first run perfdata is empty
     if len(perfdata) > 0:
-        perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3],
-                       perfdata[0][4], perfdata[0][5])
+        perfdata[0] = (
+            "rg" + perfdata[0][0],
+            perfdata[0][1],
+            perfdata[0][2],
+            perfdata[0][3],
+            perfdata[0][4],
+            perfdata[0][5],
+        )
     return rc, message, perfdata
 
 
-check_info['emcvnx_raidgroups.capacity'] = {
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
+check_info["emcvnx_raidgroups.capacity"] = {
     "inventory_function": inventory_emcvnx_raidgroups_capacity,
     "check_function": check_emcvnx_raidgroups_capacity,
     "service_description": "RAID Group %s Capacity",
@@ -215,7 +245,7 @@ check_info['emcvnx_raidgroups.capacity'] = {
     "default_levels_variable": "filesystem_default_levels",
 }
 
-#.
+# .
 #   .--capacity contiguous-------------------------------------------------.
 #   |                          _   _                                       |
 #   |           ___ ___  _ __ | |_(_) __ _ _   _  ___  _   _ ___           |
@@ -250,12 +280,18 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
     # variable name in perfdata is not allowed to be just a number
     # especially 0 does not work, so prefix it generally with "rg"
     rc, message, perfdata = df_check_filesystem_list(item, params, fslist)
-    perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3],
-                   perfdata[0][4], perfdata[0][5])
+    perfdata[0] = (
+        "rg" + perfdata[0][0],
+        perfdata[0][1],
+        perfdata[0][2],
+        perfdata[0][3],
+        perfdata[0][4],
+        perfdata[0][5],
+    )
     return rc, message, perfdata
 
 
-check_info['emcvnx_raidgroups.capacity_contiguous'] = {
+check_info["emcvnx_raidgroups.capacity_contiguous"] = {
     "inventory_function": inventory_emcvnx_raidgroups_capacity_contiguous,
     "check_function": check_emcvnx_raidgroups_capacity_contiguous,
     "service_description": "RAID Group %s Capacity Contiguous",
@@ -264,4 +300,4 @@ check_info['emcvnx_raidgroups.capacity_contiguous'] = {
     "default_levels_variable": "filesystem_default_levels",
 }
 
-#.
+# .

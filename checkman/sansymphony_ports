@@ -2,7 +2,7 @@ title: Sansymphony: Ports
 agents: windows
 catalog: app/sansymphony
 distribution: check_mk
-license: GPL
+license: GPLv2
 description:
  This check measures the port status of the reported port states by the sansymphony management.
  If the port state is up, {OK} will be reported.
@@ -13,5 +13,5 @@ description:
 item:
  Name of the port
 
-inventory:
+discovery:
  One service is created.

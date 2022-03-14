@@ -20,6 +20,6 @@ def inv_infoblox_osinfo(info):
             node["arch"] = "x86_64"
 
 
-inv_info['infoblox_osinfo'] = {
-    'inv_function': inv_infoblox_osinfo,
+inv_info["infoblox_osinfo"] = {
+    "inv_function": inv_infoblox_osinfo,
 }

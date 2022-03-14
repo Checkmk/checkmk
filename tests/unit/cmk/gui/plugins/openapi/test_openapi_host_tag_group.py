@@ -3,108 +3,238 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 
+import pytest
 
-def test_openapi_host_tag_group(wsgi_app, with_automation_user, suppress_automation_calls):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+from cmk.utils.tags import BuiltinTagConfig
 
-    base = '/NO_SITE/check_mk/api/v0'
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-    resp = wsgi_app.call_method(
-        'post',
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
         base + "/domain-types/host_tag_group/collections/all",
-        params=json.dumps({
-            "ident": "foo",
-            "title": "foobar",
-            "topic": "nothing",
-            "tags": [{
-                "ident": "tester",
-                "title": "something",
-            }]
-        }),
+        params=json.dumps(
+            {
+                "ident": "foo",
+                "title": "foobar",
+                "topic": "nothing",
+                "tags": [
+                    {
+                        "ident": "tester",
+                        "title": "something",
+                    }
+                ],
+            }
+        ),
+        headers={"Accept": "application/json"},
         status=200,
-        content_type='application/json',
+        content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
-        'put',
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "put",
         base + "/objects/host_tag_group/foo",
-        params=json.dumps({"tags": [{
-            "ident": "tutu",
-            "title": "something",
-        }]}),
-        headers={'If-Match': resp.headers['ETag']},
+        params=json.dumps(
+            {
+                "tags": [
+                    {
+                        "ident": "tutu",
+                        "title": "something",
+                    }
+                ]
+            }
+        ),
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=200,
-        content_type='application/json',
+        content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
-        'get',
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
         base + "/objects/host_tag_group/foo",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json["extensions"] == {
-        'tags': [{
-            'id': 'tutu',
-            'title': 'something',
-            'aux_tags': []
-        }],
-        'topic': 'nothing'
+        "tags": [{"id": "tutu", "title": "something", "aux_tags": []}],
+        "topic": "nothing",
     }
 
-    col_resp = wsgi_app.call_method(
-        'get',
-        base + '/domain-types/host_tag_group/collections/all',
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    builtin_groups_count = len(BuiltinTagConfig().tag_groups)
+
+    col_resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_tag_group/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
+    assert len(col_resp.json_body["value"]) == builtin_groups_count
 
-    assert len(col_resp.json_body["value"]) == 1
 
-    _resp = wsgi_app.call_method(
-        'delete',
-        base + "/objects/host_tag_group/foo",
-        params=json.dumps({}),
-        headers={'If-Match': resp.headers['ETag']},
-        status=204,
-        content_type='application/json',
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_tag_group/collections/all",
+        params=json.dumps(
+            {
+                "ident": "foo",
+                "title": "foobar",
+                "topic": "nothing",
+                "tags": [
+                    {
+                        "ident": "tester",
+                        "title": "something",
+                    }
+                ],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
-        'get',
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "delete",
         base + "/objects/host_tag_group/foo",
+        params=json.dumps({}),
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
+        status=204,
+        content_type="application/json",
+    )
+
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_tag_group/foo",
+        headers={"Accept": "application/json"},
         status=404,
     )
 
-    col_resp = wsgi_app.call_method(
-        'get',
-        base + '/domain-types/host_tag_group/collections/all',
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    base = "/NO_SITE/check_mk/api/1.0"
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_tag_group/collections/all",
+        params=json.dumps(
+            {
+                "ident": "1",
+                "title": "Kubernetes",
+                "topic": "Data Sources",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_tag_group/collections/all",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    built_in_tags = [tag_group.title for tag_group in BuiltinTagConfig().tag_groups]
+    assert all(
+        title in (entry["title"] for entry in resp.json_body["value"]) for title in built_in_tags
+    )
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_tag_group/agent",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
-    assert len(col_resp.json_body["value"]) == 0
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/host_tag_group/agent",
+        params=json.dumps(
+            {
+                "tags": [
+                    {
+                        "ident": "tutu",
+                        "title": "something",
+                    }
+                ]
+            }
+        ),
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
+        status=405,
+        content_type="application/json",
+    )
+
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "delete",
+        base + "/objects/host_tag_group/agent",
+        params=json.dumps({}),
+        headers={"Accept": "application/json"},
+        status=405,
+        content_type="application/json",
+    )
 
 
-def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user,
-                                           suppress_automation_calls):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-
-    base = '/NO_SITE/check_mk/api/v0'
-    _resp = wsgi_app.call_method(
-        'post',
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
         base + "/domain-types/host_tag_group/collections/all",
-        params=json.dumps({
-            "ident": "1",
-            "title": "Kubernetes",
-            "topic": "Data Sources",
-            "help": "Kubernetes Pods",
-            "tags": [{
-                "ident": "pod",
-                "title": "Pod"
-            }]
-        }),
-        status=400,
-        content_type='application/json',
+        params=json.dumps(
+            {
+                "ident": "group_id999",
+                "title": "Kubernetes",
+                "topic": "Data Sources",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    _resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/host_tag_group/group_id999",
+        params=json.dumps(
+            {
+                "title": "Kubernetes",
+                "topic": "Data Sources",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    _ = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_tag_group/group_id999",
+        headers={"Accept": "application/json"},
+        status=200,
     )

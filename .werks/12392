@@ -1,0 +1,54 @@
+Title: HW/SW Inventory: Single values or table columns can be kept longer than their validity period
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1627300122
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The <tt>mk_inventory</tt> agent plugin collects static data like BIOS settings,
+information about the operation system, installed packages and others. The
+collected data has a validity period and will be removed if no new data is
+provided by the plugin.
+
+Hosts or applications may be down or unreachable due to maintenance work and do
+not provide data anymore. Such situations lead to empty tree entries.
+
+In order to counteract such situations single values or table columns can be
+kept longer than their validity period from the previous tree via the ruleset
+<i>"Retention intervals for HW/SW inventory entities"</i>.
+
+One advantage is that tree entries are not missing in reports.
+
+If the host provides data again the new data is used, of course.
+
+The retention information about how long single values or table columns are
+kept is displayed behind the single value keys resp. in the headers of the
+table columns.
+
+Retention intervals will be removed completely if there is no ruleset
+<i>"Retention intervals for HW/SW inventory entities"</i> anymore.
+
+<b>Example:</b>
+
+Assume the fields <tt>hardware.memory::total_ram_usable</tt> and
+<tt>networking.interfaces::index</tt> are currently not contained in the agent
+data, and their validity periods are expired.
+If there are retention intervals configured for these fields, they will not
+dissappear from the inventory, but their respective headers display
+"Total usable RAM (x left)" and "Index (y left)".
+If the retention intervals are expired the headers show "Total usable RAM (outdated)"
+respecively "Index (outdated)".
+
+<b>Note:</b>
+
+This feature is only available for inventory plugins programed against
+the new API: If you want to keep table columns we must know which columns
+identify a row. This information is not available for legacy inventory
+plugins, which would lead to unexpected, incomprehensible and non-transparent
+results regarding the inventory history, filtering or merging other trees.
+
+This means that you have to migrate legacy inventory plugins to the new API
+which generate TableRows (or Attributes).

@@ -1,7 +1,7 @@
 title: Generic UPS Device: Out Voltage
 agents: snmp
 catalog: hw/power/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Out Voltage
@@ -9,6 +9,5 @@ description:
 item:
  ID of the phase
 
-inventory:
+discovery:
  One service is created for each phase.
-

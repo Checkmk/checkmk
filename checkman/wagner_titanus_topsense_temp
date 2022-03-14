@@ -1,17 +1,16 @@
 title: Wagner Titanus Top Sens: Temperature
 agents: snmp
 catalog: hw/environment/wagner
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the temperature measured by Detectors in Wagner Titanus Top Sens devices.
 
  Returns {WARN} or {CRIT} if the value exeeds given levels and {OK} otherwise.
 
-inventory:
+discovery:
  Two services are created for each device
  One service for every detector on each device.
 
 item:
  One of the two statement: {{Ambient 1}} or {{Ambient 2}}
-

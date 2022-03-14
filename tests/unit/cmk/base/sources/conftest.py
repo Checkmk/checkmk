@@ -6,7 +6,7 @@
 
 from contextlib import suppress
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.core_helpers.cache import FileCacheFactory
 

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When a dashboard has multiple graph dashlets showing different time ranges, it
 may be not intended to synchronize the time ranges by zooming into a single

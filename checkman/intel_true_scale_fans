@@ -1,7 +1,7 @@
 title: Intel True Fabric Scale Switches: Fans Status and Speed
 agents: snmp
 catalog: hw/network/intel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operational and speed status of fans
@@ -15,5 +15,5 @@ description:
 item:
  The fan ID.
 
-inventory:
+discovery:
  One service is created for each fan.

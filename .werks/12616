@@ -1,0 +1,12 @@
+Title: Fix missing "From" parameter in bulk notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1616768415
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+If you had set the option "From" in notification rules with bulk enabled, the
+default address was used.

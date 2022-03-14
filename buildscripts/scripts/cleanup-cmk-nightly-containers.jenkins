@@ -2,11 +2,11 @@
 import java.text.SimpleDateFormat
 import groovy.transform.Field
 
-currentBuild.description = '\nCleaning up Nightly Docker images in Nexus Regisrty\n'
-
 def BRANCH = ''
+def BUILD_NODE = ''
 withFolderProperties{
     BRANCH = env.BRANCH
+    BUILD_NODE = env.BUILD_NODE
 }
 
 properties([
@@ -16,40 +16,55 @@ properties([
 // Pattern for the daily version to be deleted
 def PATTERN = get_pattern(BRANCH)
 def BUILDS = [:]
-def NODE_LIST = ['dc4', 'dc14']
+def hostNames(label) {
+  def nodes = []
+  jenkins.model.Jenkins.instance.computers.each { c ->
+    if (c.node.labelString.contains(label)) {
+      nodes.add(c.node.selfLabel.name)
+    }
+  }
+  return nodes
+}
 
-node ('both') {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        def COMMON_IMAGE = docker.image('nexus3-cli')
-        COMMON_IMAGE.pull()
-        COMMON_IMAGE.inside() {
-            stage('Cleanup images ' + PATTERN) {
-                def NEXUS_CLEAN_CMD = 'nexus3-del-artifacts.py'
-                withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PWD', usernameVariable: 'NEXUS_USER')]) {
-                    NEXUS_CLEAN_CMD += " $ARTIFACT_STORAGE $NEXUS_USER $NEXUS_PWD"
+currentBuild.description = '\nCleanup Checkmk docker images ['+PATTERN+'] from registry and build nodes\n'
+
+def NODE_LIST = hostNames(BUILD_NODE)
+
+timeout(time: 12, unit: 'HOURS') {
+    node ('linux') {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            def COMMON_IMAGE = docker.image('nexus3-cli')
+            COMMON_IMAGE.pull()
+            COMMON_IMAGE.inside() {
+                stage('Cleanup registry') {
+                    def NEXUS_CLEAN_CMD = 'nexus3-del-artifacts.py'
+                    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PWD', usernameVariable: 'NEXUS_USER')]) {
+                        NEXUS_CLEAN_CMD += " $ARTIFACT_STORAGE $NEXUS_USER $NEXUS_PWD"
+                    }
+                    if (PATTERN != '') {
+                        NEXUS_CLEAN_CMD += ' --pattern ' + PATTERN
+                    }
+                    sh(NEXUS_CLEAN_CMD)
                 }
-                if (PATTERN != '') {
-                    NEXUS_CLEAN_CMD += ' --pattern ' + PATTERN
-                }
-                sh(NEXUS_CLEAN_CMD)
             }
         }
     }
-}
 
-NODE_LIST.each { NODE ->
-    BUILDS['Delete images on Node ' + NODE] = {
-        node(NODE) {
-            sh"""
-                for IMG in \$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep $PATTERN:$BRANCH-latest);
-                    do docker image rm -f \$IMG;
-                done
-            """
+    NODE_LIST.each { NODE ->
+        BUILDS['Cleanup ' + NODE] = {
+            node(NODE) {
+                stage('Cleanup ' + NODE) {
+                    sh"""
+                        for IMG in \$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep $PATTERN:$BRANCH-latest);
+                            do docker image rm -f \$IMG;
+                        done
+                    """
+                }
+            }
         }
     }
+    parallel BUILDS
 }
-parallel BUILDS
-
 
 def get_pattern(BRANCH) {
     def VERSION_BRANCH
@@ -64,3 +79,4 @@ def get_pattern(BRANCH) {
     
     return "cee-${VERSION_BRANCH}${DATE_FORMAT.format(DATE)}"
 }
+

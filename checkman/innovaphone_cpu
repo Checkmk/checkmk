@@ -1,12 +1,11 @@
 title: Innovaphone Gateway: CPU Utilization
 agents: special
 catalog: hw/network/innovaphone
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the peak utilization for the latest 1 min.
 
 
-inventory:
+discovery:
  One service is created.
-

@@ -9,6 +9,12 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 K8S_OK_CONDITIONS = {
     "Ready": "True",
     # Node conditions
@@ -36,9 +42,9 @@ def check_k8s_conditions(item, _no_params, value):
     return status, value
 
 
-check_info['k8s_conditions'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_conditions,
-    'check_function': check_k8s_conditions,
-    'service_description': 'Condition %s',
+check_info["k8s_conditions"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": inventory_k8s_conditions,
+    "check_function": check_k8s_conditions,
+    "service_description": "Condition %s",
 }

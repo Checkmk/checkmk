@@ -1,10 +1,10 @@
 title: Bosch Video over IP: Unit Name and Unit ID
 agents: snmp
 catalog: hw/environment/bosch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   This Check only reports the Unit Name and the Unit ID from the device.
 
-inventory:
+discovery:
  One service is created.

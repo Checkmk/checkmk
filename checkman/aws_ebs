@@ -1,7 +1,7 @@
 title: AWS EBS: Disk IO
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors disk IO of AWS EBS.
@@ -24,6 +24,6 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each volume if all required metrics
  (ReadOps, WriteOps, ReadBytes, WriteBytes and QueueLength) are given.

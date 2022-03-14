@@ -9,32 +9,33 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#<<<scaleio_mdm:sep(44)>>>
-#Cluster:
+
+# <<<scaleio_mdm:sep(44)>>>
+# Cluster:
 #    Mode: 3_node, State: Normal, Active: 3/3, Replicas: 2/2
 #    Virtual IPs: N/A
-#Master MDM:
+# Master MDM:
 #    Name: MDM02, ID: 0x028f4e581a749941
 #        IPs: 10.75.9.52, 10.75.10.52, Management IPs: 10.75.0.52, Port: 9011, Virtual IP interfaces: N/A
 #        Version: 2.0.13000
-#Slave MDMs:
+# Slave MDMs:
 #    Name: MDM01, ID: 0x1402b04f3ad359c0
 #        IPs: 10.75.10.51, 10.75.9.51, Management IPs: 10.75.0.51, Port: 9011, Virtual IP interfaces: N/A
 #        Status: Normal, Version: 2.0.13000
-#Tie-Breakers:
+# Tie-Breakers:
 #    Name: TB01, ID: 0x69dd57a10fa1c7b2
 #        IPs: 10.75.10.53, 10.75.9.53, Port: 9011
 #        Status: Normal, Version: 2.0.13000
 
 
 def add_key_values(data_dict, line):
-    '''
+    """
     Finally we can add the rest of information to a node in a
     subsection. When splitting the lines we sometimes get lines
     belonging to the last entry. These information is then added
     to the last known entry.
-    '''
-    for token in (entry.split(': ') for entry in line):
+    """
+    for token in (entry.split(": ") for entry in line):
         if len(token) > 1:
             name = token[0].strip()
             data_dict[name] = token[1].strip()
@@ -49,8 +50,13 @@ def parse_scaleio_mdm(info):
     parsed, id_, node = {}, "", ""
     for line in info:
         # A subsection starts with one of the following:
-        if line[0].lower() in ("cluster:", "master mdm:", "slave mdms:", \
-                               "tie-breakers:", "standby mdms:"):
+        if line[0].lower() in (
+            "cluster:",
+            "master mdm:",
+            "slave mdms:",
+            "tie-breakers:",
+            "standby mdms:",
+        ):
             id_ = line[0].strip(":")
             data = parsed.setdefault(id_, {})
             continue
@@ -71,7 +77,7 @@ def parse_scaleio_mdm(info):
 
             data[node] = {node_id[0].strip(): node_id[1].strip()}
             if len(line) == 3:
-                data[node][u'Role'] = line[2].strip()
+                data[node]["Role"] = line[2].strip()
         elif node in data:
             add_key_values(data[node], line)
 
@@ -79,7 +85,7 @@ def parse_scaleio_mdm(info):
 
 
 def inventory_scaleio_mdm(parsed):
-    if parsed.get('Cluster'):
+    if parsed.get("Cluster"):
         yield None, {}
 
 
@@ -101,8 +107,7 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
 
         yield translate_status[status], "Mode: %s, State: %s" % (data["Mode"], status)
 
-        if not active[0] == active[1] or \
-           not replicas[0] == replicas[1]:
+        if not active[0] == active[1] or not replicas[0] == replicas[1]:
             state = 2
 
         yield state, "Active: %s, Replicas: %s" % ("/".join(active), "/".join(replicas))
@@ -126,9 +131,9 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
         yield state, infotext
 
 
-check_info['scaleio_mdm'] = {
-    'parse_function': parse_scaleio_mdm,
-    'inventory_function': inventory_scaleio_mdm,
-    'check_function': check_scaleio_mdm,
-    'service_description': 'ScaleIO cluster status',
+check_info["scaleio_mdm"] = {
+    "parse_function": parse_scaleio_mdm,
+    "inventory_function": inventory_scaleio_mdm,
+    "check_function": check_scaleio_mdm,
+    "service_description": "ScaleIO cluster status",
 }

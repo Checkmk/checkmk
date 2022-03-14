@@ -1,7 +1,7 @@
 title: AWS WAFV2: Limits
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors limits for Web Application Firewalls (V2). Per
@@ -33,5 +33,5 @@ description:
  Note that if limits are enabled, all Web ACLs are fetched, regardless
  of possibly configured restrictions to names or tags.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

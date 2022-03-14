@@ -1,0 +1,13 @@
+Title: site_object_counts: Error when site object empty
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617890578
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Check site_object_counts failed when there was an empty site object.
+Empty site objects are no longer discovered.

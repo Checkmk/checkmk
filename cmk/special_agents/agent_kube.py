@@ -17,7 +17,6 @@ import contextlib
 import functools
 import json
 import logging
-import os
 import re
 import sys
 from collections import defaultdict
@@ -54,6 +53,7 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxy
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.utils.request_helper import get_requests_ca
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -1349,7 +1349,7 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(config.proxy)
 
     if arguments.verify_cert_api:
-        config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")
+        config.ssl_ca_cert = get_requests_ca()
     else:
         logging.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

@@ -27,6 +27,10 @@ class TokenDict(TypedDict):
     expires_in_abs: Optional[str]
 
 
+def get_requests_ca() -> Optional[str]:
+    return os.environ.get("REQUESTS_CA_BUNDLE")
+
+
 def to_token_dict(data: Any) -> TokenDict:
     return {
         "access_token": str(data["access_token"]),
@@ -134,7 +138,7 @@ def create_api_connect_session(
     """
     ssl_verify = None
     if not no_cert_check:
-        ssl_verify = os.environ.get("REQUESTS_CA_BUNDLE")
+        ssl_verify = get_requests_ca()
 
     session = ApiSession(api_url, ssl_verify)
 

@@ -4,8 +4,52 @@
 
 use anyhow::{Context, Error as AnyhowError, Result as AnyhowResult};
 use serde::Deserialize;
+#[cfg(unix)]
+use std::path::{Path, PathBuf};
 
 pub type AgentLabels = std::collections::HashMap<String, String>;
+
+#[cfg(unix)]
+#[derive(Clone)]
+pub struct AgentChannel(std::path::PathBuf);
+#[cfg(windows)]
+#[derive(Clone)]
+pub struct AgentChannel(String);
+
+#[cfg(unix)]
+impl std::convert::From<PathBuf> for AgentChannel {
+    fn from(p: PathBuf) -> Self {
+        AgentChannel(p)
+    }
+}
+
+#[cfg(unix)]
+impl std::convert::From<&str> for AgentChannel {
+    fn from(s: &str) -> Self {
+        AgentChannel(PathBuf::from(s))
+    }
+}
+
+#[cfg(unix)]
+impl std::convert::AsRef<Path> for AgentChannel {
+    fn as_ref(&self) -> &Path {
+        &self.0
+    }
+}
+
+#[cfg(windows)]
+impl std::convert::From<&str> for AgentChannel {
+    fn from(s: &str) -> Self {
+        AgentChannel(s.to_string())
+    }
+}
+
+#[cfg(windows)]
+impl std::convert::AsRef<String> for AgentChannel {
+    fn as_ref(&self) -> &String {
+        &self.0
+    }
+}
 
 #[derive(PartialEq, std::cmp::Eq, std::hash::Hash, Debug, Clone, Deserialize)]
 pub struct Port(u16);

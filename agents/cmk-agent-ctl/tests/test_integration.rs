@@ -8,6 +8,7 @@
 mod common;
 
 use anyhow::Result as AnyhowResult;
+#[cfg(unix)]
 use std::io::{Read, Write};
 
 #[test]
@@ -27,9 +28,13 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
         controller_uuid,
     );
 
-    let error =
-        cmk_agent_ctl::modes::pull::pull(common::testing_pull_config(test_path, "1234", registry))
-            .unwrap_err();
+    let error = cmk_agent_ctl::modes::pull::pull(common::testing_pull_config(
+        test_path,
+        "1234",
+        "dummy".into(),
+        registry,
+    ))
+    .unwrap_err();
 
     assert!(error.to_string().contains("Could not initialize TLS"));
 
@@ -39,34 +44,34 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_tls() -> AnyhowResult<()> {
-    // Uncomment for debugging
-    // common::init_logging(&test_path.join("log"))?;
-
     // Setup test data
     let test_dir = tempfile::Builder::new()
-        .prefix("cmk_agent_ctl_test_pull")
+        .prefix("cmk_agent_ctl_test_pull_tls")
         .tempdir()
         .unwrap();
     let test_path = test_dir.path();
     std::env::set_var("DEBUG_HOME_DIR", test_path.to_str().unwrap());
     std::fs::create_dir(test_path.join("run"))?;
+    let test_port = "9999";
     let test_agent_output = "some test agent output";
     let mut compressed_agent_output = b"\x00\x00\x01".to_vec();
     let mut zlib_enc = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
     zlib_enc.write_all(test_agent_output.as_bytes())?;
     compressed_agent_output.append(&mut zlib_enc.finish()?);
-    let (uuid, pull_config, certs) = common::testing_pull_setup(test_path, "9999");
+    let (uuid, pull_config, certs) = common::testing_pull_setup(
+        test_path,
+        test_port,
+        test_path.join("run/check-mk-agent.socket").into(),
+    );
 
-    let agent_socket_path = test_path.join("run/check-mk-agent.socket");
+    // Uncomment for debugging
+    // common::init_logging(&test_path.join("log"))?;
+
     // Provide agent stream for the pull thread
-    let agent_stream_thread = tokio::spawn(async move {
-        loop {
-            common::unix::agent_socket(&agent_socket_path, test_agent_output, None)
-                .await
-                .unwrap();
-            std::fs::remove_file(&agent_socket_path).unwrap();
-        }
-    });
+    let agent_socket_path = test_path.join("run/check-mk-agent.socket");
+    let unix_socket = tokio::net::UnixListener::bind(agent_socket_path).unwrap();
+    let agent_stream_thread =
+        tokio::spawn(common::unix::agent_loop(unix_socket, test_agent_output));
 
     // Setup the pull thread that we intend to test
     let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
@@ -74,30 +79,37 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     let mut id_buf: [u8; 2] = [0; 2];
-    let mut message_buf: Vec<u8> = vec![];
+
     // Talk to the pull thread successfully
+    let mut message_buf: Vec<u8> = vec![];
     let mut client_connection = common::testing_tls_client_connection(certs.clone(), &uuid);
-    let mut tcp_stream = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
     tls_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, compressed_agent_output);
 
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    tokio::task::yield_now().await;
+
     // Talk to the pull thread using an unknown uuid
     let mut client_connection =
         common::testing_tls_client_connection(certs, "certainly_wrong_uuid");
-    let mut tcp_stream = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
     assert!(tls_stream.read_to_end(&mut message_buf).is_err());
 
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    tokio::task::yield_now().await;
+
     // Talk too much
-    let mut tcp_stream_1 = std::net::TcpStream::connect("127.0.0.1:9999")?;
-    let mut tcp_stream_2 = std::net::TcpStream::connect("127.0.0.1:9999")?;
-    let mut tcp_stream_3 = std::net::TcpStream::connect("127.0.0.1:9999")?;
-    let mut tcp_stream_4 = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    let mut tcp_stream_1 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    let mut tcp_stream_2 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    let mut tcp_stream_3 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    let mut tcp_stream_4 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     assert!(tcp_stream_1.read_exact(&mut id_buf).is_ok());
     assert!(tcp_stream_2.read_exact(&mut id_buf).is_ok());
     assert!(tcp_stream_3.read_exact(&mut id_buf).is_ok());

@@ -2,8 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::cli;
-use super::constants;
+#[cfg(unix)]
+use super::types;
+use super::{cli, constants};
 #[cfg(unix)]
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
@@ -115,9 +116,9 @@ pub fn max_connections() -> usize {
 }
 
 #[cfg(unix)]
-pub fn agent_socket() -> PathBuf {
+pub fn agent_socket() -> types::AgentChannel {
     match env::var(constants::ENV_HOME_DIR) {
-        Err(_) => PathBuf::from(String::from(constants::UNIX_AGENT_SOCKET)),
+        Err(_) => constants::UNIX_AGENT_SOCKET.into(),
         Ok(home_dir) => {
             let sock = PathBuf::from(home_dir).join(
                 PathBuf::from(constants::UNIX_AGENT_SOCKET)
@@ -125,7 +126,7 @@ pub fn agent_socket() -> PathBuf {
                     .unwrap(),
             );
             debug!("Using debug UNIX socket: {:?}", &sock);
-            sock
+            sock.into()
         }
     }
 }

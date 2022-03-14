@@ -12,7 +12,6 @@ from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
-from cmk.utils.version import is_free_edition
 
 from cmk.gui.log import logger
 from cmk.gui.plugins.watolib.utils import sample_config_generator_registry, SampleConfigGenerator
@@ -385,10 +384,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 ),
             },
         }
-
-        if is_free_edition():
-            # CMC may not run here, we will base the decision on is_free_edition only
-            settings["cmc_cmk_helpers"] = 3
 
         return settings
 

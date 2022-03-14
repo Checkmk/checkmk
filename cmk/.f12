@@ -28,7 +28,6 @@ PYTHON3_PATHS=(
     notification_plugins
     special_agents
     post_rename_site
-    update_rrd_fs_names.py
     update_config.py
     automations
     base

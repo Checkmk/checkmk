@@ -176,7 +176,6 @@ _COMPONENTS = (
 
 _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
-    ModulePath("bin/update_rrd_fs_names.py"): Component("cmk.base"),
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),

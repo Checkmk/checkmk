@@ -1,0 +1,18 @@
+Title: Fix possible KeyError on ruleset page with predifined conditions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1647272302
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If a user views a ruleset page with rules containing predefined conditions the
+user is not permitted for, a KeyError occurs.
+
+The ruleset page will now show correctly such rules. If a user with no
+permission for the used predefined condition edits such rule, the predefined
+condition field will show a corresponding message that the user has no
+permission for the choosen predefined condition.

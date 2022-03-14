@@ -19,7 +19,7 @@ description:
 
  - Kernel version
 
- This is provided by the API server. The service is always {OK}.
+ This information is provided by the API server. The service is always {OK}.
 
  It requires that the special agent kube is configured.
 

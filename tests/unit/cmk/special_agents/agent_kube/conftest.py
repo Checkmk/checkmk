@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-
-# pylint: disable=comparison-with-callable,redefined-outer-name
+import uuid
 from typing import Callable, Dict, Iterator, Sequence, Type
 
 import pytest
@@ -14,6 +13,9 @@ from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
+
+# pylint: disable=comparison-with-callable,redefined-outer-name
+
 
 ONE_KiB = 1024
 ONE_MiB = 1024 * ONE_KiB
@@ -68,21 +70,30 @@ NPD_NODE_CONDITION_TYPES = [
 ]
 
 
-class NodeConditionFactory(ModelFactory):
-    __model__ = api.NodeCondition
-
-    type_ = Use(
-        next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
-    )
+@pytest.fixture
+def node_condition_status() -> api.NodeConditionStatus:
+    return api.NodeConditionStatus.TRUE
 
 
-class NodeStatusFactory(ModelFactory):
-    __model__ = api.NodeStatus
+@pytest.fixture
+def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
+    class NodeConditionFactory(ModelFactory):
+        __model__ = api.NodeCondition
 
-    conditions = Use(
-        NodeConditionFactory.batch,
-        size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-    )
+        type_ = Use(
+            next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
+        )
+        status = node_condition_status
+
+    class NodeStatusFactory(ModelFactory):
+        __model__ = api.NodeStatus
+
+        conditions = Use(
+            NodeConditionFactory.batch,
+            size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+        )
+
+    return NodeStatusFactory.build()
 
 
 # Container Status Fixtures
@@ -201,6 +212,11 @@ def node_capacity_pods() -> int:
 
 
 @pytest.fixture
+def node_is_control_plane() -> bool:
+    return False
+
+
+@pytest.fixture
 def node_resources_builder(
     node_allocatable_cpu: float,
     node_allocatable_memory: float,
@@ -220,14 +236,16 @@ def node_resources_builder(
 
 @pytest.fixture
 def new_node(
-    node_resources_builder: Callable[[], Dict[str, api.NodeResources]]
+    node_resources_builder: Callable[[], Dict[str, api.NodeResources]],
+    node_status: api.NodeStatus,
+    node_is_control_plane: bool,
 ) -> Callable[[], agent_kube.Node]:
     def _new_node() -> agent_kube.Node:
         return agent_kube.Node(
             metadata=NodeMetaDataFactory.build(),
-            status=NodeStatusFactory.build(),
+            status=node_status,
             resources=node_resources_builder(),
-            control_plane=False,
+            control_plane=node_is_control_plane,
             kubelet_info=KubeletInfoFactory.build(),
         )
 
@@ -245,6 +263,11 @@ def node(
 
 
 @pytest.fixture
+def pod_metadata() -> api.PodMetaData:
+    return PodMetaDataFactory.build()
+
+
+@pytest.fixture
 def phases() -> Type[api.Phase]:
     return api.Phase
 
@@ -259,6 +282,7 @@ def phase_generator(phases: Type[api.Phase]) -> Callable[[], Iterator[api.Phase]
 
 @pytest.fixture
 def new_pod(
+    pod_metadata: api.PodMetaData,
     phase_generator: Callable[[], Iterator[api.Phase]],
     pod_spec: api.PodSpec,
     container_status: Callable[[], api.ContainerStatus],
@@ -271,8 +295,8 @@ def new_pod(
         pod_status = PodStatusFactory.build()
         pod_status.phase = next(phases)
         return agent_kube.Pod(
-            uid=api.PodUID("test-pod"),
-            metadata=PodMetaDataFactory.build(),
+            uid=api.PodUID(str(uuid.uuid4())),
+            metadata=pod_metadata,
             status=pod_status,
             spec=pod_spec,
             containers={container.name: container for container in containers},
@@ -447,9 +471,9 @@ def cluster_details() -> api.ClusterDetails:
 @pytest.fixture
 def cluster(
     new_node: Callable[[], agent_kube.Node],
-    cluster_nodes: int,
     new_daemon_set: Callable[[], agent_kube.DaemonSet],
     new_statefulset: Callable[[], agent_kube.StatefulSet],
+    cluster_nodes: int,
     cluster_daemon_sets: int,
     cluster_statefulsets: int,
     cluster_details: api.ClusterDetails,

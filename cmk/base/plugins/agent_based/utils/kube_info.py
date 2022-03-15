@@ -5,10 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Literal, Mapping
+from typing import Any, Callable, Literal, Mapping, Protocol
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, render, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    HostLabelGenerator,
+)
 from cmk.base.plugins.agent_based.utils.kube import ControlChain, CreationTimestamp
 
 
@@ -79,3 +82,42 @@ def check_info(info: Mapping[InfoTypes, Any]) -> CheckResult:
     for info_type, function in _RESULT_FUNC.items():
         if info_type in info:
             yield function(info[info_type])
+
+
+class Info(Protocol):
+    cluster: str
+    namespace: str
+    name: str
+
+
+def host_labels(
+    object_type: Literal["deployment", "daemonset"]
+) -> Callable[[Info], HostLabelGenerator]:
+    def _host_labels(section: Info) -> HostLabelGenerator:
+        """Host label function.
+
+        Labels:
+            cmk/kubernetes/object:
+                This label is set to the Kubernetes object type.
+
+            cmk/kubernetes/cluster:
+                This label is set to the given Kubernetes Cluster name.
+
+            cmk/kubernetes/namespace:
+                This label contains the name of the Kubernetes Namespace this checkmk host is
+                associated with.
+
+            cmk/kubernetes/deployment:
+                This label is set to the name of the Deployment.
+
+            cmk/kubernetes/daemonset:
+                This label is set to the name of the DaemonSet.
+
+        """
+
+        yield HostLabel("cmk/kubernetes/object", object_type)
+        yield HostLabel("cmk/kubernetes/cluster", section.cluster)
+        yield HostLabel("cmk/kubernetes/namespace", section.namespace)
+        yield HostLabel(f"cmk/kubernetes/{object_type}", section.name)
+
+    return _host_labels

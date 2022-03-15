@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import DaemonSetInfo
-from cmk.base.plugins.agent_based.utils.kube_info import check_info
+from cmk.base.plugins.agent_based.utils.kube_info import check_info, host_labels
 
 
 def parse(string_table: StringTable) -> DaemonSetInfo:
@@ -36,6 +36,7 @@ register.agent_section(
     name="kube_daemonset_info_v1",
     parsed_section_name="kube_daemonset_info",
     parse_function=parse,
+    host_label_function=host_labels("daemonset"),
 )
 
 

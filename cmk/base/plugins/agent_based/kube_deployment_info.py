@@ -6,15 +6,14 @@
 
 import json
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, register, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    HostLabelGenerator,
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import DeploymentInfo
-from cmk.base.plugins.agent_based.utils.kube_info import check_info
+from cmk.base.plugins.agent_based.utils.kube_info import check_info, host_labels
 
 
 def parse(string_table: StringTable) -> DeploymentInfo:
@@ -33,35 +32,11 @@ def parse(string_table: StringTable) -> DeploymentInfo:
     return DeploymentInfo(**json.loads(string_table[0][0]))
 
 
-def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
-    """Host label function
-
-    Labels:
-        cmk/kubernetes/object:
-            This label is set to the Kubernetes object type.
-
-        cmk/kubernetes/cluster:
-            This label is set to the given Kubernetes cluster name.
-
-        cmk/kubernetes/namespace:
-            This label is set to the namespace of the deployment.
-
-        cmk/kubernetes/deployment:
-            This label is set to the name of the deployment.
-
-    """
-
-    yield HostLabel("cmk/kubernetes/object", "deployment")
-    yield HostLabel("cmk/kubernetes/cluster", section.cluster)
-    yield HostLabel("cmk/kubernetes/namespace", section.namespace)
-    yield HostLabel("cmk/kubernetes/deployment", section.name)
-
-
 register.agent_section(
     name="kube_deployment_info_v1",
     parsed_section_name="kube_deployment_info",
     parse_function=parse,
-    host_label_function=host_labels,
+    host_label_function=host_labels("deployment"),
 )
 
 

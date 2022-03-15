@@ -19,7 +19,8 @@ just to signal that real build script was not called -->
 <?define ServiceFolderName = "service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
-<?define ServiceDescription = "Check MK monitoring and management Service 2.1"?>
+<!-- IMPORTANT NOTE 3: String below must start from 'Check MK monitoring and management Service - ', grep client to find why-->
+<?define ServiceDescription = "Check MK monitoring and management Service - 2.1"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -174,13 +175,6 @@ just to signal that real build script was not called -->
             </Directory>
         </Directory>
 
-        <?if $(var.Platform)~="x64" ?>
-        <CustomAction Id="CallVersion" BinaryKey="WixCA" DllEntry="CAQuietExec64" Execute="deferred" Return="ignore"/>
-        <?else ?>
-        <CustomAction Id="CallVersion" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore"/>
-        <?endif ?>
-
-
 
         <CustomAction Id="uninstall_alert"
             Directory  ="INSTALLFOLDER_SERVICE"
@@ -196,12 +190,21 @@ just to signal that real build script was not called -->
                                 Execute="immediate" />
 
         <!-- Deferred execution of the above script -->
+        <?if $(var.Platform)~="x64" ?>
         <CustomAction Id="save_version"
                   BinaryKey="WixCA"
                   DllEntry="CAQuietExec64"
                   Execute="deferred"
                   Return="ignore"
                   Impersonate="no" />
+        <?else ?>
+        <CustomAction Id="save_version"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+        <?endif ?>
 
         <InstallExecuteSequence>
             <Custom Action='save_version_exec' Sequence="1501" ><![CDATA[INSTALLEDSERVICEDESCRIPTION <> ""]]></Custom>

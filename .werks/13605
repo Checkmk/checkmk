@@ -1,0 +1,12 @@
+Title: win-agent creates allow-legacy-pull on upgrade from 2.0(or earlier) version
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647350617
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b2
+
+With this release the unencrypted connection may be allowed only when performing 
+upgrade from version 2.0 or earlier.

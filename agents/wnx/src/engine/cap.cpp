@@ -10,6 +10,7 @@
 #include <string_view>
 #include <unordered_set>
 
+#include "agent_controller.h"
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cma_yml.h"
@@ -507,17 +508,18 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
 }
 
 namespace {
-void InstallCapFile() {
+bool InstallCapFile() {
     auto [target_cap, source_cap] = GetInstallPair(files::kCapFile);
 
     XLOG::l.t("Installing cap file '{}'", source_cap);
     if (NeedReinstall(target_cap, source_cap)) {
         XLOG::l.i("Reinstalling '{}' with '{}'", target_cap, source_cap);
         ReinstallCaps(target_cap, source_cap);
-        return;
+        return true;
     }
 
     XLOG::l.t("Installing of CAP file is not required");
+    return false;
 }
 
 void InstallYmlFile() {
@@ -644,8 +646,13 @@ static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
 
 void Install() {
     try {
-        InstallCapFile();
+        auto installation = InstallCapFile();
         InstallYmlFile();
+        if (installation) {
+            ac::CreateLegacyModeFile(fs::path{tools::win::GetSomeSystemFolder(
+                                         FOLDERID_ProgramData)} /
+                                     ac::kCmkAgentUnistall);
+        }
     } catch (const std::exception &e) {
         XLOG::l.crit("Exception '{}'", e.what());
         return;

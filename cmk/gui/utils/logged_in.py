@@ -366,7 +366,7 @@ class LoggedInUser:
         self._permissions[pname] = they_may
 
         is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
-        if is_rest_api_call:
+        if is_rest_api_call and endpoint.track_permissions:
             # We need to remember this, in oder to later check if the set of required permissions
             # actually fits the declared permission schema.
             endpoint.remember_checked_permission(pname)

@@ -557,7 +557,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity2(
 )
 def test_get_piggyback_matching_time_settings(time_settings, expected_time_setting_keys):
     assert sorted(
-        piggyback._get_matching_time_settings(
+        piggyback._TimeSettingsMap(
             [HostName("source-host")], HostName("piggybacked-host"), time_settings
-        ).keys()
+        )._expanded_settings.keys()
     ) == sorted(expected_time_setting_keys)

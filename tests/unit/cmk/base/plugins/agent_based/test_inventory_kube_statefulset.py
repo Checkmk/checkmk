@@ -10,7 +10,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_statefulset import inventory_kube_statefulset
-from cmk.base.plugins.agent_based.utils.k8s import (
+from cmk.base.plugins.agent_based.utils.kube import (
     Selector,
     StatefulSetInfo,
     StatefulSetRollingUpdate,

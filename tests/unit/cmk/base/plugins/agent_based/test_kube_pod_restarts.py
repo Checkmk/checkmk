@@ -12,7 +12,7 @@ import pytest
 
 from cmk.base.plugins.agent_based import kube_pod_restarts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.k8s import PodContainers
+from cmk.base.plugins.agent_based.utils.kube import PodContainers
 
 from cmk.gui.plugins.wato.check_parameters.kube_pod_restarts import _parameter_valuespec
 

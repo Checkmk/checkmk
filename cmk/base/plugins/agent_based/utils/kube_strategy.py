@@ -6,7 +6,7 @@
 
 from typing import Union
 
-from cmk.base.plugins.agent_based.utils.k8s import (
+from cmk.base.plugins.agent_based.utils.kube import (
     OnDelete,
     Recreate,
     RollingUpdate,

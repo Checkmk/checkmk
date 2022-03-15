@@ -8,7 +8,7 @@ from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo, DeploymentStrategy
+from cmk.base.plugins.agent_based.utils.kube import DeploymentInfo, DeploymentStrategy
 from cmk.base.plugins.agent_based.utils.kube_inventory import (
     labels_to_table,
     match_expressions_to_str,

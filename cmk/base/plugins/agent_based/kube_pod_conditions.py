@@ -21,10 +21,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.k8s import PodConditions
 from cmk.base.plugins.agent_based.utils.kube import (
     condition_detailed_description,
     condition_short_description,
+    PodConditions,
     VSResultAge,
 )
 

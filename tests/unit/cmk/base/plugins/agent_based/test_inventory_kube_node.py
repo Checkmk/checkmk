@@ -10,7 +10,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
-from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo, NodeAddress, NodeInfo
+from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo, NodeAddress, NodeInfo
 
 from .utils_inventory import sort_inventory_result
 

@@ -12,6 +12,7 @@ from typing import Dict, Optional, Tuple
 
 import pytest
 
+import cmk.base.plugins.agent_based.utils.kube
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
@@ -388,14 +389,16 @@ def test_overview_limits_contained(usage_section, check_result, resources_sectio
 
 @pytest.mark.parametrize("usage_cycle_age", [1])
 @pytest.mark.parametrize("usage_section", [None])
-def test_stored_usage_value(usage_section: Optional[kube_cpu.PerformanceUsage], value_store):
+def test_stored_usage_value(
+    usage_section: Optional[cmk.base.plugins.agent_based.utils.kube.PerformanceUsage], value_store
+):
     performance_cpu = kube_cpu.performance_cpu(usage_section, TIMESTAMP, value_store)
     assert performance_cpu is not None
 
 
 @pytest.mark.parametrize("usage_section", [None])
 def test_stored_outdated_usage_value(
-    usage_section: Optional[kube_cpu.PerformanceUsage], value_store
+    usage_section: Optional[cmk.base.plugins.agent_based.utils.kube.PerformanceUsage], value_store
 ):
     performance_cpu = kube_cpu.performance_cpu(usage_section, TIMESTAMP, value_store)
     assert performance_cpu is None

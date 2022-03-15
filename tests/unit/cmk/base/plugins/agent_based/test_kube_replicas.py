@@ -19,13 +19,13 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     parse_kube_deployment_strategy,
     parse_kube_replicas,
 )
-from cmk.base.plugins.agent_based.utils.k8s import (
+from cmk.base.plugins.agent_based.utils.kube import (
     DeploymentStrategy,
     Recreate,
     Replicas,
     RollingUpdate,
+    VSResultAge,
 )
-from cmk.base.plugins.agent_based.utils.kube import VSResultAge
 
 
 def test_parse_kube_replicas() -> None:

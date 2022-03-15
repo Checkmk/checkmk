@@ -11,7 +11,7 @@ from typing import Optional
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.k8s import StartTime
+from .utils.kube import StartTime
 from .utils.uptime import Section
 
 

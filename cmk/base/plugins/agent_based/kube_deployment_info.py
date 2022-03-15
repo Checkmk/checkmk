@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo
+from cmk.base.plugins.agent_based.utils.kube import DeploymentInfo
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 

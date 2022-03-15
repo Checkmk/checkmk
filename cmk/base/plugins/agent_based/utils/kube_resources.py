@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.k8s import PerformanceUsage
+from cmk.base.plugins.agent_based.utils.kube import PerformanceUsage
 
 ResourceType = Literal["memory", "cpu"]
 RequirementType = Literal["request", "limit", "allocatable"]

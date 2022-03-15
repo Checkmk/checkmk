@@ -9,12 +9,9 @@ from typing import Tuple
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_statefulset_info import (
-    check_kube_statefulset_info,
-    StatefulSetInfo,
-)
+from cmk.base.plugins.agent_based.kube_statefulset_info import check_kube_statefulset_info
 from cmk.base.plugins.agent_based.utils import kube_info
-from cmk.base.plugins.agent_based.utils.k8s import Selector
+from cmk.base.plugins.agent_based.utils.kube import Selector, StatefulSetInfo
 
 
 # TODO: CMK-10052

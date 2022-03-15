@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils.kube_strategy import (
+from cmk.base.plugins.agent_based.utils.kube import (
     OnDelete,
     Recreate,
     RollingUpdate,
-    statefulset_strategy_text,
     StatefulSetRollingUpdate,
+)
+from cmk.base.plugins.agent_based.utils.kube_strategy import (
+    statefulset_strategy_text,
     strategy_text,
 )
 

@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.k8s import ContainerCount
+from cmk.base.plugins.agent_based.utils.kube import ContainerCount
 
 KubeContainersLevelsUpperLower = Mapping[str, Tuple[int, int]]
 

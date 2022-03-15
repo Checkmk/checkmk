@@ -9,7 +9,7 @@ from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo, NodeInfo
+from cmk.base.plugins.agent_based.utils.kube import KubeletInfo, NodeInfo
 from cmk.base.plugins.agent_based.utils.kube_inventory import labels_to_table
 
 

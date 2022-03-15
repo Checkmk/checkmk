@@ -9,12 +9,8 @@ from datetime import datetime, timedelta
 import pytest
 
 import cmk.utils.store as store
-from cmk.utils.license_usage.samples import (
-    LicenseUsageExtensions,
-    LicenseUsageHistoryDump,
-    LicenseUsageHistoryDumpVersion,
-    LicenseUsageSample,
-)
+from cmk.utils.license_usage.export import LicenseUsageExtensions, LicenseUsageSample
+from cmk.utils.license_usage.samples import LicenseUsageHistoryDump, LicenseUsageHistoryDumpVersion
 
 import cmk.base.license_usage as license_usage
 

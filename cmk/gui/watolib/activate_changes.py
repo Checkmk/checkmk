@@ -41,11 +41,11 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils
 import cmk.utils.agent_registration as agent_registration
 import cmk.utils.daemon as daemon
-import cmk.utils.license_usage.samples as license_usage_samples
 import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.license_usage.export import LicenseUsageExtensions
 from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -2069,7 +2069,7 @@ def _add_extensions_for_license_usage():
     extensions_filepath = license_usage_dir.joinpath("extensions.json")
 
     with store.locked(extensions_filepath):
-        extensions = license_usage_samples.LicenseUsageExtensions(
+        extensions = LicenseUsageExtensions(
             ntop=is_ntop_configured(),
         )
         store.save_bytes_to_file(extensions_filepath, extensions.serialize())

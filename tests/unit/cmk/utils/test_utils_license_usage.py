@@ -8,7 +8,7 @@ from typing import Any, Mapping
 
 import pytest
 
-from cmk.utils.license_usage.samples import LicenseUsageSample
+from cmk.utils.license_usage.export import LicenseUsageSample
 
 
 @pytest.mark.parametrize(

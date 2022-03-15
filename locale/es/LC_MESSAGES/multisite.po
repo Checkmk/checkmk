@@ -13543,19 +13543,13 @@ msgstr ""
 "opción de restringir a un solo host o elegir el tipo de objetos que desea "
 "restringir manualmente."
 
+#, fuzzy
 msgid ""
-"Depending on the measurement unit (defaults to bit) the absolute levels are "
-"set in bit or byte"
+"Depending on the measurement unit (defaults to bit), the absolute levels are "
+"set in bits or bytes per second."
 msgstr ""
 "Dependiendo de la unidad de medida (por defecto es el bit) los niveles "
 "absolutos se establecen en bit o byte"
-
-msgid ""
-"Depending on the measurement unit (defaults to bit) you can set the warn and "
-"crit levels for the number of dropped bits or bytes"
-msgstr ""
-"Dependiendo de la unidad de medida (por defecto es el bit) puede establecer "
-"los niveles de advertencia y crítica para el número de bits o bytes perdidos"
 
 msgid ""
 "Depending on the precision the unit can be either milliseconds or "
@@ -16725,9 +16719,6 @@ msgstr "Activar la replicación desde un maestro"
 
 msgid "Enable row shading"
 msgstr "Activar el sombreado de las filas"
-
-msgid "Enable separate fetcher and checker helpers"
-msgstr "Habilitar los ayudantes de búsqueda y comprobación por separado"
 
 msgid "Enable service notifications"
 msgstr "Activar las notificaciones de servicio"
@@ -51702,15 +51693,6 @@ msgid ""
 "username and client IP, the request is coming from, is logged."
 msgstr ""
 
-msgid ""
-"This options enables the new 1.7 Checkmk helper model. It will be used "
-"during the 1.7 test phase to be able to toggle between the old and new model "
-"for testing."
-msgstr ""
-"Esta opción habilita el nuevo modelo de ayuda Checkmk 1.7. Se utilizará "
-"durante la fase de pruebas de la 1.7 para poder alternar entre el modelo "
-"antiguo y el nuevo para las pruebas."
-
 #, python-format
 msgid "This package cannot be installed: %s"
 msgstr "Este paquete no puede ser instalado: %s"
@@ -57155,9 +57137,6 @@ msgstr "Utilizar la configuración del proxy desde el entorno del proceso"
 #, fuzzy
 msgid "Use sensor description"
 msgstr "Descripción del uso"
-
-msgid "Use separate fetchers and checkers"
-msgstr "Utilizar recuperadores y verificadores separados"
 
 msgid "Use settings and page layout from"
 msgstr "Utilice los ajustes y el diseño de la página desde"
@@ -64502,6 +64481,29 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "Depending on the measurement unit (defaults to bit) you can set the warn "
+#~ "and crit levels for the number of dropped bits or bytes"
+#~ msgstr ""
+#~ "Dependiendo de la unidad de medida (por defecto es el bit) puede "
+#~ "establecer los niveles de advertencia y crítica para el número de bits o "
+#~ "bytes perdidos"
+
+#~ msgid "Enable separate fetcher and checker helpers"
+#~ msgstr "Habilitar los ayudantes de búsqueda y comprobación por separado"
+
+#~ msgid ""
+#~ "This options enables the new 1.7 Checkmk helper model. It will be used "
+#~ "during the 1.7 test phase to be able to toggle between the old and new "
+#~ "model for testing."
+#~ msgstr ""
+#~ "Esta opción habilita el nuevo modelo de ayuda Checkmk 1.7. Se utilizará "
+#~ "durante la fase de pruebas de la 1.7 para poder alternar entre el modelo "
+#~ "antiguo y el nuevo para las pruebas."
+
+#~ msgid "Use separate fetchers and checkers"
+#~ msgstr "Utilizar recuperadores y verificadores separados"
 
 #, fuzzy
 #~| msgid "Checkmk agent"

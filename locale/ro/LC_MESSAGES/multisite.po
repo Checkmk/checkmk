@@ -12863,13 +12863,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Depending on the measurement unit (defaults to bit) the absolute levels are "
-"set in bit or byte"
-msgstr ""
-
-msgid ""
-"Depending on the measurement unit (defaults to bit) you can set the warn and "
-"crit levels for the number of dropped bits or bytes"
+"Depending on the measurement unit (defaults to bit), the absolute levels are "
+"set in bits or bytes per second."
 msgstr ""
 
 msgid ""
@@ -16000,9 +15995,6 @@ msgid "Enable replication from a master"
 msgstr ""
 
 msgid "Enable row shading"
-msgstr ""
-
-msgid "Enable separate fetcher and checker helpers"
 msgstr ""
 
 msgid "Enable service notifications"
@@ -48173,12 +48165,6 @@ msgid ""
 "username and client IP, the request is coming from, is logged."
 msgstr ""
 
-msgid ""
-"This options enables the new 1.7 Checkmk helper model. It will be used "
-"during the 1.7 test phase to be able to toggle between the old and new model "
-"for testing."
-msgstr ""
-
 #, python-format
 msgid "This package cannot be installed: %s"
 msgstr ""
@@ -52905,9 +52891,6 @@ msgstr ""
 #, fuzzy
 msgid "Use sensor description"
 msgstr "foloseste descrierea"
-
-msgid "Use separate fetchers and checkers"
-msgstr ""
 
 msgid "Use settings and page layout from"
 msgstr ""

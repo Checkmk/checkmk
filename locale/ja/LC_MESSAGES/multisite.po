@@ -12986,19 +12986,13 @@ msgstr ""
 "(制限なし)。または、単一のホストに制限するか、手動で制限するオブジェクトのタ"
 "イプを選択するオプションがあります。"
 
+#, fuzzy
 msgid ""
-"Depending on the measurement unit (defaults to bit) the absolute levels are "
-"set in bit or byte"
+"Depending on the measurement unit (defaults to bit), the absolute levels are "
+"set in bits or bytes per second."
 msgstr ""
 "測定単位(デフォルトはビット)に応じて、絶対レベルはビットまたはバイトで設定さ"
 "れます"
-
-msgid ""
-"Depending on the measurement unit (defaults to bit) you can set the warn and "
-"crit levels for the number of dropped bits or bytes"
-msgstr ""
-"測定単位(デフォルトはビット)に応じて、ドロップされたビットまたはバイト数の警"
-"告レベルとクリティカルレベルを設定できます。"
 
 msgid ""
 "Depending on the precision the unit can be either milliseconds or "
@@ -16078,9 +16072,6 @@ msgstr "マスターからのレプリケーションを有効にする"
 
 msgid "Enable row shading"
 msgstr "行のシェーディングを有効にする"
-
-msgid "Enable separate fetcher and checker helpers"
-msgstr "個別のフェッチャーヘルパーとチェッカーヘルパーを有効にする"
 
 msgid "Enable service notifications"
 msgstr "サービス通知を有効にする"
@@ -49175,15 +49166,6 @@ msgid ""
 "username and client IP, the request is coming from, is logged."
 msgstr ""
 
-msgid ""
-"This options enables the new 1.7 Checkmk helper model. It will be used "
-"during the 1.7 test phase to be able to toggle between the old and new model "
-"for testing."
-msgstr ""
-"このオプションにより、新しい1.7 Checkmkヘルパーモデルが有効になります。これ"
-"は、1.7のテスト段階で使用され、テスト用に古いモデルと新しいモデルを切り替える"
-"ことができます。"
-
 #, python-format
 msgid "This package cannot be installed: %s"
 msgstr "このパッケージはインストールできません: %s"
@@ -54254,9 +54236,6 @@ msgstr "プロセス環境からのプロキシ設定を使用する"
 #, fuzzy
 msgid "Use sensor description"
 msgstr "説明を使用する"
-
-msgid "Use separate fetchers and checkers"
-msgstr "別々のフェッチャーとチェッカーを使用する"
 
 msgid "Use settings and page layout from"
 msgstr "設定とページレイアウトを使用する"
@@ -61094,6 +61073,28 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "Depending on the measurement unit (defaults to bit) you can set the warn "
+#~ "and crit levels for the number of dropped bits or bytes"
+#~ msgstr ""
+#~ "測定単位(デフォルトはビット)に応じて、ドロップされたビットまたはバイト数の"
+#~ "警告レベルとクリティカルレベルを設定できます。"
+
+#~ msgid "Enable separate fetcher and checker helpers"
+#~ msgstr "個別のフェッチャーヘルパーとチェッカーヘルパーを有効にする"
+
+#~ msgid ""
+#~ "This options enables the new 1.7 Checkmk helper model. It will be used "
+#~ "during the 1.7 test phase to be able to toggle between the old and new "
+#~ "model for testing."
+#~ msgstr ""
+#~ "このオプションにより、新しい1.7 Checkmkヘルパーモデルが有効になります。こ"
+#~ "れは、1.7のテスト段階で使用され、テスト用に古いモデルと新しいモデルを切り"
+#~ "替えることができます。"
+
+#~ msgid "Use separate fetchers and checkers"
+#~ msgstr "別々のフェッチャーとチェッカーを使用する"
 
 #, fuzzy
 #~| msgid "Checkmk agent"

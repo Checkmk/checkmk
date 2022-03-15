@@ -91,7 +91,7 @@ class Info(Protocol):
 
 
 def host_labels(
-    object_type: Literal["deployment", "daemonset"]
+    object_type: Literal["deployment", "daemonset", "statefulset"]
 ) -> Callable[[Info], HostLabelGenerator]:
     def _host_labels(section: Info) -> HostLabelGenerator:
         """Host label function.
@@ -112,6 +112,9 @@ def host_labels(
 
             cmk/kubernetes/daemonset:
                 This label is set to the name of the DaemonSet.
+
+            cmk/kubernetes/statefulset:
+                This label is set to the name of the StatefulSet.
 
         """
 

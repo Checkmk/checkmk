@@ -215,10 +215,11 @@ bool CreateLegacyModeFile(const std::filesystem::path &marker) {
         return true;
     }
 
-    auto ftime = std::chrono::clock_cast<std::chrono::system_clock>(timestamp);
-    auto diff = std::chrono::system_clock::now() - ftime;
+    const auto age = std::chrono::duration_cast<std::chrono::seconds>(
+        fs::_File_time_clock::now().time_since_epoch() -
+        timestamp.time_since_epoch());
     ON_OUT_OF_SCOPE(fs::remove(marker, ec));
-    if (diff > uninstall_allowed_delay) {
+    if (age > uninstall_allowed_delay) {
         XLOG::l.i("File '{}' too old, assuming fresh install, legacy OFF",
                   marker);
         return false;

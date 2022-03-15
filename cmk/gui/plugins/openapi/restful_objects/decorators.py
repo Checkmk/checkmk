@@ -1280,7 +1280,7 @@ def _docstring_description(docstring: Optional[str]) -> Optional[str]:
 
 def _permission_descriptions(
     perms: permissions.BasePerm,
-    descriptions: Optional[Mapping[str, str]] = None,
+    descriptions: Optional[dict[str, str]] = None,
 ) -> str:
     r"""Describe permissions human-readable
 
@@ -1289,6 +1289,7 @@ def _permission_descriptions(
         descriptions:
 
     Examples:
+
         >>> _permission_descriptions(
         ...     permissions.Perm("wato.edit_folders"),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
@@ -1299,22 +1300,55 @@ def _permission_descriptions(
         ...     permissions.AnyPerm([permissions.Perm("wato.edit_folders"), permissions.Perm("wato.edit_folders")]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+        'This endpoint requires the following permissions: \n * Any of:\n   * `wato.edit_folders`: Allowed to cook the books.\n   * `wato.edit_folders`: Allowed to cook the books.\n'
+
+        The description will have a structure like this:
+
+            * Any of:
+               * c
+               * All of:
+                  * a
+                  * b
+
+        >>> _permission_descriptions(
+        ...     permissions.AnyPerm([
+        ...         permissions.Perm("c"),
+        ...         permissions.AllPerm([
+        ...              permissions.Perm("a"),
+        ...              permissions.Perm("b"),
+        ...         ]),
+        ...     ]),
+        ...     {'a': 'Hold a', 'b': 'Hold b', 'c': 'Hold c'}
+        ... )
+        'This endpoint requires the following permissions: \n * Any of:\n   * `c`: Hold c\n   * All of:\n     * `a`: Hold a\n     * `b`: Hold b\n'
 
     Returns:
         The description as a string.
 
     """
-    # NOTE: This implementation is a bit rudimentary, i.e. the actual combinators (Any, All)
-    # will not be explained in the description. This will be added in a later version.
-    if descriptions is None:
-        descriptions = {}
-    _description = ["This endpoint requires the following permissions: "]
-    seen = set()
-    for perm in perms.iter_perms():
-        if perm in seen:
-            continue
-        seen.add(perm)
-        desc = descriptions.get(perm) or permission_registry[perm].description
-        _description.append(f" * `{perm}`: {desc}\n")
-    return "\n".join(_description)
+    description_map: Dict[str, str] = descriptions if descriptions is not None else {}
+    _description: List[str] = ["This endpoint requires the following permissions: "]
+
+    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: List[str]) -> None:
+        # We indent by two spaces, as is required by markdown.
+        prefix = "  " * indent
+        if isinstance(permission, permissions.Perm):
+            perm_name = permission.name
+            desc = description_map.get(perm_name) or permission_registry[perm_name].description
+            _description.append(f"{prefix} * `{perm_name}`: {desc}")
+        elif isinstance(permission, permissions.AllPerm):
+            desc_list.append(f"{prefix} * All of:")
+            for perm in permission.perms:
+                _add_desc(perm, indent + 1, desc_list)
+        elif isinstance(permission, permissions.AnyPerm):
+            desc_list.append(f"{prefix} * Any of:")
+            for perm in permission.perms:
+                _add_desc(perm, indent + 1, desc_list)
+        elif isinstance(permission, permissions.Optional):
+            desc_list.append(f"{prefix} * Optionally:")
+            _add_desc(permission.perm, indent + 1, desc_list)
+        else:
+            raise NotImplementedError(f"Printing of {permission!r} not yet implemented.")
+
+    _add_desc(perms, 0, _description)
+    return "\n".join(_description) + "\n"

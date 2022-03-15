@@ -8,7 +8,6 @@
 mod common;
 
 use anyhow::Result as AnyhowResult;
-#[cfg(unix)]
 use std::io::{Read, Write};
 
 #[test]
@@ -41,7 +40,6 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
     Ok(())
 }
 
-#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_tls() -> AnyhowResult<()> {
     // Setup test data
@@ -58,20 +56,25 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     let mut zlib_enc = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
     zlib_enc.write_all(test_agent_output.as_bytes())?;
     compressed_agent_output.append(&mut zlib_enc.finish()?);
-    let (uuid, pull_config, certs) = common::testing_pull_setup(
-        test_path,
-        test_port,
-        test_path.join("run/check-mk-agent.socket").into(),
-    );
+    #[cfg(unix)]
+    let agent_socket_address = test_path
+        .join("run/check-mk-agent.socket")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    #[cfg(windows)]
+    let agent_socket_address = "localhost:1999".to_string();
+    let (uuid, pull_config, certs) =
+        common::testing_pull_setup(test_path, test_port, agent_socket_address.as_str().into());
 
     // Uncomment for debugging
     // common::init_logging(&test_path.join("log"))?;
 
     // Provide agent stream for the pull thread
-    let agent_socket_path = test_path.join("run/check-mk-agent.socket");
-    let unix_socket = tokio::net::UnixListener::bind(agent_socket_path).unwrap();
-    let agent_stream_thread =
-        tokio::spawn(common::unix::agent_loop(unix_socket, test_agent_output));
+    let agent_stream_thread = tokio::spawn(common::agent::agent_response_loop(
+        agent_socket_address,
+        test_agent_output,
+    ));
 
     // Setup the pull thread that we intend to test
     let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
@@ -99,6 +102,9 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
     assert!(tls_stream.read_to_end(&mut message_buf).is_err());
 
+    //TODO(au): Investigate why it takes so long to release the MaxConnections semaphore, because ...
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
     // Talk too much
     let mut tcp_stream_1 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     let mut tcp_stream_2 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
@@ -106,6 +112,7 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     let mut tcp_stream_4 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     assert!(tcp_stream_1.read_exact(&mut id_buf).is_ok());
     assert!(tcp_stream_2.read_exact(&mut id_buf).is_ok());
+    //TODO(au): ... on my Windows VM, this check frequently fails on the third connection without the sleep(200)
     assert!(tcp_stream_3.read_exact(&mut id_buf).is_ok());
     assert!(tcp_stream_4.read_exact(&mut id_buf).is_err());
 
@@ -118,7 +125,6 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     Ok(())
 }
 
-#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_legacy() -> AnyhowResult<()> {
     // Setup test data
@@ -131,21 +137,26 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     std::fs::create_dir(test_path.join("run"))?;
     let test_port = "9998";
     let test_agent_output = "some test agent output";
-    let (_uuid, pull_config, _certs) = common::testing_pull_setup(
-        test_path,
-        test_port,
-        test_path.join("run/check-mk-agent.socket").into(),
-    );
+    #[cfg(unix)]
+    let agent_socket_address = test_path
+        .join("run/check-mk-agent.socket")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    #[cfg(windows)]
+    let agent_socket_address = "localhost:1998".to_string();
+    let (_uuid, pull_config, _certs) =
+        common::testing_pull_setup(test_path, test_port, agent_socket_address.as_str().into());
     pull_config.registry.save()?;
 
     // Uncomment for debugging.
     // common::init_logging(&test_path.join("log"))?;
 
     // Provide agent stream for the pull thread.
-    let agent_socket_path = test_path.join("run/check-mk-agent.socket");
-    let unix_socket = tokio::net::UnixListener::bind(agent_socket_path).unwrap();
-    let agent_stream_thread =
-        tokio::spawn(common::unix::agent_loop(unix_socket, test_agent_output));
+    let agent_stream_thread = tokio::spawn(common::agent::agent_response_loop(
+        agent_socket_address,
+        test_agent_output,
+    ));
 
     // Setup the pull thread that we intend to test.
     let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
@@ -181,12 +192,7 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"");
-    assert!(
-        std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))
-            .unwrap_err()
-            .to_string()
-            .contains("refused")
-    );
+    assert!(std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port)).is_err());
 
     // Done, kill threads
     agent_stream_thread.abort();

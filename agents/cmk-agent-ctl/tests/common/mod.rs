@@ -4,9 +4,9 @@
 
 use cmk_agent_ctl::{certs as lib_certs, config, site_spec, types};
 use std::{path::Path, str::FromStr};
+pub mod agent;
 pub mod certs;
-#[cfg(unix)]
-pub mod unix;
+
 use anyhow::{anyhow, Result as AnyhowResult};
 
 use self::certs::X509Certs;

@@ -3271,35 +3271,16 @@ def main_backup(
             _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
 
-def main_restore(
-    version_info: VersionInfo,
+def _restore_backup_from_tar(
+    *,
+    tar: tarfile.TarFile,
     site: SiteContext,
-    global_opts: "GlobalOptions",
-    args: Arguments,
     options: CommandOptions,
+    global_opts: "GlobalOptions",
+    version_info: VersionInfo,
+    source_descr: str,
+    new_site_name: Optional[str],
 ) -> None:
-    conflict_mode = _get_conflict_mode(options)
-
-    if len(args) == 0:
-        bail_out(
-            "You need to provide either a path to the source " 'file or "-" for restore from stdin.'
-        )
-
-    source = args[-1]
-    if source == "-":
-        fh = sys.stdin.buffer
-        tar_mode = "r|*"
-    elif os.path.exists(source):
-        fh = open(source, "rb")  # pylint:disable=consider-using-with
-        tar_mode = "r:*"
-    else:
-        bail_out("The backup archive does not exist.")
-
-    try:
-        tar = tarfile.open(fileobj=fh, mode=tar_mode)  # pylint:disable=consider-using-with
-    except tarfile.ReadError as e:
-        bail_out("Failed to open the backup: %s" % e)
-
     try:
         sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
     except Exception as e:
@@ -3316,23 +3297,20 @@ def main_restore(
             exec_other_omd(site, version, "restore")
 
         # Restore site with its original name, or specify a new one
-        new_sitename = sitename
-        if len(args) == 2:
-            new_sitename = args[0]
+        new_sitename = new_site_name or sitename
     else:
         new_sitename = site_name()
 
     site = SiteContext(new_sitename)
 
-    source_txt = "stdin" if source == "-" else source
     if is_root():
-        sys.stdout.write("Restoring site %s from %s...\n" % (site.name, source_txt))
+        sys.stdout.write("Restoring site %s from %s...\n" % (site.name, source_descr))
         sys.stdout.flush()
 
         prepare_restore_as_root(version_info, site, options)
 
     else:
-        sys.stdout.write("Restoring site from %s...\n" % source_txt)
+        sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
         site.load_config()
@@ -3364,7 +3342,6 @@ def main_restore(
                 tarinfo.linkname = new_linkname
 
         tar.extract(tarinfo, path=site.dir)
-    tar.close()
 
     site.load_config()
 
@@ -3374,7 +3351,7 @@ def main_restore(
     # Change config files from old to new site (see rename_site())
     if sitename != site.name:
         old_site = SiteContext(sitename)
-        patch_skeleton_files(conflict_mode, old_site, site)
+        patch_skeleton_files(_get_conflict_mode(options), old_site, site)
 
     # Now switch over to the new site as currently active site
     os.chdir(site.dir)
@@ -3387,6 +3364,53 @@ def main_restore(
         postprocess_restore_as_root(version_info, site, options)
     else:
         postprocess_restore_as_site_user(version_info, site, options, orig_apache_port)
+
+
+def main_restore(
+    version_info: VersionInfo,
+    site: SiteContext,
+    global_opts: "GlobalOptions",
+    args: Arguments,
+    options: CommandOptions,
+) -> None:
+    if len(args) == 0:
+        bail_out(
+            "You need to provide either a path to the source " 'file or "-" for restore from stdin.'
+        )
+
+    source = args[-1]
+    source_descr = "stdin" if source == "-" else source
+    new_site_name = args[0] if len(args) == 2 else None
+
+    name = None
+    fileobj = None
+
+    if source == "-":
+        fileobj = sys.stdin.buffer
+        mode = "r|*"
+    elif (source_path := Path(source)).exists():
+        name = source_path
+        mode = "r:*"
+    else:
+        bail_out("The backup archive does not exist.")
+
+    try:
+        with tarfile.open(
+            name=name,
+            fileobj=fileobj,
+            mode=mode,
+        ) as tar:
+            _restore_backup_from_tar(
+                tar=tar,
+                site=site,
+                options=options,
+                global_opts=global_opts,
+                version_info=version_info,
+                source_descr=source_descr,
+                new_site_name=new_site_name,
+            )
+    except tarfile.ReadError as e:
+        bail_out("Failed to open the backup: %s" % e)
 
 
 def prepare_restore_as_root(

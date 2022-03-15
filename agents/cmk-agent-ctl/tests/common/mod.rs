@@ -3,10 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use cmk_agent_ctl::{certs as lib_certs, config, site_spec, types};
-use std::{
-    path::Path,
-    str::FromStr,
-};
+use std::{path::Path, str::FromStr};
 pub mod certs;
 #[cfg(unix)]
 pub mod unix;

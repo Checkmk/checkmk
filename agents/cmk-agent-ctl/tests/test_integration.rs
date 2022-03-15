@@ -90,9 +90,6 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     tls_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, compressed_agent_output);
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-    tokio::task::yield_now().await;
-
     // Talk to the pull thread using an unknown uuid
     let mut client_connection =
         common::testing_tls_client_connection(certs, "certainly_wrong_uuid");
@@ -101,9 +98,6 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     assert_eq!(&id_buf, b"16");
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
     assert!(tls_stream.read_to_end(&mut message_buf).is_err());
-
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-    tokio::task::yield_now().await;
 
     // Talk too much
     let mut tcp_stream_1 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
@@ -157,8 +151,6 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
     // Give it some time to provide the TCP socket.
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    // Wait for pending actions of other threads.
-    tokio::task::yield_now().await;
 
     // Try to read plain data from TLS controller.
     // Connection will timeout after 1 sec, only sending the 16.
@@ -167,9 +159,6 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"16");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-    tokio::task::yield_now().await;
-
     // Create allow_legacy_pull file, but still be registered.
     // Connection will timeout after 1 sec, only sending the 16.
     let mut message_buf: Vec<u8> = vec![];
@@ -177,9 +166,6 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"16");
-
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-    tokio::task::yield_now().await;
 
     // Delete registry. Now we can finally receive our output in plain text.
     let mut message_buf: Vec<u8> = vec![];
@@ -195,7 +181,12 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"");
-    assert!(std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port)).unwrap_err().to_string().contains("refused"));
+    assert!(
+        std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))
+            .unwrap_err()
+            .to_string()
+            .contains("refused")
+    );
 
     // Done, kill threads
     agent_stream_thread.abort();

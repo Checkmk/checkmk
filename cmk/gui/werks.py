@@ -337,7 +337,7 @@ def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]
         return
 
     ack_url = makeactionuri(
-        request, transactions, [("_werk_ack", werk["id"])], filename="version.py"
+        request, transactions, [("_werk_ack", werk["id"])], filename="change_log.py"
     )
     yield PageMenuEntry(
         title=_("Acknowledge"),

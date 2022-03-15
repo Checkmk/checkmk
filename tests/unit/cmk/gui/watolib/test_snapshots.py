@@ -23,10 +23,9 @@ def test_create_snapshot() -> None:
 def test_snapshot_status() -> None:
     snapshots.create_snapshot("test snapshot")
     snapshot_status = snapshots.get_snapshot_status(next(_snapshot_files()).name)
-    # bug, will be fixed in the next commit
-    assert not snapshot_status["comment"]
-    assert snapshot_status["broken"]
-    assert snapshot_status["broken_text"]
+    assert "test snapshot" in snapshot_status["comment"]
+    assert not snapshot_status["broken"]
+    assert "broken_text" not in snapshot_status
 
 
 def test_extract_snapshot() -> None:

@@ -7,6 +7,7 @@
 from typing import Any, Sequence
 
 import pytest
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_statefulset import inventory_kube_statefulset
@@ -58,3 +59,23 @@ def test_inventory_kube_statefulset(
     assert sort_inventory_result(
         inventory_kube_statefulset(section_info, section_strategy)
     ) == sort_inventory_result(expected_inventory_result)
+
+
+def test_inventory_kube_statefulset_calls_labels_to_table(mocker):
+    """Test coverage and uniform look across inventories relies on the inventories calling
+    labels_to_table."""
+
+    class StatefulSetInfoFactory(ModelFactory):
+        __model__ = StatefulSetInfo
+        selector = Selector(match_labels={}, match_expressions=[])
+
+    section_info = StatefulSetInfoFactory.build()
+
+    class StatefulSetStrategyFactory(ModelFactory):
+        __model__ = StatefulSetStrategy
+
+    section_strategy = StatefulSetStrategyFactory.build()
+
+    mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_statefulset.labels_to_table")
+    list(inventory_kube_statefulset(section_info, section_strategy))
+    mock.assert_called_once()

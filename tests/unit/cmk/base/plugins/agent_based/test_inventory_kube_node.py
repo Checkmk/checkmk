@@ -7,6 +7,7 @@
 from typing import Sequence, Union
 
 import pytest
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
@@ -79,3 +80,22 @@ def test_inventory_kube_node(
     assert sort_inventory_result(
         inventory_kube_node(section_info, section_kubelet)
     ) == sort_inventory_result(expected_check_result)
+
+
+def test_inventory_kube_node_calls_labels_to_table(mocker):
+    """Test coverage and uniform look across inventories relies on the inventories calling
+    labels_to_table."""
+
+    class NodeInfoFactory(ModelFactory):
+        __model__ = NodeInfo
+
+    section_info = NodeInfoFactory.build()
+
+    class KubeletInfoFactory(ModelFactory):
+        __model__ = KubeletInfo
+
+    section_kubelet = KubeletInfoFactory.build()
+
+    mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_node.labels_to_table")
+    list(inventory_kube_node(section_info, section_kubelet))
+    mock.assert_called_once()

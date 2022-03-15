@@ -75,7 +75,7 @@ TEST(AgentController, ConfigApiDefaults) {
     EXPECT_FALSE(ac::IsRunController(cfg));
 }
 
-TEST(AgentController, CreateLegacyModeFile) {
+TEST(AgentController, CreateLegacyModeFileFlaky) {
     constexpr std::string_view marker_2_1 =
         "Check MK monitoring and management Service - 2.1, 64-bit";
     constexpr std::string_view marker_1_6_2_0 =

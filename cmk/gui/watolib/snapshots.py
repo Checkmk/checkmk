@@ -405,15 +405,14 @@ def _get_file_content(the_tarfile: Union[str, io.BytesIO], filename: str) -> byt
     if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
         with tarfile.open("r", fileobj=the_tarfile) as tar:
-            obj = tar.extractfile(filename)
+            if obj := tar.extractfile(filename):
+                return obj.read()
     else:
         with tarfile.open(the_tarfile, "r") as tar:
-            obj = tar.extractfile(filename)
+            if obj := tar.extractfile(filename):
+                return obj.read()
 
-    if obj is None:
-        raise MKGeneralException(_("Failed to extract %s") % filename)
-
-    return obj.read()
+    raise MKGeneralException(_("Failed to extract %s") % filename)
 
 
 def _get_default_backup_domains():

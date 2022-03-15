@@ -34,6 +34,7 @@ async fn async_collect_from_ip(
     stream
         .write_all(format!("{}", remote_ip).as_bytes())
         .await?;
+    stream.flush().await?;
     stream.read_to_end(&mut data).await?;
     stream.shutdown(std::net::Shutdown::Both)?;
     debug!("delivered {}", data.len());

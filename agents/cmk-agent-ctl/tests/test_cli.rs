@@ -7,7 +7,6 @@
 #![allow(dead_code)]
 mod common;
 
-#[cfg(unix)]
 use anyhow::Result as AnyhowResult;
 use assert_cmd::{prelude::OutputAssertExt, Command};
 use predicates::prelude::predicate;
@@ -23,7 +22,6 @@ fn test_help() {
         .stdout(predicate::str::contains("Checkmk agent controller"));
 }
 
-#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump() -> AnyhowResult<()> {
     let test_dir = tempfile::Builder::new()
@@ -34,22 +32,35 @@ async fn test_dump() -> AnyhowResult<()> {
     std::fs::create_dir(test_path.join("run"))?;
 
     let test_agent_output = "some test agent output";
-    let socket_addr = test_path.join("run/check-mk-agent.socket");
-    let agent_stream_thread = tokio::spawn(tokio::time::timeout(
-        tokio::time::Duration::from_secs(1),
-        common::unix::agent_call(socket_addr, test_agent_output, Some("\n")),
+    #[cfg(unix)]
+    let agent_socket_address = test_path
+        .join("run/check-mk-agent.socket")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    #[cfg(unix)]
+    let expected_remote_address = Some("\n");
+    #[cfg(windows)]
+    let agent_socket_address = "localhost:1997".to_string();
+    #[cfg(windows)]
+    let expected_remote_address: Option<&str> = None;
+    let agent_stream_thread = tokio::spawn(common::agent::one_time_agent_response(
+        agent_socket_address,
+        test_agent_output,
+        expected_remote_address,
     ));
 
     let mut cmd = Command::cargo_bin(BINARY)?;
 
     cmd.env("DEBUG_HOME_DIR", test_path.to_str().unwrap())
+        .env("DEBUG_WINDOWS_INTERNAL_PORT", "1997")
         .arg("dump")
         .arg("-vv")
         .unwrap()
         .assert()
         .stdout(predicate::str::contains(test_agent_output));
 
-    agent_stream_thread.await???;
+    agent_stream_thread.await??;
     test_dir.close()?;
 
     Ok(())

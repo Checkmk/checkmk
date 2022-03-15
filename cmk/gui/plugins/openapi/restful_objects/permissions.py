@@ -52,7 +52,7 @@ class FakeUser:
 
 class BasePerm(abc.ABC):
     @abc.abstractmethod
-    def may(self, user: UserLike) -> bool:
+    def has_permission(self, user: UserLike) -> bool:
         """Verify that this user fulfils the requirements."""
         raise NotImplementedError()
 
@@ -62,7 +62,7 @@ class BasePerm(abc.ABC):
 
     def validate(self, permissions: Sequence[str]) -> bool:
         """Verify that a user with these permissions fulfills the requirements."""
-        return self.may(FakeUser(permissions))
+        return self.has_permission(FakeUser(permissions))
 
     def __contains__(self, item):
         return item in list(self.iter_perms())
@@ -80,7 +80,7 @@ class Optional(BasePerm):
     def __repr__(self):
         return f"{self.perm}?"
 
-    def may(self, user: UserLike) -> bool:
+    def has_permission(self, user: UserLike) -> bool:
         """Verify that the permission might be there or not.
 
         It's okay if we don't have the permission, so we accept it all the time."""
@@ -107,7 +107,7 @@ class NoPerm(BasePerm):
     This permission can never be true.
     """
 
-    def may(self, user: UserLike) -> bool:
+    def has_permission(self, user: UserLike) -> bool:
         """(Unsuccessfully) verify that the user fulfils the requirements.
 
         This method will never succeed in doing that though.
@@ -127,7 +127,7 @@ class Perm(BasePerm):
     def __repr__(self):
         return f"{{{self.name}}}"
 
-    def may(self, user: UserLike) -> bool:
+    def has_permission(self, user: UserLike) -> bool:
         """Verify if the user fulfils the requirements.
 
         This method asks the user object if it has said permission."""
@@ -152,16 +152,16 @@ class AllPerm(MultiPerm):
         ...     def has_permission(self, perm_name):
         ...         return perm_name in self.perms
 
-        >>> p.may(User(["wato.edit"]))
+        >>> p.has_permission(User(["wato.edit"]))
         False
 
-        >>> p.may(User(["wato.edit", "wato.users"]))
+        >>> p.has_permission(User(["wato.edit", "wato.users"]))
         True
 
-        >>> p.may(User(["wato.users"]))
+        >>> p.has_permission(User(["wato.users"]))
         False
 
-        >>> p.may(User(["wato.seeall"]))
+        >>> p.has_permission(User(["wato.seeall"]))
         True
 
         >>> "wato.seeall" in p
@@ -172,11 +172,11 @@ class AllPerm(MultiPerm):
 
     """
 
-    def may(self, user: UserLike) -> bool:
+    def has_permission(self, user: UserLike) -> bool:
         """Verify if the user fulfils the requirements.
 
         Is verified if all the child permissions are verified."""
-        return all(perm.may(user) for perm in self.perms)
+        return all(perm.has_permission(user) for perm in self.perms)
 
 
 class AnyPerm(MultiPerm):
@@ -194,22 +194,22 @@ class AnyPerm(MultiPerm):
         ...     def has_permission(self, perm_name):
         ...         return perm_name in self.perms
 
-        >>> p.may(User(["foo"]))
+        >>> p.has_permission(User(["foo"]))
         True
 
-        >>> p.may(User(["bar"]))
+        >>> p.has_permission(User(["bar"]))
         True
 
-        >>> p.may(User(["baz"]))
+        >>> p.has_permission(User(["baz"]))
         True
 
-        >>> p.may(User(["FizzBuzz!"]))
+        >>> p.has_permission(User(["FizzBuzz!"]))
         False
 
     """
 
-    def may(self, user: UserLike) -> bool:
+    def has_permission(self, user: UserLike) -> bool:
         """Verify if the user fulfils the requirements.
 
         Is verified if any one of the child permissions is verified."""
-        return any(perm.may(user) for perm in self.perms)
+        return any(perm.has_permission(user) for perm in self.perms)

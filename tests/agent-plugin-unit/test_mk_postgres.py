@@ -59,10 +59,10 @@ class TestNotImplementedOS:
 
     def test_not_implemented_os(self, mk_postgres):
         with pytest.raises(Exception) as e:
-            mk_postgres.get_default_path()
+            mk_postgres.helper_factory().get_default_path()
         assert "is not yet implemented" in str(e.value)
         with pytest.raises(Exception) as e:
-            mk_postgres.get_default_postgres_user()
+            mk_postgres.helper_factory().get_default_postgres_user()
         assert "is not yet implemented" in str(e.value)
 
 
@@ -77,19 +77,20 @@ class TestLinux:
         self,
         mk_postgres,
     ):
-        assert "/etc/check_mk" == mk_postgres.get_default_path()
+        assert "/etc/check_mk" == mk_postgres.helper_factory().get_default_path()
 
     def test_get_default_postgres_user(
         self,
         mk_postgres,
     ):
-        assert "postgres" == mk_postgres.get_default_postgres_user()
+        assert "postgres" == mk_postgres.helper_factory().get_default_postgres_user()
 
     def test_config_without_instance(
         self,
         mk_postgres,
     ):
-        dbuser, instances = mk_postgres.parse_postgres_cfg(VALID_CONFIG_WITHOUT_INSTANCE)
+        sep = mk_postgres.helper_factory().get_conf_sep()
+        dbuser, instances = mk_postgres.parse_postgres_cfg(VALID_CONFIG_WITHOUT_INSTANCE, sep)
         assert dbuser == "user_xy"
         assert len(instances) == 0
 
@@ -99,7 +100,8 @@ class TestLinux:
     ):
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_LINUX)
-        dbuser, instances = mk_postgres.parse_postgres_cfg(config)
+        sep = mk_postgres.helper_factory().get_conf_sep()
+        dbuser, instances = mk_postgres.parse_postgres_cfg(config, sep)
         assert dbuser == "user_yz"
         assert len(instances) == 1
         assert instances[0]["pg_port"] == "5432"
@@ -193,10 +195,13 @@ class TestWindows:
         )
 
     def test_get_default_path(self, mk_postgres):
-        assert "c:\\ProgramData\\checkmk\\agent\\config" == mk_postgres.get_default_path()
+        assert (
+            "c:\\ProgramData\\checkmk\\agent\\config"
+            == mk_postgres.helper_factory().get_default_path()
+        )
 
     def test_get_default_postgres_user(self, mk_postgres):
-        assert "postgres" == mk_postgres.get_default_postgres_user()
+        assert "postgres" == mk_postgres.helper_factory().get_default_postgres_user()
 
     def test_config_with_instance(
         self,
@@ -204,7 +209,8 @@ class TestWindows:
     ):
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_WINDOWS)
-        dbuser, instances = mk_postgres.parse_postgres_cfg(config)
+        sep = mk_postgres.helper_factory().get_conf_sep()
+        dbuser, instances = mk_postgres.parse_postgres_cfg(config, sep)
         assert len(instances) == 1
         assert dbuser == "user_yz"
         assert instances[0]["pg_port"] == "5432"

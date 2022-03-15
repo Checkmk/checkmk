@@ -11,6 +11,7 @@ which then has to be dumped into the checkmk.yaml file.
 """
 from __future__ import annotations
 
+import contextlib
 import functools
 import hashlib
 import http.client
@@ -395,6 +396,8 @@ class Endpoint:
 
         self.permissions_required = permissions_required
         self._used_permissions: Set[str] = set()
+        self.track_permissions = True
+
         self._expected_status_codes = self.additional_status_codes.copy()
 
         if content_type == "application/json":
@@ -445,6 +448,12 @@ class Endpoint:
                     "Unexpected custom status description. "
                     f"Status code {status_code} not expected for endpoint: {method.upper()} {path}"
                 )
+
+    @contextlib.contextmanager
+    def do_not_track_permissions(self) -> typing.Iterator[None]:
+        self.track_permissions = False
+        yield
+        self.track_permissions = True
 
     def remember_checked_permission(self, permission: str) -> None:
         """Remember that a permission has been required (used)

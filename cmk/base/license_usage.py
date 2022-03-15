@@ -128,6 +128,7 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         return None
 
     general_infos = cmk_version.get_general_version_infos()
+    extensions = _get_extensions()
     return LicenseUsageSample(
         version=cmk_version.omd_version(),
         edition=general_infos["edition"],
@@ -139,11 +140,11 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         num_services_excluded=services_counter.excluded,
         sample_time=int(time.time()),
         timezone=time.localtime().tm_zone,
-        extensions=_get_extensions(),
+        extension_ntop=extensions.ntop,
     )
 
 
-def _get_extensions():
+def _get_extensions() -> LicenseUsageExtensions:
     with store.locked(extensions_filepath):
         raw_extensions = store.load_bytes_from_file(
             extensions_filepath,

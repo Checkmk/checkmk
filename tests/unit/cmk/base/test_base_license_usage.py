@@ -29,9 +29,7 @@ _license_usage_sample_example = LicenseUsageSample(
     num_hosts_excluded=0,
     num_services=1000,
     num_services_excluded=0,
-    extensions=LicenseUsageExtensions(
-        ntop=False,
-    ),
+    extension_ntop=False,
 )
 
 
@@ -59,9 +57,7 @@ def test_update_history_de_serialize(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=500,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(
-                    ntop=False,
-                ),
+                extension_ntop=False,
             ),
         ],
     )
@@ -72,8 +68,7 @@ def test_update_history_de_serialize(monkeypatch):
     deserialized_history_dump = LicenseUsageHistoryDump.deserialize(serialized_history_dump)
     assert isinstance(deserialized_history_dump, LicenseUsageHistoryDump)
 
-    assert history_dump.VERSION == deserialized_history_dump.VERSION
-    assert deserialized_history_dump.VERSION == "1.1"
+    assert deserialized_history_dump.VERSION == "1.2"
 
     assert history_dump.history == deserialized_history_dump.history
     assert len(deserialized_history_dump.history) == 2
@@ -93,7 +88,7 @@ def test_update_history_de_serialize(monkeypatch):
         assert sample.timezone == ""
         assert sample.num_hosts == num_hosts
         assert sample.num_services == num_services
-        assert sample.extensions.ntop is False
+        assert sample.extension_ntop is False
 
 
 def test_update_history__create_or_update_history_dump_empty(monkeypatch):
@@ -117,7 +112,7 @@ def test_update_history__create_or_update_history_dump_empty(monkeypatch):
     assert sample.timezone == ""
     assert sample.num_hosts == 100
     assert sample.num_services == 1000
-    assert sample.extensions.ntop is False
+    assert sample.extension_ntop is False
 
 
 def test_update_history__create_or_update_history_dump(monkeypatch):
@@ -135,9 +130,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=30,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(
-                    ntop=False,
-                ),
+                extension_ntop=False,
             ),
             LicenseUsageSample(
                 version="",
@@ -150,9 +143,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=20,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(
-                    ntop=False,
-                ),
+                extension_ntop=False,
             ),
             LicenseUsageSample(
                 version="",
@@ -165,9 +156,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=10,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(
-                    ntop=False,
-                ),
+                extension_ntop=False,
             ),
         ],
     ).serialize()
@@ -179,7 +168,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
     )
 
     history_dump = license_usage._create_or_update_history_dump()
-    assert history_dump.VERSION == "1.1"
+    assert history_dump.VERSION == "1.2"
     assert len(history_dump.history) == 4
 
     for (sample_time, num_hosts, num_services), sample in zip(
@@ -199,7 +188,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
         assert sample.timezone == ""
         assert sample.num_hosts == num_hosts
         assert sample.num_services == num_services
-        assert sample.extensions.ntop is False
+        assert sample.extension_ntop is False
 
 
 def test_update_history__may_update_successful(monkeypatch):

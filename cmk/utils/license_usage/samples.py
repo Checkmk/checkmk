@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import json
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Mapping
 
 from cmk.utils.license_usage.export import (
     ABCMonthlyServiceAverages,
@@ -16,7 +18,7 @@ from cmk.utils.license_usage.export import (
     RawSubscriptionDetails,
 )
 
-LicenseUsageHistoryDumpVersion = "1.1"
+LicenseUsageHistoryDumpVersion = "1.2"
 
 
 @dataclass
@@ -27,9 +29,23 @@ class LicenseUsageExtensions:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_extensions: bytes) -> "LicenseUsageExtensions":
-        extensions = _migrate_extensions(_deserialize(raw_extensions))
-        return cls(**extensions)
+    def deserialize(cls, raw_extensions: bytes) -> LicenseUsageExtensions:
+        extensions = _deserialize(raw_extensions)
+        return cls(ntop=extensions.get("ntop", False))
+
+    @classmethod
+    def parse(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageExtensions:
+        # Extensions are created after execute_activate_changes and may be missing when downloading
+        # or submitting license usage reports. This means that the extensions are not really
+        # dependent on the report version:
+        # Old: {..., "extensions": {"ntop": True/False}, ...}
+        # New: {..., "extension_ntop": True/False, ...}
+        parsed_extensions = {
+            ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
+            for key in ["ntop"]
+            for ext_key in ("extension_%s" % key,)
+        }
+        return cls(ntop=parsed_extensions["extension_ntop"])
 
 
 @dataclass
@@ -44,7 +60,70 @@ class LicenseUsageSample:
     num_hosts_excluded: int
     num_services: int
     num_services_excluded: int
-    extensions: LicenseUsageExtensions
+    extension_ntop: bool
+
+    @classmethod
+    def get_parser(cls, report_version: str) -> Callable[[Mapping[str, Any]], LicenseUsageSample]:
+        if report_version == "1.0":
+            parser = cls._parse_sample_v1_0
+
+        elif report_version in ["1.1", "1.2"]:
+            parser = cls._parse_sample_v1_1
+
+        else:
+            raise NotImplementedError(f"Unknown report version {report_version}")
+
+        return lambda raw_sample: cls._parse(parser(raw_sample), raw_sample)
+
+    @staticmethod
+    def _parse_sample_v1_0(sample: Mapping[str, Any]) -> Mapping[str, Any]:
+        return {
+            "version": sample["version"],
+            "edition": sample["edition"],
+            "platform": sample["platform"],
+            "is_cma": sample["is_cma"],
+            "sample_time": sample["sample_time"],
+            "timezone": sample["timezone"],
+            "num_hosts": sample["num_hosts"],
+            "num_services": sample["num_services"],
+            "num_hosts_excluded": 0,
+            "num_services_excluded": 0,
+        }
+
+    @staticmethod
+    def _parse_sample_v1_1(sample: Mapping[str, Any]) -> Mapping[str, Any]:
+        return {
+            "version": sample["version"],
+            "edition": sample["edition"],
+            "platform": sample["platform"],
+            "is_cma": sample["is_cma"],
+            "sample_time": sample["sample_time"],
+            "timezone": sample["timezone"],
+            "num_hosts": sample["num_hosts"],
+            "num_services": sample["num_services"],
+            "num_hosts_excluded": sample["num_hosts_excluded"],
+            "num_services_excluded": sample["num_services_excluded"],
+        }
+
+    @classmethod
+    def _parse(
+        cls, parsed_sample: Mapping[str, Any], raw_sample: Mapping[str, Any]
+    ) -> LicenseUsageSample:
+        extensions = LicenseUsageExtensions.parse(raw_sample)
+        return cls(
+            version=parsed_sample["version"],
+            edition=parsed_sample["edition"],
+            # Restrict platform string to 50 chars due to the restriction of the license DB field.
+            platform=parsed_sample["platform"][:50],
+            is_cma=parsed_sample["is_cma"],
+            sample_time=parsed_sample["sample_time"],
+            timezone=parsed_sample["timezone"],
+            num_hosts=parsed_sample["num_hosts"],
+            num_hosts_excluded=parsed_sample["num_hosts_excluded"],
+            num_services=parsed_sample["num_services"],
+            num_services_excluded=parsed_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
 
 
 @dataclass
@@ -59,13 +138,18 @@ class LicenseUsageHistoryDump:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_history_dump: bytes) -> "LicenseUsageHistoryDump":
-        history_dump = _deserialize(raw_history_dump)
+    def deserialize(cls, raw_dump: bytes) -> LicenseUsageHistoryDump:
+        dump = _deserialize(raw_dump)
+        if not dump:
+            return cls(
+                VERSION=LicenseUsageHistoryDumpVersion,
+                history=[],
+            )
+
+        parser = LicenseUsageSample.get_parser(dump["VERSION"])
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
-            history=[
-                _migrate_sample(history_dump["VERSION"], s) for s in history_dump.get("history", [])
-            ],
+            history=[parser(s) for s in dump.get("history", [])],
         )
 
 
@@ -74,33 +158,13 @@ def _serialize(dump: Any) -> bytes:
     return rot47(dump_str).encode("utf-8")
 
 
-def _deserialize(raw_dump: bytes) -> Dict:
+def _deserialize(raw_dump: bytes) -> Mapping[str, Any]:
     dump_str = rot47(raw_dump.decode("utf-8"))
 
     try:
         return json.loads(dump_str)
     except json.decoder.JSONDecodeError:
         return {}
-
-
-def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
-    if prev_dump_version == "1.0":
-        sample.setdefault("num_hosts_excluded", 0)
-        sample.setdefault("num_services_excluded", 0)
-
-    # Restrict platform string to 50 chars due to the restriction of the license DB field.
-    sample["platform"] = sample["platform"][:50]
-
-    migrated_extensions = _migrate_extensions(sample.get("extensions", {}))
-    sample["extensions"] = LicenseUsageExtensions(**migrated_extensions)
-    return LicenseUsageSample(**sample)
-
-
-def _migrate_extensions(extensions: Dict) -> Dict:
-    # May be missing independent of dump version:
-    # It's only after execute_activate_changes created the extensions dump then it's available.
-    extensions.setdefault("ntop", False)
-    return extensions
 
 
 def rot47(input_str: str) -> str:

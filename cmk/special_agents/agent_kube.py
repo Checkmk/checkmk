@@ -465,25 +465,13 @@ class Deployment(PodOwner):
         return [pod for pod in self._pods if pod.phase == phase]
 
     def info(self, cluster_name: str) -> section.DeploymentInfo:
-        container_images = set()
-        container_names = []
-        for pod in self._pods:
-            if containers := pod.container_statuses():
-                container_images.update(
-                    {container.image for container in containers.containers.values()}
-                )
-                container_names.extend(
-                    [container.name for container in containers.containers.values()]
-                )
-
         return section.DeploymentInfo(
             name=self.name(),
             namespace=self.metadata.namespace,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels if self.metadata.labels else {},
             selector=self.spec.selector,
-            images=list(container_images),
-            containers=container_names,
+            containers=_thin_containers(self.pods()),
             cluster=cluster_name,
         )
 
@@ -506,6 +494,18 @@ class Deployment(PodOwner):
 
     def strategy(self) -> section.DeploymentStrategy:
         return section.DeploymentStrategy(strategy=self.spec.strategy)
+
+
+def _thin_containers(pods: Collection[Pod]) -> section.ThinContainers:
+    container_images = set()
+    container_names = []
+    for pod in pods:
+        if containers := pod.container_statuses():
+            container_images.update(
+                {container.image for container in containers.containers.values()}
+            )
+            container_names.extend([container.name for container in containers.containers.values()])
+    return section.ThinContainers(images=container_images, names=container_names)
 
 
 class DaemonSet(PodOwner):

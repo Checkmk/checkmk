@@ -240,6 +240,19 @@ class ContainerSpecs(BaseModel):
     containers: Mapping[ContainerName, ContainerSpec]
 
 
+class ThinContainers(BaseModel):
+    """ThinContainers reduces agent ouput duplication.
+
+    Container information is often times duplicated across different piggyback hosts. In order
+    to reduce the amount of duplication, we maintain this data structure, which is based on a smaller
+    subset of fields. This structure can then be used with hosts such as Deployment, which only
+    require a small amount of container-related information.
+    """
+
+    images: frozenset[str]
+    names: Sequence[str]
+
+
 class ReadyCount(BaseModel):
     ready: int = 0
     not_ready: int = 0
@@ -318,8 +331,7 @@ class DeploymentInfo(BaseModel):
     labels: api.Labels
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
-    images: Sequence[str]
-    containers: Sequence[str]
+    containers: ThinContainers
     cluster: str
 
 

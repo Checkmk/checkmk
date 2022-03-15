@@ -379,8 +379,8 @@ class LoggedInUser:
                     f"Required permissions not declared for this endpoint.\n"
                     f"Endpoint: {endpoint}\n"
                     f"Permission: {pname}\n"
-                    f"Used permission: {endpoint._used_permissions}\n",
-                    f"Declared: {endpoint.permissions_required}\n",
+                    f"Used permission: {endpoint._used_permissions}\n"
+                    f"Declared: {endpoint.permissions_required}\n"
                 )
 
         return they_may

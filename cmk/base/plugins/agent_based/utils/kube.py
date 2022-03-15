@@ -451,6 +451,32 @@ class ContainerStatus(BaseModel):
     restart_count: int
 
 
+ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
+
+
+class ContainerSpec(BaseModel):
+    image_pull_policy: ImagePullPolicy
+
+
+class ContainerSpecs(BaseModel):
+    """section: kube_pod_container_specs_v1"""
+
+    containers: Mapping[ContainerName, ContainerSpec]
+
+
+class ThinContainers(BaseModel):
+    """ThinContainers reduces agent ouput duplication.
+
+    Container information is often times duplicated across different piggyback hosts. In order
+    to reduce the amount of duplication, we maintain this data structure, which is based on a smaller
+    subset of fields. This structure can then be used with hosts such as Deployment, which only
+    require a small amount of container-related information.
+    """
+
+    images: frozenset[str]
+    names: Sequence[str]
+
+
 class MatchExpression(TypedDict):
     key: LabelName
     operator: Literal["In", "NotIn", "Exists", "DoesNotExist"]
@@ -474,8 +500,7 @@ class DeploymentInfo(BaseModel):
     labels: Labels
     selector: Selector
     creation_timestamp: CreationTimestamp
-    images: Sequence[str]
-    containers: Sequence[str]
+    containers: ThinContainers
     cluster: str
 
 
@@ -550,16 +575,3 @@ class StatefulSetStrategy(BaseModel):
     """section: kube_statefulset_strategy_v1"""
 
     strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
-
-
-ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
-
-
-class ContainerSpec(BaseModel):
-    image_pull_policy: ImagePullPolicy
-
-
-class ContainerSpecs(BaseModel):
-    """section: kube_pod_container_specs_v1"""
-
-    containers: Mapping[ContainerName, ContainerSpec]

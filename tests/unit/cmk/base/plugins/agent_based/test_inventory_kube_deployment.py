@@ -15,6 +15,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
     DeploymentStrategy,
     RollingUpdate,
     Selector,
+    ThinContainers,
 )
 
 from .utils_inventory import sort_inventory_result
@@ -30,8 +31,7 @@ from .utils_inventory import sort_inventory_result
                 labels={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
-                images=["i/name:0.5"],
-                containers=["name"],
+                containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
             ),
             DeploymentStrategy(

@@ -8,13 +8,13 @@
 from typing import Iterator, List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.utils.k8s import Labels, MatchExpressions, MatchLabels
+from cmk.base.plugins.agent_based.utils.kube import Labels, MatchExpressions, MatchLabels
 
 
 def match_labels_to_str(match_labels: MatchLabels) -> str:
     """Creates expression, which can be parsed by kubectl
 
-    >>> from cmk.base.plugins.agent_based.utils.k8s import LabelValue, LabelName
+    >>> from cmk.base.plugins.agent_based.utils.kube import LabelValue, LabelName
     >>> match_labels_to_str(
     ...    {
     ...        LabelName("app"): LabelValue("agent"),
@@ -31,7 +31,7 @@ def match_labels_to_str(match_labels: MatchLabels) -> str:
 def match_expressions_to_str(match_expressions: MatchExpressions) -> str:
     """Creates expression, which can be parsed by kubectl
 
-    >>> from cmk.base.plugins.agent_based.utils.k8s import LabelValue, LabelName
+    >>> from cmk.base.plugins.agent_based.utils.kube import LabelValue, LabelName
     >>> match_expressions_to_str(
     ...         [
     ...             {
@@ -85,7 +85,7 @@ def labels_to_table(labels: Labels) -> Iterator[TableRow]:
 
         yield from labels_to_table(section_info.labels)
 
-    >>> from cmk.base.plugins.agent_based.utils.k8s import LabelName, Label
+    >>> from cmk.base.plugins.agent_based.utils.kube import LabelName, Label
     >>> list(labels_to_table({LabelName("app"): Label(name="app", value="checkmk-cluster-agent")}))
     [TableRow(path=['software', 'applications', 'kube', 'labels'], key_columns={'label_name': 'app'}, inventory_columns={'label_value': 'checkmk-cluster-agent'}, status_columns={})]
     """

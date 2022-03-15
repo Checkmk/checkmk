@@ -18,10 +18,9 @@ from cmk.base.plugins.agent_based.kube_pod_resources import (
     check_kube_pod_resources,
     Params,
     PodPhaseTimes,
-    PodSequence,
     VSResultPercent,
 )
-from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods, PodResources
+from cmk.base.plugins.agent_based.utils.kube import AllocatablePods, PodResources, PodSequence
 
 
 @pytest.fixture(name="get_value_store")

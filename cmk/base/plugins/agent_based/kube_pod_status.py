@@ -18,14 +18,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils.k8s import (
+from cmk.base.plugins.agent_based.utils.kube import (
     ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
+    PodLifeCycle,
+    VSResultAge,
 )
-from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle, VSResultAge
 
 DESIRED_PHASE = [
     "Running",

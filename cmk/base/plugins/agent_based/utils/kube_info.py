@@ -9,7 +9,7 @@ from typing import Any, Callable, Literal, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.utils.k8s import ControlChain, CreationTimestamp
+from cmk.base.plugins.agent_based.utils.kube import ControlChain, CreationTimestamp
 
 
 def result_simple(display_name: str, notice_only=False):
@@ -30,7 +30,7 @@ def result_from_age(value: CreationTimestamp) -> Result:
 
 def result_from_control_chain(control_chain: ControlChain) -> Result:
     """
-    >>> from cmk.base.plugins.agent_based.utils.k8s import ControllerType, Controller
+    >>> from cmk.base.plugins.agent_based.utils.kube import ControllerType, Controller
     >>> result_from_control_chain([])
     Result(state=<State.OK: 0>, summary='Controlled by: None')
     >>> result_from_control_chain([Controller(type_=ControllerType.daemon_set, name="kube-proxy")])

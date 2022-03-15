@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Optional
 
-from cmk.base.plugins.agent_based.utils.k8s import PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
     check_resource,
@@ -19,6 +18,7 @@ from cmk.base.plugins.agent_based.utils.kube_resources import (
 
 from .agent_based_api.v1 import register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.kube import PerformanceUsage
 
 register.agent_section(
     name="kube_memory_resources_v1",

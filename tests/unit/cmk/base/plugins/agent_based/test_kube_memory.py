@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.kube_memory import (
     Params,
     Resources,
 )
-from cmk.base.plugins.agent_based.utils.k8s import Memory, PerformanceUsage
+from cmk.base.plugins.agent_based.utils.kube import Memory, PerformanceUsage
 
 from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valuespec_memory
 

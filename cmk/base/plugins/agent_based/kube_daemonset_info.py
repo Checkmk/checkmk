@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.k8s import DaemonSetInfo
+from cmk.base.plugins.agent_based.utils.kube import DaemonSetInfo
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 

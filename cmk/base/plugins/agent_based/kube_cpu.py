@@ -9,7 +9,7 @@ from typing import Any, MutableMapping, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils.k8s import PerformanceUsage
+from cmk.base.plugins.agent_based.utils.kube import PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
     check_resource,

@@ -19,8 +19,7 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import DeploymentStrategy, Replicas
-from .utils.kube import VSResultAge
+from .utils.kube import DeploymentStrategy, Replicas, VSResultAge
 from .utils.kube_strategy import strategy_text
 
 

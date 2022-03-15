@@ -9,8 +9,9 @@ from typing import Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_node_info import check_kube_node_info, NodeInfo
+from cmk.base.plugins.agent_based.kube_node_info import check_kube_node_info
 from cmk.base.plugins.agent_based.utils import kube_info
+from cmk.base.plugins.agent_based.utils.kube import NodeInfo
 
 
 @pytest.fixture(name="time")

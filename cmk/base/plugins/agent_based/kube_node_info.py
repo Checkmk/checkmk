@@ -13,8 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.k8s import NodeInfo
-from cmk.base.plugins.agent_based.utils.kube import kube_labels_to_cmk_labels
+from cmk.base.plugins.agent_based.utils.kube import kube_labels_to_cmk_labels, NodeInfo
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 

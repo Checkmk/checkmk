@@ -11,14 +11,14 @@ import pytest
 from cmk.base.plugins.agent_based import kube_pod_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_pod_status import check_kube_pod_status, DEFAULT_PARAMS
-from cmk.base.plugins.agent_based.utils.k8s import (
+from cmk.base.plugins.agent_based.utils.kube import (
     ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
+    PodLifeCycle,
 )
-from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle
 
 from cmk.gui.plugins.wato.check_parameters import kube_pod_status as wato_kube_pod_status
 

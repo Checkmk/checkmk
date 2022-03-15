@@ -22,6 +22,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes_object:endpoint",
     "cmk/kubernetes:yes",
     "cmk/kubernetes/deployment",
+    "cmk/kubernetes/daemonset",
     "cmk/kubernetes/namespace",
     "cmk/kubernetes/node",
     "cmk/kubernetes/object",

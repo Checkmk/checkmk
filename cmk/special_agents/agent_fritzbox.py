@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# This agent uses UPNP API calls to the Fritz!Box to gather information
+# This agent uses UPNP API calls to the FRITZ!Box to gather information
 # about connection configuration and status.
 
 # UPNP API CALLS THAT HAVE BEEN PROVEN WORKING
@@ -25,7 +25,7 @@
 #
 # http://fritz.box:49000/igddslSCPD.xml
 # get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
-"""Checkmk special agent Fritz!Box"""
+"""Checkmk special agent FRITZ!Box"""
 
 import argparse
 import json
@@ -94,7 +94,7 @@ def parse_arguments(argv):
     parser.add_argument(
         "host_address",
         metavar="HOST",
-        help="host name or IP address of your Fritz!Box",
+        help="host name or IP address of your FRITZ!Box",
     )
 
     return parser.parse_args(argv)
@@ -214,7 +214,7 @@ def main(sys_argv=None):
         for key, value in attrs.items():
             sys.stdout.write(f"{key} {value}\n")
 
-    labels = {"cmk/os_family": "Fritz!OS"}
+    labels = {"cmk/os_family": "FRITZ!OS"}
     sys.stdout.write("<<<labels:sep(0)>>>\n")
     sys.stdout.write(f"{json.dumps(labels)}\n")
 

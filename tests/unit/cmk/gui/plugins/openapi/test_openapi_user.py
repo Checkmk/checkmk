@@ -929,6 +929,7 @@ def test_show_all_users_with_no_email(aut_user_auth_wsgi_app: WebTestAppForCMK, 
     assert all(("contact_options" not in user["extensions"] for user in resp.json["value"]))
 
 
+@managedtest
 def test_user_enforce_password_change_option(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     """Test enforce password change option for create and update endpoints"""
     monkeypatch.setattr(

@@ -49,14 +49,6 @@ class OSNotImplementedError(NotImplementedError):
         return "The OS type(%s) is not yet implemented." % platform.system()
 
 
-if IS_LINUX:
-    import resource
-elif IS_WINDOWS:
-    import time
-else:
-    raise OSNotImplementedError
-
-
 # for compatibility with python 2.6
 def subprocess_check_output(args):
     return subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
@@ -496,9 +488,9 @@ class PostgresWin(PostgresBase):
         cmd = "SELECT version() AS v"
 
         # TODO: Verify this time measurement
-        start_time = time.time()
+        start_time = time.time()  # type: ignore[name-defined] # pylint: disable=undefined-variable
         out = self.run_sql_as_db_user(cmd)
-        diff = time.time() - start_time
+        diff = time.time() - start_time  # type: ignore[name-defined] # pylint: disable=undefined-variable
         return out, "%.3f" % diff
 
     def get_bloat(self, databases, numeric_version):
@@ -794,9 +786,9 @@ class PostgresLinux(PostgresBase):
     def get_version_and_connection_time(self):
         # type: () -> Tuple[str, str]
         cmd = "SELECT version() AS v"
-        usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
+        usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)  # type: ignore[name-defined] # pylint: disable=undefined-variable
         out = self.run_sql_as_db_user(cmd)
-        usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)
+        usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
         sys_time = usage_end.ru_stime - usage_start.ru_stime
         usr_time = usage_end.ru_utime - usage_start.ru_utime
@@ -951,12 +943,114 @@ def postgres_factory(db_user, pg_instance):
     raise OSNotImplementedError
 
 
+def helper_factory():
+    # type: () -> Helpers
+    if IS_LINUX:
+        return LinuxHelpers()
+    if IS_WINDOWS:
+        return WindowsHelpers()
+    raise OSNotImplementedError
+
+
+class Helpers:
+    """
+    Base class for x-plattform postgres helper functions
+
+    All abstract methods must have individual implementation depending on the OS type
+    which runs postgres.
+    All non-abstract methods are meant to work on all OS types which were subclassed.
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_default_postgres_user():
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_default_path():
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_conf_sep():
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_default_db_name():
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def import_os_specific_modules():
+        pass
+
+
+class WindowsHelpers(Helpers):
+    @staticmethod
+    def get_default_postgres_user():
+        return "postgres"
+
+    @staticmethod
+    def get_default_path():
+        return "c:\\ProgramData\\checkmk\\agent\\config"
+
+    @staticmethod
+    def get_conf_sep():
+        return "|"
+
+    @staticmethod
+    def get_default_db_name():
+        return "data"
+
+    @staticmethod
+    def import_os_specific_modules():
+        import time  # pylint: disable=unused-import
+
+
+class LinuxHelpers(Helpers):
+    @staticmethod
+    def get_default_postgres_user():
+        for user_id in ("pgsql", "postgres"):
+            try:
+                proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                    ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                proc.communicate()
+                if proc.returncode == 0:
+                    return user_id.rstrip()
+            except subprocess.CalledProcessError:
+                pass
+        LOGGER.warning('Could not determine postgres user, using "postgres" as default')
+        return "postgres"
+
+    @staticmethod
+    def get_default_path():
+        return "/etc/check_mk"
+
+    @staticmethod
+    def get_conf_sep():
+        return ":"
+
+    @staticmethod
+    def get_default_db_name():
+        return "main"
+
+    @staticmethod
+    def import_os_specific_modules():
+        import resource  # pylint: disable=unused-import
+
+
 def open_env_file(file_to_open):
     """Wrapper around built-in open to be able to monkeypatch through all python versions"""
     return open(file_to_open).readlines()
 
 
 def parse_env_file(env_file):
+    # type: (str) -> Tuple[str, str]
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     for line in open_env_file(env_file):
@@ -970,7 +1064,8 @@ def parse_env_file(env_file):
     return pg_database, pg_port
 
 
-def parse_postgres_cfg(postgres_cfg):
+def parse_postgres_cfg(postgres_cfg, config_separator):
+    # type: (List[str], str) -> Tuple[str, List[Dict[str, str]]]
     """
     Parser for Postgres config. x-Plattform compatible.
 
@@ -979,12 +1074,6 @@ def parse_postgres_cfg(postgres_cfg):
     INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
     INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
     """
-    if IS_LINUX:
-        conf_sep = ":"
-    elif IS_WINDOWS:
-        conf_sep = "|"
-    else:
-        raise OSNotImplementedError
     dbuser = None
     instances = []
     for line in postgres_cfg:
@@ -995,7 +1084,7 @@ def parse_postgres_cfg(postgres_cfg):
         if key == "DBUSER":
             dbuser = value.rstrip()
         if key == "INSTANCE":
-            env_file, pg_user, pg_passfile = value.split(conf_sep)
+            env_file, pg_user, pg_passfile = value.split(config_separator)
             env_file = env_file.strip()
             pg_database, pg_port = parse_env_file(env_file)
             instances.append(
@@ -1026,36 +1115,11 @@ def parse_arguments(argv):
     return options
 
 
-def get_default_postgres_user():
-    if IS_WINDOWS:
-        return "postgres"
-    if IS_LINUX:
-        for user_id in ("pgsql", "postgres"):
-            try:
-                proc = subprocess.Popen(  # pylint:disable=consider-using-with
-                    ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-                proc.communicate()
-                if proc.returncode == 0:
-                    return user_id.rstrip()
-            except subprocess.CalledProcessError:
-                pass
-        LOGGER.warning('Could not determine postgres user, using "postgres" as default')
-        return "postgres"
-    raise OSNotImplementedError
-
-
-def get_default_path():
-    if IS_LINUX:
-        return "/etc/check_mk"
-    if IS_WINDOWS:
-        return "c:\\ProgramData\\checkmk\\agent\\config"
-    raise OSNotImplementedError
-
-
 def main(argv=None):
     # type: (Optional[List]) -> int
 
+    helper = helper_factory()
+    helper.import_os_specific_modules()
     if argv is None:
         argv = sys.argv[1:]
 
@@ -1067,24 +1131,24 @@ def main(argv=None):
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(opt.verbose, logging.DEBUG),
     )
 
-    instances = []
+    instances = []  # type: List[Dict[str, str]]
     try:
         postgres_cfg_path = os.path.join(
-            os.getenv("MK_CONFDIR", get_default_path()), "postgres.cfg"
+            os.getenv("MK_CONFDIR", helper.get_default_path()), "postgres.cfg"
         )
         with open(postgres_cfg_path) as opened_file:
             postgres_cfg = opened_file.readlines()
-        dbuser, instances = parse_postgres_cfg(postgres_cfg)
+        dbuser, instances = parse_postgres_cfg(postgres_cfg, helper.get_conf_sep())
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging
-        dbuser = get_default_postgres_user()
+        dbuser = helper.get_default_postgres_user()
         LOGGER.debug("try_parse_config: exception: %s", str(e))
         LOGGER.debug('Using "%s" as default postgres user.', dbuser)
 
     if not instances:
         default_postgres_installation_parameters = {
             # default database name of postgres installation
-            "name": "main" if IS_LINUX else "data",
+            "name": helper.get_default_db_name(),
             "pg_user": "postgres",
             "pg_database": "postgres",
             "pg_port": "5432",

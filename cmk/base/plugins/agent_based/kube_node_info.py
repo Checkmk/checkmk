@@ -46,6 +46,11 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
         cmk/kubernetes/cluster:
             This label is set to the given Kubernetes cluster name.
 
+        cmk/kubernetes/node:
+            This label contains the name of the Kubernetes Node this checkmk
+            host is associated with. Checkmk hosts of the type Pod and Node
+            will be assigned this label.
+
         cmk/os_family:
             This label is set to the operating system as reported by the agent
             as "AgentOS" (such as "windows" or "linux").
@@ -53,6 +58,7 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
     """
     yield HostLabel("cmk/kubernetes/object", "node")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
+    yield HostLabel("cmk/kubernetes/node", section.name)
     yield HostLabel("cmk/os_family", section.operating_system)
     yield from kube_labels_to_cmk_labels(section.labels)
 

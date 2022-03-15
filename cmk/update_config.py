@@ -1568,7 +1568,7 @@ class UpdateConfig:
             full_config=True
         )
         cert_settings = global_config.setdefault(
-            "trusted_certificate_authorities", {"use_system_wide_cas": False, "trusted_cas": []}
+            "trusted_certificate_authorities", {"use_system_wide_cas": True, "trusted_cas": []}
         )
         # For remotes with config sync the settings would be overwritten by activate changes. To keep the config
         # consistent exclude remotes during the update.

@@ -143,6 +143,9 @@ def run(client: Client, services: Sequence[GCPService]) -> None:
 
 #######################################################################
 # Configuration of which metrics we collect for a service starts here #
+#                                                                     #
+# A list of all available metrics can be found here:                  #
+# https://cloud.google.com/monitoring/api/metrics_gcp                 #
 #######################################################################
 
 
@@ -338,7 +341,103 @@ RUN = GCPService(
     ],
 )
 
-SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN]}
+CLOUDSQL = GCPService(
+    name="cloud_sql",
+    metrics=[
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/uptime",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/up",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/network/received_bytes_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/network/sent_bytes_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/memory/utilization",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/cpu/utilization",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/state",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_NEXT_OLDER,
+                "cross_series_reducer": Reducer.REDUCE_NONE,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/disk/write_ops_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MEAN,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/disk/read_ops_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MEAN,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudsql.googleapis.com/database/disk/utilization",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.database_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+    ],
+)
+
+SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL]}
 
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:

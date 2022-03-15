@@ -10,6 +10,8 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.check_legacy_includes.network_fs import CHECK_DEFAULT_PARAMETERS
+
 from .checktestlib import (
     assertCheckResultsEqual,
     assertDiscoveryResultsEqual,
@@ -161,5 +163,7 @@ def test_nfsmounts(info, discovery_expected, check_expected):
     )
 
     for item, params, result_expected in check_expected:
-        result = CheckResult(check_nfs.run_check(item, params, parsed))
+        result = CheckResult(
+            check_nfs.run_check(item, {**CHECK_DEFAULT_PARAMETERS, **params}, parsed)
+        )
         assertCheckResultsEqual(result, CheckResult([result_expected]))

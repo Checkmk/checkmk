@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Final
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_parsed_item_data
@@ -15,8 +16,20 @@ from .df import df_check_filesystem_single
 # /with spaces Permission denied
 
 
+CHECK_DEFAULT_PARAMETERS: Final = {
+    # adapted from FILESYSTEM_DEFAULT_LEVELS:
+    "levels": (80.0, 90.0),
+    "magic_normsize": 20,
+    "levels_low": (50.0, 60.0),
+    "trend_range": 24,
+    "trend_perfdata": True,
+    "has_perfdata": False,
+    "show_levels": "onmagic",
+}
+
+
 def parse_network_fs_mounts(info):
-    parsed = {}
+    parsed: dict[str, dict[str, str]] = {}
     for line in info:
         if " ".join(line[-2:]) == "Permission denied":
             parsed.setdefault(" ".join(line[:-2]), {"state": "Permission denied"})
@@ -50,7 +63,6 @@ def _scaled_metric(new_name, metric, factor):
 
 @get_parsed_item_data
 def check_network_fs_mounts(item, params, attrs):
-    params = params or {}
 
     state = attrs["state"]
     if state == "Permission denied":
@@ -74,7 +86,7 @@ def check_network_fs_mounts(item, params, attrs):
 
     state, text, perf = df_check_filesystem_single(item, size_mb, free_mb, 0, None, None, params)
 
-    if not params.get("has_perfdata"):
+    if not params["has_perfdata"]:
         return state, text
 
     # fix metrics to new names and scales

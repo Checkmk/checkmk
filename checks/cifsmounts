@@ -15,6 +15,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.network_fs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.network_fs import CHECK_DEFAULT_PARAMETERS
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
@@ -26,6 +27,8 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
 
+factory_settings["cifsmounts_default_levels"] = CHECK_DEFAULT_PARAMETERS
+
 check_info["cifsmounts"] = {
     "parse_function": parse_network_fs_mounts,
     "inventory_function": discover(),
@@ -33,4 +36,5 @@ check_info["cifsmounts"] = {
     "service_description": "CIFS mount %s",
     "has_perfdata": True,
     "group": "network_fs",
+    "default_levels_variable": "cifsmounts_default_levels",
 }

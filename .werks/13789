@@ -1,0 +1,19 @@
+Title: KUBE: New workload resource: StatefulSets
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647374856
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces StatefulSets to the Kubernetes agent. Similar to the
+other Kubernetes objects, Checkmk creates a piggyback host for each
+StatefulSet. A StatefulSet host supports
+
+- Pod resources
+- Memory resources
+- CPU resources
+- Info
+- HW/SW inventory

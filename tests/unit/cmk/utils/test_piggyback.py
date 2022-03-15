@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import time
 from pathlib import Path
+from typing import Iterable
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+
+from tests.testlib import on_time
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -22,9 +24,11 @@ _TEST_HOST_NAME = HostName("test-host")
 
 _PAYLOAD = b"<<<check_mk>>>\nlala\n"
 
+_REF_TIME = 1640000000.0
+
 
 @pytest.fixture(autouse=True)
-def _fixture_setup(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+def _fixture_setup(tmp_path: Path, monkeypatch: MonkeyPatch) -> Iterable[None]:
     monkeypatch.setattr("cmk.utils.paths.piggyback_dir", tmp_path / "piggyback")
     monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir", tmp_path / "piggyback_source")
 
@@ -39,9 +43,12 @@ def _fixture_setup(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
     with source_status_file.open("wb") as f3:
         f3.write(b"")
-    source_stat = source_status_file.stat()
 
-    os.utime(str(source_file), (source_stat.st_atime, source_stat.st_mtime))
+    os.utime(str(source_file), (_REF_TIME, _REF_TIME))
+    os.utime(str(source_status_file), (_REF_TIME, _REF_TIME))
+
+    with on_time(_REF_TIME + 10.0, "UTC"):
+        yield
 
 
 def test_piggyback_default_time_settings() -> None:
@@ -162,7 +169,7 @@ def test_get_piggyback_raw_data_not_updated() -> None:
     # Fake age the test-host piggyback file
     os.utime(
         str(cmk.utils.paths.piggyback_dir / str(_TEST_HOST_NAME) / "source1"),
-        (time.time() - 10, time.time() - 10),
+        (_REF_TIME - 10, _REF_TIME - 10),
     )
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
@@ -345,7 +352,7 @@ def test_get_source_and_piggyback_hosts():
     # Fake age the test-host piggyback file
     os.utime(
         str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (time.time() - 10, time.time() - 10),
+        (_REF_TIME - 10, _REF_TIME - 10),
     )
 
     piggyback.store_piggyback_raw_data(
@@ -486,7 +493,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(
     # Fake age the test-host piggyback file
     os.utime(
         str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (time.time() - 10, time.time() - 10),
+        (_REF_TIME - 10, _REF_TIME - 10),
     )
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
@@ -522,7 +529,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity2(
     # Fake age the test-host piggyback file
     os.utime(
         str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (time.time() - 10, time.time() - 10),
+        (_REF_TIME - 10, _REF_TIME - 10),
     )
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)

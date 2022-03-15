@@ -1,0 +1,15 @@
+Title: Fix usage of system wide CAs after update
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1647359254
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+On update to 2.1.0b1, the configuration setting "Trusted certificate
+authorities for SSL" - "Use system wide CAs" was set to false, leading to
+different problems with intergrations that used TLS.
+

@@ -466,7 +466,8 @@ void ServiceProcessor::prepareAnswer(const std::string &ip_from,
 ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
     auto tp = openAnswer(ip_from);
     if (tp) {
-        XLOG::d.i("Id is [{}] for ip [{}]", AnswerIdToNumber(tp.value()), ip_from);
+        XLOG::d.i("Id is [{}] for ip [{}]", AnswerIdToNumber(tp.value()),
+                  ip_from);
         auto count_of_started = startProviders(tp.value(), ip_from);
 
         return getAnswer(count_of_started);
@@ -610,7 +611,6 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
 
-    ac::CreateLegacyModeFile();
     auto port = OptionallyStartAgentController(1000ms);
     ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
     OpenFirewall(port.has_value());

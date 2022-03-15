@@ -9,6 +9,7 @@
 #include "cfg.h"
 #include "test_tools.h"
 
+using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 namespace cma::details {
 extern bool g_is_service;
@@ -74,12 +75,40 @@ TEST(AgentController, ConfigApiDefaults) {
     EXPECT_FALSE(ac::IsRunController(cfg));
 }
 
-TEST(AgentController, EnableLegacyMode) {
+TEST(AgentController, CreateLegacyModeFile) {
+    constexpr std::string_view marker_2_1 =
+        "Check MK monitoring and management Service - 2.1, 64-bit";
+    constexpr std::string_view marker_1_6_2_0 =
+        "Check MK monitoring and management Service, 64-bit";
+
     auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    auto marker_file = temp_fs->data() / ac::kCmkAgentUnistall;
     ASSERT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
-    ac::CreateLegacyModeFile();
-    ASSERT_TRUE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+
+    // absent
+    EXPECT_FALSE(ac::CreateLegacyModeFile(""));
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+
+    // 2.1+
+    tst::CreateTextFile(temp_fs->data() / ac::kCmkAgentUnistall, marker_2_1);
+    EXPECT_FALSE(ac::CreateLegacyModeFile(marker_file));
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kCmkAgentUnistall));
+
+    // old file
+    tst::CreateTextFile(marker_file, marker_1_6_2_0);
+    auto timestamp = fs::last_write_time(marker_file);
+    fs::last_write_time(marker_file, timestamp - 11s);
+    EXPECT_FALSE(ac::CreateLegacyModeFile(marker_file));
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kCmkAgentUnistall));
+
+    // 1.6..2.0
+    tst::CreateTextFile(marker_file, marker_1_6_2_0);
+    EXPECT_TRUE(ac::CreateLegacyModeFile(marker_file));
+    EXPECT_TRUE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kCmkAgentUnistall));
 }
 
 TEST(AgentController, SimulationIntegration) {

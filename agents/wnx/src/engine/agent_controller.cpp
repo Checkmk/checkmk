@@ -188,11 +188,57 @@ bool KillAgentController(const fs::path &service) {
     return false;
 }
 
-/// Creates/Deletes file in agent-user dir to satisfy controller requirements
-void CreateLegacyModeFile() {
+namespace {
+void CreateLegacyFile() {
     auto file_name = LegacyPullFile();
     std::ofstream ofs(file_name.u8string());
     ofs << "Created by Windows agent";
+}
+}  // namespace
+
+/// Creates/Deletes file in agent-user dir to satisfy controller requirements
+/// marker is used to determine status of the OS
+/// marker will be deleted
+bool CreateLegacyModeFile(const std::filesystem::path &marker) {
+    constexpr auto uninstall_allowed_delay = 10s;
+    std::error_code ec;
+    if (!fs::exists(marker, ec)) {
+        XLOG::l.i("File '{}' absent, assuming fresh install, legacy OFF",
+                  marker);
+        return false;
+    }
+
+    auto timestamp = fs::last_write_time(marker, ec);
+    if (ec) {
+        XLOG::l.i("File '{}' is strange, assuming bad file, legacy ON", marker);
+        CreateLegacyFile();
+        return true;
+    }
+
+    auto ftime = std::chrono::clock_cast<std::chrono::system_clock>(timestamp);
+    auto diff = std::chrono::system_clock::now() - ftime;
+    ON_OUT_OF_SCOPE(fs::remove(marker, ec));
+    if (diff > uninstall_allowed_delay) {
+        XLOG::l.i("File '{}' too old, assuming fresh install, legacy OFF",
+                  marker);
+        return false;
+    }
+
+    auto data = tools::ReadFileInString(marker.wstring().c_str());
+    if (!data.has_value()) {
+        XLOG::l.i("File '{}' is bad, assuming fresh install, legacy ON",
+                  marker);
+        return false;
+    }
+
+    if ((*data).starts_with(kCmkAgentMarkerNew)) {
+        XLOG::l.i("File '{}' from 2.1+, legacy OFF", marker);
+        return false;
+    }
+
+    CreateLegacyFile();
+    XLOG::l.i("File '{}' from 2.0 or earlier, legacy ON", marker);
+    return true;
 }
 
 }  // namespace cma::ac

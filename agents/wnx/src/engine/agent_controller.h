@@ -19,6 +19,9 @@ namespace cma::ac {
 
 // Should be synchronized with Rust code of controller
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
+constexpr std::string_view kCmkAgentUnistall{"cmk_agent_uninstall.txt"};
+constexpr std::string_view kCmkAgentMarkerNew{
+    "Check MK monitoring and management Service - "};
 constexpr std::string_view kCmdLineAsDaemon{"daemon"};
 constexpr std::string_view kCmdLinePort{"-P"};
 constexpr std::string_view kCmdLineAllowedIp{"-A"};
@@ -37,7 +40,7 @@ std::string DetermineAgentCtlVersion();
 std::string DetermineAgentCtlStatus();
 bool IsRunController(const YAML::Node &node);
 bool IsInLegacyMode();
-void CreateLegacyModeFile();
+bool CreateLegacyModeFile(const std::filesystem::path &marker);
 }  // namespace cma::ac
 
 #endif  // agent_controller_h__

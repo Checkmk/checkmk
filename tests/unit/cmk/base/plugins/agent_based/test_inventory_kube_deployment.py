@@ -7,6 +7,7 @@
 from typing import Any, Sequence
 
 import pytest
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_deployment import inventory_kube_deployment
@@ -65,3 +66,23 @@ def test_inventory_kube_deployment(
     assert sort_inventory_result(
         inventory_kube_deployment(section_info, section_strategy)
     ) == sort_inventory_result(expected_check_result)
+
+
+def test_inventory_kube_deployment_calls_labels_to_table(mocker):
+    """Test coverage and uniform look across inventories relies on the inventories calling
+    labels_to_table."""
+
+    class DeploymentInfoFactory(ModelFactory):
+        __model__ = DeploymentInfo
+        selector = Selector(match_labels={}, match_expressions=[])
+
+    section_info = DeploymentInfoFactory.build()
+
+    class DeploymentStrategyFactory(ModelFactory):
+        __model__ = DeploymentStrategy
+
+    section_strategy = DeploymentStrategyFactory.build()
+
+    mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_deployment.labels_to_table")
+    list(inventory_kube_deployment(section_info, section_strategy))
+    mock.assert_called_once()

@@ -7,6 +7,7 @@
 from typing import Optional, Sequence, Union
 
 import pytest
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
@@ -261,3 +262,23 @@ def test_container_to_table(
             container_statuses,
         )
     )
+
+
+def test_inventory_kube_pod_calls_labels_to_table(mocker):
+    """Test coverage and uniform look across inventories relies on the inventories calling
+    labels_to_table."""
+
+    class PodInfoFactory(ModelFactory):
+        __model__ = PodInfo
+
+    section_info = PodInfoFactory.build()
+
+    class ContainerSpecsFactory(ModelFactory):
+        __model__ = ContainerSpecs
+
+    section_init_specs = ContainerSpecsFactory.build()
+    section_specs = ContainerSpecsFactory.build()
+
+    mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_pod.labels_to_table")
+    list(inventory_kube_pod(section_info, None, None, section_init_specs, section_specs))
+    mock.assert_called_once()

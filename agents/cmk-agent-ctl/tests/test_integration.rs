@@ -115,7 +115,89 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     assert!(tcp_stream_3.read_exact(&mut id_buf).is_ok());
     assert!(tcp_stream_4.read_exact(&mut id_buf).is_err());
 
-    // Kill threads
+    // Done, kill threads
+    agent_stream_thread.abort();
+    assert!(agent_stream_thread.await.unwrap_err().is_cancelled());
+    pull_thread.abort();
+    assert!(pull_thread.await.unwrap_err().is_cancelled());
+
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_legacy() -> AnyhowResult<()> {
+    // Setup test data
+    let test_dir = tempfile::Builder::new()
+        .prefix("cmk_agent_ctl_test_pull_legacy")
+        .tempdir()
+        .unwrap();
+    let test_path = test_dir.path();
+    std::env::set_var("DEBUG_HOME_DIR", test_path.to_str().unwrap());
+    std::fs::create_dir(test_path.join("run"))?;
+    let test_port = "9998";
+    let test_agent_output = "some test agent output";
+    let (_uuid, pull_config, _certs) = common::testing_pull_setup(
+        test_path,
+        test_port,
+        test_path.join("run/check-mk-agent.socket").into(),
+    );
+    pull_config.registry.save()?;
+
+    // Uncomment for debugging.
+    // common::init_logging(&test_path.join("log"))?;
+
+    // Provide agent stream for the pull thread.
+    let agent_socket_path = test_path.join("run/check-mk-agent.socket");
+    let unix_socket = tokio::net::UnixListener::bind(agent_socket_path).unwrap();
+    let agent_stream_thread =
+        tokio::spawn(common::unix::agent_loop(unix_socket, test_agent_output));
+
+    // Setup the pull thread that we intend to test.
+    let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
+    // Give it some time to provide the TCP socket.
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    // Wait for pending actions of other threads.
+    tokio::task::yield_now().await;
+
+    // Try to read plain data from TLS controller.
+    // Connection will timeout after 1 sec, only sending the 16.
+    let mut message_buf: Vec<u8> = vec![];
+    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    tcp_stream.read_to_end(&mut message_buf)?;
+    assert_eq!(message_buf, b"16");
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    tokio::task::yield_now().await;
+
+    // Create allow_legacy_pull file, but still be registered.
+    // Connection will timeout after 1 sec, only sending the 16.
+    let mut message_buf: Vec<u8> = vec![];
+    std::fs::File::create(test_path.join("allow_legacy_pull"))?;
+    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    tcp_stream.read_to_end(&mut message_buf)?;
+    assert_eq!(message_buf, b"16");
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    tokio::task::yield_now().await;
+
+    // Delete registry. Now we can finally receive our output in plain text.
+    let mut message_buf: Vec<u8> = vec![];
+    std::fs::remove_file(test_path.join("registered_connections.json"))?;
+    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    tcp_stream.read_to_end(&mut message_buf)?;
+    assert_eq!(message_buf, test_agent_output.as_bytes());
+
+    // Disallow legacy pull. First successing connection will be dropped, thus the response being empty.
+    // The TCP socket will close afterwards, leading to a refused connection on connect().
+    let mut message_buf: Vec<u8> = vec![];
+    std::fs::remove_file(test_path.join("allow_legacy_pull"))?;
+    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    tcp_stream.read_to_end(&mut message_buf)?;
+    assert_eq!(message_buf, b"");
+    assert!(std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port)).unwrap_err().to_string().contains("refused"));
+
+    // Done, kill threads
     agent_stream_thread.abort();
     assert!(agent_stream_thread.await.unwrap_err().is_cancelled());
     pull_thread.abort();

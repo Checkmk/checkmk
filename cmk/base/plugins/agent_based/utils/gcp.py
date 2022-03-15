@@ -51,13 +51,11 @@ class AssetSection:
 
 
 def parse_gcp(string_table: StringTable, label_key: str) -> Section:
-    rows = [GCPResult.deserialize(row[0]) for row in string_table[1:]]
-    raw_items = json.loads(string_table[0][0])
+    rows = [GCPResult.deserialize(row[0]) for row in string_table]
+    items = {row.ts.resource.labels[label_key] for row in rows}
     return {
-        item["name"]: SectionItem(
-            [r for r in rows if r.ts.resource.labels[label_key] == item["name"]]
-        )
-        for item in raw_items
+        item: SectionItem([r for r in rows if r.ts.resource.labels[label_key] == item])
+        for item in items
     }
 
 

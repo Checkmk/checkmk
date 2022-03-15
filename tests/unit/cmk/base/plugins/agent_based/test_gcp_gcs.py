@@ -22,9 +22,6 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 SECTION_TABLE = [
     [
-        '[{"name":"backup-home-ml-free"},{"name":"gcf-sources-360989076580-us-central1"},{"name":"lakjsdklasjd"},{"name":"us.artifacts.backup-255820.appspot.com"}]'
-    ],
-    [
         '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"backup-home-ml-free","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":3298633360.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":3298633360.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":3298633360.0}}],"unit":""}'
     ],
     [
@@ -71,7 +68,7 @@ def test_parse_gcp():
     section = parse_gcp_gcs(SECTION_TABLE)
     n_rows = sum(len(i.rows) for i in section.values())
     # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE) - 1
+    assert n_rows == len(SECTION_TABLE)
 
 
 @pytest.fixture(name="asset_section")

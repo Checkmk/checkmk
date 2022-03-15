@@ -25,7 +25,6 @@ from cmk.base.plugins.agent_based.gcp_function import (
 from cmk.base.plugins.agent_based.utils import gcp
 
 SECTION_TABLE = [
-    ['[{"name":"function-1"},{"name":"function-2"},{"name":"function-3"}]'],
     [
         '{"metric":{"type":"cloudfunctions.googleapis.com/function/execution_count","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"doubleValue":0.016666666666666666}},{"interval":{"startTime":"2022-02-23T12:26:27.205842Z","endTime":"2022-02-23T12:26:27.205842Z"},"value":{"doubleValue":0.06666666666666667}}],"unit":""}'
     ],
@@ -61,7 +60,7 @@ def test_parse_gcp():
     section = parse_gcp_function(SECTION_TABLE)
     n_rows = sum(len(i.rows) for i in section.values())
     # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE) - 1
+    assert n_rows == len(SECTION_TABLE)
 
 
 @pytest.fixture(name="asset_section")

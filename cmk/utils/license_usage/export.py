@@ -12,6 +12,7 @@ import json
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
+from enum import auto, Enum
 from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
@@ -217,14 +218,34 @@ def validate_subscription_period(attrs: Dict) -> None:
         raise SubscriptionPeriodError()
 
 
-#   .--migrations----------------------------------------------------------.
-#   |                    _                 _   _                           |
-#   |          _ __ ___ (_) __ _ _ __ __ _| |_(_) ___  _ __  ___           |
-#   |         | '_ ` _ \| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|          |
-#   |         | | | | | | | (_| | | | (_| | |_| | (_) | | | \__ \          |
-#   |         |_| |_| |_|_|\__, |_|  \__,_|\__|_|\___/|_| |_|___/          |
-#   |                      |___/                                           |
+#   .--report fields-------------------------------------------------------.
+#   |                                 _      __ _      _     _             |
+#   |       _ __ ___ _ __   ___  _ __| |_   / _(_) ___| | __| |___         |
+#   |      | '__/ _ \ '_ \ / _ \| '__| __| | |_| |/ _ \ |/ _` / __|        |
+#   |      | | |  __/ |_) | (_) | |  | |_  |  _| |  __/ | (_| \__ \        |
+#   |      |_|  \___| .__/ \___/|_|   \__| |_| |_|\___|_|\__,_|___/        |
+#   |               |_|                                                    |
 #   '----------------------------------------------------------------------'
+
+
+class LicenseUsageReportVersionError(Exception):
+    pass
+
+
+class UploadOrigin(Enum):
+    empty = auto()
+    manual = auto()
+    from_checkmk = auto()
+
+    @classmethod
+    def parse(cls, report_version: str, raw_upload_origin: str) -> UploadOrigin:
+        if report_version in ["1.0", "1.1", "1.2"]:
+            return cls.empty
+
+        if report_version == "1.3":
+            return cls[raw_upload_origin]
+
+        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 
 
 @dataclass
@@ -273,7 +294,7 @@ class LicenseUsageSample:
         if report_version == "1.0":
             return cls._parse_sample_v1_0
 
-        if report_version in ["1.1", "1.2"]:
+        if report_version in ["1.1", "1.2", "1.3"]:
             return cls._parse_sample_v1_1
 
         raise NotImplementedError(f"Unknown report version {report_version}")

@@ -64,7 +64,7 @@ def test_update_history_de_serialize(monkeypatch):
     deserialized_history_dump = LicenseUsageHistoryDump.deserialize(serialized_history_dump)
     assert isinstance(deserialized_history_dump, LicenseUsageHistoryDump)
 
-    assert deserialized_history_dump.VERSION == "1.2"
+    assert deserialized_history_dump.VERSION == "1.3"
 
     assert history_dump.history == deserialized_history_dump.history
     assert len(deserialized_history_dump.history) == 2
@@ -164,7 +164,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
     )
 
     history_dump = license_usage._create_or_update_history_dump()
-    assert history_dump.VERSION == "1.2"
+    assert history_dump.VERSION == "1.3"
     assert len(history_dump.history) == 4
 
     for (sample_time, num_hosts, num_services), sample in zip(

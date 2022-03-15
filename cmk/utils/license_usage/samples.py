@@ -20,7 +20,7 @@ from cmk.utils.license_usage.export import (
     serialize_dump,
 )
 
-LicenseUsageHistoryDumpVersion = "1.2"
+LicenseUsageHistoryDumpVersion = "1.3"
 
 
 @dataclass

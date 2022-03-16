@@ -251,7 +251,7 @@ def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
     )
 
 
-def node_conditions(status: client.V1Status) -> Optional[Sequence[api.NodeCondition]]:
+def node_conditions(status: client.V1NodeStatus) -> Optional[Sequence[api.NodeCondition]]:
     conditions = status.conditions
     if not conditions:
         return None

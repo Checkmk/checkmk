@@ -7,7 +7,7 @@ HOMEDIR="/var/lib/cmk-agent"
 
 usage() {
     cat >&2 <<HERE
-Usage: ${0} new|upgrade
+Usage: ${0}
 Create the system user 'cmk-agent' for the Checkmk agent package.
 HERE
     exit 1
@@ -20,17 +20,25 @@ to allow unencrypted legacy agent pull mode.
 It will be removed automatically on first successful agent registration.
 You can remove it manually to disallow legacy mode, but note that
 for regular operation you need to register the agent anyway.
+
+To secure the connection run \`cmk-agent-ctl register\`.
+
+HERE
+}
+
+_issue_legacy_pull_warning() {
+    cat <<HERE
+
+WARNING: The agent controller is operating in an insecure mode! To secure the connection run \`cmk-agent-ctl register\`.
+
 HERE
 }
 
 main() {
-    case "$1" in
-        new | upgrade) ;;
-        *) usage ;;
-    esac
+    [ "$1" ] && usage
 
     # add cmk-agent system user
-    echo "Creating/updating cmk-agent user account ($1) ..."
+    echo "Creating/updating cmk-agent user account ..."
     comment="Checkmk agent system user"
     usershell="/bin/false"
 
@@ -59,7 +67,10 @@ main() {
     # Create home directory manually instead of doing this on user creation,
     # because it might already exist with wrong ownership
     mkdir -p ${HOMEDIR}
-    [ "${user_is_new}" ] && [ "$1" = "upgrade" ] && _allow_legacy_pull
+    if [ "${user_is_new}" ]; then
+        _allow_legacy_pull
+        _issue_legacy_pull_warning
+    fi
     chown -R cmk-agent:cmk-agent ${HOMEDIR}
     unset homedir comment usershell
 

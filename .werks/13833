@@ -1,0 +1,17 @@
+Title: Checkmk agent controller: allow unencrypted pulling for fresh installations
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647441233
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b3
+
+On linux hosts new installations now allow the unencrypted pulling
+of agent data, just as the old agent did.
+This is done to ease the installation process.
+
+The <i>Check_MK Agent</tt> service will issue a warning until the
+connections is secured by TLS, or the service is explicitly configured
+to ignore the unencrypted connection.

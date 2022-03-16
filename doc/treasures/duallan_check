@@ -9,27 +9,23 @@ LANB=${HOSTNAME}2
 
 exec 2>/dev/null
 
-if cat < /dev/tcp/$LANA/6556
-then
+if cat </dev/tcp/$LANA/6556; then
     echo '<<<local:sep(0)>>>'
     echo "0 LAN-A - OK - Rechner via LAN-A erreichbar"
-    if /usr/lib/nagios/plugins/check_icmp $LANB >/dev/null 2>&1
-    then
-	echo "0 LAN-B - OK - Rechner via LAN-B erreichbar"
+    if /usr/lib/nagios/plugins/check_icmp $LANB >/dev/null 2>&1; then
+        echo "0 LAN-B - OK - Rechner via LAN-B erreichbar"
     else
-	echo "2 LAN-B - CRIT - Rechner via LAN-B nicht erreichbar"
+        echo "2 LAN-B - CRIT - Rechner via LAN-B nicht erreichbar"
     fi
-else 
-    if cat < /dev/tcp/$LANB/6556
-    then
-	echo '<<<local:sep(0)>>>'
-	echo "2 LAN-A - CRIT - Rechner via LAN-A nicht erreichbar"
-	echo "0 LAN-B - OK - Rechner via LAN-B erreichbar"
+else
+    if cat </dev/tcp/$LANB/6556; then
+        echo '<<<local:sep(0)>>>'
+        echo "2 LAN-A - CRIT - Rechner via LAN-A nicht erreichbar"
+        echo "0 LAN-B - OK - Rechner via LAN-B erreichbar"
     else
-	echo '<<<local:sep(0)>>>'
-	echo "2 LAN-A - CRIT - Rechner via LAN-A nicht erreichbar"
-	echo "2 LAN-B - CRIT - Rechner via LAN-B nicht erreichbar"
-	exit 1 # Beide LANs erfolglos
+        echo '<<<local:sep(0)>>>'
+        echo "2 LAN-A - CRIT - Rechner via LAN-A nicht erreichbar"
+        echo "2 LAN-B - CRIT - Rechner via LAN-B nicht erreichbar"
+        exit 1 # Beide LANs erfolglos
     fi
 fi
-

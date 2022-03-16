@@ -7,27 +7,23 @@
 # which is able to handle mrpe, local and plugin scripts
 
 echo '<<<mrpe>>>'
-grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe_include.cfg" | \
-while read user include
-do
-    if [ -f $include ] ; then
-        PREFIX=""
-        if [ "$user" != "-" ] ; then
-            PREFIX="su $user -c "
-        fi
-
-        grep -Ev '^[[:space:]]*($|#)' "$include" | \
-        while read descr cmdline
-        do
-            PLUGIN=${cmdline%% *}
-            if [ -n "$PREFIX" ] ; then
-                cmdline="$PREFIX\"$cmdline\""
+grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe_include.cfg" |
+    while read user include; do
+        if [ -f $include ]; then
+            PREFIX=""
+            if [ "$user" != "-" ]; then
+                PREFIX="su $user -c "
             fi
-            OUTPUT=$(eval "$cmdline")
-            echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-            echo
-        done
-    fi
-done
 
-
+            grep -Ev '^[[:space:]]*($|#)' "$include" |
+                while read descr cmdline; do
+                    PLUGIN=${cmdline%% *}
+                    if [ -n "$PREFIX" ]; then
+                        cmdline="$PREFIX\"$cmdline\""
+                    fi
+                    OUTPUT=$(eval "$cmdline")
+                    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+                    echo
+                done
+        fi
+    done

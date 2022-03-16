@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# This check checks the overall state of a service group. 
+# This check checks the overall state of a service group.
 # It fetches the current state of all services of a group
 # via livestatus (the path to the livestatus socket is
 # provided as a third, optional parameter).
-# 
+#
 # Provide the name of the service group as first
 # parameter.
 #
@@ -21,32 +21,30 @@
 # WARN is considered to be worse than UNKNOWN.
 
 GROUPNAME=$1
-if [ -z "$GROUPNAME" ] ; then
+if [ -z "$GROUPNAME" ]; then
     echo "Usage: $0 SERVICE_GROUP [NUM [SOCKET] ]"
     exit 3
 fi
 NUM=${2:-1}
 SOCKET=${3:-/var/run/nagios/rw/live}
 
-check ()
-{
-  IFS=\; read COUNT OK WARN CRIT UNKNOWN
-  if [ $CRIT -ge $NUM ] 
-  then
-      status=CRIT
-      exitcode=2
-  elif [ $((CRIT + WARN)) -ge $NUM ] ; then
-      status=WARN
-      exitcode=1
-  elif [ $((CRIT + WARN + UNKNOWN)) -ge $NUM ] ; then
-      status=UNKNOWN
-      exitcode=3
-  else
-      status=OK
-      exitcode=0
-  fi
-  echo "$status - $COUNT services: $CRIT critical, $WARN warning, $UNKNOWN unknown, $OK ok"
-  exit $exitcode
+check() {
+    IFS=\; read COUNT OK WARN CRIT UNKNOWN
+    if [ $CRIT -ge $NUM ]; then
+        status=CRIT
+        exitcode=2
+    elif [ $((CRIT + WARN)) -ge $NUM ]; then
+        status=WARN
+        exitcode=1
+    elif [ $((CRIT + WARN + UNKNOWN)) -ge $NUM ]; then
+        status=UNKNOWN
+        exitcode=3
+    else
+        status=OK
+        exitcode=0
+    fi
+    echo "$status - $COUNT services: $CRIT critical, $WARN warning, $UNKNOWN unknown, $OK ok"
+    exit $exitcode
 }
 
 cat <<EOF | unixcat $SOCKET | check

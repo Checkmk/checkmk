@@ -36,7 +36,7 @@ case "$1" in
             echo ERROR
             exit 1
         fi
-    ;;
+        ;;
     stop)
         echo -n 'Stopping nsca2mkeventd... '
         PID=$(pidof_nsca2mkeventd) || {
@@ -56,12 +56,12 @@ case "$1" in
             fi
 
             echo -n '.'
-            I=$(($I+1))
+            I=$(($I + 1))
             sleep 1
         done
 
         echo OK
-    ;;
+        ;;
     status)
         PID=$(pidof_nsca2mkeventd) && {
             echo "Running (PID: $PID)."
@@ -70,15 +70,15 @@ case "$1" in
             echo "Not running."
             exit 1
         }
-    ;;
+        ;;
     restart)
         $0 stop
         $0 start
-    ;;
+        ;;
     *)
         echo 'Usage: /etc/init.d/nsca2mkeventd {start|stop|restart|status}'
         exit 1
-    ;;
+        ;;
 esac
 
 exit 0

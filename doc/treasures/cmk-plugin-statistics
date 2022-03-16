@@ -7,19 +7,19 @@
 # It makes a Livestatus-Connection and outputs a list of plugins and the
 # information on how many different hosts this plugin is being used.
 
-if [ "$OMD_ROOT" ] ; then
+if [ "$OMD_ROOT" ]; then
     LIVE_SOCKET=$OMD_ROOT/tmp/run/live
-elif [ -z "$LIVE_SOCKET" ] ; then
+elif [ -z "$LIVE_SOCKET" ]; then
     echo "Please do an 'export LIVE_SOCKET=/path/to/your/livestatus/socket'" >&2
     echo "and then call me again." >&2
     exit 1
 fi
 
-echo -e "GET services\nColumns: host_name check_command" \
-    | unixcat "$LIVE_SOCKET" \
-    | sort -u \
-    | cut -d\; -f2 \
-    | cut -d\! -f1 \
-    | sort \
-    | uniq -c \
-    | sort -rn
+echo -e "GET services\nColumns: host_name check_command" |
+    unixcat "$LIVE_SOCKET" |
+    sort -u |
+    cut -d\; -f2 |
+    cut -d\! -f1 |
+    sort |
+    uniq -c |
+    sort -rn

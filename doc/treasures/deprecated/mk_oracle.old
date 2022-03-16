@@ -7,9 +7,9 @@
 
 # Get list of all running databases
 SIDS=$(UNIX95=true ps ax -o args | sed -n '/^\(ora\|xe\)_pmon_\([^ ]*\)/s//\2/p')
-if [ -z "$SIDS" ] ; then
+if [ -z "$SIDS" ]; then
     # If on this system we've already found a database
-    if [ -e "$MK_CONFDIR/mk_oracle.found" ] ; then
+    if [ -e "$MK_CONFDIR/mk_oracle.found" ]; then
         echo '<<<oracle_version>>>'
         echo '<<<oracle_sessions>>>'
         echo '<<<oracle_logswitches>>>'
@@ -27,8 +27,7 @@ touch $MK_CONFDIR/mk_oracle.found
 CACHE_MAXAGE=120
 
 # Source the optional configuration file for this agent plugin
-if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
-then
+if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
     . $MK_CONFDIR/mk_oracle.cfg
 fi
 
@@ -62,26 +61,30 @@ fi
 # option is pre-set to 120 seconds but can be changed in mk_oracle.cfg.
 
 sqlplus() {
-    if OUTPUT=$({ echo 'set pages 0' ; echo 'whenever sqlerror exit 1'; echo 'set lines 8000' ; echo 'set feedback off'; cat ; } | $MK_CONFDIR/sqlplus.sh $1)
-    then
+    if OUTPUT=$({
+        echo 'set pages 0'
+        echo 'whenever sqlerror exit 1'
+        echo 'set lines 8000'
+        echo 'set feedback off'
+        cat
+    } | $MK_CONFDIR/sqlplus.sh $1); then
         echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"
     else
         echo "${OUTPUT}" | sed "s/^/$1 FAILURE /"
     fi
 }
 
-
 for SID in $SIDS; do
     # Check if SID is listed in ONLY_SIDS if this is used
-    if [ "$ONLY_SIDS" ] ; then
+    if [ "$ONLY_SIDS" ]; then
         SKIP=yes
-        for S in $ONLY_SIDS ; do
-	    if  [ "$S" = "$SID" ] ; then
-	        SKIP=
-		break
+        for S in $ONLY_SIDS; do
+            if [ "$S" = "$SID" ]; then
+                SKIP=
+                break
             fi
         done
-	if [ "$SKIP" ] ; then continue ; fi
+        if [ "$SKIP" ]; then continue; fi
     fi
 
     EXCLUDE=EXCLUDE_$SID
@@ -112,15 +115,14 @@ for SID in $SIDS; do
     # If the cache file exists, output it, regardless of its age. If it's outdated
     # then it will be recreated *asynchronously*. It's new contents will not
     # be available here anyway.
-    if [ -s "$CACHE_FILE" ] ; then cat "$CACHE_FILE" ; fi
+    if [ -s "$CACHE_FILE" ]; then cat "$CACHE_FILE"; fi
 
     # When the cache file is not valid, we recreated it, but only if there is not
     # yet a background process from a previous check still doing this! We see this
     # because of the existance of the .new file
     # When the cache is old and there is no *new file present, then start a query
     # to update the information for this instance.
-    if [ -z "$CACHE_FILE_UPTODATE" -a ! -e "$CACHE_FILE.new" ]
-    then
+    if [ -z "$CACHE_FILE_UPTODATE" -a ! -e "$CACHE_FILE.new" ]; then
         setsid bash -c "
             set -o noclobber
             function sqlplus ()

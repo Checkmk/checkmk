@@ -3,28 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-VERSION=$(sed -n '/^VERSION.*= *\(.*\)/s//\1/p' < Makefile)
+VERSION=$(sed -n '/^VERSION.*= *\(.*\)/s//\1/p' <Makefile)
 TAR=${1:-check_mk-$VERSION.tar.gz}
 
-if [ ! -e "$TAR" ] ; then
+if [ ! -e "$TAR" ]; then
     echo "Usage: $0 check_mk-...tar.gz" >&2
     exit 1
 fi
 
-tar tzf $TAR | \
-while read filename
-do
-  echo -n "$filename"
-  if [ "${filename:(-7)}" = ".tar.gz" ] ; then
-    echo :
-    tar xzf $TAR --to-stdout "$filename" | tar tzvf -
-    echo
-  elif [ "${filename:(-4)}" = ".tar" ] ; then
-    echo :
-    tar xzf $TAR --to-stdout "$filename" | tar tvf -
-    echo
-  else
-    echo
-  fi
-done
-
+tar tzf $TAR |
+    while read filename; do
+        echo -n "$filename"
+        if [ "${filename:(-7)}" = ".tar.gz" ]; then
+            echo :
+            tar xzf $TAR --to-stdout "$filename" | tar tzvf -
+            echo
+        elif [ "${filename:(-4)}" = ".tar" ]; then
+            echo :
+            tar xzf $TAR --to-stdout "$filename" | tar tvf -
+            echo
+        else
+            echo
+        fi
+    done

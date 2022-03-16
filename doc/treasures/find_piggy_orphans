@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 cd $OMD_ROOT
-for h in $(cd tmp/check_mk/piggyback ; echo *)
-do 
+for h in $(
+    cd tmp/check_mk/piggyback
+    echo *
+); do
     lq "GET hosts\nColumns: address name\nFilter: address = $h\nFilter: name = $h\nOr: 2" | grep -q . || echo "$h"
 done
-

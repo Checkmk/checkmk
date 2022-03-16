@@ -6,8 +6,8 @@
 BASE_PATH=/var/spool/sylo
 
 if [ -f "$BASE_PATH/silo.hint" ]; then
-  echo "<<<sylo>>>"
-  stat --printf "%Y " "$BASE_PATH/silo.hint"
-  cat "$BASE_PATH/silo.hint"
-  echo
+    echo "<<<sylo>>>"
+    stat --printf "%Y " "$BASE_PATH/silo.hint"
+    cat "$BASE_PATH/silo.hint"
+    echo
 fi

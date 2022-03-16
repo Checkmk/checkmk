@@ -3,6 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-zombies=$( ps aux | awk '{ print $8 " " $2 }' | grep -w Z | wc -l )
+zombies=$(ps aux | awk '{ print $8 " " $2 }' | grep -w Z | wc -l)
 
 echo "P Zombies zombies=$zombies;1;3"

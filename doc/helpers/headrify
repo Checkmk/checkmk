@@ -7,172 +7,181 @@
 CRE_LICENSE_NAME="GNU General Public License v2"
 CEE_LICENSE_NAME="Check_MK Enterprise License"
 
-header ()
-{
-  if [ $isCFile = true ]; then
-      echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
-      echo "This file is part of Checkmk (https://checkmk.com). It is subject to the"
-      echo "terms and conditions defined in the file COPYING, which is part of this"
-      echo "source code package."
-  else
-      echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
-      echo "This file is part of Checkmk (https://checkmk.com). It is subject to the terms and"
-      echo "conditions defined in the file COPYING, which is part of this source code package."
-  fi
+header() {
+    if [ $isCFile = true ]; then
+        echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
+        echo "This file is part of Checkmk (https://checkmk.com). It is subject to the"
+        echo "terms and conditions defined in the file COPYING, which is part of this"
+        echo "source code package."
+    else
+        echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
+        echo "This file is part of Checkmk (https://checkmk.com). It is subject to the terms and"
+        echo "conditions defined in the file COPYING, which is part of this source code package."
+    fi
 }
 
-headrify ()
-{
-  if [ ! -f "$file" ]; then
-      echo "Skipping $file. It's not a file."
-      return
-  fi
-  if [ -L "$file" ]; then
-      echo "Skipping $file. It's a symlink."
-      return
-  fi
+headrify() {
+    if [ ! -f "$file" ]; then
+        echo "Skipping $file. It's not a file."
+        return
+    fi
+    if [ -L "$file" ]; then
+        echo "Skipping $file. It's a symlink."
+        return
+    fi
 
-  if [[ "${file##*/}" =~ ^[A-Z]+$ ]]; then
-      echo "Skipping $file. It's a documentation file."
-      return
-  fi
+    if [[ "${file##*/}" =~ ^[A-Z]+$ ]]; then
+        echo "Skipping $file. It's a documentation file."
+        return
+    fi
 
-  headline="$(head -n1 $file)"
-  checkSuffix=false
-  isCFile=false
-  if [ "${headline:0:9}" = "#!/bin/sh" ] ; then
-      comment="# "
-      bangpath="#!/bin/sh"
-      if [ "${headline:9}" != "" ] ; then
-          bangpath="$bangpath${headline:9}"
-      fi
-  elif [ "${headline:0:16}" = "#!/usr/bin/ksh93" ] ; then
-      comment="# "
-      bangpath="#!/usr/bin/ksh93"
-  elif [ "${headline:0:14}" = "#!/usr/bin/ksh" ] ; then
-      comment="# "
-      bangpath="#!/usr/bin/ksh"
-  elif [ "${headline:0:11}" = "#!/bin/bash" ] ; then
-      comment="# "
-      bangpath="#!/bin/bash"
-      if [ "${headline:11}" != "" ] ; then
-          bangpath="$bangpath${headline:11}"
-      fi
-  elif [ "${headline:0:15}" = "#!/usr/bin/bash" ] ; then
-      comment="# "
-      bangpath="#!/usr/bin/bash"
-  elif [ "${headline:0:5}" = "<?php" ] ; then
-      comment="# "
-      bangpath="<?php"
-  elif [[ "${headline:0:22}" = "#!/usr/bin/env python3" || "${headline:0:18}" = "#!/usr/bin/python3" ]] ; then
-      comment="# "
-      bangpath="#!/usr/bin/env python3
+    headline="$(head -n1 $file)"
+    checkSuffix=false
+    isCFile=false
+    if [ "${headline:0:9}" = "#!/bin/sh" ]; then
+        comment="# "
+        bangpath="#!/bin/sh"
+        if [ "${headline:9}" != "" ]; then
+            bangpath="$bangpath${headline:9}"
+        fi
+    elif [ "${headline:0:16}" = "#!/usr/bin/ksh93" ]; then
+        comment="# "
+        bangpath="#!/usr/bin/ksh93"
+    elif [ "${headline:0:14}" = "#!/usr/bin/ksh" ]; then
+        comment="# "
+        bangpath="#!/usr/bin/ksh"
+    elif [ "${headline:0:11}" = "#!/bin/bash" ]; then
+        comment="# "
+        bangpath="#!/bin/bash"
+        if [ "${headline:11}" != "" ]; then
+            bangpath="$bangpath${headline:11}"
+        fi
+    elif [ "${headline:0:15}" = "#!/usr/bin/bash" ]; then
+        comment="# "
+        bangpath="#!/usr/bin/bash"
+    elif [ "${headline:0:5}" = "<?php" ]; then
+        comment="# "
+        bangpath="<?php"
+    elif [[ "${headline:0:22}" = "#!/usr/bin/env python3" || "${headline:0:18}" = "#!/usr/bin/python3" ]]; then
+        comment="# "
+        bangpath="#!/usr/bin/env python3
 # -*- coding: utf-8 -*-"
-  elif [[ "${headline:0:21}" = "#!/usr/bin/env python" || "${headline:0:17}" = "#!/usr/bin/python" ]] ; then
-      comment="# "
-      bangpath="#!/usr/bin/env python
+    elif [[ "${headline:0:21}" = "#!/usr/bin/env python" || "${headline:0:17}" = "#!/usr/bin/python" ]]; then
+        comment="# "
+        bangpath="#!/usr/bin/env python
 # -*- coding: utf-8 -*-"
-  else
-      bangpath=""
-      case "${file##*/}" in
-          *.openvms) comment="$!# " ;;
-          *.php)    comment="# " ; bangpath="<?php" ;;
-          *.scss|*.css)    comment="// " ;  bangpath="@charset \"UTF-8\";" ;;
-          *.h|*.c|*.cc|*.h.in|*.cpp) comment="// " ; isCFile=true ;;
-          *.js) comment="// " ;;
-          *.conf|*.cfg)   comment="# " ;;
-          *.spec|Makefile*) comment="# " ;;
-          *.sh) comment="# " ;;
-          *.py)     comment="# "  ; bangpath="#!/usr/bin/env python
-# -*- coding: utf-8 -*-"; ;;
-          *) if [ "$force" = false ]; then
+    else
+        bangpath=""
+        case "${file##*/}" in
+            *.openvms) comment="$!# " ;;
+            *.php)
+                comment="# "
+                bangpath="<?php"
+                ;;
+            *.scss | *.css)
+                comment="// "
+                bangpath="@charset \"UTF-8\";"
+                ;;
+            *.h | *.c | *.cc | *.h.in | *.cpp)
+                comment="// "
+                isCFile=true
+                ;;
+            *.js) comment="// " ;;
+            *.conf | *.cfg) comment="# " ;;
+            *.spec | Makefile*) comment="# " ;;
+            *.sh) comment="# " ;;
+            *.py)
+                comment="# "
+                bangpath="#!/usr/bin/env python
+# -*- coding: utf-8 -*-"
+                ;;
+            *) if [ "$force" = false ]; then
                 echo "Skipping $file. No shebang or suffix match for Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile."
                 return
-             fi ;;
-      esac
-  fi
+            fi ;;
+        esac
+    fi
 
-  if [[ "$bangpath" == *"python"* && "$(realpath $file)" == *"/tests/"* ]]; then
-      bangpath="#!/usr/bin/env python3
+    if [[ "$bangpath" == *"python"* && "$(realpath $file)" == *"/tests/"* ]]; then
+        bangpath="#!/usr/bin/env python3
 # -*- coding: utf-8 -*-"
-  fi
-
-  figletline="---------------------------------------------------"
-  up2dateline="Copyright (C) 2019 tribe29 GmbH - License"
-  endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|source code package.)'
-
-  TMP=$(mktemp .headrify.new.XXXXXX)
-  chmod --reference=$file $TMP
-  : > $TMP
-  if [[ "$(head -n1 $file | sed -n "/^\xEF\xBB\xBF/ p")" ]]; then
-      printf "\xEF\xBB\xBF" > $TMP
-  fi
-  if [ -n "$bangpath" ]; then echo "$bangpath" >> $TMP ; fi
-
-  licenseName=$CRE_LICENSE_NAME
-  if [[ "$(realpath $file)" == *"/enterprise/"* || "$(realpath $file)" == *"/managed/"* ]]; then
-      licenseName=$CEE_LICENSE_NAME
-  fi
-  header $licenseName | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
-  echo >> $TMP
-  bangpathlines=0
-  count=0
-  tmpwritten=false
-  while read line; do
-    if [[ ("$line" == *"$up2dateline"* || "$line" == *"$figletline"*) && "$(sed -rn "/$endline/I p" $file)" ]]; then
-      # Delete all lines until and including $endline, then also remove all
-      # leading # blank lines as well as a possible multiline comment ending
-      # tag '*/' from the beginning of $file and append the result to $TMP
-      sed -i "1s/^\xEF\xBB\xBF//" $file
-      sed -r '0,/^'"$endline"'$/Id' $file | sed '/./,$!d' | sed '1{/^\*\/$/d}' | sed '/./,$!d' >> $TMP
-      tmpwritten=true
-      break
-    elif [[ "$(echo "$line" | sed -n '/copyright/I p' | sed -n '/tribe29/ !p')" ]]; then
-      echo "Skipping $file because it seems to hold a non tribe29 copyright notice already."
-      rm -f $TMP
-      return
-    elif [[ ( $count == $bangpathlines ) && ( "$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* || "$line" = "#!/usr/bin/python"* ) ]]; then
-        let bangpathlines=bangpathlines+1
     fi
 
-    if [ $count -gt 4 ]; then
-      break
-    fi
-    let count=count+1
-  done <$file
+    figletline="---------------------------------------------------"
+    up2dateline="Copyright (C) 2019 tribe29 GmbH - License"
+    endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|source code package.)'
 
-  if [ "$tmpwritten" = false ]; then
-    if [ $bangpathlines -gt 0 ]; then
-        let tailindex=bangpathlines+1
-        sed -i "1s/^\xEF\xBB\xBF//" $file
-        tail -n +$tailindex "$file" >> $TMP
-    else
-        sed -i "1s/^\xEF\xBB\xBF//" $file
-        cat $file >> $TMP
+    TMP=$(mktemp .headrify.new.XXXXXX)
+    chmod --reference=$file $TMP
+    : >$TMP
+    if [[ "$(head -n1 $file | sed -n "/^\xEF\xBB\xBF/ p")" ]]; then
+        printf "\xEF\xBB\xBF" >$TMP
     fi
-  fi
-  echo "$file..."
-  mv $TMP $file || rm -f $TMP
-  if [[ "$bangpath" == *"python"* ]]; then
-      yapf -i $file
-  fi
+    if [ -n "$bangpath" ]; then echo "$bangpath" >>$TMP; fi
+
+    licenseName=$CRE_LICENSE_NAME
+    if [[ "$(realpath $file)" == *"/enterprise/"* || "$(realpath $file)" == *"/managed/"* ]]; then
+        licenseName=$CEE_LICENSE_NAME
+    fi
+    header $licenseName | sed "s@^@$comment@" | sed 's/ *$//' >>$TMP
+    echo >>$TMP
+    bangpathlines=0
+    count=0
+    tmpwritten=false
+    while read line; do
+        if [[ ("$line" == *"$up2dateline"* || "$line" == *"$figletline"*) && "$(sed -rn "/$endline/I p" $file)" ]]; then
+            # Delete all lines until and including $endline, then also remove all
+            # leading # blank lines as well as a possible multiline comment ending
+            # tag '*/' from the beginning of $file and append the result to $TMP
+            sed -i "1s/^\xEF\xBB\xBF//" $file
+            sed -r '0,/^'"$endline"'$/Id' $file | sed '/./,$!d' | sed '1{/^\*\/$/d}' | sed '/./,$!d' >>$TMP
+            tmpwritten=true
+            break
+        elif [[ "$(echo "$line" | sed -n '/copyright/I p' | sed -n '/tribe29/ !p')" ]]; then
+            echo "Skipping $file because it seems to hold a non tribe29 copyright notice already."
+            rm -f $TMP
+            return
+        elif [[ ($count == $bangpathlines) && ("$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* || "$line" = "#!/usr/bin/python"*) ]]; then
+            let bangpathlines=bangpathlines+1
+        fi
+
+        if [ $count -gt 4 ]; then
+            break
+        fi
+        let count=count+1
+    done <$file
+
+    if [ "$tmpwritten" = false ]; then
+        if [ $bangpathlines -gt 0 ]; then
+            let tailindex=bangpathlines+1
+            sed -i "1s/^\xEF\xBB\xBF//" $file
+            tail -n +$tailindex "$file" >>$TMP
+        else
+            sed -i "1s/^\xEF\xBB\xBF//" $file
+            cat $file >>$TMP
+        fi
+    fi
+    echo "$file..."
+    mv $TMP $file || rm -f $TMP
+    if [[ "$bangpath" == *"python"* ]]; then
+        yapf -i $file
+    fi
 }
 
-if [ "$#" -gt 0 ] ; then
-  #echo "Headrifying to version $VERSION"
-  force=false
-  if [[ "$*" == *"-f "* || "$*" == *" -f" ]]; then
-      force=true
-      echo "Entering 'force' mode. Headrifying will be forced ignoring shebang and suffix constraints."
-  fi
-  for file in "$@"
-  do
-    if [ ! "$file" = "-f" ]; then
-        headrify "$file" $force
+if [ "$#" -gt 0 ]; then
+    #echo "Headrifying to version $VERSION"
+    force=false
+    if [[ "$*" == *"-f "* || "$*" == *" -f" ]]; then
+        force=true
+        echo "Entering 'force' mode. Headrifying will be forced ignoring shebang and suffix constraints."
     fi
-  done
+    for file in "$@"; do
+        if [ ! "$file" = "-f" ]; then
+            headrify "$file" $force
+        fi
+    done
 else
-  echo "Provide at least one file as an argument."
+    echo "Provide at least one file as an argument."
 fi
 sleep 0.1
 wait

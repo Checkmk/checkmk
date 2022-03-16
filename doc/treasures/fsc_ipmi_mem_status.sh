@@ -20,49 +20,48 @@
 
 # Check needed binarys
 if ! which ipmi-sensors >/dev/null 2>&1; then
-  OUT="\nE ipmi-sensors is missing" && ERR=1
+    OUT="\nE ipmi-sensors is missing" && ERR=1
 fi
 if ! which ipmi-raw >/dev/null 2>&1; then
-  OUT="\nE ipmi-raw is missing" && ERR=1
+    OUT="\nE ipmi-raw is missing" && ERR=1
 fi
 
 if [ -z $ERR ]; then
-  # No cache file existing? => give more time to create it
-  if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]
-  then
-    TIMEOUT=50
-  else
-    TIMEOUT=2
-  fi
-  CMD="waitmax $TIMEOUT ipmi-sensors --sdr-cache-directory /var/cache -g OEM_Reserved $FORMAT"
-  CMD="ipmi-sensors --sdr-cache-directory /var/cache -g OEM_Reserved $FORMAT"
-  FORMAT="--legacy-output"
-  SENSORS=$($CMD $FORMAT 2>&1 || $CMD 2>&1)
-  
-  # Check for caching problem
-  if [[ "$SENSORS" =~ "SDR" ]]; then
-    OUT="\nE SDR cache broken. Need to be flushed and reloaded"
-    ERR=1
-  fi
+    # No cache file existing? => give more time to create it
+    if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]; then
+        TIMEOUT=50
+    else
+        TIMEOUT=2
+    fi
+    CMD="waitmax $TIMEOUT ipmi-sensors --sdr-cache-directory /var/cache -g OEM_Reserved $FORMAT"
+    CMD="ipmi-sensors --sdr-cache-directory /var/cache -g OEM_Reserved $FORMAT"
+    FORMAT="--legacy-output"
+    SENSORS=$($CMD $FORMAT 2>&1 || $CMD 2>&1)
 
-  if [ -z $ERR ]; then
-    SLOTS="$(echo "$SENSORS" | grep DIMM | cut -d' ' -f 2 | uniq)"
+    # Check for caching problem
+    if [[ "$SENSORS" =~ "SDR" ]]; then
+        OUT="\nE SDR cache broken. Need to be flushed and reloaded"
+        ERR=1
+    fi
 
-    # Use ipmi-sensors to get all memory slots of TX-120
-    OUT=
-    I=0
-    for NAME in $SLOTS; do
-      STATUS=$(ipmi-raw 0 0x2e 0xf5 0x80 0x28 0x00 0x48 $I | cut -d' ' -f 7)
-      OUT="$OUT\n$I $NAME $STATUS"
-      I=$(($I+1))
-    done
-  fi
+    if [ -z $ERR ]; then
+        SLOTS="$(echo "$SENSORS" | grep DIMM | cut -d' ' -f 2 | uniq)"
+
+        # Use ipmi-sensors to get all memory slots of TX-120
+        OUT=
+        I=0
+        for NAME in $SLOTS; do
+            STATUS=$(ipmi-raw 0 0x2e 0xf5 0x80 0x28 0x00 0x48 $I | cut -d' ' -f 7)
+            OUT="$OUT\n$I $NAME $STATUS"
+            I=$(($I + 1))
+        done
+    fi
 fi
 
 # Only print output when at least one memory slot was found
 if [[ ! -z $ERR || $I -ne 0 ]]; then
-  echo -n "<<<fsc_ipmi_mem_status>>>"
-  echo -e "$OUT"
+    echo -n "<<<fsc_ipmi_mem_status>>>"
+    echo -e "$OUT"
 fi
 
 exit 0

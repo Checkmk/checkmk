@@ -534,10 +534,13 @@ def _thin_containers(pods: Collection[Pod]) -> section.ThinContainers:
 
 
 class DaemonSet(PodOwner):
-    def __init__(self, metadata: api.MetaData, spec: api.DaemonSetSpec) -> None:
+    def __init__(
+        self, metadata: api.MetaData, spec: api.DaemonSetSpec, status: api.DaemonSetStatus
+    ) -> None:
         super().__init__()
         self.metadata = metadata
         self.spec = spec
+        self._status = status
         self.type_: str = "daemonset"
 
     def name(self, prepend_namespace: bool = False) -> str:
@@ -800,6 +803,7 @@ class Cluster:
             daemon_set = DaemonSet(
                 metadata=api_daemon_set.metadata,
                 spec=api_daemon_set.spec,
+                status=api_daemon_set.status,
             )
             cluster.add_daemon_set(daemon_set)
             _register_owner_for_pods(daemon_set, api_daemon_set.pods)

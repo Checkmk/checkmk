@@ -10,6 +10,8 @@ description:
 
  The apply_lag_min is only useful when an apply lag is configured
  in Data Guard. Otherwise the apply lag is 0.
+ If the apply lag is not known, the plugin will issue a WARNING
+ by default, this state is configurable.
 
  The init.ora-Parameter log_archive_config must be configured.
  Oracle Enterprise Edition is required for Oracle Data-Guard.

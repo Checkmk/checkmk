@@ -20,6 +20,7 @@ from typing import Optional
 
 factory_settings["oracle_dataguard_stats"] = {
     "apply_lag": (3600, 14400),
+    "missing_apply_lag_state": 1,
     "active_dataguard_option": 1,
     "primary_broker_state": False,
     "mrp_option": (0, 2),
@@ -131,7 +132,8 @@ def check_oracle_dataguard_stats(item, params, parsed):
         for dgstat_param in sorted(dgdata["dgstat"]):
 
             if dgstat_param == "apply lag" and not dgdata["dgstat"][dgstat_param]:
-                yield 1, "No value for apply lag"
+                yield params["missing_apply_lag_state"], "No value for apply lag"
+                continue
 
             if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
                 state = 0

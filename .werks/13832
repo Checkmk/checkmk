@@ -1,0 +1,12 @@
+Title: Oracle data guard stats: Configurable state for missing apply lag
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647417534
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The plugin creates a WARN message if the appply lag is not known.
+This state is now confurable.

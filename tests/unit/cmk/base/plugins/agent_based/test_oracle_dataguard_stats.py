@@ -36,6 +36,10 @@ _AGENT_OUTPUT = [
     ["TUX12C", "TUXSTDB", "PHYSICAL STANDBY", "apply lag", "+00 00:28:57"],
     ["TUX12C", "TUXSTDB", "PHYSICAL STANDBY", "apply finish time", "+00 00:00:17.180"],
     ["TUX12C", "TUXSTDB", "PHYSICAL STANDBY", "estimated startup time", "20"],
+    ["KNULF", "TUXSTDB", "PHYSICAL STANDBY", "transport lag", "+00 00:00:00"],
+    ["KNULF", "TUXSTDB", "PHYSICAL STANDBY", "apply lag", ""],
+    ["KNULF", "TUXSTDB", "PHYSICAL STANDBY", "apply finish time", "+00 00:00:17.180"],
+    ["KNULF", "TUXSTDB", "PHYSICAL STANDBY", "estimated startup time", "20"],
 ]
 
 
@@ -45,6 +49,7 @@ _AGENT_OUTPUT = [
         (
             _AGENT_OUTPUT,
             [
+                Service(item="KNULF.TUXSTDB"),
                 Service(item="TESTDB.TESTDBU2"),
                 Service(item="TUX12C.TUXSTDB"),
             ],
@@ -82,13 +87,31 @@ def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_re
                 Metric("transport_lag", 0.0),
             ],
         ),
+        (
+            _AGENT_OUTPUT,
+            "KNULF.TUXSTDB",
+            [
+                Result(state=State.OK, summary="Database Role physical standby"),
+                Result(state=State.OK, summary="apply finish time 17.0 s"),
+                Metric("apply_finish_time", 17.0),
+                Result(state=State.CRIT, summary="No value for apply lag"),
+                Result(state=State.OK, summary="transport lag 0.00 s"),
+                Metric("transport_lag", 0.0),
+                Result(state=State.OK, summary="old plugin data found, recovery active?"),
+            ],
+        ),
     ],
 )
 def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected_result):
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert (
-        list(check_plugin.check_function(item=item, params={}, section=section)) == expected_result
+        list(
+            check_plugin.check_function(
+                item=item, params={"missing_apply_lag_state": 2}, section=section
+            )
+        )
+        == expected_result
     )
 
 
@@ -116,6 +139,18 @@ def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected
                     key_columns={
                         "sid": "TUX12C",
                         "db_unique": "TUX12C.TUXSTDB",
+                    },
+                    inventory_columns={
+                        "role": "PHYSICAL STANDBY",
+                        "switchover": None,
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "applications", "oracle", "dataguard_stats"],
+                    key_columns={
+                        "sid": "KNULF",
+                        "db_unique": "KNULF.TUXSTDB",
                     },
                     inventory_columns={
                         "role": "PHYSICAL STANDBY",

@@ -60,7 +60,7 @@ def _parameter_valuespec_oracle_dataguard_stats():
             (
                 "apply_lag",
                 Tuple(
-                    title=_("Apply Lag Maximum Time"),
+                    title=_("Apply lag: Maximum time"),
                     help=_("The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."),
                     elements=[
                         Age(
@@ -75,11 +75,12 @@ def _parameter_valuespec_oracle_dataguard_stats():
             (
                 "apply_lag_min",
                 Tuple(
-                    title=_("Apply Lag Minimum Time"),
+                    title=_("Apply lag: Minimum time"),
                     help=_(
                         "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
-                        "This is only useful if also <i>Apply Lag Maximum Time</i> has been configured."
-                    ),
+                        "This is only useful if also <i>%s</i> has been configured."
+                    )
+                    % _("Apply lag: Maximum time"),
                     elements=[
                         Age(
                             title=_("Warning at"),
@@ -88,6 +89,13 @@ def _parameter_valuespec_oracle_dataguard_stats():
                             title=_("Critical at"),
                         ),
                     ],
+                ),
+            ),
+            (
+                "missing_apply_lag_state",
+                MonitoringState(
+                    title=_("Apply lag: State in case the apply lag is not known"),
+                    default_value=1,
                 ),
             ),
             (

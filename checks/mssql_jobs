@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
+from typing import Any, Mapping, NamedTuple
+
 # Sample output:
 
 # <<<mssql_jobs:sep(09)>>>
@@ -15,7 +18,6 @@
 # Database documentation:
 # https://docs.microsoft.com/en-us/sql/relational-databases/system-tables/dbo-sysjobs-transact-sql?view=sql-server-ver15
 
-import datetime
 
 factory_settings["mssql_jobs_defaults"] = {
     "ignore_db_status": True,
@@ -27,7 +29,17 @@ factory_settings["mssql_jobs_defaults"] = {
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
 
-def _calculate_seconds(raw_duration):
+class JobSpec(NamedTuple):
+    last_run_duration: float
+    last_run_outcome: str
+    last_run_datetime: str
+    enabled: str
+    schedule_enabled: str
+    next_run_datetime: str
+    last_outcome_message: str
+
+
+def _calculate_seconds(raw_duration: str) -> float:
     """Return the number of seconds from a string in HHMMSS format.
     The strings are of variable length, e.g. 124 = 1 minute 24 seconds.
 
@@ -62,7 +74,7 @@ def _calculate_seconds(raw_duration):
     return raw_seconds + raw_minutes * 60 + raw_hours * 3600
 
 
-def _format_to_datetime(raw_date, raw_time):
+def _format_to_datetime(raw_date: str, raw_time: str) -> str:
     """Return a valid datetime from date and time strings in YYYYMMDD and HHMMSS formats respectively.
     The date and/or time may be set to '0'. The time may be of variable length, e.g. 300 = 00:03:00.
 
@@ -123,40 +135,36 @@ def parse_mssql_jobs(info):
         # it is scheduled. the user is only interested in the most immediate next run time
         if line[1] in parsed:
             continue
-        job_details = dict(zip(col_headers, line))
-        job_details["last_run_outcome"] = outcome_translation[job_details["last_run_outcome"]]
+        job = dict(zip(col_headers, line))
 
-        job_details["last_run_duration"] = _calculate_seconds(
-            job_details["last_run_duration"],
+        parsed[job["job_name"]] = JobSpec(
+            last_run_duration=_calculate_seconds(job["last_run_duration"]),
+            last_run_outcome=outcome_translation[job["last_run_outcome"]],
+            last_run_datetime=_format_to_datetime(
+                job["last_run_date"],
+                job["last_run_time"],
+            ),
+            enabled=job["job_enabled"],
+            schedule_enabled=job["schedule_enabled"],
+            next_run_datetime=_format_to_datetime(
+                job["next_run_date"],
+                job["next_run_time"],
+            ),
+            last_outcome_message=job["last_outcome_message"],
         )
-
-        job_details["last_run_datetime"] = _format_to_datetime(
-            job_details["last_run_date"],
-            job_details["last_run_time"],
-        )
-        job_details["next_run_datetime"] = _format_to_datetime(
-            job_details["next_run_date"],
-            job_details["next_run_time"],
-        )
-        parsed[job_details["job_name"]] = job_details
 
     return parsed
 
 
-def discover_mssql_jobs(parsed):
-
-    for job_name in parsed:
+def discover_mssql_jobs(section: Mapping[str, JobSpec]):
+    for job_name in section:
         yield job_name, {}
 
 
-def check_mssql_jobs(item, params, parsed):
+def check_mssql_jobs(item: str, params: Mapping[str, Any], section: Mapping[str, JobSpec]):
 
-    job_specs = parsed.get(item)
-
-    # status to be returned when jobs disappear
-    status_missing_jobs = params["status_missing_jobs"]
-    if job_specs is None:
-        return status_missing_jobs, "Job not found"
+    if (job_specs := section.get(item)) is None:
+        return params["status_missing_jobs"], "Job not found"
 
     status_mapping = {
         "Fail": 2,
@@ -168,7 +176,7 @@ def check_mssql_jobs(item, params, parsed):
     }
 
     yield check_levels(
-        value=job_specs["last_run_duration"],
+        value=job_specs.last_run_duration,
         dsname="database_job_duration",
         params=params.get("run_duration"),
         human_readable_func=get_age_human_readable,
@@ -177,20 +185,20 @@ def check_mssql_jobs(item, params, parsed):
 
     db_status = 0
     if not params["ignore_db_status"]:
-        db_status = status_mapping[job_specs["last_run_outcome"]]
-    yield db_status, "MSSQL status: %s" % job_specs["last_run_outcome"]
+        db_status = status_mapping[job_specs.last_run_outcome]
+    yield db_status, "MSSQL status: %s" % job_specs.last_run_outcome
 
-    yield 0, "Last run: %s" % job_specs["last_run_datetime"]
+    yield 0, "Last run: %s" % job_specs.last_run_datetime
 
     status_disabled_jobs = params["status_disabled_jobs"]
-    if job_specs["job_enabled"] == "0":
+    if job_specs.enabled == "0":
         yield status_disabled_jobs, "Job is disabled"
-    elif job_specs["schedule_enabled"] == "0":
+    elif job_specs.schedule_enabled == "0":
         yield status_disabled_jobs, "Schedule is disabled"
     else:
-        yield 0, "Next run: %s" % job_specs["next_run_datetime"]
+        yield 0, "Next run: %s" % job_specs.next_run_datetime
 
-    yield 0, "\nOutcome message: %s" % job_specs["last_outcome_message"]
+    yield 0, "\nOutcome message: %s" % job_specs.last_outcome_message
 
 
 check_info["mssql_jobs"] = {

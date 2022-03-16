@@ -46,7 +46,7 @@ LOGGER = logging.getLogger(__name__)
 
 class OSNotImplementedError(NotImplementedError):
     def __str__(self):
-        return "The OS type(%s) is not yet implemented." % platform.system()
+        return "The OS type ({}) is not yet implemented.".format(platform.system())
 
 
 # for compatibility with python 2.6

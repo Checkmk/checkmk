@@ -15,5 +15,5 @@ Separators: 10 124 124 124
 EOF
     IFS='|' read state output perfdata
     echo "$output|$perfdata"
-    exit $state
+    exit "$state"
 }

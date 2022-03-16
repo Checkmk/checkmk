@@ -5,11 +5,11 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo install -m 755 guitest $ROOT/bin/guitest
+sudo install -m 755 guitest "$ROOT"/bin/guitest

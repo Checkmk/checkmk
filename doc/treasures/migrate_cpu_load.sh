@@ -33,7 +33,7 @@ echo "$FIRST"
 
 echo -n "Lege RRD-Datenbank $NEU.neu an..."
 
-rrdtool create $NEU.neu -s 60 -b $FIRST $DS1 $DS2 $DS3 $RRA && echo OK || exit 1
+rrdtool create $NEU.neu -s 60 -b "$FIRST" $DS1 $DS2 $DS3 "$RRA" && echo OK || exit 1
 chown nagios.nagios $NEU.neu
 
 echo -n "Speise Daten aus $ALT ein..."

@@ -8,7 +8,7 @@ CRE_LICENSE_NAME="GNU General Public License v2"
 CEE_LICENSE_NAME="Check_MK Enterprise License"
 
 header() {
-    if [ $isCFile = true ]; then
+    if [ "$isCFile" = true ]; then
         echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
         echo "This file is part of Checkmk (https://checkmk.com). It is subject to the"
         echo "terms and conditions defined in the file COPYING, which is part of this"
@@ -35,8 +35,8 @@ headrify() {
         return
     fi
 
-    headline="$(head -n1 $file)"
-    checkSuffix=false
+    headline="$(head -n1 "$file")"
+    #checkSuffix=false
     isCFile=false
     if [ "${headline:0:9}" = "#!/bin/sh" ]; then
         comment="# "
@@ -102,7 +102,7 @@ headrify() {
         esac
     fi
 
-    if [[ "$bangpath" == *"python"* && "$(realpath $file)" == *"/tests/"* ]]; then
+    if [[ "$bangpath" == *"python"* && "$(realpath "$file")" == *"/tests/"* ]]; then
         bangpath="#!/usr/bin/env python3
 # -*- coding: utf-8 -*-"
     fi
@@ -112,59 +112,61 @@ headrify() {
     endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|source code package.)'
 
     TMP=$(mktemp .headrify.new.XXXXXX)
-    chmod --reference=$file $TMP
-    : >$TMP
-    if [[ "$(head -n1 $file | sed -n "/^\xEF\xBB\xBF/ p")" ]]; then
-        printf "\xEF\xBB\xBF" >$TMP
+    chmod --reference="$file" "$TMP"
+    : >"$TMP"
+    if [[ "$(head -n1 "$file" | sed -n "/^\xEF\xBB\xBF/ p")" ]]; then
+        printf "\xEF\xBB\xBF" >"$TMP"
     fi
-    if [ -n "$bangpath" ]; then echo "$bangpath" >>$TMP; fi
+    if [ -n "$bangpath" ]; then echo "$bangpath" >>"$TMP"; fi
 
     licenseName=$CRE_LICENSE_NAME
-    if [[ "$(realpath $file)" == *"/enterprise/"* || "$(realpath $file)" == *"/managed/"* ]]; then
+    if [[ "$(realpath "$file")" == *"/enterprise/"* || "$(realpath "$file")" == *"/managed/"* ]]; then
         licenseName=$CEE_LICENSE_NAME
     fi
-    header $licenseName | sed "s@^@$comment@" | sed 's/ *$//' >>$TMP
-    echo >>$TMP
+    header "$licenseName" | sed "s@^@$comment@" | sed 's/ *$//' >>"$TMP"
+    echo >>"$TMP"
     bangpathlines=0
     count=0
     tmpwritten=false
-    while read line; do
-        if [[ ("$line" == *"$up2dateline"* || "$line" == *"$figletline"*) && "$(sed -rn "/$endline/I p" $file)" ]]; then
+    # FIXME: Make sure not to read and write the same file in the same pipeline.
+    # shellcheck disable=SC2094
+    while read -r line; do
+        if [[ ("$line" == *"$up2dateline"* || "$line" == *"$figletline"*) && "$(sed -rn "/$endline/I p" "$file")" ]]; then
             # Delete all lines until and including $endline, then also remove all
             # leading # blank lines as well as a possible multiline comment ending
             # tag '*/' from the beginning of $file and append the result to $TMP
-            sed -i "1s/^\xEF\xBB\xBF//" $file
-            sed -r '0,/^'"$endline"'$/Id' $file | sed '/./,$!d' | sed '1{/^\*\/$/d}' | sed '/./,$!d' >>$TMP
+            sed -i "1s/^\xEF\xBB\xBF//" "$file"
+            sed -r '0,/^'"$endline"'$/Id' "$file" | sed '/./,$!d' | sed '1{/^\*\/$/d}' | sed '/./,$!d' >>"$TMP"
             tmpwritten=true
             break
         elif [[ "$(echo "$line" | sed -n '/copyright/I p' | sed -n '/tribe29/ !p')" ]]; then
             echo "Skipping $file because it seems to hold a non tribe29 copyright notice already."
-            rm -f $TMP
+            rm -f "$TMP"
             return
-        elif [[ ($count == $bangpathlines) && ("$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* || "$line" = "#!/usr/bin/python"*) ]]; then
-            let bangpathlines=bangpathlines+1
+        elif [[ ($count == "$bangpathlines") && ("$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* || "$line" = "#!/usr/bin/python"*) ]]; then
+            bangpathlines=$((bangpathlines + 1))
         fi
 
         if [ $count -gt 4 ]; then
             break
         fi
-        let count=count+1
-    done <$file
+        count=$((count + 1))
+    done <"$file"
 
     if [ "$tmpwritten" = false ]; then
         if [ $bangpathlines -gt 0 ]; then
-            let tailindex=bangpathlines+1
-            sed -i "1s/^\xEF\xBB\xBF//" $file
-            tail -n +$tailindex "$file" >>$TMP
+            tailindex=$((bangpathlines + 1))
+            sed -i "1s/^\xEF\xBB\xBF//" "$file"
+            tail -n +$tailindex "$file" >>"$TMP"
         else
-            sed -i "1s/^\xEF\xBB\xBF//" $file
-            cat $file >>$TMP
+            sed -i "1s/^\xEF\xBB\xBF//" "$file"
+            cat "$file" >>"$TMP"
         fi
     fi
     echo "$file..."
-    mv $TMP $file || rm -f $TMP
+    mv "$TMP" "$file" || rm -f "$TMP"
     if [[ "$bangpath" == *"python"* ]]; then
-        yapf -i $file
+        yapf -i "$file"
     fi
 }
 

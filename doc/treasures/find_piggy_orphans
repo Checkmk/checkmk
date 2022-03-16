@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-cd $OMD_ROOT
+cd "$OMD_ROOT" || exit
 for h in $(
-    cd tmp/check_mk/piggyback
+    cd tmp/check_mk/piggyback || exit
     echo *
 ); do
     lq "GET hosts\nColumns: address name\nFilter: address = $h\nFilter: name = $h\nOr: 2" | grep -q . || echo "$h"

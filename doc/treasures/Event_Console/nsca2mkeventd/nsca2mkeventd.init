@@ -17,7 +17,7 @@
 unset LANG
 
 pidof_nsca2mkeventd() {
-    pgrep -u $OMD_SITE -f -x "/usr/bin/python $OMD_ROOT/local/bin/nsca2mkeventd"
+    pgrep -u "$OMD_SITE" -f -x "/usr/bin/python $OMD_ROOT/local/bin/nsca2mkeventd"
 }
 
 case "$1" in
@@ -29,7 +29,7 @@ case "$1" in
             exit 1
         }
 
-        $OMD_ROOT/local/bin/nsca2mkeventd
+        "$OMD_ROOT"/local/bin/nsca2mkeventd
         if [ $? -eq 0 ]; then
             echo OK
         else
@@ -45,11 +45,11 @@ case "$1" in
         }
 
         I=0
-        kill $PID
-        while kill -0 $PID >/dev/null 2>&1; do
+        kill "$PID"
+        while kill -0 "$PID" >/dev/null 2>&1; do
             if [ $I = '5' ]; then
                 echo -e 'sending SIGKILL... '
-                kill -9 $PID
+                kill -9 "$PID"
             elif [ $I = '10' ]; then
                 echo ERROR
                 exit 1

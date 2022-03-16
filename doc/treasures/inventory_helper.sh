@@ -19,7 +19,7 @@ reinventory() {
     now=$(date +%s)
 
     # Use the automation API to run an inventory, only for new objects.
-    check_mk --automation inventory new $HOST >/dev/null
+    check_mk --automation inventory new "$HOST" >/dev/null
 
     # Then reschedule the service discovery check right now to clear up.
     # (currently we're running it just once a day at the same time on all hosts)

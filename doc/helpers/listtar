@@ -11,16 +11,16 @@ if [ ! -e "$TAR" ]; then
     exit 1
 fi
 
-tar tzf $TAR |
-    while read filename; do
+tar tzf "$TAR" |
+    while read -r filename; do
         echo -n "$filename"
         if [ "${filename:(-7)}" = ".tar.gz" ]; then
             echo :
-            tar xzf $TAR --to-stdout "$filename" | tar tzvf -
+            tar xzf "$TAR" --to-stdout "$filename" | tar tzvf -
             echo
         elif [ "${filename:(-4)}" = ".tar" ]; then
             echo :
-            tar xzf $TAR --to-stdout "$filename" | tar tvf -
+            tar xzf "$TAR" --to-stdout "$filename" | tar tvf -
             echo
         else
             echo

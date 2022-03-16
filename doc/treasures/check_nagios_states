@@ -12,7 +12,7 @@ Stats: has_been_checked = 1
 StatsAnd: 2
 Stats: state = 1
 Stats: state = 2
-Stats: state = 3" | unixcat $OMD_ROOT/tmp/run/live)
+Stats: state = 3" | unixcat "$OMD_ROOT"/tmp/run/live)
 
 TOTAL=$1
 PENDING=$2

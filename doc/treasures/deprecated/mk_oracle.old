@@ -18,7 +18,7 @@ if [ -z "$SIDS" ]; then
     exit 0
 fi
 
-touch $MK_CONFDIR/mk_oracle.found
+touch "$MK_CONFDIR"/mk_oracle.found
 
 # Recreate data if cachefile is older than 120 seconds.
 # If you set this to 0, then the cache file will be created
@@ -28,7 +28,7 @@ CACHE_MAXAGE=120
 
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
-    . $MK_CONFDIR/mk_oracle.cfg
+    . "$MK_CONFDIR"/mk_oracle.cfg
 fi
 
 # You can specify a list of SIDs to monitor. Those databases will
@@ -67,7 +67,7 @@ sqlplus() {
         echo 'set lines 8000'
         echo 'set feedback off'
         cat
-    } | $MK_CONFDIR/sqlplus.sh $1); then
+    } | "$MK_CONFDIR"/sqlplus.sh "$1"); then
         echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"
     else
         echo "${OUTPUT}" | sed "s/^/$1 FAILURE /"
@@ -104,9 +104,9 @@ for SID in $SIDS; do
 
     # Check if file exists and recent enough
     CACHE_FILE_UPTODATE=
-    if [ -s $CACHE_FILE ]; then
+    if [ -s "$CACHE_FILE" ]; then
         NOW=$(date +%s)
-        MTIME=$(stat -c %Y $CACHE_FILE)
+        MTIME=$(stat -c %Y "$CACHE_FILE")
         if [ $(($NOW - $MTIME)) -le $CACHE_MAXAGE ]; then
             CACHE_FILE_UPTODATE=1
         fi
@@ -149,7 +149,7 @@ for SID in $SIDS; do
 
             if [ '$EXCLUDE' = '${EXCLUDE/jobs/}' ]; then
                 echo '<<<oracle_jobs>>>'
-                sqlplus "$SID" <<EOF
+                sqlplus ""$SID"" <<EOF
                 SELECT j.OWNER, j.JOB_NAME, j.STATE,
                 (TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400 AS LAST_RUN_DURATION,
                 j.RUN_COUNT, j.ENABLED, NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd')),
@@ -163,7 +163,7 @@ EOF
 
             if [ '$EXCLUDE' = '${EXCLUDE/rman_backups/}' ]; then
                 echo '<<<oracle_rman_backups>>>'
-                sqlplus "$SID" <<EOF
+                sqlplus ""$SID"" <<EOF
                 SELECT b.COMMAND_ID, a.STATUS,
                 to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS') AS START_TIME,
                 to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS') AS END_TIME, b.INPUT_TYPE
@@ -176,7 +176,7 @@ EOF
 
             if [ '$EXCLUDE' = '${EXCLUDE/tablespaces/}' ]; then
                 echo '<<<oracle_tablespaces>>>'
-                sqlplus "$SID" <<EOF | sed 's/READ ONLY/READONLY/g'
+                sqlplus ""$SID"" <<EOF | sed 's/READ ONLY/READONLY/g'
                 select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
                 f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
                 f.ONLINE_STATUS, t.BLOCK_SIZE, t.status, decode(sum(fs.blocks), NULL, 0,

@@ -9,7 +9,7 @@
 echo '<<<mrpe>>>'
 grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe_include.cfg" |
     while read user include; do
-        if [ -f $include ]; then
+        if [ -f "$include" ]; then
             PREFIX=""
             if [ "$user" != "-" ]; then
                 PREFIX="su $user -c "

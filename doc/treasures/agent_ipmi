@@ -16,9 +16,9 @@ echo 'AgentOS: IPMI'
 
 if which ipmi-sensors >/dev/null 2>&1; then
     echo '<<<ipmi_sensors>>>'
-    ipmi-sensors -h $1 -u $2 -p $3 -l USER -Q --ignore-not-available-sensors --legacy-output |
+    ipmi-sensors -h "$1" -u "$2" -p "$3" -l USER -Q --ignore-not-available-sensors --legacy-output |
         sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-    test ${PIPESTATUS[0]} -eq 0
+    test "${PIPESTATUS[0]}" -eq 0
 else
     echo '<<<ipmi>>>'
     ipmitool -i lan -H "$HOST" -U "$USERNAME" -f "$PASSWORD" sensor show 2>/dev/null |

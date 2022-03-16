@@ -30,13 +30,13 @@ SOCKET=${3:-/var/run/nagios/rw/live}
 
 check() {
     IFS=\; read COUNT OK WARN CRIT UNKNOWN
-    if [ $CRIT -ge $NUM ]; then
+    if [ "$CRIT" -ge "$NUM" ]; then
         status=CRIT
         exitcode=2
-    elif [ $((CRIT + WARN)) -ge $NUM ]; then
+    elif [ $((CRIT + WARN)) -ge "$NUM" ]; then
         status=WARN
         exitcode=1
-    elif [ $((CRIT + WARN + UNKNOWN)) -ge $NUM ]; then
+    elif [ $((CRIT + WARN + UNKNOWN)) -ge "$NUM" ]; then
         status=UNKNOWN
         exitcode=3
     else
@@ -47,7 +47,7 @@ check() {
     exit $exitcode
 }
 
-cat <<EOF | unixcat $SOCKET | check
+cat <<EOF | unixcat "$SOCKET" | check
 GET services
 Filter: groups >= $GROUPNAME
 Stats: last_hard_state >= 0

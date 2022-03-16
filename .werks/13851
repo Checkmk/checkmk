@@ -1,0 +1,15 @@
+Title: Baked windows agent packages are not signed anymore
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1647434906
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously the agent bakery used a signed MSI file as a basis to assemble
+windows agent packages. As a result the package got an invalid signature.
+
+With this release the agent bakery uses an unsigned MSI file, thus solving 
+the problem.

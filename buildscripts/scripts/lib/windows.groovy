@@ -20,7 +20,7 @@ def build(Map args) {
                     ARTIFACTS = 'python-3.cab,python-3.4.cab'
                 } else if (args.TARGET == "agent_with_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd tribe29.pfx ' + args.PASSWORD
-                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_no_sign.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
+                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
                 } else if (args.TARGET == "agent_no_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd'
                     ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"

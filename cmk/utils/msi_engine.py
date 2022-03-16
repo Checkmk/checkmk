@@ -18,8 +18,11 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
+from typing import Final
 
 from cmk.utils import msi_patch
+
+AGENT_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 
 opt_verbose = True
 
@@ -279,7 +282,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
             path_prefix = "./"
             tmp_dir = "."
 
-        new_msi_file = src_dir + "/check_mk_agent.msi"
+        new_msi_file = src_dir + "/" + AGENT_MSI_FILE
         work_dir = tempfile.mkdtemp(prefix=tmp_dir + "/msi-update.")
 
         # When this script is run in the build environment then we need to specify

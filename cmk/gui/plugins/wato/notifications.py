@@ -1334,7 +1334,7 @@ $LONGSERVICEOUTPUT$
 
     def _recovery_state_vs(self, issue_type: str) -> Dictionary:
         return Dictionary(
-            title=_("Settings for state of %s in case of recovery") % issue_type,
+            title=_("Settings for %s state in case of recovery") % issue_type,
             help=_(
                 "Here you can define the state of the %s in case of a recovery "
                 "of the affected host or service problem."

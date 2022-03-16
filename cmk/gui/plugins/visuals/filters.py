@@ -28,7 +28,6 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
-from cmk.gui.utils.labels import encode_labels_for_livestatus
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, Labels
@@ -1502,49 +1501,42 @@ class FilterHostAuxTags(Filter):
 
 
 class LabelFilter(Filter):
-    def __init__(self, *, ident: str, title: Union[str, LazyString], object_type: str) -> None:
-        self._object_type = object_type
+    def __init__(
+        self,
+        *,
+        title: Union[str, LazyString],
+        object_type: Literal["host", "service"],
+    ) -> None:
+        self.query_filter = query_filters.LabelsQuery(object_type=object_type)
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=301,
-            info=object_type,
-            htmlvars=[self._var_prefix],
+            info=self.query_filter.object_type,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
         )
 
-    @property
-    def _var_prefix(self):
-        return "%s_label" % self._object_type
-
-    @property
-    def _column(self):
-        return "%s_labels" % self._object_type
-
-    def _parsed_value(self, value: FilterHTTPVariables):
-        return self._valuespec()._from_html_vars(value.get(self._var_prefix, ""), self._var_prefix)
-
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
-        return " ".join(":".join(e) for e in sorted(self._parsed_value(value).items()))
+        return " ".join(":".join(e) for e in sorted(self.query_filter.parse_value(value)))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
-        return {self.htmlvars[0]: row[self._column]}
+        return {self.query_filter.request_vars[0]: row[self.query_filter.ident]}
 
     def _valuespec(self):
         return Labels(world=Labels.World.CORE)
 
     def display(self, value: FilterHTTPVariables) -> None:
-        self._valuespec().render_input(self._var_prefix, self._parsed_value(value))
+        self._valuespec().render_input(
+            self.query_filter.request_vars[0], dict(self.query_filter.parse_value(value))
+        )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if value := self._parsed_value(value):
-            return encode_labels_for_livestatus(self._column, iter(value.items())) + "\n"
-        return ""
+        return self.query_filter.filter(value)
 
 
 filter_registry.register(
     LabelFilter(
-        ident="host_labels",
         title=_l("Host labels"),
         object_type="host",
     )
@@ -1552,7 +1544,6 @@ filter_registry.register(
 
 filter_registry.register(
     LabelFilter(
-        ident="service_labels",
         title=_l("Service labels"),
         object_type="service",
     )

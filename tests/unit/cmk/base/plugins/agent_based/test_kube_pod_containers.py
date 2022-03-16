@@ -127,11 +127,6 @@ def test_parse(container_name, container_state, string_table):
     assert section.containers[container_name].state.type == container_state
 
 
-def test_host_labels(section):
-    labels = kube_pod_containers.host_labels(section)
-    assert len(list(labels)) == 1
-
-
 @pytest.mark.parametrize("num_of_containers", [1, 2, 5, 10])
 def test_discovery_returns_as_much_services_as_containers(num_of_containers, section):
     assert len(list(kube_pod_containers.discovery(section))) == num_of_containers

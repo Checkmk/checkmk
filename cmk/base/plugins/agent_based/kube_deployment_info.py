@@ -50,27 +50,12 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
         cmk/kubernetes/deployment:
             This label is set to the name of the deployment.
 
-        cmk/container_name:
-            This label is set to the name of the container
-
-        cmk/container_image:
-            This label is set to the image of the container.
-
     """
-
-    if not section:
-        return
 
     yield HostLabel("cmk/kubernetes/object", "deployment")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
     yield HostLabel("cmk/kubernetes/deployment", section.name)
-
-    for container in section.containers:
-        yield HostLabel("cmk/container_name", container)
-
-    for image in section.images:
-        yield HostLabel("cmk/container_image", image)
 
 
 register.agent_section(

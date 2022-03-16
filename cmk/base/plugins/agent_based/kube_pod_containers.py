@@ -8,18 +8,10 @@ import json
 from time import time
 from typing import Mapping, Optional
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    HostLabel,
-    register,
-    render,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    HostLabelGenerator,
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
@@ -45,30 +37,16 @@ def parse(string_table: StringTable) -> Optional[PodContainers]:
     return PodContainers(**json.loads(string_table[0][0]))
 
 
-def host_labels(section: PodContainers) -> HostLabelGenerator:
-    """Host label function
-
-    Labels:
-        cmk/container_image:
-            This label is set to the image of the container
-    """
-
-    for image in {container.image for container in section.containers.values()}:
-        yield HostLabel("cmk/container_image", image)
-
-
 register.agent_section(
     name="kube_pod_containers_v1",
     parsed_section_name="kube_pod_containers",
     parse_function=parse,
-    host_label_function=host_labels,
 )
 
 register.agent_section(
     name="kube_pod_init_containers_v1",
     parsed_section_name="kube_pod_init_containers",
     parse_function=parse,
-    host_label_function=host_labels,
 )
 
 

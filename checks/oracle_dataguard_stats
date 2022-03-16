@@ -116,62 +116,64 @@ def check_oracle_dataguard_stats(item, params, parsed):
                     "switchover_status"
                 ]
 
-    if dgdata["database_role"] == "PHYSICAL STANDBY":
-        mrp_status = dgdata.get("mrp_status")
+    if dgdata["database_role"] != "PHYSICAL STANDBY":
+        return
 
-        mrp_started_state, mrp_stopped_state = params.get("mrp_option", (0, 2))
-        if mrp_status:
-            yield mrp_started_state, "Managed Recovery Process state %s" % mrp_status.lower()
+    mrp_status = dgdata.get("mrp_status")
 
-            if dgdata.get("open_mode", "") == "READ ONLY WITH APPLY":
-                yield params.get("active_dataguard_option"), "Active Data-Guard found"
-        elif mrp_status is not None:
-            yield mrp_stopped_state, "Managed Recovery Process not started"
+    mrp_started_state, mrp_stopped_state = params.get("mrp_option", (0, 2))
+    if mrp_status:
+        yield mrp_started_state, "Managed Recovery Process state %s" % mrp_status.lower()
 
-        for dgstat_param in sorted(dgdata["dgstat"]):
+        if dgdata.get("open_mode", "") == "READ ONLY WITH APPLY":
+            yield params.get("active_dataguard_option"), "Active Data-Guard found"
+    elif mrp_status is not None:
+        yield mrp_stopped_state, "Managed Recovery Process not started"
 
-            if dgstat_param == "apply lag" and not dgdata["dgstat"][dgstat_param]:
-                yield params["missing_apply_lag_state"], "No value for apply lag"
-                continue
+    for dgstat_param in sorted(dgdata["dgstat"]):
 
-            if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
-                if (seconds := _get_seconds(dgdata["dgstat"][dgstat_param])) is not None:
-                    pkey = dgstat_param.replace(" ", "_")
-                    levels_upper = params.get(pkey) or (None, None)
-                    levels_lower = params.get(f"{pkey}_min") or (None, None)
+        if dgstat_param == "apply lag" and not dgdata["dgstat"][dgstat_param]:
+            yield params["missing_apply_lag_state"], "No value for apply lag"
+            continue
 
-                    yield check_levels(
-                        seconds,
-                        pkey,
-                        levels_upper + levels_lower,
-                        human_readable_func=get_age_human_readable,
-                        infoname=dgstat_param.capitalize(),
-                    )
+        if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
+            if (seconds := _get_seconds(dgdata["dgstat"][dgstat_param])) is not None:
+                pkey = dgstat_param.replace(" ", "_")
+                levels_upper = params.get(pkey) or (None, None)
+                levels_lower = params.get(f"{pkey}_min") or (None, None)
 
-            # show only 'apply finish time'
+                yield check_levels(
+                    seconds,
+                    pkey,
+                    levels_upper + levels_lower,
+                    human_readable_func=get_age_human_readable,
+                    infoname=dgstat_param.capitalize(),
+                )
 
-            elif dgstat_param == "apply finish time":
-                if dgdata["dgstat"][dgstat_param]:
-                    seconds = _get_seconds(dgdata["dgstat"][dgstat_param])
-                    perfdata = [
-                        (dgstat_param.replace(" ", "_"), seconds),
-                    ]
-                    if seconds is None:
-                        # apply finish time is only for informational purposes
-                        # => we ignore possible unknown time for apply finish times
-                        yield 0, "%s unknown time" % (dgstat_param), perfdata
-                    else:
-                        yield 0, "%s %s" % (dgstat_param, get_age_human_readable(seconds)), perfdata
+        # show only 'apply finish time'
 
-        if (
-            dgdata["database_role"] == "PHYSICAL STANDBY"
-            and "broker_state" not in dgdata
-            and "apply lag" in dgdata["dgstat"]
-            and dgdata["dgstat"]["apply lag"] == ""
-        ):
-            # old sql cannot detect a started standby database without running media recovery
-            # => add an information for old plugin with possible wrong result
-            yield 0, "old plugin data found, recovery active?"
+        elif dgstat_param == "apply finish time":
+            if dgdata["dgstat"][dgstat_param]:
+                seconds = _get_seconds(dgdata["dgstat"][dgstat_param])
+                perfdata = [
+                    (dgstat_param.replace(" ", "_"), seconds),
+                ]
+                if seconds is None:
+                    # apply finish time is only for informational purposes
+                    # => we ignore possible unknown time for apply finish times
+                    yield 0, "%s unknown time" % (dgstat_param), perfdata
+                else:
+                    yield 0, "%s %s" % (dgstat_param, get_age_human_readable(seconds)), perfdata
+
+    if (
+        dgdata["database_role"] == "PHYSICAL STANDBY"
+        and "broker_state" not in dgdata
+        and "apply lag" in dgdata["dgstat"]
+        and dgdata["dgstat"]["apply lag"] == ""
+    ):
+        # old sql cannot detect a started standby database without running media recovery
+        # => add an information for old plugin with possible wrong result
+        yield 0, "old plugin data found, recovery active?"
 
 
 check_info["oracle_dataguard_stats"] = {

@@ -45,7 +45,6 @@ def _get_seconds(timestamp: str) -> Optional[int]:
 
 
 def check_oracle_dataguard_stats(item, params, parsed):
-    state = 0
 
     try:
         dgdata = parsed[item]
@@ -136,62 +135,18 @@ def check_oracle_dataguard_stats(item, params, parsed):
                 continue
 
             if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
-                state = 0
                 if (seconds := _get_seconds(dgdata["dgstat"][dgstat_param])) is not None:
+                    pkey = dgstat_param.replace(" ", "_")
+                    levels_upper = params.get(pkey) or (None, None)
+                    levels_lower = params.get(f"{pkey}_min") or (None, None)
 
-                    paramtext = ""
-                    warn = None
-                    crit = None
-
-                    if params.get(dgstat_param.replace(" ", "_")):
-
-                        warn, crit = params.get(dgstat_param.replace(" ", "_"))
-
-                        if crit <= seconds:
-                            paramtext = "(%s/%s)" % (
-                                get_age_human_readable(warn),
-                                get_age_human_readable(crit),
-                            )
-                            state = 2
-                        elif warn <= seconds:
-                            paramtext = "(%s/%s)" % (
-                                get_age_human_readable(warn),
-                                get_age_human_readable(crit),
-                            )
-                            state = 1
-
-                        # apply_lag_min is a MINIMUM value!
-                        if dgstat_param == "apply lag" and params.get("apply_lag_min"):
-                            warn, crit = params.get("apply_lag_min")
-                            if crit >= seconds:
-                                paramtext += " apply lag minimum (%s/%s)" % (
-                                    get_age_human_readable(warn),
-                                    get_age_human_readable(crit),
-                                )
-                                state = max(state, 2)
-                            elif warn >= seconds:
-                                paramtext += " apply lag minimum (%s/%s)" % (
-                                    get_age_human_readable(warn),
-                                    get_age_human_readable(crit),
-                                )
-                                state = max(state, 1)
-
-                perfdata = [
-                    (dgstat_param.replace(" ", "_"), seconds, warn, crit),
-                ]
-
-                if state == 0:
-                    yield 0, "%s %s" % (dgstat_param, get_age_human_readable(seconds)), perfdata
-                else:
-                    if seconds is None:
-                        # seconds is None => state != 0 from upper checks
-                        yield state, "%s unknown time" % (dgstat_param), perfdata
-                    else:
-                        yield state, "%s %s %s" % (
-                            dgstat_param,
-                            get_age_human_readable(seconds),
-                            paramtext,
-                        ), perfdata
+                    yield check_levels(
+                        seconds,
+                        pkey,
+                        levels_upper + levels_lower,
+                        human_readable_func=get_age_human_readable,
+                        infoname=dgstat_param.capitalize(),
+                    )
 
             # show only 'apply finish time'
 

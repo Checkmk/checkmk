@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple, Optional
 
 # Sample output:
 
@@ -30,16 +30,16 @@ DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
 
 class JobSpec(NamedTuple):
-    last_run_duration: float
+    last_run_duration: Optional[float]
     last_run_outcome: str
     last_run_datetime: str
-    enabled: str
-    schedule_enabled: str
+    enabled: bool
+    schedule_enabled: bool
     next_run_datetime: str
     last_outcome_message: str
 
 
-def _calculate_seconds(raw_duration: str) -> float:
+def _calculate_seconds(raw_duration: str) -> Optional[float]:
     """Return the number of seconds from a string in HHMMSS format.
     The strings are of variable length, e.g. 124 = 1 minute 24 seconds.
 
@@ -57,7 +57,8 @@ def _calculate_seconds(raw_duration: str) -> float:
 
     """
 
-    length = len(raw_duration)
+    if not (length := len(raw_duration)):
+        return None
 
     if length <= 2:
         return float(raw_duration)
@@ -119,6 +120,7 @@ def parse_mssql_jobs(info):
         "server_current_time",
     ]
     outcome_translation = {
+        "": "N/A",
         "0": "Fail",
         "1": "Succeed",
         "2": "Retry",
@@ -144,8 +146,8 @@ def parse_mssql_jobs(info):
                 job["last_run_date"],
                 job["last_run_time"],
             ),
-            enabled=job["job_enabled"],
-            schedule_enabled=job["schedule_enabled"],
+            enabled=job["job_enabled"] not in ("", "0"),
+            schedule_enabled=job["schedule_enabled"] not in ("", "0"),
             next_run_datetime=_format_to_datetime(
                 job["next_run_date"],
                 job["next_run_time"],
@@ -175,13 +177,14 @@ def check_mssql_jobs(item: str, params: Mapping[str, Any], section: Mapping[str,
         "Unknown": 3,
     }
 
-    yield check_levels(
-        value=job_specs.last_run_duration,
-        dsname="database_job_duration",
-        params=params.get("run_duration"),
-        human_readable_func=get_age_human_readable,
-        infoname="Last duration",
-    )
+    if job_specs.last_run_duration is not None:
+        yield check_levels(
+            value=job_specs.last_run_duration,
+            dsname="database_job_duration",
+            params=params.get("run_duration"),
+            human_readable_func=get_age_human_readable,
+            infoname="Last duration",
+        )
 
     db_status = 0
     if not params["ignore_db_status"]:
@@ -191,9 +194,9 @@ def check_mssql_jobs(item: str, params: Mapping[str, Any], section: Mapping[str,
     yield 0, "Last run: %s" % job_specs.last_run_datetime
 
     status_disabled_jobs = params["status_disabled_jobs"]
-    if job_specs.enabled == "0":
+    if not job_specs.enabled:
         yield status_disabled_jobs, "Job is disabled"
-    elif job_specs.schedule_enabled == "0":
+    elif not job_specs.schedule_enabled:
         yield status_disabled_jobs, "Schedule is disabled"
     else:
         yield 0, "Next run: %s" % job_specs.next_run_datetime

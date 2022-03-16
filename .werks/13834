@@ -1,0 +1,13 @@
+Title: mssql_jobs: deal with jobs that never ran
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647447016
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The check plugin crashed for uninitialized jobs that
+never run (resulting in a WARNING state of the
+<i>Check_MK Discovery</i> service).

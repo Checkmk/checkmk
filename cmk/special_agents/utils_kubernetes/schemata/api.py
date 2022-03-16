@@ -73,7 +73,7 @@ class NodeConditionStatus(str, enum.Enum):
 
 class NodeCondition(BaseModel):
     status: NodeConditionStatus
-    type_: Optional[str]
+    type_: str
     reason: Optional[str]
     detail: Optional[str]
     last_transition_time: Optional[int]

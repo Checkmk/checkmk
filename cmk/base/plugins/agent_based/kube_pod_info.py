@@ -55,10 +55,13 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
             This label is set to the given Kubernetes cluster name.
 
         cmk/kubernetes/namespace:
-            This label is set to the namespace of the deployment.
+            This label contains the name of the Kubernetes Namespace this
+            checkmk host is associated with.
 
         cmk/kubernetes/node:
-            This label is set to the node of the pod.
+            This label contains the name of the Kubernetes Node this checkmk
+            host is associated with. Checkmk hosts of the type Pod and Node
+            will be assigned this label.
     """
     yield HostLabel("cmk/kubernetes/object", "pod")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)

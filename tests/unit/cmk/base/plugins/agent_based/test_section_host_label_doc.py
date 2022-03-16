@@ -13,8 +13,6 @@ import itertools
 from typing import Final, List, Optional, Sequence, Set
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
-    "cmk/container_image",
-    "cmk/container_name",
     "cmk/device_type",
     "cmk/docker_image",
     "cmk/docker_image_name",

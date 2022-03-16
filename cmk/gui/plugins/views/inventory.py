@@ -1183,7 +1183,7 @@ def _register_info_class(infoname: str, title_singular: str, title_plural: str) 
             "title": property(lambda self: self._title),
             "_title_plural": title_plural,
             "title_plural": property(lambda self: self._title_plural),
-            "single_spec": property(lambda self: None),
+            "single_spec": property(lambda self: []),
         },
     )
     visual_info_registry.register(info_class)

@@ -1,0 +1,20 @@
+Title: Fix crash due to dashboard's ill configured with software inventory object restriction
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1647445487
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+If you configured a dashboard with the object restriction "show information of a
+single software package", that setting produced a misconfiguration of the
+dashboard specification. When updating to checkmk 2.1 your site is unusable and
+you can only see a crash report with the message:
+
+TypeError ('NoneType' object is not iterable)
+
+This werk fixes the crash, yet we still recommend to remove dashboards that use
+that restriction.

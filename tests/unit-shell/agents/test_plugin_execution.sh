@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
 # shellcheck source=../../agents/check_mk_agent.linux
@@ -16,7 +15,7 @@ oneTimeSetUp() {
     chmod +x "${SHUNIT_TMPDIR}/existing_py3_plugin.py"
 
     mkdir "${SHUNIT_TMPDIR}/execute"
-    printf "#!/bin/sh\necho '<<<foobar>>>'\n" > "${SHUNIT_TMPDIR}/execute/foobar.sh"
+    printf "#!/bin/sh\necho '<<<foobar>>>'\n" >"${SHUNIT_TMPDIR}/execute/foobar.sh"
     chmod +x "${SHUNIT_TMPDIR}/execute/foobar.sh"
 }
 

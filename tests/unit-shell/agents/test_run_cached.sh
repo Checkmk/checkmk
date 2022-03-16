@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
 # shellcheck source=../../agents/check_mk_agent.linux
@@ -32,14 +31,14 @@ oneTimeSetUp() {
         echo 'cached(123,456) P "leave my custom cache info alone!"'
         echo 'cached(123,456) P "leave my custom cache info alone as well!"'
         echo 'P "This is more output without custom cache info"'
-    } > "$LOCA_CACHE"
+    } >"$LOCA_CACHE"
 
     # mrpe plugin
     {
         # Note that mrpe includes a section header
         echo "<<<mrpe>>>"
         echo "(my_check) Description 0 This is mrpe output"
-    } > "$MRPE_CACHE"
+    } >"$MRPE_CACHE"
 
     # agent plugin
     {
@@ -48,7 +47,7 @@ oneTimeSetUp() {
         echo "<<<my_plugin_section2:cached(123,456)>>>"
         echo "<<<my_plugin_section3:cached(123,789)>>>"
         echo "This is a custom plugin output with own cache info"
-    } > "$PLUG_CACHE"
+    } >"$PLUG_CACHE"
 
 }
 

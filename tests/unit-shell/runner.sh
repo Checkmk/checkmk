@@ -15,15 +15,15 @@ run_file() {
     bname="${1##.*tests/unit-shell/}"
     printf "%s" "${bname}"
     if ! OUTPUT=$("${1}"); then
-         _failed_tests="$_failed_tests ${bname}"
-         printf "\n%s" "${OUTPUT}"
+        _failed_tests="$_failed_tests ${bname}"
+        printf "\n%s" "${OUTPUT}"
     else
         printf "%s" "${OUTPUT##*Ran}" | tr '\n.' ' '
         printf "\n"
     fi
 }
 
-find "${_REPO}/tests/unit-shell" -name "test*.sh"  | while read -r test_file; do
+find "${_REPO}/tests/unit-shell" -name "test*.sh" | while read -r test_file; do
     run_file "${test_file}"
 done
 

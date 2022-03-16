@@ -5,7 +5,6 @@
 
 TESTEE="${UNIT_SH_AGENTS_DIR}/scripts/super-server/setup"
 
-
 setUp() {
     # shellcheck source=../../agents/scripts/super-server/setup
     MK_SOURCE_ONLY="true" source "$TESTEE"

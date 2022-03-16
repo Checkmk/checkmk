@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 TESTEE="${UNIT_SH_AGENTS_DIR}/scripts/super-server/0_systemd/setup"
-
 
 setUp() {
     # shellcheck source=../../agents/scripts/super-server/0_systemd/setup
@@ -18,7 +16,6 @@ setUp() {
     mkdir -p "${SHUNIT_TMPDIR}${RESOURCES}"
 
 }
-
 
 _populate_units() {
     mkdir -p "${SHUNIT_TMPDIR}/usr/lib/systemd/system"
@@ -67,14 +64,12 @@ test_systemd_sufficient_fail_for_219() {
     assertContains "${ERRMSG}" $'The Checkmk agent may require features that are either buggy,\nor not even supported in systemd versions prior to 220.'
 }
 
-
 test__unit_deployed() {
     _populate_units
-   assertTrue "_unit_deployed unit_a"
-   assertTrue "_unit_deployed unit_c"
-   assertFalse "_unit_deployed unit_x"
+    assertTrue "_unit_deployed unit_a"
+    assertTrue "_unit_deployed unit_c"
+    assertFalse "_unit_deployed unit_x"
 }
-
 
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

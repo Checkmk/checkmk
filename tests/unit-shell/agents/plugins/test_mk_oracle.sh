@@ -14,7 +14,7 @@ MK_ORACLE_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_oracle"
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
-oneTimeSetUp () {
+oneTimeSetUp() {
     export MK_CONFDIR=${SHUNIT_TMPDIR}
     export MK_VARDIR=${SHUNIT_TMPDIR}
 
@@ -25,39 +25,38 @@ oneTimeSetUp () {
     . "$MK_ORACLE_PLUGIN_PATH" >/dev/null 2>&1
 
     # Overwrite functions from mk_oracle which cannot/won't be unit tested for now
-    mk_ora_sqlplus () { true; }
-    run_cached () { true; }
+    mk_ora_sqlplus() { true; }
+    run_cached() { true; }
 
-    do_sync_checks () { true; }
-    do_async_checks () { true; }
-    do_testmode () { true; }
+    do_sync_checks() { true; }
+    do_async_checks() { true; }
+    do_testmode() { true; }
 
-    do_async_custom_sqls () { true; }
-    do_testmode_custom_sql () { true; }
+    do_async_custom_sqls() { true; }
+    do_testmode_custom_sql() { true; }
 
-    sql_performance () { echo "mocked-sql_performance"; }
-    sql_tablespaces () { echo "mocked-sql_tablespaces"; }
-    sql_dataguard_stats () { echo "mocked-sql_dataguard_stats"; }
-    sql_recovery_status () { echo "mocked-sql_recovery_status"; }
-    sql_rman () { echo "mocked-sql_rman"; }
-    sql_recovery_area () { echo "mocked-sql_recovery_area"; }
-    sql_undostat () { echo "mocked-sql_undostat"; }
-    sql_resumable () { echo "mocked-sql_resumable"; }
-    sql_jobs () { echo "mocked-sql_jobs"; }
-    sql_ts_quotas () { echo "mocked-sql_ts_quotas"; }
-    sql_version () { echo "mocked-sql_version"; }
-    sql_instance () { echo "mocked-sql_instance"; }
-    sql_sessions () { echo "mocked-sql_sessions"; }
-    sql_processes () { echo "mocked-sql_processes"; }
-    sql_logswitches () { echo "mocked-sql_logswitches"; }
-    sql_locks () { echo "mocked-sql_locks"; }
-    sql_locks_old () { echo "mocked-sql_locks_old"; }
-    sql_longactivesessions () { echo "mocked-sql_longactivesessions"; }
-    sql_asm_diskgroup () { echo "mocked-sql_asm_diskgroup"; }
+    sql_performance() { echo "mocked-sql_performance"; }
+    sql_tablespaces() { echo "mocked-sql_tablespaces"; }
+    sql_dataguard_stats() { echo "mocked-sql_dataguard_stats"; }
+    sql_recovery_status() { echo "mocked-sql_recovery_status"; }
+    sql_rman() { echo "mocked-sql_rman"; }
+    sql_recovery_area() { echo "mocked-sql_recovery_area"; }
+    sql_undostat() { echo "mocked-sql_undostat"; }
+    sql_resumable() { echo "mocked-sql_resumable"; }
+    sql_jobs() { echo "mocked-sql_jobs"; }
+    sql_ts_quotas() { echo "mocked-sql_ts_quotas"; }
+    sql_version() { echo "mocked-sql_version"; }
+    sql_instance() { echo "mocked-sql_instance"; }
+    sql_sessions() { echo "mocked-sql_sessions"; }
+    sql_processes() { echo "mocked-sql_processes"; }
+    sql_logswitches() { echo "mocked-sql_logswitches"; }
+    sql_locks() { echo "mocked-sql_locks"; }
+    sql_locks_old() { echo "mocked-sql_locks_old"; }
+    sql_longactivesessions() { echo "mocked-sql_longactivesessions"; }
+    sql_asm_diskgroup() { echo "mocked-sql_asm_diskgroup"; }
 }
 
-
-tearDown () {
+tearDown() {
     if [ -f "${MK_CONFDIR}/mk_oracle.cfg" ]; then
         # shellcheck disable=SC1090
         rm "${MK_CONFDIR}/mk_oracle.cfg"
@@ -78,7 +77,7 @@ tearDown () {
 
 #   ---load_config----------------------------------------------------------
 
-test_mk_oracle_default_config () {
+test_mk_oracle_default_config() {
     load_config
 
     assertEquals "instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks systemparameter" "$SYNC_SECTIONS"
@@ -90,8 +89,7 @@ test_mk_oracle_default_config () {
     assertEquals "1" "$MAX_TASKS"
 }
 
-
-test_mk_oracle_load_config () {
+test_mk_oracle_load_config() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 # Some comments
 SYNC_SECTIONS="instance undostat"
@@ -114,7 +112,7 @@ EOF
     assertEquals "5" "$MAX_TASKS"
 }
 
-test_mk_oracle_load_config_custom_all_sids () {
+test_mk_oracle_load_config_custom_all_sids() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 # custom sqls assignement
 SQLS_SIDS="\$SIDS"
@@ -127,7 +125,7 @@ EOF
     assertEquals "XE MYSID" "$custom_sqls_sids"
 }
 
-test_mk_oracle_load_config_sections_opt () {
+test_mk_oracle_load_config_sections_opt() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SQLS_SECTIONS="section1,section2,section3"
 EOF
@@ -146,7 +144,7 @@ EOF
 
 #   ---skip_sids------------------------------------------------------------
 
-test_mk_oracle_only_sids0 () {
+test_mk_oracle_only_sids0() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 ONLY_SIDS="YourSID HisSID HerSID"
 EOF
@@ -156,8 +154,7 @@ EOF
     assertEquals "yes" "$(skip_sid "MYSID")"
 }
 
-
-test_mk_oracle_only_sids1 () {
+test_mk_oracle_only_sids1() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 ONLY_SIDS="MYSID YourSID HisSID HerSID"
 EOF
@@ -167,8 +164,7 @@ EOF
     assertEquals "no" "$(skip_sid "MYSID")"
 }
 
-
-test_mk_oracle_skip_sids0 () {
+test_mk_oracle_skip_sids0() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SKIP_SIDS="MYSID YourSID"
 EOF
@@ -178,8 +174,7 @@ EOF
     assertEquals "yes" "$(skip_sid "MYSID")"
 }
 
-
-test_mk_oracle_skip_sids1 () {
+test_mk_oracle_skip_sids1() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SKIP_SIDS="YourSID"
 EOF
@@ -189,8 +184,7 @@ EOF
     assertEquals "no" "$(skip_sid "MYSID")"
 }
 
-
-test_mk_oracle_exclude_all0 () {
+test_mk_oracle_exclude_all0() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 EXCLUDE_MYSID="ALL"
 EOF
@@ -200,8 +194,7 @@ EOF
     assertEquals "yes" "$(skip_sid "MYSID")"
 }
 
-
-test_mk_oracle_exclude_all1 () {
+test_mk_oracle_exclude_all1() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 EXCLUDE_OtherSID="ALL"
 EOF
@@ -211,8 +204,7 @@ EOF
     assertEquals "no" "$(skip_sid "MYSID")"
 }
 
-
-test_mk_oracle_only_vs_skip () {
+test_mk_oracle_only_vs_skip() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 ONLY_SIDS="MYSID"
 SKIP_SIDS="MYSID"
@@ -224,7 +216,7 @@ EOF
     assertEquals "no" "$(skip_sid "MYSID")"
 }
 
-test_mk_oracle_load_config_confd () {
+test_mk_oracle_load_config_confd() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.d/custom_config.cfg"
 DBUSER_MYSID="checkmk:password"
 SYNC_SECTIONS_MYSID="instance performance"
@@ -245,7 +237,7 @@ EOF
     assertEquals "tablespaces jobs" "$ASYNC_SECTIONS_MYSID"
 }
 
-test_mk_oracle_noexisting_confd () {
+test_mk_oracle_noexisting_confd() {
     rmdir "${MK_CONFDIR}/mk_oracle.d"
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 DBUSER="checkmk:password"
@@ -260,10 +252,9 @@ EOF
     mkdir "${MK_CONFDIR}/mk_oracle.d"
 }
 
-
 #   ---do_checks------------------------------------------------------------
 
-test_mk_oracle_do_checks_sections () {
+test_mk_oracle_do_checks_sections() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions"
 ASYNC_SECTIONS="tablespaces rman"
@@ -278,8 +269,7 @@ mocked-sql_sessions" "$MK_SYNC_SECTIONS_QUERY"
 mocked-sql_rman" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-
-test_mk_oracle_do_checks_exclude_sections () {
+test_mk_oracle_do_checks_exclude_sections() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches"
 ASYNC_SECTIONS="tablespaces rman jobs"
@@ -300,8 +290,7 @@ mocked-sql_sessions" "$MK_SYNC_SECTIONS_QUERY"
 mocked-sql_rman" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-
-test_mk_oracle_do_checks_sid_sections () {
+test_mk_oracle_do_checks_sid_sections() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
 ASYNC_SECTIONS="tablespaces rman jobs resumable"
@@ -321,7 +310,6 @@ mocked-sql_sessions" "$MK_SYNC_SECTIONS_QUERY"
 mocked-sql_rman" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-
 test_mk_oracle_case_insensitive_sync_section() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS_MYSID="instance sessions"
@@ -340,8 +328,7 @@ mocked-sql_sessions" "$MK_SYNC_SECTIONS_QUERY"
 mocked-sql_rman" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-
-test_mk_oracle_do_checks_remote_sid_excluded () {
+test_mk_oracle_do_checks_remote_sid_excluded() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 DBUSER="checkmk:password"
 DBUSER_myinst1="checkmk_inst:password_inst::db1xyz_srv12.domain.tld:1521"
@@ -357,15 +344,13 @@ EOF
     ORACLE_SID="myinst1"
     do_checks
 
-
     assertEquals "mocked-sql_tablespaces
 mocked-sql_resumable
 mocked-sql_ts_quotas" "$MK_ASYNC_SECTIONS_QUERY"
 
 }
 
-
-test_mk_oracle_do_checks_sid_sections_excluded () {
+test_mk_oracle_do_checks_sid_sections_excluded() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
 ASYNC_SECTIONS="tablespaces rman jobs resumable"
@@ -388,8 +373,7 @@ mocked-sql_undostat" "$MK_SYNC_SECTIONS_QUERY"
 mocked-sql_jobs" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-
-test_mk_oracle_do_checks_sections_opt () {
+test_mk_oracle_do_checks_sections_opt() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches"
 ASYNC_SECTIONS="tablespaces rman jobs"
@@ -410,8 +394,7 @@ mocked-sql_tablespaces" "$MK_SYNC_SECTIONS_QUERY"
     assertEquals "" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-
-test_mk_oracle_do_checks_sid_sections_opt () {
+test_mk_oracle_do_checks_sid_sections_opt() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS_MYSID="instance sessions logswitches undostat"
 ASYNC_SECTIONS_MYSID="tablespaces rman jobs"
@@ -436,7 +419,7 @@ mocked-sql_tablespaces" "$MK_SYNC_SECTIONS_QUERY"
 
 #   ---ASM------------------------------------------------------------------
 
-test_mk_oracle_do_checks_asm () {
+test_mk_oracle_do_checks_asm() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_ASM_SECTIONS="instance processes"
 ASYNC_ASM_SECTIONS="asm_diskgroup"
@@ -453,7 +436,7 @@ mocked-sql_processes" "$MK_SYNC_SECTIONS_QUERY"
     assertEquals "mocked-sql_asm_diskgroup" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
-test_mk_oracle_do_checks_asm_sections_opt () {
+test_mk_oracle_do_checks_asm_sections_opt() {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_ASM_SECTIONS="instance processes"
 ASYNC_ASM_SECTIONS="asm_diskgroup"

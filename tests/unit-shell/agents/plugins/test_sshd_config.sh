@@ -5,9 +5,9 @@
 
 MK_SSHD_CONFIG_PLUGIN_PATH="$UNIT_SH_PLUGINS_DIR/mk_sshd_config"
 
-oneTimeSetUp(){
+oneTimeSetUp() {
     CONF_FILE="${SHUNIT_TMPDIR}/sshd_config"
-    cat <<EOF > "${CONF_FILE}"
+    cat <<EOF >"${CONF_FILE}"
 # Skip comment
 Hi test
 
@@ -19,13 +19,12 @@ EOF
 }
 
 test_sshd_config() {
-    . "$MK_SSHD_CONFIG_PLUGIN_PATH" > /dev/null
+    . "$MK_SSHD_CONFIG_PLUGIN_PATH" >/dev/null
     result=$(drop_comments_whitespace ${CONF_FILE})
     assertEquals "no stuff" "Hi test
 One First Unique
 Two Second Repeated" "${result}"
 
 }
-
 
 . "$UNIT_SH_SHUNIT2"

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
 # shellcheck source=../../agents/check_mk_agent.linux
@@ -26,20 +25,20 @@ wait_for() {
     limit=100
     until [ "${limit}" -eq 0 ] || [ -e "${1}" ]; do
         sleep 0.01
-        (( limit-- ))
+        ((limit--))
     done
 }
 
 test_basic_function_noop() {
     LOG_SECTION_TIME=false set_up_profiling
-    _log_section_time "echo" "whatever" > /dev/null
+    _log_section_time "echo" "whatever" >/dev/null
 
     assertTrue "[ ! -e $(profiling_dir) ]"
 }
 
 test_basic_function() {
     LOG_SECTION_TIME=true set_up_profiling
-    _log_section_time "echo" "some" "string" > /dev/null
+    _log_section_time "echo" "some" "string" >/dev/null
 
     assertEquals "
 real	0mRUNTIMEs

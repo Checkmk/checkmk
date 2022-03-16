@@ -5,7 +5,7 @@
 
 MK_NETSTAT_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/netstat.linux"
 
-netstat(){
+netstat() {
     echo '
 Active Internet connections (servers and established)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State
@@ -20,10 +20,8 @@ udp        0      0 127.0.0.1:49341         127.0.0.1:49341         ESTABLISHED
 udp6       0      0 :::5353                 :::*'
 }
 
-
-
-test_netstat_plugin(){
-#    alias netstat='_sample_netstat'
+test_netstat_plugin() {
+    #    alias netstat='_sample_netstat'
     response=$(. "$MK_NETSTAT_PLUGIN_PATH")
     assertEquals "convert LISTEN to LISTENING" "<<<netstat>>>
 tcp        0      0 127.0.0.1:5001          0.0.0.0:*               LISTENING

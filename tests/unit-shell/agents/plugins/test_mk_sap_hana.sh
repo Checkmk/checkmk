@@ -14,7 +14,7 @@ MK_SAP_HANA_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_sap_hana"
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
-oneTimeSetUp () {
+oneTimeSetUp() {
 
     export MK_CONFDIR=${SHUNIT_TMPDIR}
     export USERSTOREKEY="storekey"
@@ -26,8 +26,8 @@ oneTimeSetUp () {
     . "$MK_SAP_HANA_PLUGIN_PATH" >/dev/null 2>&1
 
     # Mock sys calls
-    nslookup () {
-        if [ "$1" = "myServer" ];then
+    nslookup() {
+        if [ "$1" = "myServer" ]; then
             cat <<"output"
 Server:		127.0.0.53
 Address:	127.0.0.53#53
@@ -37,7 +37,7 @@ Address: 192.168.1.1
 output
         fi
     }
-    ip () {
+    ip() {
         cat <<"output"
 2: wlo1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
     link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
@@ -55,7 +55,7 @@ output
        valid_lft forever preferred_lft forever
 output
     }
-#
+    #
 }
 
 sim_landscape_1_0_worker() {
@@ -107,7 +107,6 @@ output
 
 }
 
-
 sim_odbcreg_1_0_OK() {
     cat <<out
 
@@ -146,28 +145,30 @@ out
 #   '----------------------------------------------------------------------'
 #.
 
-test_mk_sap_hana_single_hostname () {
+test_mk_sap_hana_single_hostname() {
 
     # Mock landscape
-    landscape=$(cat <<output
+    landscape=$(
+        cat <<output
 | Host |
 |      |
 |      |
 | ------------- |
 | myServer |
 output
-)
+    )
 
-    actual=$(sap_hana_host_from_landscape  "$landscape")
+    actual=$(sap_hana_host_from_landscape "$landscape")
     expected="myServer"
     assertEquals "$expected" "$actual"
 
 }
 
-test_mk_sap_hana_multiple_hostnames () {
+test_mk_sap_hana_multiple_hostnames() {
 
     # Mock landscape
-    landscape=$(cat <<output
+    landscape=$(
+        cat <<output
 | Host |
 |      |
 |      |
@@ -175,17 +176,18 @@ test_mk_sap_hana_multiple_hostnames () {
 | do_not_care_1 |
 | myServer |
 output
-)
-    actual=$(sap_hana_host_from_landscape   "$landscape")
+    )
+    actual=$(sap_hana_host_from_landscape "$landscape")
     expected="myServer"
     assertEquals "$expected" "$actual"
 
 }
 
-test_mk_sap_hana_multiple_hostnames_non_active () {
+test_mk_sap_hana_multiple_hostnames_non_active() {
 
     # Mock landscape
-    landscape=$(cat <<output
+    landscape=$(
+        cat <<output
 | Host |
 |      |
 |      |
@@ -193,7 +195,7 @@ test_mk_sap_hana_multiple_hostnames_non_active () {
 | non-active-host1 |
 | non-active-host2 |
 output
-)
+    )
 
     actual=$(sap_hana_host_from_landscape "$landscape")
     expected=""
@@ -201,7 +203,7 @@ output
 
 }
 
-test_mk_sap_hana_1-0_get_role () {
+test_mk_sap_hana_1-0_get_role() {
 
     # Mock landscape
     landscape=$(sim_landscape_1_0_worker)
@@ -212,7 +214,7 @@ test_mk_sap_hana_1-0_get_role () {
 
 }
 
-test_mk_sap_hana_2-0_get_role () {
+test_mk_sap_hana_2-0_get_role() {
 
     # Mock landscape
     landscape=$(sim_landscape_2_0_worker)
@@ -222,12 +224,12 @@ test_mk_sap_hana_2-0_get_role () {
 
 }
 
-test_mk_sap_hana_1_connect_OK () {
+test_mk_sap_hana_1_connect_OK() {
 
     # Mocks
     landscape=$(sim_landscape_1_0_worker)
     status=$'Version;;1.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
-    su () {
+    su() {
         called_bin=$(echo "$4" | awk '{print $1}')
         if [[ "$called_bin" != *"odbcreg"* ]]; then
             # Ensure that we're called for odbcred
@@ -235,7 +237,7 @@ test_mk_sap_hana_1_connect_OK () {
         fi
 
         port=$(echo "$4" | awk '{print $2}' | awk -F":" '{print $2}')
-        if [ "$port" = "3inst15" ];then
+        if [ "$port" = "3inst15" ]; then
             # Ensure that we're called with the correct port
             sim_odbcreg_1_0_OK
         fi
@@ -243,11 +245,11 @@ test_mk_sap_hana_1_connect_OK () {
 
     SAP_HANA_VERSION="1"
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
-    expected=$(sim_odbcreg_1_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
+    expected=$(sim_odbcreg_1_0_OK | tr ';' ',' | tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
     assertEquals "$expected" "$actual"
 }
 
-test_mk_sap_hana_1_connect_standby_not_worker () {
+test_mk_sap_hana_1_connect_standby_not_worker() {
 
     # Mocks
     landscape=$(sim_landscape_1_0_not_worker)
@@ -258,12 +260,12 @@ test_mk_sap_hana_1_connect_standby_not_worker () {
     assertEquals "$expected" "$actual"
 }
 
-test_mk_sap_hana_2_connect_OK () {
+test_mk_sap_hana_2_connect_OK() {
 
     # Mocks
     landscape=$(sim_landscape_2_0_worker)
     status=$'Version;;2.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
-    su () {
+    su() {
         called_bin=$(echo "$4" | awk '{print $1}')
         if [[ "$called_bin" != *"odbcreg"* ]]; then
             # Ensure that we're called for odbcred
@@ -272,18 +274,18 @@ test_mk_sap_hana_2_connect_OK () {
 
         # Ensure that we're called with the correct port
         port=$(echo "$4" | awk '{print $2}' | awk -F":" '{print $2}')
-        if [ "$port" = "3inst13" ];then
+        if [ "$port" = "3inst13" ]; then
             sim_odbcreg_2_0_OK
         fi
     }
 
     SAP_HANA_VERSION="2"
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
-    expected=$(sim_odbcreg_2_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
+    expected=$(sim_odbcreg_2_0_OK | tr ';' ',' | tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
     assertEquals "$expected" "$actual"
 }
 
-test_mk_sap_hana_2_connect_standby_not_worker () {
+test_mk_sap_hana_2_connect_standby_not_worker() {
 
     # Mocks
     landscape=$(sim_landscape_2_0_not_worker)
@@ -311,26 +313,25 @@ test_mk_sap_hana_unknown_version() {
 test_mk_sap_hana_skip_sql_queries() {
 
     # Mocks
-    mk_hdbsql () {
+    mk_hdbsql() {
         # Return code 43 in case SQL DB is not open (see SUP-1436 for details)
         return 43
     }
 
-    actual=$(query_instance "sid" "inst" "inst_user" "" "" "" 2> /dev/null)
+    actual=$(query_instance "sid" "inst" "inst_user" "" "" "" 2>/dev/null)
     # SQL DB not available so we only want non-sql sections to be executed
     expected_sections=("sap_hana_replication_status" "sap_hana_connect:sep(59)")
 
-    for exp_section in "${expected_sections[@]}"
-    do
+    for exp_section in "${expected_sections[@]}"; do
         :
         assertContains "$actual" "$exp_section"
     done
 }
 
-test_mk_sap_hana_get_ssl_option_with_ssl(){
+test_mk_sap_hana_get_ssl_option_with_ssl() {
 
     # Mocks read_global_ini
-    read_global_ini () {
+    read_global_ini() {
         echo "sslenforce = true"
     }
 
@@ -338,10 +339,10 @@ test_mk_sap_hana_get_ssl_option_with_ssl(){
     assertEquals "-e -sslhostnameincert $(hostname -f)" "$actual"
 }
 
-test_mk_sap_hana_get_ssl_option_without_ssl(){
+test_mk_sap_hana_get_ssl_option_without_ssl() {
 
     # Mocks read_global_ini
-    read_global_ini () {
+    read_global_ini() {
         echo "sslenforce = false"
     }
 
@@ -349,13 +350,13 @@ test_mk_sap_hana_get_ssl_option_without_ssl(){
     assertEquals "" "$actual"
 }
 
-test_mk_sap_hana_get_alerts_last_check_file_no_remote_host(){
+test_mk_sap_hana_get_alerts_last_check_file_no_remote_host() {
 
     actual=$(get_alerts_last_check_file "sid" "instance" "_DB")
     assertEquals "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "$actual"
 }
 
-test_mk_sap_hana_get_alerts_last_check_file_with_remote_host(){
+test_mk_sap_hana_get_alerts_last_check_file_with_remote_host() {
     REMOTE="hostname"
 
     actual=$(get_alerts_last_check_file "sid" "instance" "")
@@ -364,7 +365,7 @@ test_mk_sap_hana_get_alerts_last_check_file_with_remote_host(){
     REMOTE=""
 }
 
-test_mk_sap_hana_get_last_used_check_file_new_file_exists(){
+test_mk_sap_hana_get_last_used_check_file_new_file_exists() {
 
     # Mocks file_exists
     file_exists() {
@@ -381,7 +382,7 @@ test_mk_sap_hana_get_last_used_check_file_new_file_exists(){
     assertEquals "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "$actual"
 }
 
-test_mk_sap_hana_get_last_used_check_file_old_file_exists(){
+test_mk_sap_hana_get_last_used_check_file_old_file_exists() {
 
     # Mocks file_exists
     file_exists() {
@@ -398,7 +399,7 @@ test_mk_sap_hana_get_last_used_check_file_old_file_exists(){
     assertEquals "/vardir/sap_hana_alerts_sid_instance.last_checked" "$actual"
 }
 
-test_mk_sap_hana_get_last_used_check_file_no_file(){
+test_mk_sap_hana_get_last_used_check_file_no_file() {
 
     # Mocks file_exists
     file_exists() {

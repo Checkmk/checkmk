@@ -22,12 +22,10 @@ EOF
     rm "${MK_CONFDIR}/ibm_mq.cfg"
 }
 
-
 test_is_qm_monitored_no_config() {
     is_qm_monitored foo
     assertEquals 0 $?
 }
-
 
 test_is_qm_monitored_ONLY_QM() {
     ONLY_QM="bar tee"
@@ -40,7 +38,6 @@ test_is_qm_monitored_ONLY_QM() {
     assertEquals "foo: Ignored because ONLY_QM: bar tee" "${result}"
 }
 
-
 test_is_qm_monitored_SKIP_QM() {
     SKIP_QM="foo bar"
 
@@ -51,7 +48,6 @@ test_is_qm_monitored_SKIP_QM() {
     assertEquals 1 $?
     assertEquals "bar: Ignored because SKIP_QM: foo bar" "${result}"
 }
-
 
 test_is_qm_monitored_full_config() {
     ONLY_QM="bar tee"
@@ -68,7 +64,6 @@ test_is_qm_monitored_full_config() {
     assertEquals 1 $?
     assertEquals "bar: Ignored because SKIP_QM: foo bar" "${result}"
 }
-
 
 test_monitored_qm() {
     ONLY_QM="BAR TEE"
@@ -90,11 +85,10 @@ QMNAME(TEE)                                           STATUS(RUNNING)"
     assertEquals "$expected" "$actual"
 }
 
-
 test_excluded_qm() {
     ONLY_QM="FOO BAR"
     mock_dspmq="QMNAME(TEE)                                           STATUS(RUNNING)"
-    actual=$(. "$IBM_PLUGIN_PATH" 2>&1 | sed 's/version: .*/version: a_version/' )
+    actual=$(. "$IBM_PLUGIN_PATH" 2>&1 | sed 's/version: .*/version: a_version/')
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
 version: a_version
@@ -106,11 +100,9 @@ QMNAME(TEE)                                           STATUS(RUNNING)"
     assertEquals "$expected" "$actual"
 }
 
-
 oneTimeSetUp() {
     . "$IBM_PLUGIN_PATH" 1>/dev/null
 }
-
 
 # Mocks
 dspmq() {
@@ -120,6 +112,5 @@ dspmq() {
 runmqsc() {
     echo "$mock_runmqsc"
 }
-
 
 . "$UNIT_SH_SHUNIT2"

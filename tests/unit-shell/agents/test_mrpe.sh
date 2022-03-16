@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
 # shellcheck source=../../agents/check_mk_agent.linux
@@ -13,7 +12,7 @@ oneTimeSetUp() {
 
     CONFIGFILE="${SHUNIT_TMPDIR}/mrpe.cfg"
 
-    cat > "${CONFIGFILE}" <<EOF
+    cat >"${CONFIGFILE}" <<EOF
 Foo_Application (ignored=parameter) mrpe_plugin1 -w 60 -c 80
 Bar_Extender mrpe_plugin2 -s -X -w 4:5
 EOF
@@ -40,7 +39,7 @@ test_run_remote_plugins() {
     assertEquals "${expected}" "$(run_remote_plugins "${CONFIGFILE}")"
 }
 
-test__mrpe_get_interval(){
+test__mrpe_get_interval() {
     assertEquals "132" "$(_mrpe_get_interval "(interval=132) some command")"
     assertEquals "132" "$(_mrpe_get_interval "(foo=true:interval=132:bar=no) some command")"
     assertEquals "" "$(_mrpe_get_interval "(foobar=132) some command")"

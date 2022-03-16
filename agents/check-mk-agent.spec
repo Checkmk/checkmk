@@ -71,11 +71,7 @@ fi
 # Only create our dedicated user, if the controller is in place (and working)
 # Otherwise we can do without the user.
 if cmk-agent-ctl --version >/dev/null 2>&1; then
-    if { [ "$1" = "configure" ] && [ -n "$2" ]; } || [ "$1" -ge 2 ] 2>/dev/null; then
-        /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh upgrade
-    else
-        /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh new
-    fi
+    /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 fi
 
 /var/lib/cmk-agent/scripts/super-server/setup trigger

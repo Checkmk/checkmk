@@ -131,14 +131,15 @@ def check_oracle_dataguard_stats(item, params, parsed):
         yield mrp_stopped_state, "Managed Recovery Process not started"
 
     for dgstat_param in sorted(dgdata["dgstat"]):
+        seconds = _get_seconds(dgdata["dgstat"][dgstat_param])
+        pkey = dgstat_param.replace(" ", "_")
 
         if dgstat_param == "apply lag" and not dgdata["dgstat"][dgstat_param]:
             yield params["missing_apply_lag_state"], "No value for apply lag"
             continue
 
         if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
-            if (seconds := _get_seconds(dgdata["dgstat"][dgstat_param])) is not None:
-                pkey = dgstat_param.replace(" ", "_")
+            if seconds is not None:
                 levels_upper = params.get(pkey) or (None, None)
                 levels_lower = params.get(f"{pkey}_min") or (None, None)
 
@@ -154,10 +155,7 @@ def check_oracle_dataguard_stats(item, params, parsed):
 
         elif dgstat_param == "apply finish time":
             if dgdata["dgstat"][dgstat_param]:
-                seconds = _get_seconds(dgdata["dgstat"][dgstat_param])
-                perfdata = [
-                    (dgstat_param.replace(" ", "_"), seconds),
-                ]
+                perfdata = [(pkey, seconds)]
                 if seconds is None:
                     # apply finish time is only for informational purposes
                     # => we ignore possible unknown time for apply finish times

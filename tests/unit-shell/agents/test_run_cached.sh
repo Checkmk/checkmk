@@ -5,7 +5,7 @@
 
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
-# shellcheck source=../../agents/check_mk_agent.linux
+# shellcheck source=agents/check_mk_agent.linux
 MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 
 oneTimeSetUp() {

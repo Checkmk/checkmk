@@ -22,6 +22,7 @@ udp6       0      0 :::5353                 :::*'
 
 test_netstat_plugin() {
     #    alias netstat='_sample_netstat'
+    # shellcheck source=agents/plugins/netstat.linux
     response=$(. "$MK_NETSTAT_PLUGIN_PATH")
     assertEquals "convert LISTEN to LISTENING" "<<<netstat>>>
 tcp        0      0 127.0.0.1:5001          0.0.0.0:*               LISTENING

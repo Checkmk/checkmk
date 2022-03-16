@@ -5,7 +5,7 @@
 
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
-# shellcheck source=../../agents/check_mk_agent.linux
+# shellcheck source=agents/check_mk_agent.linux
 MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 
 # mock openssl
@@ -30,8 +30,7 @@ test_unencrypted() {
 test_encrypted() {
     unset optionally_encrypt
 
-    ENCRYPTED="yes"
-    set_up_encryption
+    ENCRYPTED="yes" set_up_encryption
 
     actual="$(printf "Hello plain world!" | optionally_encrypt)"
 
@@ -41,8 +40,7 @@ test_encrypted() {
 test_encryption_does_not_strip_newlines() {
     unset optionally_encrypt
 
-    ENCRYPTED="yes"
-    set_up_encryption
+    ENCRYPTED="yes" set_up_encryption
 
     actual="$(printf "Hello plain world!\n" | optionally_encrypt | wc -c)"
 

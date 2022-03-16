@@ -5,7 +5,7 @@
 
 AGENT_AIX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.aix"
 
-# shellcheck source=../../agents/check_mk_agent.aix
+# shellcheck source=agents/check_mk_agent.aix
 MK_SOURCE_AGENT="true" source "$AGENT_AIX"
 
 test_checkmk_uptime() {

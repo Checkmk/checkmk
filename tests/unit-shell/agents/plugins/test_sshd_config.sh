@@ -19,8 +19,9 @@ EOF
 }
 
 test_sshd_config() {
+    # shellcheck source=agents/plugins/mk_sshd_config
     . "$MK_SSHD_CONFIG_PLUGIN_PATH" >/dev/null
-    result=$(drop_comments_whitespace ${CONF_FILE})
+    result=$(drop_comments_whitespace "${CONF_FILE}")
     assertEquals "no stuff" "Hi test
 One First Unique
 Two Second Repeated" "${result}"

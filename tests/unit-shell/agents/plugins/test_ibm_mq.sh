@@ -9,6 +9,11 @@
 
 IBM_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/ibm_mq"
 
+_source_plugin() {
+    # shellcheck source=agents/plugins/ibm_mq
+    . "$IBM_PLUGIN_PATH"
+}
+
 test_load_config() {
     MK_CONFDIR=${SHUNIT_TMPDIR}
     cat <<EOF >"${MK_CONFDIR}/ibm_mq.cfg"
@@ -68,7 +73,7 @@ test_is_qm_monitored_full_config() {
 test_monitored_qm() {
     ONLY_QM="BAR TEE"
     mock_dspmq="QMNAME(TEE)                                           STATUS(RUNNING)"
-    actual=$(. "$IBM_PLUGIN_PATH" | sed 's/NOW([^)]*)/NOW(timestamp)/' | sed 's/version: .*/version: a_version/')
+    actual=$(_source_plugin | sed 's/NOW([^)]*)/NOW(timestamp)/' | sed 's/version: .*/version: a_version/')
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
 version: a_version
@@ -88,7 +93,7 @@ QMNAME(TEE)                                           STATUS(RUNNING)"
 test_excluded_qm() {
     ONLY_QM="FOO BAR"
     mock_dspmq="QMNAME(TEE)                                           STATUS(RUNNING)"
-    actual=$(. "$IBM_PLUGIN_PATH" 2>&1 | sed 's/version: .*/version: a_version/')
+    actual=$(_source_plugin 2>&1 | sed 's/version: .*/version: a_version/')
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
 version: a_version
@@ -101,7 +106,7 @@ QMNAME(TEE)                                           STATUS(RUNNING)"
 }
 
 oneTimeSetUp() {
-    . "$IBM_PLUGIN_PATH" 1>/dev/null
+    _source_plugin 1>/dev/null
 }
 
 # Mocks
@@ -110,7 +115,7 @@ dspmq() {
 }
 
 runmqsc() {
-    echo "$mock_runmqsc"
+    echo
 }
 
 # shellcheck disable=SC1090 # Can't follow

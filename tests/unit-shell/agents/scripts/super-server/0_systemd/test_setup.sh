@@ -6,7 +6,7 @@
 TESTEE="${UNIT_SH_AGENTS_DIR}/scripts/super-server/0_systemd/setup"
 
 setUp() {
-    # shellcheck source=../../agents/scripts/super-server/0_systemd/setup
+    # shellcheck source=agents/scripts/super-server/0_systemd/setup
     MK_SOURCE_ONLY="true" source "$TESTEE"
 
     RESOURCES="/systemd-resources"

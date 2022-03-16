@@ -5,7 +5,7 @@
 
 AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 
-# shellcheck source=../../agents/check_mk_agent.linux
+# shellcheck source=agents/check_mk_agent.linux
 MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 
 oneTimeSetUp() {
@@ -24,8 +24,7 @@ test_get_plugin_interpreter_non_python_plugin() {
 }
 
 test_plugin_execution() {
-    PLUGINSDIR="${SHUNIT_TMPDIR}/execute"
-    set_up_profiling
+    PLUGINSDIR="${SHUNIT_TMPDIR}/execute" set_up_profiling
 
     assertEquals "<<<foobar>>>" "$(run_plugins)"
 }
@@ -34,58 +33,60 @@ test_get_plugin_interpreter_no_py_present() {
     INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" && fail
     assertEquals "" "${INTERPRETER}"
 
-    NO_PYTHON="no python found"
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_plugin.py")" && fail
+    INTERPRETER="$(NO_PYTHON="no python found" get_plugin_interpreter "${SHUNIT_TMPDIR}/some_plugin.py")" && fail
     assertContains "${INTERPRETER}" "<<<check_mk>>>"
     assertContains "${INTERPRETER}" "FailedPythonPlugins: "
 }
 
 test_get_plugin_interpreter_py2_present() {
-    NO_PYTHON=""
-    PYTHON2="my_py2"
-    PYTHON3=""
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" && fail
+    _env_get_plugin_interpreter() {
+        NO_PYTHON="" PYTHON2="my_py2" PYTHON3="" get_plugin_interpreter "$@"
+    }
+
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" && fail
     assertEquals "" "${INTERPRETER}"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" || fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" || fail
     assertEquals "my_py2" "${INTERPRETER}"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" || fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" || fail
     assertEquals "my_py2" "${INTERPRETER}"
 }
 
 test_get_plugin_interpreter_py3_present() {
-    NO_PYTHON=""
-    PYTHON2=""
-    PYTHON3="my_py3"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" || fail
+    _env_get_plugin_interpreter() {
+        NO_PYTHON="" PYTHON2="" PYTHON3="my_py3" get_plugin_interpreter "$@"
+    }
+
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" || fail
     assertEquals "my_py3" "${INTERPRETER}"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" && fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" && fail
     assertContains "${INTERPRETER}" "<<<check_mk>>>"
     assertContains "${INTERPRETER}" "FailedPythonPlugins: "
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" && fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" && fail
     assertEquals "" "${INTERPRETER}"
 }
 
 test_get_plugin_interpreter_both_present() {
-    NO_PYTHON=""
-    PYTHON2="my_py2"
-    PYTHON3="my_py3"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" || fail
+    _env_get_plugin_interpreter() {
+        NO_PYTHON="" PYTHON2="my_py2" PYTHON3="my_py3" get_plugin_interpreter "$@"
+    }
+
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py2_plugin.py")" || fail
     assertEquals "my_py3" "${INTERPRETER}"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" || fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" || fail
     assertEquals "my_py2" "${INTERPRETER}"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" && fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" && fail
     assertEquals "" "${INTERPRETER}"
 
-    INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py3_plugin.py")" || fail
+    INTERPRETER="$(_env_get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py3_plugin.py")" || fail
     assertEquals "my_py3" "${INTERPRETER}"
 }
 

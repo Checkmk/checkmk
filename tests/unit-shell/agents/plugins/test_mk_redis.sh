@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# shellcheck source=agents/plugins/mk_redis
 MK_SOURCE_ONLY=true source "${UNIT_SH_PLUGINS_DIR}/mk_redis"
 
 oneTimeSetUp() {

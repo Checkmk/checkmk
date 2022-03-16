@@ -243,8 +243,7 @@ test_mk_sap_hana_1_connect_OK() {
         fi
     }
 
-    SAP_HANA_VERSION="1"
-    actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
+    actual=$(SAP_HANA_VERSION="1" sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected=$(sim_odbcreg_1_0_OK | tr ';' ',' | tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
     assertEquals "$expected" "$actual"
 }
@@ -279,8 +278,7 @@ test_mk_sap_hana_2_connect_OK() {
         fi
     }
 
-    SAP_HANA_VERSION="2"
-    actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
+    actual=$(SAP_HANA_VERSION="2" sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected=$(sim_odbcreg_2_0_OK | tr ';' ',' | tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
     assertEquals "$expected" "$actual"
 }
@@ -357,12 +355,8 @@ test_mk_sap_hana_get_alerts_last_check_file_no_remote_host() {
 }
 
 test_mk_sap_hana_get_alerts_last_check_file_with_remote_host() {
-    REMOTE="hostname"
-
-    actual=$(get_alerts_last_check_file "sid" "instance" "")
+    actual=$(REMOTE="hostname" get_alerts_last_check_file "sid" "instance" "")
     assertEquals "/vardir/sap_hana_alerts_sid_instance.hostname.last_checked" "$actual"
-
-    REMOTE=""
 }
 
 test_mk_sap_hana_get_last_used_check_file_new_file_exists() {

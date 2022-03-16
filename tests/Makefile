@@ -23,8 +23,10 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
 # evaluate this only if needed, it slows down tab expansion otherwise.
+# asio-asio* and googletest* are excluded because they are present during CI call
 SHELL_FILES_REL = $(shell cd ..; grep -rl \
-    --exclude-dir="core" \
+    --exclude-dir="asio-asio*" \
+    --exclude-dir="googletest*" \
     --exclude-dir="doc" \
     --exclude-dir="livestatus" \
     --exclude-dir="node_modules" \

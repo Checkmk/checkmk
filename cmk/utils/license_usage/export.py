@@ -297,7 +297,7 @@ class LicenseUsageSample:
         if report_version in ["1.1", "1.2", "1.3"]:
             return cls._parse_sample_v1_1
 
-        raise NotImplementedError(f"Unknown report version {report_version}")
+        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 
     @classmethod
     def _parse_sample_v1_0(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
@@ -327,8 +327,8 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
-            num_hosts_excluded=raw_sample["num_hosts_excluded"],
             num_services=raw_sample["num_services"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )

@@ -233,9 +233,17 @@ class DaemonSetSpec(BaseModel):
     selector: Selector
 
 
+class DaemonSetStatus(BaseModel):
+    desired_number_scheduled: int
+    updated_number_scheduled: int
+    number_misscheduled: int
+    number_ready: int
+
+
 class DaemonSet(BaseModel):
     metadata: MetaData
     spec: DaemonSetSpec
+    status: DaemonSetStatus
     pods: Sequence[PodUID]
 
 

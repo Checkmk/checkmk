@@ -170,6 +170,13 @@ class DeploymentStatusFactory(ModelFactory):
     __model__ = api.DeploymentStatus
 
 
+# DaemonSet Factories
+
+
+class DaemonSetStatusFactory(ModelFactory):
+    __model__ = api.DaemonSetStatus
+
+
 # Container Status Fixtures
 @pytest.fixture
 def container_status_state() -> str:
@@ -409,6 +416,7 @@ def new_daemon_set(daemonset_spec: api.DaemonSetSpec) -> Callable[[], agent_kube
         return agent_kube.DaemonSet(
             metadata=MetaDataFactory.build(),
             spec=daemonset_spec,
+            status=DaemonSetStatusFactory.build(),
         )
 
     return _new_daemon_set

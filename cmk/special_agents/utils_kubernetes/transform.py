@@ -461,6 +461,15 @@ def cron_job_from_client(
     )
 
 
+def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetStatus:
+    return api.DaemonSetStatus(
+        desired_number_scheduled=status.desired_number_scheduled,
+        updated_number_scheduled=status.updated_number_scheduled or 0,
+        number_misscheduled=status.number_misscheduled,
+        number_ready=status.number_ready,
+    )
+
+
 def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
     if daemonset_spec.update_strategy.type == "OnDelete":
         return api.DaemonSetSpec(
@@ -484,6 +493,7 @@ def daemonset_from_client(
     return api.DaemonSet(
         metadata=parse_metadata(daemonset.metadata),
         spec=parse_daemonset_spec(daemonset.spec),
+        status=parse_daemonset_status(status=daemonset.status),
         pods=pod_uids,
     )
 

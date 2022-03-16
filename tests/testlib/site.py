@@ -710,7 +710,7 @@ class Site:
     def _enable_web_api(self) -> None:
         self.makedirs("etc/check_mk/multisite.d")
         self.write_text_file(
-            "etc/check_mk/multisite.d/enable-web-api.mk", "disable_web_api = False\n"
+            "etc/check_mk/multisite.d/zzz-enable-web-api.mk", "disable_web_api = False\n"
         )
 
     def _tune_nagios(self) -> None:

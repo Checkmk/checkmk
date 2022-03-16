@@ -104,13 +104,13 @@ def host_labels(
 
         Labels:
             cmk/kubernetes:
-                This label is set to "yes" for all kubernetes objects.
+                This label is set to "yes" for all Kubernetes objects.
 
             cmk/kubernetes/object:
                 This label is set to the Kubernetes object type.
 
             cmk/kubernetes/cluster:
-                This label is set to the given Kubernetes Cluster name.
+                This label is set to the given Kubernetes cluster name.
 
             cmk/kubernetes/namespace:
                 This label contains the name of the Kubernetes Namespace this checkmk host is

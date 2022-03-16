@@ -37,7 +37,7 @@ def host_labels(section: ClusterInfo) -> HostLabelGenerator:
 
     Labels:
         cmk/kubernetes:
-            This label is set to "yes" for all kubernetes objects.
+            This label is set to "yes" for all Kubernetes objects.
 
         cmk/kubernetes/object:
             This label is set to the Kubernetes object type.

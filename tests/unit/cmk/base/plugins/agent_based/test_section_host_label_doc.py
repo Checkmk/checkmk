@@ -10,7 +10,10 @@ Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
 import itertools
-from typing import Final, List, Optional, Sequence, Set
+from collections import defaultdict
+from typing import DefaultDict, Dict, Final, List, Optional, Sequence
+
+from cmk.utils.type_defs import SectionName
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/device_type",
@@ -63,7 +66,7 @@ def test_all_sections_have_host_labels_documented(  # type:ignore[no-untyped-def
         fix_register.snmp_sections.values(),
     )
 
-    encountered_labels: Set[Optional[str]] = set()
+    encountered_labels: DefaultDict[str, Dict[SectionName, Sequence[str]]] = defaultdict(dict)
 
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
@@ -94,9 +97,19 @@ def test_all_sections_have_host_labels_documented(  # type:ignore[no-untyped-def
         label_docs = label_paragraphs[0].subsections()
         # at least one label
         assert label_docs
-        encountered_labels.update(doc.header for doc in label_docs)
+        for doc in label_docs:
+            assert doc.header is not None, f"header in {section.name} not set"
+            encountered_labels[doc.header][section.name] = doc.lines
 
-    assert ALL_DOCUMENTED_BUILTIN_HOST_LABELS == encountered_labels
+    assert ALL_DOCUMENTED_BUILTIN_HOST_LABELS == set(encountered_labels.keys())
+
+    for label_name, section_to_lines in encountered_labels.items():
+        if len(set(" ".join(lines) for lines in section_to_lines.values())) != 1:
+            info = "\n".join(
+                f"{section_name}\n  {' '.join(lines)}"
+                for section_name, lines in section_to_lines.items()
+            )
+            assert False, f"documentation for label '{label_name}' differ: \n{info}"
 
 
 def test_builtin_labels_start_with_cmk() -> None:

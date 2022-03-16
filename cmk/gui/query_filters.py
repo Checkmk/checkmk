@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.labels import encode_label_for_livestatus
+from cmk.gui.utils.labels import encode_label_for_livestatus, Labels, parse_labels_value
 
 Options = List[Tuple[str, str]]
 
@@ -637,6 +637,28 @@ class MultipleQuery(TextQuery):
         joiner = "And" if negate else "Or"
 
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
+
+
+class LabelsQuery(Query):
+    def __init__(
+        self,
+        *,
+        object_type: Literal["host", "service"],
+    ):
+        self.object_type = object_type
+        super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
+
+    def parse_value(self, value: FilterHTTPVariables) -> Labels:
+        return parse_labels_value(value.get(self.request_vars[0], ""))
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        headers = [
+            encode_label_for_livestatus(self.ident, label_id, label_value)
+            for label_id, label_value in self.parse_value(value)
+        ]
+        if headers:
+            return "\n".join(headers) + "\n"
+        return ""
 
 
 class TagsQuery(Query):

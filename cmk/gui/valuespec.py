@@ -85,6 +85,7 @@ from cmk.gui.utils.labels import (
     encode_labels_for_tagify,
     get_labels_cache,
     label_help_text,
+    parse_labels_value,
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
@@ -6664,32 +6665,15 @@ class Labels(ValueSpec):
     def canonical_value(self) -> dict[str, Any]:
         return {}
 
-    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
+    def from_html_vars(self, varprefix: str) -> dict[str, str]:
         value = html.request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
-    def _from_html_vars(self, value: str, varprefix) -> dict[str, Any]:
-        labels: dict[str, Any] = {}
-
+    def _from_html_vars(self, value: str, varprefix) -> dict[str, str]:
         try:
-            decoded_labels = json.loads(value or "[]")
+            return dict(parse_labels_value(value))
         except ValueError as e:
-            raise MKUserError(varprefix, _("Failed to parse labels: %s") % e)
-
-        for entry in decoded_labels:
-            label_id, label_value = [p.strip() for p in entry["value"].split(":", 1)]
-            if label_id in labels:
-                raise MKUserError(
-                    varprefix,
-                    _(
-                        "A label key can be used only once per object. "
-                        'The Label key "%s" is used twice.'
-                    )
-                    % label_id,
-                )
-            labels[label_id] = label_value
-
-        return labels
+            raise MKUserError(varprefix, "%s" % e)
 
     def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
         if not isinstance(value, dict):

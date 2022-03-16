@@ -26,6 +26,28 @@ if TYPE_CHECKING:
 Labels = Iterable[Tuple[str, str]]
 
 
+def parse_labels_value(value: str) -> Labels:
+
+    try:
+        decoded_labels = json.loads(value or "[]")
+    except ValueError as e:
+        raise ValueError(_("Failed to parse labels: %s") % e)
+
+    seen: Set[str] = set()
+    for entry in decoded_labels:
+        label_id, label_value = [p.strip() for p in entry["value"].split(":", 1)]
+        if label_id in seen:
+            raise ValueError(
+                _(
+                    "A label key can be used only once per object. "
+                    'The Label key "%s" is used twice.'
+                )
+                % label_id,
+            )
+        yield label_id, label_value
+        seen.add(label_id)
+
+
 def encode_label_for_livestatus(
     column: str,
     label_id: str,

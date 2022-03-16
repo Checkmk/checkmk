@@ -130,38 +130,34 @@ def check_oracle_dataguard_stats(item, params, parsed):
     elif mrp_status is not None:
         yield mrp_stopped_state, "Managed Recovery Process not started"
 
-    for dgstat_param in sorted(dgdata["dgstat"]):
-        seconds = _get_seconds(dgdata["dgstat"][dgstat_param])
+    for dgstat_param in ("apply finish time", "apply lag", "transport lag"):
+        raw_value = dgdata["dgstat"][dgstat_param]
+        seconds = _get_seconds(raw_value)
         pkey = dgstat_param.replace(" ", "_")
+        label = dgstat_param.capitalize()
 
-        if dgstat_param == "apply lag" and not dgdata["dgstat"][dgstat_param]:
-            yield params["missing_apply_lag_state"], "No value for apply lag"
+        if not raw_value:
+            if dgstat_param == "apply lag":
+                yield params["missing_apply_lag_state"], f"{label}: no value"
             continue
 
-        if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
-            if seconds is not None:
-                levels_upper = params.get(pkey) or (None, None)
-                levels_lower = params.get(f"{pkey}_min") or (None, None)
+        # NOTE:
+        # 1) not all of these metrics have parameters implemented, that's why we have to use 'get'
+        # 2) the incosistent handling of 'not parsable' vs no raw value became apparent during
+        #    a refactoring, it may not be intentional.
+        if seconds is not None:
+            levels_upper = params.get(pkey) or (None, None)
+            levels_lower = params.get(f"{pkey}_min") or (None, None)
 
-                yield check_levels(
-                    seconds,
-                    pkey,
-                    levels_upper + levels_lower,
-                    human_readable_func=get_age_human_readable,
-                    infoname=dgstat_param.capitalize(),
-                )
-
-        # show only 'apply finish time'
-
-        elif dgstat_param == "apply finish time":
-            if dgdata["dgstat"][dgstat_param]:
-                perfdata = [(pkey, seconds)]
-                if seconds is None:
-                    # apply finish time is only for informational purposes
-                    # => we ignore possible unknown time for apply finish times
-                    yield 0, "%s unknown time" % (dgstat_param), perfdata
-                else:
-                    yield 0, "%s %s" % (dgstat_param, get_age_human_readable(seconds)), perfdata
+            yield check_levels(
+                seconds,
+                pkey,
+                levels_upper + levels_lower,
+                human_readable_func=get_age_human_readable,
+                infoname=label,
+            )
+        else:
+            yield 0, f"{label}: {raw_value}"
 
     if (
         dgdata["database_role"] == "PHYSICAL STANDBY"

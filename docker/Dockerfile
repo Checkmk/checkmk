@@ -4,7 +4,7 @@ FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.1.0b2"
+ARG CMK_VERSION="2.1.0b3"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 

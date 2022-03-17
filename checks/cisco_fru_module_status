@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.entity_mib import PhysicalClasses
+
 # .1.3.6.1.2.1.47.1.1.1.1.2.1   "CISCO1921/K9 chassis" --> ENTITY-MIB::entPhysicalDescr.1
 # .1.3.6.1.2.1.47.1.1.1.1.2.2   "C1921 Chassis Slot" --> ENTITY-MIB::entPhysicalDescr.2
 # .1.3.6.1.2.1.47.1.1.1.1.2.3   "C1921 Mother board 2GE, integrated VPN and 2W" --> ENTITY-MIB::entPhysicalDescr.3
@@ -85,7 +87,7 @@ def parse_cisco_fru_module_status(info):
     }
     collected_entities = {}
     for oid, _hardware_descr, hardware_type, hardware_name in info[0]:
-        if hardware_type == "9":
+        if PhysicalClasses(hardware_type) is PhysicalClasses.module:
             collected_entities.setdefault(oid, hardware_name)
 
     parsed = {}

@@ -16,6 +16,7 @@ from livestatus import SiteConfigurations, SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
+from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
 import cmk.gui.sites as sites
@@ -428,7 +429,9 @@ class LoggedInUser:
             raise
 
     def get_docs_base_url(self) -> str:
-        return "https://docs.checkmk.com/master/%s" % ("de" if self.language == "de" else "en")
+        version = Version(__version__).version_base
+        version = version if version != "" else "master"
+        return "https://docs.checkmk.com/%s/%s" % (version, "de" if self.language == "de" else "en")
 
 
 # Login a user that has all permissions. This is needed for making

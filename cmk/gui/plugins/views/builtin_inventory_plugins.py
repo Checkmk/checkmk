@@ -644,6 +644,15 @@ inventory_displayhints.update({
         "title": _l("FortiGate HighAvailability"),
     },
 
+    ".software.applications.fritz.link_type": {"title": _l("Link type")},
+    ".software.applications.fritz.wan_access_type": {"title": _l("WAN access type")},
+    ".software.applications.fritz.auto_disconnect_time": {"title": _l("Auto-disconnect time")},
+    ".software.applications.fritz.dns_server_1": {"title": _l("DNS server 1")},
+    ".software.applications.fritz.dns_server_2": {"title": _l("DNS server 2")},
+    ".software.applications.fritz.voip_dns_server_1": {"title": _l("VoIP DNS server 1")},
+    ".software.applications.fritz.voip_dns_server_2": {"title": _l("VoIP DNS server 2")},
+    ".software.applications.fritz.statefulset.upnp_config_enabled": {"title": _l("uPnP configuration enabled")},
+
     ".software.applications.kube.": {"title": _l("Kubernetes")},
 
     ".software.applications.kube.labels:": {

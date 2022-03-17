@@ -1,0 +1,23 @@
+Title: Rework some Fritz!Box check plugins
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1647539246
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The following Fritz!Box check plugins have been reworked for consistency:
+<ul>
+<li><tt>fritz_conn</tt> does not display the uptime anymore. This is now handled by
+a dedicated uptime service.</li>
+<li><tt>fritz_config</tt> has been removed. The configuration values previously
+displayed by this plugin are now shown in the HW/SW inventory.</li>
+<li><tt>fritz_link</tt> now actually monitors the network link and goes critical if
+either the link or the physical link are not up. The link type and the WAN access
+type are now shown in the HW/SW inventory instead of in the output of this plugin.</li>
+</ul>
+These changes are incompatible. Users need to re-discover the services of
+affected hosts.

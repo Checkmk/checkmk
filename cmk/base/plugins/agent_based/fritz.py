@@ -149,15 +149,6 @@ def check_fritz_conn(section: Section) -> CheckResult:
             summary="Last Error: %s" % last_err,
         )
 
-    if uptime_str := section.get("NewUptime"):
-        yield from uptime.check(
-            {},
-            uptime.Section(
-                uptime_sec=float(uptime_str),
-                message=None,
-            ),
-        )
-
 
 register.check_plugin(
     name="fritz_conn",
@@ -168,47 +159,33 @@ register.check_plugin(
 )
 
 
-def discover_fritz_config(section: Section) -> DiscoveryResult:
-    if "NewDNSServer1" in section:
+def discover_fritz_uptime(section: Section) -> DiscoveryResult:
+    if "NewUptime" in section:
         yield Service()
 
 
-_CONFIG_FIELDS = [
-    ("NewAutoDisconnectTime", "Auto-disconnect time"),
-    ("NewDNSServer1", "DNS server 1"),
-    ("NewDNSServer2", "DNS server 2"),
-    ("NewVoipDNSServer1", "VoIP DNS server 1"),
-    ("NewVoipDNSServer2", "VoIP DNS server 2"),
-    ("NewUpnpControlEnabled", "uPnP config enabled"),
-]
-
-_UNCONFIGURED_VALUE = "0.0.0.0"
-
-
-def check_fritz_config(section: Section) -> CheckResult:
-    if output := [
-        f"{label}: {value}"
-        for key, label in _CONFIG_FIELDS
-        if (
-            value := section.get(
-                key,
-                _UNCONFIGURED_VALUE,
-            )
-        )
-        != _UNCONFIGURED_VALUE
-    ]:
-        yield Result(
-            state=State.OK,
-            summary=", ".join(output),
+def check_fritz_uptime(
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    if uptime_str := section.get("NewUptime"):
+        yield from uptime.check(
+            params,
+            uptime.Section(
+                uptime_sec=float(uptime_str),
+                message=None,
+            ),
         )
 
 
 register.check_plugin(
-    name="fritz_config",
+    name="fritz_uptime",
     sections=["fritz"],
-    service_name="Configuration",
-    discovery_function=discover_fritz_config,
-    check_function=check_fritz_config,
+    service_name="Uptime",
+    discovery_function=discover_fritz_uptime,
+    check_function=check_fritz_uptime,
+    check_default_parameters={},
+    check_ruleset_name="uptime",
 )
 
 
@@ -217,22 +194,22 @@ def discover_fritz_link(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-_LINK_FIELDS = [
+_LINK_CHECK_FIELDS = [
     ("NewLinkStatus", "Link status"),
     ("NewPhysicalLinkStatus", "Physical link status"),
-    ("NewLinkType", "Link type"),
-    ("NewWANAccessType", "WAN access type"),
 ]
 
 
 def check_fritz_link(section: Section) -> CheckResult:
-    if output := [
-        f"{label}: {value}" for key, label in _LINK_FIELDS if (value := section.get(key))
-    ]:
-        yield Result(
-            state=State.OK,
-            summary=", ".join(output),
-        )
+    for key, label in _LINK_CHECK_FIELDS:
+        if value := section.get(key):
+            yield Result(
+                state={"Up": State.OK}.get(
+                    value,
+                    State.CRIT,
+                ),
+                summary=f"{label}: {value}",
+            )
 
 
 register.check_plugin(
@@ -244,6 +221,24 @@ register.check_plugin(
 )
 
 
+_LINK_INV_FIELDS = [
+    ("NewLinkType", "link_type"),
+    ("NewWANAccessType", "wan_access_type"),
+]
+
+_CONFIG_FIELDS = [
+    ("NewAutoDisconnectTime", "auto_disconnect_time"),
+    ("NewDNSServer1", "dns_server_1"),
+    ("NewDNSServer2", "dns_server_2"),
+    ("NewVoipDNSServer1", "voip_dns_server_1"),
+    ("NewVoipDNSServer2", "voip_dns_server_2"),
+    ("NewUpnpControlEnabled", "upnp_config_enabled"),
+]
+
+
+_UNCONFIGURED_VALUE = "0.0.0.0"
+
+
 def inventory_fritz(section: Section) -> type_defs.InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
@@ -252,6 +247,21 @@ def inventory_fritz(section: Section) -> type_defs.InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={"version": section.get("VersionOS")},
+    )
+    yield Attributes(
+        path=["software", "applications", "fritz"],
+        inventory_attributes={
+            **{
+                inv_key: value
+                for section_key, inv_key in _LINK_INV_FIELDS
+                if (value := section.get(section_key))
+            },
+            **{
+                inv_key: value
+                for section_key, inv_key in _CONFIG_FIELDS
+                if (value := section.get(section_key, _UNCONFIGURED_VALUE)) != _UNCONFIGURED_VALUE
+            },
+        },
     )
 
 

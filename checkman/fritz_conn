@@ -13,6 +13,5 @@ description:
  special agent uses uPnP to get the needed information from the device.
 
 discovery:
- One service is created for each system
- if the agent has a section {<<<fritz>>>} and
- the keys {NewConnectionStatus} and {NewExternalIPAddress} are in this section.
+ One service is created for each system if the agent has a section {<<<fritz>>>}
+ and the keys {NewConnectionStatus} and {NewExternalIPAddress} are in this section.

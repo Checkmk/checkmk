@@ -17,13 +17,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.fritz import (
-    check_fritz_config,
     check_fritz_conn,
     check_fritz_link,
+    check_fritz_uptime,
     check_fritz_wan_if,
-    discover_fritz_config,
     discover_fritz_conn,
     discover_fritz_link,
+    discover_fritz_uptime,
     discover_fritz_wan_if,
     inventory_fritz,
     parse_fritz,
@@ -228,6 +228,57 @@ def test_discover_fritz_conn(
                     state=State.OK,
                     summary="WAN IP Address: 217.235.84.223",
                 ),
+            ],
+            id="standard case",
+        ),
+        pytest.param(
+            {},
+            [],
+            id="empty data",
+        ),
+    ],
+)
+def test_check_fritz_conn(
+    section: Section,
+    expected_result: CheckResult,
+) -> None:
+    assert list(check_fritz_conn(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    [
+        "section",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            _SECTION,
+            [Service()],
+            id="standard case",
+        ),
+        pytest.param(
+            {},
+            [],
+            id="empty data",
+        ),
+    ],
+)
+def test_discover_fritz_uptime(
+    section: Section,
+    expected_result: DiscoveryResult,
+) -> None:
+    assert list(discover_fritz_uptime(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    [
+        "section",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            _SECTION,
+            [
                 Result(
                     state=State.OK,
                     summary="Up since Mar 17 2022 11:07:38",
@@ -250,67 +301,20 @@ def test_discover_fritz_conn(
         ),
     ],
 )
-def test_check_fritz_conn(
+def test_check_fritz_uptime(
     section: Section,
     expected_result: CheckResult,
 ) -> None:
     with on_time(1647515259, "UTC"):
-        assert list(check_fritz_conn(section)) == expected_result
-
-
-@pytest.mark.parametrize(
-    [
-        "section",
-        "expected_result",
-    ],
-    [
-        pytest.param(
-            _SECTION,
-            [Service()],
-            id="standard case",
-        ),
-        pytest.param(
-            {},
-            [],
-            id="empty data",
-        ),
-    ],
-)
-def test_discover_fritz_config(
-    section: Section,
-    expected_result: DiscoveryResult,
-) -> None:
-    assert list(discover_fritz_config(section)) == expected_result
-
-
-@pytest.mark.parametrize(
-    [
-        "section",
-        "expected_result",
-    ],
-    [
-        pytest.param(
-            _SECTION,
-            [
-                Result(
-                    state=State.OK,
-                    summary="Auto-disconnect time: 0, DNS server 1: 217.237.148.102, DNS server 2: 217.237.151.115, VoIP DNS server 1: 217.237.148.102, VoIP DNS server 2: 217.237.151.115, uPnP config enabled: 1",
-                ),
-            ],
-            id="standard case",
-        ),
-        pytest.param(
-            {},
-            [],
-            id="empty data",
-        ),
-    ],
-)
-def test_check_fritz_config(
-    section: Section,
-    expected_result: CheckResult,
-) -> None:
-    assert list(check_fritz_config(section)) == expected_result
+        assert (
+            list(
+                check_fritz_uptime(
+                    {},
+                    section,
+                )
+            )
+            == expected_result
+        )
 
 
 @pytest.mark.parametrize(
@@ -349,7 +353,11 @@ def test_discover_fritz_link(
             [
                 Result(
                     state=State.OK,
-                    summary="Link status: Up, Physical link status: Up, Link type: PPPoE, WAN access type: DSL",
+                    summary="Link status: Up",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Physical link status: Up",
                 ),
             ],
             id="standard case",
@@ -369,11 +377,26 @@ def test_check_fritz_link(
 
 
 def test_inventory_fritz() -> None:
-    assert list(
-        inventory_fritz({"VersionOS": "Fritz!OS 1970.12.19", "VersionDevice": "Tyson Beckford"})
-    ) == [
-        Attributes(path=["hardware", "system"], inventory_attributes={"model": "Tyson Beckford"}),
+    assert list(inventory_fritz(_SECTION)) == [
         Attributes(
-            path=["software", "os"], inventory_attributes={"version": "Fritz!OS 1970.12.19"}
+            path=["hardware", "system"],
+            inventory_attributes={"model": "AVM FRITZ!Box 7412 (UI)"},
+        ),
+        Attributes(
+            path=["software", "os"],
+            inventory_attributes={"version": "137.06.83"},
+        ),
+        Attributes(
+            path=["software", "applications", "fritz"],
+            inventory_attributes={
+                "link_type": "PPPoE",
+                "wan_access_type": "DSL",
+                "auto_disconnect_time": "0",
+                "dns_server_1": "217.237.148.102",
+                "dns_server_2": "217.237.151.115",
+                "voip_dns_server_1": "217.237.148.102",
+                "voip_dns_server_2": "217.237.151.115",
+                "upnp_config_enabled": "1",
+            },
         ),
     ]

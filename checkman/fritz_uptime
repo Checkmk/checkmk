@@ -1,0 +1,11 @@
+title: AVM Fritz!Box: Uptime
+agents: fritzbox
+catalog: hw/network/avm
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the uptime of the Fritz!Box.
+
+discovery:
+ One service is created for each system if the agent has a section {<<<fritz>>>}
+ and the key {NewUptime} is available.

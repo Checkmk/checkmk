@@ -195,6 +195,7 @@ class DocReference(Enum):
     WATO_HOSTS = "wato_hosts"
     WATO_SERVICES = "wato_services"
     WATO_SERVICES_MANUAL_CHECKS = "wato_services#manual_checks"
+    WATO_USER_2FA = "wato_user#2fa"
 
 
 def doc_reference_url(doc_ref: Optional[DocReference] = None) -> str:

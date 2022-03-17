@@ -5,22 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Final, Iterable, Mapping, NamedTuple, Optional
+from typing import Any, Final, Mapping, NamedTuple, Optional
 
-# TODO: use these from the API, of course
-StringTable = list[list[str]]
-
-DiscoveryResult = Iterable[tuple[str, dict]]
-
-CheckResult = Iterable[tuple[int, str]]
-
-
-class State:
-    OK = 0
-    WARN = 1
-    CRIT = 2
-    UNKNOWN = 3
-
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # Sample output:
 
@@ -42,7 +30,7 @@ class JobSpec(NamedTuple):
     schedule_enabled: bool
     next_run_datetime: str
     last_outcome_message: str
-    state: int
+    state: State
 
 
 _DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -90,13 +78,13 @@ def _calculate_seconds(raw_duration: str) -> Optional[float]:
     >>> _calculate_seconds('0')
     0.0
 
-    >>> _caluclate_seconds('3'):
+    >>> _calculate_seconds('3')
     3.0
 
-    >>> _caluclate_seconds('124'):
+    >>> _calculate_seconds('124')
     84.0
 
-    >>> _calculate_seconds('12314'):
+    >>> _calculate_seconds('12314')
     4994.0
 
     """
@@ -184,7 +172,7 @@ def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
 
 def discover_mssql_jobs(section: Mapping[str, JobSpec]) -> DiscoveryResult:
     for job_name in section:
-        yield job_name, {}
+        yield Service(item=job_name)
 
 
 def check_mssql_jobs(
@@ -192,48 +180,50 @@ def check_mssql_jobs(
 ) -> CheckResult:
 
     if (job_specs := section.get(item)) is None:
-        return params["status_missing_jobs"], "Job not found"
+        return State(params["status_missing_jobs"]), "Job not found"
 
     if job_specs.last_run_duration is not None:
-        yield check_levels(
+        yield from check_levels(
             value=job_specs.last_run_duration,
-            dsname="database_job_duration",
-            params=params["run_duration"],
-            human_readable_func=get_age_human_readable,
-            infoname="Last duration",
+            metric_name="database_job_duration",
+            levels_upper=params["run_duration"],
+            render_func=render.timespan,
+            label="Last duration",
         )
 
-    yield (
-        State.OK if params["ignore_db_status"] else job_specs.state,
-        f"MSSQL status: {job_specs.last_run_outcome}",
+    yield Result(
+        state=State.OK if params["ignore_db_status"] else job_specs.state,
+        summary=f"MSSQL status: {job_specs.last_run_outcome}",
     )
 
-    yield State.OK, f"Last run: {job_specs.last_run_datetime}"
+    yield Result(state=State.OK, summary=f"Last run: {job_specs.last_run_datetime}")
 
-    status_disabled_jobs = params["status_disabled_jobs"]
+    status_disabled_jobs = State(params["status_disabled_jobs"])
     if not job_specs.enabled:
-        yield status_disabled_jobs, "Job is disabled"
+        yield Result(state=status_disabled_jobs, summary="Job is disabled")
     elif not job_specs.schedule_enabled:
-        yield status_disabled_jobs, "Schedule is disabled"
+        yield Result(state=status_disabled_jobs, summary="Schedule is disabled")
     else:
-        yield State.OK, f"Next run: {job_specs.next_run_datetime}"
+        yield Result(state=State.OK, summary=f"Next run: {job_specs.next_run_datetime}")
 
-    yield State.OK, f"\nOutcome message: {job_specs.last_outcome_message}"
+    yield Result(state=State.OK, notice=f"Outcome message: {job_specs.last_outcome_message}")
 
 
-check_info["mssql_jobs"] = {
-    "parse_function": parse_mssql_jobs,
-    "inventory_function": discover_mssql_jobs,
-    "check_function": check_mssql_jobs,
-    "service_description": "MSSQL Job: %s",
-    "group": "mssql_jobs",
-    "has_perfdata": True,
-    "default_levels_variable": "mssql_jobs_defaults",
-}
+register.agent_section(
+    name="mssql_jobs",
+    parse_function=parse_mssql_jobs,
+)
 
-factory_settings["mssql_jobs_defaults"] = {
-    "ignore_db_status": True,
-    "status_disabled_jobs": 0,
-    "status_missing_jobs": 2,
-    "run_duration": None,
-}
+register.check_plugin(
+    name="mssql_jobs",
+    discovery_function=discover_mssql_jobs,
+    check_function=check_mssql_jobs,
+    service_name="MSSQL Job: %s",
+    check_ruleset_name="mssql_jobs",
+    check_default_parameters={
+        "ignore_db_status": True,
+        "status_disabled_jobs": 0,
+        "status_missing_jobs": 2,
+        "run_duration": None,
+    },
+)

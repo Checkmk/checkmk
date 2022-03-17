@@ -31,8 +31,11 @@ checks = {
                     0, 'Last duration: 0.00 s', [
                         ('database_job_duration', 0.0, None, None, None, None)
                     ]
-                ), (0, 'MSSQL status: Unknown', []), (0, 'Last run: N/A', []),
-                (0, 'Next run: N/A', []), (0, '\nOutcome message: ', [])
+                ),
+                (0, 'MSSQL status: Unknown', []),
+                (0, 'Last run: N/A', []),
+                (0, 'Schedule is disabled', []),
+                (0, '\nOutcome message: ', [])
             ]
         )
     ]

@@ -21,7 +21,10 @@ from cmk.base.plugins.agent_based.cisco_cpu_multiitem import (
 @pytest.fixture(name="parsed_section")
 def parsed_section_fixture() -> Section:
     return parse_cisco_cpu_multiitem(
-        [[["2001", "5"], ["3001", "10"]], [["2001", "cpu 2"], ["3001", "another cpu 3"]]]
+        [
+            [["2001", "5"], ["3001", "10"], ["4001", "10"]],
+            [["2001", "cpu 2", "12"], ["3001", "another cpu 3", "12"], ["4001", "A FAN", "7"]],
+        ]
     )
 
 
@@ -92,5 +95,14 @@ def test_discover_cisco_cpu_multiitem(
 def test_zero_cpm_cpu_total_physical_index() -> None:
     # if cpmCPUTotalPhysicalIndex is 0 we should ignore the item
     assert parse_cisco_cpu_multiitem(
-        [[["0", "5"], ["3001", "10"]], [["2001", "cpu 2"], ["3001", "another cpu 3"]]]
+        [[["0", "5"], ["3001", "10"]], [["2001", "cpu 2", "12"], ["3001", "another cpu 3", "12"]]]
     ) == {"another cpu 3": CPUInfo(util=10.0), "average": CPUInfo(util=10.0)}
+
+
+def test_ignore_non_cpu_entities() -> None:
+    assert (
+        parse_cisco_cpu_multiitem(
+            [[["2001", "5"], ["3001", "10"]], [["2001", "FAN", "7"], ["3001", "Chassis", "3"]]]
+        )
+        == {}
+    )

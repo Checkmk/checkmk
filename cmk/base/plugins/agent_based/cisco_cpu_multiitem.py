@@ -21,6 +21,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.entity_mib import PhysicalClasses
 
 DISCOVERY_DEFAULT_PARAMETERS = {"individual": True, "average": False}
 
@@ -41,22 +42,27 @@ class DiscoveryParams(TypedDict, total=False):
     individual: bool
 
 
+class Entity(NamedTuple):
+    description: str
+    physical_class: PhysicalClasses
+
+
 def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
-    ph_idx_to_desc = {}
-    for idx, desc in string_table[1]:
+    ph_idx_to_entity: Dict[str, Entity] = {}
+    for idx, desc, class_idx in string_table[1]:
         if desc.lower().startswith("cpu "):
             desc = desc[4:]
-        ph_idx_to_desc[idx] = desc
+        ph_idx_to_entity[idx] = Entity(desc, PhysicalClasses(class_idx))
 
     parsed = {}
     for idx, util in string_table[0]:
+        entity = ph_idx_to_entity.get(idx, Entity(idx, PhysicalClasses.unknown))
         # if cpmCPUTotalPhysicalIndex is 0, the element is not supported
         # (see CISCO-PROCESS-MIB.txt)
-        if idx == "0":
+        if idx == "0" or entity.physical_class != PhysicalClasses.cpu:
             continue
-        name = ph_idx_to_desc.get(idx, idx)
         with suppress(ValueError):
-            parsed[name] = CPUInfo(util=float(util))
+            parsed[entity.description] = CPUInfo(util=float(util))
 
     if values := [data.util for data in parsed.values()]:
         parsed["average"] = CPUInfo(util=mean(values))
@@ -103,10 +109,11 @@ register.snmp_section(
             ],
         ),
         SNMPTree(
-            base=".1.3.6.1.2.1.47.1.1.1",
+            base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[
                 OIDEnd(),  # OID index
-                "1.7",  # entPhysicalName
+                "7",  # entPhysicalName
+                "5",  # entPhysicalClass
             ],
         ),
     ],

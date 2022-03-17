@@ -64,7 +64,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
         selected_sections: SectionNameCollection,
@@ -88,9 +88,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             persisted_section_dir=persisted_section_dir,
         )
         self.selected_sections = selected_sections
-        # HostAddress is not optional for SNMP, see comment under
-        # `_Builder._initialize_snmp_based()`.
-        assert self.ipaddress is not None
         self.snmp_config = (
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
@@ -104,7 +101,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
     def snmp(
         cls,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
@@ -242,7 +239,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
     def _make_description(
         source_type: SourceType,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         title: str,
     ) -> str:

@@ -1767,7 +1767,7 @@ def notification_script_env(plugin_context: PluginContext) -> PluginContext:
 def create_spoolfile(data: Any) -> None:
     if not os.path.exists(notification_spooldir):
         os.makedirs(notification_spooldir)
-    file_path = "%s/%s" % (notification_spooldir, fresh_uuid())
+    file_path = "%s/%s" % (notification_spooldir, str(uuid.uuid4()))
     logger.info("Creating spoolfile: %s", file_path)
     store.save_object_to_file(file_path, data, pretty=True)
 
@@ -1939,7 +1939,7 @@ def do_bulk_notify(
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
     bulk_dir = create_bulk_dir(bulk_path)
-    notify_uuid = fresh_uuid()
+    notify_uuid = str(uuid.uuid4())
     filename_new = bulk_dir / f"{notify_uuid}.new"
     filename_final = bulk_dir / notify_uuid
     filename_new.write_text("%r\n" % ((params, plugin_context),))
@@ -2331,6 +2331,13 @@ def format_exception() -> str:
 
 
 def dead_nagios_variable(value: str) -> bool:
+    """check if nagios var was not substitued
+
+    >>> dead_nagios_variable("$SERVICEACKAUTHOR$")
+    True
+    >>> dead_nagios_variable("some value")
+    False
+    """
     if len(value) < 3:
         return False
     if value[0] != "$" or value[-1] != "$":
@@ -2339,16 +2346,6 @@ def dead_nagios_variable(value: str) -> bool:
         if not c.isupper() and c != "_":
             return False
     return True
-
-
-def fresh_uuid() -> str:
-    try:
-        return open("/proc/sys/kernel/random/uuid").read().strip()
-    except IOError:
-        # On platforms where the above file does not exist we try to
-        # use the python uuid module which seems to be a good fallback
-        # for those systems. Well, if got python < 2.5 you are lost for now.
-        return str(uuid.uuid4())
 
 
 # TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk/base/notify.py

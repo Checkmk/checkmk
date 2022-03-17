@@ -31686,9 +31686,9 @@ msgid "No rules found."
 msgstr "Geen regels gevonden."
 
 msgid ""
-"No ruleset <b>State in case of restricted address mismatch</b> is configured"
+"No ruleset <b>State in case of restricted address missmatch</b> is configured"
 msgstr ""
-"Geen regelset <b>State in case of restricted address mismatch</b> is "
+"Geen regelset <b>State in case of restricted address missmatch</b> is "
 "geconfigureerd"
 
 msgid "No scan has been started yet."
@@ -38437,7 +38437,7 @@ msgstr "Beperking tot n<sup>de</sup> tot m<sup>de</sup> melding (escalatie)"
 msgid "Restrict to notification number"
 msgstr "Beperken tot kennisgevingsnummer"
 
-msgid "Restricted address mismatch"
+msgid "Restricted address missmatch"
 msgstr "Mismatch met beperkt adres"
 
 msgid "Result"
@@ -43364,7 +43364,7 @@ msgstr "Staat voor weigering van aansluiting"
 msgid "State for expected string mismatch"
 msgstr "Staat voor verwachte string mismatch"
 
-msgid "State for mismatching Aggregator IDs for LACP"
+msgid "State for missmatching Aggregator IDs for LACP"
 msgstr "Toestand voor het niet overeenstemmen van Aggregator ID's voor LACP"
 
 msgid "State if 'maintenance' services are found"
@@ -43500,7 +43500,7 @@ msgstr "Toestand in geval van geen systeemreplicatie"
 msgid "State in case of non space error count is greater then 0: "
 msgstr "Staat in geval van niet spatiefout telling is groter dan 0: "
 
-msgid "State in case of restricted address mismatch"
+msgid "State in case of restricted address missmatch"
 msgstr "Staat in geval van foutief beperkt adres"
 
 msgid "State in case of unhandled exception"
@@ -50257,7 +50257,7 @@ msgstr ""
 
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
-"address mismatch</b> in the ruleset <b>Status of the Checkmk services</b> "
+"address missmatch</b> in the ruleset <b>Status of the Checkmk services</b> "
 "is configured and differs from default state <b>WARN</b>. With the above "
 "setting you can overwrite the default service state. This will help you to "
 "reduce above warnings during the update process of your Checkmk sites and "

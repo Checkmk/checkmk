@@ -61,7 +61,7 @@ from cmk.gui.userdb import (
     set_two_factor_completed,
 )
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 
 from .abstract_page import ABCUserProfilePage
@@ -74,7 +74,10 @@ def make_fido2_server() -> Fido2Server:
     return Fido2Server(PublicKeyCredentialRpEntity(rp_id, "Checkmk"))
 
 
-@page_registry.register_page("user_two_factor_overview")
+overview_page_name: str = "user_two_factor_overview"
+
+
+@page_registry.register_page(overview_page_name)
 class UserTwoFactorOverview(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Two-factor authentication")
@@ -105,7 +108,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             )
 
     def _page_menu(self, breadcrumb) -> PageMenu:
-        return PageMenu(
+        page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="actions",
@@ -132,10 +135,12 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                         ),
                     ],
                 ),
-                page_menu_dropdown_user_related("user_two_factor_overview"),
+                page_menu_dropdown_user_related(page_name=overview_page_name, show_shortcuts=False),
             ],
             breadcrumb=breadcrumb,
         )
+        page_menu.add_doc_reference(title=self._page_title(), doc_ref=DocReference.WATO_USER_2FA)
+        return page_menu
 
     def _show_form(self) -> None:
         assert user.id is not None

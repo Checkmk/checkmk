@@ -1,0 +1,11 @@
+Title: Update openssl to 1.1.1n
+Class: security
+Compatible: compat
+Component: core
+Date: 1647502130
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+

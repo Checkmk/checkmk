@@ -12,6 +12,7 @@ black = "*"  # used in our CI and in the LSP-integration.
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
+devpi-client = "*" # Managing the devpi server
 docker = "*"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "*"  # used by dockerized tests for opening debug shells
 freezegun = "*"  # used by various unit tests

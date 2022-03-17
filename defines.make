@@ -88,5 +88,8 @@ VIRTUALENV_VERSION := 20.13.0
 NODEJS_VERSION := 16
 NPM_VERSION := 8
 
+# Internal PyPi Mirror
+DEVPI_SERVER := devpi.lan.tribe29.com
+
 print-%:
 	@echo '$($*)'

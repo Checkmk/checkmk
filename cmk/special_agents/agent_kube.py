@@ -625,10 +625,7 @@ class Node(PodOwner):
         return [pod for pod in self._pods if pod.phase == phase]
 
     def pod_resources(self) -> section.PodResources:
-        resources: DefaultDict[str, List[str]] = defaultdict(list)
-        for pod in self._pods:
-            resources[pod.phase].append(pod.name())
-        return section.PodResources(**resources)
+        return _pod_resources(self.pods())
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(

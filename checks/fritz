@@ -31,7 +31,7 @@ def check_fritz_conn(_unused, _no_params, parsed):
     if conn_stat == 'Connected':
         yield 0, 'WAN IP Address: %s' % parsed.get('NewExternalIPAddress')
     else:
-        yield 1, ''
+        yield 1, "Not connected"
 
     last_err = parsed.get('NewLastConnectionError')
     if last_err and last_err != 'ERROR_NONE':

@@ -1,0 +1,16 @@
+Title: Fritz!Box check plugins: Handly empty data correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647506169
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b3
+
+The Fritz!Box check plugins did not handly empty data correctly:
+<ul>
+<li><tt>fritz_wan_if</tt> crashed with <tt>KeyError (NewLayer1DownstreamMaxBitRate)</tt>.</li>
+<li><tt>fritz_conn</tt>, <tt>fritz_config</tt> and <tt>fritz_link</tt> reported UNKNOWN.</li>
+</ul>
+Now, these plugins go stale instead, as expected.

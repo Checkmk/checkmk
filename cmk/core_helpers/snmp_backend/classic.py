@@ -31,7 +31,7 @@ class ClassicSNMPBackend(SNMPBackend):
             commandtype = "get"
 
         protospec = self._snmp_proto_spec()
-        ipaddress = self.config.ipaddress
+        ipaddress = self.config.ipaddress or "0.0.0.0"
         if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
         portspec = self._snmp_port_spec()
@@ -96,7 +96,7 @@ class ClassicSNMPBackend(SNMPBackend):
     ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 
-        ipaddress = self.config.ipaddress
+        ipaddress = self.config.ipaddress or "0.0.0.0"
         if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
 

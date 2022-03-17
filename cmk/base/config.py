@@ -2622,7 +2622,7 @@ class HostConfig:
             return "push-agent"
         raise NotImplementedError(f"unknown connection mode: {mode!r}")
 
-    def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
+    def snmp_config(self, ip_address: Optional[HostAddress]) -> SNMPHostConfig:
         return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,

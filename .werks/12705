@@ -1,0 +1,17 @@
+Title: Fix "Checker and fetcher mismatch" for SNMP devices that cannot be resolved
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647530457
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The service Check_MK Discovery could produce a crash report with the
+error "Checker and fetcher mismatch" if the address of an SNMP host
+cannot be resolved.  Alternatively, the service would be OK although
+the host was not checked.
+
+Now, the service for the unreachable host will fail consistently (CRIT)
+with the error: "Host has no IP address configured".

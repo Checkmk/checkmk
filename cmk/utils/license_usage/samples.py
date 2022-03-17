@@ -9,15 +9,15 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from cmk.utils.license_usage.export import (
     ABCMonthlyServiceAverages,
     DailyServices,
     deserialize_dump,
     LicenseUsageSample,
-    RawSubscriptionDetails,
     serialize_dump,
+    SubscriptionDetails,
 )
 
 LicenseUsageHistoryDumpVersion = "1.3"
@@ -54,7 +54,7 @@ class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
     def __init__(
         self,
         username: str,
-        subscription_details: RawSubscriptionDetails,
+        subscription_details: Optional[SubscriptionDetails],
         short_samples: List,
     ) -> None:
         super().__init__(username, subscription_details, short_samples)

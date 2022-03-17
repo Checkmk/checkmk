@@ -18,10 +18,193 @@ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tup
 from dateutil.relativedelta import relativedelta
 
 
-class RawSubscriptionDetails(NamedTuple):
-    start: Optional[int]
-    end: Optional[int]
-    limit: Optional[int]
+class SubscriptionDetailsError(Exception):
+    pass
+
+
+class SubscriptionDetailsSource(Enum):
+    empty = auto()
+    manual = auto()
+    # from_tribe29 = auto()
+
+    @classmethod
+    def parse(cls, raw_subscription_details_source: str) -> SubscriptionDetailsSource:
+        try:
+            return _SUBSCRIPTION_DETAILS_SOURCE_MAP[raw_subscription_details_source]
+        except KeyError:
+            raise SubscriptionDetailsError(
+                f"Unknown subscription details source {raw_subscription_details_source}"
+            ) from None
+
+
+_SUBSCRIPTION_DETAILS_SOURCE_MAP = {
+    "empty": SubscriptionDetailsSource.empty,
+    "manual": SubscriptionDetailsSource.manual,
+}
+
+SUBSCRIPTION_LIMITS_FIXED = (
+    "3000",
+    "7000",
+    "12000",
+    "18000",
+    "30000",
+    "60000",
+    "100000",
+    "200000",
+    "300000",
+    "500000",
+    "1000000",
+    "1500000",
+    "2000000",
+    "2000000+",
+)
+
+
+class SubscriptionDetailsLimitType(Enum):
+    fixed = auto()
+    unlimited = auto()
+    custom = auto()
+
+    @classmethod
+    def parse(cls, raw_subscription_details_limit_type: str) -> SubscriptionDetailsLimitType:
+        try:
+            return _SUBSCRIPTION_DETAILS_LIMIT_TYPE_MAP[raw_subscription_details_limit_type]
+        except KeyError:
+            raise SubscriptionDetailsError(
+                f"Unknown subscription details source {raw_subscription_details_limit_type}"
+            ) from None
+
+
+_SUBSCRIPTION_DETAILS_LIMIT_TYPE_MAP = {
+    "fixed": SubscriptionDetailsLimitType.fixed,
+    "unlimited": SubscriptionDetailsLimitType.unlimited,
+    "custom": SubscriptionDetailsLimitType.custom,
+}
+
+
+class SubscriptionDetailsLimit(NamedTuple):
+    limit_type: SubscriptionDetailsLimitType
+    limit_value: int
+
+    def for_report(self) -> Tuple[str, float]:
+        return (self.limit_type.name, self.limit_value)
+
+    def for_config(self) -> Union[str, Tuple[str, float]]:
+        if self.limit_type == SubscriptionDetailsLimitType.fixed:
+            return str(self.limit_value)
+
+        if self.limit_type == SubscriptionDetailsLimitType.unlimited:
+            return "2000000+"
+
+        if self.limit_type == SubscriptionDetailsLimitType.custom:
+            return ("custom", self.limit_value)
+
+        raise SubscriptionDetailsError()
+
+    @classmethod
+    def parse(cls, raw_limit: object) -> SubscriptionDetailsLimit:
+        if isinstance(raw_limit, tuple) and len(raw_limit) == 2:
+            return cls._parse(raw_limit[0], raw_limit[1])
+
+        if isinstance(raw_limit, (str, int, float)):
+            return cls._parse(str(raw_limit), raw_limit)
+
+        raise SubscriptionDetailsError()
+
+    @classmethod
+    def _parse(
+        cls, raw_limit_type: str, raw_limit_value: Union[str, int, float]
+    ) -> SubscriptionDetailsLimit:
+        if raw_limit_type in ["2000000+", "unlimited"]:
+            return SubscriptionDetailsLimit(
+                limit_type=SubscriptionDetailsLimitType.unlimited,
+                # '-1' means unlimited. This value is also used in Django DB
+                # where we have no appropriate 'float("inf")' DB field.
+                limit_value=-1,
+            )
+
+        if str(raw_limit_value) in SUBSCRIPTION_LIMITS_FIXED:
+            return SubscriptionDetailsLimit(
+                limit_type=SubscriptionDetailsLimitType.fixed,
+                limit_value=int(raw_limit_value),
+            )
+
+        return SubscriptionDetailsLimit(
+            limit_type=SubscriptionDetailsLimitType.custom,
+            limit_value=int(raw_limit_value),
+        )
+
+
+class SubscriptionDetails(NamedTuple):
+    source: SubscriptionDetailsSource
+    start: int
+    end: int
+    limit: SubscriptionDetailsLimit
+
+    def for_report(self) -> Mapping[str, Any]:
+        return {
+            "source": self.source.name,
+            "subscription_start": self.start,
+            "subscription_end": self.end,
+            "subscription_limit": self.limit.for_report(),
+        }
+
+    def for_config(self) -> Mapping[str, Any]:
+        return {
+            "source": self.source.name,
+            "subscription_start": self.start,
+            "subscription_end": self.end,
+            "subscription_limit": self.limit.for_config(),
+        }
+
+    @classmethod
+    def parse(cls, raw_subscription_details: object) -> SubscriptionDetails:
+        # Old:      'subscription_details': ['manual', {...}]
+        # Current:  'subscription_details': {"source": "manual", ...}
+        # Future:   'subscription_details': {"source": 'from_tribe'}/{"source": "manual", ...}
+        if not raw_subscription_details:
+            raise SubscriptionDetailsError()
+
+        if (
+            isinstance(raw_subscription_details, (list, tuple))
+            and len(raw_subscription_details) == 2
+        ):
+            source, details = raw_subscription_details
+            if not isinstance(details, dict):
+                raise SubscriptionDetailsError()
+
+            cls._validate_detail_values(details)
+
+            return SubscriptionDetails(
+                source=SubscriptionDetailsSource.parse(source),
+                start=int(details["subscription_start"]),
+                end=int(details["subscription_end"]),
+                limit=SubscriptionDetailsLimit.parse(details["subscription_limit"]),
+            )
+
+        if isinstance(raw_subscription_details, dict) and "source" in raw_subscription_details:
+            cls._validate_detail_values(raw_subscription_details)
+
+            return SubscriptionDetails(
+                source=SubscriptionDetailsSource.parse(raw_subscription_details["source"]),
+                start=int(raw_subscription_details["subscription_start"]),
+                end=int(raw_subscription_details["subscription_end"]),
+                limit=SubscriptionDetailsLimit.parse(
+                    raw_subscription_details["subscription_limit"]
+                ),
+            )
+
+        raise SubscriptionDetailsError()
+
+    @staticmethod
+    def _validate_detail_values(raw_subscription_details: dict) -> None:
+        for key in [
+            "subscription_start",
+            "subscription_end",
+            "subscription_limit",
+        ]:
+            if raw_subscription_details.get(key) is None:
+                raise SubscriptionDetailsError()
 
 
 RawMonthlyServiceAverage = Dict[str, Union[int, float]]
@@ -36,7 +219,7 @@ class ABCMonthlyServiceAverages(abc.ABC):
     def __init__(
         self,
         username: str,
-        subscription_details: RawSubscriptionDetails,
+        subscription_details: Optional[SubscriptionDetails],
         short_samples: List,
     ) -> None:
         self._username = username
@@ -47,15 +230,19 @@ class ABCMonthlyServiceAverages(abc.ABC):
 
     @property
     def subscription_start(self) -> Optional[int]:
-        return self._subscription_details.start
+        return None if self._subscription_details is None else self._subscription_details.start
 
     @property
     def subscription_end(self) -> Optional[int]:
-        return self._subscription_details.end
+        return None if self._subscription_details is None else self._subscription_details.end
 
     @property
-    def subscription_limit(self) -> Optional[int]:
-        return self._subscription_details.limit
+    def subscription_limit_value(self) -> Optional[int]:
+        return (
+            None
+            if self._subscription_details is None
+            else self._subscription_details.limit.limit_value
+        )
 
     @property
     def monthly_service_averages(self) -> RawMonthlyServiceAverages:
@@ -137,7 +324,7 @@ class ABCMonthlyServiceAverages(abc.ABC):
             "subscription_exceeded_first": self._get_subscription_exceeded_first(),
             "subscription_start": self.subscription_start,
             "subscription_end": self.subscription_end,
-            "subscription_limit": self.subscription_limit,
+            "subscription_limit": self.subscription_limit_value,
         }
 
     _DEFAULT_MONTHLY_SERVICE_AVERAGE = {
@@ -162,10 +349,10 @@ class ABCMonthlyServiceAverages(abc.ABC):
     def _get_subscription_exceeded_first(
         self,
     ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
-        if self.subscription_limit is None:
+        if self.subscription_limit_value is None or self.subscription_limit_value < 0:
             return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         for service_average in self._monthly_service_averages:
-            if service_average["num_services"] >= self.subscription_limit:
+            if service_average["num_services"] >= self.subscription_limit_value:
                 return service_average
         return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
 
@@ -186,7 +373,7 @@ class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
     def __init__(
         self,
         username: str,
-        subscription_details: RawSubscriptionDetails,
+        subscription_details: Optional[SubscriptionDetails],
         short_samples: List,
         samples: List[Dict],
     ) -> None:
@@ -243,9 +430,21 @@ class UploadOrigin(Enum):
             return cls.empty
 
         if report_version == "1.3":
-            return cls[raw_upload_origin]
+            try:
+                return _UPLOAD_ORIGIN_MAP[raw_upload_origin]
+            except KeyError:
+                raise LicenseUsageReportVersionError(
+                    f"Unknown report version {report_version}"
+                ) from None
 
         raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
+
+
+_UPLOAD_ORIGIN_MAP = {
+    "empty": UploadOrigin.empty,
+    "manual": UploadOrigin.manual,
+    "from_checkmk": UploadOrigin.from_checkmk,
+}
 
 
 @dataclass

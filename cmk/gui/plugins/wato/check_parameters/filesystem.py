@@ -166,25 +166,48 @@ def _transform_filesystem_groups(
 ) -> Dict[str, Any]:
     """
     Old format:
+
         [(group_name, include_pattern), (group_name, include_pattern), ...]
 
-        OR
+    OR
 
-        [{group_name: name,
-          patterns_include: [include_pattern, include_pattern, ...],
-          patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-         {group_name: name,
-          patterns_include: [include_pattern, include_pattern, ...],
-          patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-         ...]
+        [
+            {
+                group_name: name,
+                patterns_include: [include_pattern, include_pattern, ...],
+                patterns_exclude: [exclude_pattern, exclude_pattern, ...],
+            },
+            {
+                group_name: name,
+                patterns_include: ...
+            ...
+        ]
+
     New format:
-        {"groups" : [{group_name: name,
-          patterns_include: [include_pattern, include_pattern, ...],
-          patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-         {group_name: name,
-          patterns_include: [include_pattern, include_pattern, ...],
-          patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-         ...]}
+
+        {
+            "groups" : [
+                {
+                    group_name: name,
+                    patterns_include: [include_pattern, include_pattern, ...],
+                    patterns_exclude: [exclude_pattern, exclude_pattern, ...],
+                },
+                {
+                    group_name: name,
+                    patterns_include: ...
+                ...
+            ],
+        }
+
+    >>> _transform_filesystem_groups([('whisky', ['Glen.*'])])
+    {'groups': [{'group_name': 'whisky', 'patterns_include': [['Glen.*']], 'patterns_exclude': []}]}
+    >>> _transform_filesystem_groups([{
+    ...     'group_name': 'Whisky',
+    ...     'patterns_exclude': ['Jim.*', 'Jack.*'],
+    ...     'patterns_include': ['Glen.*', '*iach'],
+    ... }])
+    {'groups': [{'group_name': 'Whisky', 'patterns_exclude': ['Jim.*', 'Jack.*'], 'patterns_include': ['Glen.*', '*iach']}]}
+
     """
     grouping = copy.deepcopy(params)
     if isinstance(grouping, dict) and FILESYSTEM_GROUPS_WRAPPER_KEY in grouping:

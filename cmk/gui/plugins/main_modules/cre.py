@@ -26,6 +26,7 @@ import cmk.gui.node_visualization
 import cmk.gui.notifications
 import cmk.gui.openapi
 import cmk.gui.prediction
+import cmk.gui.robotmk
 import cmk.gui.sidebar
 import cmk.gui.user_message
 import cmk.gui.userdb

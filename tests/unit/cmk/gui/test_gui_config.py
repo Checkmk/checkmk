@@ -386,6 +386,7 @@ def test_registered_permissions():
         "icons_and_actions.perfgraph",
         "icons_and_actions.prediction",
         "icons_and_actions.reschedule",
+        "icons_and_actions.robotmk",
         "icons_and_actions.rule_editor",
         "icons_and_actions.stars",
         "icons_and_actions.status_acknowledged",

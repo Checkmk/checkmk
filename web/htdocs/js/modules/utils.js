@@ -396,6 +396,15 @@ export function delete_user_message(msg_id, btn) {
     row.parentNode.removeChild(row);
 }
 
+export function add_height_to_simple_bar_content_of_iframe(target_iframe) {
+    var iframe = document.getElementById(target_iframe);
+    if (!iframe) return;
+
+    var simple_bar_content = iframe.parentElement;
+    if (!simple_bar_content) return;
+    simple_bar_content.style.height = "100%";
+}
+
 //#.
 //#   .-Page Reload--------------------------------------------------------.
 //#   |        ____                    ____      _                 _       |

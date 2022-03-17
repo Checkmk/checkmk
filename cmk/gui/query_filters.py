@@ -9,7 +9,7 @@
 
 import re
 import time
-from typing import Callable, List, Literal, Optional, Tuple, Union
+from typing import Callable, List, Literal, Optional, Protocol, Tuple, Union
 
 import livestatus
 
@@ -404,6 +404,25 @@ class TimeQuery(NumberRangeQuery):
             return None
 
 
+class AjaxDropdownFilterQueryProtocol(Protocol):
+    ident: str
+    request_vars: List[str]
+    link_columns: List[str]
+    negateable: bool
+    column: str
+    op: str  # TODO: will be removed in next refactoring step
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        ...
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        ...
+
+    @property
+    def autocompleter_name(self) -> str:
+        ...
+
+
 class TextQuery(Query):
     def __init__(
         self,
@@ -440,6 +459,31 @@ class TextQuery(Query):
             self.op,
             livestatus.lqencode(value[self.request_vars[0]]),
         )
+
+
+class AutocompletedTextQuery(TextQuery):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        op: str,
+        autocompleter_name: str,
+        negateable: bool = False,
+        request_var: Optional[str] = None,
+        column: Optional[str] = None,
+    ):
+        super().__init__(
+            ident=ident,
+            op=op,
+            negateable=negateable,
+            request_var=request_var,
+            column=column,
+        )
+        self._autocompleter_name = autocompleter_name
+
+    @property
+    def autocompleter_name(self) -> str:
+        return self._autocompleter_name
 
 
 class TableTextQuery(TextQuery):
@@ -509,7 +553,7 @@ def filter_in_host_inventory_range(
     return row_filter
 
 
-class CheckCommandQuery(TextQuery):
+class CheckCommandQuery(AutocompletedTextQuery):
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return "Filter: %s %s ^%s(!.*)?\n" % (
             self.column,
@@ -558,6 +602,10 @@ class OptEventEffectiveContactgroupQuery(TextQuery):
             "And: 2\n"
             "Or: 2\n" % (negate, selected_value, negate, selected_value)
         )
+
+    @property
+    def autocompleter_name(self) -> str:
+        return "allgroups"
 
 
 class IPAddressQuery(Query):
@@ -637,6 +685,31 @@ class MultipleQuery(TextQuery):
         joiner = "And" if negate else "Or"
 
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
+
+
+class AutocompletedMultipleQuery(MultipleQuery):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        op: str,
+        autocompleter_name: str,
+        negateable: bool = False,
+        request_var: Optional[str] = None,
+        column: Optional[str] = None,
+    ):
+        super().__init__(
+            ident=ident,
+            op=op,
+            negateable=negateable,
+            request_var=request_var,
+            column=column,
+        )
+        self._autocompleter_name = autocompleter_name
+
+    @property
+    def autocompleter_name(self) -> str:
+        return self._autocompleter_name
 
 
 class LabelsQuery(Query):

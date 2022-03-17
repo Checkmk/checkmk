@@ -7,8 +7,7 @@
 import pytest
 
 from testlib import on_time, get_value_store_fixture
-from cmk.utils.type_defs import CheckPluginName
-from cmk.base.api.agent_based import register
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
@@ -17,7 +16,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.fritz import (
+    check_fritz_config,
+    check_fritz_conn,
+    check_fritz_link,
     check_fritz_wan_if,
+    discover_fritz_config,
+    discover_fritz_conn,
+    discover_fritz_link,
     discover_fritz_wan_if,
     parse_fritz,
     Section,
@@ -187,14 +192,11 @@ def test_check_fritz_wan_if(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_discover_fritz_conn(
     section: Section,
     expected_result: DiscoveryResult,
 ) -> None:
-    plugin = register.get_check_plugin(CheckPluginName("fritz_conn"))
-    assert plugin
-    assert list(plugin.discovery_function(section)) == expected_result
+    assert list(discover_fritz_conn(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -216,7 +218,11 @@ def test_discover_fritz_conn(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Up since Thu Mar 17 11:07:38 2022, uptime: 0:00:01",
+                    summary="Up since Mar 17 2022 11:07:38",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Uptime: 1 second",
                 ),
                 Metric(
                     "uptime",
@@ -245,18 +251,12 @@ def test_discover_fritz_conn(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fritz_conn(
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    plugin = register.get_check_plugin(CheckPluginName("fritz_conn"))
-    assert plugin
     with on_time(1647515259, "UTC"):
-        assert list(plugin.check_function(
-            params={},
-            section=section,
-        )) == expected_result
+        assert list(check_fritz_conn(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -277,14 +277,11 @@ def test_check_fritz_conn(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_discover_fritz_config(
     section: Section,
     expected_result: DiscoveryResult,
 ) -> None:
-    plugin = register.get_check_plugin(CheckPluginName("fritz_config"))
-    assert plugin
-    assert list(plugin.discovery_function(section)) == expected_result
+    assert list(discover_fritz_config(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -316,17 +313,11 @@ def test_discover_fritz_config(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fritz_config(
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    plugin = register.get_check_plugin(CheckPluginName("fritz_config"))
-    assert plugin
-    assert list(plugin.check_function(
-        params={},
-        section=section,
-    )) == expected_result
+    assert list(check_fritz_config(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -347,14 +338,11 @@ def test_check_fritz_config(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_discover_fritz_link(
     section: Section,
     expected_result: DiscoveryResult,
 ) -> None:
-    plugin = register.get_check_plugin(CheckPluginName("fritz_link"))
-    assert plugin
-    assert list(plugin.discovery_function(section)) == expected_result
+    assert list(discover_fritz_link(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -384,14 +372,8 @@ def test_discover_fritz_link(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fritz_link(
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    plugin = register.get_check_plugin(CheckPluginName("fritz_link"))
-    assert plugin
-    assert list(plugin.check_function(
-        params={},
-        section=section,
-    )) == expected_result
+    assert list(check_fritz_link(section)) == expected_result

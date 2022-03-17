@@ -12,49 +12,6 @@ Section = Mapping[str, str]
 
 
 def parse_fritz(string_table: type_defs.StringTable) -> Section:
-    """
-    >>> for k, v in parse_fritz([
-    ...     ['VersionOS', '137.06.83'], ['VersionDevice', 'AVM', 'FRITZ!Box', '7412', '(UI)'],
-    ...     ['NewVoipDNSServer1', '217.237.148.102'], ['NewDNSServer2', '217.237.151.115'],
-    ...     ['NewDNSServer1', '217.237.148.102'], ['NewVoipDNSServer2', '217.237.151.115'],
-    ...     ['NewIdleDisconnectTime', '0'], ['NewLayer1DownstreamMaxBitRate', '25088000'],
-    ...     ['NewWANAccessType', 'DSL'], ['NewByteSendRate', '197'], ['NewPacketReceiveRate', '0'],
-    ...     ['NewConnectionStatus', 'Connected'], ['NewRoutedBridgedModeBoth', '1'], ['NewUptime', '1'],
-    ...     ['NewTotalBytesReceived', '178074787'], ['NewPacketSendRate', '0'],
-    ...     ['NewPhysicalLinkStatus', 'Up'], ['NewLinkStatus', 'Up'],
-    ...     ['NewLayer1UpstreamMaxBitRate', '5056000'], ['NewTotalBytesSent', '40948982'],
-    ...     ['NewLastConnectionError', 'ERROR_NONE'], ['NewAutoDisconnectTime', '0'],
-    ...     ['NewExternalIPAddress', '217.235.84.223'], ['NewLinkType', 'PPPoE'],
-    ...     ['NewByteReceiveRate', '0'], ['NewUpnpControlEnabled', '1'],
-    ... ]).items():
-    ...     print(f"{k}: {v}")
-    VersionOS: 137.06.83
-    VersionDevice: AVM FRITZ!Box 7412 (UI)
-    NewVoipDNSServer1: 217.237.148.102
-    NewDNSServer2: 217.237.151.115
-    NewDNSServer1: 217.237.148.102
-    NewVoipDNSServer2: 217.237.151.115
-    NewIdleDisconnectTime: 0
-    NewLayer1DownstreamMaxBitRate: 25088000
-    NewWANAccessType: DSL
-    NewByteSendRate: 197
-    NewPacketReceiveRate: 0
-    NewConnectionStatus: Connected
-    NewRoutedBridgedModeBoth: 1
-    NewUptime: 1
-    NewTotalBytesReceived: 178074787
-    NewPacketSendRate: 0
-    NewPhysicalLinkStatus: Up
-    NewLinkStatus: Up
-    NewLayer1UpstreamMaxBitRate: 5056000
-    NewTotalBytesSent: 40948982
-    NewLastConnectionError: ERROR_NONE
-    NewAutoDisconnectTime: 0
-    NewExternalIPAddress: 217.235.84.223
-    NewLinkType: PPPoE
-    NewByteReceiveRate: 0
-    NewUpnpControlEnabled: 1
-    """
     return {line[0]: ' '.join(line[1:]) for line in string_table if len(line) > 1}
 
 

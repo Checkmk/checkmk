@@ -217,7 +217,7 @@ def test_discover_fritz_conn(
             [
                 Result(
                     state=State.OK,
-                    summary="Status: Connected",
+                    summary="Connection status: Connected",
                 ),
                 Result(
                     state=State.OK,
@@ -242,16 +242,8 @@ def test_discover_fritz_conn(
             {},
             [
                 Result(
-                    state=State.OK,
-                    summary="Status: None",
-                ),
-                Result(
                     state=State.UNKNOWN,
-                    summary="unhandled connection status",
-                ),
-                Result(
-                    state=State.WARN,
-                    notice="Not connected",
+                    summary="Got no connection status from device",
                 ),
             ],
             id="empty data",
@@ -302,7 +294,7 @@ def test_discover_fritz_config(
             [
                 Result(
                     state=State.OK,
-                    summary="Auto Disconnect Time: 0, DNS-Server1: 217.237.148.102, DNS-Server2: 217.237.151.115, VoIP-DNS-Server1: 217.237.148.102, VoIP-DNS-Server2: 217.237.151.115, uPnP Config Enabled: 1",
+                    summary="Auto-disconnect time: 0, DNS server 1: 217.237.148.102, DNS server 2: 217.237.151.115, VoIP DNS server 1: 217.237.148.102, VoIP DNS server 2: 217.237.151.115, uPnP config enabled: 1",
                 ),
             ],
             id="standard case",
@@ -362,7 +354,7 @@ def test_discover_fritz_link(
             [
                 Result(
                     state=State.OK,
-                    summary="Link Status: Up, Physical Link Status: Up, Link Type: PPPoE, WAN Access Type: DSL",
+                    summary="Link status: Up, Physical link status: Up, Link type: PPPoE, WAN access type: DSL",
                 ),
             ],
             id="standard case",

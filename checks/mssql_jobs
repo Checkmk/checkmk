@@ -5,7 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Mapping, NamedTuple, Optional
+from typing import Any, Final, Iterable, Mapping, NamedTuple, Optional
+
+# TODO: use these from the API, of course
+StringTable = list[list[str]]
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+CheckResult = Iterable[tuple[int, str]]
+
+
+class State:
+    OK = 0
+    WARN = 1
+    CRIT = 2
+    UNKNOWN = 3
+
 
 # Sample output:
 
@@ -19,16 +34,6 @@ from typing import Any, Mapping, NamedTuple, Optional
 # https://docs.microsoft.com/en-us/sql/relational-databases/system-tables/dbo-sysjobs-transact-sql?view=sql-server-ver15
 
 
-factory_settings["mssql_jobs_defaults"] = {
-    "ignore_db_status": True,
-    "status_disabled_jobs": 0,
-    "status_missing_jobs": 2,
-    "run_duration": None,
-}
-
-DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
-
-
 class JobSpec(NamedTuple):
     last_run_duration: Optional[float]
     last_run_outcome: str
@@ -37,6 +42,45 @@ class JobSpec(NamedTuple):
     schedule_enabled: bool
     next_run_datetime: str
     last_outcome_message: str
+    state: int
+
+
+_DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+
+
+_COL_HEADERS: Final = (
+    "job_id",
+    "job_name",
+    "job_enabled",
+    "next_run_date",
+    "next_run_time",
+    "last_run_outcome",
+    "last_outcome_message",
+    "last_run_date",
+    "last_run_time",
+    "last_run_duration",
+    "schedule_enabled",
+    "server_current_time",
+)
+
+_OUTCOME_TRANSLATION: Final = {
+    "": "N/A",
+    "0": "Fail",
+    "1": "Succeed",
+    "2": "Retry",
+    "3": "Cancel",
+    "4": "In progress",
+    "5": "Unknown",
+}
+
+_STATUS_MAPPING: Final = {
+    "Fail": State.CRIT,
+    "Succeed": State.OK,
+    "Retry": State.OK,
+    "Cancel": State.OK,
+    "In progress": State.OK,
+    "Unknown": State.UNKNOWN,
+}
 
 
 def _calculate_seconds(raw_duration: str) -> Optional[float]:
@@ -100,48 +144,27 @@ def _format_to_datetime(raw_date: str, raw_time: str) -> str:
         "%Y%m%d %H%M%S",
     )
 
-    return datetime.datetime.strftime(source_datetime, DATETIME_FMT)
+    return datetime.datetime.strftime(source_datetime, _DATETIME_FMT)
 
 
-def parse_mssql_jobs(info):
+def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
 
-    col_headers = [
-        "job_id",
-        "job_name",
-        "job_enabled",
-        "next_run_date",
-        "next_run_time",
-        "last_run_outcome",
-        "last_outcome_message",
-        "last_run_date",
-        "last_run_time",
-        "last_run_duration",
-        "schedule_enabled",
-        "server_current_time",
-    ]
-    outcome_translation = {
-        "": "N/A",
-        "0": "Fail",
-        "1": "Succeed",
-        "2": "Retry",
-        "3": "Cancel",
-        "4": "In progress",
-        "5": "Unknown",
-    }
-    parsed = {}
-
-    for line in iter(info):
+    section = {}
+    for line in string_table:
         if len(line) == 1:
             continue
-        # the job output may contain more than one line per job, depending on how often
-        # it is scheduled. the user is only interested in the most immediate next run time
-        if line[1] in parsed:
+        # The output may contain more than one line per job, depending on how often it is scheduled.
+        # The user is only interested in the upcoming "next_run_time".
+        if line[1] in section:
             continue
-        job = dict(zip(col_headers, line))
 
-        parsed[job["job_name"]] = JobSpec(
+        job = dict(zip(_COL_HEADERS, line))
+
+        last_run_outcome = _OUTCOME_TRANSLATION[job["last_run_outcome"]]
+
+        section[job["job_name"]] = JobSpec(
             last_run_duration=_calculate_seconds(job["last_run_duration"]),
-            last_run_outcome=outcome_translation[job["last_run_outcome"]],
+            last_run_outcome=last_run_outcome,
             last_run_datetime=_format_to_datetime(
                 job["last_run_date"],
                 job["last_run_time"],
@@ -153,45 +176,39 @@ def parse_mssql_jobs(info):
                 job["next_run_time"],
             ),
             last_outcome_message=job["last_outcome_message"],
+            state=_STATUS_MAPPING.get(last_run_outcome, State.UNKNOWN),
         )
 
-    return parsed
+    return section
 
 
-def discover_mssql_jobs(section: Mapping[str, JobSpec]):
+def discover_mssql_jobs(section: Mapping[str, JobSpec]) -> DiscoveryResult:
     for job_name in section:
         yield job_name, {}
 
 
-def check_mssql_jobs(item: str, params: Mapping[str, Any], section: Mapping[str, JobSpec]):
+def check_mssql_jobs(
+    item: str, params: Mapping[str, Any], section: Mapping[str, JobSpec]
+) -> CheckResult:
 
     if (job_specs := section.get(item)) is None:
         return params["status_missing_jobs"], "Job not found"
-
-    status_mapping = {
-        "Fail": 2,
-        "Succeed": 0,
-        "Retry": 0,
-        "Cancel": 0,
-        "In progress": 0,
-        "Unknown": 3,
-    }
 
     if job_specs.last_run_duration is not None:
         yield check_levels(
             value=job_specs.last_run_duration,
             dsname="database_job_duration",
-            params=params.get("run_duration"),
+            params=params["run_duration"],
             human_readable_func=get_age_human_readable,
             infoname="Last duration",
         )
 
-    db_status = 0
-    if not params["ignore_db_status"]:
-        db_status = status_mapping[job_specs.last_run_outcome]
-    yield db_status, "MSSQL status: %s" % job_specs.last_run_outcome
+    yield (
+        State.OK if params["ignore_db_status"] else job_specs.state,
+        f"MSSQL status: {job_specs.last_run_outcome}",
+    )
 
-    yield 0, "Last run: %s" % job_specs.last_run_datetime
+    yield State.OK, f"Last run: {job_specs.last_run_datetime}"
 
     status_disabled_jobs = params["status_disabled_jobs"]
     if not job_specs.enabled:
@@ -199,9 +216,9 @@ def check_mssql_jobs(item: str, params: Mapping[str, Any], section: Mapping[str,
     elif not job_specs.schedule_enabled:
         yield status_disabled_jobs, "Schedule is disabled"
     else:
-        yield 0, "Next run: %s" % job_specs.next_run_datetime
+        yield State.OK, f"Next run: {job_specs.next_run_datetime}"
 
-    yield 0, "\nOutcome message: %s" % job_specs.last_outcome_message
+    yield State.OK, f"\nOutcome message: {job_specs.last_outcome_message}"
 
 
 check_info["mssql_jobs"] = {
@@ -212,4 +229,11 @@ check_info["mssql_jobs"] = {
     "group": "mssql_jobs",
     "has_perfdata": True,
     "default_levels_variable": "mssql_jobs_defaults",
+}
+
+factory_settings["mssql_jobs_defaults"] = {
+    "ignore_db_status": True,
+    "status_disabled_jobs": 0,
+    "status_missing_jobs": 2,
+    "run_duration": None,
 }

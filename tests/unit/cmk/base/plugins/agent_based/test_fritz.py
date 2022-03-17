@@ -163,6 +163,11 @@ def test_discover_fritz_wan_if(
             ],
             id="standard case",
         ),
+        pytest.param(
+            {},
+            [],
+            id="empty section",
+        ),
     ],
 )
 def test_check_fritz_wan_if(
@@ -240,12 +245,7 @@ def test_discover_fritz_conn(
         ),
         pytest.param(
             {},
-            [
-                Result(
-                    state=State.UNKNOWN,
-                    summary="Got no connection status from device",
-                ),
-            ],
+            [],
             id="empty data",
         ),
     ],
@@ -301,12 +301,7 @@ def test_discover_fritz_config(
         ),
         pytest.param(
             {},
-            [
-                Result(
-                    state=State.UNKNOWN,
-                    summary="Configuration info is missing",
-                ),
-            ],
+            [],
             id="empty data",
         ),
     ],
@@ -361,12 +356,7 @@ def test_discover_fritz_link(
         ),
         pytest.param(
             {},
-            [
-                Result(
-                    state=State.UNKNOWN,
-                    summary="Link info is missing",
-                )
-            ],
+            [],
             id="empty data",
         ),
     ],

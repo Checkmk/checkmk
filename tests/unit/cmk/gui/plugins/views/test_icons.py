@@ -37,6 +37,7 @@ def test_builtin_icons_and_actions():
         "perfgraph",
         "prediction",
         "reschedule",
+        "robotmk",
         "rule_editor",
         "stars",
         "status_acknowledged",

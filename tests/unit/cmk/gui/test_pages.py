@@ -109,6 +109,8 @@ def test_registered_pages():
         "message",
         "prediction_graph",
         "parent_child_topology",
+        "robotmk",
+        "robotmk_report",
         "search_open",
         "side",
         "sidebar_add_snapin",

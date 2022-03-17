@@ -1197,11 +1197,11 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         return ACTestCategories.security
 
     def title(self) -> str:
-        return _("Restricted address missmatch")
+        return _("Restricted address mismatch")
 
     def help(self) -> str:
         return _(
-            "This check returns CRIT if the parameter <b>State in case of restricted address missmatch</b> "
+            "This check returns CRIT if the parameter <b>State in case of restricted address mismatch</b> "
             "in the ruleset <b>Status of the Checkmk services</b> is configured and differs from default "
             "state <b>WARN</b>. "
             "With the above setting you can overwrite the default service state. This will help "
@@ -1222,7 +1222,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         rules = self._get_rules()
         if not bool(rules):
             yield ACResultOK(
-                _("No ruleset <b>State in case of restricted address missmatch</b> is configured")
+                _("No ruleset <b>State in case of restricted address mismatch</b> is configured")
             )
             return
 

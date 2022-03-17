@@ -135,7 +135,7 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "restricted_address_mismatch",
                 MonitoringState(
-                    title=_("State in case of restricted address missmatch"),
+                    title=_("State in case of restricted address mismatch"),
                     help=_(
                         "If a Checkmk site is updated to a newer version but the agents of some "
                         "hosts are not, then the warning <i>Unexpected allowed IP ranges</i> may "

@@ -656,7 +656,7 @@ class ErrorReporter:
         values.
 
         So If this test failes, chances are high you recently fixed such an
-        missmatch! Then simply remove the element from the corresponding
+        mismatch! Then simply remove the element from the corresponding
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...

@@ -36,14 +36,14 @@ def inventory_bonding(parsed):
 
 def _check_ieee_302_3ad_specific(params, status):
     master_id = status.get("aggregator_id")
-    missmatch_state = params["ieee_302_3ad_agg_id_missmatch_state"]
+    mismatch_state = params["ieee_302_3ad_agg_id_missmatch_state"]
 
     for eth, slave in status["interfaces"].items():
         slave_id = slave["aggregator_id"]
         if master_id is None:
             master_id = slave_id
         if slave_id != master_id:
-            yield missmatch_state, "Missmatching aggregator ID of %s: %s" % (eth, slave_id)
+            yield mismatch_state, "Mismatching aggregator ID of %s: %s" % (eth, slave_id)
 
 
 def check_bonding(item, params, parsed):

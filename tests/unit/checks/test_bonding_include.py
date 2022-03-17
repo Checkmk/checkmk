@@ -45,7 +45,7 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                (1, "Missmatching aggregator ID of ens1f1: 2"),
+                (1, "Mismatching aggregator ID of ens1f1: 2"),
             ],
         ),
         (
@@ -75,7 +75,7 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                (2, "Missmatching aggregator ID of ens1f1: 2"),
+                (2, "Mismatching aggregator ID of ens1f1: 2"),
             ],
         ),
     ],

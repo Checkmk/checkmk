@@ -31,7 +31,7 @@ def _parameter_valuespec_bonding():
             (
                 "ieee_302_3ad_agg_id_missmatch_state",
                 MonitoringState(
-                    title=_("State for missmatching Aggregator IDs for LACP"),
+                    title=_("State for mismatching Aggregator IDs for LACP"),
                     default_value=1,
                 ),
             ),

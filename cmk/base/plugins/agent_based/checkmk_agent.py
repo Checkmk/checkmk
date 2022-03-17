@@ -86,16 +86,16 @@ def _check_version(
     if not agent_version:
         return
 
-    rendered_missmatch = _render_agent_version_missmatch(
+    rendered_mismatch = _render_agent_version_mismatch(
         agent_version, site_version, *expected_version
     )
     yield Result(
-        state=fail_state if rendered_missmatch else State.OK,
-        summary=f"Version: {agent_version}{rendered_missmatch}",
+        state=fail_state if rendered_mismatch else State.OK,
+        summary=f"Version: {agent_version}{rendered_mismatch}",
     )
 
 
-def _render_agent_version_missmatch(
+def _render_agent_version_mismatch(
     agent_version: str,
     site_version: str,
     spec_type: str,

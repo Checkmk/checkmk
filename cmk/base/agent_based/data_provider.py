@@ -312,10 +312,10 @@ def _collect_host_sections(
 
     # TODO(lm): Can we somehow verify that this is correct?
     # if fetcher_message["fetcher_type"] != source.id:
-    #     raise LookupError("Checker and fetcher missmatch")
+    #     raise LookupError("Checker and fetcher mismatch")
     # (mo): this is not enough, but better than nothing:
     if len(sources) != len(fetcher_messages):
-        raise LookupError("Checker and fetcher missmatch")
+        raise LookupError("Checker and fetcher mismatch")
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
     results: List[Tuple[Source, result.Result[HostSections, Exception]]] = []

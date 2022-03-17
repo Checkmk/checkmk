@@ -7,7 +7,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Callable, Iterator, Mapping, Sequence
 
-from google.cloud.asset_v1.types.assets import Asset
+from google.cloud.asset_v1 import Asset
 from google.cloud.monitoring_v3.types import TimeSeries
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive
@@ -50,11 +50,13 @@ class AssetSection:
         return iter(self.assets)
 
 
-def parse_gcp(string_table: StringTable, label_key: str) -> Section:
+def parse_gcp(
+    string_table: StringTable, label_key: str, extract: Callable[[str], str] = lambda x: x
+) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table]
     items = {row.ts.resource.labels[label_key] for row in rows}
     return {
-        item: SectionItem([r for r in rows if r.ts.resource.labels[label_key] == item])
+        extract(item): SectionItem([r for r in rows if r.ts.resource.labels[label_key] == item])
         for item in items
     }
 
@@ -70,17 +72,25 @@ def parse_assets(string_table: StringTable) -> AssetSection:
 class MetricSpec:
     metric_type: str
     render_func: Callable
-    # TODO proper unit handling with an actual unit library!!!
     scale: float = 1.0
+    # TODO: use enum
+    dtype: str = "float"
 
 
-def _get_value(results: Sequence[GCPResult], metric_type: str, scale: float) -> float:
+def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
     try:
-        result = next(r for r in results if r.ts.metric.type == metric_type)
-        return result.ts.points[0].value.double_value * scale
+        result = next(r for r in results if r.ts.metric.type == spec.metric_type)
+        proto_value = result.ts.points[0].value
+        if spec.dtype == "float":
+            value = proto_value.double_value
+        elif spec.dtype == "int":
+            value = proto_value.int64_value
+        else:
+            raise NotImplementedError("unkown dtype")
+        return value * spec.scale
     except StopIteration:
         return 0
 
@@ -89,7 +99,7 @@ def generic_check(
     metrics: Mapping[str, MetricSpec], timeseries: Sequence[GCPResult], params: Mapping[str, Any]
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
-        value = _get_value(timeseries, metric_spec.metric_type, metric_spec.scale)
+        value = _get_value(timeseries, metric_spec)
         levels_upper = params.get(metric_name)
         if isinstance(levels_upper, dict):
             yield from check_levels_predictive(

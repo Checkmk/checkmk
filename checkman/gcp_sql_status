@@ -1,0 +1,16 @@
+title: GCP Cloud SQL: Up
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors status of your sql server. The status as reported by GCP
+ is converted to corresponding service states. Possible value are: RUNNING,
+ SUSPEND, RUNNABLE, PENDING_CREATE, MAINTENANCE, FAILED, UNKOWN_STATE
+ The mapping of each status can be done with the rule "GCP/Cloud SQL status".
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+discovery:
+ One service is created for each database.

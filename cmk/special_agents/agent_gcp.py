@@ -345,15 +345,6 @@ CLOUDSQL = GCPService(
     name="cloud_sql",
     metrics=[
         GCPMetric(
-            name="cloudsql.googleapis.com/database/uptime",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
-        ),
-        GCPMetric(
             name="cloudsql.googleapis.com/database/up",
             aggregation={
                 "alignment_period": {"seconds": 60},

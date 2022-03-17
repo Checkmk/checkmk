@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     SimpleLevels,
 )
-from cmk.gui.valuespec import Dictionary, ValueSpec
+from cmk.gui.valuespec import Dictionary, MonitoringState, ValueSpec
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plugin. Please do not change them.
@@ -225,5 +225,31 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_run_requests,
         title=lambda: _("GCP/Cloud Run Requests"),
+    )
+)
+
+
+def _vs_sql_status() -> ValueSpec:
+    return Dictionary(
+        title=_("Map GCP status to check mk"),
+        elements=[
+            ("RUNNING", MonitoringState(title=_("Running"), default_value=0)),
+            ("SUSPEND", MonitoringState(title=_("Suspend"), default_value=1)),
+            ("RUNNABLE", MonitoringState(title=_("Runnable"), default_value=0)),
+            ("PENDING_CREATE", MonitoringState(title=_("Pending create"), default_value=3)),
+            ("MAINTENANCE", MonitoringState(title=_("Maintenance"), default_value=3)),
+            ("FAILED", MonitoringState(title=_("Failed"), default_value=2)),
+            ("UNKOWN_STATE", MonitoringState(title=_("Unkown"), default_value=3)),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_sql_status",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_sql_status,
+        title=lambda: _("GCP/Cloud SQL status"),
     )
 )

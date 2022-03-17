@@ -25,6 +25,7 @@ from cmk.gui.valuespec import Alternative, Dictionary, ListChoice, TextInput, Tr
 def _parameter_valuespec_netapp_volumes():
     return Transform(
         Dictionary(
+            ignored_keys=["patterns"],
             elements=[
                 (
                     "levels",

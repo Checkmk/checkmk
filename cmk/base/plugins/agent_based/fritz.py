@@ -6,8 +6,9 @@
 
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import Attributes, register, type_defs
-from .utils import interfaces
+from .agent_based_api.v1 import Attributes, register, Result, Service, State, type_defs
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils import interfaces, uptime
 
 Section = Mapping[str, str]
 
@@ -88,6 +89,135 @@ register.check_plugin(
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_fritz_wan_if,
+)
+
+
+def discover_fritz_conn(section: Section) -> DiscoveryResult:
+    conn_stat = section.get("NewConnectionStatus")
+    if conn_stat and conn_stat != "Unconfigured" and "NewExternalIPAddress" in section:
+        yield Service()
+
+
+def check_fritz_conn(section: Section) -> CheckResult:
+    conn_stat = section.get("NewConnectionStatus")
+    yield Result(
+        state=State.OK,
+        summary="Status: %s" % conn_stat,
+    )
+
+    if conn_stat not in ("Connected", "Connecting", "Disconnected", "Unconfigured"):
+        yield Result(
+            state=State.UNKNOWN,
+            summary="unhandled connection status",
+        )
+
+    if conn_stat == "Connected":
+        yield Result(
+            state=State.OK,
+            summary="WAN IP Address: %s" % section.get("NewExternalIPAddress"),
+        )
+    else:
+        yield Result(
+            state=State.WARN,
+            summary="Not connected",
+        )
+
+    last_err = section.get("NewLastConnectionError")
+    if last_err and last_err != "ERROR_NONE":
+        yield Result(
+            state=State.OK,
+            summary="Last Error: %s" % last_err,
+        )
+
+    uptime_str = section.get("NewUptime")
+    if uptime_str:
+        yield from uptime.check(
+            {},
+            uptime.Section(
+                uptime_sec=float(uptime_str),
+                message=None,
+            ),
+        )
+
+
+register.check_plugin(
+    name="fritz_conn",
+    sections=["fritz"],
+    service_name="Connection",
+    discovery_function=discover_fritz_conn,
+    check_function=check_fritz_conn,
+)
+
+
+def discover_fritz_config(section: Section) -> DiscoveryResult:
+    if "NewDNSServer1" in section:
+        yield Service()
+
+
+def check_fritz_config(section: Section) -> CheckResult:
+    label_val = [
+        ("Auto Disconnect Time", section.get("NewAutoDisconnectTime", "0.0.0.0")),
+        ("DNS-Server1", section.get("NewDNSServer1", "0.0.0.0")),
+        ("DNS-Server2", section.get("NewDNSServer2", "0.0.0.0")),
+        ("VoIP-DNS-Server1", section.get("NewVoipDNSServer1", "0.0.0.0")),
+        ("VoIP-DNS-Server2", section.get("NewVoipDNSServer2", "0.0.0.0")),
+        ("uPnP Config Enabled", section.get("NewUpnpControlEnabled", "0.0.0.0")),
+    ]
+    output = ["%s: %s" % (l, v) for l, v in label_val if v != "0.0.0.0"]
+    yield (
+        Result(
+            state=State.OK,
+            summary=", ".join(output),
+        )
+        if output
+        else Result(
+            state=State.UNKNOWN,
+            summary="Configuration info is missing",
+        )
+    )
+
+
+register.check_plugin(
+    name="fritz_config",
+    sections=["fritz"],
+    service_name="Configuration",
+    discovery_function=discover_fritz_config,
+    check_function=check_fritz_config,
+)
+
+
+def discover_fritz_link(section: Section) -> DiscoveryResult:
+    if "NewLinkStatus" in section and "NewPhysicalLinkStatus" in section:
+        yield Service()
+
+
+def check_fritz_link(section: Section) -> CheckResult:
+    label_val = [
+        ("Link Status", section.get("NewLinkStatus")),
+        ("Physical Link Status", section.get("NewPhysicalLinkStatus")),
+        ("Link Type", section.get("NewLinkType")),
+        ("WAN Access Type", section.get("NewWANAccessType")),
+    ]
+    output = ["%s: %s" % (l, v) for l, v in label_val if v]
+    yield (
+        Result(
+            state=State.OK,
+            summary=", ".join(output),
+        )
+        if output
+        else Result(
+            state=State.UNKNOWN,
+            summary="Link info is missing",
+        )
+    )
+
+
+register.check_plugin(
+    name="fritz_link",
+    sections=["fritz"],
+    service_name="Link Info",
+    discovery_function=discover_fritz_link,
+    check_function=check_fritz_link,
 )
 
 

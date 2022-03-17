@@ -8,10 +8,6 @@ import pytest
 
 from tests.testlib import on_time
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Attributes,
     Metric,
@@ -21,7 +17,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.fritz import (
+    check_fritz_config,
+    check_fritz_conn,
+    check_fritz_link,
     check_fritz_wan_if,
+    discover_fritz_config,
+    discover_fritz_conn,
+    discover_fritz_link,
     discover_fritz_wan_if,
     inventory_fritz,
     parse_fritz,
@@ -198,14 +200,10 @@ def test_check_fritz_wan_if(
     ],
 )
 def test_discover_fritz_conn(
-    fix_register: FixRegister,
     section: Section,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert (
-        list(fix_register.check_plugins[CheckPluginName("fritz_conn")].discovery_function(section))
-        == expected_result
-    )
+    assert list(discover_fritz_conn(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -227,7 +225,11 @@ def test_discover_fritz_conn(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Up since Thu Mar 17 11:07:38 2022, uptime: 0:00:01",
+                    summary="Up since Mar 17 2022 11:07:38",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Uptime: 1 second",
                 ),
                 Metric(
                     "uptime",
@@ -257,20 +259,11 @@ def test_discover_fritz_conn(
     ],
 )
 def test_check_fritz_conn(
-    fix_register: FixRegister,
     section: Section,
     expected_result: CheckResult,
 ) -> None:
     with on_time(1647515259, "UTC"):
-        assert (
-            list(
-                fix_register.check_plugins[CheckPluginName("fritz_conn")].check_function(
-                    params={},
-                    section=section,
-                )
-            )
-            == expected_result
-        )
+        assert list(check_fritz_conn(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -292,16 +285,10 @@ def test_check_fritz_conn(
     ],
 )
 def test_discover_fritz_config(
-    fix_register: FixRegister,
     section: Section,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert (
-        list(
-            fix_register.check_plugins[CheckPluginName("fritz_config")].discovery_function(section)
-        )
-        == expected_result
-    )
+    assert list(discover_fritz_config(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -333,19 +320,10 @@ def test_discover_fritz_config(
     ],
 )
 def test_check_fritz_config(
-    fix_register: FixRegister,
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    assert (
-        list(
-            fix_register.check_plugins[CheckPluginName("fritz_config")].check_function(
-                params={},
-                section=section,
-            )
-        )
-        == expected_result
-    )
+    assert list(check_fritz_config(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -367,14 +345,10 @@ def test_check_fritz_config(
     ],
 )
 def test_discover_fritz_link(
-    fix_register: FixRegister,
     section: Section,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert (
-        list(fix_register.check_plugins[CheckPluginName("fritz_link")].discovery_function(section))
-        == expected_result
-    )
+    assert list(discover_fritz_link(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -406,19 +380,10 @@ def test_discover_fritz_link(
     ],
 )
 def test_check_fritz_link(
-    fix_register: FixRegister,
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    assert (
-        list(
-            fix_register.check_plugins[CheckPluginName("fritz_link")].check_function(
-                params={},
-                section=section,
-            )
-        )
-        == expected_result
-    )
+    assert list(check_fritz_link(section)) == expected_result
 
 
 def test_inventory_fritz() -> None:

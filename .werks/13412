@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0b2
+Version: 2.1.0b3
 
 This check shows the state of the ports of the SEH myUTN dongle server
 devices. The state of the port is not interpreted by checkmk, only displayed.

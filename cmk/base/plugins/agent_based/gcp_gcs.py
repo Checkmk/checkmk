@@ -69,10 +69,10 @@ def check_gcp_gcs_network(
         return
     metrics = {
         "net_data_sent": gcp.MetricSpec(
-            "storage.googleapis.com/network/sent_bytes_count", render.bytes
+            "storage.googleapis.com/network/sent_bytes_count", render.networkbandwidth
         ),
         "net_data_recv": gcp.MetricSpec(
-            "storage.googleapis.com/network/received_bytes_count", render.bytes
+            "storage.googleapis.com/network/received_bytes_count", render.networkbandwidth
         ),
     }
     timeseries = section_gcp_service_gcs[item].rows

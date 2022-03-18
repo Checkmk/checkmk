@@ -8,9 +8,9 @@ import pytest
 
 from cmk.gui.plugins.wato.datasource_programs import (
     _special_agents_innovaphone_transform,
-    _special_agents_kubernetes_transform,
     MultisiteBiDatasource,
 )
+from cmk.gui.plugins.wato.special_agents.kubernetes import special_agents_kubernetes_transform
 
 
 @pytest.mark.parametrize(
@@ -79,7 +79,7 @@ from cmk.gui.plugins.wato.datasource_programs import (
     ],
 )
 def test__special_agents_kubernetes_transform(parameters, expected_result):
-    assert _special_agents_kubernetes_transform(parameters) == expected_result
+    assert special_agents_kubernetes_transform(parameters) == expected_result
 
 
 @pytest.mark.parametrize(

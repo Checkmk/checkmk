@@ -11,7 +11,15 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
     RulespecSubGroup,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, TextInput, Transform
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    Integer,
+    ListOf,
+    RegExp,
+    TextInput,
+    Transform,
+)
 
 
 @rulespec_group_registry.register
@@ -209,3 +217,26 @@ def api_request_connection_elements(help_text: str, default_port: int):
             TextInput(title=_("Custom path prefix"), help=help_text, allow_empty=False),
         ),
     ]
+
+
+def filter_kubernetes_namespace_element():
+    return (
+        "namespace_include_patterns",
+        ListOf(
+            valuespec=RegExp(
+                mode=RegExp.complete,
+                title=_("Pattern"),
+                allow_empty=False,
+            ),
+            title=_("Monitor namespaces matching"),
+            add_label=_("Add new pattern"),
+            allow_empty=False,
+            help=_(
+                "If your cluster has multiple namespaces, you can specify "
+                "a list of regex patterns. Only matching namespaces will "
+                "be monitored. Note that this concerns everything which "
+                "is part of the matching namespaces such as pods for "
+                "example."
+            ),
+        ),
+    )

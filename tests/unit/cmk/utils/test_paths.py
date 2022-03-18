@@ -53,7 +53,7 @@ _STR_PATHS: Final = {
     "inventory_archive_dir",
     "inventory_delta_cache_dir",
     "status_data_dir",
-    "robotmk_var_dir",
+    "robotmk_html_log_dir",
     "share_dir",
     "checks_dir",
     "inventory_dir",

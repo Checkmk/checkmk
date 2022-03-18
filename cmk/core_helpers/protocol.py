@@ -202,7 +202,7 @@ class SNMPResultMessage(ResultMessage[SNMPRawData]):
 
     def __init__(self, value: SNMPRawData) -> None:
         super().__init__()
-        self._value: Final[SNMPRawData] = value
+        self._value: Final = value
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._value)
@@ -314,11 +314,11 @@ class FetcherHeader(Serializer, Deserializer):
         stats_length: int,
     ) -> None:
         super().__init__()
-        self.fetcher_type: Final[FetcherType] = fetcher_type
-        self.payload_type: Final[PayloadType] = payload_type
-        self.status: Final[int] = status
-        self.payload_length: Final[int] = payload_length
-        self.stats_length: Final[int] = stats_length
+        self.fetcher_type: Final = fetcher_type
+        self.payload_type: Final = payload_type
+        self.status: Final = status
+        self.payload_length: Final = payload_length
+        self.stats_length: Final = stats_length
 
     @property
     def name(self) -> str:

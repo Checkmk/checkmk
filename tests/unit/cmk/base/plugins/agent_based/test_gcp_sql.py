@@ -13,6 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_cpu,
     check_gcp_sql_memory,
+    check_gcp_sql_network,
     check_gcp_sql_status,
     discover,
     parse,
@@ -197,6 +198,13 @@ PLUGINS = [
         function=check_gcp_sql_memory,
         metrics=[
             "memory_util",
+        ],
+    ),
+    Plugin(
+        function=check_gcp_sql_network,
+        metrics=[
+            "net_data_sent",
+            "net_data_recv",
         ],
     ),
 ]

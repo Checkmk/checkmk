@@ -161,3 +161,38 @@ register.check_plugin(
     check_function=check_gcp_sql_cpu,
     check_default_parameters={},
 )
+
+
+def check_gcp_sql_network(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    if section_gcp_service_cloud_sql is None:
+        return
+    if item not in section_gcp_service_cloud_sql:
+        return
+    metrics = {
+        "net_data_recv": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/network/received_bytes_count",
+            render.networkbandwidth,
+        ),
+        "net_data_sent": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/network/sent_bytes_count",
+            render.networkbandwidth,
+        ),
+    }
+    timeseries = section_gcp_service_cloud_sql[item].rows
+    yield from gcp.generic_check(metrics, timeseries, params)
+
+
+register.check_plugin(
+    name="gcp_sql_network",
+    sections=["gcp_service_cloud_sql", "gcp_assets"],
+    service_name="GCP Cloud SQL Network: %s",
+    check_ruleset_name="gcp_sql_network",
+    discovery_function=discover,
+    check_function=check_gcp_sql_network,
+    check_default_parameters={},
+)

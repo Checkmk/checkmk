@@ -272,3 +272,13 @@ rulespec_registry.register(
         title=lambda: _("GCP/Cloud SQL memory"),
     )
 )
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_sql_network",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_network,
+        title=lambda: _("GCP/Cloud SQL Network"),
+    )
+)

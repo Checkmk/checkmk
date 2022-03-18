@@ -1,0 +1,19 @@
+Title: Win-agent installer creates allow-pull-mode file correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647600369
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.2.0i1
+
+
+Previously, custom action in MSI failed if the available Powershell was  
+too old. Such failure made impossible the obtaining of the previously 
+installed version of win-agent. For the use case <tt>update from 2.0 on 
+2.1</tt>, this means lack of connection between agent and site, i.e. stop 
+of the monitoring.
+
+Since this release, the uninstaller custom action supports also 
+Powershell 4.0 thus solving the problem.

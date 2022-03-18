@@ -135,9 +135,11 @@ def check_gcp_run_requests(
         return
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
-            "run.googleapis.com/container/instance_count", str
+            "run.googleapis.com/container/instance_count", str, dtype="int"
         ),
-        "faas_execution_count": gcp.MetricSpec("run.googleapis.com/container/request_count", str),
+        "faas_execution_count": gcp.MetricSpec(
+            "run.googleapis.com/container/request_count", str, dtype="int"
+        ),
         "gcp_billable_time": gcp.MetricSpec(
             "run.googleapis.com/container/billable_instance_time", lambda x: f"{x:.2f} s/s"
         ),

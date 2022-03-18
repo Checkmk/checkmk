@@ -6,8 +6,8 @@ distribution: check_mk
 description:
  This check monitors the requests of Cloud Run and reports
 
- - number of containers running
- - number of requests
+ - number of containers running in the last minute
+ - number of requests in the last minute
  - 99th percentile of request latency
  - billable time
 

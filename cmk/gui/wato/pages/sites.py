@@ -49,6 +49,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, UserId
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import (
+    DocReference,
     make_confirm_link,
     makeactionuri,
     makeactionuri_contextless,
@@ -531,10 +532,10 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
     def title(self):
-        return _("Distributed Monitoring")
+        return _("Distributed monitoring")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="connections",
@@ -560,6 +561,8 @@ class ModeDistributedMonitoring(WatoMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.DISTRIBUTED_MONITORING)
+        return page_menu
 
     def action(self) -> ActionResult:
         delete_id = request.get_ascii_input("_delete")

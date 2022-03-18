@@ -438,7 +438,8 @@ class ModeBulkImport(WatoMode):
             table.row()
             for col_num in range(num_columns):
                 header = headers[col_num] if len(headers) > col_num else None
-                table.cell(escape_to_html(header))
+                if header is not None:
+                    table.cell(escape_to_html(header))
                 attribute_varname = "attribute_%d" % col_num
                 if request.var(attribute_varname):
                     attribute_method = request.get_ascii_input_mandatory(attribute_varname)

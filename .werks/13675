@@ -1,0 +1,12 @@
+Title: Fix 'NoneType" error on update preview of bulk host import
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1647611552
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+

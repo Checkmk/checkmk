@@ -138,7 +138,7 @@ class ResultStats(Serializer, Deserializer):
         self.duration: Final = duration
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self.duration)
+        return f"{type(self).__name__}({self.duration!r})"
 
     def __iter__(self) -> Iterator[bytes]:
         yield json.dumps({"duration": self.duration.serialize()}).encode("ascii")
@@ -169,7 +169,7 @@ class AgentResultMessage(ResultMessage[AgentRawData]):
         self._value: Final = value
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._value)
+        return f"{type(self).__name__}({self._value!r})"
 
     def __len__(self) -> int:
         return ResultMessage.length + len(self._value)
@@ -205,7 +205,7 @@ class SNMPResultMessage(ResultMessage[SNMPRawData]):
         self._value: Final = value
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._value)
+        return f"{type(self).__name__}({self._value!r})"
 
     def __len__(self) -> int:
         return ResultMessage.length + len(self.payload)
@@ -253,7 +253,7 @@ class ErrorResultMessage(ResultMessage[AgentRawData]):
         self._error: Final = error
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._error)
+        return f"{type(self).__name__}({self._error!r})"
 
     def __iter__(self) -> Iterator[bytes]:
         payload = self.payload
@@ -325,13 +325,12 @@ class FetcherHeader(Serializer, Deserializer):
         return self.fetcher_type.name
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, status=%r, payload_length=%r, stats_length=%r)" % (
-            type(self).__name__,
-            self.fetcher_type,
-            self.payload_type,
-            self.status,
-            self.payload_length,
-            self.stats_length,
+        return (
+            f"{type(self).__name__}("
+            f"{self.fetcher_type!r}, {self.payload_type!r}, "
+            f"status={self.status!r}, "
+            f"payload_length={self.payload_length!r}, "
+            f"stats_length={self.stats_length!r})"
         )
 
     def __len__(self) -> int:
@@ -378,7 +377,7 @@ class FetcherMessage(Serializer, Deserializer):
         self.stats: Final = stats
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
+        return f"{type(self).__name__}({self.header!r}, {self.payload!r}, {self.stats!r})"
 
     def __len__(self) -> int:
         return len(self.header) + self.header.payload_length + self.header.stats_length
@@ -547,12 +546,12 @@ class CMCHeader(Serializer, Deserializer):
         self.payload_length = payload_length
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, %r, %r)" % (
-            type(self).__name__,
-            self.name,
-            self.state,
-            self.log_level,
-            self.payload_length,
+        return (
+            f"{type(self).__name__}("
+            f"{self.name!r}, "
+            f"{self.state!r}, "
+            f"{self.log_level!r}, "
+            f"{self.payload_length!r})"
         )
 
     def __len__(self) -> int:
@@ -704,7 +703,7 @@ class CMCMessage(Serializer, Deserializer):
         self.payload: Final = payload
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
+        return f"{type(self).__name__}({self.header!r}, {self.payload!r})"
 
     def __len__(self) -> int:
         return len(self.header) + self.header.payload_length

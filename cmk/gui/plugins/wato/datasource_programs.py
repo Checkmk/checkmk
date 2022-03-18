@@ -92,53 +92,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_proxmox_ve():
-    return Dictionary(
-        elements=[
-            ("username", TextInput(title=_("Username"), allow_empty=False)),
-            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
-            ("port", Integer(title=_("Port"), default_value=8006)),
-            (
-                "no-cert-check",
-                FixedValue(
-                    value=True,
-                    title=_("Disable SSL certificate validation"),
-                    totext=_("SSL certificate validation is disabled"),
-                ),
-            ),
-            (
-                "timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    help=_("The network timeout in seconds"),
-                    default_value=60,
-                    minvalue=1,
-                    unit=_("seconds"),
-                ),
-            ),
-            (
-                "log-cutoff-weeks",
-                Integer(
-                    title=_("Maximum log age"),
-                    help=_("Age in weeks of log data to fetch"),
-                    default_value=2,
-                    unit=_("weeks"),
-                ),
-            ),
-        ],
-        title=_("Proxmox VE"),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupVMCloudContainer,
-        name="special_agents:proxmox_ve",
-        valuespec=_valuespec_special_agents_proxmox_ve,
-    )
-)
-
-
 def _ssl_verification():
     return (
         "verify-cert",

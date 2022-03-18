@@ -132,7 +132,7 @@ pub fn agent_socket() -> types::AgentChannel {
 }
 
 #[cfg(windows)]
-pub fn agent_port() -> String {
+fn agent_port() -> String {
     match env::var(constants::ENV_WINDOWS_INTERNAL_PORT) {
         Err(_) => String::from(constants::WINDOWS_INTERNAL_PORT),
         Ok(port) => {
@@ -140,6 +140,11 @@ pub fn agent_port() -> String {
             port
         }
     }
+}
+
+#[cfg(windows)]
+pub fn agent_channel() -> String {
+    format!("localhost:{}", agent_port())
 }
 
 #[cfg(unix)]

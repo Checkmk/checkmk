@@ -89,6 +89,12 @@ pub struct PullArgs {
     #[structopt(long, short = "A", parse(from_str))]
     pub allowed_ip: Option<Vec<String>>,
 
+    /// TCP connection "ip:port"
+    /// None means default behavior
+    #[cfg(windows)]
+    #[structopt(long, parse(from_str))]
+    pub agent_channel: Option<String>,
+
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
 }

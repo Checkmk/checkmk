@@ -860,6 +860,8 @@ mod test_status {
                     config::ConfigFromDisk::new().unwrap(),
                     cli::PullArgs {
                         port: None,
+                        #[cfg(windows)]
+                        agent_channel: None,
                         allowed_ip: None,
                         logging_opts: cli::LoggingOpts { verbose: 0 },
                     },

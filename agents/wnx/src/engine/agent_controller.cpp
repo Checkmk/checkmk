@@ -97,15 +97,19 @@ std::wstring BuildCommandLine(const fs::path &controller) {
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
     std::string allowed_ip;
     if (!only_from.empty()) {
-        allowed_ip = " " + std::string{kCmdLineAllowedIp};
+        allowed_ip = std::string{kCmdLineAllowedIp};
         for (const auto &a : only_from) {
             allowed_ip += " " + a;
         }
     }
 
-    return controller.wstring() + wtools::ConvertToUTF16(fmt::format(
-                                      " {} {} {}{} -vv", kCmdLineAsDaemon,
-                                      kCmdLinePort, port, allowed_ip));
+    return controller.wstring() +
+           wtools::ConvertToUTF16(fmt::format(
+               " {} {} {} {} localhost:{} {} -vv",      //
+               kCmdLineAsDaemon,                        // daemon
+               kCmdLinePort, port,                      // -P 6556
+               kCmdLineChannel, windows_internal_port,  // --channel 50001
+               allowed_ip));                            // -A ip ip ip ip
 }
 
 std::optional<uint32_t> StartAgentController(const fs::path &service) {

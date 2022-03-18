@@ -288,27 +288,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_ddn_s2a():
-    return Dictionary(
-        elements=[
-            ("username", TextInput(title=_("Username"), allow_empty=False)),
-            ("password", Password(title=_("Password"), allow_empty=False)),
-            ("port", Integer(title=_("Port"), default_value=8008)),
-        ],
-        optional_keys=["port"],
-        title=_("DDN S2A"),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:ddn_s2a",
-        valuespec=_valuespec_special_agents_ddn_s2a,
-    )
-)
-
-
 def _valuespec_special_agents_proxmox_ve():
     return Dictionary(
         elements=[

@@ -985,9 +985,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
             } else if (left == "structured_status_path") {
                 fl_paths._structured_status =
                     check_path("Check_MK structured status directory", right);
-            } else if (left == "robotmk_var_path") {
-                fl_paths._robotmk_var_path =
-                    check_path("Check_MK robotmk var directory", right);
+            } else if (left == "robotmk_html_log_path") {
+                fl_paths._robotmk_html_log_path =
+                    check_path("Check_MK robotmk HTML log directory", right);
             } else if (left == "mk_logwatch_path") {
                 fl_paths._mk_logwatch =
                     check_path("Check_MK logwatch directory", right);

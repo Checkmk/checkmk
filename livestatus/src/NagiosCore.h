@@ -35,7 +35,7 @@ struct NagiosPaths {
     std::string _pnp;
     std::string _mk_inventory;
     std::string _structured_status;
-    std::filesystem::path _robotmk_var_path;
+    std::filesystem::path _robotmk_html_log_path;
     std::filesystem::path _crash_reports_path;
     std::filesystem::path _license_usage_history_path;
     std::string _mk_logwatch;
@@ -93,7 +93,7 @@ public:
     std::filesystem::path mkLogwatchPath() const override;
     std::filesystem::path mkInventoryPath() const override;
     std::filesystem::path structuredStatusPath() const override;
-    std::filesystem::path robotMkVarPath() const override;
+    std::filesystem::path robotMkHtmlLogPath() const override;
     std::filesystem::path crashReportPath() const override;
     std::filesystem::path licenseUsageHistoryPath() const override;
     std::filesystem::path pnpPath() const override;

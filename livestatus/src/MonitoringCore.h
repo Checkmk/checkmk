@@ -111,7 +111,7 @@ public:
     [[nodiscard]] virtual std::filesystem::path mkInventoryPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
         const = 0;
-    [[nodiscard]] virtual std::filesystem::path robotMkVarPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path robotMkHtmlLogPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path licenseUsageHistoryPath()
         const = 0;

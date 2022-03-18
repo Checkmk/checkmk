@@ -53,7 +53,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -707,7 +707,7 @@ class ModeLDAPConfig(LDAPMode):
         return _("LDAP connections")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="connections",
@@ -745,6 +745,8 @@ class ModeLDAPConfig(LDAPMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.LDAP)
+        return page_menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(

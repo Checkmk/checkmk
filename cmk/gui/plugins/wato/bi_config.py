@@ -18,6 +18,7 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.utils.urls import DocReference
 
 try:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -423,11 +424,11 @@ class ModeBIPacks(ABCBIMode):
                 )
             )
 
-        return PageMenu(
+        page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="packs",
-                    title=_("BI Packs"),
+                    title=_("BI packs"),
                     topics=[
                         PageMenuTopic(
                             title=_("BI configuration"),
@@ -477,6 +478,8 @@ class ModeBIPacks(ABCBIMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.BI)
+        return page_menu
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():

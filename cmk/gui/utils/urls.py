@@ -180,8 +180,14 @@ class DocReference(Enum):
 
     ACTIVE_CHECKS = "active_checks"
     ACTIVE_CHECKS_MRPE = "active_checks#mrpe"
+    AGENT_LINUX = "agent_linux"
+    AGENT_WINDOWS = "agent_windows"
+    ALERT_HANDLERS = "alert_handlers"
+    BI = "bi"  # Business Intelligence
     DASHBOARD_HOST_PROBLEMS = "dashboards#host_problems"
+    DCD = "dcd"  # dynamic host configuration
     DEVEL_CHECK_PLUGINS = "devel_check_plugins"
+    DISTRIBUTED_MONITORING = "distributed_monitoring"
     GRAPHING_RRDS = "graphing#rrds"
     # TODO: Check whether these anchors on the intro page exist and fix/remove broken ones.
     INTRO_CREATING_FOLDERS = "intro#Creating folders"
@@ -189,6 +195,7 @@ class DocReference(Enum):
     INTRO_LINUX = "intro#linux"
     INTRO_SERVICES = "intro#services"
     INTRO_WELCOME = "intro_welcome"
+    LDAP = "ldap"
     PIGGYBACK = "piggyback"
     REGEXES = "regexes"
     REST_API = "rest_api"

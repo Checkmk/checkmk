@@ -29,13 +29,6 @@ CMK_VERSION="2.2.0i1"
 # REDIS_HOST_My_socket_Redis="/var/redis/redis.sock"
 # REDIS_PORT_My_socket_Redis="unix-socket"
 
-set -e -o pipefail
-
-REDIS_INSTANCES=()
-IS_DETECTED=false
-REDIS_CLI_CMD=${REDIS_CLI_CMD:-redis-cli} # To be overloaded by tests
-WAITMAX_CMD=${WAITMAX_CMD:-waitmax}       # To be overloaded by tests
-
 load_config() {
     # source optional configuration file
     if [ -e "$MK_CONFDIR/mk_redis.cfg" ]; then
@@ -69,45 +62,53 @@ redis_args() {
     REDIS_ARGS+=("info")
 }
 
-load_config
+main() {
+    set -e -o pipefail
 
-# if no servers in config file, try to detect
-if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
-    IS_DETECTED=true
-    # find instances and remove entries like "*:6879", possible with docker container
-    DETECTED=$(pgrep -xa "redis-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ { print $3 }')
+    REDIS_INSTANCES=()
+    IS_DETECTED=false
 
-    # add found redis instances
-    for REDIS_INSTANCE in $DETECTED; do
-        for inst in $REDIS_INSTANCE; do
-            IFS=":" read -ra parts <<<"$inst"
+    load_config
 
-            # dot of IP can not be used in variable names
-            REDIS_NAME=$(echo "$inst" | tr :. _)
+    # if no servers in config file, try to detect
+    if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
+        IS_DETECTED=true
+        # find instances and remove entries like "*:6879", possible with docker container
+        DETECTED=$(pgrep -xa "redis-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ { print $3 }')
 
-            # create dynamic variables
-            declare "REDIS_HOST_$REDIS_NAME=${parts[0]}"
-            declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
+        # add found redis instances
+        for REDIS_INSTANCE in $DETECTED; do
+            for inst in $REDIS_INSTANCE; do
+                IFS=":" read -ra parts <<<"$inst"
 
-            # append instance to array
-            REDIS_INSTANCES+=("${REDIS_NAME}")
+                # dot of IP can not be used in variable names
+                REDIS_NAME=$(echo "$inst" | tr :. _)
+
+                # create dynamic variables
+                declare "REDIS_HOST_$REDIS_NAME=${parts[0]}"
+                declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
+
+                # append instance to array
+                REDIS_INSTANCES+=("${REDIS_NAME}")
+            done
         done
+    fi
+
+    # print redis section, if servers are found
+    [ "${REDIS_INSTANCES[*]}" ] || exit 0
+
+    echo "<<<redis_info:sep(58)>>>"
+
+    for INSTANCE in ${REDIS_INSTANCES[*]}; do
+        redis_args "${INSTANCE}"
+        # print server section
+        echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
+
+        # execute command
+        waitmax 3 redis-cli "${REDIS_ARGS[@]}" || true
+        echo
     done
-fi
 
-# print redis section, if servers are found
-if [ "${REDIS_INSTANCES[*]}" ]; then
-    echo -e "<<<redis_info:sep(58)>>>"
-else
-    exit 0
-fi
+}
 
-for INSTANCE in ${REDIS_INSTANCES[*]}; do
-    redis_args "${INSTANCE}"
-    # print server section
-    echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
-
-    # execute command
-    $WAITMAX_CMD 3 "${REDIS_CLI_CMD}" "${REDIS_ARGS[@]}" || true
-    echo
-done
+[ -z "${MK_SOURCE_ONLY}" ] && main "$@"

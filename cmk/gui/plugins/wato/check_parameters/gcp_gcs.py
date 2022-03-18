@@ -282,3 +282,25 @@ rulespec_registry.register(
         title=lambda: _("GCP/Cloud SQL Network"),
     )
 )
+
+
+def _vs_sql_disk() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels disk"),
+        elements=[
+            ("fs_used_percent", Levels(title=_("Disk usage"), unit="%")),
+            ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
+            ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_sql_disk",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_sql_disk,
+        title=lambda: _("GCP/Cloud SQL disk"),
+    )
+)

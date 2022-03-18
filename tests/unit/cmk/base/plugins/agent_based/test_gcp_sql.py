@@ -12,6 +12,7 @@ from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_cpu,
+    check_gcp_sql_disk,
     check_gcp_sql_memory,
     check_gcp_sql_network,
     check_gcp_sql_status,
@@ -205,6 +206,14 @@ PLUGINS = [
         metrics=[
             "net_data_sent",
             "net_data_recv",
+        ],
+    ),
+    Plugin(
+        function=check_gcp_sql_disk,
+        metrics=[
+            "fs_used_percent",
+            "disk_write_ios",
+            "disk_read_ios",
         ],
     ),
 ]

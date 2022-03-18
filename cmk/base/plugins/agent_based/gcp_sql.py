@@ -196,3 +196,41 @@ register.check_plugin(
     check_function=check_gcp_sql_network,
     check_default_parameters={},
 )
+
+
+def check_gcp_sql_disk(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    if section_gcp_service_cloud_sql is None:
+        return
+    if item not in section_gcp_service_cloud_sql:
+        return
+    metrics = {
+        "fs_used_percent": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/disk/utilization",
+            lambda x: f"usage: {render.percent(x)}",
+            scale=1e2,
+        ),
+        "disk_write_ios": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/disk/write_ops_count", lambda x: f"write: {x} IOPS"
+        ),
+        "disk_read_ios": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/disk/read_ops_count", lambda x: f"read: {x} IOPS"
+        ),
+    }
+    timeseries = section_gcp_service_cloud_sql[item].rows
+    yield from gcp.generic_check(metrics, timeseries, params)
+
+
+register.check_plugin(
+    name="gcp_sql_disk",
+    sections=["gcp_service_cloud_sql", "gcp_assets"],
+    service_name="GCP Cloud SQL disk: %s",
+    check_ruleset_name="gcp_sql_disk",
+    discovery_function=discover,
+    check_function=check_gcp_sql_disk,
+    check_default_parameters={},
+)

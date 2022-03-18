@@ -1,0 +1,20 @@
+title: GCP Cloud Run: Disk
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the disk of database servers and reports
+
+ - disk usage in percent
+ - average write IOPS in the last minute
+ - average read IOPS in the last minute
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ There are no default levels. Upper levels
+ are configurable via the rule "GCP/Cloud SQL disk".
+
+discovery:
+ One service is created for each bucket.

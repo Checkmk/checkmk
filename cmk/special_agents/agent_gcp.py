@@ -403,7 +403,7 @@ CLOUDSQL = GCPService(
             aggregation={
                 "alignment_period": {"seconds": 60},
                 "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MEAN,
+                "per_series_aligner": Aligner.ALIGN_RATE,
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
@@ -412,7 +412,7 @@ CLOUDSQL = GCPService(
             aggregation={
                 "alignment_period": {"seconds": 60},
                 "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MEAN,
+                "per_series_aligner": Aligner.ALIGN_RATE,
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),

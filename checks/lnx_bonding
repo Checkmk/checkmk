@@ -10,117 +10,15 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-# <<<lnx_bonding:sep(58)>>>
-# ==> bond0 <==
-# Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
-#
-# Bonding Mode: load balancing (round-robin)
-# MII Status: down
-# MII Polling Interval (ms): 0
-# Up Delay (ms): 0
-# Down Delay (ms): 0
-#
-# ==> bond1 <==
-# Ethernet Channel Bonding Driver: v3.2.5 (March 21, 2008)
-#
-# Bonding Mode: fault-tolerance (active-backup)
-# Primary Slave: eth0
-# Currently Active Slave: eth0
-# MII Status: up
-# MII Polling Interval (ms): 100
-# Up Delay (ms): 0
-# Down Delay (ms): 0
-#
-# Slave Interface: eth4
-# MII Status: up
-# Link Failure Count: 0
-# Permanent HW addr: 00:1b:21:49:d4:e4
-#
-# Slave Interface: eth0
-# MII Status: up
-# Link Failure Count: 1
-# Permanent HW addr: 00:26:b9:7d:89:2e
-
-factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS
-
-
-def _split_into_bonds(info):
-    bonds = {}
-    for line in info:
-        if len(line) == 1 and line[0].startswith("/"):
-            continue
-        else:
-            line = [i.strip() for i in line]
-
-        words = line[0].split()
-        if words[0] == "==>":
-            current = bonds.setdefault(words[1], [])
-        elif "Channel Bonding Driver" in line:
-            pass
-        else:
-            current.append(line)
-    return bonds
-
-
-def _parse_bond(bond_lines):
-    bond = {}
-    interfaces = bond.setdefault("interfaces", {})
-    # start with global part
-    current = bond.setdefault("main", {})
-
-    for line in bond_lines:
-        # check for start of new sections
-        if line[0] == "Slave Interface":
-            current = interfaces.setdefault(line[1], {})
-        elif line[0] == "802.3ad info":
-            current = bond.setdefault("802.3ad info", {})
-        # or add key/val to current dict
-        else:
-            current[line[0]] = ":".join(line[1:])
-    return bond
-
-
-def _convert_to_generic(bonds):
-    """convert to generic dict, also used by other bonding checks"""
-    converted = {}
-    for bond, status in bonds.items():
-        bond = bond.lstrip("./")
-        interfaces = {}
-        for eth, ethstatus in status["interfaces"].items():
-            interfaces[eth] = {
-                "status": ethstatus["MII Status"],
-                "hwaddr": ethstatus.get("Permanent HW addr", ""),
-                "failures": int(ethstatus["Link Failure Count"]),
-            }
-            if "Aggregator ID" in ethstatus:
-                interfaces[eth]["aggregator_id"] = ethstatus["Aggregator ID"]
-
-        converted[bond] = {
-            "status": status["main"]["MII Status"],
-            "mode": status["main"]["Bonding Mode"].split("(")[0].strip(),
-            "interfaces": interfaces,
-        }
-        if "Aggregator ID" in status.get("802.3ad info", ()):
-            converted[bond]["aggregator_id"] = status["802.3ad info"]["Aggregator ID"]
-
-        if "Currently Active Slave" in status["main"]:
-            converted[bond]["active"] = status["main"]["Currently Active Slave"]
-        if "Primary Slave" in status["main"]:
-            converted[bond]["primary"] = status["main"]["Primary Slave"].split()[0]
-    return converted
-
-
-def parse_lnx_bonding(info):
-    bond_blocks = _split_into_bonds(info)
-    bonds = {k: _parse_bond(bond_blocks[k]) for k in bond_blocks}
-    return _convert_to_generic(bonds)
-
-
 check_info["lnx_bonding"] = {
-    "parse_function": parse_lnx_bonding,
+    # section already migrated!
+    # "parse_function": parse_lnx_bonding,
     "check_function": check_bonding,
     "inventory_function": inventory_bonding,
     "service_description": "Bonding Interface %s",
     "group": "bonding",
     "default_levels_variable": "bonding_default_levels",
 }
+
+
+factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS

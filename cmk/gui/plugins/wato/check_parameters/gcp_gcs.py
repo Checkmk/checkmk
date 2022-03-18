@@ -149,8 +149,8 @@ def _vs_run_network() -> ValueSpec:
     return Dictionary(
         title=_("Levels on network traffic"),
         elements=[
-            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes")),
-            ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes")),
+            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
+            ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes/s")),
         ],
     )
 

@@ -5,15 +5,18 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-ROOT=/omd/sites/$SITE
 
-PROG=`echo "$0" | sed 's,.*/,,'`
+PROG="${0##*/}"
 for dir in src api/python; do
     FULLPATH=$(readlink -f $dir)
     echo "$PROG: Entering directory \`$FULLPATH'"
-    RC=0; ( cd "$FULLPATH" && bash .f12 ) || RC=$?
+    RC=0
+    (cd "$FULLPATH" && bash .f12) || RC=$?
     echo "$PROG: Leaving directory \`$FULLPATH'"
     test $RC -eq 0 || exit $RC
 done

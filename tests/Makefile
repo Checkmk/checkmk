@@ -28,7 +28,6 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude-dir="asio-asio*" \
     --exclude-dir="googletest*" \
     --exclude-dir="doc" \
-    --exclude-dir="livestatus" \
     --exclude-dir="node_modules" \
     --exclude-dir="omd" \
     --exclude-dir="skel" \

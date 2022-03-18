@@ -5,21 +5,21 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync livestatus.py $ROOT/lib/python3/
+sudo rsync livestatus.py "$ROOT/lib/python3/"
 
 if [ -z "$ONLY_COPY" ]; then
-    sudo $ROOT/bin/python3 -m compileall -qq $ROOT/lib/python3/livestatus.py
+    sudo "$ROOT/bin/python3" -m compileall -qq "$ROOT/lib/python3/livestatus.py"
 fi
 
-if [ -z $ONLY_COPY ]; then
+if [ -z "$ONLY_COPY" ]; then
     if [ "$SITE" != - ]; then
-        sudo omd restart $SITE apache
+        sudo omd restart "$SITE" apache
     fi
 fi

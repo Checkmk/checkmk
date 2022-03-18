@@ -190,8 +190,12 @@ impl PullConfig {
         #[cfg(unix)]
         let agent_channel = setup::agent_socket();
         #[cfg(windows)]
-        let agent_channel =
-            types::AgentChannel::from(format!("localhost:{}", setup::agent_port()).as_str());
+        let agent_channel = types::AgentChannel::from(
+            pull_args
+                .agent_channel
+                .unwrap_or(setup::agent_channel())
+                .as_str(),
+        );
         Ok(PullConfig {
             allowed_ip,
             port,

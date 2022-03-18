@@ -71,6 +71,8 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                 // this will vanish once the Windows agent also uses the toml config
                 cli::PullArgs {
                     port: None,
+                    #[cfg(windows)]
+                    agent_channel: None,
                     allowed_ip: None,
                     logging_opts: status_args.logging_opts,
                 },

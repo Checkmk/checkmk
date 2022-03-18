@@ -59,8 +59,8 @@ fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
 
 #[cfg(windows)]
 pub fn collect() -> IoResult<Vec<u8>> {
-    let peer = format!("localhost:{}", setup::agent_port());
-    collect_from_ip(&peer)
+    let agent_channel = setup::agent_channel();
+    collect_from_ip(&agent_channel)
 }
 
 #[cfg(unix)]

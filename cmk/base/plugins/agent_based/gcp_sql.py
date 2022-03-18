@@ -7,6 +7,7 @@ from typing import Any, Mapping, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
+    render,
     Result,
     Service,
     ServiceLabel,
@@ -98,4 +99,65 @@ register.check_plugin(
         "FAILED": int(State.CRIT),
         "UNKOWN_STATE": int(State.CRIT),
     },
+)
+
+
+def check_gcp_sql_memory(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    if section_gcp_service_cloud_sql is None:
+        return
+    if item not in section_gcp_service_cloud_sql:
+        return
+    metrics = {
+        # percent render expects numbers range 0 to 100 and not fractions.
+        "memory_util": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/memory/utilization", render.percent, scale=1e2
+        ),
+    }
+    timeseries = section_gcp_service_cloud_sql[item].rows
+    yield from gcp.generic_check(metrics, timeseries, params)
+
+
+register.check_plugin(
+    name="gcp_sql_memory",
+    sections=["gcp_service_cloud_sql", "gcp_assets"],
+    service_name="GCP Cloud SQL memory: %s",
+    check_ruleset_name="gcp_sql_memory",
+    discovery_function=discover,
+    check_function=check_gcp_sql_memory,
+    check_default_parameters={},
+)
+
+
+def check_gcp_sql_cpu(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    if section_gcp_service_cloud_sql is None:
+        return
+    if item not in section_gcp_service_cloud_sql:
+        return
+    metrics = {
+        "util": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/cpu/utilization", render.percent, scale=1e2
+        ),
+    }
+    timeseries = section_gcp_service_cloud_sql[item].rows
+    yield from gcp.generic_check(metrics, timeseries, params)
+
+
+register.check_plugin(
+    name="gcp_sql_cpu",
+    sections=["gcp_service_cloud_sql", "gcp_assets"],
+    service_name="GCP Cloud SQL cpu: %s",
+    check_ruleset_name="gcp_sql_cpu",
+    discovery_function=discover,
+    check_function=check_gcp_sql_cpu,
+    check_default_parameters={},
 )

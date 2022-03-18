@@ -3,14 +3,20 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import Sequence
+from dataclasses import dataclass
+from typing import Callable, Sequence, Tuple, Union
 
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.gcp_sql import check_gcp_sql_status, discover, parse
+from cmk.base.plugins.agent_based.gcp_sql import (
+    check_gcp_sql_cpu,
+    check_gcp_sql_memory,
+    check_gcp_sql_status,
+    discover,
+    parse,
+)
 from cmk.base.plugins.agent_based.utils import gcp
 from cmk.base.plugins.agent_based.utils.gcp import AssetSection, Section, SectionItem
 
@@ -164,6 +170,122 @@ def test_gcp_sql_status_no_results_if_item_not_found(section: gcp.Section):
     results = (
         el
         for el in check_gcp_sql_status(
+            item="I do not exist",
+            params=params,
+            section_gcp_service_cloud_sql=section,
+            section_gcp_assets=None,
+        )
+        if isinstance(el, Metric)
+    )
+    assert list(results) == []
+
+
+@dataclass(frozen=True)
+class Plugin:
+    metrics: Sequence[str]
+    function: Callable
+
+
+PLUGINS = [
+    Plugin(
+        function=check_gcp_sql_cpu,
+        metrics=[
+            "util",
+        ],
+    ),
+    Plugin(
+        function=check_gcp_sql_memory,
+        metrics=[
+            "memory_util",
+        ],
+    ),
+]
+
+
+@pytest.fixture(params=PLUGINS, name="checkplugin")
+def fixture_checkplugin(request) -> Plugin:
+    return request.param
+
+
+Results = Tuple[Sequence[Union[Metric, Result]], Plugin]
+
+
+@pytest.fixture(name="results_and_plugin")
+def fixture_results(checkplugin: Plugin, section: Section) -> Results:
+    params = {k: None for k in checkplugin.metrics}
+    results = list(
+        checkplugin.function(
+            item=ITEM, params=params, section_gcp_service_cloud_sql=section, section_gcp_assets=None
+        )
+    )
+    return results, checkplugin
+
+
+def test_no_sql_section_yields_no_metric_data(checkplugin):
+    params = {k: None for k in checkplugin.metrics}
+    results = list(
+        checkplugin.function(
+            item=ITEM,
+            params=params,
+            section_gcp_service_cloud_sql=None,
+            section_gcp_assets=None,
+        )
+    )
+    assert len(results) == 0
+
+
+def test_yield_metrics_as_specified(results_and_plugin: Results):
+    results, checkplugin = results_and_plugin
+    res = {r.name: r for r in results if isinstance(r, Metric)}
+    assert len(res) == len(checkplugin.metrics)
+    assert set(res.keys()) == set(checkplugin.metrics)
+
+
+def test_yield_results_as_specified(results_and_plugin: Results):
+    results, checkplugin = results_and_plugin
+    res = [r for r in results if isinstance(r, Result)]
+    assert len(res) == len(checkplugin.metrics)
+    for r in res:
+        assert r.state == State.OK
+
+
+class TestConfiguredNotificationLevels:
+    # In the example sections we do not have data for all metrics. To be able to test all check plugins
+    # use 0, the default value, to check notification levels.
+    def test_warn_levels(self, checkplugin: Plugin, section: Section):
+        params = {k: (0, None) for k in checkplugin.metrics}
+        results = list(
+            checkplugin.function(
+                item=ITEM,
+                params=params,
+                section_gcp_service_cloud_sql=section,
+                section_gcp_assets=None,
+            )
+        )
+        results = [r for r in results if isinstance(r, Result)]
+        for r in results:
+            assert r.state == State.WARN
+
+    def test_crit_levels(self, checkplugin: Plugin, section: Section):
+        params = {k: (None, 0) for k in checkplugin.metrics}
+        results = list(
+            checkplugin.function(
+                item=ITEM,
+                params=params,
+                section_gcp_service_cloud_sql=section,
+                section_gcp_assets=None,
+            )
+        )
+        results = [r for r in results if isinstance(r, Result)]
+        for r in results:
+            assert r.state == State.CRIT
+
+
+def test_no_results_if_item_not_found(section: gcp.Section, checkplugin: Plugin):
+    params = {k: None for k in ["requests"]}
+    results = (
+        el
+        for el in checkplugin.function(
             item="I do not exist",
             params=params,
             section_gcp_service_cloud_sql=section,

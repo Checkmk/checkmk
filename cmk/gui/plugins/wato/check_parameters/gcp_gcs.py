@@ -253,3 +253,22 @@ rulespec_registry.register(
         title=lambda: _("GCP/Cloud SQL status"),
     )
 )
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_sql_cpu",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_cpu,
+        title=lambda: _("GCP/Cloud SQL CPU"),
+    )
+)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_sql_memory",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_memory,
+        title=lambda: _("GCP/Cloud SQL memory"),
+    )
+)

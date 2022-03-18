@@ -8,28 +8,37 @@
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
+from typing import NamedTuple
+
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.entity_mib import PhysicalClasses
+
 factory_settings['cisco_cpu_multiitem_default_levels'] = {
     'levels': (80.0, 90.0),
 }
 
 
+class Entity(NamedTuple):
+    description: str
+    physical_class: PhysicalClasses
+
+
 def parse_cisco_cpu_multiitem(info):
-    ph_idx_to_desc = {}
-    for idx, desc in info[1]:
+    ph_idx_to_entity: Dict[str, Entity] = {}
+    for idx, desc, class_idx in info[1]:
         if desc.lower().startswith("cpu "):
             desc = desc[4:]
-        ph_idx_to_desc[idx] = desc
+        ph_idx_to_entity[idx] = Entity(desc, PhysicalClasses(class_idx))
 
     parsed = {}
     for idx, util in info[0]:
+        entity = ph_idx_to_entity.get(idx, Entity(idx, PhysicalClasses.unknown))
         # if cpmCPUTotalPhysicalIndex is 0, the element is not supported
         # (see CISCO-PROCESS-MIB.txt)
-        if idx == "0":
+        if idx == "0" or entity.physical_class != PhysicalClasses.cpu:
             continue
-        name = ph_idx_to_desc.get(idx, idx)
         try:
-            parsed[name] = {'util': float(util)}
+            parsed[entity.description] = {'util': float(util)}
         except ValueError:
             pass
     return parsed
@@ -66,6 +75,7 @@ check_info["cisco_cpu_multiitem"] = {
             [
                 OID_END,  #OID index
                 '1.7',  # entPhysicalName
+                '1.5',  # entPhysicalClass
             ])
     ],
     'snmp_scan_function': snmp_scan_cisco_cpu_multiitem,

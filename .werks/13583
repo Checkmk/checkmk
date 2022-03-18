@@ -1,0 +1,14 @@
+Title: Only discover CPUs with cisco_cpu_multiitem
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647521139
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+The check <tt>cisco_cpu_multiitem</tt> may discovered also other Physical Entities like Fans, Chassies etc.
+This may have led to funny service descriptions like "CPU Utilization Fan".
+Perform a rediscovery to get rid of those faulty services.

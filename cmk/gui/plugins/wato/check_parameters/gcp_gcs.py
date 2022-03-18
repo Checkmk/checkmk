@@ -125,22 +125,22 @@ rulespec_registry.register(
 )
 
 
-def _vs_function_egress() -> ValueSpec:
+def _vs_function_network() -> ValueSpec:
     return Dictionary(
-        title=_("Levels on network egress"),
+        title=_("Levels on network"),
         elements=[
-            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes")),
+            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
         ],
     )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
-        check_group_name="gcp_function_egress",
+        check_group_name="gcp_function_network",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_vs_function_egress,
-        title=lambda: _("GCP/Function egress"),
+        parameter_valuespec=_vs_function_network,
+        title=lambda: _("GCP/Function network"),
     )
 )
 

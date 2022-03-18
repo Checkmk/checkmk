@@ -108,7 +108,7 @@ register.check_plugin(
 )
 
 
-def check_gcp_function_egress(
+def check_gcp_function_network(
     item: str,
     params: Mapping[str, Any],
     section_gcp_service_cloud_functions: Optional[gcp.Section],
@@ -119,7 +119,7 @@ def check_gcp_function_egress(
     section = section_gcp_service_cloud_functions
     metrics = {
         "net_data_sent": gcp.MetricSpec(
-            "cloudfunctions.googleapis.com/function/network_egress", render.bytes
+            "cloudfunctions.googleapis.com/function/network_egress", render.networkbandwidth
         ),
     }
     timeseries = section[item].rows
@@ -127,11 +127,11 @@ def check_gcp_function_egress(
 
 
 register.check_plugin(
-    name="gcp_function_egress",
+    name="gcp_function_network",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function egress %s",
-    check_ruleset_name="gcp_function_egress",
+    service_name="GCP Cloud Function network %s",
+    check_ruleset_name="gcp_function_network",
     discovery_function=discover,
-    check_function=check_gcp_function_egress,
+    check_function=check_gcp_function_network,
     check_default_parameters={},
 )

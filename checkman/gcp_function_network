@@ -1,10 +1,10 @@
-title: GCP GCS: Egress
+title: GCP Function: Network
 agents: gcp
 catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the egress of Cloud Functions and reports
+ This check monitors the network of Cloud Functions and reports
 
  - total number of bytes sent in the last minute
 
@@ -12,7 +12,7 @@ description:
  special agent {Google Cloud Platform (GCP)}.
 
  There are no default levels. Upper levels on the received bytes
- are configurable via the rule "GCP/Function Egress".
+ are configurable via the rule "GCP/Function network".
 
 discovery:
- One service is created for each bucket.
+ One service is created for each function.

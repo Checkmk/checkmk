@@ -16,9 +16,9 @@ from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_function import (
-    check_gcp_function_egress,
     check_gcp_function_execution,
     check_gcp_function_instances,
+    check_gcp_function_network,
     discover,
     parse_gcp_function,
 )
@@ -107,7 +107,7 @@ class Plugin:
 
 PLUGINS = [
     Plugin(
-        function=check_gcp_function_egress,
+        function=check_gcp_function_network,
         metrics=[
             "net_data_sent",
         ],

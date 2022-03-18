@@ -22,6 +22,13 @@ register.agent_section(
     parse_function=parse_fritz,
 )
 
+_WAN_IF_KEYS = {
+    "NewLayer1DownstreamMaxBitRate",
+    "NewLinkStatus",
+    "NewTotalBytesReceived",
+    "NewTotalBytesSent",
+}
+
 _LINK_STATUS_MAP = {
     None: "4",
     "Up": "1",
@@ -29,6 +36,8 @@ _LINK_STATUS_MAP = {
 
 
 def _section_to_interface(section: Section) -> interfaces.Section:
+    if not _WAN_IF_KEYS & set(section):
+        return []
     return [
         interfaces.Interface(
             index="0",
@@ -61,15 +70,24 @@ def check_fritz_wan_if(
     params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
-    params_updated = dict(params)
-    params_updated.update({
-        'assumed_speed_in': int(section['NewLayer1DownstreamMaxBitRate']),
-        'assumed_speed_out': int(section['NewLayer1UpstreamMaxBitRate']),
-        'unit': 'bit',
-    })
     yield from interfaces.check_multiple_interfaces(
         item,
-        params_updated,
+        {
+            **params,
+            **{
+                key_params: int(raw_value) for (key_params, key_section) in (
+                    (
+                        "assumed_speed_in",
+                        "NewLayer1DownstreamMaxBitRate",
+                    ),
+                    (
+                        "assumed_speed_out",
+                        "NewLayer1UpstreamMaxBitRate",
+                    ),
+                ) if (raw_value := section.get(key_section))
+            },
+            "unit": "bit",
+        },
         _section_to_interface(section),
     )
 
@@ -114,11 +132,10 @@ def check_fritz_conn(section: Section) -> CheckResult:
             state=State.WARN,
             summary=f"Connection status: {conn_stat}",
         )
-    else:
+    elif conn_stat:
         yield Result(
             state=State.UNKNOWN,
-            summary=f"Connection status: {conn_stat}"
-            if conn_stat else "Got no connection status from device",
+            summary=f"Connection status: {conn_stat}",
         )
 
     last_err = section.get("NewLastConnectionError")
@@ -165,19 +182,16 @@ _UNCONFIGURED_VALUE = "0.0.0.0"
 
 
 def check_fritz_config(section: Section) -> CheckResult:
-    output = [
-        f"{label}: {value}" for key, label in _CONFIG_FIELDS if (value := section.get(
-            key,
-            _UNCONFIGURED_VALUE,
-        )) != _UNCONFIGURED_VALUE
-    ]
-    yield Result(
-        state=State.OK,
-        summary=", ".join(output),
-    ) if output else Result(
-        state=State.UNKNOWN,
-        summary="Configuration info is missing",
-    )
+    if output := [
+            f"{label}: {value}" for key, label in _CONFIG_FIELDS if (value := section.get(
+                key,
+                _UNCONFIGURED_VALUE,
+            )) != _UNCONFIGURED_VALUE
+    ]:
+        yield Result(
+            state=State.OK,
+            summary=", ".join(output),
+        )
 
 
 register.check_plugin(
@@ -203,14 +217,13 @@ _LINK_FIELDS = [
 
 
 def check_fritz_link(section: Section) -> CheckResult:
-    output = [f"{label}: {value}" for key, label in _LINK_FIELDS if (value := section.get(key))]
-    yield Result(
-        state=State.OK,
-        summary=", ".join(output),
-    ) if output else Result(
-        state=State.UNKNOWN,
-        summary="Link info is missing",
-    )
+    if output := [
+            f"{label}: {value}" for key, label in _LINK_FIELDS if (value := section.get(key))
+    ]:
+        yield Result(
+            state=State.OK,
+            summary=", ".join(output),
+        )
 
 
 register.check_plugin(

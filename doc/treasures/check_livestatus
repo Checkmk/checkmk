@@ -13,7 +13,7 @@ Filter: description = $SVC
 Columns: state plugin_output perf_data
 Separators: 10 124 124 124
 EOF
-    IFS='|' read state output perfdata
+    IFS='|' read -r state output perfdata
     echo "$output|$perfdata"
     exit "$state"
 }

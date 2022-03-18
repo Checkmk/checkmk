@@ -18,6 +18,8 @@
 # check_mk_agent on your target machines. By default the directory
 # is located here: /usr/lib/check_mk_agent/plugins
 
+# shellcheck disable=SC2230 # which is non-standard. Use builtin 'command -v' instead.
+
 # Check needed binarys
 if ! which ipmi-sensors >/dev/null 2>&1; then
     OUT="\nE ipmi-sensors is missing" && ERR=1
@@ -53,13 +55,13 @@ if [ -z $ERR ]; then
         for NAME in $SLOTS; do
             STATUS=$(ipmi-raw 0 0x2e 0xf5 0x80 0x28 0x00 0x48 $I | cut -d' ' -f 7)
             OUT="$OUT\n$I $NAME $STATUS"
-            I=$(($I + 1))
+            I=$((I + 1))
         done
     fi
 fi
 
 # Only print output when at least one memory slot was found
-if [[ ! -z $ERR || $I -ne 0 ]]; then
+if [ -n "$ERR" ] || [ "$I" != "0" ]; then
     echo -n "<<<fsc_ipmi_mem_status>>>"
     echo -e "$OUT"
 fi

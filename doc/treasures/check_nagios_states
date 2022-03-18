@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+:
+
+# shellcheck disable=SC2046 # Quote this to prevent word splitting.
 set $(echo -e "GET services
 Separators: 10 32 32 32
 Stats: state >= 0

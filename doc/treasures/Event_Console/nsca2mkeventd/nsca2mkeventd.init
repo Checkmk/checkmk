@@ -29,8 +29,7 @@ case "$1" in
             exit 1
         }
 
-        "$OMD_ROOT"/local/bin/nsca2mkeventd
-        if [ $? -eq 0 ]; then
+        if "$OMD_ROOT"/local/bin/nsca2mkeventd; then
             echo OK
         else
             echo ERROR
@@ -56,7 +55,7 @@ case "$1" in
             fi
 
             echo -n '.'
-            I=$(($I + 1))
+            I=$((I + 1))
             sleep 1
         done
 
@@ -66,10 +65,9 @@ case "$1" in
         PID=$(pidof_nsca2mkeventd) && {
             echo "Running (PID: $PID)."
             exit 0
-        } || {
-            echo "Not running."
-            exit 1
         }
+        echo "Not running."
+        exit 1
         ;;
     restart)
         $0 stop

@@ -8,7 +8,6 @@
 #Most updated file: https://github.com/bbhenry/check_mk_local/edit/master/check_mount_rw
 
 PROGNAME=$(basename "$0")
-PROGPATH=$(echo "$0" | sed -e 's,[\\/][^\\/][^\\/]*$,,')
 REVISION="1.0"
 FQDNNAME=$(hostname -f)
 TESTFILE="test-rw-$FQDNNAME"
@@ -29,6 +28,8 @@ print_help() {
 }
 
 check_mount_rw() {
+    # FIXME: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
+    # shellcheck disable=SC2207
     MOUNTPOINTS=($(grep -E 'glusterfs|nfs' /proc/mounts | awk '{ gsub("fuse.glusterfs","glusterfs",$3); print $2":"toupper($3) }'))
 
     for a in "${MOUNTPOINTS[@]}"; do

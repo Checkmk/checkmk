@@ -21,10 +21,10 @@ set_times() {
 
     # Rechnen ab beginn des aktuellen tages (07 Uhr)
     time_now=$(date -u +%s -d "today 0700")
-    time_start=$(($time_now - $offset * 86400))
+    time_start=$((time_now - offset * 86400))
     if [[ $2 ]]; then
         length=$2
-        time_end=$(($time_start + $length * 86400))
+        time_end=$((time_start + length * 86400))
     else
         time_end=$(date +%s)
     fi
@@ -33,13 +33,15 @@ set_times() {
 }
 
 run_query() {
-    echo "GET log 
+    cat <<HERE | lq
+GET log
 Filter: class = 3
 Filter: service_description > ""
 Filter: time > $time_start
 Filter: time < $time_end
-Columns: host_name service_description plugin_output" | lq
+Columns: host_name service_description plugin_output
+HERE
 }
 
-set_times $@
+set_times "$@"
 run_query

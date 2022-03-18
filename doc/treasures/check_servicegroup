@@ -29,7 +29,7 @@ NUM=${2:-1}
 SOCKET=${3:-/var/run/nagios/rw/live}
 
 check() {
-    IFS=\; read COUNT OK WARN CRIT UNKNOWN
+    IFS=\; read -r COUNT OK WARN CRIT UNKNOWN
     if [ "$CRIT" -ge "$NUM" ]; then
         status=CRIT
         exitcode=2

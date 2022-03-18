@@ -607,6 +607,11 @@ class UserAttributes(BaseSchema):
         required=False,
         description="The language used by the user in the user interface",
     )
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="This field indicates if the user is forced to change the password on the "
+        "next login or access.",
+    )
 
 
 class UserObject(DomainObject):

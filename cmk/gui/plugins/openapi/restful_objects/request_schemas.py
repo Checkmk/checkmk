@@ -1075,6 +1075,14 @@ AUTH_SECRET = fields.String(
     example="DEYQEQQPYCFFBYH@AVMC",
 )
 
+AUTH_ENFORCE_PASSWORD_CHANGE = fields.Boolean(
+    required=False,
+    description="If set to True, the user will be forced to change his password on the next "
+    "login or access. Defaults to False",
+    example=False,
+    load_default=False,
+)
+
 AUTH_CREATE_TYPE = fields.String(
     required=False,
     description="The authentication type",
@@ -1098,6 +1106,13 @@ class AuthSecret(BaseSchema):
 class AuthPassword(BaseSchema):
     auth_type = AUTH_CREATE_TYPE
     password = AUTH_PASSWORD
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="If set to True, the user will be forced to change his password on the next "
+        "login or access. Defaults to False",
+        example=False,
+        load_default=False,
+    )
 
 
 class AuthUpdateSecret(BaseSchema):
@@ -1108,6 +1123,12 @@ class AuthUpdateSecret(BaseSchema):
 class AuthUpdatePassword(BaseSchema):
     auth_type = AUTH_UPDATE_TYPE
     password = AUTH_PASSWORD
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="If set to True, the user will be forced to change his password on the next "
+        "login or access",
+        example=False,
+    )
 
 
 class AuthUpdateRemove(BaseSchema):

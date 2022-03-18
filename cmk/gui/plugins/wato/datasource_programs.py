@@ -1775,42 +1775,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_hp_msa():
-    return Dictionary(
-        elements=[
-            (
-                "username",
-                TextInput(
-                    title=_("Username"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "password",
-                Password(
-                    title=_("Password"),
-                    allow_empty=False,
-                ),
-            ),
-        ],
-        optional_keys=False,
-        title=_("HP MSA via Web Interface"),
-        help=_(
-            "This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
-            "which collects the data through the HP MSA web interface"
-        ),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:hp_msa",
-        valuespec=_valuespec_special_agents_hp_msa,
-    )
-)
-
-
 def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements:
     return [
         (

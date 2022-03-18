@@ -14,16 +14,23 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.plugins.metrics.utils import MetricName
+from cmk.gui.plugins.wato.special_agents.common import (
+    api_request_authentication,
+    api_request_connection_elements,
+    RulespecGroupDatasourceProgramsApps,
+    RulespecGroupDatasourceProgramsCustom,
+    RulespecGroupDatasourceProgramsHardware,
+    RulespecGroupDatasourceProgramsOS,
+    RulespecGroupDatasourceProgramsTesting,
+    RulespecGroupVMCloudContainer,
+)
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     HTTPProxyReference,
     IndividualOrStoredPassword,
     monitoring_macro_help,
     PasswordFromStore,
-    rulespec_group_registry,
     rulespec_registry,
-    RulespecGroup,
-    RulespecSubGroup,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -247,140 +254,6 @@ def _auth_option(option: str) -> List[Any]:
             )
         )
     return auth
-
-
-@rulespec_group_registry.register
-class RulespecGroupVMCloudContainer(RulespecGroup):
-    @property
-    def name(self):
-        return "vm_cloud_container"
-
-    @property
-    def title(self):
-        return _("VM, Cloud, Container")
-
-    @property
-    def help(self):
-        return _("Integrate with VM, cloud or container platforms")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourcePrograms(RulespecGroup):
-    @property
-    def name(self):
-        return "datasource_programs"
-
-    @property
-    def title(self):
-        return _("Other integrations")
-
-    @property
-    def help(self):
-        return _("Integrate platforms using special agents, e.g. SAP R/3")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "os"
-
-    @property
-    def title(self):
-        return _("Operating systems")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "apps"
-
-    @property
-    def title(self):
-        return _("Applications")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "cloud"
-
-    @property
-    def title(self):
-        return _("Cloud based environments")
-
-
-class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "container"
-
-    @property
-    def title(self):
-        return _("Containerization")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "custom"
-
-    @property
-    def title(self):
-        return _("Custom integrations")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "hw"
-
-    @property
-    def title(self):
-        return _("Hardware")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "testing"
-
-    @property
-    def title(self):
-        return _("Testing")
 
 
 def _valuespec_datasource_programs():
@@ -1002,69 +875,6 @@ def _check_not_empty_exporter_dict(value, _varprefix):
         raise MKUserError("dict_selection", _("Please select at least one element"))
 
 
-def _api_request_authentication():
-    return (
-        "auth_basic",
-        Transform(
-            valuespec=CascadingDropdown(
-                title=_("Authentication"),
-                choices=[
-                    (
-                        "auth_login",
-                        _("Basic authentication"),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "username",
-                                    TextInput(
-                                        title=_("Login username"),
-                                        allow_empty=False,
-                                    ),
-                                ),
-                                (
-                                    "password",
-                                    IndividualOrStoredPassword(
-                                        title=_("Password"),
-                                        allow_empty=False,
-                                    ),
-                                ),
-                            ],
-                            optional_keys=[],
-                        ),
-                    ),
-                    (
-                        "auth_token",
-                        _("Token authentication"),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "token",
-                                    IndividualOrStoredPassword(
-                                        title=_("Login token"),
-                                        allow_empty=False,
-                                    ),
-                                ),
-                            ],
-                            optional_keys=[],
-                        ),
-                    ),
-                ],
-            ),
-            forth=lambda v: ("auth_login", v) if "username" in v else v,
-        ),
-    )
-
-
-def _api_request_connection_elements(help_text: str, default_port: int):
-    return [
-        ("port", Integer(title=_("Port"), default_value=default_port)),
-        (
-            "path-prefix",
-            TextInput(title=_("Custom path prefix"), help=help_text, allow_empty=False),
-        ),
-    ]
-
-
 def _valuespec_generic_metrics_prometheus():
     namespace_element = (
         "prepend_namespaces",
@@ -1095,7 +905,7 @@ def _valuespec_generic_metrics_prometheus():
                                 "ip_address",
                                 _("IP Address"),
                                 Dictionary(
-                                    elements=_api_request_connection_elements(
+                                    elements=api_request_connection_elements(
                                         help_text=_(
                                             "Specifies a URL path prefix, which is prepended to API calls "
                                             "to the Prometheus API. If this option is not relevant for "
@@ -1109,7 +919,7 @@ def _valuespec_generic_metrics_prometheus():
                                 "host_name",
                                 _("Host name"),
                                 Dictionary(
-                                    elements=_api_request_connection_elements(
+                                    elements=api_request_connection_elements(
                                         help_text=_(
                                             "Specifies a URL path prefix, which is prepended to API calls "
                                             "to the Prometheus API. If this option is not relevant for "
@@ -1146,7 +956,7 @@ def _valuespec_generic_metrics_prometheus():
                         title=_("Prometheus connection option"),
                     ),
                 ),
-                _api_request_authentication(),
+                api_request_authentication(),
                 (
                     "protocol",
                     DropdownChoice(
@@ -1627,7 +1437,7 @@ def _valuespec_generic_metrics_alertmanager():
                             "ip_address",
                             _("IP Address"),
                             Dictionary(
-                                elements=_api_request_connection_elements(
+                                elements=api_request_connection_elements(
                                     help_text=_(
                                         "Specifies a URL path prefix, which is prepended to API calls "
                                         "to the Alertmanager API. If this option is not relevant for "
@@ -1641,7 +1451,7 @@ def _valuespec_generic_metrics_alertmanager():
                             "host_name",
                             _("Host name"),
                             Dictionary(
-                                elements=_api_request_connection_elements(
+                                elements=api_request_connection_elements(
                                     help_text=_(
                                         "Specifies a URL path prefix, which is prepended to API calls "
                                         "to the Alertmanager API. If this option is not relevant for "
@@ -1678,7 +1488,7 @@ def _valuespec_generic_metrics_alertmanager():
                     title=_("Alertmanager connection option"),
                 ),
             ),
-            _api_request_authentication(),
+            api_request_authentication(),
             (
                 "protocol",
                 DropdownChoice(

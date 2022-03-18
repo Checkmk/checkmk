@@ -186,7 +186,7 @@ just to signal that real build script was not called -->
         <!-- assign the string (command) to save_registry_exec -->
         <CustomAction Id="save_version_exec"
                                 Property="save_version"
-                                Value="&quot;[%windir]\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NonInteractive -InputFormat None -NoProfile New-Item -Force  -Path &quot;[%ProgramData]&quot; -Name &quot;cmk_agent_uninstall.txt&quot; -Value '[INSTALLEDSERVICEDESCRIPTION]'"
+                                Value="&quot;[%windir]\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NonInteractive -InputFormat None -NoProfile New-Item -Force  -Path &quot;[%ProgramData]&quot; -ItemType &quot;file&quot; -Name &quot;cmk_agent_uninstall.txt&quot; -Value '[INSTALLEDSERVICEDESCRIPTION]'"
                                 Execute="immediate" />
 
         <!-- Deferred execution of the above script -->

@@ -114,7 +114,7 @@ class SNMPHostConfig(
         NamedTuple("SNMPHostConfig", [
             ("is_ipv6_primary", bool),
             ("hostname", _HostName),
-            ("ipaddress", _HostAddress),
+            ("ipaddress", Optional[_HostAddress]),
             ("credentials", SNMPCredentials),
             ("port", int),
             ("is_bulkwalk_host", bool),
@@ -177,7 +177,7 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
         return self.config.hostname
 
     @property
-    def address(self) -> _HostAddress:
+    def address(self) -> Optional[_HostAddress]:
         return self.config.ipaddress
 
     @abc.abstractmethod

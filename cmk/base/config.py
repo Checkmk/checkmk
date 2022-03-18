@@ -2513,7 +2513,7 @@ class HostConfig:
 
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
-    def snmp_config(self, ipaddress: HostAddress) -> SNMPHostConfig:
+    def snmp_config(self, ipaddress: Optional[HostAddress]) -> SNMPHostConfig:
         return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,

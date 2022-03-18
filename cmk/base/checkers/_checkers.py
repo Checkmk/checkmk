@@ -110,15 +110,6 @@ class _Builder:
     def _initialize_snmp_based(self) -> None:
         if not self._host_config.is_snmp_host:
             return
-        if self._ipaddress is None:
-            # HostAddress is not Optional.
-            #
-            # At least classic SNMP enforces that there is an address set,
-            # Inline-SNMP has some lookup logic for some reason. We need
-            # to find out whether or not we can really have None here.
-            # Looks like it could be the case for cluster hosts which
-            # don't have an IP address set.
-            return
         self._add(
             SNMPSource.snmp(
                 self._hostname,

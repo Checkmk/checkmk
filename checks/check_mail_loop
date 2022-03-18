@@ -14,13 +14,12 @@ def check_mail_loop_arguments(params):
     ...     'subject': 'Some subject',
     ...     'smtp_server': 'smtp.gmx.de',
     ...     'smtp_tls': True,
-    ...     'imap_tls': True,
     ...     'smtp_port': 42,
     ...     'smtp_auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
     ...     'fetch': ('IMAP', {
     ...       'server': 'imap.gmx.de',
-    ...       'ssl': (True, None),
-    ...       'auth': ('me@gmx.de', ('password', 'p4ssw0rd'))}),
+    ...       'auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
+    ...       'connection': {'disable_tls': False, 'tcp_port': 123}}),
     ...     'mail_from': 'me_from@gmx.de',
     ...     'mail_to': 'me_to@gmx.de',
     ...     'connect_timeout': 23,
@@ -30,6 +29,7 @@ def check_mail_loop_arguments(params):
     --fetch-protocol=IMAP
     --fetch-server=imap.gmx.de
     --fetch-tls
+    --fetch-port=123
     --fetch-username=me@gmx.de
     --fetch-password=p4ssw0rd
     --connect-timeout=23
@@ -47,7 +47,7 @@ def check_mail_loop_arguments(params):
     """
     try:
         fetch_protocol, fetch_params = params["fetch"]
-        fetch_use_tls, fetch_port = fetch_params["ssl"]
+        connection_params = fetch_params["connection"]
         fetch_username, fetch_password = fetch_params["auth"]
     except KeyError as exc:
         raise ValueError(
@@ -58,9 +58,16 @@ def check_mail_loop_arguments(params):
         f"--fetch-protocol={fetch_protocol}",
         f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
     ]
-    if fetch_use_tls or "imap_tls" in params:
+
+    # NOTE: this argument will be turned into `--fetch-disable-tls` when
+    # refactoring all mailbox based active checks
+    if not connection_params.get("disable_tls"):
         args.append("--fetch-tls")
-    if fetch_port:
+
+    if connection_params.get("disable_cert_validation"):
+        args.append("--fetch-disable-cert-validation")
+
+    if (fetch_port := connection_params.get("tcp_port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
     args.append(f"--fetch-username={fetch_username}")

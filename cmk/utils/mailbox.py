@@ -90,6 +90,7 @@ class EWS:
 
         logging.debug("fetch mails from %s (from %s)", dt_start, after)
         logging.debug("fetch mails to   %s (from %s)", dt_end, before)
+
         return [
             item.datetime_sent.timestamp()
             for item in self._selected_folder.filter(datetime_received__range=(dt_start, dt_end))

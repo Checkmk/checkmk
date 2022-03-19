@@ -343,6 +343,7 @@ class DaemonSetInfo(BaseModel):
     labels: api.Labels
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
+    containers: ThinContainers
     cluster: str
 
 
@@ -354,6 +355,7 @@ class StatefulSetInfo(BaseModel):
     labels: api.Labels
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
+    containers: ThinContainers
     cluster: str
 
 

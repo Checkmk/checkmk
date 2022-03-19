@@ -512,6 +512,7 @@ class DaemonSetInfo(BaseModel):
     labels: Labels
     selector: Selector
     creation_timestamp: CreationTimestamp
+    containers: ThinContainers
     cluster: str
 
 
@@ -523,6 +524,7 @@ class StatefulSetInfo(BaseModel):
     labels: Labels
     selector: Selector
     creation_timestamp: CreationTimestamp
+    containers: ThinContainers
     cluster: str
 
 

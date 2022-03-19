@@ -550,6 +550,7 @@ def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSet
         creation_timestamp=daemonset.metadata.creation_timestamp,
         labels=daemonset.metadata.labels,
         selector=daemonset.spec.selector,
+        containers=_thin_containers(daemonset.pods()),
         cluster=cluster_name,
     )
 
@@ -595,6 +596,7 @@ def statefulset_info(statefulset: StatefulSet, cluster_name: str) -> section.Sta
         creation_timestamp=statefulset.metadata.creation_timestamp,
         labels=statefulset.metadata.labels,
         selector=statefulset.spec.selector,
+        containers=_thin_containers(statefulset.pods()),
         cluster=cluster_name,
     )
 

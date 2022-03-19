@@ -11,7 +11,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_statefulset_info import check_kube_statefulset_info
 from cmk.base.plugins.agent_based.utils import kube_info
-from cmk.base.plugins.agent_based.utils.kube import Selector, StatefulSetInfo
+from cmk.base.plugins.agent_based.utils.kube import Selector, StatefulSetInfo, ThinContainers
 
 
 # TODO: CMK-10052
@@ -34,6 +34,7 @@ def fixture_time(mocker):
                 labels={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
+                containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
             ),
             (

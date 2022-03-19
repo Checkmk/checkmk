@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
     StatefulSetInfo,
     StatefulSetRollingUpdate,
     StatefulSetStrategy,
+    ThinContainers,
 )
 
 from .utils_inventory import sort_inventory_result
@@ -31,6 +32,7 @@ from .utils_inventory import sort_inventory_result
                 labels={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
+                containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
             ),
             StatefulSetStrategy(strategy=StatefulSetRollingUpdate(partition=0)),

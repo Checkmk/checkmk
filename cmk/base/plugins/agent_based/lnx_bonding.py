@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, TypedDict
+from typing import Mapping, Sequence, TypedDict
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -40,6 +40,8 @@ from .agent_based_api.v1.type_defs import StringTable
 # Link Failure Count: 1
 # Permanent HW addr: 00:26:b9:7d:89:2e
 
+_ParsedBlocks = tuple[dict[str, str], Sequence[dict[str, str]], dict[str, str]]
+
 
 class _Interface(TypedDict, total=False):
     status: str
@@ -71,7 +73,7 @@ def _split_bonds(string_table: StringTable) -> Mapping[str, StringTable]:
 
         words = line[0].split()
         if words[0] == "==>":
-            current = bonds.setdefault(words[1], [])
+            current = bonds.setdefault(words[1].lstrip(".").lstrip("/"), [])
         elif "Channel Bonding Driver" in line:
             pass
         else:
@@ -79,61 +81,61 @@ def _split_bonds(string_table: StringTable) -> Mapping[str, StringTable]:
     return bonds
 
 
-# this is untypebable :-(
-def _parse_bond(bond_lines: StringTable):
-    bond: dict = {}
-    interfaces = bond.setdefault("interfaces", {})
+def _parse_blocks(bond_lines: StringTable) -> _ParsedBlocks:
+    main: dict[str, str] = {}
+    interfaces: list[dict[str, str]] = []
+    info8023ad: dict[str, str] = {}
+
     # start with global part
-    current = bond.setdefault("main", {})
-
-    for line in bond_lines:
+    current = main
+    for key, *values in bond_lines:
         # check for start of new sections
-        if line[0] == "Slave Interface":
-            current = interfaces.setdefault(line[1], {})
-        elif line[0] == "802.3ad info":
-            current = bond.setdefault("802.3ad info", {})
-        # or add key/val to current dict
-        else:
-            current[line[0]] = ":".join(line[1:])
-    return bond
+        if key == "Slave Interface":
+            current = {}
+            interfaces.append(current)
+        elif key == "802.3ad info":
+            current = info8023ad
+
+        current[key] = ":".join(values)
+
+    return main, interfaces, info8023ad
 
 
-def _convert_to_generic(bonds) -> SectionBonding:
+def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> SectionBonding:
     """convert to generic dict, also used by other bonding checks"""
-    # 'bonds' is a really nasty type. At least the return type is defined for this function.
     converted: dict[str, _ConvertedBond] = {}
-    for bond, status in bonds.items():
-        bond = bond.lstrip("./")
-        interfaces: dict[str, _Interface] = {}
-        for eth, ethstatus in status["interfaces"].items():
-            interfaces[eth] = {
-                "status": ethstatus["MII Status"],
-                "hwaddr": ethstatus.get("Permanent HW addr", ""),
-                "failures": int(ethstatus["Link Failure Count"]),
+    for name, (main, interfaces, info8023ad) in bonds.items():
+        new_interfaces: dict[str, _Interface] = {}
+        for interface in interfaces:
+            eth = interface["Slave Interface"]
+            new_interfaces[eth] = {
+                "status": interface["MII Status"],
+                "hwaddr": interface.get("Permanent HW addr", ""),
+                "failures": int(interface["Link Failure Count"]),
             }
-            if "Aggregator ID" in ethstatus:
-                interfaces[eth]["aggregator_id"] = ethstatus["Aggregator ID"]
+            if "Aggregator ID" in interface:
+                new_interfaces[eth]["aggregator_id"] = interface["Aggregator ID"]
 
         this_bond: _ConvertedBond = {
-            "status": status["main"]["MII Status"],
-            "mode": status["main"]["Bonding Mode"].split("(")[0].strip(),
-            "interfaces": interfaces,
+            "status": main["MII Status"],
+            "mode": main["Bonding Mode"].split("(")[0].strip(),
+            "interfaces": new_interfaces,
         }
-        if "Aggregator ID" in status.get("802.3ad info", ()):
-            this_bond["aggregator_id"] = status["802.3ad info"]["Aggregator ID"]
+        if "Aggregator ID" in info8023ad:
+            this_bond["aggregator_id"] = info8023ad["Aggregator ID"]
 
-        if "Currently Active Slave" in status["main"]:
-            this_bond["active"] = status["main"]["Currently Active Slave"]
-        if "Primary Slave" in status["main"]:
-            this_bond["primary"] = status["main"]["Primary Slave"].split()[0]
+        if "Currently Active Slave" in main:
+            this_bond["active"] = main["Currently Active Slave"]
+        if "Primary Slave" in main:
+            this_bond["primary"] = main["Primary Slave"].split()[0]
 
-        converted[bond] = this_bond
+        converted[name] = this_bond
 
     return converted
 
 
 def parse_lnx_bonding(string_table: StringTable) -> SectionBonding:
-    return _convert_to_generic({k: _parse_bond(v) for k, v in _split_bonds(string_table).items()})
+    return _convert_to_generic({k: _parse_blocks(v) for k, v in _split_bonds(string_table).items()})
 
 
 register.agent_section(

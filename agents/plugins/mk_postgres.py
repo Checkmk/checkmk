@@ -49,6 +49,13 @@ class OSNotImplementedError(NotImplementedError):
         return "The OS type ({}) is not yet implemented.".format(platform.system())
 
 
+if IS_LINUX:
+    import resource
+elif IS_WINDOWS:
+    import time
+else:
+    raise OSNotImplementedError
+
 # for compatibility with python 2.6
 def subprocess_check_output(args):
     return subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
@@ -488,9 +495,9 @@ class PostgresWin(PostgresBase):
         cmd = "SELECT version() AS v"
 
         # TODO: Verify this time measurement
-        start_time = time.time()  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        start_time = time.time()
         out = self.run_sql_as_db_user(cmd)
-        diff = time.time() - start_time  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        diff = time.time() - start_time
         return out, "%.3f" % diff
 
     def get_bloat(self, databases, numeric_version):
@@ -786,9 +793,9 @@ class PostgresLinux(PostgresBase):
     def get_version_and_connection_time(self):
         # type: () -> Tuple[str, str]
         cmd = "SELECT version() AS v"
-        usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
         out = self.run_sql_as_db_user(cmd)
-        usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)
 
         sys_time = usage_end.ru_stime - usage_start.ru_stime
         usr_time = usage_end.ru_utime - usage_start.ru_utime
@@ -983,11 +990,6 @@ class Helpers:
     def get_default_db_name():
         pass
 
-    @staticmethod
-    @abc.abstractmethod
-    def import_os_specific_modules():
-        pass
-
 
 class WindowsHelpers(Helpers):
     @staticmethod
@@ -1005,10 +1007,6 @@ class WindowsHelpers(Helpers):
     @staticmethod
     def get_default_db_name():
         return "data"
-
-    @staticmethod
-    def import_os_specific_modules():
-        import time  # pylint: disable=unused-import
 
 
 class LinuxHelpers(Helpers):
@@ -1038,10 +1036,6 @@ class LinuxHelpers(Helpers):
     @staticmethod
     def get_default_db_name():
         return "main"
-
-    @staticmethod
-    def import_os_specific_modules():
-        import resource  # pylint: disable=unused-import
 
 
 def open_env_file(file_to_open):
@@ -1119,7 +1113,6 @@ def main(argv=None):
     # type: (Optional[List]) -> int
 
     helper = helper_factory()
-    helper.import_os_specific_modules()
     if argv is None:
         argv = sys.argv[1:]
 

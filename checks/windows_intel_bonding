@@ -4,113 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# <<<windows_intel_bonding>>>
-# Caption    Name                                    RedundancyStatus
-# Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
-#
-# ###
-# AdapterFunction  AdapterStatus  GroupComponent                                                                                               PartComponent
-# 1                1              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{18EC3002-F03B-4B69-AD88-BFEB700460DC}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
-# 2                2              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{1EDEBE50-005F-4533-BAFC-E863617F1030}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
-#
-# ###
-# AdapterStatus  Caption                                                             DeviceID
-# 51             TEAM : Bond_10.4 - Intel(R) Gigabit ET Dual Port Server Adapter     {18EC3002-F03B-4B69-AD88-BFEB700460DC}
-# 51             TEAM : Bond_10.4 - Intel(R) Gigabit ET Dual Port Server Adapter #2  {1EDEBE50-005F-4533-BAFC-E863617F1030}
-# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #43           {55799336-A84B-4DA5-8EB9-B7426AA1AB75}
-# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #35           {7DB9B461-FAC0-4763-9AF9-9A6CA6648188}
-# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #40           {82AE1F27-BF28-4E30-AC3D-809DF5FF0D39}
-# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #38           {DC918766-F61C-4801-92F8-E5532907EA0D}
+from cmk.base.check_legacy_includes.bonding import (
+    BONDING_CHECK_DEFAULT_PARAMETERS,
+    check_bonding,
+    inventory_bonding,
+)
 
 factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS
 
 
-def get_real_adapter_name(bond, name):
-    prefix = "TEAM : %s - " % bond
-    return name[len(prefix) :]
-
-
-def parse_windows_intel_bonding(info):
-    lines = iter(info)
-    bonds = {}
-    adapters = {}
-    adapter_names = {}
-
-    try:
-        # Get bond info
-        line = next(lines)
-        if line[0] != "###":
-            while True:
-                line = next(lines)
-                if line[0] == "###":
-                    break
-                bond_caption = " ".join(line[:-2])
-                bond_name, bond_mode = line[-2], line[-1]
-                bonds[bond_name] = {"caption": bond_caption, "mode": bond_mode}
-
-        # Get adapter info
-        line = next(lines)
-        if line[0] != "###":
-            while True:
-                line = next(lines)
-                if line[0] == "###":
-                    break
-                adapter_function, adapter_status = line[0], line[1]
-                adapter_bond = line[2].split(",")[-1].split("=")[1][1:-1]
-                adapter = line[3].split(",")[1].split("=")[1][1:-1]
-                adapters[adapter] = {
-                    "function": adapter_function,
-                    "status": adapter_status,
-                    "bond": adapter_bond,
-                }
-
-        # Get adapter names
-        line = next(lines)  # Skip header
-        while True:
-            line = next(lines)
-            adapter_names[line[-1]] = " ".join(line[1:-1])
-
-    except StopIteration:
-        pass
-
-    # Now convert to generic dict, also used by other bonding checks
-    converted = {}
-    map_adapter_status = {"0": "Unknown", "1": "up", "2": "up", "3": "down"}
-    for bond, status in bonds.items():
-        interfaces = {}
-        bond_status = "down"
-        converted[status["caption"]] = {}
-        for adapter, adapter_info in adapters.items():
-            if bond == adapter_info["bond"]:
-                real_adapter_name = get_real_adapter_name(status["caption"], adapter_names[adapter])
-                if adapter_info["function"] == "1":
-                    converted[status["caption"]]["primary"] = real_adapter_name
-                if adapter_info["status"] == "1":
-                    converted[status["caption"]]["active"] = real_adapter_name
-                    bond_status = "up"
-                interfaces[real_adapter_name] = {
-                    "status": map_adapter_status.get(adapter_info["status"], "down"),
-                }
-
-        converted[status["caption"]].update(
-            {
-                "status": bond_status,
-                "mode": status["mode"],
-                "interfaces": interfaces,
-            }
-        )
-
-    return converted
-
-
 check_info["windows_intel_bonding"] = {
-    "parse_function": parse_windows_intel_bonding,
+    # section alreaddy migrated!
+    # "parse_function": parse_windows_intel_bonding,
     "check_function": check_bonding,
     "inventory_function": inventory_bonding,
     "service_description": "Bonding interface %s",

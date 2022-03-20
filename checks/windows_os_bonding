@@ -4,63 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# <<<windows_os_bonding:sep(58)>>>
-# Team Name: LAN
-# Bonding Mode: Dynamic
-# Status: Up
-# Speed: 20 Gbps
-#
-# Slave Name: NIC1
-# Slave Interface: Ethernet_14
-# Slave Description: Intel(R) Ethernet 10G 2P X520-k bNDC #2
-# Slave Status: Up
-# Slave Speed: 10 Gbps
-# Slave MAC address: 18-A9-9B-9F-AD-28
-#
-# Slave Name: NIC2
-# Slave Interface: Ethernet_10
-# Slave Description: Intel(R) Ethernet 10G 2P X520-k bNDC
-# Slave Status: Up
-# Slave Speed: 10 Gbps
-# Slave MAC address: 18-A9-9B-9F-AD-2A
+from cmk.base.check_legacy_includes.bonding import (
+    BONDING_CHECK_DEFAULT_PARAMETERS,
+    check_bonding,
+    inventory_bonding,
+)
 
 factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS
 
 
-def parse_windows_os_bonding(info):
-    bonds = {}
-
-    for line in info:
-        if len(line) > 1:
-            item = line[1].lstrip()
-        if line[0] == "Team Name":
-            bond = item
-            bonds[bond] = {}
-            bonds[bond]["interfaces"] = {}
-        elif line[0] == "Bonding Mode":
-            bonds[bond]["mode"] = item
-        elif line[0] == "Status":
-            bonds[bond]["status"] = item.lower()
-        elif line[0] == "Speed":
-            bonds[bond]["speed"] = item
-        elif line[0] == "Slave Name":
-            slave = item
-            bonds[bond]["interfaces"][slave] = {}
-        elif line[0] == "Slave Status":
-            bonds[bond]["interfaces"][slave]["status"] = item.lower()
-        elif line[0] == "Slave MAC address":
-            bonds[bond]["interfaces"][slave]["hwaddr"] = item.lower().replace("-", ":")
-    return bonds
-
-
 check_info["windows_os_bonding"] = {
-    "parse_function": parse_windows_os_bonding,
+    # section already migrated
+    # "parse_function": parse_windows_os_bonding,
     "check_function": check_bonding,
     "inventory_function": inventory_bonding,
     "service_description": "Bonding Interface %s",

@@ -17,6 +17,7 @@ class Interface(TypedDict, total=False):
 
 class Bond(TypedDict, total=False):
     status: str
+    speed: str
     mode: str
     interfaces: Mapping[str, Interface]
     aggregator_id: str

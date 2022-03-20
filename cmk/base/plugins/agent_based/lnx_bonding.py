@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence, TypedDict
+from typing import Mapping, Sequence
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
+from .utils import bonding
 
 # <<<lnx_bonding:sep(58)>>>
 # ==> bond0 <==
@@ -41,26 +42,6 @@ from .agent_based_api.v1.type_defs import StringTable
 # Permanent HW addr: 00:26:b9:7d:89:2e
 
 _ParsedBlocks = tuple[dict[str, str], Sequence[dict[str, str]], dict[str, str]]
-
-
-class _Interface(TypedDict, total=False):
-    status: str
-    mode: str
-    hwaddr: str
-    failures: int
-    aggregator_id: str
-
-
-class _ConvertedBond(TypedDict, total=False):
-    status: str
-    mode: str
-    interfaces: Mapping[str, _Interface]
-    aggregator_id: str
-    active: str
-    primary: str
-
-
-SectionBonding = Mapping[str, _ConvertedBond]
 
 
 def _split_bonds(string_table: StringTable) -> Mapping[str, StringTable]:
@@ -101,11 +82,11 @@ def _parse_blocks(bond_lines: StringTable) -> _ParsedBlocks:
     return main, interfaces, info8023ad
 
 
-def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> SectionBonding:
+def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> bonding.Section:
     """convert to generic dict, also used by other bonding checks"""
-    converted: dict[str, _ConvertedBond] = {}
+    converted: dict[str, bonding.Bond] = {}
     for name, (main, interfaces, info8023ad) in bonds.items():
-        new_interfaces: dict[str, _Interface] = {}
+        new_interfaces: dict[str, bonding.Interface] = {}
         for interface in interfaces:
             eth = interface["Slave Interface"]
             new_interfaces[eth] = {
@@ -116,7 +97,7 @@ def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> SectionBonding:
             if "Aggregator ID" in interface:
                 new_interfaces[eth]["aggregator_id"] = interface["Aggregator ID"]
 
-        this_bond: _ConvertedBond = {
+        this_bond: bonding.Bond = {
             "status": main["MII Status"],
             "mode": main["Bonding Mode"].split("(")[0].strip(),
             "interfaces": new_interfaces,
@@ -134,7 +115,7 @@ def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> SectionBonding:
     return converted
 
 
-def parse_lnx_bonding(string_table: StringTable) -> SectionBonding:
+def parse_lnx_bonding(string_table: StringTable) -> bonding.Section:
     return _convert_to_generic({k: _parse_blocks(v) for k, v in _split_bonds(string_table).items()})
 
 

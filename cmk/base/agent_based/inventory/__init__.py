@@ -42,7 +42,7 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
-from cmk.base.sources import Source
+from cmk.base.sources import make_sources, Source
 
 from ._retentions import Retentions, RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
@@ -270,15 +270,18 @@ def _inventorize_host(
     config_cache = config.get_config_cache()
 
     broker, results = make_broker(
-        config_cache=config_cache,
-        host_config=host_config,
-        ip_address=ipaddress,
-        selected_sections=selected_sections,
-        mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
-        file_cache_max_age=host_config.max_cachefile_age,
+        sources=make_sources(
+            config_cache,
+            host_config,
+            ipaddress,
+            selected_sections=selected_sections,
+            force_snmp_cache_refresh=False,
+            on_scan_error=OnError.RAISE,
+        ),
         fetcher_messages=(),
-        force_snmp_cache_refresh=False,
-        on_scan_error=OnError.RAISE,
+        selected_sections=selected_sections,
+        file_cache_max_age=host_config.max_cachefile_age,
+        mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
 
     parsing_errors = broker.parsing_errors()

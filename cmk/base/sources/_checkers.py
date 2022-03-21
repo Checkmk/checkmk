@@ -44,7 +44,7 @@ else:
             )
 
 
-__all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources"]
+__all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources", "make_sources"]
 
 
 class _Builder:
@@ -264,3 +264,28 @@ def make_cluster_sources(
             force_snmp_cache_refresh=False,
         )
     ]
+
+
+def make_sources(
+    config_cache: config.ConfigCache,
+    host_config: HostConfig,
+    ip_address: Optional[HostAddress],
+    *,
+    selected_sections: SectionNameCollection,
+    force_snmp_cache_refresh: bool,
+    on_scan_error: OnError,
+) -> Sequence[Source]:
+    return (
+        make_non_cluster_sources(
+            host_config,
+            ip_address,
+            selected_sections=selected_sections,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
+            on_scan_error=on_scan_error,
+        )
+        if host_config.nodes is None
+        else make_cluster_sources(
+            config_cache,
+            host_config,
+        )
+    )

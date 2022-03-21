@@ -65,6 +65,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
+from cmk.base.sources import make_sources
 
 from . import _cluster_modes, _submit_to_core
 from .utils import AggregatedResult
@@ -161,15 +162,18 @@ def _execute_checkmk_checks(
         )
         with CPUTracker() as tracker:
             broker, source_results = make_broker(
-                config_cache=config_cache,
-                host_config=host_config,
-                ip_address=ipaddress,
-                mode=mode,
+                sources=make_sources(
+                    config_cache,
+                    host_config,
+                    ipaddress,
+                    selected_sections=selected_sections,
+                    force_snmp_cache_refresh=False,
+                    on_scan_error=OnError.RAISE,
+                ),
+                fetcher_messages=fetcher_messages,
                 selected_sections=selected_sections,
                 file_cache_max_age=host_config.max_cachefile_age,
-                fetcher_messages=fetcher_messages,
-                force_snmp_cache_refresh=False,
-                on_scan_error=OnError.RAISE,
+                mode=mode,
             )
             num_success, plugins_missing_data = check_host_services(
                 config_cache=config_cache,

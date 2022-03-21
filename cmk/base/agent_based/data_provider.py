@@ -24,16 +24,8 @@ from typing import (
 
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostKey,
-    ParsedSectionName,
-    result,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import HostKey, ParsedSectionName, result, SectionName, SourceType
 
 import cmk.core_helpers.cache as cache
 from cmk.core_helpers.host_sections import HostSections
@@ -41,7 +33,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
-from cmk.base.sources import fetch_all, make_cluster_sources, make_non_cluster_sources
+from cmk.base.sources import fetch_all
 from cmk.base.sources.agent import AgentRawDataSection
 
 if TYPE_CHECKING:
@@ -359,31 +351,12 @@ def _collect_host_sections(
 
 def make_broker(
     *,
-    config_cache: ConfigCache,
-    host_config: HostConfig,
-    ip_address: Optional[HostAddress],
-    mode: Mode,
+    sources: Sequence[Source],
+    fetcher_messages: Sequence[FetcherMessage],
     selected_sections: SectionNameCollection,
     file_cache_max_age: cache.MaxAge,
-    fetcher_messages: Sequence[FetcherMessage],
-    force_snmp_cache_refresh: bool,
-    on_scan_error: OnError,
+    mode: Mode,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
-    sources = (
-        make_non_cluster_sources(
-            host_config,
-            ip_address,
-            selected_sections=selected_sections,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
-            on_scan_error=on_scan_error,
-        )
-        if host_config.nodes is None
-        else make_cluster_sources(
-            config_cache,
-            host_config,
-        )
-    )
-
     if not fetcher_messages:
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         # Note: `fetch_all(sources)` is almost always called in similar

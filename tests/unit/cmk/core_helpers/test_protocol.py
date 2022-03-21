@@ -169,7 +169,7 @@ class TestCMCResultsStats:
 
     def test_from_bytes(self, stats):
         assert isinstance(repr(stats), str)
-        assert FetcherResultsStats.from_bytes(bytes(stats))
+        assert FetcherResultsStats.from_bytes(bytes(stats)) == stats
 
 
 class TestCMCResults:

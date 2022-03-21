@@ -1,0 +1,28 @@
+title: Bonding Network Interface (Open vSwitch, Linux, Windows)
+agents: windows/linux
+catalog: os/networking
+license: GPLv2
+distribution: check_mk
+description:
+ This plugin monitors the current state of a bonding interface.
+ If the total bonding state of the interface is down, then the
+ check goes to {CRIT}, for status degraded it returns {WARN}.
+ If at least one slave interface is down or not the expected slave
+ is currently active, then the check gets {WARN}.
+
+ If the bonding mode is according to IEEE 802.3ad (Dynamic link
+ aggregation), the aggregation IDs are compared. A mismatch
+ results in the configured state (default {WARN}).
+
+ For this check to work on Windows you may have to install the
+ agent plugin windows_os_bonding.ps1 on the target machine.
+
+item:
+ The team name of the bonding interface
+
+discovery:
+ One service is created for each {active} bonding interface.
+ During inventory the current active interface is considered
+ to be the primary interface.
+ This is only relevant if you configure a detection of
+ a change in the active interface.

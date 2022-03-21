@@ -52,5 +52,6 @@ def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
 
 register.agent_section(
     name="ovs_bonding",
+    parsed_section_name="bonding",
     parse_function=parse_ovs_bonding,
 )

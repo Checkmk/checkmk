@@ -158,6 +158,9 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
     CheckPluginName("docker_container_diskstat"): CheckPluginName("diskstat"),
     CheckPluginName("check_mk_agent_update"): CheckPluginName("checkmk_agent"),
+    CheckPluginName("ovs_bonding"): CheckPluginName("bonding"),
+    CheckPluginName("lnx_bonding"): CheckPluginName("bonding"),
+    CheckPluginName("windows_os_bonding"): CheckPluginName("bonding"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

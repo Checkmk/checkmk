@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
-from cmk.base.plugins.agent_based.utils import bonding
-
-DiscoveryResult = Iterable[tuple[str, dict[str, Any]]]
-CheckResult = Iterable[tuple[int, str]]
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils import bonding
 
 
 def _discovery_params(bond: bonding.Bond) -> dict[str, str]:
@@ -32,10 +31,10 @@ def discover_bonding(section: bonding.Section) -> DiscoveryResult:
     ...         'primary': 'None',
     ...     },
     ... }))
-    [('bond0', {'primary': 'eth2'})]
+    [Service(item='bond0', parameters={'primary': 'eth2'})]
     """
     yield from (
-        (bond_name, _discovery_params(bond))
+        Service(item=bond_name, parameters=_discovery_params(bond))
         for bond_name, bond in section.items()
         if bond["status"] in {"up", "degraded"}
     )
@@ -49,9 +48,9 @@ def _check_ieee_302_3ad_specific(params: Mapping[str, Any], status: bonding.Bond
         if master_id is None:
             master_id = slave_id
         if slave_id != master_id:
-            yield (
-                params["ieee_302_3ad_agg_id_missmatch_state"],
-                f"Mismatching aggregator ID of {eth}: {slave_id}",
+            yield Result(
+                state=State(params["ieee_302_3ad_agg_id_missmatch_state"]),
+                summary=f"Mismatching aggregator ID of {eth}: {slave_id}",
             )
 
 
@@ -71,35 +70,35 @@ def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section
     ...         'active': 'eth2',
     ...         'primary': 'None'}}):
     ...   print(result)
-    (0, 'Status: up')
-    (0, 'Mode: fault-tolerance')
-    (0, 'Primary: eth2')
-    (0, 'eth2/f8:4f:57:72:11:34 up')
-    (1, 'eth3/f8:4f:57:72:11:36 down')
+    Result(state=<State.OK: 0>, summary='Status: up')
+    Result(state=<State.OK: 0>, summary='Mode: fault-tolerance')
+    Result(state=<State.OK: 0>, summary='Primary: eth2')
+    Result(state=<State.OK: 0>, summary='eth2/f8:4f:57:72:11:34 up')
+    Result(state=<State.WARN: 1>, summary='eth3/f8:4f:57:72:11:36 down')
     """
     if (properties := section.get(item)) is None:
         return
 
     status = properties["status"]
-    yield (
-        {"up": 0, "degraded": 1}.get(status, 2),
-        f"Status: {status}",
+    yield Result(
+        state={"up": State.OK, "degraded": State.WARN}.get(status, State.CRIT),
+        summary=f"Status: {status}",
     )
     if status not in {"up", "degraded"}:
         return
 
     mode = properties["mode"]
-    yield 0, "Mode: %s" % mode
+    yield Result(state=State.OK, summary=f"Mode: {mode}")
     if "IEEE 802.3ad" in mode:
         yield from _check_ieee_302_3ad_specific(params, properties)
 
     if (speed := properties.get("speed")) is not None:
-        yield 0, f"Speed: {speed}"
+        yield Result(state=State.OK, summary=f"Speed: {speed}")
 
     current_primary = properties.get("primary", "None")
     primary = current_primary if current_primary != "None" else params.get("primary", "None")
     if primary != "None":
-        yield 0, f"Primary: {primary}"
+        yield Result(state=State.OK, summary=f"Primary: {primary}")
 
     expected_active = {
         "primary": primary,
@@ -112,18 +111,47 @@ def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section
         # we don't expect an interface to be up and others to be down so check whether all
         # interfaces are up
         for eth, slave in properties["interfaces"].items():
-            state = 0 if slave["status"] == "up" else 1
+            state = State.OK if slave["status"] == "up" else State.WARN
             if "hwaddr" in slave:
-                yield state, f"{eth}/{slave['hwaddr']} {slave['status']}"
+                yield Result(state=state, summary=f"{eth}/{slave['hwaddr']} {slave['status']}")
             else:
-                yield state, f"{eth} {slave['status']}"
+                yield Result(state=state, summary=f"{eth} {slave['status']}")
     elif expected_active == active_if:
-        yield 0, f"Active: {active_if}"
+        yield Result(state=State.OK, summary=f"Active: {active_if}")
     else:
-        yield 1, f"Active: {active_if} (expected is {expected_active})"
+        yield Result(
+            state=State.WARN, summary=f"Active: {active_if} (expected is {expected_active})"
+        )
 
 
-BONDING_CHECK_DEFAULT_PARAMETERS = {
-    "ieee_302_3ad_agg_id_missmatch_state": 1,
-    "expect_active": "ignore",
-}
+register.check_plugin(
+    name="bonding",
+    service_name="Bonding Interface %s",
+    discovery_function=discover_bonding,
+    check_function=check_bonding,
+    check_ruleset_name="bonding",
+    check_default_parameters={
+        "ieee_302_3ad_agg_id_missmatch_state": 1,
+        "expect_active": "ignore",
+    },
+)
+
+
+def never_discover(section: bonding.Section) -> DiscoveryResult:
+    yield from ()
+
+
+register.check_plugin(
+    name="windows_intel_bonding",
+    # unfortunately, this one is written with lower 'i' :-(
+    service_name="Bonding interface %s",
+    sections=["bonding"],
+    # This plugin is not discovered since version 2.2
+    discovery_function=never_discover,
+    check_function=check_bonding,
+    check_ruleset_name="bonding",
+    check_default_parameters={
+        "ieee_302_3ad_agg_id_missmatch_state": 1,
+        "expect_active": "ignore",
+    },
+)

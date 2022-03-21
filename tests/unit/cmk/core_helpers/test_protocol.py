@@ -37,6 +37,7 @@ from cmk.core_helpers.protocol import (
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
+    FetcherResultsId,
     FetcherResultsStats,
     PayloadType,
     ResultStats,
@@ -117,7 +118,7 @@ class TestCMCHeader:
 
 class TestCMCMessage:
     @pytest.mark.parametrize("count", list(range(10)))
-    def test_result_answer(self, count):
+    def test_serialization(self, count):
         fetcher_payload = AgentResultMessage(AgentRawData(69 * b"\xff"))
         fetcher_stats = ResultStats(Snapshot.null())
         fetcher_message = FetcherMessage(
@@ -132,16 +133,31 @@ class TestCMCMessage:
             fetcher_stats,
         )
         fetcher_messages = list(repeat(fetcher_message, count))
+        serial = 1337
+        host_name = "my_host_name"
         timeout = 7
 
-        message = CMCMessage.result_answer(fetcher_messages, timeout, Snapshot.null())
-        assert isinstance(repr(message), str)
-        assert CMCMessage.from_bytes(bytes(message)) == message
-        assert message.header.name == "fetch"
-        assert message.header.state == CMCHeader.State.RESULT
-        assert message.header.log_level.strip() == ""
-        assert message.header.payload_length == len(message) - len(message.header)
-        assert message.header.payload_length == len(message.payload)
+        message = CMCMessage.result_answer(
+            fetcher_messages,
+            serial=serial,
+            host_name=host_name,
+            timeout=timeout,
+            duration=Snapshot.null(),
+        )
+
+        other = CMCMessage.from_bytes(bytes(message))
+        assert other == message
+        assert isinstance(repr(other), str)
+        assert other.header.name == "fetch"
+        assert other.header.state == CMCHeader.State.RESULT
+        assert other.header.log_level.strip() == ""
+        assert other.header.payload_length == len(message) - len(message.header)
+        assert other.header.payload_length == len(message.payload)
+        assert isinstance(other.payload, CMCResults)
+        assert other.payload.id_.serial == serial
+        assert other.payload.id_.host_name == host_name
+        assert other.payload.stats.timeout == timeout
+        assert other.payload.stats.duration == Snapshot.null()
 
     def test_log_answer(self):
         log_message = "the log message"
@@ -160,6 +176,13 @@ class TestCMCMessage:
         message = CMCMessage.end_of_reply()
         assert isinstance(repr(message), str)
         assert CMCMessage.from_bytes(bytes(message)) is message
+
+
+class TestFetcherResultsId:
+    def test_from_bytes(self):
+        assert (
+            FetcherResultsId.from_bytes(bytes(msg := FetcherResultsId(1337, "my_hostname"))) == msg
+        )
 
 
 class TestCMCResultsStats:
@@ -197,7 +220,11 @@ class TestCMCResults:
 
     @pytest.fixture
     def payload(self, messages):
-        return CMCResults(messages, FetcherResultsStats(7, Snapshot.null()))
+        return CMCResults(
+            messages,
+            FetcherResultsId(1337, "my_host_name"),
+            FetcherResultsStats(timeout=7, duration=Snapshot.null()),
+        )
 
     def test_from_bytes(self, payload):
         assert CMCResults.from_bytes(bytes(payload)) == payload

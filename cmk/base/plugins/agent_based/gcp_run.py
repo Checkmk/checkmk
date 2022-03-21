@@ -53,7 +53,7 @@ def check_gcp_run_network(
             "run.googleapis.com/container/network/sent_bytes_count", render.networkbandwidth
         ),
     }
-    timeseries = section_gcp_service_cloud_run[item].rows
+    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -82,7 +82,7 @@ def check_gcp_run_memory(
             "run.googleapis.com/container/memory/utilizations", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_run[item].rows
+    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -110,7 +110,7 @@ def check_gcp_run_cpu(
             "run.googleapis.com/container/cpu/utilizations", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_run[item].rows
+    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -146,7 +146,7 @@ def check_gcp_run_requests(
             "run.googleapis.com/container/request_latencies", render.timespan, scale=1e3
         ),
     }
-    timeseries = section_gcp_service_cloud_run[item].rows
+    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 

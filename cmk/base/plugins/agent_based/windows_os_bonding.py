@@ -43,5 +43,6 @@ def parse_windows_os_bonding(string_table: StringTable) -> bonding.Section:
 
 register.agent_section(
     name="windows_os_bonding",
+    parsed_section_name="bonding",
     parse_function=parse_windows_os_bonding,
 )

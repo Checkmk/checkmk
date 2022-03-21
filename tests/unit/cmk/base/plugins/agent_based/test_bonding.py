@@ -6,11 +6,8 @@
 
 import pytest
 
-from cmk.base.check_legacy_includes.bonding import (  # type: ignore[attr-defined]
-    _check_ieee_302_3ad_specific,
-)
-
-pytestmark = pytest.mark.checks
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.bonding import _check_ieee_302_3ad_specific
 
 
 @pytest.mark.parametrize(
@@ -45,7 +42,7 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                (1, "Missmatching aggregator ID of ens1f1: 2"),
+                Result(state=State.WARN, summary="Missmatching aggregator ID of ens1f1: 2"),
             ],
         ),
         (
@@ -75,7 +72,7 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                (2, "Missmatching aggregator ID of ens1f1: 2"),
+                Result(state=State.CRIT, summary="Missmatching aggregator ID of ens1f1: 2"),
             ],
         ),
     ],

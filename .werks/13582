@@ -1,0 +1,12 @@
+Title: Add ssl verify option to agent prometheus
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647264008
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It is now possible to explicit enable/disable ssl verification
+for agent prometheus and the alertmaneger.

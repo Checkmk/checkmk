@@ -430,12 +430,7 @@ class UploadOrigin(Enum):
             return cls.empty
 
         if report_version == "1.3":
-            try:
-                return _UPLOAD_ORIGIN_MAP[raw_upload_origin]
-            except KeyError:
-                raise LicenseUsageReportVersionError(
-                    f"Unknown report version {report_version}"
-                ) from None
+            return _UPLOAD_ORIGIN_MAP[raw_upload_origin]
 
         raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 

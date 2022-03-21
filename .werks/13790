@@ -1,0 +1,20 @@
+Title: KUBE: Remove Container Labels
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1647850670
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+Previously, on a Kubernetes host Checkmk would create a single label of each
+
+- cmk/container_image and
+
+- cmk/container_name.
+
+The label value was set to the name, respectively image, of one container. Since label keys
+have to be unique, this would cause most containers to be left out, if there were multiple 
+containers. This werk introduces removes the faulty labels.

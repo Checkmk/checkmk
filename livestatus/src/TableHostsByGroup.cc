@@ -36,20 +36,18 @@ std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
 std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query *query) {
-    for (const auto *group = hostgroup_list; group != nullptr;
-         group = group->next) {
-        if (is_authorized_for_host_group(core()->groupAuthorization(), group,
+    for (const auto *grp = hostgroup_list; grp != nullptr; grp = grp->next) {
+        if (is_authorized_for_host_group(core()->groupAuthorization(), grp,
                                          query->authUser())) {
-            for (const auto *m = group->members; m != nullptr; m = m->next) {
-                host_and_group hag{m->host_ptr, group};
-                if (!query->processDataset(Row(&hag))) {
-                    return;
+            for (const auto *m = grp->members; m != nullptr; m = m->next) {
+                const auto *hst = m->host_ptr;
+                if (is_authorized_for_hst(query->authUser(), hst)) {
+                    host_and_group hag{hst, grp};
+                    if (!query->processDataset(Row{&hag})) {
+                        return;
+                    }
                 }
             }
         }
     }
-}
-
-bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_hst(ctc, rowData<host_and_group>(row)->hst);
 }

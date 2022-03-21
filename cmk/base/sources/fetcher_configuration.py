@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostAddress
 import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
-from ._checkers import make_sources
+from ._checkers import make_non_cluster_sources
 
 __all__ = ["fetchers", "clusters"]
 
@@ -32,7 +32,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                 "fetcher_type": c.fetcher_type.name,
                 "fetcher_params": c.fetcher_configuration,
             }
-            for c in make_sources(host_config, ipaddress)
+            for c in make_non_cluster_sources(host_config, ipaddress)
         ]
     }
 

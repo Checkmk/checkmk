@@ -41,7 +41,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
-from cmk.base.sources import fetch_all, make_cluster_sources, make_sources
+from cmk.base.sources import fetch_all, make_cluster_sources, make_non_cluster_sources
 from cmk.base.sources.agent import AgentRawDataSection
 
 if TYPE_CHECKING:
@@ -370,7 +370,7 @@ def make_broker(
     on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
     sources = (
-        make_sources(
+        make_non_cluster_sources(
             host_config,
             ip_address,
             selected_sections=selected_sections,

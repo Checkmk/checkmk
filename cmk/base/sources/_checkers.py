@@ -44,7 +44,7 @@ else:
             )
 
 
-__all__ = ["fetch_all", "make_sources", "make_cluster_sources"]
+__all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources"]
 
 
 class _Builder:
@@ -209,7 +209,7 @@ class _Builder:
         ]
 
 
-def make_sources(
+def make_non_cluster_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     *,
@@ -258,7 +258,7 @@ def make_cluster_sources(
     return [
         source
         for host_name in host_config.nodes
-        for source in make_sources(
+        for source in make_non_cluster_sources(
             HostConfig.make_host_config(host_name),
             config.lookup_ip_address(config_cache.get_host_config(host_name)),
             force_snmp_cache_refresh=False,

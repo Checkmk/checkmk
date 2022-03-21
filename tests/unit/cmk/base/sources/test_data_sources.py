@@ -11,7 +11,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.type_defs import result, SectionName
 
 from cmk.base import config
-from cmk.base.sources import make_sources
+from cmk.base.sources import make_non_cluster_sources
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 from cmk.base.sources.snmp import SNMPSource
@@ -96,7 +96,7 @@ def test_host_config_creates_passing_source_sources(
     host_config = config.HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [type(c) for c in make_sources(host_config, ipaddress)] == sources
+    assert [type(c) for c in make_non_cluster_sources(host_config, ipaddress)] == sources
 
 
 @pytest.mark.parametrize(

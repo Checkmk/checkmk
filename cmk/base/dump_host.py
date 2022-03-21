@@ -98,7 +98,9 @@ def dump_host(hostname: HostName) -> None:
         + "\n"
     )
 
-    agenttypes = [source.description for source in sources.make_sources(host_config, ipaddress)]
+    agenttypes = [
+        source.description for source in sources.make_non_cluster_sources(host_config, ipaddress)
+    ]
 
     if host_config.is_ping_host:
         agenttypes.append("PING only")

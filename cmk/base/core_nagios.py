@@ -1364,7 +1364,7 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
 
     yield from (
         s.special_agent_plugin_file_name
-        for s in sources.make_sources(
+        for s in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
         )

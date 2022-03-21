@@ -650,47 +650,51 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    if (_filter->accepts(row, _auth_user, _timezone_offset) &&
-        (_auth_user == nullptr || _table.isAuthorized(row, _auth_user))) {
-        _current_line++;
-        if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
-            return false;
-        }
+    if (!_filter->accepts(row, _auth_user, _timezone_offset)) {
+        return true;
+    }
 
-        // When we reach the time limit we let the query fail. Otherwise the
-        // user will not know that the answer is incomplete.
-        if (timelimitReached()) {
-            return false;
-        }
+    if (!(_auth_user == nullptr || _table.isAuthorized(row, _auth_user))) {
+        return true;
+    }
 
-        if (doStats()) {
-            // Things get a bit tricky here: For stats queries, we have to
-            // combine rows with the same values in the non-stats columns. But
-            // when we finally output those non-stats columns in finish(), we
-            // don't have the row anymore, so we can't use Column::output()
-            // then.  :-/ The slightly hacky workaround is to pre-render all
-            // non-stats columns into a single string here (RowFragment) and
-            // output it later in a verbatim manner.
-            std::ostringstream os;
-            {
-                auto renderer =
-                    Renderer::make(_output_format, os, _output.getLogger(),
-                                   _separators, _data_encoding);
-                QueryRenderer q(*renderer, EmitBeginEnd::off);
-                RowRenderer r(q);
-                for (const auto &column : _columns) {
-                    column->output(row, r, _auth_user, _timezone_offset);
-                }
-            }
-            for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
-                aggr->consume(row, _auth_user, timezoneOffset());
-            }
-        } else {
-            assert(_renderer_query);  // Missing call to `process()`.
-            RowRenderer r(*_renderer_query);
+    _current_line++;
+    if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
+        return false;
+    }
+
+    // When we reach the time limit we let the query fail. Otherwise the user
+    // will not know that the answer is incomplete.
+    if (timelimitReached()) {
+        return false;
+    }
+
+    if (doStats()) {
+        // Things get a bit tricky here: For stats queries, we have to combine
+        // rows with the same values in the non-stats columns. But when we
+        // finally output those non-stats columns in finish(), we don't have the
+        // row anymore, so we can't use Column::output() then.  :-/ The slightly
+        // hacky workaround is to pre-render all non-stats columns into a single
+        // string here (RowFragment) and output it later in a verbatim manner.
+        std::ostringstream os;
+        {
+            auto renderer =
+                Renderer::make(_output_format, os, _output.getLogger(),
+                               _separators, _data_encoding);
+            QueryRenderer q(*renderer, EmitBeginEnd::off);
+            RowRenderer r(q);
             for (const auto &column : _columns) {
                 column->output(row, r, _auth_user, _timezone_offset);
             }
+        }
+        for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
+            aggr->consume(row, _auth_user, timezoneOffset());
+        }
+    } else {
+        assert(_renderer_query);  // Missing call to `process()`.
+        RowRenderer r(*_renderer_query);
+        for (const auto &column : _columns) {
+            column->output(row, r, _auth_user, _timezone_offset);
         }
     }
     return true;

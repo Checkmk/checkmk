@@ -134,7 +134,9 @@ def _confirm_command_processed() -> Iterator[None]:
         write(protocol.CMCMessage.end_of_reply())
 
 
-def run_fetchers(config_path: ConfigPath, host_name: HostName, timeout: int, mode: Mode) -> None:
+def run_fetchers(
+    config_path: VersionedConfigPath, host_name: HostName, timeout: int, mode: Mode
+) -> None:
     """Entry point from bin/fetcher"""
     try:
         # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
@@ -211,7 +213,7 @@ def _parse_cluster_config(data: Mapping[str, Any], config_path: ConfigPath) -> I
 
 
 def _run_fetchers_from_file(
-    config_path: ConfigPath,
+    config_path: VersionedConfigPath,
     host_name: HostName,
     timeout: int,
     mode: Mode,

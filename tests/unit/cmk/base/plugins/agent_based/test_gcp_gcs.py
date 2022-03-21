@@ -203,6 +203,21 @@ class TestDefaultMetricValues:
         for result in results:
             assert result.value != 0.0
 
+    def test_zero_default_if_item_does_not_exist(self, gcs_section, checkplugin: Plugin):
+        params = {k: None for k in ["requests"]}
+        results = (
+            el
+            for el in checkplugin.function(
+                item="no I do not exist",
+                params=params,
+                section_gcp_service_gcs=gcs_section,
+                section_gcp_assets=None,
+            )
+            if isinstance(el, Metric)
+        )
+        for result in results:
+            assert result.value == 0.0
+
 
 class TestConfiguredNotificationLevels:
     # In the example sections we do not have data for all metrics. To be able to test all check plugins

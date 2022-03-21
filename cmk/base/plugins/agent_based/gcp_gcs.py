@@ -44,7 +44,7 @@ def check_gcp_gcs_requests(
     if section_gcp_service_gcs is None:
         return
     metrics = {"requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", str)}
-    timeseries = section_gcp_service_gcs[item].rows
+    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -75,7 +75,7 @@ def check_gcp_gcs_network(
             "storage.googleapis.com/network/received_bytes_count", render.networkbandwidth
         ),
     }
-    timeseries = section_gcp_service_gcs[item].rows
+    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -104,7 +104,7 @@ def check_gcp_gcs_object(
         ),
         "aws_num_objects": gcp.MetricSpec("storage.googleapis.com/storage/object_count", str),
     }
-    timeseries = section_gcp_service_gcs[item].rows
+    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 

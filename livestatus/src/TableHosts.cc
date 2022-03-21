@@ -885,33 +885,42 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableHosts::answerQuery(Query *query) {
-    // do we know the host group?
+    auto process = [query, auth_user = query->authUser()](const host *hst) {
+        return !is_authorized_for_hst(auth_user, hst) ||
+               query->processDataset(Row{hst});
+    };
+
+    // If we know the host, we use it directly.
+    if (auto value = query->stringValueRestrictionFor("name")) {
+        Debug(logger()) << "using host name index with '" << *value << "'";
+        if (const auto *hst =
+                reinterpret_cast<const host *>(core()->find_host(*value))) {
+            process(hst);
+        }
+        return;
+    }
+
+    // If we know the host group, we simply iterate over it.
     if (auto value = query->stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
-        if (hostgroup *hg =
+        if (const auto *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
-            for (hostsmember *mem = hg->members; mem != nullptr;
-                 mem = mem->next) {
-                const host *r = mem->host_ptr;
-                if (!query->processDataset(Row(r))) {
-                    break;
+            for (const auto *m = hg->members; m != nullptr; m = m->next) {
+                if (!process(m->host_ptr)) {
+                    return;
                 }
             }
         }
         return;
     }
 
-    // no index -> linear search over all hosts
+    // In the general case, we have to process all hosts.
     Debug(logger()) << "using full table scan";
     for (const auto *hst = host_list; hst != nullptr; hst = hst->next) {
-        const host *r = hst;
-        if (!query->processDataset(Row(r))) {
-            break;
+        if (!process(hst)) {
+            return;
         }
     }
-}
-bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_hst(ctc, rowData<host>(row));
 }
 
 Row TableHosts::get(const std::string &primary_key) const {

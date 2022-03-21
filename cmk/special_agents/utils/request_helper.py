@@ -132,7 +132,7 @@ def create_api_connect_session(
     """
     ssl_verify = None
     if not no_cert_check:
-        ssl_verify = os.environ.get('REQUEST_CA_BUNDLE')
+        ssl_verify = os.environ.get("REQUESTS_CA_BUNDLE")
 
     session = ApiSession(api_url, ssl_verify)
 

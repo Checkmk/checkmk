@@ -1108,7 +1108,13 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> fields.Field:
-        pass
+        return fields.Nested(
+            gui_fields.LockedBy,
+            description=(
+                "Identity of the entity which locked the locked_attributes. "
+                "The identity is built out of the Site ID, the program name and the connection ID."
+            ),
+        )
 
 
 class LockedByValuespec(Tuple):
@@ -1181,7 +1187,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
             fields.String(),
-            description="Attributes which are locked.",
+            description="Name of host attributes which are locked in the UI.",
         )
 
 

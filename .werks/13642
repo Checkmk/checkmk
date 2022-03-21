@@ -1,0 +1,14 @@
+Title: REST API: Fix representation of locked_by host attribute
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1648653025
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The locked_by host attribute was represented as string by the REST API while it
+is actually a more complex data structure. The scheme is now representing the
+data structure in the correct way.

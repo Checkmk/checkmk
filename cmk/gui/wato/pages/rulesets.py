@@ -883,15 +883,6 @@ class ModeEditRuleset(WatoMode):
             is_suggested=True,
         )
 
-        if not self._folder.is_root():
-            yield PageMenuEntry(
-                title=_("Add rule in folder %s") % self._folder.title(),
-                icon_name={"icon": "folder_blue", "emblem": "rulesets"},
-                item=make_form_submit_link(form_name="new_rule", button_name="_new_rule"),
-                is_shortcut=True,
-                is_suggested=True,
-            )
-
         if self._hostname:
             title = _("Add rule for current host")
             if self._item is not None and self._rulespec.item_type:
@@ -902,6 +893,15 @@ class ModeEditRuleset(WatoMode):
                 title=title,
                 icon_name={"icon": "services_blue", "emblem": "rulesets"},
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_host_rule"),
+                is_shortcut=True,
+                is_suggested=True,
+            )
+
+        if not self._folder.is_root():
+            yield PageMenuEntry(
+                title=_("Add rule in folder %s") % self._folder.title(),
+                icon_name={"icon": "folder_blue", "emblem": "rulesets"},
+                item=make_form_submit_link(form_name="new_rule", button_name="_new_rule"),
                 is_shortcut=True,
                 is_suggested=True,
             )

@@ -1,0 +1,15 @@
+Title: Make the order of 'Add rule' buttons more user friendly
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0b3
+Date: 1647861128
+
+On ruleset pages users may add a rule by clicking buttons of different context information. These
+buttons are now sorted with respect to their relevance for users. The new order is
+<ul><li>Add rule</li>
+<li>Add rule for current host (and service/device, if available)</li>
+<li>Add rule in folder <folder_name></li></ul>

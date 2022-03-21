@@ -440,10 +440,9 @@ def mode_dump_agent(hostname: HostName) -> None:
             if not isinstance(source, sources.agent.AgentSource):
                 continue
 
-            mode = FetchMode.CHECKING
-            raw_data = source.fetch(mode)
+            raw_data = source.fetch(FetchMode.CHECKING)
             host_sections = source.parse(raw_data, selection=NO_SELECTION)
-            source_results = source.summarize(host_sections, mode=mode)
+            source_results = source.summarize(host_sections)
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",

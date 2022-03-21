@@ -9,7 +9,7 @@ Generally, the helpers implement three interfaces:
 
 * `Fetcher` performs I/O and returns raw data.
 * `Parser` parses the raw data into `HostSections` and handles caching.
-* `Summarizer` extracts the `ServiceCheckResult` from the `HostSection`.
+* `Summarizer` extracts the `ServiceCheckResult`.
 
 The typical sequence of events is
 

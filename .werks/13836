@@ -1,0 +1,11 @@
+Title: Execution of cached agent plugins on Solaris
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647853135
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p22
+
+Cached agent plugins where not executed by the Checkmk agent for Solaris.

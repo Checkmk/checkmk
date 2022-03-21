@@ -572,6 +572,9 @@ run_agent_plugin() {
     add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
 }
 
+export -f run_agent_plugin
+
+
 # Plugins
 if cd $PLUGINSDIR 2>/dev/null
 then

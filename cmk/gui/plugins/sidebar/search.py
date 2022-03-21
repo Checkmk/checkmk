@@ -41,6 +41,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
     encode_labels_for_livestatus,
+    Label,
     label_help_text,
     Labels,
 )
@@ -1231,13 +1232,13 @@ match_plugin_registry.register(HosttagMatchPlugin())
 
 class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
     @staticmethod
-    def _input_to_key_value(inpt: str) -> Tuple[str, str]:
+    def _input_to_key_value(inpt: str) -> Label:
         if ":" not in inpt:
             raise IncorrectLabelInputError(None, label_help_text())
         key, value = inpt.split(":", maxsplit=1)
         if not key or not value:
             raise IncorrectLabelInputError(None, label_help_text())
-        return key, value
+        return Label(key, value, False)
 
     def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
         yield from (self._input_to_key_value(inpt) for inpt in user_inputs)

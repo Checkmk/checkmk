@@ -38,8 +38,7 @@ std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 void TableHostsByGroup::answerQuery(Query *query) {
     for (const auto *group = hostgroup_list; group != nullptr;
          group = group->next) {
-        if (core()->groupAuthorization() == GroupAuthorization::loose ||
-            is_authorized_for_host_group(core()->groupAuthorization(), group,
+        if (is_authorized_for_host_group(core()->groupAuthorization(), group,
                                          query->authUser())) {
             for (const auto *m = group->members; m != nullptr; m = m->next) {
                 host_and_group hag{m->host_ptr, group};

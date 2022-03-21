@@ -1404,7 +1404,7 @@ class TagFilter(Filter):
 
         html.open_table()
         for num in range(self.query_filter.count):
-            prefix = "%s%d" % (self.query_filter.var_prefix, num)
+            prefix = "%s_%d" % (self.query_filter.var_prefix, num)
             html.open_tr()
             html.open_td()
             grp_value = value.get(prefix + "_grp", "")
@@ -1450,14 +1450,14 @@ class TagFilter(Filter):
 filter_registry.register(
     TagFilter(
         title=_l("Host Tags"),
-        query_filter=query_filters.TagsQuery(ident="host_tags", object_type="host"),
+        query_filter=query_filters.TagsQuery(object_type="host"),
     )
 )
 
 filter_registry.register(
     TagFilter(
         title=_l("Tags"),
-        query_filter=query_filters.TagsQuery(ident="service_tags", object_type="service"),
+        query_filter=query_filters.TagsQuery(object_type="service"),
         is_show_more=True,
     )
 )
@@ -1466,27 +1466,20 @@ filter_registry.register(
 @filter_registry.register_instance
 class FilterHostAuxTags(Filter):
     def __init__(self):
-        self.count = 3
-        self.prefix = "host_auxtags"
-
-        htmlvars = []
-        for num in range(self.count):
-            htmlvars.append("%s_%d" % (self.prefix, num))
-            htmlvars.append("%s_%d_neg" % (self.prefix, num))
-
+        self.query_filter = query_filters.AuxTagsQuery(object_type="host")
         super().__init__(
-            ident="host_auxtags",
+            ident=self.query_filter.ident,
             title=_l("Host Auxiliary Tags"),
             sort_index=302,
-            info="host",
-            htmlvars=htmlvars,
+            info=self.query_filter.object_type,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=True,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        for num in range(self.count):
-            varname = "%s_%d" % (self.prefix, num)
+        for num in range(self.query_filter.count):
+            varname = "%s_%d" % (self.query_filter.var_prefix, num)
             html.dropdown(
                 varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_="neg"
             )
@@ -1500,7 +1493,7 @@ class FilterHostAuxTags(Filter):
         return aux_tag_choices + list(config.tags.aux_tag_list.get_choices())
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return query_filters.host_aux_tags_lq(self.prefix, value)
+        return self.query_filter.filter(value)
 
 
 class LabelFilter(Filter):
@@ -1510,7 +1503,7 @@ class LabelFilter(Filter):
         title: Union[str, LazyString],
         object_type: Literal["host", "service"],
     ) -> None:
-        self.query_filter = query_filters.LabelsQuery(object_type=object_type)
+        self.query_filter = query_filters.AllLabelsQuery(object_type=object_type)
         super().__init__(
             ident=self.query_filter.ident,
             title=title,
@@ -1521,7 +1514,7 @@ class LabelFilter(Filter):
         )
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
-        return " ".join(":".join(e) for e in sorted(self.query_filter.parse_value(value)))
+        return " ".join(f"{e.id}:{e.value}" for e in sorted(self.query_filter.parse_value(value)))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.ident]}
@@ -1531,7 +1524,8 @@ class LabelFilter(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         self._valuespec().render_input(
-            self.query_filter.request_vars[0], dict(self.query_filter.parse_value(value))
+            self.query_filter.request_vars[0],
+            {e.id: e.value for e in self.query_filter.parse_value(value)},
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:

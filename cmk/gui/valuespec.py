@@ -6111,7 +6111,7 @@ class Labels(ValueSpec):
 
     def _from_html_vars(self, value: str, varprefix) -> dict[str, str]:
         try:
-            return dict(parse_labels_value(value))
+            return {label.id: label.value for label in parse_labels_value(value)}
         except ValueError as e:
             raise MKUserError(varprefix, "%s" % e)
 

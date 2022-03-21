@@ -6,7 +6,7 @@
 
 import json
 from ast import literal_eval
-from typing import Dict, Iterable, List, Mapping, Set, Tuple, TYPE_CHECKING
+from typing import Dict, Iterable, List, Mapping, NamedTuple, Set, Tuple, TYPE_CHECKING, Union
 
 from redis.client import Pipeline
 
@@ -24,7 +24,14 @@ from cmk.gui.i18n import _
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded
 
-Labels = Iterable[Tuple[str, str]]
+
+class Label(NamedTuple):
+    id: str
+    value: str
+    negate: bool
+
+
+Labels = Iterable[Label]
 
 
 def parse_labels_value(value: str) -> Labels:
@@ -46,25 +53,20 @@ def parse_labels_value(value: str) -> Labels:
                 )
                 % label_id,
             )
-        yield label_id, label_value
+        yield Label(label_id, label_value, False)
         seen.add(label_id)
 
 
-def encode_label_for_livestatus(
-    column: str,
-    label_id: str,
-    label_value: str,
-    negate: bool = False,
-) -> str:
+def encode_label_for_livestatus(column: str, label: Label) -> str:
     """
-    >>> encode_label_for_livestatus("labels", "key", "value")
+    >>> encode_label_for_livestatus("labels", Label("key", "value", False))
     "Filter: labels = 'key' 'value'"
     """
     return "Filter: %s %s %s %s" % (
         lqencode(column),
-        "!=" if negate else "=",
-        lqencode(quote_dict(label_id)),
-        lqencode(quote_dict(label_value)),
+        "!=" if label.negate else "=",
+        lqencode(quote_dict(label.id)),
+        lqencode(quote_dict(label.value)),
     )
 
 
@@ -73,26 +75,27 @@ def encode_labels_for_livestatus(
     labels: Labels,
 ) -> str:
     """
-    >>> encode_labels_for_livestatus("labels", {"key": "value", "x": "y"}.items())
-    "Filter: labels = 'key' 'value'\\nFilter: labels = 'x' 'y'"
+    >>> encode_labels_for_livestatus("labels", [Label("key", "value", False), Label("x", "y", False)])
+    "Filter: labels = 'key' 'value'\\nFilter: labels = 'x' 'y'\\n"
     >>> encode_labels_for_livestatus("labels", [])
     ''
     """
-    return "\n".join(
-        encode_label_for_livestatus(column, label_id, label_value)
-        for label_id, label_value in labels
-    )
+    if headers := "\n".join(encode_label_for_livestatus(column, label) for label in labels):
+        return headers + "\n"
+    return ""
 
 
-def encode_labels_for_tagify(labels: Labels) -> Iterable[Mapping[str, str]]:
+def encode_labels_for_tagify(
+    labels: Union[Labels, Iterable[Tuple[str, str]]]
+) -> Iterable[Mapping[str, str]]:
     """
-    >>> encode_labels_for_tagify({"key": "value", "x": "y"}.items())
-    [{'value': 'key:value'}, {'value': 'x:y'}]
+    >>> encode_labels_for_tagify({"key": "value", "x": "y"}.items()) ==  encode_labels_for_tagify([Label("key", "value", False), Label("x", "y", False)])
+    True
     """
-    return [{"value": "%s:%s" % e} for e in labels]
+    return [{"value": "%s:%s" % e[:2]} for e in labels]
 
 
-def encode_labels_for_http(labels: Labels) -> str:
+def encode_labels_for_http(labels: Union[Labels, Iterable[Tuple[str, str]]]) -> str:
     """The result can be used in building URLs
     >>> encode_labels_for_http([])
     '[]'

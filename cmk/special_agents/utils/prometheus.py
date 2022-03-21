@@ -15,7 +15,10 @@ from cmk.special_agents.utils.request_helper import (
 
 
 def extract_connection_args(config):
-    connection_args = {"protocol": config.get("protocol")}
+    connection_args = {
+        "protocol": config.get("protocol"),
+        "verify-cert": config.get("verify-cert", False),
+    }
 
     if "auth_basic" in config:
         if config["auth_basic"][0] == "auth_login":
@@ -58,4 +61,5 @@ def generate_api_session(connection_options):
         api_url,
         auth=connection_options.get("auth"),
         token=connection_options.get("token"),
+        no_cert_check=not connection_options["verify-cert"],
     )

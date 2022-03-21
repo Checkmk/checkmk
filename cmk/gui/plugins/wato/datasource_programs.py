@@ -1142,6 +1142,7 @@ def _valuespec_generic_metrics_prometheus():
                         title=_("Prometheus connection option"),
                     ),
                 ),
+                _ssl_verification(),
                 _api_request_authentication(),
                 (
                     "protocol",
@@ -1674,6 +1675,7 @@ def _valuespec_generic_metrics_alertmanager():
                     title=_("Alertmanager connection option"),
                 ),
             ),
+            _ssl_verification(),
             _api_request_authentication(),
             (
                 "protocol",

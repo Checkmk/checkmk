@@ -82,7 +82,8 @@ class CheckmkTuple:
                 else:
                     if field not in self.declared_fields:
                         raise ValidationError(
-                            f"Field {field!r} not declared in schema {self.__class__.__name__}"
+                            f"Field {field!r} not declared in schema {self.__class__.__name__}. "
+                            f"Declared are: {self.declared_fields!r}"
                         )
                     _result[field] = (
                         converter.from_checkmk(value) if isinstance(converter, Converter) else value

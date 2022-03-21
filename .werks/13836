@@ -1,0 +1,13 @@
+Title: Execution of cached agent plugins on some Unix systems
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647853135
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+Cached agent plugins where not executed by the Checkmk agent for AIX,
+Solaris, OpenWRT and FreeBSD.

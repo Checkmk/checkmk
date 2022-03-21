@@ -648,7 +648,7 @@ run_cached() {
 
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
         {
-            nohup sh -c "eval ${MK_DEFINE_LOG_SECTION_TIME}; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null &&
+            nohup sh -c "eval '${MK_DEFINE_LOG_SECTION_TIME}'; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null &&
                 mv -f "${CACHEFILE}.new" "${CACHEFILE}"
         } || rm -f "${CACHEFILE}.new" "${CACHEFILE}" &
     fi

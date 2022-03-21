@@ -155,7 +155,7 @@ def bulk_create_hosts(params):
             host_name = host["host_name"]
             attributes = host["attributes"]
             try:
-                folder.verify_host_details(host_name, host["attributes"])
+                folder.verify_host_details(host_name, attributes)
             except (MKUserError, MKAuthException):
                 failed_hosts.append(host_name)
             validated_entries.append((host_name, attributes, None))

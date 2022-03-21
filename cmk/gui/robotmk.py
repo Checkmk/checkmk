@@ -6,11 +6,10 @@
 
 import json
 import re
-from pathlib import Path
 
-import cmk.utils.store as store
-from cmk.utils import paths
-from cmk.utils.type_defs import HostName
+from livestatus import LivestatusRow, lqencode, MKLivestatusNotFoundError, SiteId
+
+from cmk.utils.type_defs import HostName, Tuple
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
@@ -19,15 +18,14 @@ from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
+from cmk.gui.sites import live, only_sites
 from cmk.gui.utils.urls import makeuri_contextless
 
 
 @cmk.gui.pages.register("robotmk")
 def robotmk_page() -> cmk.gui.pages.PageResult:
     """Renders an iframe to view the content of the robotmk log file"""
-    site_id: str = request.get_str_input_mandatory("site")
-    host_name: HostName = request.get_str_input_mandatory("host")
-    service_description: str = request.get_str_input_mandatory("service")
+    site_id, host_name, service_description = _get_mandatory_request_vars()
 
     breadcrumb: Breadcrumb = make_service_breadcrumb(HostName(host_name), service_description)
     html.header(
@@ -35,13 +33,14 @@ def robotmk_page() -> cmk.gui.pages.PageResult:
         breadcrumb=breadcrumb,
     )
 
-    last_log_path: str = "/%s/%s/suite_last_log.html" % (host_name, service_description)
+    try:
+        content = _get_html_from_livestatus(host_name, service_description, site_id)
+    except MKLivestatusNotFoundError:
+        html.user_error(MKUserError(None, _("You are not permitted to view this page")))
+        return
 
-    robotmk_logfile_path: Path = Path(str(paths.robotmk_html_log_dir) + last_log_path)
-    if not robotmk_logfile_path.exists():
-        html.user_error(
-            MKUserError(None, _("Report file %s could not be found.") % robotmk_logfile_path)
-        )
+    if not content[0]:
+        html.user_error(MKUserError(None, _("No logs could be found.")))
         return
 
     iframe: str = "robotmk"
@@ -53,7 +52,6 @@ def robotmk_page() -> cmk.gui.pages.PageResult:
                 ("site", site_id),
                 ("host", host_name),
                 ("service", service_description),
-                ("path", str(robotmk_logfile_path)),
             ],
             filename="robotmk_report.py",
         ),
@@ -70,16 +68,23 @@ def robotmk_page() -> cmk.gui.pages.PageResult:
 @cmk.gui.pages.register("robotmk_report")
 def robotmk_report_page() -> cmk.gui.pages.PageResult:
     """Renders the content of the robotmk html log file"""
-    robotmk_logfile_path: str = request.get_str_input_mandatory("path")
+    site_id, host_name, service_description = _get_mandatory_request_vars()
 
-    content: str = store.load_text_from_file(Path(robotmk_logfile_path))
-    if content is None:
-        return
+    content = _get_html_from_livestatus(host_name, service_description, site_id)
 
-    html.write_html(HTML(_get_cleaned_content(content)))
+    html_content = _get_cleaned_html_content(content[0].decode("utf-8"))
+    html.write_html(html_content)
 
 
-def _get_cleaned_content(content: str) -> str:
+def _get_mandatory_request_vars() -> Tuple[SiteId, HostName, str]:
+    site_id: SiteId = SiteId(request.get_str_input_mandatory("site"))
+    host_name: HostName = request.get_str_input_mandatory("host")
+    service_description: str = request.get_str_input_mandatory("service")
+
+    return site_id, host_name, service_description
+
+
+def _get_cleaned_html_content(content: str) -> HTML:
     """HTML ships with links that will break our layout. Make them unusable"""
     cleaned_content = re.sub(
         '(href=("\\${relativeSource}"|"#\\${id}"))|(<a class="link".*</a>$)|(onclick="makeElementVisible\\(.*\\)")',
@@ -88,4 +93,18 @@ def _get_cleaned_content(content: str) -> str:
         flags=re.MULTILINE,
     )
 
-    return cleaned_content
+    return HTML(cleaned_content)
+
+
+def _get_html_from_livestatus(
+    host_name: HostName, service_description: str, site_id: SiteId
+) -> LivestatusRow:
+    query = (
+        "GET services\nColumns: robotmk_last_log\nFilter: host_name = %s\nFilter: service_description = %s\n"
+        % (lqencode(host_name), lqencode(service_description))
+    )
+
+    with only_sites(site_id):
+        row = live().query_row(query)
+
+    return row

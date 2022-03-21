@@ -69,7 +69,7 @@ from cmk.base.api.agent_based.value_store import load_host_value_store, ValueSto
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources import make_sources
+from cmk.base.sources import fetch_all, make_sources
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -162,16 +162,22 @@ def commandline_discovery(
         host_config = config_cache.get_host_config(host_name)
         section.section_begin(host_name)
         try:
+            sources = make_sources(
+                config_cache,
+                host_config,
+                config.lookup_ip_address(host_config),
+                selected_sections=selected_sections,
+                force_snmp_cache_refresh=False,
+                on_scan_error=on_error,
+            )
+            fetcher_messages = fetch_all(
+                sources,
+                file_cache_max_age=config.max_cachefile_age(),
+                mode=mode,
+            )
             parsed_sections_broker, _results = make_broker(
-                sources=make_sources(
-                    config_cache,
-                    host_config,
-                    config.lookup_ip_address(host_config),
-                    selected_sections=selected_sections,
-                    force_snmp_cache_refresh=False,
-                    on_scan_error=on_error,
-                ),
-                fetcher_messages=(),
+                sources=sources,
+                fetcher_messages=list(fetcher_messages),
                 selected_sections=selected_sections,
                 file_cache_max_age=config.max_cachefile_age(),
                 mode=mode,
@@ -326,16 +332,22 @@ def automation_discovery(
         else:
             ipaddress = config.lookup_ip_address(host_config)
 
+        sources = make_sources(
+            config_cache,
+            host_config,
+            ipaddress,
+            selected_sections=NO_SELECTION,
+            force_snmp_cache_refresh=not use_cached_snmp_data,
+            on_scan_error=on_error,
+        )
+        fetcher_messages = fetch_all(
+            sources,
+            file_cache_max_age=max_cachefile_age,
+            mode=Mode.DISCOVERY,
+        )
         parsed_sections_broker, _source_results = make_broker(
-            sources=make_sources(
-                config_cache,
-                host_config,
-                ipaddress,
-                selected_sections=NO_SELECTION,
-                force_snmp_cache_refresh=not use_cached_snmp_data,
-                on_scan_error=on_error,
-            ),
-            fetcher_messages=(),
+            sources=sources,
+            fetcher_messages=list(fetcher_messages),
             selected_sections=NO_SELECTION,
             file_cache_max_age=max_cachefile_age,
             mode=Mode.DISCOVERY,
@@ -1212,16 +1224,22 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
+    sources = make_sources(
+        config_cache,
+        host_config,
+        ip_address,
+        selected_sections=NO_SELECTION,
+        force_snmp_cache_refresh=not use_cached_snmp_data,
+        on_scan_error=on_error,
+    )
+    fetcher_messages = fetch_all(
+        sources,
+        file_cache_max_age=max_cachefile_age,
+        mode=Mode.DISCOVERY,
+    )
     parsed_sections_broker, _source_results = make_broker(
-        sources=make_sources(
-            config_cache,
-            host_config,
-            ip_address,
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=not use_cached_snmp_data,
-            on_scan_error=on_error,
-        ),
-        fetcher_messages=(),
+        sources=sources,
+        fetcher_messages=list(fetcher_messages),
         selected_sections=NO_SELECTION,
         file_cache_max_age=max_cachefile_age,
         mode=Mode.DISCOVERY,

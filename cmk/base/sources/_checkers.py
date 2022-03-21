@@ -228,8 +228,8 @@ def make_non_cluster_sources(
 
 
 def fetch_all(
-    *,
     sources: Iterable[Source],
+    *,
     file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Iterator[FetcherMessage]:

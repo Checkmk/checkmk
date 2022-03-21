@@ -358,12 +358,6 @@ def make_broker(
     mode: Mode,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
     if not fetcher_messages:
-        # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
-        # Note: `fetch_all(sources)` is almost always called in similar
-        #       code in discovery and inventory.  The only two exceptions
-        #       are `cmk.base.agent_based.checking.active_check_checking(...)` and
-        #       `cmk.base.agent_based.discovery.active_check_discovery(...)`.
-        #       This does not seem right.
         fetcher_messages = list(
             fetch_all(
                 sources=sources,

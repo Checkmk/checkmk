@@ -42,7 +42,7 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
-from cmk.base.sources import make_sources, Source
+from cmk.base.sources import fetch_all, make_sources, Source
 
 from ._retentions import Retentions, RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
@@ -269,16 +269,22 @@ def _inventorize_host(
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
+    sources = make_sources(
+        config_cache,
+        host_config,
+        ipaddress,
+        selected_sections=selected_sections,
+        force_snmp_cache_refresh=False,
+        on_scan_error=OnError.RAISE,
+    )
+    fetcher_messages = fetch_all(
+        sources,
+        file_cache_max_age=host_config.max_cachefile_age,
+        mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
+    )
     broker, results = make_broker(
-        sources=make_sources(
-            config_cache,
-            host_config,
-            ipaddress,
-            selected_sections=selected_sections,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-        ),
-        fetcher_messages=(),
+        sources=sources,
+        fetcher_messages=list(fetcher_messages),
         selected_sections=selected_sections,
         file_cache_max_age=host_config.max_cachefile_age,
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),

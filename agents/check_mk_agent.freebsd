@@ -591,10 +591,12 @@ run_cached() {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        {
-            echo "$*" | daemon /usr/local/bin/bash -o noclobber >"${CACHEFILE}.new" &&
-                mv "${CACHEFILE}.new" "${CACHEFILE}"
-        } || rm -f "${CACHEFILE}" "${CACHEFILE}.new" &
+        cat <<HERE | nohup /usr/local/bin/bash >/dev/null 2>&1
+set -o noclobber
+eval '${MK_DEFINE_LOG_SECTION_TIME}'
+exec > "${CACHEFILE}.new" || exit 1
+$* && mv "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
+HERE
     fi
 }
 

@@ -16,6 +16,7 @@
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma::ac {
 
@@ -97,7 +98,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
     std::string allowed_ip;
     if (!only_from.empty()) {
-        allowed_ip = std::string{kCmdLineAllowedIp};
+        allowed_ip = " "s + std::string{kCmdLineAllowedIp};
         for (const auto &a : only_from) {
             allowed_ip += " " + a;
         }
@@ -105,7 +106,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
 
     return controller.wstring() +
            wtools::ConvertToUTF16(fmt::format(
-               " {} {} {} {} localhost:{} {} -vv",      //
+               " {} {} {} {} localhost:{}{} -vv",       //
                kCmdLineAsDaemon,                        // daemon
                kCmdLinePort, port,                      // -P 6556
                kCmdLineChannel, windows_internal_port,  // --channel 50001

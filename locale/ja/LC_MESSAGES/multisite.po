@@ -4040,7 +4040,7 @@ msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "コンテンツに期待される正規表現"
 
 #, fuzzy
-msgid "Agent plugins: Required minimal versions"
+msgid "Agent plugins: versions"
 msgstr "必要な一致(正規表現)"
 
 #, fuzzy
@@ -5080,12 +5080,6 @@ msgstr "終了時間を適用する"
 msgid "Apply Lag"
 msgstr "ラグを適用する"
 
-msgid "Apply Lag Maximum Time"
-msgstr "ラグ最大時間を適用する"
-
-msgid "Apply Lag Minimum Time"
-msgstr "ラグ最小時間を適用する"
-
 #, fuzzy
 msgid "Apply OMD config changes"
 msgstr "ラグを適用する"
@@ -5095,6 +5089,17 @@ msgstr "条件を適用する"
 
 msgid "Apply filters"
 msgstr "フィルタを適用する"
+
+#, fuzzy
+msgid "Apply lag: Maximum time"
+msgstr "ラグ最大時間を適用する"
+
+#, fuzzy
+msgid "Apply lag: Minimum time"
+msgstr "ラグ最小時間を適用する"
+
+msgid "Apply lag: State in case the apply lag is not known"
+msgstr ""
 
 msgid "Apply logwatch patterns"
 msgstr "ログウォッチパターンを適用する"
@@ -11465,6 +11470,10 @@ msgstr "カスタムGUIデザイン %s"
 
 msgid "Custom Graph"
 msgstr "カスタムグラフ"
+
+#, fuzzy
+msgid "Custom Host"
+msgstr "カスタムアイコン"
 
 msgid "Custom Host/Service Notes URL"
 msgstr "カスタムホスト/サービスノートのURL"
@@ -21170,6 +21179,10 @@ msgstr "ホストタグ"
 msgid "Host tags (with titles)"
 msgstr "ホストタグ(タイトル付き)"
 
+#, fuzzy
+msgid "Host to use for connecting to Cisco Prime"
+msgstr "中央サイトに接続するための自動化ユーザー"
+
 msgid "Host&nbsp;status"
 msgstr "ホスト&nbsp; ステータス"
 
@@ -26610,6 +26623,20 @@ msgstr "ホストチェック"
 msgid "Local checks in Checkmk clusters"
 msgstr "Checkmkクラスターのローカルチェック"
 
+#, python-format
+msgid ""
+"Local checks matching this pattern will be excluded from the comparison with "
+"the required versions specified in '%s' and from the duplicates check."
+msgstr ""
+
+#, fuzzy
+msgid "Local checks: Regular expression to exclude files"
+msgstr "コンテンツに期待される正規表現"
+
+#, fuzzy
+msgid "Local checks: versions"
+msgstr "ホストチェック"
+
 msgid "Local destination"
 msgstr "ローカルの宛先"
 
@@ -29422,6 +29449,10 @@ msgstr ""
 msgid "Monitoring state in case of swap errors"
 msgstr "スワップエラー時の状態監視"
 
+#, fuzzy
+msgid "Monitoring state in case of version parsing failure"
+msgstr "スワップエラー時の状態監視"
+
 msgid "Monitoring state requirement"
 msgstr "状態要件の監視"
 
@@ -30638,8 +30669,9 @@ msgstr "このルールは一致します"
 msgid "No rules found."
 msgstr "ルールが見つかりません。"
 
+#, fuzzy
 msgid ""
-"No ruleset <b>State in case of restricted address missmatch</b> is configured"
+"No ruleset <b>State in case of restricted address mismatch</b> is configured"
 msgstr ""
 "ルールセット<b>アドレスの不一致が制限されている場合の状態</b>は構成されていま"
 "せん"
@@ -34680,8 +34712,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Plugins or local checks matching this pattern will be excluded from the "
-"comparison with the required versions specified in '%s'."
+"Plugins matching this pattern will be excluded from the comparison with the "
+"required versions specified in '%s' and from the duplicates check."
 msgstr ""
 
 msgid ""
@@ -34888,6 +34920,10 @@ msgstr "事前定義された条件"
 
 #, python-format
 msgid "Predefined condition '%s' does not exist or using not permitted"
+msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
+
+#, fuzzy, python-format
+msgid "Predefined condition: '%s' does not exist or using not permitted"
 msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
 
 #, python-format
@@ -37199,7 +37235,8 @@ msgstr "n<sup>th</sup>からm<sup>th</sup>の通知に制限(エスカレーシ�
 msgid "Restrict to notification number"
 msgstr "通知番号に制限する"
 
-msgid "Restricted address missmatch"
+#, fuzzy
+msgid "Restricted address mismatch"
 msgstr "制限付きアドレスの不一致"
 
 msgid "Result"
@@ -39697,6 +39734,10 @@ msgstr "設定"
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
 msgstr "CheckmkおよびSNMPエージェントへの接続に関する設定"
 
+#, fuzzy, python-format
+msgid "Settings for %s state in case of recovery"
+msgstr "復旧時のインシデント状態の設定"
+
 msgid "Settings for Parent Scan"
 msgstr "親スキャンの設定"
 
@@ -39711,10 +39752,6 @@ msgstr "ダウンタイムの場合のインシデント状態の設定"
 
 msgid "Settings for messages not processed"
 msgstr "未処理のメッセージの設定"
-
-#, fuzzy, python-format
-msgid "Settings for state of %s in case of recovery"
-msgstr "復旧時のインシデント状態の設定"
 
 msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
@@ -41922,7 +41959,8 @@ msgstr "接続拒否の状態"
 msgid "State for expected string mismatch"
 msgstr "予想される文字列の不一致の状態"
 
-msgid "State for missmatching Aggregator IDs for LACP"
+#, fuzzy
+msgid "State for mismatching Aggregator IDs for LACP"
 msgstr "LACPのアグリゲーターIDの不一致の状態"
 
 msgid "State if 'maintenance' services are found"
@@ -42053,7 +42091,8 @@ msgstr "システムレプリケーションがない場合の状態"
 msgid "State in case of non space error count is greater then 0: "
 msgstr "スペース以外のエラーカウントが0より大きい場合の状態: "
 
-msgid "State in case of restricted address missmatch"
+#, fuzzy
+msgid "State in case of restricted address mismatch"
 msgstr "制限されたアドレスの不一致の場合の状態"
 
 msgid "State in case of unhandled exception"
@@ -45998,9 +46037,10 @@ msgstr ""
 "メトリックラベルは、結果のサービスのステータス詳細のクエリ値と一緒に表示され"
 "ます。何も指定されていない場合、メトリック名がラベルとして使用されます。"
 
+#, fuzzy, python-format
 msgid ""
 "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. This is "
-"only useful if also <i>Apply Lag Maximum Time</i> has been configured."
+"only useful if also <i>%s</i> has been configured."
 msgstr ""
 "<tt>v$dataguard_stats</tt>の適用ラグの最小制限。これは、<i>ラグの最大時間の適"
 "用</i>も構成されている場合にのみ役立ちます。"
@@ -46023,6 +46063,14 @@ msgstr ""
 "ターゲットサイト '%s'の監視コアのバージョンは '%s'です。これは、ログファイル"
 "情報のフェッチをサポートしていません。新しいバージョンにアップグレードしてく"
 "ださい。"
+
+msgid ""
+"The monitoring state in case the version of a local check is unparsable."
+msgstr ""
+
+msgid ""
+"The monitoring state in case the version of an agent plugin is unparsable."
+msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "このイベントがトリガーする監視状態。"
@@ -48291,8 +48339,8 @@ msgstr "このチェックは、リモートサイトへの接続が失敗した
 
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
-"address missmatch</b> in the ruleset <b>Status of the Checkmk services</b> "
-"is configured and differs from default state <b>WARN</b>. With the above "
+"address mismatch</b> in the ruleset <b>Status of the Checkmk services</b> is "
+"configured and differs from default state <b>WARN</b>. With the above "
 "setting you can overwrite the default service state. This will help you to "
 "reduce above warnings during the update process of your Checkmk sites and "
 "agents. We recommend to set this option only for the affected hosts as long "
@@ -57724,6 +57772,22 @@ msgstr ""
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plugins and local checks."
+msgstr ""
+"Webサーバーによって処理される現在アクティブな接続の上限しきい値を構成できま"
+"す。"
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins."
+msgstr ""
+"Webサーバーによって処理される現在アクティブな接続の上限しきい値を構成できま"
+"す。"
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed local checks."
 msgstr ""
 "Webサーバーによって処理される現在アクティブな接続の上限しきい値を構成できま"
 "す。"

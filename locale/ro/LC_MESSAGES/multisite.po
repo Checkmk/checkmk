@@ -3953,7 +3953,7 @@ msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr ""
 
 #, fuzzy
-msgid "Agent plugins: Required minimal versions"
+msgid "Agent plugins: versions"
 msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
@@ -4978,12 +4978,6 @@ msgstr ""
 msgid "Apply Lag"
 msgstr ""
 
-msgid "Apply Lag Maximum Time"
-msgstr ""
-
-msgid "Apply Lag Minimum Time"
-msgstr ""
-
 #, fuzzy
 msgid "Apply OMD config changes"
 msgstr "%d schimbări"
@@ -4994,6 +4988,15 @@ msgstr ""
 #, fuzzy
 msgid "Apply filters"
 msgstr "Adaugă filtre"
+
+msgid "Apply lag: Maximum time"
+msgstr ""
+
+msgid "Apply lag: Minimum time"
+msgstr ""
+
+msgid "Apply lag: State in case the apply lag is not known"
+msgstr ""
 
 msgid "Apply logwatch patterns"
 msgstr ""
@@ -11275,6 +11278,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Custom Graph"
+msgstr "Atribute personalizate"
+
+#, fuzzy
+msgid "Custom Host"
 msgstr "Atribute personalizate"
 
 msgid "Custom Host/Service Notes URL"
@@ -21004,6 +21011,10 @@ msgstr ""
 msgid "Host tags (with titles)"
 msgstr ""
 
+#, fuzzy
+msgid "Host to use for connecting to Cisco Prime"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
 msgid "Host&nbsp;status"
 msgstr ""
 
@@ -26101,6 +26112,19 @@ msgstr "sesiuni"
 msgid "Local checks in Checkmk clusters"
 msgstr ""
 
+#, python-format
+msgid ""
+"Local checks matching this pattern will be excluded from the comparison with "
+"the required versions specified in '%s' and from the duplicates check."
+msgstr ""
+
+msgid "Local checks: Regular expression to exclude files"
+msgstr ""
+
+#, fuzzy
+msgid "Local checks: versions"
+msgstr "sesiuni"
+
 #, fuzzy
 msgid "Local destination"
 msgstr "Acțiune"
@@ -29093,6 +29117,10 @@ msgid "Monitoring state in case of swap errors"
 msgstr ""
 
 #, fuzzy
+msgid "Monitoring state in case of version parsing failure"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 msgid "Monitoring state requirement"
 msgstr " pe siteul de monitorizare: "
 
@@ -30365,7 +30393,7 @@ msgid "No rules found."
 msgstr ""
 
 msgid ""
-"No ruleset <b>State in case of restricted address missmatch</b> is configured"
+"No ruleset <b>State in case of restricted address mismatch</b> is configured"
 msgstr ""
 
 msgid "No scan has been started yet."
@@ -34414,8 +34442,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Plugins or local checks matching this pattern will be excluded from the "
-"comparison with the required versions specified in '%s'."
+"Plugins matching this pattern will be excluded from the comparison with the "
+"required versions specified in '%s' and from the duplicates check."
 msgstr ""
 
 msgid ""
@@ -34629,6 +34657,10 @@ msgstr "Adaugă Condiție"
 
 #, python-format
 msgid "Predefined condition '%s' does not exist or using not permitted"
+msgstr ""
+
+#, python-format
+msgid "Predefined condition: '%s' does not exist or using not permitted"
 msgstr ""
 
 #, python-format
@@ -37055,7 +37087,7 @@ msgstr ""
 msgid "Restrict to notification number"
 msgstr "trimite notificare"
 
-msgid "Restricted address missmatch"
+msgid "Restricted address mismatch"
 msgstr ""
 
 msgid "Result"
@@ -39633,6 +39665,10 @@ msgstr "Setari"
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Settings for %s state in case of recovery"
+msgstr "Întreruperi adhoc"
+
 msgid "Settings for Parent Scan"
 msgstr ""
 
@@ -39647,10 +39683,6 @@ msgstr ""
 
 msgid "Settings for messages not processed"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "Settings for state of %s in case of recovery"
-msgstr "Întreruperi adhoc"
 
 msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
@@ -41751,7 +41783,7 @@ msgstr ""
 msgid "State for expected string mismatch"
 msgstr ""
 
-msgid "State for missmatching Aggregator IDs for LACP"
+msgid "State for mismatching Aggregator IDs for LACP"
 msgstr ""
 
 msgid "State if 'maintenance' services are found"
@@ -41881,7 +41913,7 @@ msgstr ""
 msgid "State in case of non space error count is greater then 0: "
 msgstr ""
 
-msgid "State in case of restricted address missmatch"
+msgid "State in case of restricted address mismatch"
 msgstr ""
 
 msgid "State in case of unhandled exception"
@@ -45543,9 +45575,10 @@ msgid ""
 "nothing was specified."
 msgstr ""
 
+#, python-format
 msgid ""
 "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. This is "
-"only useful if also <i>Apply Lag Maximum Time</i> has been configured."
+"only useful if also <i>%s</i> has been configured."
 msgstr ""
 
 msgid ""
@@ -45558,6 +45591,14 @@ msgstr ""
 msgid ""
 "The monitoring core of the target site '%s' has the version '%s'. That does "
 "not support fetching logfile information. Please upgrade to a newer version."
+msgstr ""
+
+msgid ""
+"The monitoring state in case the version of a local check is unparsable."
+msgstr ""
+
+msgid ""
+"The monitoring state in case the version of an agent plugin is unparsable."
 msgstr ""
 
 msgid "The monitoring state that this event will trigger."
@@ -47453,8 +47494,8 @@ msgstr ""
 
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
-"address missmatch</b> in the ruleset <b>Status of the Checkmk services</b> "
-"is configured and differs from default state <b>WARN</b>. With the above "
+"address mismatch</b> in the ruleset <b>Status of the Checkmk services</b> is "
+"configured and differs from default state <b>WARN</b>. With the above "
 "setting you can overwrite the default service state. This will help you to "
 "reduce above warnings during the update process of your Checkmk sites and "
 "agents. We recommend to set this option only for the affected hosts as long "
@@ -55999,6 +56040,16 @@ msgstr ""
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plugins and local checks."
+msgstr ""
+
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins."
+msgstr ""
+
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed local checks."
 msgstr ""
 
 #, python-format

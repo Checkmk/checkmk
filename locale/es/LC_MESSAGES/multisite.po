@@ -4224,7 +4224,7 @@ msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "Expresión regular que se espera en el contenido"
 
 #, fuzzy
-msgid "Agent plugins: Required minimal versions"
+msgid "Agent plugins: versions"
 msgstr "Coincidencia obligatoria (expresión regular)"
 
 #, fuzzy
@@ -5288,12 +5288,6 @@ msgstr "Aplicar la hora de finalización"
 msgid "Apply Lag"
 msgstr "Aplicar Lag"
 
-msgid "Apply Lag Maximum Time"
-msgstr "Aplicar el tiempo máximo de retardo"
-
-msgid "Apply Lag Minimum Time"
-msgstr "Aplicar el tiempo mínimo de retraso"
-
 #, fuzzy
 msgid "Apply OMD config changes"
 msgstr "Aplicar Lag"
@@ -5303,6 +5297,17 @@ msgstr "Aplicar condiciones"
 
 msgid "Apply filters"
 msgstr "Aplicar filtros"
+
+#, fuzzy
+msgid "Apply lag: Maximum time"
+msgstr "Aplicar el tiempo máximo de retardo"
+
+#, fuzzy
+msgid "Apply lag: Minimum time"
+msgstr "Aplicar el tiempo mínimo de retraso"
+
+msgid "Apply lag: State in case the apply lag is not known"
+msgstr ""
 
 msgid "Apply logwatch patterns"
 msgstr "Aplicar patrones de vigilancia del registro"
@@ -11988,6 +11993,10 @@ msgstr "Diseño de GUI personalizado de %s"
 
 msgid "Custom Graph"
 msgstr "Gráfico personalizado"
+
+#, fuzzy
+msgid "Custom Host"
+msgstr "Iconos personalizados"
 
 msgid "Custom Host/Service Notes URL"
 msgstr "URL personalizada de host/servicio"
@@ -22055,6 +22064,10 @@ msgstr "Etiquetas de anfitrión"
 msgid "Host tags (with titles)"
 msgstr "Etiquetas de acogida (con títulos)"
 
+#, fuzzy
+msgid "Host to use for connecting to Cisco Prime"
+msgstr "Usuario de automatización para la conexión con el sitio central"
+
 msgid "Host&nbsp;status"
 msgstr "Anfitrión&nbsp;estado"
 
@@ -27821,6 +27834,20 @@ msgstr "Comprobación de los anfitriones"
 msgid "Local checks in Checkmk clusters"
 msgstr "Controles locales en los clusters de Checkmk"
 
+#, python-format
+msgid ""
+"Local checks matching this pattern will be excluded from the comparison with "
+"the required versions specified in '%s' and from the duplicates check."
+msgstr ""
+
+#, fuzzy
+msgid "Local checks: Regular expression to exclude files"
+msgstr "Expresión regular que se espera en el contenido"
+
+#, fuzzy
+msgid "Local checks: versions"
+msgstr "Comprobación de los anfitriones"
+
 msgid "Local destination"
 msgstr "Destino local"
 
@@ -30715,6 +30742,10 @@ msgstr "Estado de supervisión si la unidad equivocada está activa/en espera"
 msgid "Monitoring state in case of swap errors"
 msgstr "Estado de supervisión en caso de errores de intercambio"
 
+#, fuzzy
+msgid "Monitoring state in case of version parsing failure"
+msgstr "Estado de supervisión en caso de errores de intercambio"
+
 msgid "Monitoring state requirement"
 msgstr "Control de los requisitos del Estado"
 
@@ -31944,8 +31975,9 @@ msgstr "Esta regla coincide con"
 msgid "No rules found."
 msgstr "No se han encontrado reglas."
 
+#, fuzzy
 msgid ""
-"No ruleset <b>State in case of restricted address missmatch</b> is configured"
+"No ruleset <b>State in case of restricted address mismatch</b> is configured"
 msgstr ""
 "No se ha configurado el conjunto de reglas <b>Estado en caso de falta de "
 "coincidencia de dirección restringida</b>."
@@ -36179,8 +36211,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Plugins or local checks matching this pattern will be excluded from the "
-"comparison with the required versions specified in '%s'."
+"Plugins matching this pattern will be excluded from the comparison with the "
+"required versions specified in '%s' and from the duplicates check."
 msgstr ""
 
 msgid ""
@@ -36393,6 +36425,10 @@ msgstr "Condición predefinida"
 
 #, python-format
 msgid "Predefined condition '%s' does not exist or using not permitted"
+msgstr "La condición predefinida '%s' no existe o su uso no está permitido"
+
+#, fuzzy, python-format
+msgid "Predefined condition: '%s' does not exist or using not permitted"
 msgstr "La condición predefinida '%s' no existe o su uso no está permitido"
 
 #, python-format
@@ -38762,7 +38798,8 @@ msgstr ""
 msgid "Restrict to notification number"
 msgstr "Restringir al número de notificación"
 
-msgid "Restricted address missmatch"
+#, fuzzy
+msgid "Restricted address mismatch"
 msgstr "Falta de coincidencia de direcciones restringidas"
 
 msgid "Result"
@@ -41386,6 +41423,10 @@ msgstr "Ajustes"
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
 msgstr "Ajustes relativos a la conexión con los agentes Checkmk y SNMP"
 
+#, fuzzy, python-format
+msgid "Settings for %s state in case of recovery"
+msgstr "Ajustes para el estado del incidente en caso de recuperación"
+
 msgid "Settings for Parent Scan"
 msgstr "Configuración de la exploración de los padres"
 
@@ -41400,10 +41441,6 @@ msgstr "Ajustes para el estado de las incidencias en caso de inactividad"
 
 msgid "Settings for messages not processed"
 msgstr "Ajustes de los mensajes no procesados"
-
-#, fuzzy, python-format
-msgid "Settings for state of %s in case of recovery"
-msgstr "Ajustes para el estado del incidente en caso de recuperación"
 
 msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
@@ -43744,7 +43781,8 @@ msgstr "Estado para la denegación de la conexión"
 msgid "State for expected string mismatch"
 msgstr "Estado de la cadena esperada"
 
-msgid "State for missmatching Aggregator IDs for LACP"
+#, fuzzy
+msgid "State for mismatching Aggregator IDs for LACP"
 msgstr "Estado de los ID de agregadores que no coinciden para LACP"
 
 msgid "State if 'maintenance' services are found"
@@ -43882,7 +43920,8 @@ msgid "State in case of non space error count is greater then 0: "
 msgstr ""
 "Estado en caso de que el recuento de errores no espaciales sea mayor que 0: "
 
-msgid "State in case of restricted address missmatch"
+#, fuzzy
+msgid "State in case of restricted address mismatch"
 msgstr "Estado en caso de falta de coincidencia de direcciones restringidas"
 
 msgid "State in case of unhandled exception"
@@ -48150,9 +48189,10 @@ msgstr ""
 "del estado del servicio resultante. El nombre de la métrica se tomará como "
 "etiqueta si no se ha especificado nada."
 
+#, fuzzy, python-format
 msgid ""
 "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. This is "
-"only useful if also <i>Apply Lag Maximum Time</i> has been configured."
+"only useful if also <i>%s</i> has been configured."
 msgstr ""
 "El límite mínimo para el retraso de aplicación en <tt>v$dataguard_stats</"
 "tt>. Solo es útil si también se ha configurado <i>Tiempo máximo de retraso "
@@ -48175,6 +48215,14 @@ msgstr ""
 "El núcleo de monitorización del sitio de destino '%s' tiene la versión '%s'. "
 "Esta no soporta la obtención de información de archivos de registro. Por "
 "favor, actualice a una versión más reciente."
+
+msgid ""
+"The monitoring state in case the version of a local check is unparsable."
+msgstr ""
+
+msgid ""
+"The monitoring state in case the version of an agent plugin is unparsable."
+msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "El estado de monitorización que activará este evento."
@@ -50671,10 +50719,11 @@ msgstr ""
 "Esta comprobación devuelve CRIT si la conexión con el sitio remoto ha "
 "fallado."
 
+#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
-"address missmatch</b> in the ruleset <b>Status of the Checkmk services</b> "
-"is configured and differs from default state <b>WARN</b>. With the above "
+"address mismatch</b> in the ruleset <b>Status of the Checkmk services</b> is "
+"configured and differs from default state <b>WARN</b>. With the above "
 "setting you can overwrite the default service state. This will help you to "
 "reduce above warnings during the update process of your Checkmk sites and "
 "agents. We recommend to set this option only for the affected hosts as long "
@@ -60929,6 +60978,22 @@ msgstr ""
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plugins and local checks."
+msgstr ""
+"Puede configurar umbrales superiores para las conexiones activas que maneja "
+"el servidor web."
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins."
+msgstr ""
+"Puede configurar umbrales superiores para las conexiones activas que maneja "
+"el servidor web."
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed local checks."
 msgstr ""
 "Puede configurar umbrales superiores para las conexiones activas que maneja "
 "el servidor web."

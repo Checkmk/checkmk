@@ -8,7 +8,7 @@ import logging
 
 import pytest
 
-from cmk.core_helpers.controller import GlobalConfig, write_bytes
+from cmk.core_helpers.controller import GlobalConfig
 from cmk.core_helpers.protocol import CMCMessage
 from cmk.core_helpers.snmp import SNMPPluginStore
 
@@ -38,9 +38,3 @@ class TestControllerApi:
 
     def test_controller_end_of_reply(self):
         assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"
-
-    def test_write_bytes(self, capfdbinary):
-        write_bytes(b"123")
-        captured = capfdbinary.readouterr()
-        assert captured.out == b"123"
-        assert captured.err == b""

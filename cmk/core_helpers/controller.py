@@ -20,6 +20,7 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import HostName, result
+from cmk.utils.type_defs.protocol import Serializer
 
 from . import Fetcher, FetcherType, protocol
 from .cache import MaxAge
@@ -130,7 +131,7 @@ def _confirm_command_processed() -> Iterator[None]:
         yield
     finally:
         logger.info("Command done")
-        write_bytes(bytes(protocol.CMCMessage.end_of_reply()))
+        write(protocol.CMCMessage.end_of_reply())
 
 
 def run_fetchers(config_path: ConfigPath, host_name: HostName, timeout: int, mode: Mode) -> None:
@@ -248,13 +249,11 @@ def _run_fetchers_from_file(
         messages = _replace_netsnmp_obfuscated_timeout(messages, timeout_manager.message)
 
     logger.debug("Produced %d messages", len(messages))
-    write_bytes(
-        bytes(
-            protocol.CMCMessage.result_answer(
-                messages,
-                timeout,
-                cpu_tracker.duration,
-            )
+    write(
+        protocol.CMCMessage.result_answer(
+            messages,
+            timeout,
+            cpu_tracker.duration,
         )
     )
     for msg in filter(
@@ -297,7 +296,7 @@ def _replace_netsnmp_obfuscated_timeout(
     ]
 
 
-def write_bytes(data: bytes) -> None:
+def write(serializable: Serializer) -> None:
     """Idea is based on the cmk method.
     Data will be received  by Microcore from a non-blocking socket, thus simple sys.stdout.write
     makes flushing mandatory, which is not always appropriate.
@@ -307,6 +306,8 @@ def write_bytes(data: bytes) -> None:
 
     The socket, we are writing in, is blocking, thus loop will not overload CPU in any case.
     """
-    while data:
-        bytes_written = os.write(1, data)
-        data = data[bytes_written:]
+    data = bytes(serializable)
+    view = memoryview(data)
+    while view:
+        bytes_written = os.write(1, view)
+        view = view[bytes_written:]

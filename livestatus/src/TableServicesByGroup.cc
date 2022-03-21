@@ -40,8 +40,7 @@ std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 void TableServicesByGroup::answerQuery(Query *query) {
     for (const auto *group = servicegroup_list; group != nullptr;
          group = group->next) {
-        if (core()->groupAuthorization() == GroupAuthorization::loose ||
-            is_authorized_for_service_group(core()->groupAuthorization(),
+        if (is_authorized_for_service_group(core()->groupAuthorization(),
                                             core()->serviceAuthorization(),
                                             group, query->authUser())) {
             for (const auto *m = group->members; m != nullptr; m = m->next) {

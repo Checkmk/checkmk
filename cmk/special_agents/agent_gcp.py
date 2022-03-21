@@ -428,7 +428,40 @@ CLOUDSQL = GCPService(
     ],
 )
 
-SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL]}
+FILESTORE = GCPService(
+    name="filestore",
+    metrics=[
+        GCPMetric(
+            name="file.googleapis.com/nfs/server/used_bytes_percent",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_name"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="file.googleapis.com/nfs/server/write_ops_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="file.googleapis.com/nfs/server/read_ops_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+    ],
+)
+
+SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE]}
 
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:

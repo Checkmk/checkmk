@@ -304,3 +304,13 @@ rulespec_registry.register(
         title=lambda: _("GCP/Cloud SQL disk"),
     )
 )
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_filestore_disk",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_sql_disk,
+        title=lambda: _("GCP/Filestore"),
+    )
+)

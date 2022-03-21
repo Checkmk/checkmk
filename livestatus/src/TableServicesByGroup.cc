@@ -39,23 +39,17 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
-    bool requires_authcheck =
-        query->authUser() != nullptr &&
-        core()->groupAuthorization() == AuthorizationKind::strict;
-
     for (const servicegroup *sg = servicegroup_list; sg != nullptr;
          sg = sg->next) {
-        if (requires_authcheck &&
-            !is_authorized_for_service_group(core()->groupAuthorization(),
-                                             core()->serviceAuthorization(), sg,
-                                             query->authUser())) {
-            continue;
-        }
-
-        for (const servicesmember *m = sg->members; m != nullptr; m = m->next) {
-            servicebygroup sbg{m->service_ptr, sg};
-            if (!query->processDataset(Row(&sbg))) {
-                return;
+        if (is_authorized_for_service_group(core()->groupAuthorization(),
+                                            core()->serviceAuthorization(), sg,
+                                            query->authUser())) {
+            for (const servicesmember *m = sg->members; m != nullptr;
+                 m = m->next) {
+                servicebygroup sbg{m->service_ptr, sg};
+                if (!query->processDataset(Row(&sbg))) {
+                    return;
+                }
             }
         }
     }

@@ -37,22 +37,16 @@ std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
 std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query *query) {
-    bool requires_authcheck =
-        query->authUser() != nullptr &&
-        core()->groupAuthorization() == AuthorizationKind::strict;
-
     for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        if (requires_authcheck &&
-            !is_authorized_for_host_group(core()->groupAuthorization(),
-                                          core()->serviceAuthorization(), hg,
-                                          query->authUser())) {
-            continue;
-        }
-
-        for (const hostsmember *m = hg->members; m != nullptr; m = m->next) {
-            hostbygroup hbg{m->host_ptr, hg};
-            if (!query->processDataset(Row(&hbg))) {
-                return;
+        if (is_authorized_for_host_group(core()->groupAuthorization(),
+                                         core()->serviceAuthorization(), hg,
+                                         query->authUser())) {
+            for (const hostsmember *m = hg->members; m != nullptr;
+                 m = m->next) {
+                hostbygroup hbg{m->host_ptr, hg};
+                if (!query->processDataset(Row(&hbg))) {
+                    return;
+                }
             }
         }
     }

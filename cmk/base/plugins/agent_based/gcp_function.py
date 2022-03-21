@@ -54,7 +54,7 @@ def check_gcp_function_instances(
             "cloudfunctions.googleapis.com/function/active_instances", str
         ),
     }
-    timeseries = section[item].rows
+    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -93,7 +93,7 @@ def check_gcp_function_execution(
             scale=1e-9,
         ),
     }
-    timeseries = section[item].rows
+    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 
@@ -122,7 +122,7 @@ def check_gcp_function_network(
             "cloudfunctions.googleapis.com/function/network_egress", render.networkbandwidth
         ),
     }
-    timeseries = section[item].rows
+    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
     yield from gcp.generic_check(metrics, timeseries, params)
 
 

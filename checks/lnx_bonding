@@ -14,7 +14,7 @@ check_info["lnx_bonding"] = {
     # section already migrated!
     # "parse_function": parse_lnx_bonding,
     "check_function": check_bonding,
-    "inventory_function": inventory_bonding,
+    "inventory_function": discover_bonding,
     "service_description": "Bonding Interface %s",
     "group": "bonding",
     "default_levels_variable": "bonding_default_levels",

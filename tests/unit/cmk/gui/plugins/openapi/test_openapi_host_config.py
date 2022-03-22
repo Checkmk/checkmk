@@ -819,3 +819,29 @@ def test_openapi_create_host_with_contact_group(
         status=200,
         content_type='application/json',
     )
+
+
+def test_openapi_create_host_with_custom_attributes(wsgi_app, with_automation_user, monkeypatch):
+    # TODO: remove mock verification once custom attributes can be set via the REST API
+    monkeypatch.setattr("cmk.gui.watolib.host_attributes._retrieve_host_attributes",
+                        lambda: ["ipaddress", "custom"])
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "ipaddress": "192.168.0.123",
+            "custom": "abc",
+        },
+    }
+    wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )

@@ -1114,8 +1114,10 @@ def validate_host_attributes(attributes, new=False):
 
 # Check if the given attribute name exists, no type check
 def _validate_general_host_attributes(host_attributes, new):
+    """Check if the given attribute name exists, no type check"""
+    all_host_attribute_names = _retrieve_host_attributes()
     # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
-    all_host_attribute_names = list(host_attribute_registry.keys()) + ["inventory_failed", "site"]
+    all_host_attribute_names.extend(["inventory_failed", "site"])
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
@@ -1133,3 +1135,8 @@ def _validate_general_host_attributes(host_attributes, new):
         # The site attribute gets an extra check
         if name == "site" and value not in config.allsites().keys():
             raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
+
+
+def _retrieve_host_attributes() -> List[str]:
+    """Returns list of registered host attribute names"""
+    return list(host_attribute_registry.keys())

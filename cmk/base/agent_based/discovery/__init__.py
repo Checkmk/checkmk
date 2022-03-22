@@ -69,7 +69,7 @@ from cmk.base.api.agent_based.value_store import load_host_value_store, ValueSto
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import fetch_all, make_sources, Source
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -532,9 +532,12 @@ def active_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
+    sources: Sequence[Source],
     fetcher_messages: Sequence[FetcherMessage],
 ) -> ActiveCheckResult:
-    return _execute_check_discovery(host_name, ipaddress, fetcher_messages=fetcher_messages)
+    return _execute_check_discovery(
+        host_name, ipaddress, sources=sources, fetcher_messages=fetcher_messages
+    )
 
 
 @decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
@@ -542,13 +545,40 @@ def commandline_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
 ) -> ActiveCheckResult:
-    return _execute_check_discovery(host_name, ipaddress, fetcher_messages=())
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(host_name)
+
+    # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
+    # ipaddress is always None
+    if ipaddress is None and not host_config.is_cluster:
+        ipaddress = config.lookup_ip_address(host_config)
+
+    sources = make_sources(
+        config_cache,
+        host_config,
+        ipaddress,
+        selected_sections=NO_SELECTION,
+        force_snmp_cache_refresh=False,
+        on_scan_error=OnError.RAISE,
+    )
+    fetcher_messages = fetch_all(
+        sources=sources,
+        file_cache_max_age=config.max_cachefile_age(
+            discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
+        ),
+        mode=Mode.DISCOVERY,
+    )
+
+    return _execute_check_discovery(
+        host_name, ipaddress, sources=sources, fetcher_messages=list(fetcher_messages)
+    )
 
 
 def _execute_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
+    sources: Sequence[Source],
     fetcher_messages: Sequence[FetcherMessage],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -573,14 +603,7 @@ def _execute_check_discovery(
         ipaddress = config.lookup_ip_address(host_config)
 
     parsed_sections_broker, source_results = make_broker(
-        sources=make_sources(
-            config_cache,
-            host_config,
-            ipaddress,
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-        ),
+        sources=sources,
         fetcher_messages=fetcher_messages,
         selected_sections=NO_SELECTION,
         file_cache_max_age=config.max_cachefile_age(

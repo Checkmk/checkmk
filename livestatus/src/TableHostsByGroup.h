@@ -11,10 +11,8 @@
 #include <string>
 
 #include "Table.h"
-#include "contact_fwd.h"
 class MonitoringCore;
 class Query;
-class Row;
 
 class TableHostsByGroup : public Table {
 public:

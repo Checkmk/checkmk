@@ -48,6 +48,7 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
+#include "contact_fwd.h"
 #include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"

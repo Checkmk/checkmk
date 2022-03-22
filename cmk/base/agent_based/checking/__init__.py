@@ -163,21 +163,21 @@ def _execute_checkmk_checks(
                 key=lambda service: service.description,
             ),
         )
-        with CPUTracker() as tracker:
-            broker, source_results = make_broker(
-                sources=make_sources(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    selected_sections=selected_sections,
-                    force_snmp_cache_refresh=False,
-                    on_scan_error=OnError.RAISE,
-                ),
-                fetcher_messages=fetcher_messages,
+        broker, source_results = make_broker(
+            sources=make_sources(
+                config_cache,
+                host_config,
+                ipaddress,
                 selected_sections=selected_sections,
-                file_cache_max_age=host_config.max_cachefile_age,
-                mode=mode,
-            )
+                force_snmp_cache_refresh=False,
+                on_scan_error=OnError.RAISE,
+            ),
+            fetcher_messages=fetcher_messages,
+            selected_sections=selected_sections,
+            file_cache_max_age=host_config.max_cachefile_age,
+            mode=mode,
+        )
+        with CPUTracker() as tracker:
             num_success, plugins_missing_data = check_host_services(
                 config_cache=config_cache,
                 host_config=host_config,

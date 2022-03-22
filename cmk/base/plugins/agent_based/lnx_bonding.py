@@ -91,7 +91,7 @@ def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> bonding.Section:
             eth = interface["Slave Interface"]
             new_interfaces[eth] = {
                 "status": interface["MII Status"],
-                "hwaddr": interface.get("Permanent HW addr", ""),
+                "hwaddr": interface.get("Permanent HW addr", "").upper(),
                 "failures": int(interface["Link Failure Count"]),
             }
             if "Aggregator ID" in interface:

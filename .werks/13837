@@ -1,0 +1,19 @@
+Title: Linux interface bonding: wrong MAC address for bonded interfaces
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648072161
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+For bonded interfaces a wrong MAC address has been reported in the interface
+services and the hardware/software inventory. This has been fixed.
+
+The reported MAC address is now the one that has been correctly displayed by
+the <i>Bonding Interface &lt;name&gt;</i> service all along.
+
+Since when looking at the hardware/software inventory we can no longer tell
+which interfaces are bonded by the MAC address, we now add a dedicated field
+for the bonds name.

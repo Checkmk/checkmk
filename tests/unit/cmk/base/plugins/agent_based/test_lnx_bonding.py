@@ -42,8 +42,8 @@ def test_parse_failover() -> None:
         "bond0": {
             "active": "enp129s0f2",
             "interfaces": {
-                "enp129s0f2": {"failures": 0, "hwaddr": "3c:ec:ef:28:4a:56", "status": "up"},
-                "enp129s0f3": {"failures": 0, "hwaddr": "3c:ec:ef:28:4a:57", "status": "up"},
+                "enp129s0f2": {"failures": 0, "hwaddr": "3C:EC:EF:28:4A:56", "status": "up"},
+                "enp129s0f3": {"failures": 0, "hwaddr": "3C:EC:EF:28:4A:57", "status": "up"},
             },
             "mode": "fault-tolerance",
             "primary": "None",

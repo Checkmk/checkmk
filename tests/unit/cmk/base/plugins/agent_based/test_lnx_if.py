@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Dict, List
+from typing import Mapping
 
 import pytest
 
@@ -18,10 +18,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils import interfaces
-
-from .utils_inventory import sort_inventory_result
+from cmk.base.plugins.agent_based.utils import bonding, interfaces
 
 
 @pytest.mark.parametrize(
@@ -215,6 +212,7 @@ def test_check_lnx_if(monkeypatch):
                 INTERFACE.index,
                 PARAMS,
                 section,
+                None,
             )
         )
     monkeypatch.setattr("time.time", lambda: 1)
@@ -223,6 +221,7 @@ def test_check_lnx_if(monkeypatch):
             INTERFACE.index,
             PARAMS,
             section,
+            None,
         )
     )
     monkeypatch.setattr("time.time", lambda: 2)
@@ -236,8 +235,8 @@ def test_check_lnx_if(monkeypatch):
     assert result_lnx_if == result_interfaces
 
 
-def test_cluster_check_lnx_if(monkeypatch):
-    section: Dict[str, lnx_if.Section] = {}
+def test_cluster_check_lnx_if(monkeypatch) -> None:
+    section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
         iface = copy.copy(INTERFACE)
@@ -252,6 +251,7 @@ def test_cluster_check_lnx_if(monkeypatch):
                 INTERFACE.index,
                 PARAMS,
                 section,
+                {},
             )
         )
     monkeypatch.setattr("time.time", lambda: 1)
@@ -260,6 +260,7 @@ def test_cluster_check_lnx_if(monkeypatch):
             INTERFACE.index,
             PARAMS,
             section,
+            {},
         )
     )
     monkeypatch.setattr("time.time", lambda: 2)
@@ -767,6 +768,7 @@ def test_lnx_if_regression(
             lnx_if.discover_lnx_if(
                 [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
                 section,
+                None,
             )
         )
         == discovery_results
@@ -780,6 +782,7 @@ def test_lnx_if_regression(
                     item,
                     par,
                     section,
+                    None,
                 )
             )
             == res
@@ -793,6 +796,7 @@ def test_lnx_if_regression(
                     item,
                     par,
                     {node_name: section},
+                    {},
                 )
             )
             == [
@@ -807,78 +811,256 @@ def test_lnx_if_regression(
         )
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_result",
-    [
-        (
-            [],
+def test_lnx_if_with_bonding(monkeypatch) -> None:
+
+    section = lnx_if.parse_lnx_if(
+        [
+            ["[start_iplink]"],
             [
-                Attributes(
-                    path=["networking"],
-                    inventory_attributes={
-                        "available_ethernet_ports": 0,
-                        "total_ethernet_ports": 0,
-                        "total_interfaces": 0,
-                    },
-                    status_attributes={},
-                ),
+                "1:",
+                "lo:",
+                "<LOOPBACK,UP,LOWER_UP>",
+                "mtu",
+                "65536",
+                "qdisc",
+                "noqueue",
+                "state",
+                "UNKNOWN",
+                "mode",
+                "DEFAULT",
+                "group",
+                "default",
+                "qlen",
+                "1000",
             ],
-        ),
-        (
+            ["link/loopback", "00:00:00:00:00:00", "brd", "00:00:00:00:00:00"],
             [
-                ["[start_iplink]"],
+                "2:",
+                "wlp3s0:",
+                "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                "mtu",
+                "1500",
+                "qdisc",
+                "fq_codel",
+                "state",
+                "UP",
+                "mode",
+                "DORMANT",
+                "group",
+                "default",
+                "qlen",
+                "1000",
+            ],
+            ["link/ether", "AA:AA:AA:AA:AA:BB", "brd", "BB:BB:BB:BB:BB:BB"],
+            [
+                "3:",
+                "docker0:",
+                "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                "mtu",
+                "1500",
+                "qdisc",
+                "noqueue",
+                "state",
+                "UP",
+                "mode",
+                "DEFAULT",
+                "group",
+                "default",
+            ],
+            ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+            [
+                "5:",
+                "veth6a06585@if4:",
+                "<BROADCAST,MULTICAST,UP,LOWER_UP>",
+                "mtu",
+                "1500",
+                "qdisc",
+                "noqueue",
+                "master",
+                "docker0",
+                "state",
+                "UP",
+                "mode",
+                "DEFAULT",
+                "group",
+                "default",
+            ],
+            [
+                "link/ether",
+                "AA:AA:AA:AA:AA:AA",
+                "brd",
+                "BB:BB:BB:BB:BB:BB",
+                "link-netnsid",
+                "0",
+            ],
+            ["[end_iplink]"],
+            [
+                "lo",
+                " 164379850  259656    0    0    0     0          0         0 164379850  259656    0    0    0     0       0          0",
+            ],
+            [
+                "wlp3s0",
+                " 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0",
+            ],
+            [
+                "docker0",
+                "       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0",
+            ],
+            [
+                "veth6a06585",
+                "       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0",
+            ],
+        ]
+    )
+
+    section_bonding: Mapping[str, bonding.Bond] = {
+        "bond0": {
+            "interfaces": {
+                "wlp3s0": {
+                    "hwaddr": "BB:BB:BB:BB:BB:BB",
+                },
+            },
+        },
+    }
+
+    monkeypatch.setattr(interfaces, "get_value_store", lambda: {})
+    assert list(
+        lnx_if.check_lnx_if(
+            "4",
+            {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
+            section,
+            section_bonding,
+        )
+    ) == [
+        Result(state=state.OK, summary="[wlp3s0]"),
+        Result(state=state.OK, summary="(up)", details="Operational state: up"),
+        Result(state=state.OK, summary="MAC: BB:BB:BB:BB:BB:BB"),
+        Result(state=state.OK, summary="Speed: unknown"),
+    ]
+
+
+def test_inventory_lnx_if_empty() -> None:
+    assert list(lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if([]), None)) == [
+        Attributes(
+            path=["networking"],
+            inventory_attributes={
+                "available_ethernet_ports": 0,
+                "total_ethernet_ports": 0,
+                "total_interfaces": 0,
+            },
+            status_attributes={},
+        ),
+    ]
+
+
+def test_inventory_lnx_if_no_bonding() -> None:
+    assert [
+        e
+        for e in lnx_if.inventory_lnx_if(
+            lnx_if.parse_lnx_if(
                 [
-                    "1:",
-                    "wlp3s0:",
-                    "<BROADCAST,MULTICAST>",
-                    "mtu",
-                    "1500",
-                    "qdisc",
-                    "fq_codel",
-                    "state",
-                    "UP",
-                    "mode",
-                    "DORMANT",
-                    "group",
-                    "default",
-                    "qlen",
-                    "1000",
-                ],
-                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
-                ["[end_iplink]"],
-                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
-            ],
-            [
-                TableRow(
-                    path=["networking", "interfaces"],
-                    key_columns={
-                        "index": 1,
-                        "description": "wlp3s0",
-                        "alias": "wlp3s0",
-                    },
-                    inventory_columns={
-                        "speed": 0,
-                        "phys_address": "AA:AA:AA:AA:AA:AA",
-                        "oper_status": 2,
-                        "port_type": 6,
-                        "available": True,
-                    },
-                    status_columns={},
-                ),
-                Attributes(
-                    path=["networking"],
-                    inventory_attributes={
-                        "available_ethernet_ports": 1,
-                        "total_ethernet_ports": 1,
-                        "total_interfaces": 1,
-                    },
-                    status_attributes={},
-                ),
-            ],
+                    ["[start_iplink]"],
+                    [
+                        "1:",
+                        "wlp3s0:",
+                        "<BROADCAST,MULTICAST>",
+                        "mtu",
+                        "1500",
+                        "qdisc",
+                        "fq_codel",
+                        "state",
+                        "UP",
+                        "mode",
+                        "DORMANT",
+                        "group",
+                        "default",
+                        "qlen",
+                        "1000",
+                    ],
+                    ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                    ["[end_iplink]"],
+                    ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                ]
+            ),
+            None,
+        )
+        if isinstance(e, TableRow)
+    ] == [
+        TableRow(
+            path=["networking", "interfaces"],
+            key_columns={
+                "index": 1,
+                "description": "wlp3s0",
+                "alias": "wlp3s0",
+            },
+            inventory_columns={
+                "speed": 0,
+                "phys_address": "AA:AA:AA:AA:AA:AA",
+                "oper_status": 2,
+                "port_type": 6,
+                "available": True,
+            },
+            status_columns={},
         ),
-    ],
-)
-def test_inventory_lnx_if(string_table: List[List[str]], expected_result: InventoryResult):
-    assert sort_inventory_result(
-        lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if(string_table))
-    ) == sort_inventory_result(expected_result)
+    ]
+
+
+def test_inventory_lnx_if_with_bonding() -> None:
+    assert [
+        e
+        for e in lnx_if.inventory_lnx_if(
+            lnx_if.parse_lnx_if(
+                [
+                    ["[start_iplink]"],
+                    [
+                        "1:",
+                        "wlp3s0:",
+                        "<BROADCAST,MULTICAST>",
+                        "mtu",
+                        "1500",
+                        "qdisc",
+                        "fq_codel",
+                        "state",
+                        "UP",
+                        "mode",
+                        "DORMANT",
+                        "group",
+                        "default",
+                        "qlen",
+                        "1000",
+                    ],
+                    ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                    ["[end_iplink]"],
+                    ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                ]
+            ),
+            {
+                "bond0": {
+                    "interfaces": {
+                        "wlp3s0": {
+                            "hwaddr": "BB:BB:BB:BB:BB:BB",
+                        },
+                    },
+                },
+            },
+        )
+        if isinstance(e, TableRow)
+    ] == [
+        TableRow(
+            path=["networking", "interfaces"],
+            key_columns={
+                "index": 1,
+                "description": "wlp3s0",
+                "alias": "wlp3s0",
+            },
+            inventory_columns={
+                "speed": 0,
+                "phys_address": "BB:BB:BB:BB:BB:BB",
+                "oper_status": 2,
+                "port_type": 6,
+                "available": True,
+                "bond": "bond0",
+            },
+            status_columns={},
+        ),
+    ]

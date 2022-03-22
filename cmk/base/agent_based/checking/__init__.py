@@ -65,7 +65,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.sources import make_sources
+from cmk.base.sources import fetch_all, make_sources, Source
 
 from . import _cluster_modes, _submit_to_core
 from .utils import AggregatedResult
@@ -88,6 +88,7 @@ def active_check_checking(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     *,
+    sources: Sequence[Source],
     fetcher_messages: Sequence[FetcherMessage],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
@@ -103,6 +104,7 @@ def active_check_checking(
     return _execute_checkmk_checks(
         hostname=hostname,
         ipaddress=ipaddress,
+        sources=sources,
         fetcher_messages=fetcher_messages,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
@@ -123,10 +125,32 @@ def commandline_checking(
     show_perfdata: bool = False,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(host_name)
+    # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
+    # address is unknown). When called as non keepalive ipaddress may be None or
+    # is already an address (2nd argument)
+    if ipaddress is None and not host_config.is_cluster:
+        ipaddress = config.lookup_ip_address(host_config)
+
+    sources = make_sources(
+        config_cache,
+        host_config,
+        ipaddress,
+        selected_sections=selected_sections,
+        force_snmp_cache_refresh=False,
+        on_scan_error=OnError.RAISE,
+    )
+    fetcher_messages = fetch_all(
+        sources=sources,
+        file_cache_max_age=host_config.max_cachefile_age,
+        mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
+    )
     return _execute_checkmk_checks(
         hostname=host_name,
         ipaddress=ipaddress,
-        fetcher_messages=(),
+        sources=sources,
+        fetcher_messages=list(fetcher_messages),
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
         dry_run=dry_run,
@@ -138,6 +162,7 @@ def _execute_checkmk_checks(
     *,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
+    sources: Sequence[Source],
     fetcher_messages: Sequence[FetcherMessage],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
@@ -150,12 +175,6 @@ def _execute_checkmk_checks(
     mode = Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
     try:
         license_usage.try_history_update()
-        # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
-        # address is unknown). When called as non keepalive ipaddress may be None or
-        # is already an address (2nd argument)
-        if ipaddress is None and not host_config.is_cluster:
-            ipaddress = config.lookup_ip_address(host_config)
-
         services = config.resolve_service_dependencies(
             host_name=hostname,
             services=sorted(
@@ -164,14 +183,7 @@ def _execute_checkmk_checks(
             ),
         )
         broker, source_results = make_broker(
-            sources=make_sources(
-                config_cache,
-                host_config,
-                ipaddress,
-                selected_sections=selected_sections,
-                force_snmp_cache_refresh=False,
-                on_scan_error=OnError.RAISE,
-            ),
+            sources=sources,
             fetcher_messages=fetcher_messages,
             selected_sections=selected_sections,
             file_cache_max_age=host_config.max_cachefile_age,

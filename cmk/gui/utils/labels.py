@@ -16,6 +16,7 @@ from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redi
 from cmk.utils.type_defs import Labels as _Labels
 
 import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -31,13 +32,14 @@ def parse_labels_value(value: str) -> Labels:
     try:
         decoded_labels = json.loads(value or "[]")
     except ValueError as e:
-        raise ValueError(_("Failed to parse labels: %s") % e)
+        raise MKUserError(None, _("Failed to parse labels: %s") % e)
 
     seen: Set[str] = set()
     for entry in decoded_labels:
         label_id, label_value = [p.strip() for p in entry["value"].split(":", 1)]
         if label_id in seen:
-            raise ValueError(
+            raise MKUserError(
+                None,
                 _(
                     "A label key can be used only once per object. "
                     'The Label key "%s" is used twice.'

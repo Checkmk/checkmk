@@ -26,3 +26,27 @@ class Bond(TypedDict, total=False):
 
 
 Section = Mapping[str, Bond]
+
+
+def get_mac_map(section: Section) -> Mapping[str, str]:
+    """Map interface names to the MAC addresses
+
+    Bonded interfaces are assigned a new MAC adresses in some outputs.
+    This map is used to look up the original one.
+    """
+    return {
+        if_name: mac
+        for bond in section.values()
+        for if_name, interface in bond.get("interfaces", {}).items()
+        if (mac := interface.get("hwaddr"))
+    }
+
+
+def get_bond_map(section: Section) -> Mapping[str, str]:
+    """Map interfaces by MAC to the bond they're part of"""
+    return {
+        mac: bond_name
+        for bond_name, bond in section.items()
+        for interface in bond.get("interfaces", {}).values()
+        if (mac := interface.get("hwaddr"))
+    }

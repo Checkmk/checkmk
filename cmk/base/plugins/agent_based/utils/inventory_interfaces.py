@@ -23,6 +23,7 @@ class Interface:
     phys_address: str
     admin_status: Optional[int] = None
     last_change: Optional[float] = None
+    bond: Optional[str] = None
 
 
 class InventoryParams(TypedDict, total=False):
@@ -111,6 +112,7 @@ def inventorize_interfaces(
                 "phys_address": interface.phys_address,
                 "oper_status": interface.oper_status,
                 "port_type": int(interface.type),
+                **({"bond": interface.bond} if interface.bond else {}),
                 **(
                     {"admin_status": interface.admin_status}
                     if interface.admin_status is not None

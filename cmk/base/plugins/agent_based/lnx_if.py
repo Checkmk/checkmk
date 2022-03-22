@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import replace
 from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
-from .utils import interfaces
+from .utils import bonding, interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
 
@@ -258,39 +259,68 @@ register.agent_section(
 
 def discover_lnx_if(
     params: Sequence[Mapping[str, Any]],
-    section: Section,
+    section_lnx_if: Optional[Section],
+    section_bonding: Optional[bonding.Section],
 ) -> type_defs.DiscoveryResult:
+    if section_lnx_if is None:
+        return
     # Always exclude dockers veth* interfaces on docker nodes
-    if_table = [iface for iface in section[0] if not iface.descr.startswith("veth")]
+    if_table = [iface for iface in section_lnx_if[0] if not iface.descr.startswith("veth")]
     yield from interfaces.discover_interfaces(
         params,
         if_table,
     )
 
 
+def _fix_bonded_mac(
+    interface: interfaces.Interface,
+    mac_map: Mapping[str, str],
+) -> interfaces.Interface:
+    try:
+        mac = mac_map.get(interface.alias) or mac_map[interface.descr]
+    except KeyError:
+        return interface
+    return replace(interface, phys_address=interfaces.mac_address_from_hexstring(mac))
+
+
+def _get_fixed_bonded_if_table(
+    section_lnx_if: Section,
+    section_bonding: Optional[bonding.Section],
+) -> interfaces.Section:
+    if not section_bonding:
+        return section_lnx_if[0]
+    mac_map = bonding.get_mac_map(section_bonding)
+    return [_fix_bonded_mac(interface, mac_map) for interface in section_lnx_if[0]]
+
+
 def check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section: Section,
+    section_lnx_if: Optional[Section],
+    section_bonding: Optional[bonding.Section],
 ) -> type_defs.CheckResult:
+    if section_lnx_if is None:
+        return
+
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        section[0],
+        _get_fixed_bonded_if_table(section_lnx_if, section_bonding),
     )
 
 
 def cluster_check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section_lnx_if: Mapping[str, Optional[Section]],
+    section_bonding: Mapping[str, Optional[bonding.Section]],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
         params,
         {
-            node: node_section[0]
-            for node, node_section in section.items()
+            node: _get_fixed_bonded_if_table(node_section, section_bonding.get(node))
+            for node, node_section in section_lnx_if.items()
             if node_section is not None
         },
     )
@@ -298,6 +328,7 @@ def cluster_check_lnx_if(
 
 register.check_plugin(
     name="lnx_if",
+    sections=["lnx_if", "bonding"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=register.RuleSetType.ALL,
@@ -310,12 +341,22 @@ register.check_plugin(
 )
 
 
-def _make_inventory_interface(interface: interfaces.Interface) -> Optional[InterfaceInv]:
+def _make_inventory_interface(
+    interface: interfaces.Interface,
+    mac_map: Mapping[str, str],
+    bond_map: Mapping[str, str],
+) -> Optional[InterfaceInv]:
     # Always exclude dockers veth* interfaces on docker nodes.
     # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
     # Ignore useless half-empty tables (e.g. Viprinet-Router).
     if interface.descr.startswith("veth") or interface.type in ("231", "232"):
         return None
+
+    mac = (
+        mac_map.get(interface.descr)
+        or mac_map.get(interface.alias)
+        or interfaces.render_mac_address(interface.phys_address)
+    )
 
     return InterfaceInv(
         index=interface.index,
@@ -324,12 +365,22 @@ def _make_inventory_interface(interface: interfaces.Interface) -> Optional[Inter
         type=interface.type,
         speed=int(interface.speed),
         oper_status=int(interface.oper_status),
-        phys_address=interfaces.render_mac_address(interface.phys_address),
+        phys_address=mac,
+        bond=bond_map.get(mac),
     )
 
 
-def inventory_lnx_if(section: Section) -> InventoryResult:
-    ifaces, ip_stats = section
+def inventory_lnx_if(
+    section_lnx_if: Optional[Section],
+    section_bonding: Optional[bonding.Section],
+) -> InventoryResult:
+    if section_lnx_if is None:
+        return
+
+    ifaces, ip_stats = section_lnx_if
+
+    mac_map = bonding.get_mac_map(section_bonding) if section_bonding else {}
+    bond_map = bonding.get_bond_map(section_bonding) if section_bonding else {}
 
     yield from inventorize_interfaces(
         {
@@ -351,7 +402,7 @@ def inventory_lnx_if(section: Section) -> InventoryResult:
         (
             inv_if
             for interface in ifaces
-            if (inv_if := _make_inventory_interface(interface)) is not None
+            if (inv_if := _make_inventory_interface(interface, mac_map, bond_map)) is not None
         ),
         len(ifaces),
     )
@@ -384,6 +435,7 @@ def _get_address(network: str) -> str:
 
 register.inventory_plugin(
     name="lnx_if",
+    sections=["lnx_if", "bonding"],
     inventory_function=inventory_lnx_if,
     # TODO Use inv_if? Also have a look at winperf_if and other interface intentories..
     # inventory_ruleset_name="inv_if",

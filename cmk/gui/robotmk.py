@@ -35,14 +35,14 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 @cmk.gui.pages.page_registry.register_page("robotmk")
 class ModeRobotmkPage(cmk.gui.pages.Page):
     def _title(self) -> str:
-        return _("Robotmk report")
+        return _("RobotMK report")
 
     def page(self) -> cmk.gui.pages.PageResult:
-        """Renders an iframe to view the content of the robotmk log file"""
+        """Renders an iframe to view the content of the RobotMK log file"""
         site_id, host_name, service_description = _get_mandatory_request_vars()
 
         breadcrumb: Breadcrumb = make_service_breadcrumb(HostName(host_name), service_description)
-        title = self._title() + _("of service %s on host %s") % (service_description, host_name)
+        title = self._title() + _(" of service %s on host %s") % (service_description, host_name)
         try:
             content = _get_html_from_livestatus(site_id, host_name, service_description)
         except MKLivestatusNotFoundError:
@@ -101,10 +101,10 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
             dropdowns=[
                 PageMenuDropdown(
                     name="robotmk_reports",
-                    title=_("Robotmk reports"),
+                    title=_("RobotMK reports"),
                     topics=[
                         PageMenuTopic(
-                            title=_("This robotmk report"),
+                            title=_("This RobotMK report"),
                             entries=[
                                 PageMenuEntry(
                                     title=_("Download"),
@@ -134,7 +134,7 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
 
 @cmk.gui.pages.register("robotmk_report")
 def robotmk_report_page() -> cmk.gui.pages.PageResult:
-    """Renders the content of the robotmk html log file"""
+    """Renders the content of the RobotMK html log file"""
     site_id, host_name, service_description = _get_mandatory_request_vars()
 
     content = _get_html_from_livestatus(site_id, host_name, service_description)
@@ -149,7 +149,7 @@ def robotmk_download_page() -> cmk.gui.pages.PageResult:
 
     site_id, host_name, service_description = _get_mandatory_request_vars()
 
-    filename = "Robotmk_Report_%s_%s_%s_%s.tar.gz" % (
+    filename = "RobotMK_report_%s_%s_%s_%s.tar.gz" % (
         urlencode(site_id),
         urlencode(host_name),
         urlencode(service_description),

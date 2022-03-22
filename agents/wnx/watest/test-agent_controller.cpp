@@ -62,6 +62,14 @@ TEST(AgentController, LegacyMode) {
     EXPECT_TRUE(ac::IsInLegacyMode());
 }
 
+TEST(AgentController, CreateControllerFlagFile) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    EXPECT_FALSE(ac::IsControllerFlagFileExists());
+    ac::CreateControllerFlagFile();
+    EXPECT_TRUE(ac::IsControllerFlagFileExists());
+}
+
 TEST(AgentController, FabricConfig) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());

@@ -80,6 +80,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
+from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -2780,15 +2781,18 @@ class AjaxDropdownChoice(DropdownChoice):
     # python endpoint. You're responsible of putting them together.
     # for new autocompleters.
     ident = ""
+    # TODO: completely remove ident from this class! should only be defined in autocompleter!
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
-        strict: Literal["True", "False", "withHost"] = "False",
+        # TODO: remove this one, replace with autocompleter!
+        strict: Literal["True", "False"] = "False",
+        # TODO: rename to autocompleter_config!
+        autocompleter: _Optional[AutocompleterConfig] = None,
         # DropdownChoice
         label: _Optional[str] = None,
-        choices: _Optional[DropdownChoices] = None,
         html_attrs: _Optional[HTMLTagAttributes] = None,
         # From ValueSpec
         title: _Optional[str] = None,
@@ -2798,7 +2802,7 @@ class AjaxDropdownChoice(DropdownChoice):
     ):
         super().__init__(
             label=label,
-            choices=choices or [],
+            choices=[],
             encode_value=False,  # because JS picks & passes the values on same page
             title=title,
             help=help,
@@ -2806,6 +2810,15 @@ class AjaxDropdownChoice(DropdownChoice):
             validate=validate,
             html_attrs=html_attrs,
         )
+
+        if autocompleter is None:
+            # TODO: remove this!
+            self._autocompleter = AutocompleterConfig(
+                ident=self.ident,
+                strict=(strict == "True"),
+            )
+        else:
+            self._autocompleter = autocompleter
 
         if isinstance(regex, str):
             self._regex: _Optional[Pattern[str]] = re.compile(regex)
@@ -2816,7 +2829,6 @@ class AjaxDropdownChoice(DropdownChoice):
             if regex_error is not None
             else _("Your input does not match the required format.")
         )
-        self._strict = strict
 
     def from_html_vars(self, varprefix: str) -> str:
         return request.get_str_input_mandatory(varprefix, "")
@@ -2849,12 +2861,12 @@ class AjaxDropdownChoice(DropdownChoice):
             onchange=self._on_change,
             ordered=self._sorted,
             label=None,
-            class_=["ajax-vals", self.ident],
+            class_=["ajax-vals"],
+            data_autocompleter=json.dumps(self._autocompleter.config),
             size=1,
             read_only=self._read_only,
             # kwargs following
             style="width: 250px;",
-            data_strict=self._strict,
             **self._html_attrs,
         )
 
@@ -2883,6 +2895,9 @@ class AutocompleterRegistry(Registry[AutocompleterFunc]):
 autocompleter_registry = AutocompleterRegistry()
 
 
+# TODO: check where this class is used with strict=False.
+# Create a separate class (MonitoredHostnameFreeInput?) for this usecase,
+# otherwise use a normal AjaxDropdownChoice with the correct ident.
 class MonitoredHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
@@ -2893,10 +2908,10 @@ class MonitoredHostname(AjaxDropdownChoice):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        strict: Literal["True", "False", "withHost"] = "False",
+        strict: Literal["True", "False"] = "False",
         # DropdownChoice
+        autocompleter: _Optional[AutocompleterConfig] = None,
         label: _Optional[str] = None,
-        choices: _Optional[DropdownChoices] = None,
         html_attrs: _Optional[HTMLTagAttributes] = None,
         # From ValueSpec
         title: _Optional[str] = None,
@@ -2911,8 +2926,8 @@ class MonitoredHostname(AjaxDropdownChoice):
                 "Only letters, digits, dash, underscore and dot are allowed."
             ),
             strict=strict,
+            autocompleter=autocompleter,
             label=label,
-            choices=choices,
             html_attrs=html_attrs,
             title=title,
             help=help,
@@ -2945,24 +2960,28 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         # AjaxDropdownChoice
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
-        strict: Literal["True", "False", "withHost"] = "False",
         # DropdownChoice
         label: _Optional[str] = None,
-        choices: _Optional[DropdownChoices] = None,
         html_attrs: _Optional[HTMLTagAttributes] = None,
+        autocompleter: _Optional[AutocompleterConfig] = None,
         # From ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
+        if autocompleter is None:
+            autocompleter = AutocompleterConfig(
+                ident=self.ident,
+                strict=True,
+                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
+            )
         super().__init__(
             regex=regex,
             regex_error=regex_error,
-            strict=strict,
             label=label,
-            choices=choices,
             html_attrs=html_attrs,
+            autocompleter=autocompleter,
             title=title,
             help=help,
             default_value=default_value,
@@ -2984,21 +3003,25 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
             deflt=self._option_for_html(value),
             class_=self._css_spec,
             style="width: 250px;",
+            data_autocompleter=json.dumps(self._autocompleter.config),
             read_only=self._read_only,
         )
 
         vs_host = MonitoredHostname(
             label=_("Filter %s selection by hostname: ") % self._hint_label,
-            choices=[],
             strict="True",
         )
         html.br()
         vs_host.render_input(varprefix + "_hostname_hint", "")
 
         vs_service = MonitoredServiceDescription(
+            autocompleter=ContextAutocompleterConfig(
+                ident=MonitoredServiceDescription.ident,
+                show_independent_of_context=True,
+                strict=True,
+                dynamic_params_callback_name="host_hinted_autocompleter",
+            ),
             label=_("Filter %s selection by service: ") % self._hint_label,
-            choices=[],
-            strict="True",
         )
         html.br()
         vs_service.render_input(varprefix + "_service_hint", "")

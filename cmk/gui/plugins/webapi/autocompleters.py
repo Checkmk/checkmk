@@ -47,7 +47,7 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choic
     if len(choices) > limit:
         choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))
 
-    if (value, value) not in choices and params["strict"] == "False":
+    if (value, value) not in choices and params["strict"] is False:
         choices.insert(0, (value, value))  # User is allowed to enter anything they want
     return choices
 
@@ -103,10 +103,6 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     group_type = params["group_type"]
-    # Have something without ifs
-    group_type = (
-        "contact" if "_contact" in group_type else "host" if "host" in group_type else "service"
-    )
     choices: Choices = sorted(
         (v for v in sites.all_groups(group_type) if value.lower() in v[1].lower()),
         key=lambda a: a[1].lower(),
@@ -154,13 +150,15 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     context = params.get("context", {})
-    if not any((context.get("host"), context.get("hostregex"))) and params["strict"] == "withHost":
+    if not any((context.get("host", {}).get("host"), context.get("hostregex"))) and not params.get(
+        "show_independent_of_context", True
+    ):
         return []
     context.pop("service", None)
     context["serviceregex"] = {"service_regex": value or "."}
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
-
-    return _sorted_unique_lq(query, 200, value, params)
+    result = _sorted_unique_lq(query, 200, value, params)
+    return result
 
 
 @autocompleter_registry.register_expression("wato_folder_choices")
@@ -173,7 +171,7 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
     context = params.get("context", {})
     host = context.get("host", {}).get("host", "")
     service = context.get("service", {}).get("service", "")
-    if params.get("strict") == "withSource" and not all((host, service)):
+    if not params.get("show_independent_of_context") and not all((host, service)):
         return []
 
     if context:
@@ -231,7 +229,7 @@ def graph_templates_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
-    if not params.get("context") and params.get("strict", "False") == "False":
+    if not params.get("context") and params.get("show_independent_of_context") is True:
         choices: Iterable[Tuple[str, str]] = (
             (
                 graph_id,

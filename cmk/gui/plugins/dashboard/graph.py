@@ -34,6 +34,7 @@ from cmk.gui.plugins.metrics.html_render import (
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -59,9 +60,8 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
 
     def __init__(self, **kwargs: Any):
         kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": ["ajax-vals", "graph-selector", self.ident],
+            "css_spec": ["ajax-vals"],
             "hint_label": _("graph"),
-            "choices": [(None, _("Select graph"))],
             "title": _("Graph"),
             "help": _(
                 "Select the graph to be displayed by this element. In case the current selection "
@@ -71,6 +71,12 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 "will continue to work, however, if you want to re-edit them, you have to re-"
                 "select the graph. To check which graph is currently selected, look at the title "
                 "of the element in the dashboard.",
+            ),
+            "autocompleter": ContextAutocompleterConfig(
+                ident=self.ident,
+                strict=True,
+                show_independent_of_context=True,
+                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
             ),
             **kwargs,
         }

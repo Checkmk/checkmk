@@ -63,6 +63,7 @@ from cmk.gui.type_defs import (
     UnitInfo,
     VisualContext,
 )
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceModel, DropdownChoiceWithHostAndServiceHints
@@ -1338,14 +1339,18 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
         kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": ["ajax-vals", "metric-selector", self.ident],
+            "css_spec": ["ajax-vals"],
             "hint_label": _("metric"),
-            "choices": [(None, _("Select metric"))],
             "title": _("Metric"),
             "regex": re.compile("^[a-zA-Z][a-zA-Z0-9_]*$"),
             "regex_error": _(
                 "Metric names must only consist of letters, digits and "
                 "underscores and they must start with a letter."
+            ),
+            "autocompleter": ContextAutocompleterConfig(
+                ident=self.ident,
+                show_independent_of_context=True,
+                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
             ),
             **kwargs,
         }

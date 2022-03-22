@@ -12,7 +12,6 @@
 
 #include "Row.h"
 #include "Table.h"
-#include "contact_fwd.h"
 class ColumnOffsets;
 class MonitoringCore;
 class Query;

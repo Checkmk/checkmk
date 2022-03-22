@@ -84,6 +84,7 @@ def test_registered_pages():
         "download_agent_output",
         "download_crash_report",
         "download_diagnostics_dump",
+        "download_robotmk_report",
         "edit_bookmark_list",
         "edit_dashboard",
         "edit_dashboards",

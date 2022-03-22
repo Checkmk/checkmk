@@ -74,9 +74,9 @@ function handle_error(handler_data, status_code, error_msg) {
 }
 
 export function show_error(text) {
-    var container = document.getElementById("async_progress_msg");
+    var container = document.getElementById("async_progress_msg")!;
     container.style.display = "block";
-    var msg = container.childNodes[0];
+    var msg = container.childNodes[0] as HTMLElement;
 
     utils.add_class(msg, "error");
     utils.remove_class(msg, "success");
@@ -85,10 +85,10 @@ export function show_error(text) {
 }
 
 export function show_info(text) {
-    const container = document.getElementById("async_progress_msg");
+    const container = document.getElementById("async_progress_msg")!;
     container.style.display = "block";
 
-    let msg = container.childNodes[0];
+    let msg = container.childNodes[0] as HTMLElement;
     if (!msg) {
         msg = document.createElement("div");
         container.appendChild(msg);

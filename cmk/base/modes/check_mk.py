@@ -1519,7 +1519,7 @@ modes.register(
 
 
 def mode_check_discovery(hostname: HostName) -> int:
-    return discovery.active_check_discovery(hostname, ipaddress=None)
+    return discovery.commandline_check_discovery(hostname, ipaddress=None)
 
 
 modes.register(

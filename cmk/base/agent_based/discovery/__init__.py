@@ -532,11 +532,25 @@ def active_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    # The next argument *must* remain optional for the DiscoCheckExecutor.
-    #   See Also: `cmk.base.agent_based.checking.active_check_checking()`.
-    fetcher_messages: Sequence[FetcherMessage] = (),
+    fetcher_messages: Sequence[FetcherMessage],
 ) -> ActiveCheckResult:
+    return _execute_check_discovery(host_name, ipaddress, fetcher_messages=fetcher_messages)
 
+
+@decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
+def commandline_check_discovery(
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+) -> ActiveCheckResult:
+    return _execute_check_discovery(host_name, ipaddress, fetcher_messages=())
+
+
+def _execute_check_discovery(
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    *,
+    fetcher_messages: Sequence[FetcherMessage],
+) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
     #    - Set FileCacheFactory.maybe = True (set max_cachefile_age, else 0)

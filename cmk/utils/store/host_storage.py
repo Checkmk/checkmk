@@ -389,7 +389,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             global_dict[global_key].clear()
             global_dict[global_key].extend(new_cgs)
 
-        # Dict based settings
+        # Dict based settings with {key: value}
         for key in [
             "clusters",
             "host_tags",
@@ -400,10 +400,13 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             "management_ipmi_credentials",
             "management_snmp_credentials",
             "management_protocol",
-            "explicit_host_conf",
             "host_attributes",
         ]:
             global_dict[key].update(data.get(key, {}))
+
+        # Dict based setting with {key: {another_key: value}}
+        for explicit_name, values in data.get("explicit_host_conf", {}).items():
+            global_dict["explicit_host_conf"].setdefault(explicit_name, {}).update(values)
 
         # "attributes" are moved to global scope
         # 'attributes': {'ipaddresses': {'test': '1.2.3.4'}}

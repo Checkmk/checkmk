@@ -1,0 +1,12 @@
+Title: Fixed error loading explicit host settings
+Class: fix
+Compatible: compat
+Component: core
+Date: 1647949045
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+An error during config loading caused explicit host settings to vanish.
+This included parents, cmk_agent_connection, alias and some custom nagios host attributes.

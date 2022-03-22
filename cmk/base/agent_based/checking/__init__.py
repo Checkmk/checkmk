@@ -211,7 +211,7 @@ def _execute_checkmk_checks(
             ]
         return ActiveCheckResult.from_subresults(
             *timed_results,
-            _timing_results(tracker, fetcher_messages),
+            _timing_results(tracker.duration, fetcher_messages),
         )
 
     finally:
@@ -219,9 +219,8 @@ def _execute_checkmk_checks(
 
 
 def _timing_results(
-    tracker: CPUTracker, fetcher_messages: Sequence[FetcherMessage]
+    total_times: Snapshot, fetcher_messages: Sequence[FetcherMessage]
 ) -> ActiveCheckResult:
-    total_times = tracker.duration
     for msg in fetcher_messages:
         total_times += msg.stats.duration
 

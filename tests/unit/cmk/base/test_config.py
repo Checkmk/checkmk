@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
@@ -2676,6 +2677,46 @@ cmc_host_rrd_config = [
 """
             % (condition, value)
         )
+
+
+def _add_explicit_setting_in_folder(
+    folder_path: Path, setting_name: str, values: Dict[str, Any]
+) -> None:
+    folder_path.mkdir(parents=True, exist_ok=True)
+    with (folder_path / "hosts.mk").open("w", encoding="utf-8") as f:
+        f.write(
+            f"""
+# Explicit settings for {setting_name}
+explicit_host_conf.setdefault('{setting_name}', {{}})
+explicit_host_conf['{setting_name}'].update({values})
+"""
+        )
+
+
+def test_explicit_setting_loading():
+    main_mk_file = Path(cmk.utils.paths.main_config_file)
+    settings = [
+        ("sub1", "parents", {"hostA": "setting1"}),
+        ("sub2", "parents", {"hostB": "setting2"}),
+        ("sub3", "other", {"hostA": "setting3"}),
+        ("sub4", "other", {"hostB": "setting4"}),
+    ]
+    config_dir = Path(cmk.utils.paths.check_mk_config_dir)
+    wato_main_folder = config_dir / "wato"
+    try:
+        main_mk_file.touch()
+        for foldername, setting, values in settings:
+            _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
+
+        config.load()
+        assert config.explicit_host_conf["parents"]["hostA"] == "setting1"
+        assert config.explicit_host_conf["parents"]["hostB"] == "setting2"
+        assert config.explicit_host_conf["other"]["hostA"] == "setting3"
+        assert config.explicit_host_conf["other"]["hostB"] == "setting4"
+    finally:
+        main_mk_file.unlink()
+        for foldername, _setting, _values in settings:
+            shutil.rmtree(wato_main_folder / foldername, ignore_errors=True)
 
 
 @pytest.fixture(name="config_path")

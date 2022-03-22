@@ -745,24 +745,69 @@ function hook_select2_hint(elem, source_id) {
     source_field.on("change", () => set_select2_element(elem, source_field.val()));
 }
 
-function ajax_autocomplete_request(value, elem, ident, params) {
+let dynamicParamsCallbacks = {
+    nop(autocompleter, elem) {
+        return {
+            ...autocompleter.params,
+        };
+    },
+    tag_group_options_autocompleter(autocompleter, elem) {
+        return {
+            group_id: document.getElementById(elem.id.replace(/_val$/, "_grp")).value,
+            ...autocompleter.params,
+        };
+    },
+    host_and_service_hinted_autocompleter(autocompleter, elem) {
+        // fetch metrics, filtered by hostname and service from another input field
+        // DropdownChoiceWithHostAndServiceHints
+        let obj = {};
+        let hint = document.getElementById(`${elem.id}_hostname_hint`).value;
+        if (hint) {
+            set(obj, "context.host.host", hint);
+        }
+        hint = document.getElementById(`${elem.id}_service_hint`).value;
+        if (hint) {
+            set(obj, "context.service.service", hint);
+        }
+
+        return {
+            ...obj,
+            ...autocompleter.params,
+        };
+    },
+    host_hinted_autocompleter(autocompleter, elem) {
+        // fetch services, filtered by host name of another input field
+        let host_id = elem.id.endsWith("_service_hint")
+            ? `${elem.id.slice(0, -13)}_hostname_hint`
+            : "context_host_p_host";
+        let val_or_empty = obj => (obj ? {host: {host: obj.value}} : {});
+
+        return {
+            context: val_or_empty(document.getElementById(host_id)),
+            ...autocompleter.params,
+        };
+    },
+};
+
+function ajax_autocomplete_request(value, elem, autocompleter) {
+    let callback = dynamicParamsCallbacks[autocompleter.dynamic_params_callback_name || "nop"];
     return (
         "request=" +
         encodeURIComponent(
             JSON.stringify({
-                ident: ident,
-                params: params(elem),
+                ident: autocompleter.ident,
+                params: callback(autocompleter, elem),
                 value: value,
             })
         )
     );
 }
 
-function select2_ajax_vs_autocomplete(elem, ident, params) {
+function select2_ajax_vs_autocomplete(elem, autocompleter) {
     let value = term =>
         term.term !== undefined
             ? term.term
-            : ["hostname", "service"].find(el => ident.includes(el))
+            : ["hostname", "service"].find(el => autocompleter.ident.includes(el))
             ? elem.value
             : "";
 
@@ -770,7 +815,7 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
         url: "ajax_vs_autocomplete.py",
         delay: 250,
         type: "POST",
-        data: term => ajax_autocomplete_request(value(term), elem, ident, params),
+        data: term => ajax_autocomplete_request(value(term), elem, autocompleter),
         processResults: resp => ({
             results: resp.result.choices.map(x => ({
                 id: x[0],
@@ -781,20 +826,29 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
     };
 }
 
-function select2_vs_autocomplete(container, css_class, params) {
-    let field_element =
-        ["hostname", "service", "metric", "graph"].find(el => css_class.includes(el)) || "item";
-    let placeholder_title = `(Select ${field_element})`;
-    if (css_class === "wato_folder_choices") placeholder_title = "(Select target folder)";
+function select2_vs_autocomplete(container) {
     $(container)
-        .find("select." + css_class)
+        .find("select.ajax-vals")
         .each((i, elem) => {
+            let autocompleter = JSON.parse(elem.dataset.autocompleter);
+
+            console.log(autocompleter);
+
+            // TODO: move placeholder_title to python autocompleter config!
+            let field_element =
+                ["hostname", "service", "metric", "graph"].find(el =>
+                    autocompleter.ident.includes(el)
+                ) || "item";
+            let placeholder_title = `(Select ${field_element})`;
+            if (autocompleter.ident === "wato_folder_choices")
+                placeholder_title = "(Select target folder)";
+
             $(elem)
                 .select2({
                     width: "style",
                     allowClear: true,
                     placeholder: placeholder_title,
-                    ajax: select2_ajax_vs_autocomplete(elem, css_class, params),
+                    ajax: select2_ajax_vs_autocomplete(elem, autocompleter),
                 })
                 .on("select2:open", () => {
                     if (["hostname", "service"].includes(field_element))
@@ -822,7 +876,7 @@ function select2_vs_autocomplete(container, css_class, params) {
                 $.ajax({
                     type: "POST",
                     url: "ajax_vs_autocomplete.py",
-                    data: ajax_autocomplete_request(term, elem, css_class, params),
+                    data: ajax_autocomplete_request(term, elem, autocompleter),
                 }).then(data => {
                     let pick = data.result.choices.find(el => el[0] === term);
                     if (pick) {
@@ -834,77 +888,8 @@ function select2_vs_autocomplete(container, css_class, params) {
         });
 }
 
-function single_autocompleter(css_class, container) {
-    let params = elem => ({
-        strict: elem.dataset.strict,
-    });
-    select2_vs_autocomplete(container, css_class, params);
-}
-
-function allgroups_autocompleter(css_class, container) {
-    let params = elem => ({
-        strict: elem.dataset.strict,
-        group_type: elem.id,
-    });
-    select2_vs_autocomplete(container, css_class, params);
-}
-
-function service_desc_autocompleter(css_class, container) {
-    let params = elem => {
-        let host_id = elem.id.endsWith("_service_hint")
-            ? `${elem.id.slice(0, -13)}_hostname_hint`
-            : "context_host_p_host";
-        let val_or_empty = obj => (obj ? {host: {host: obj.value}} : {});
-
-        return {
-            context: val_or_empty(document.getElementById(host_id)),
-            strict: elem.dataset.strict,
-        };
-    };
-
-    select2_vs_autocomplete(container, css_class, params);
-}
-
-function autocompleter_with_host_service_hints(css_class, container) {
-    let params = elem => {
-        let obj = {strict: elem.dataset.strict};
-        let hint = document.getElementById(`${elem.id}_hostname_hint`).value;
-        if (hint) {
-            set(obj, "context.host.host", hint);
-        }
-        hint = document.getElementById(`${elem.id}_service_hint`).value;
-        if (hint) {
-            set(obj, "context.service.service", hint);
-        }
-        return obj;
-    };
-
-    select2_vs_autocomplete(container, css_class, params);
-}
-
-function tag_group_options_autocompleter(css_class, container) {
-    let params = elem => ({
-        strict: elem.dataset.strict,
-        group_id: document.getElementById(elem.id.replace(/_val$/, "_grp")).value,
-    });
-    select2_vs_autocomplete(container, css_class, params);
-}
-
 export function initialize_autocompleters(container) {
-    single_autocompleter("sites", container);
-    single_autocompleter("monitored_hostname", container);
-    single_autocompleter("config_hostname", container);
-    single_autocompleter("check_cmd", container);
-    single_autocompleter("syslog_facilities", container);
-    single_autocompleter("service_levels", container);
-    single_autocompleter("wato_folder_choices", container);
-    single_autocompleter("tag_groups", container);
-    tag_group_options_autocompleter("tag_groups_opt", container);
-
-    service_desc_autocompleter("monitored_service_description", container);
-    autocompleter_with_host_service_hints("monitored_metrics", container);
-    autocompleter_with_host_service_hints("available_graphs", container);
-    allgroups_autocompleter("allgroups", container);
+    select2_vs_autocomplete(container);
 }
 
 var vs_color_pickers = [];

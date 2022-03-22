@@ -1,0 +1,15 @@
+Title: Improved Livestatus query performance for hostsbygroup and servicesbygroup tables
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1647948874
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0b3
+
+Under various (complicated) circumstances, Livestatus queries for the
+hostsbygroup and servicesbygroup tables with non-trivial filters could take
+a very long time.  This has been improved, sometimes bringing down the
+response time from minutes to milliseconds.

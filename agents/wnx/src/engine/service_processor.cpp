@@ -577,6 +577,7 @@ std::optional<uint16_t> OptionallyStartAgentController(
             ac::DeleteControllerInBin(wtools::GetArgv(0));
             return {};
         }
+        ac::CreateControllerFlagFile();
         return ac::windows_internal_port;
     }
 

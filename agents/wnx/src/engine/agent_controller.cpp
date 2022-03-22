@@ -29,6 +29,10 @@ fs::path LegacyPullFile() {
     return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
 }
 
+fs::path ControllerFlagFile() {
+    return fs::path{cfg::GetUserDir()} / ac::kControllerFlagFile;
+}
+
 fs::path CopyControllerToBin(const fs::path &service) {
     const auto [src, tgt] = ServiceName2TargetName(service);
     std::error_code ec;
@@ -245,6 +249,17 @@ bool CreateLegacyModeFile(const std::filesystem::path &marker) {
     CreateLegacyFile();
     XLOG::l.i("File '{}' from 2.0 or earlier, legacy ON", marker);
     return true;
+}
+
+void CreateControllerFlagFile() {
+    auto file_name = ControllerFlagFile();
+    std::ofstream ofs(file_name.u8string());
+    ofs << "Created by Windows agent";
+}
+
+bool IsControllerFlagFileExists() {
+    std::error_code ec;
+    return fs::exists(ControllerFlagFile(), ec);
 }
 
 }  // namespace cma::ac

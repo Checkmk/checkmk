@@ -46,12 +46,12 @@ void CreatePluginInTemp(const std::filesystem::path &filename, int timeout,
         << "@echo " << SecondLine << "\n";
 }
 
-void CreateVbsPluginInTemp(const std::filesystem::path &Path,
-                           std::string Name) {
-    std::ofstream ofs(Path.u8string());
+void CreateVbsPluginInTemp(const std::filesystem::path &path,
+                           const std::string &name) {
+    std::ofstream ofs(path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path, GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return;
     }
 
@@ -64,17 +64,17 @@ void CreateVbsPluginInTemp(const std::filesystem::path &Path,
                "45678912345678912345678912345678912345678912345678912345678912345aa\"\n";
 }
 
-void CreateComplicatedPluginInTemp(const std::filesystem::path &Path,
-                                   std::string Name) {
-    std::ofstream ofs(Path.u8string());
+void CreateComplicatedPluginInTemp(const std::filesystem::path &path,
+                                   std::string name) {
+    std::ofstream ofs(path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path, GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return;
     }
 
     ofs << "@echo off\n"
-        << "@echo ^<^<^<" << Name << "^>^>^>\n"
+        << "@echo ^<^<^<" << name << "^>^>^>\n"
         << "@echo " << SecondLine << "\n"
         << "@echo " << SecondLine << "\n"
         << "@echo " << SecondLine << "\n"
@@ -84,27 +84,26 @@ void CreateComplicatedPluginInTemp(const std::filesystem::path &Path,
         << "@echo " << SecondLine << "\n";
 }
 
-void CreatePluginInTemp(const std::filesystem::path &Path, int Timeout,
-                        std::string Name, std::string_view code,
+void CreatePluginInTemp(const std::filesystem::path &path, int timeout,
+                        std::string name, std::string_view code,
                         cma::provider::PluginType type) {
-    std::ofstream ofs(Path.u8string());
+    std::ofstream ofs(path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path, GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return;
     }
 
     ofs << "@echo off\n"
-        << "powershell Start-Sleep " << Timeout << " \n";
+        << "powershell Start-Sleep " << timeout << " \n";
     if (type == cma::provider::PluginType::normal) {
-        ofs << "@echo ^<^<^<" << Name << "^>^>^>\n";
+        ofs << "@echo ^<^<^<" << name << "^>^>^>\n";
     }
     ofs << code << "\n";
 }
 
-void RemoveFolder(const std::filesystem::path &Path) {
-    namespace fs = std::filesystem;
-    fs::path top = Path;
+void RemoveFolder(const std::filesystem::path &path) {
+    fs::path top = path;
     fs::path dir_path;
 
     cma::PathVector directories;
@@ -123,7 +122,7 @@ void RemoveFolder(const std::filesystem::path &Path) {
         }
     }
 
-    fs::remove_all(Path);
+    fs::remove_all(path);
 }
 
 // because PluginMap is relative complicated(PluginEntry is not trivial)

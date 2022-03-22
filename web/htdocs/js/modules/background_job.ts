@@ -12,7 +12,8 @@ export function start(update_url, job_id) {
         update_function: update,
         finish_function: finish,
         error_function: error,
-        post_data: "request=" + encodeURIComponent(JSON.stringify({job_id: job_id})),
+        post_data:
+            "request=" + encodeURIComponent(JSON.stringify({job_id: job_id})),
     });
 }
 
@@ -22,9 +23,10 @@ function update(handler_data, response) {
     const old_log = document.getElementById("progress_log");
     const scroll_pos = old_log ? old_log.scrollTop : 0;
     // Start with tail mode (when there is no progress_log before)
-    const is_scrolled_down = !old_log || scroll_pos >= old_log.scrollHeight - old_log.clientHeight;
+    const is_scrolled_down =
+        !old_log || scroll_pos >= old_log.scrollHeight - old_log.clientHeight;
 
-    const container = document.getElementById("status_container");
+    const container = document.getElementById("status_container")!;
     container.style.display = "block";
     container.innerHTML = response.status_container_content;
     utils.execute_javascript_by_object(container);
@@ -34,7 +36,7 @@ function update(handler_data, response) {
     if (new_log && is_scrolled_down) {
         new_log.scrollTop = new_log.scrollHeight - new_log.clientHeight;
     } else if (old_log) {
-        new_log.scrollTop = scroll_pos;
+        new_log!.scrollTop = scroll_pos;
     }
 }
 

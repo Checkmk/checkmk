@@ -88,15 +88,18 @@ def active_check_checking(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    # The following arguments *must* remain optional for Nagios and the `DiscoCheckExecutor`.
-    #   See Also: `cmk.base.discovery.active_check_discovery()`
-    # TODO: can we drop them now that we slit up 'commandline_checking'?
-    fetcher_messages: Sequence[FetcherMessage] = (),
+    fetcher_messages: Sequence[FetcherMessage],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
 ) -> ActiveCheckResult:
+    """
+    See Also:
+        - `commandline_checking()` to fetch the data before processing.
+        - `cmk.base.discovery.active_check_discovery()` for the discovery.
+
+    """
     return _execute_checkmk_checks(
         hostname=hostname,
         ipaddress=ipaddress,
@@ -114,10 +117,10 @@ def commandline_checking(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    run_plugin_names: Container[CheckPluginName],
-    selected_sections: SectionNameCollection,
-    dry_run: bool,
-    show_perfdata: bool,
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
+    selected_sections: SectionNameCollection = NO_SELECTION,
+    dry_run: bool = False,
+    show_perfdata: bool = False,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
     return _execute_checkmk_checks(
@@ -135,7 +138,7 @@ def _execute_checkmk_checks(
     *,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    fetcher_messages: Sequence[FetcherMessage] = (),
+    fetcher_messages: Sequence[FetcherMessage],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     dry_run: bool,

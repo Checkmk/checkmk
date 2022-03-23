@@ -2061,48 +2061,6 @@ rulespec_registry.register(
 )
 
 
-def _factory_default_special_agents_fritzbox():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_fritzbox():
-    return Dictionary(
-        title=_("Fritz!Box Devices"),
-        help=_(
-            "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
-            "about configuration and connection status information."
-        ),
-        elements=[
-            (
-                "timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    help=_(
-                        "The network timeout in seconds when communicating via UPNP. "
-                        "The default is 10 seconds. Please note that this "
-                        "is not a total timeout, instead it is applied to each API call."
-                    ),
-                    default_value=10,
-                    minvalue=1,
-                    unit=_("seconds"),
-                ),
-            ),
-        ],
-        optional_keys=["timeout"],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_fritzbox(),
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:fritzbox",
-        valuespec=_valuespec_special_agents_fritzbox,
-    )
-)
-
-
 def _factory_default_special_agents_innovaphone():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED

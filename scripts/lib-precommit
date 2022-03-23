@@ -1,31 +1,30 @@
-# vim: syntax=sh
+#!/bin/sh
 
 GIT_ROOT=$(git rev-parse --show-toplevel)
 
 python_files() {
-    local shebang
-    local prefix
-    if [ $1 -eq 2 ]; then
+    if [ "${1}" -eq 2 ]; then
         shebang=python
         prefix=tests/
     else
         shebang=python3
         prefix=tests/
     fi
-    for file in $2; do
-        relative=${file#"$GIT_ROOT/"}
-        if [[ $relative == $prefix* ]]; then
-            echo $file
+    for file in ${2}; do
+        if [ "${file#"${GIT_ROOT}/${prefix}"}" != "${file}" ]; then
+            # file is it in GIT_ROOT/prefix
+            echo "${file}"
             continue
         fi
-        if head -1 $file | grep -q "^#!.*$shebang$" > /dev/null; then
-            echo $file
+        if head -1 "${file}" | grep -q "^#!.*${shebang}$" >/dev/null; then
+            echo "${file}"
             continue
         fi
         # Assume 3 by default
-        if [ $1 -eq 3 ]; then
-            echo $file
+        if [ "${1}" -eq 3 ]; then
+            echo "${file}"
             continue
         fi
     done
+    unset shebang prefix
 }

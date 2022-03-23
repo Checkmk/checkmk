@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-set -e -o pipefail
+set -x -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
@@ -21,37 +21,6 @@ INSTALL_PREFIX=
 TARGET_DIR=/opt
 USE_BUILD_CACHE=1
 VERIFY_INSTALL=1
-
-# option parsing ###############################################################
-
-if ! OPTIONS=$(getopt -o us --long user,system -- "$@"); then
-    echo "error parsing options"
-    exit 1
-fi
-eval set -- "$OPTIONS"
-unset OPTIONS
-while true; do
-    case "$1" in
-        '-u' | '--user')
-            INSTALL_PREFIX="${HOME}/.local"
-            TARGET_DIR=${INSTALL_PREFIX}${TARGET_DIR}
-            USE_BUILD_CACHE=
-            break
-            ;;
-        '-s' | '--system')
-            USE_BUILD_CACHE=
-            break
-            ;;
-        '--')
-            shift
-            break
-            ;;
-        *)
-            echo "internal error"
-            exit 1
-            ;;
-    esac
-done
 
 # build/install ################################################################
 
@@ -125,6 +94,44 @@ verify_install() {
     pkg-config --libs protobuf
 }
 
+# option parsing ###############################################################
+
+if ! OPTIONS=$(getopt -o lus --long link,user,system -- "$@"); then
+    echo "error parsing options"
+    exit 1
+fi
+eval set -- "$OPTIONS"
+unset OPTIONS
+while true; do
+    case "$1" in
+        '-l' | '--link')
+            install
+            verify_install
+            exit 0
+            break
+            ;;
+        '-u' | '--user')
+            INSTALL_PREFIX="${HOME}/.local"
+            TARGET_DIR=${INSTALL_PREFIX}${TARGET_DIR}
+            USE_BUILD_CACHE=
+            break
+            ;;
+        '-s' | '--system')
+            USE_BUILD_CACHE=
+            break
+            ;;
+        '--')
+            shift
+            break
+            ;;
+        *)
+            echo "internal error"
+            exit 1
+            ;;
+    esac
+done
+
+# Execution  ###############################################################
 if [ -n "$USE_BUILD_CACHE" ]; then
     # Get the sources from nexus or upstream
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"

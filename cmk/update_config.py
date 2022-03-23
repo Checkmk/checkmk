@@ -171,6 +171,7 @@ REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
     ("config", "notification_spooler_config", {}),
     # 2.0: Helper model was changed. We use the previous number of helpers to
     # initialize the number of fetchers.
+    # 2.2: The option was removed from the UI as well.
     ("cmc_cmk_helpers", "cmc_fetcher_helpers", {}),
 ]
 

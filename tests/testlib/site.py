@@ -497,7 +497,6 @@ class Site:
 
             self._ensure_sample_config_is_present()
             if not self.version.is_raw_edition():
-                self._set_number_of_helpers()
                 self._log_cmc_startup()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
@@ -613,10 +612,6 @@ class Site:
         logger.info("Updating core configuration...")
         p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         assert p.wait() == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
-
-    def _set_number_of_helpers(self) -> None:
-        self.makedirs("etc/check_mk/conf.d")
-        self.write_text_file("etc/check_mk/conf.d/cmc-helpers.mk", "cmc_cmk_helpers = 5\n")
 
     def _enabled_liveproxyd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/liveproxyd.d")

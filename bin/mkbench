@@ -608,30 +608,29 @@ class TestRunner(threading.Thread):
                 self,
                 num_hosts=self._num_hosts,
                 planned_duration=15 * 60,
-                num_cmk_helpers=self._num_helpers,
             )
         # return [
-        #    TestAgentBasedStandardHosts(self, num_hosts=100,   planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=200,   planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=500,   planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=1000,  planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=2000,  planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=5000,  planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60, num_cmk_helpers=20),
-        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60, num_cmk_helpers=20),
+        #    TestAgentBasedStandardHosts(self, num_hosts=100,   planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=200,   planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=500,   planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=1000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=2000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=5000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60),
 
-        #    TestAgentBasedStandardHosts(self, num_hosts=2000,  planned_duration=15*60, num_cmk_helpers=40),
-        #    TestAgentBasedStandardHosts(self, num_hosts=5000,  planned_duration=15*60, num_cmk_helpers=40),
-        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60, num_cmk_helpers=40),
-        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60, num_cmk_helpers=40),
+        #    TestAgentBasedStandardHosts(self, num_hosts=2000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=5000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60),
 
-        #    TestAgentBasedStandardHosts(self, num_hosts=5000,  planned_duration=15*60, num_cmk_helpers=60),
-        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60, num_cmk_helpers=60),
-        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60, num_cmk_helpers=60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=5000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60),
 
-        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60, num_cmk_helpers=100),
-        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60, num_cmk_helpers=100),
-        #    TestAgentBasedStandardHosts(self, num_hosts=20000, planned_duration=15*60, num_cmk_helpers=100),
+        #    TestAgentBasedStandardHosts(self, num_hosts=8000,  planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=10000, planned_duration=15*60),
+        #    TestAgentBasedStandardHosts(self, num_hosts=20000, planned_duration=15*60),
         # ]
 
     def _while_waiting(self):
@@ -2514,24 +2513,22 @@ class TestAgentBasedStandardHosts(TestCase):
 
     host_name_template = "std-agent-host-%05d"
 
-    def __init__(self, runner=None, num_hosts=None, planned_duration=None, num_cmk_helpers=20):
+    def __init__(self, runner=None, num_hosts=None, planned_duration=None):
         super().__init__()
         self._runner = runner
         self._test = runner.test if runner else None
 
         self.num_hosts = num_hosts
         self.planned_duration = planned_duration
-        self.num_cmk_helpers = num_cmk_helpers
 
         self._listeners = []
         self._hosts_per_listener = 100
 
     def name(self):
-        return "%s(hosts=%d, duration=%d, helpers=%d)" % (
+        return "%s(hosts=%d, duration=%d)" % (
             self.__class__.__name__,
             self.num_hosts,
             self.planned_duration,
-            self.num_cmk_helpers,
         )
 
     def run(self):
@@ -2582,14 +2579,13 @@ class TestAgentBasedStandardHosts(TestCase):
         with open("%s/global_settings.mk" % config_dir, "w") as f:
             f.write(
                 "# Created by mkbench\n"
-                "cmc_cmk_helpers = %d\n"
                 "cmc_log_limit = 209715200\n"
                 "cmc_initial_scheduling = {\n"
                 "    'burst': 100,\n"
                 "    'spread_cmk': 10,\n"
                 "    'spread_generic': 150\n"
                 "}\n"
-                "\n" % self.num_cmk_helpers
+                "\n"
             )
 
         with open("%s/rules.mk" % config_dir, "w") as f:

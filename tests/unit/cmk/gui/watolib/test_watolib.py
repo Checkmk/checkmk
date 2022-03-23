@@ -210,7 +210,6 @@ def test_registered_configvars():
             "cmc_authorization",
             "cmc_check_helpers",
             "cmc_check_timeout",
-            "cmc_cmk_helpers",
             "cmc_config_multiprocessing",
             "cmc_debug_notifications",
             "cmc_dump_core",

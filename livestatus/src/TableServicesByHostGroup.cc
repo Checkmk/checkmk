@@ -40,21 +40,23 @@ std::string TableServicesByHostGroup::name() const {
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query *query) {
+    auto is_authorized = [service_auth = core()->serviceAuthorization(),
+                          auth_user = query->authUser()](const service *svc) {
+        return is_authorized_for_svc(service_auth, auth_user, svc);
+    };
+
     for (const auto *group = hostgroup_list; group != nullptr;
          group = group->next) {
         for (const auto *hm = group->members; hm != nullptr; hm = hm->next) {
             for (const auto *sm = hm->host_ptr->services; sm != nullptr;
                  sm = sm->next) {
-                service_and_group sag{sm->service_ptr, group};
-                if (!query->processDataset(Row(&sag))) {
-                    return;
+                if (is_authorized(sm->service_ptr)) {
+                    service_and_group sag{sm->service_ptr, group};
+                    if (!query->processDataset(Row(&sag))) {
+                        return;
+                    }
                 }
             }
         }
     }
-}
-
-bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
-                                 rowData<service_and_group>(row)->svc);
 }

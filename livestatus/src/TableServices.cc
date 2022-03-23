@@ -44,6 +44,7 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -720,6 +721,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableServices::answerQuery(Query *query) {
+    auto is_authorized = [service_auth = core()->serviceAuthorization(),
+                          auth_user = query->authUser()](const service *svc) {
+        return is_authorized_for_svc(service_auth, auth_user, svc);
+    };
+
     // do we know the host?
     if (auto value = query->stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
@@ -728,8 +734,10 @@ void TableServices::answerQuery(Query *query) {
                 reinterpret_cast<::host *>(core()->find_host(*value))) {
             for (const auto *m = host->services; m != nullptr; m = m->next) {
                 const service *r = m->service_ptr;
-                if (!query->processDataset(Row(r))) {
-                    break;
+                if (is_authorized(r)) {
+                    if (!query->processDataset(Row(r))) {
+                        break;
+                    }
                 }
             }
             return;
@@ -743,8 +751,10 @@ void TableServices::answerQuery(Query *query) {
                 find_servicegroup(const_cast<char *>(value->c_str()))) {
             for (const auto *m = sg->members; m != nullptr; m = m->next) {
                 const service *r = m->service_ptr;
-                if (!query->processDataset(Row(r))) {
-                    break;
+                if (is_authorized(r)) {
+                    if (!query->processDataset(Row(r))) {
+                        break;
+                    }
                 }
             }
         }
@@ -760,8 +770,10 @@ void TableServices::answerQuery(Query *query) {
                 for (const auto *smem = m->host_ptr->services; smem != nullptr;
                      smem = smem->next) {
                     const service *r = smem->service_ptr;
-                    if (!query->processDataset(Row(r))) {
-                        return;
+                    if (is_authorized(r)) {
+                        if (!query->processDataset(Row(r))) {
+                            return;
+                        }
                     }
                 }
             }
@@ -773,15 +785,12 @@ void TableServices::answerQuery(Query *query) {
     Debug(logger()) << "using full table scan";
     for (const auto *svc = service_list; svc != nullptr; svc = svc->next) {
         const service *r = svc;
-        if (!query->processDataset(Row(r))) {
-            break;
+        if (is_authorized(r)) {
+            if (!query->processDataset(Row(r))) {
+                break;
+            }
         }
     }
-}
-
-bool TableServices::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
-                                 rowData<service>(row));
 }
 
 Row TableServices::get(const std::string &primary_key) const {

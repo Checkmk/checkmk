@@ -21,7 +21,6 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsCustom,
     RulespecGroupDatasourceProgramsHardware,
     RulespecGroupDatasourceProgramsOS,
-    RulespecGroupDatasourceProgramsTesting,
     RulespecGroupVMCloudContainer,
 )
 from cmk.gui.plugins.wato.utils import (
@@ -1158,33 +1157,6 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:emcvnx",
         valuespec=_valuespec_special_agents_emcvnx,
-    )
-)
-
-
-def _factory_default_special_agents_random():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_random():
-    return FixedValue(
-        value={},
-        title=_("Create random monitoring data"),
-        help=_(
-            "By configuring this rule for a host - instead of the normal "
-            "Check_MK agent random monitoring data will be created."
-        ),
-        totext=_("Create random monitoring data"),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_random(),
-        group=RulespecGroupDatasourceProgramsTesting,
-        name="special_agents:random",
-        valuespec=_valuespec_special_agents_random,
     )
 )
 

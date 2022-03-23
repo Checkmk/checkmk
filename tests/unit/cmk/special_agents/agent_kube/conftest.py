@@ -39,6 +39,14 @@ class ContainerTerminatedStateFactory(ModelFactory):
     __model__ = api.ContainerTerminatedState
 
 
+class ContainerStatusFactory(ModelFactory):
+    __model__ = api.ContainerStatus
+
+
+class ContainerSpecFactory(ModelFactory):
+    __model__ = api.ContainerSpec
+
+
 # Pod Factories
 class PodMetaDataFactory(ModelFactory):
     __model__ = api.PodMetaData
@@ -46,6 +54,10 @@ class PodMetaDataFactory(ModelFactory):
 
 class PodStatusFactory(ModelFactory):
     __model__ = api.PodStatus
+
+
+class PodSpecFactory(ModelFactory):
+    __model__ = api.PodSpec
 
 
 # Node Factories
@@ -70,6 +82,23 @@ NPD_NODE_CONDITION_TYPES = [
 ]
 
 
+class NodeConditionFactory(ModelFactory):
+    __model__ = api.NodeCondition
+
+    type_ = Use(
+        next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
+    )
+
+
+class NodeStatusFactory(ModelFactory):
+    __model__ = api.NodeStatus
+
+    conditions = Use(
+        NodeConditionFactory.batch,
+        size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+    )
+
+
 @pytest.fixture
 def node_condition_status() -> api.NodeConditionStatus:
     return api.NodeConditionStatus.TRUE
@@ -77,23 +106,36 @@ def node_condition_status() -> api.NodeConditionStatus:
 
 @pytest.fixture
 def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
-    class NodeConditionFactory(ModelFactory):
-        __model__ = api.NodeCondition
-
-        type_ = Use(
-            next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
+    return NodeStatusFactory.build(
+        conditions=NodeConditionFactory.batch(
+            len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+            status=node_condition_status,
         )
-        status = node_condition_status
+    )
 
-    class NodeStatusFactory(ModelFactory):
-        __model__ = api.NodeStatus
 
-        conditions = Use(
-            NodeConditionFactory.batch,
-            size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-        )
+# DaemonSet Factories
+class DaemonSetSpecFactory(ModelFactory):
+    __model__ = api.DaemonSetSpec
 
-    return NodeStatusFactory.build()
+
+# StatefulSet Factories
+class StatefulSetSpecFactory(ModelFactory):
+    __model__ = api.StatefulSetSpec
+
+
+# Cluster Factories
+class ClusterDetailsFactory(ModelFactory):
+    __model__ = api.ClusterDetails
+
+
+# Deployment Factories
+class DeploymentSpecFactory(ModelFactory):
+    __model__ = api.DeploymentSpec
+
+
+class DeploymentStatusFactory(ModelFactory):
+    __model__ = api.DeploymentStatus
 
 
 # Container Status Fixtures
@@ -116,12 +158,7 @@ def container_state(container_status_state) -> api.ContainerState:
 @pytest.fixture
 def container_status(container_state) -> Callable[[], api.ContainerStatus]:
     def _container_status() -> api.ContainerStatus:
-        class ContainerStatusFactory(ModelFactory):
-            __model__ = api.ContainerStatus
-
-            state = container_state
-
-        return ContainerStatusFactory.build()
+        return ContainerStatusFactory.build(state=container_state)
 
     return _container_status
 
@@ -173,22 +210,12 @@ def container_resources_requirements(
 
 @pytest.fixture
 def container_spec(container_resources_requirements: api.ContainerResources) -> api.ContainerSpec:
-    class ContainerSpecFactory(ModelFactory):
-        __model__ = api.ContainerSpec
-
-        resources = container_resources_requirements
-
-    return ContainerSpecFactory.build()
+    return ContainerSpecFactory.build(resources=container_resources_requirements)
 
 
 @pytest.fixture
 def pod_spec(container_spec: api.ContainerSpec, pod_containers_count: int) -> api.PodSpec:
-    class PodSpecFactory(ModelFactory):
-        __model__ = api.PodSpec
-
-        containers = [container_spec for _ in range(pod_containers_count)]
-
-    return PodSpecFactory.build()
+    return PodSpecFactory.build(containers=[container_spec for _ in range(pod_containers_count)])
 
 
 @pytest.fixture
@@ -318,9 +345,6 @@ def node_pods() -> int:
 
 @pytest.fixture
 def daemonset_spec() -> api.DaemonSetSpec:
-    class DaemonSetSpecFactory(ModelFactory):
-        __model__ = api.DaemonSetSpec
-
     return DaemonSetSpecFactory.build()
 
 
@@ -354,9 +378,6 @@ def daemon_set(
 
 @pytest.fixture
 def statefulset_spec() -> api.StatefulSetSpec:
-    class StatefulSetSpecFactory(ModelFactory):
-        __model__ = api.StatefulSetSpec
-
     return StatefulSetSpecFactory.build()
 
 
@@ -400,17 +421,11 @@ def deployment_pods() -> int:
 
 @pytest.fixture
 def deployment_spec() -> api.DeploymentSpec:
-    class DeploymentSpecFactory(ModelFactory):
-        __model__ = api.DeploymentSpec
-
     return DeploymentSpecFactory.build()
 
 
 @pytest.fixture
 def deployment_status() -> api.DeploymentStatus:
-    class DeploymentStatusFactory(ModelFactory):
-        __model__ = api.DeploymentStatus
-
     return DeploymentStatusFactory.build()
 
 
@@ -462,9 +477,6 @@ def cluster_statefulsets() -> int:
 
 @pytest.fixture
 def cluster_details() -> api.ClusterDetails:
-    class ClusterDetailsFactory(ModelFactory):
-        __model__ = api.ClusterDetails
-
     return ClusterDetailsFactory.build()
 
 

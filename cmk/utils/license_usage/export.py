@@ -13,7 +13,7 @@ from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
 
@@ -387,10 +387,10 @@ class LicenseUsageSample:
 #   '----------------------------------------------------------------------'
 
 
-RawMonthlyServiceAverage = Dict[str, Union[int, float]]
-RawMonthlyServiceAverages = List[RawMonthlyServiceAverage]
-DailyServices = Dict[datetime, Counter]
-SortedDailyServices = List[Tuple[datetime, Counter]]
+@dataclass(frozen=True)
+class MonthlyServiceAverage:
+    sample_time: float
+    num_services: float
 
 
 class ABCMonthlyServiceAverages(abc.ABC):
@@ -400,13 +400,11 @@ class ABCMonthlyServiceAverages(abc.ABC):
         self,
         username: str,
         subscription_details: Optional[SubscriptionDetails],
-        short_samples: List,
     ) -> None:
         self._username = username
         self._subscription_details = subscription_details
-        self._short_samples = short_samples
-        self._daily_services: SortedDailyServices = []
-        self._monthly_service_averages: RawMonthlyServiceAverages = []
+        self._daily_services: List[Tuple[datetime, Counter]] = []
+        self._monthly_service_averages: List[MonthlyServiceAverage] = []
 
     @property
     def subscription_start(self) -> Optional[int]:
@@ -424,33 +422,16 @@ class ABCMonthlyServiceAverages(abc.ABC):
             else self._subscription_details.limit.limit_value
         )
 
-    @property
-    def monthly_service_averages(self) -> RawMonthlyServiceAverages:
-        # Sorting is done in the frontend
-        return self._monthly_service_averages
-
-    @property
-    def daily_services(self) -> List[Dict]:
-        # Sorting is done in the frontend
-        return [
-            {
-                "sample_time": daily_service_date.timestamp(),
-                "num_services": counter["num_services"],
-            }
-            for daily_service_date, counter in self._daily_services
-        ]
-
     @abc.abstractmethod
-    def _calculate_daily_services(self) -> DailyServices:
+    def _calculate_daily_services(self) -> Mapping[datetime, Counter]:
         raise NotImplementedError()
 
-    def calculate_averages(self) -> None:
-        if not self._short_samples:
-            return
-
+    def _calculate_averages(self) -> None:
         # Get max. 400 days, because the license usage history per site - recorded in
         # Checkmk - is max. 400 long.
         self._daily_services = sorted(self._calculate_daily_services().items())[-400:]
+        if not self._daily_services:
+            return
 
         if self.subscription_start is None or self.subscription_end is None:
             # It does not make sense to calculate monthly averages
@@ -490,15 +471,27 @@ class ABCMonthlyServiceAverages(abc.ABC):
 
         for month_start, counter in monthly_services.items():
             self._monthly_service_averages.append(
-                {
-                    "num_services": 1.0 * counter["num_services"] / counter["num_daily_services"],
-                    "sample_time": month_start.timestamp(),
-                }
+                MonthlyServiceAverage(
+                    sample_time=month_start.timestamp(),
+                    num_services=1.0 * counter["num_services"] / counter["num_daily_services"],
+                )
             )
 
     def get_aggregation(self) -> Dict:
+        "This method prepares the following data for javascript rendering"
+        self._calculate_averages()
         return {
             "owner": self._username,
+            "daily_services": [
+                asdict(
+                    MonthlyServiceAverage(
+                        sample_time=daily_service_date.timestamp(),
+                        num_services=counter["num_services"],
+                    )
+                )
+                for daily_service_date, counter in self._daily_services
+            ],
+            "monthly_service_averages": [asdict(a) for a in self._monthly_service_averages],
             "last_service_report": self._get_last_service_report(),
             "highest_service_report": self._get_highest_service_report(),
             "subscription_exceeded_first": self._get_subscription_exceeded_first(),
@@ -507,39 +500,37 @@ class ABCMonthlyServiceAverages(abc.ABC):
             "subscription_limit": self.subscription_limit_value,
         }
 
-    _DEFAULT_MONTHLY_SERVICE_AVERAGE = {
-        "num_services": None,
-        "sample_time": None,
-    }
-
-    def _get_last_service_report(
-        self,
-    ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
+    def _get_last_service_report(self) -> Optional[Mapping[str, float]]:
         if not self._monthly_service_averages:
-            return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
-        return self._monthly_service_averages[-1]
+            return None
+        return asdict(self._monthly_service_averages[-1])
 
-    def _get_highest_service_report(
-        self,
-    ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
+    def _get_highest_service_report(self) -> Optional[Mapping[str, float]]:
         if not self._monthly_service_averages:
-            return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
-        return max(self._monthly_service_averages, key=lambda d: d["num_services"])
+            return None
+        return asdict(max(self._monthly_service_averages, key=lambda d: d.num_services))
 
-    def _get_subscription_exceeded_first(
-        self,
-    ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
+    def _get_subscription_exceeded_first(self) -> Optional[Mapping[str, float]]:
         if self.subscription_limit_value is None or self.subscription_limit_value < 0:
-            return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+            return None
         for service_average in self._monthly_service_averages:
-            if service_average["num_services"] >= self.subscription_limit_value:
-                return service_average
-        return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+            if service_average.num_services >= self.subscription_limit_value:
+                return asdict(service_average)
+        return None
 
 
 class MonthlyServiceAverages(ABCMonthlyServiceAverages):
-    def _calculate_daily_services(self) -> DailyServices:
-        daily_services: DailyServices = {}
+    def __init__(
+        self,
+        username: str,
+        subscription_details: Optional[SubscriptionDetails],
+        short_samples: Sequence[Tuple[int, int]],
+    ) -> None:
+        super().__init__(username, subscription_details)
+        self._short_samples = short_samples
+
+    def _calculate_daily_services(self) -> Mapping[datetime, Counter]:
+        daily_services: Dict[datetime, Counter] = {}
         for sample_time, num_services in self._short_samples:
             sample_date = datetime.fromtimestamp(sample_time)
             daily_services.setdefault(
@@ -547,29 +538,6 @@ class MonthlyServiceAverages(ABCMonthlyServiceAverages):
                 Counter(),
             ).update(num_services=num_services)
         return daily_services
-
-
-class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
-    def __init__(
-        self,
-        username: str,
-        subscription_details: Optional[SubscriptionDetails],
-        short_samples: List,
-        samples: List[Dict],
-    ) -> None:
-        super().__init__(username, subscription_details, short_samples)
-        self._samples = samples
-
-    def get_aggregation(self) -> Dict:
-        aggregation = super().get_aggregation()
-        aggregation.update(
-            {
-                "daily_services": self.daily_services,
-                "monthly_service_averages": self.monthly_service_averages,
-                "samples": self._samples,
-            }
-        )
-        return aggregation
 
 
 # .

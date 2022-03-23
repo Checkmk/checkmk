@@ -9,11 +9,12 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Mapping, Optional, Sequence
+
+from livestatus import SiteId
 
 from cmk.utils.license_usage.export import (
     ABCMonthlyServiceAverages,
-    DailyServices,
     deserialize_dump,
     LicenseUsageSample,
     serialize_dump,
@@ -50,23 +51,27 @@ class LicenseUsageHistoryDump:
         )
 
 
+LicenseUsageHistoryBySite = Mapping[SiteId, Sequence[LicenseUsageSample]]
+
+
 class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
     def __init__(
         self,
         username: str,
         subscription_details: Optional[SubscriptionDetails],
-        short_samples: List,
+        short_samples: LicenseUsageHistoryBySite,
     ) -> None:
-        super().__init__(username, subscription_details, short_samples)
-        self._last_daily_services: Dict = {}
+        super().__init__(username, subscription_details)
+        self._short_samples = short_samples
+        self._last_daily_services: Dict[str, Optional[LicenseUsageSample]] = {}
 
     @property
-    def last_daily_services(self) -> Dict:
+    def last_daily_services(self) -> Mapping[str, Optional[LicenseUsageSample]]:
         return self._last_daily_services
 
-    def _calculate_daily_services(self) -> DailyServices:
-        daily_services: DailyServices = {}
-        for site_id, history in self._short_samples:
+    def _calculate_daily_services(self) -> Mapping[datetime, Counter]:
+        daily_services: Dict[datetime, Counter] = {}
+        for site_id, history in self._short_samples.items():
             self._last_daily_services.setdefault(site_id, history[0] if history else None)
 
             for sample in history:
@@ -76,13 +81,3 @@ class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
                     Counter(),
                 ).update(num_services=sample.num_services)
         return daily_services
-
-    def get_aggregation(self) -> Dict:
-        aggregation = super().get_aggregation()
-        aggregation.update(
-            {
-                "daily_services": self.daily_services,
-                "monthly_service_averages": self.monthly_service_averages,
-            }
-        )
-        return aggregation

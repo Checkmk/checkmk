@@ -19,6 +19,22 @@ class ClusterDetailsFactory(ModelFactory):
     __model__ = api.ClusterDetails
 
 
+class ContainerSpecFactory(ModelFactory):
+    __model__ = api.ContainerSpec
+
+
+class APIDeployment(ModelFactory):
+    __model__ = api.Deployment
+
+
+class APIPod(ModelFactory):
+    __model__ = api.Pod
+
+
+class APINode(ModelFactory):
+    __model__ = api.Node
+
+
 @pytest.fixture
 def node_name():
     return "node"
@@ -26,9 +42,6 @@ def node_name():
 
 @pytest.fixture
 def api_node(node_name):
-    class APINode(ModelFactory):
-        __model__ = api.Node
-
     node = APINode.build()
     node.metadata.name = node_name
     return node
@@ -36,9 +49,6 @@ def api_node(node_name):
 
 @pytest.fixture
 def api_pod(node_name):
-    class APIPod(ModelFactory):
-        __model__ = api.Pod
-
     pod = APIPod.build()
     pod.spec.node = node_name
     return pod
@@ -64,9 +74,6 @@ def test_pod_node_allocation_within_cluster(
 def test_pod_deployment_allocation_within_cluster(api_node, api_pod):
     """Test pod is correctly allocated to deployment within cluster"""
 
-    class APIDeployment(ModelFactory):
-        __model__ = api.Deployment
-
     deployment = APIDeployment.build()
     deployment.pods = [api_pod.uid]
     cluster = Cluster.from_api_resources(
@@ -91,15 +98,12 @@ def container_spec(
     request_memory: Optional[float] = 1.0 * ONE_MiB,
     limit_memory: Optional[float] = 2.0 * ONE_MiB,
 ) -> api.ContainerSpec:
-    class ContainerSpecFactory(ModelFactory):
-        __model__ = api.ContainerSpec
-
-        resources = api.ContainerResources(
+    return ContainerSpecFactory.build(
+        resources=api.ContainerResources(
             limits=api.ResourcesRequirements(memory=limit_memory, cpu=limit_cpu),
             requests=api.ResourcesRequirements(memory=request_memory, cpu=request_cpu),
         )
-
-    return ContainerSpecFactory.build()
+    )
 
 
 def test_aggregate_resources_summed_request_cpu() -> None:

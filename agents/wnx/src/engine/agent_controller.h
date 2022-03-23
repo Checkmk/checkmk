@@ -42,10 +42,24 @@ std::string DetermineAgentCtlVersion();
 std::string DetermineAgentCtlStatus();
 bool IsRunController(const YAML::Node &node);
 bool IsInLegacyMode();
-bool CreateLegacyModeFile(const std::filesystem::path &marker);
 void CreateControllerFlagFile();
 bool IsControllerFlagFileExists();
 
+/// To be called once when cap is installed
+///
+/// marker contains uninstall information
+/// always remove marker file
+/// controller_exists is determined by caller
+/// creates controller-flag allow-pull-mode
+/// According to https://jira.lan.tribe29.com/browse/CMK-10073
+/// if !controler_exists
+/// - does nothing
+/// else
+/// - creates legacy-pull if no controller flag
+/// - create controller flag
+///
+void CreateArtifacts(const std::filesystem::path &marker,
+                     bool controller_exists);
 }  // namespace cma::ac
 
 #endif  // agent_controller_h__

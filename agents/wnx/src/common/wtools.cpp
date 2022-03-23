@@ -28,7 +28,6 @@
 #include "common/wtools_user_control.h"
 #include "logger.h"
 #include "tools/_raii.h"
-#include "upgrade.h"
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
 
@@ -611,12 +610,8 @@ void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
     XLOG::l.i("Service handlers registered");
 
     try {
-        using namespace cma::cfg;  // NOLINT
         // Tell SCM that the service is starting.
         setServiceStatus(SERVICE_START_PENDING);
-
-        cap::Install();
-        upgrade::UpgradeLegacy(upgrade::Force::no);
 
         // Perform service-specific initialization.
         processor_->startService();

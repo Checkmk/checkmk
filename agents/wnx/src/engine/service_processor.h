@@ -271,7 +271,8 @@ private:
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;
     [[nodiscard]] bool conditionallyStartOhm() noexcept;
-    void mainThread(world::ExternalPort *Port) noexcept;
+    void mainThread(world::ExternalPort *ex_port, bool cap_installed) noexcept;
+    void mainThreadAsTest() noexcept { mainThread(nullptr, false); }
 
     // object data
     std::thread thread_;

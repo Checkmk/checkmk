@@ -29,7 +29,7 @@ constexpr std::string_view kAllowedExtension = ".EXE";
 enum class Mode { normal, forced };
 
 // main API
-void Install();    // normal installation of all files from the MSI
+bool Install();    // normal installation of all files from the MSI
 bool ReInstall();  // forced installation of all files from the MSI
 
 // support

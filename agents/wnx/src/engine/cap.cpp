@@ -10,7 +10,6 @@
 #include <string_view>
 #include <unordered_set>
 
-#include "agent_controller.h"
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cma_yml.h"
@@ -644,18 +643,14 @@ static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
             tgt.u8string(), ec.value(), src.u8string());
 }
 
-void Install() {
+bool Install() {
+    bool installed{false};
     try {
-        auto installation = InstallCapFile();
+        installed = InstallCapFile();
         InstallYmlFile();
-        if (installation) {
-            ac::CreateLegacyModeFile(fs::path{tools::win::GetSomeSystemFolder(
-                                         FOLDERID_ProgramData)} /
-                                     ac::kCmkAgentUnistall);
-        }
     } catch (const std::exception &e) {
         XLOG::l.crit("Exception '{}'", e.what());
-        return;
+        return installed;
     }
 
     // DAT
@@ -677,6 +672,7 @@ void Install() {
 
     auto [tgt_example, src_example] = GetExampleYmlNames();
     UpdateUserYmlExample(tgt_example, src_example);
+    return installed;
 }
 
 // Re-install all files as is from the root-install

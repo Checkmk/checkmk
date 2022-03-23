@@ -13,6 +13,7 @@
 #include <ranges>
 
 #include "agent_controller.h"
+#include "cap.h"
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
@@ -43,12 +44,16 @@ void ServiceProcessor::startService() {
         return;
     }
 
+    auto installed = cfg::cap::Install();
+    cfg::upgrade::UpgradeLegacy(cfg::upgrade::Force::no);
+
     // service must reload config, because service may reconfigure itself
     ReloadConfig();
 
     rm_lwa_thread_ = std::thread(&cfg::rm_lwa::Execute);
 
-    thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_);
+    thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_,
+                          installed);
 
     XLOG::l.t("Successful start of thread");
 }
@@ -58,7 +63,7 @@ void ServiceProcessor::startServiceAsLegacyTest() {
         xlog::l("Attempt to start service twice, no way!").print();
         return;
     }
-    thread_ = std::thread(&ServiceProcessor::mainThread, this, nullptr);
+    thread_ = std::thread(&ServiceProcessor::mainThreadAsTest, this);
     thread_.join();
     XLOG::t("Successful legacy start of thread");
 }
@@ -577,7 +582,6 @@ std::optional<uint16_t> OptionallyStartAgentController(
             ac::DeleteControllerInBin(wtools::GetArgv(0));
             return {};
         }
-        ac::CreateControllerFlagFile();
         return ac::windows_internal_port;
     }
 
@@ -602,9 +606,11 @@ void OpenFirewall(bool controller) {
 
 /// \brief <HOSTING THREAD>
 /// ex_port may be nullptr(command line test, for example)
+/// cap_installed is signaled from the service thread about cap_installation
 /// makes a mail slot + starts IO on TCP
 /// Periodically checks if the service is stopping.
-void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
+void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
+                                  bool cap_installed) noexcept {
     if (IsService()) {
         auto wait_period =
             cfg::GetVal(cfg::groups::kSystem, cfg::vars::kWaitNetwork,
@@ -615,10 +621,15 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
     auto port = OptionallyStartAgentController(1000ms);
     ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
     OpenFirewall(port.has_value());
+    if (cap_installed) {
+        ac::CreateArtifacts(
+            fs::path{tools::win::GetSomeSystemFolder(FOLDERID_ProgramData)} /
+                ac::kCmkAgentUnistall,
+            port.has_value());
+    }
     uint16_t use_port = port ? *port
                              : cfg::GetVal(cfg::groups::kGlobal,
                                            cfg::vars::kPort, cfg::kMainPort);
-
     MailSlot mailbox(
         IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
@@ -696,7 +707,7 @@ void ServiceProcessor::startTestingMainThread() {
         return;
     }
 
-    thread_ = std::thread(&ServiceProcessor::mainThread, this, nullptr);
+    thread_ = std::thread(&ServiceProcessor::mainThreadAsTest, this);
     XLOG::l.i("Successful start of main thread");
 }
 

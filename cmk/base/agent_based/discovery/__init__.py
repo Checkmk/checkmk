@@ -162,22 +162,25 @@ def commandline_discovery(
         host_config = config_cache.get_host_config(host_name)
         section.section_begin(host_name)
         try:
-            fetched = fetch_all(
-                sources=make_sources(
-                    config_cache,
-                    host_config,
-                    config.lookup_ip_address(host_config),
-                    selected_sections=selected_sections,
-                    force_snmp_cache_refresh=False,
-                    on_scan_error=on_error,
-                ),
+            sources = make_sources(
+                config_cache,
+                host_config,
+                config.lookup_ip_address(host_config),
+                selected_sections=selected_sections,
+                force_snmp_cache_refresh=False,
+                on_scan_error=on_error,
+            )
+            fetcher_messages = fetch_all(
+                sources,
                 file_cache_max_age=config.max_cachefile_age(),
                 mode=mode,
             )
             parsed_sections_broker, _results = make_broker(
-                fetched=fetched,
+                sources=sources,
+                fetcher_messages=list(fetcher_messages),
                 selected_sections=selected_sections,
                 file_cache_max_age=config.max_cachefile_age(),
+                mode=mode,
             )
             _commandline_discovery_on_host(
                 host_key=host_config.host_key,
@@ -329,22 +332,25 @@ def automation_discovery(
         else:
             ipaddress = config.lookup_ip_address(host_config)
 
-        fetched = fetch_all(
-            sources=make_sources(
-                config_cache,
-                host_config,
-                ipaddress,
-                selected_sections=NO_SELECTION,
-                force_snmp_cache_refresh=not use_cached_snmp_data,
-                on_scan_error=on_error,
-            ),
+        sources = make_sources(
+            config_cache,
+            host_config,
+            ipaddress,
+            selected_sections=NO_SELECTION,
+            force_snmp_cache_refresh=not use_cached_snmp_data,
+            on_scan_error=on_error,
+        )
+        fetcher_messages = fetch_all(
+            sources,
             file_cache_max_age=max_cachefile_age,
             mode=Mode.DISCOVERY,
         )
         parsed_sections_broker, _source_results = make_broker(
-            fetched=fetched,
+            sources=sources,
+            fetcher_messages=list(fetcher_messages),
             selected_sections=NO_SELECTION,
             file_cache_max_age=max_cachefile_age,
+            mode=Mode.DISCOVERY,
         )
 
         if mode is not DiscoveryMode.REMOVE:
@@ -526,9 +532,12 @@ def active_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    sources: Sequence[Source],
+    fetcher_messages: Sequence[FetcherMessage],
 ) -> ActiveCheckResult:
-    return _execute_check_discovery(host_name, ipaddress, fetched=fetched)
+    return _execute_check_discovery(
+        host_name, ipaddress, sources=sources, fetcher_messages=fetcher_messages
+    )
 
 
 @decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
@@ -544,29 +553,33 @@ def commandline_check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = config.lookup_ip_address(host_config)
 
-    fetched = fetch_all(
-        sources=make_sources(
-            config_cache,
-            host_config,
-            ipaddress,
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-        ),
+    sources = make_sources(
+        config_cache,
+        host_config,
+        ipaddress,
+        selected_sections=NO_SELECTION,
+        force_snmp_cache_refresh=False,
+        on_scan_error=OnError.RAISE,
+    )
+    fetcher_messages = fetch_all(
+        sources=sources,
         file_cache_max_age=config.max_cachefile_age(
             discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
         ),
         mode=Mode.DISCOVERY,
     )
 
-    return _execute_check_discovery(host_name, ipaddress, fetched=list(fetched))
+    return _execute_check_discovery(
+        host_name, ipaddress, sources=sources, fetcher_messages=list(fetcher_messages)
+    )
 
 
 def _execute_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    sources: Sequence[Source],
+    fetcher_messages: Sequence[FetcherMessage],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -590,11 +603,13 @@ def _execute_check_discovery(
         ipaddress = config.lookup_ip_address(host_config)
 
     parsed_sections_broker, source_results = make_broker(
-        fetched=fetched,
+        sources=sources,
+        fetcher_messages=fetcher_messages,
         selected_sections=NO_SELECTION,
         file_cache_max_age=config.max_cachefile_age(
             discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
         ),
+        mode=Mode.DISCOVERY,
     )
 
     host_labels = analyse_host_labels(
@@ -1246,22 +1261,25 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
-    fetched = fetch_all(
-        sources=make_sources(
-            config_cache,
-            host_config,
-            ip_address,
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=not use_cached_snmp_data,
-            on_scan_error=on_error,
-        ),
+    sources = make_sources(
+        config_cache,
+        host_config,
+        ip_address,
+        selected_sections=NO_SELECTION,
+        force_snmp_cache_refresh=not use_cached_snmp_data,
+        on_scan_error=on_error,
+    )
+    fetcher_messages = fetch_all(
+        sources,
         file_cache_max_age=max_cachefile_age,
         mode=Mode.DISCOVERY,
     )
     parsed_sections_broker, _source_results = make_broker(
-        fetched=fetched,
+        sources=sources,
+        fetcher_messages=list(fetcher_messages),
         selected_sections=NO_SELECTION,
         file_cache_max_age=max_cachefile_age,
+        mode=Mode.DISCOVERY,
     )
 
     host_labels = analyse_host_labels(

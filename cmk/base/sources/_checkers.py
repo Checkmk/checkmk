@@ -8,7 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Final, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Final, Iterable, Iterator, Optional, Sequence
 
 import cmk.utils.tty as tty
 from cmk.utils import version
@@ -232,9 +232,8 @@ def fetch_all(
     *,
     file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
-) -> Sequence[Tuple[Source, FetcherMessage]]:
+) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: List[Tuple[Source, FetcherMessage]] = []
     for source in sources:
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
@@ -242,17 +241,11 @@ def fetch_all(
 
         with CPUTracker() as tracker:
             raw_data = source.fetch(mode)
-        out.append(
-            (
-                source,
-                FetcherMessage.from_raw_data(
-                    raw_data,
-                    tracker.duration,
-                    source.fetcher_type,
-                ),
-            )
+        yield FetcherMessage.from_raw_data(
+            raw_data,
+            tracker.duration,
+            source.fetcher_type,
         )
-    return out
 
 
 def make_cluster_sources(

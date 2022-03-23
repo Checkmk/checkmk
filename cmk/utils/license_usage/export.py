@@ -18,7 +18,65 @@ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tup
 from dateutil.relativedelta import relativedelta
 
 
+class LicenseUsageReportVersionError(Exception):
+    pass
+
+
+#   .--upload origin-------------------------------------------------------.
+#   |                _                 _              _       _            |
+#   |    _   _ _ __ | | ___   __ _  __| |   ___  _ __(_) __ _(_)_ __       |
+#   |   | | | | '_ \| |/ _ \ / _` |/ _` |  / _ \| '__| |/ _` | | '_ \      |
+#   |   | |_| | |_) | | (_) | (_| | (_| | | (_) | |  | | (_| | | | | |     |
+#   |    \__,_| .__/|_|\___/ \__,_|\__,_|  \___/|_|  |_|\__, |_|_| |_|     |
+#   |         |_|                                       |___/              |
+#   '----------------------------------------------------------------------'
+
+
+class UploadOrigin(Enum):
+    empty = auto()
+    manual = auto()
+    from_checkmk = auto()
+
+    @classmethod
+    def parse(cls, report_version: str, raw_upload_origin: str) -> UploadOrigin:
+        if report_version in ["1.0", "1.1", "1.2"]:
+            return cls.empty
+
+        if report_version == "1.3":
+            return _UPLOAD_ORIGIN_MAP[raw_upload_origin]
+
+        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
+
+
+_UPLOAD_ORIGIN_MAP = {
+    "empty": UploadOrigin.empty,
+    "manual": UploadOrigin.manual,
+    "from_checkmk": UploadOrigin.from_checkmk,
+}
+
+
+# .
+#   .--subscription details------------------------------------------------.
+#   |                 _                   _       _   _                    |
+#   |       ___ _   _| |__  ___  ___ _ __(_)_ __ | |_(_) ___  _ __         |
+#   |      / __| | | | '_ \/ __|/ __| '__| | '_ \| __| |/ _ \| '_ \        |
+#   |      \__ \ |_| | |_) \__ \ (__| |  | | |_) | |_| | (_) | | | |       |
+#   |      |___/\__,_|_.__/|___/\___|_|  |_| .__/ \__|_|\___/|_| |_|       |
+#   |                                      |_|                             |
+#   |                         _      _        _ _                          |
+#   |                      __| | ___| |_ __ _(_) |___                      |
+#   |                     / _` |/ _ \ __/ _` | | / __|                     |
+#   |                    | (_| |  __/ || (_| | | \__ \                     |
+#   |                     \__,_|\___|\__\__,_|_|_|___/                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 class SubscriptionDetailsError(Exception):
+    pass
+
+
+class SubscriptionPeriodError(Exception):
     pass
 
 
@@ -207,6 +265,128 @@ class SubscriptionDetails(NamedTuple):
                 raise SubscriptionDetailsError()
 
 
+def validate_subscription_period(attrs: Dict) -> None:
+    delta = date.fromtimestamp(attrs["subscription_end"]) - date.fromtimestamp(
+        attrs["subscription_start"]
+    )
+    # full year is e.g. 01.01.1970-31.12.1970 (364 days)
+    if delta.days < 364:
+        raise SubscriptionPeriodError()
+
+
+# .
+#   .--sample--------------------------------------------------------------.
+#   |                                            _                         |
+#   |                  ___  __ _ _ __ ___  _ __ | | ___                    |
+#   |                 / __|/ _` | '_ ` _ \| '_ \| |/ _ \                   |
+#   |                 \__ \ (_| | | | | | | |_) | |  __/                   |
+#   |                 |___/\__,_|_| |_| |_| .__/|_|\___|                   |
+#   |                                     |_|                              |
+#   '----------------------------------------------------------------------'
+
+
+@dataclass
+class LicenseUsageExtensions:
+    ntop: bool
+
+    def serialize(self) -> bytes:
+        return serialize_dump(self)
+
+    @classmethod
+    def deserialize(cls, raw_extensions: bytes) -> LicenseUsageExtensions:
+        extensions = deserialize_dump(raw_extensions)
+        return cls(ntop=extensions.get("ntop", False))
+
+    @classmethod
+    def parse(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageExtensions:
+        # Extensions are created after execute_activate_changes and may be missing when downloading
+        # or submitting license usage reports. This means that the extensions are not really
+        # dependent on the report version:
+        # Old: {..., "extensions": {"ntop": True/False}, ...}
+        # New: {..., "extension_ntop": True/False, ...}
+        parsed_extensions = {
+            ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
+            for key in ["ntop"]
+            for ext_key in ("extension_%s" % key,)
+        }
+        return cls(ntop=parsed_extensions["extension_ntop"])
+
+
+@dataclass
+class LicenseUsageSample:
+    version: str
+    edition: str
+    platform: str
+    is_cma: bool
+    sample_time: int
+    timezone: str
+    num_hosts: int
+    num_hosts_excluded: int
+    num_services: int
+    num_services_excluded: int
+    extension_ntop: bool
+
+    @classmethod
+    def get_parser(cls, report_version: str) -> Callable[[Mapping[str, Any]], LicenseUsageSample]:
+        if report_version == "1.0":
+            return cls._parse_sample_v1_0
+
+        if report_version in ["1.1", "1.2", "1.3"]:
+            return cls._parse_sample_v1_1
+
+        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
+
+    @classmethod
+    def _parse_sample_v1_0(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
+        extensions = LicenseUsageExtensions.parse(raw_sample)
+        return cls(
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_services=raw_sample["num_services"],
+            num_hosts_excluded=0,
+            num_services_excluded=0,
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v1_1(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
+        extensions = LicenseUsageExtensions.parse(raw_sample)
+        return cls(
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_services=raw_sample["num_services"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_services_excluded=raw_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
+
+    @staticmethod
+    def _restrict_platform(platform: str) -> str:
+        # Restrict platform string to 50 chars due to the restriction of the license DB field.
+        return platform[:50]
+
+
+# .
+#   .--averages------------------------------------------------------------.
+#   |                                                                      |
+#   |               __ ___   _____ _ __ __ _  __ _  ___  ___               |
+#   |              / _` \ \ / / _ \ '__/ _` |/ _` |/ _ \/ __|              |
+#   |             | (_| |\ V /  __/ | | (_| | (_| |  __/\__ \              |
+#   |              \__,_| \_/ \___|_|  \__,_|\__, |\___||___/              |
+#   |                                        |___/                         |
+#   '----------------------------------------------------------------------'
+
+
 RawMonthlyServiceAverage = Dict[str, Union[int, float]]
 RawMonthlyServiceAverages = List[RawMonthlyServiceAverage]
 DailyServices = Dict[datetime, Counter]
@@ -392,145 +572,15 @@ class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
         return aggregation
 
 
-class SubscriptionPeriodError(Exception):
-    pass
-
-
-def validate_subscription_period(attrs: Dict) -> None:
-    delta = date.fromtimestamp(attrs["subscription_end"]) - date.fromtimestamp(
-        attrs["subscription_start"]
-    )
-    # full year is e.g. 01.01.1970-31.12.1970 (364 days)
-    if delta.days < 364:
-        raise SubscriptionPeriodError()
-
-
-#   .--report fields-------------------------------------------------------.
-#   |                                 _      __ _      _     _             |
-#   |       _ __ ___ _ __   ___  _ __| |_   / _(_) ___| | __| |___         |
-#   |      | '__/ _ \ '_ \ / _ \| '__| __| | |_| |/ _ \ |/ _` / __|        |
-#   |      | | |  __/ |_) | (_) | |  | |_  |  _| |  __/ | (_| \__ \        |
-#   |      |_|  \___| .__/ \___/|_|   \__| |_| |_|\___|_|\__,_|___/        |
-#   |               |_|                                                    |
+# .
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
-
-
-class LicenseUsageReportVersionError(Exception):
-    pass
-
-
-class UploadOrigin(Enum):
-    empty = auto()
-    manual = auto()
-    from_checkmk = auto()
-
-    @classmethod
-    def parse(cls, report_version: str, raw_upload_origin: str) -> UploadOrigin:
-        if report_version in ["1.0", "1.1", "1.2"]:
-            return cls.empty
-
-        if report_version == "1.3":
-            return _UPLOAD_ORIGIN_MAP[raw_upload_origin]
-
-        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
-
-
-_UPLOAD_ORIGIN_MAP = {
-    "empty": UploadOrigin.empty,
-    "manual": UploadOrigin.manual,
-    "from_checkmk": UploadOrigin.from_checkmk,
-}
-
-
-@dataclass
-class LicenseUsageExtensions:
-    ntop: bool
-
-    def serialize(self) -> bytes:
-        return serialize_dump(self)
-
-    @classmethod
-    def deserialize(cls, raw_extensions: bytes) -> LicenseUsageExtensions:
-        extensions = deserialize_dump(raw_extensions)
-        return cls(ntop=extensions.get("ntop", False))
-
-    @classmethod
-    def parse(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageExtensions:
-        # Extensions are created after execute_activate_changes and may be missing when downloading
-        # or submitting license usage reports. This means that the extensions are not really
-        # dependent on the report version:
-        # Old: {..., "extensions": {"ntop": True/False}, ...}
-        # New: {..., "extension_ntop": True/False, ...}
-        parsed_extensions = {
-            ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
-            for key in ["ntop"]
-            for ext_key in ("extension_%s" % key,)
-        }
-        return cls(ntop=parsed_extensions["extension_ntop"])
-
-
-@dataclass
-class LicenseUsageSample:
-    version: str
-    edition: str
-    platform: str
-    is_cma: bool
-    sample_time: int
-    timezone: str
-    num_hosts: int
-    num_hosts_excluded: int
-    num_services: int
-    num_services_excluded: int
-    extension_ntop: bool
-
-    @classmethod
-    def get_parser(cls, report_version: str) -> Callable[[Mapping[str, Any]], LicenseUsageSample]:
-        if report_version == "1.0":
-            return cls._parse_sample_v1_0
-
-        if report_version in ["1.1", "1.2", "1.3"]:
-            return cls._parse_sample_v1_1
-
-        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
-
-    @classmethod
-    def _parse_sample_v1_0(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
-        extensions = LicenseUsageExtensions.parse(raw_sample)
-        return cls(
-            version=raw_sample["version"],
-            edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
-            is_cma=raw_sample["is_cma"],
-            sample_time=raw_sample["sample_time"],
-            timezone=raw_sample["timezone"],
-            num_hosts=raw_sample["num_hosts"],
-            num_services=raw_sample["num_services"],
-            num_hosts_excluded=0,
-            num_services_excluded=0,
-            extension_ntop=extensions.ntop,
-        )
-
-    @classmethod
-    def _parse_sample_v1_1(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
-        extensions = LicenseUsageExtensions.parse(raw_sample)
-        return cls(
-            version=raw_sample["version"],
-            edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
-            is_cma=raw_sample["is_cma"],
-            sample_time=raw_sample["sample_time"],
-            timezone=raw_sample["timezone"],
-            num_hosts=raw_sample["num_hosts"],
-            num_services=raw_sample["num_services"],
-            num_hosts_excluded=raw_sample["num_hosts_excluded"],
-            num_services_excluded=raw_sample["num_services_excluded"],
-            extension_ntop=extensions.ntop,
-        )
-
-    @staticmethod
-    def _restrict_platform(platform: str) -> str:
-        # Restrict platform string to 50 chars due to the restriction of the license DB field.
-        return platform[:50]
 
 
 def serialize_dump(dump: Any) -> bytes:

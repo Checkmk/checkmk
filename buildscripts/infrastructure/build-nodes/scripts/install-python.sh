@@ -42,5 +42,7 @@ build_package() {
     rm -rf /opt/src
 }
 
-cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+if [ "$1" != "link" ]; then
+    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"

@@ -108,10 +108,7 @@ RUN /opt/install-cmake.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
-RUN /opt/install-pipenv.sh
-RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
-RUN /opt/install-cmk-dependencies.sh
 
 # Exclusively for this distro at the moment, because it is used by several CI
 # jobs for special tasks (checking out git, "make dist", orchestrating other
@@ -128,6 +125,30 @@ FROM base
 
 # Copy our standard tool chain for building
 COPY --from=builder /opt /opt
+ARG DISTRO
+ARG BRANCH_VERSION
+ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
+# Set symlinks
+RUN /opt/install-gnu-toolchain.sh link
+RUN /opt/install-valgrind.sh link
+RUN /opt/install-cmake.sh link
+RUN /opt/install-freetds.sh link
+
+# Exclusively for this distro at the moment, because it is used by several CI
+# jobs for special tasks (checking out git, "make dist", orchestrating other
+# containers, ...). Scripts should be usable with other Ubuntu versions.
+RUN /opt/install-docker.sh
+RUN /opt/install-make-dist-deps.sh
+RUN /opt/install-nodejs.sh
+RUN /opt/install-clang.sh
+RUN /opt/install-shellcheck.sh
+RUN /opt/install-musl-tools.sh
+
+# Install non cached dependencies
+RUN /opt/install-pipenv.sh
+RUN /opt/install-cmk-dependencies.sh
+RUN /opt/install-patchelf.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

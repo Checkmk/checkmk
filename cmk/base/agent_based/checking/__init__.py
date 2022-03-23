@@ -32,6 +32,7 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     ExitSpec,
     HostAddress,
+    HostKey,
     HostName,
     MetricTuple,
     ParsedSectionName,
@@ -171,6 +172,7 @@ def _execute_checkmk_checks(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
     exit_spec = host_config.exit_code_spec()
+    mode = Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
     try:
         license_usage.try_history_update()
         services = config.resolve_service_dependencies(
@@ -207,6 +209,7 @@ def _execute_checkmk_checks(
             timed_results = [
                 *check_sources(
                     source_results=source_results,
+                    mode=mode,
                     include_ok_results=True,
                 ),
                 *check_parsing_errors(

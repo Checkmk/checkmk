@@ -645,7 +645,7 @@ def _execute_check_discovery(
     return ActiveCheckResult.from_subresults(
         *services_result,
         host_labels_result,
-        *check_sources(source_results=source_results),
+        *check_sources(source_results=source_results, mode=Mode.DISCOVERY),
         *parsing_errors_results,
         _schedule_rediscovery(
             host_config=host_config,

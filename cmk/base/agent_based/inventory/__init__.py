@@ -21,7 +21,17 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, StructuredDataStore
-from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, result, ServiceState
+from cmk.utils.type_defs import (
+    EVERYTHING,
+    HostAddress,
+    HostKey,
+    HostName,
+    InventoryPluginName,
+    result,
+    ServiceState,
+    SourceType,
+    state_markers,
+)
 
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
@@ -177,6 +187,7 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
         *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
         *check_sources(
             source_results=inv_result.source_results,
+            mode=Mode.INVENTORY,
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
             override_non_ok_state=fail_status,

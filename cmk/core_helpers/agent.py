@@ -691,8 +691,19 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         return parser.sections, parser.piggyback_sections
 
 
-class AgentSummarizerDefault(Summarizer):
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
+class AgentSummarizer(Summarizer[AgentRawDataSection]):
+    pass
+
+
+class AgentSummarizerDefault(AgentSummarizer):
+    def summarize_success(
+        self,
+        host_sections: HostSections[AgentRawDataSection],
+        *,
+        mode: Mode,
+    ) -> Sequence[ActiveCheckResult]:
+        # TODO: host_sections is not needed anymore. Doing something similar in the
+        # IPMI DS will allow us to simplify things a lot.
         # Note: currently we *must not* return an empty sequence, because the datasource
         # will not be visible in the Check_MK service otherwise.
         return [ActiveCheckResult(0, "Success")]

@@ -1,0 +1,12 @@
+Title: Fix the page reload timer
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1648025093
+Class: fix
+
+On views with automatic page reload, the wandering circle around the number (i.e. the page reload
+interval in seconds) in the top right corner was not rendered anymore. This is fixed to the
+original state.

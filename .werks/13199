@@ -26,7 +26,7 @@ To detect if this vulnerability is/was used you can check
 <tt>etc/check_mk/multisite.d/wato/custom_attrs.mk</tt> for HTML code. Please be
 aware that an attacker could delete the code after a attack.
 
-CVE is requested and will be added later.
+CVE is CVE-2022-24564.
 
 CVSS: CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:L/I:H/A:N (5.2 medium)
 

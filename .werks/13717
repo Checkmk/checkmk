@@ -21,7 +21,7 @@ To detect if this vulnerability is/was used you can check
 <tt>etc/check_mk/conf.d/wato/predefined_conditions.mk</tt> for HTML code.
 Please be aware that an attacker could delete the code after a attack.
 
-CVE is requested and will be added later.
+CVE is CVE-2022-24566.
 
 CVSS: CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:N (6.3 medium)
 

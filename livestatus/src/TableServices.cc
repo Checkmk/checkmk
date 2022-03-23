@@ -736,7 +736,7 @@ void TableServices::answerQuery(Query *query) {
                 const service *r = m->service_ptr;
                 if (is_authorized(r)) {
                     if (!query->processDataset(Row(r))) {
-                        break;
+                        return;
                     }
                 }
             }
@@ -753,7 +753,7 @@ void TableServices::answerQuery(Query *query) {
                 const service *r = m->service_ptr;
                 if (is_authorized(r)) {
                     if (!query->processDataset(Row(r))) {
-                        break;
+                        return;
                     }
                 }
             }
@@ -787,7 +787,7 @@ void TableServices::answerQuery(Query *query) {
         const service *r = svc;
         if (is_authorized(r)) {
             if (!query->processDataset(Row(r))) {
-                break;
+                return;
             }
         }
     }

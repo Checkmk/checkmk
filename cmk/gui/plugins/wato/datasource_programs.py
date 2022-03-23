@@ -1197,34 +1197,6 @@ rulespec_registry.register(
 )
 
 
-def _factory_default_special_agents_acme_sbc():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_acme_sbc():
-    return FixedValue(
-        value={},
-        title=_("ACME Session Border Controller"),
-        help=_(
-            "This rule activates an agent which connects "
-            "to an ACME Session Border Controller (SBC). This agent uses SSH, so "
-            "you have to exchange an SSH key to make a passwordless connect possible."
-        ),
-        totext=_("Connect to ACME SBC"),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_acme_sbc(),
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:acme_sbc",
-        valuespec=_valuespec_special_agents_acme_sbc,
-    )
-)
-
-
 def _valuespec_special_agents_tinkerforge():
     return Dictionary(
         title=_("Tinkerforge"),

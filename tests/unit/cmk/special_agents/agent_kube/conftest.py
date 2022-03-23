@@ -60,6 +60,21 @@ class PodSpecFactory(ModelFactory):
     __model__ = api.PodSpec
 
 
+containers_count = 1
+
+
+class APIPodFactory(ModelFactory):
+    __model__ = api.Pod
+
+    uid = lambda: api.PodUID(str(uuid.uuid4()))
+    metadata = PodMetaDataFactory.build
+    status = PodStatusFactory.build
+    spec = lambda: PodSpecFactory.build(containers=ContainerSpecFactory.batch(containers_count))
+    containers = lambda: {
+        container.name: container for container in ContainerStatusFactory.batch(containers_count)
+    }
+
+
 # Node Factories
 class KubeletInfoFactory(ModelFactory):
     __model__ = api.KubeletInfo
@@ -112,6 +127,19 @@ def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatu
             status=node_condition_status,
         )
     )
+
+
+class APINodeFactory(ModelFactory):
+    __model__ = api.Node
+
+    metadata = NodeMetaDataFactory.build
+    status = NodeStatusFactory.build
+    control_plane = False
+    resources = lambda: {
+        "capacity": NodeResourcesFactory.build(),
+        "allocatable": NodeResourcesFactory.build(),
+    }
+    kubelet_info = KubeletInfoFactory.build
 
 
 # DaemonSet Factories
@@ -279,6 +307,16 @@ def new_node(
     return _new_node
 
 
+def api_to_agent_node(node: api.Node) -> agent_kube.Node:
+    return agent_kube.Node(
+        metadata=node.metadata,
+        status=node.status,
+        resources=node.resources,
+        control_plane=node.control_plane,
+        kubelet_info=node.kubelet_info,
+    )
+
+
 @pytest.fixture
 def node(
     new_node: Callable[[], agent_kube.Node], node_pods: int, new_pod: Callable[[], agent_kube.Pod]
@@ -331,6 +369,17 @@ def new_pod(
         )
 
     return _new_pod
+
+
+def api_to_agent_pod(pod: api.Pod) -> agent_kube.Pod:
+    return agent_kube.Pod(
+        uid=pod.uid,
+        metadata=pod.metadata,
+        status=pod.status,
+        spec=pod.spec,
+        containers=pod.containers,
+        init_containers=pod.init_containers,
+    )
 
 
 @pytest.fixture

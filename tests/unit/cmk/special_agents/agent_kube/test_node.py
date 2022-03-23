@@ -8,12 +8,22 @@ from unittest.mock import Mock
 
 import pytest
 
+from tests.unit.cmk.special_agents.agent_kube.conftest import (
+    api_to_agent_node,
+    api_to_agent_pod,
+    APINodeFactory,
+    APIPodFactory,
+)
+
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 @pytest.mark.parametrize("node_pods", [0, 10, 20])
-def test_node_pod_resources_returns_all_node_pods(node: agent.Node, node_pods: int):
+def test_node_pod_resources_returns_all_node_pods(node_pods: int):
+    node = api_to_agent_node(APINodeFactory.build())
+    for _ in range(node_pods):
+        node.add_pod(api_to_agent_pod(APIPodFactory.build()))
     resources = dict(node.pod_resources())
     pod_resources = section.PodResources(**resources)
     assert sum(len(pods) for _, pods in pod_resources) == node_pods

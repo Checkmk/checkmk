@@ -86,40 +86,128 @@ TEST(AgentController, ConfigApiDefaults) {
     EXPECT_FALSE(ac::IsRunController(cfg));
 }
 
-TEST(AgentController, CreateLegacyModeFile) {
-    constexpr std::string_view marker_2_1 =
+class AgentControllerCreateArtifacts : public ::testing::Test {
+public:
+    static constexpr std::string_view marker_2_1 =
         "Check MK monitoring and management Service - 2.1, 64-bit";
-    constexpr std::string_view marker_1_6_2_0 =
+    static constexpr std::string_view marker_1_6_2_0 =
         "Check MK monitoring and management Service, 64-bit";
+    void SetUp() override {
+        temp_fs_ = tst::TempCfgFs::Create();
+        ASSERT_TRUE(temp_fs_->loadFactoryConfig());
+    }
 
-    auto temp_fs = tst::TempCfgFs::Create();
-    ASSERT_TRUE(temp_fs->loadFactoryConfig());
-    auto marker_file = temp_fs->data() / ac::kCmkAgentUnistall;
-    ASSERT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    void TearDown() override { killArtifacts(); }
 
-    // absent
-    EXPECT_FALSE(ac::CreateLegacyModeFile(""));
-    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    bool markerExists() { return fs::exists(markerFile()); }
+    bool legacyExists() { return fs::exists(legacyFile()); }
+    bool flagExists() { return fs::exists(flagFile()); }
 
-    // 2.1+
-    tst::CreateTextFile(temp_fs->data() / ac::kCmkAgentUnistall, marker_2_1);
-    EXPECT_FALSE(ac::CreateLegacyModeFile(marker_file));
-    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
-    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kCmkAgentUnistall));
+    void killArtifacts() {
+        std::error_code ec;
+        fs::remove(markerFile(), ec);
+        fs::remove(legacyFile(), ec);
+        fs::remove(flagFile(), ec);
+    }
 
-    // old file
-    tst::CreateTextFile(marker_file, marker_1_6_2_0);
-    auto timestamp = fs::last_write_time(marker_file);
-    fs::last_write_time(marker_file, timestamp - 11s);
-    EXPECT_FALSE(ac::CreateLegacyModeFile(marker_file));
-    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
-    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kCmkAgentUnistall));
+    fs::path markerFile() const {
+        return temp_fs_->data() / ac::kCmkAgentUnistall;
+    }
 
-    // 1.6..2.0
-    tst::CreateTextFile(marker_file, marker_1_6_2_0);
-    EXPECT_TRUE(ac::CreateLegacyModeFile(marker_file));
-    EXPECT_TRUE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
-    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kCmkAgentUnistall));
+    fs::path flagFile() const {
+        return temp_fs_->data() / ac::kControllerFlagFile;
+    }
+
+private:
+    fs::path legacyFile() const {
+        return temp_fs_->data() / ac::kLegacyPullFile;
+    }
+
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(AgentControllerCreateArtifacts, FromNothingNoController) {
+    ac::CreateArtifacts("", false);
+    EXPECT_FALSE(markerExists());
+    EXPECT_FALSE(flagExists());
+    EXPECT_FALSE(legacyExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, FromNothingWithController) {
+    ac::CreateArtifacts("", true);
+    EXPECT_FALSE(markerExists());
+    EXPECT_TRUE(legacyExists());
+    EXPECT_TRUE(flagExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, From21ncNoController) {
+    tst::CreateTextFile(markerFile(), marker_2_1);
+    ac::CreateArtifacts(markerFile(), false);
+    EXPECT_FALSE(markerExists());
+    EXPECT_FALSE(flagExists());
+    EXPECT_FALSE(legacyExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, From21ncWithController) {
+    tst::CreateTextFile(markerFile(), marker_2_1);
+    ac::CreateArtifacts(markerFile(), true);
+    EXPECT_FALSE(markerExists());
+    EXPECT_TRUE(flagExists());
+    EXPECT_FALSE(legacyExists());  // no changes!
+}
+
+TEST_F(AgentControllerCreateArtifacts, From21wcNoController) {
+    tst::CreateTextFile(markerFile(), marker_2_1);
+    tst::CreateTextFile(flagFile(), "flag_file");
+    ac::CreateArtifacts(markerFile(), false);
+    EXPECT_FALSE(markerExists());
+    EXPECT_TRUE(flagExists());  // no changes
+    EXPECT_FALSE(legacyExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, From21wcWithController) {
+    tst::CreateTextFile(markerFile(), marker_2_1);
+    tst::CreateTextFile(flagFile(), "flag_file");
+    ac::CreateArtifacts(markerFile(), true);
+    EXPECT_FALSE(markerExists());
+    EXPECT_TRUE(flagExists());
+    EXPECT_FALSE(legacyExists());  // no changes!
+}
+
+TEST_F(AgentControllerCreateArtifacts, From1620NoController) {
+    tst::CreateTextFile(markerFile(), marker_1_6_2_0);
+    ac::CreateArtifacts(markerFile(), false);
+    EXPECT_FALSE(markerExists());
+    EXPECT_FALSE(flagExists());
+    EXPECT_FALSE(legacyExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, From1620WithController) {
+    tst::CreateTextFile(markerFile(), marker_1_6_2_0);
+    ac::CreateArtifacts(markerFile(), true);
+    EXPECT_FALSE(markerExists());
+    EXPECT_TRUE(flagExists());
+    EXPECT_TRUE(legacyExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, From1620OldNoController) {
+    tst::CreateTextFile(markerFile(), marker_1_6_2_0);
+    auto timestamp = fs::last_write_time(markerFile());
+    fs::last_write_time(markerFile(), timestamp - 11s);
+    ac::CreateArtifacts(markerFile(), false);
+    EXPECT_FALSE(markerExists());
+    EXPECT_FALSE(flagExists());
+    EXPECT_FALSE(legacyExists());
+}
+
+TEST_F(AgentControllerCreateArtifacts, From1620OldWithController) {
+    tst::CreateTextFile(markerFile(), marker_1_6_2_0);
+    auto timestamp = fs::last_write_time(markerFile());
+    fs::last_write_time(markerFile(), timestamp - 11s);
+    ac::CreateArtifacts(markerFile(), true);
+    EXPECT_FALSE(markerExists());
+    EXPECT_TRUE(flagExists());
+    EXPECT_TRUE(legacyExists());
 }
 
 TEST(AgentController, SimulationIntegration) {

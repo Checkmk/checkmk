@@ -204,52 +204,58 @@ void CreateLegacyFile() {
     std::ofstream ofs(file_name.u8string());
     ofs << "Created by Windows agent";
 }
+
+bool ConditionallyCreateLegacyFile(const fs::path &marker,
+                                   std::string_view message) {
+    const std::string text{"File '{}'  {}, legacy pull mode {}"};
+    bool created{false};
+    if (!ac::IsControllerFlagFileExists()) {
+        CreateLegacyFile();
+        created = true;
+    }
+    XLOG::l.i(text, marker, message, created ? "ON" : "OFF");
+
+    return created;
+}
 }  // namespace
 
 /// Creates/Deletes file in agent-user dir to satisfy controller requirements
 /// marker is used to determine status of the OS
 /// marker will be deleted
-bool CreateLegacyModeFile(const std::filesystem::path &marker) {
+bool CreateLegacyModeFile(const fs::path &marker) {
     constexpr auto uninstall_allowed_delay = 10s;
     std::error_code ec;
     if (!fs::exists(marker, ec)) {
-        XLOG::l.i("File '{}' absent, assuming fresh install, legacy OFF",
-                  marker);
-        return false;
+        return ConditionallyCreateLegacyFile(
+            marker, "is absent, assuming fresh install");
     }
 
     auto timestamp = fs::last_write_time(marker, ec);
     if (ec) {
-        XLOG::l.i("File '{}' is strange, assuming bad file, legacy ON", marker);
-        CreateLegacyFile();
-        return true;
+        return ConditionallyCreateLegacyFile(marker,
+                                             "is strange, assuming bad file");
     }
 
     const auto age = std::chrono::duration_cast<std::chrono::seconds>(
         fs::_File_time_clock::now().time_since_epoch() -
         timestamp.time_since_epoch());
-    ON_OUT_OF_SCOPE(fs::remove(marker, ec));
     if (age > uninstall_allowed_delay) {
-        XLOG::l.i("File '{}' too old, assuming fresh install, legacy OFF",
-                  marker);
-        return false;
+        return ConditionallyCreateLegacyFile(
+            marker, "is too old, assuming fresh install");
     }
 
     auto data = tools::ReadFileInString(marker.wstring().c_str());
     if (!data.has_value()) {
-        XLOG::l.i("File '{}' is bad, assuming fresh install, legacy ON",
-                  marker);
-        return false;
+        return ConditionallyCreateLegacyFile(marker,
+                                             "is bad, assuming fresh install");
     }
 
-    if ((*data).starts_with(kCmkAgentMarkerNew)) {
-        XLOG::l.i("File '{}' from 2.1+, legacy OFF", marker);
+    bool reinstall_new = (*data).starts_with(kCmkAgentMarkerNew);
+    if (reinstall_new) {
+        XLOG::l.i("File '{}' is from 2.1+ legacy pull mode  N/A", marker);
         return false;
     }
-
-    CreateLegacyFile();
-    XLOG::l.i("File '{}' from 2.0 or earlier, legacy ON", marker);
-    return true;
+    return ConditionallyCreateLegacyFile(marker, "is from 2.0 or earlier");
 }
 
 void CreateControllerFlagFile() {
@@ -261,6 +267,18 @@ void CreateControllerFlagFile() {
 bool IsControllerFlagFileExists() {
     std::error_code ec;
     return fs::exists(ControllerFlagFile(), ec);
+}
+
+void CreateArtifacts(const fs::path &marker, bool controller_exists) {
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(fs::remove(marker, ec));
+    if (!controller_exists) {
+        return;
+    }
+    if (!IsControllerFlagFileExists()) {
+        CreateLegacyModeFile(marker);
+    }
+    CreateControllerFlagFile();
 }
 
 }  // namespace cma::ac

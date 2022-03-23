@@ -1,4 +1,8 @@
-function scale_factor_prefix(value, base, prefixes = ["", "k", "M", "G", "T", "P"]) {
+function scale_factor_prefix(
+    value: number,
+    base: number,
+    prefixes: string[] = ["", "k", "M", "G", "T", "P"]
+): [number, string] {
     let factor = base;
     let prefix = prefixes[prefixes.length - 1];
 
@@ -25,7 +29,9 @@ export function fmt_number_with_precision(
 ) {
     const [factor, prefix] = scale_factor_prefix(v, base);
     const value = v / factor;
-    const number = drop_zeroes ? drop_dotzero(value, precision) : value.toFixed(precision);
+    const number = drop_zeroes
+        ? drop_dotzero(value, precision)
+        : value.toFixed(precision);
     return `${number} ${prefix + unit}`;
 }
 
@@ -47,7 +53,7 @@ export function percent(perc, scientific_notation = false) {
         result = scientific(perc, 1);
     } else if (Math.abs(perc) >= 100) {
         result = perc.toFixed(0);
-    } else if (0 < Math.abs(perc) < 0.01) {
+    } else if (0 < Math.abs(perc) && Math.abs(perc) < 0.01) {
         result = perc.toFixed(7);
         if (parseFloat(result) == 0) return "0%";
         if (scientific_notation && Math.abs(perc) < 0.0001) {
@@ -59,7 +65,8 @@ export function percent(perc, scientific_notation = false) {
         result = drop_dotzero(perc, 2);
     }
 
-    if (Number.isInteger(parseFloat(result)) && perc < 100) result = result + ".0";
+    if (Number.isInteger(parseFloat(result)) && perc < 100)
+        result = result + ".0";
 
     return result + "%";
 }
@@ -69,8 +76,10 @@ export function scientific(v, precision) {
     if (v < 0) return "-" + scientific(-1 * v, precision);
 
     let [mantissa, exponent] = frexpb(v, 10);
-    if (-3 <= exponent <= 4) {
-        return v.toFixed(Math.min(precision, Math.max(0, precision - exponent)));
+    if (-3 <= exponent && exponent <= 4) {
+        return v.toFixed(
+            Math.min(precision, Math.max(0, precision - exponent))
+        );
     }
     return v.toExponetial(precision);
 }
@@ -116,9 +125,14 @@ export function calculate_physical_precision(v, precision) {
 
 export function physical_precision(v, precision, unit_symbol) {
     if (v < 0) return "-" + physical_precision(-1 * v, precision, unit_symbol);
-    const [symbol, places_after_comma, factor] = calculate_physical_precision(v, precision);
+    const [symbol, places_after_comma, factor] = calculate_physical_precision(
+        v,
+        precision
+    );
     const scaled_value = v / factor;
-    return scaled_value.toFixed(places_after_comma) + " " + symbol + unit_symbol;
+    return (
+        scaled_value.toFixed(places_after_comma) + " " + symbol + unit_symbol
+    );
 }
 
 export function frexpb(x, base) {

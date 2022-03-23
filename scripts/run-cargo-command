@@ -14,7 +14,7 @@ if [ -e "/opt/rust/rustup" ]; then
     export CARGO_HOME
 fi
 
-if [[ -f cargo_env ]]; then
-    source cargo_env
-fi
+# shellcheck source=agents/cmk-agent-ctl/cargo_env
+[ -f cargo_env ] && source cargo_env
+
 cargo "$@"

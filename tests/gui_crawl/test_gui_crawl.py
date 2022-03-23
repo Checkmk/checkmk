@@ -268,7 +268,16 @@ class Crawler:
 
         try:
             with tarfile.open(fileobj=io.BytesIO(response.content)) as tar:
-                crash_info = tar.extractfile("crash.info")
+                crash_info_file = tar.extractfile("crash.info")
+                if crash_info_file is None:
+                    self.handle_error(
+                        Url(url=crash_report_url, referer_url=url.url),
+                        "EmptyCrashReportTarFile",
+                        message=crash_id,
+                    )
+                    return False
+
+                crash_info = json.loads(crash_info_file.read().decode("utf-8"))
         except tarfile.ReadError:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),
@@ -277,16 +286,8 @@ class Crawler:
             )
             return False
 
-        if crash_info is None:
-            self.handle_error(
-                Url(url=crash_report_url, referer_url=url.url),
-                "EmptyCrashReportTarFile",
-                message=crash_id,
-            )
-            return False
-
         # reads the crash report and dumps it indented for better readability
-        crash_report = json.dumps(json.loads(crash_info.read().decode("utf-8")), indent=4)
+        crash_report = json.dumps(crash_info, indent=4)
         return self.handle_error(url, "CrashReport", message=crash_report)
 
     async def visit_url(

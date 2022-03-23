@@ -107,7 +107,7 @@ SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 # '/' might occur in custom branches
 # filenames and sed arguments should not contain '/'
 NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
-CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
+CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "buster" ]; then echo "-3" ; elif [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2"; fi )
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 
@@ -332,10 +332,10 @@ $(CMA_INSTALL): $(INSTALL_TARGETS)
 
 $(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	# Create info file to mark minimal cma firmware version requirement
-	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
+	@if [ "$(DISTRO_CODE)" = "buster" ]; then \
+	    MIN_VERSION=1.5.0 ; \
+	elif [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.17 ; \
-	else \
-	    MIN_VERSION=1.1.2 ; \
 	fi ; \
 	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 

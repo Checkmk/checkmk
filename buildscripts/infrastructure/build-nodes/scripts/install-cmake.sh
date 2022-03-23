@@ -30,5 +30,7 @@ build_package() {
     test ! -e "${DIR_NAME}" && mv "${DIR_NAME/-Linux-/-linux-}" "${DIR_NAME}"
 }
 
-cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+if [ "$1" != "link" ]; then
+    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+fi
 ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* /usr/bin/

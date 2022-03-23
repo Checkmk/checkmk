@@ -38,9 +38,12 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
-    auto is_authorized = [service_auth = core()->serviceAuthorization(),
-                          auth_user = query->authUser()](const service *svc) {
-        return is_authorized_for_svc(service_auth, auth_user, svc);
+    auto process = [query, service_auth = core()->serviceAuthorization(),
+                    auth_user = query->authUser()](const service *svc,
+                                                   const servicegroup *group) {
+        service_and_group sag{svc, group};
+        return !is_authorized_for_svc(service_auth, auth_user, svc) ||
+               query->processDataset(Row(&sag));
     };
 
     for (const auto *group = servicegroup_list; group != nullptr;
@@ -49,11 +52,8 @@ void TableServicesByGroup::answerQuery(Query *query) {
                                             core()->serviceAuthorization(),
                                             group, query->authUser())) {
             for (const auto *m = group->members; m != nullptr; m = m->next) {
-                if (is_authorized(m->service_ptr)) {
-                    service_and_group sag{m->service_ptr, group};
-                    if (!query->processDataset(Row(&sag))) {
-                        return;
-                    }
+                if (!process(m->service_ptr, group)) {
+                    return;
                 }
             }
         }

@@ -194,7 +194,7 @@ fi
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.0.0p22"
+    echo "Version: 2.0.0p23"
     echo "AgentOS: linux"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"

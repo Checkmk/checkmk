@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.0.0p22"
+set CMK_VERSION="2.0.0p23"
 echo ^<^<^<windows_intel_bonding^>^>^>
 
 

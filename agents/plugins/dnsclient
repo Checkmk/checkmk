@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.0.0p22"
+CMK_VERSION="2.0.0p23"
 
 # This check can be used to test the name resolution of a given host
 # address using the local resolver of the system this script is

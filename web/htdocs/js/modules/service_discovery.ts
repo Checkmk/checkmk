@@ -52,7 +52,7 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
 
     if (["bulk_update", "update_services"].includes(discovery_options.action)) {
         var checked_checkboxes = [];
-        var checkboxes = document.getElementsByClassName("service_checkbox");
+        var checkboxes = document.getElementsByClassName("service_checkbox") as  HTMLCollectionOf<HTMLInputElement>;
         for (var i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
                 checked_checkboxes.push(checkboxes[i].name);
@@ -105,7 +105,8 @@ function update(handler_data, response) {
         handler_data.host_name,
         handler_data.folder_path,
         response.discovery_options,
-        handler_data.transid
+        handler_data.transid,
+        null
     );
 
     // Update the page menu

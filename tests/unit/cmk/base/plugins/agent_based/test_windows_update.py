@@ -3,6 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Sequence, Union
+
+import pytest
+from pytest_mock.plugin import MockerFixture
 
 from cmk.utils.type_defs import CheckPluginName
 
@@ -42,28 +46,118 @@ def test_discover_windows_updates(fix_register) -> None:
     discover_windows_updates = fix_register.check_plugins[
         CheckPluginName("windows_updates")
     ].discovery_function
-
-    assert list(discover_windows_updates(section=SECTION)) == [
-        Service(parameters={"auto-migration-wrapper-key": (0, 0, 0, 0, 604800, 172800, True)})
-    ]
+    assert list(discover_windows_updates(section=SECTION)) == [Service()]
 
 
-def test_check_windows_updates(fix_register) -> None:
-    check_windows_updates = fix_register.check_plugins[
-        CheckPluginName("windows_updates")
-    ].check_function
+@pytest.fixture(name="check_windows_updates")
+def check_windows_updates_fixture(fix_register):
+    return fix_register.check_plugins[CheckPluginName("windows_updates")].check_function
+
+
+def test_check_windows_updates(check_windows_updates) -> None:
     assert list(
         check_windows_updates(
-            params={"auto-migration-wrapper-key": (0, 0, 0, 0, 604800, 172800, True)},
+            params=dict(
+                levels_important=(1, 2),
+                levels_optional=(1, 2),
+                levels_lower_forced_reboot=(604800, 172800),
+            ),
             section=SECTION,
         )
     ) == [
-        Result(state=State.CRIT, summary="Important: 2 (warn/crit at 0/0)"),
-        Metric("important", 2.0, levels=(0.0, 0.0)),
+        Result(state=State.CRIT, summary="Important: 2 (warn/crit at 1/2)"),
+        Metric("important", 2.0, levels=(1.0, 2.0)),
         Result(
             state=State.OK,
-            summary="(Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830))",
+            notice="(Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830))",
         ),
-        Result(state=State.CRIT, summary="Optional: 5 (warn/crit at 0/0)"),
-        Metric("optional", 5.0, levels=(0.0, 0.0)),
+        Result(state=State.CRIT, summary="Optional: 5 (warn/crit at 1/2)"),
+        Metric("optional", 5.0, levels=(1.0, 2.0)),
     ]
+
+
+def test_reboot_required(check_windows_updates) -> None:
+    section = Section(
+        reboot_required=True,
+        important_updates=[],
+        optional_updates=[],
+        forced_reboot=None,
+    )
+    assert list(
+        check_windows_updates(
+            params=dict(
+                levels_important=None,
+                levels_optional=None,
+                levels_lower_forced_reboot=(604800, 172800),
+            ),
+            section=section,
+        )
+    ) == [
+        Result(state=State.OK, summary="Important: 0"),
+        Metric("important", 0.0),
+        Result(state=State.OK, summary="Optional: 0"),
+        Metric("optional", 0.0),
+        Result(state=State.WARN, summary="Reboot required to finish updates"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "reboot_time, now, results",
+    [
+        pytest.param(
+            3601,
+            1,
+            [
+                Result(state=State.OK, summary="Important: 0"),
+                Metric("important", 0.0),
+                Result(state=State.OK, summary="Optional: 0"),
+                Metric("optional", 0.0),
+                Result(state=State.WARN, summary="Reboot required to finish updates"),
+                Result(
+                    state=State.CRIT,
+                    summary="Time to enforced reboot to finish updates: 1 hour 0 minutes (warn/crit below 7 days 0 hours/2 days 0 hours)",
+                ),
+            ],
+            id="report if reboot time is in the future",
+        ),
+        pytest.param(
+            1,
+            3601,
+            [
+                Result(state=State.OK, summary="Important: 0"),
+                Metric("important", 0.0),
+                Result(state=State.OK, summary="Optional: 0"),
+                Metric("optional", 0.0),
+                Result(state=State.WARN, summary="Reboot required to finish updates"),
+            ],
+            id="no report if reboot time is in the past",
+        ),
+    ],
+)
+def test_time_until_force_reboot(
+    check_windows_updates,
+    mocker: MockerFixture,
+    reboot_time: float,
+    now: float,
+    results: Sequence[Union[Result, Metric]],
+) -> None:
+    mocker.patch("time.time", return_value=now)
+    section = Section(
+        reboot_required=True,
+        important_updates=[],
+        optional_updates=[],
+        forced_reboot=reboot_time,
+    )
+    assert (
+        list(
+            check_windows_updates(
+                params=dict(
+                    levels_important=None,
+                    levels_optional=None,
+                    levels_lower_forced_reboot=(604800, 172800),
+                ),
+                section=section,
+            )
+        )
+        == results
+    )

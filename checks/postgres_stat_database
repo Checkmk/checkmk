@@ -36,7 +36,7 @@ def parse_postgres_stat_database(info):
                 db_name = "%s/%s" % (instance_name, row["datname"])
             else:
                 db_name = row["datname"]
-            parsed[db_name] = row
+            parsed[str(db_name)] = row
 
     return parsed
 

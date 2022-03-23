@@ -16,6 +16,7 @@ CMK_VERSION="2.2.0i1"
 # USER=client.admin
 # KEYRING=/etc/ceph/ceph.client.admin.keyring
 
+# shellcheck disable=SC1091 # TODO: add a configuration example and remove this suppression
 # shellcheck source=agents/cfg_examples/ceph.cfg
 . "$MK_CONFDIR/ceph.cfg" 2>/dev/null
 

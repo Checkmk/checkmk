@@ -21,6 +21,7 @@ CMK_VERSION="2.2.0i1"
 # If you have more than once instance, make sure that the upper
 # login works on all of them.
 
+# shellcheck disable=SC1091 # TODO: add a configuration example and remove this suppression
 # shellcheck source=agents/cfg_examples/tsm.cfg
 . "$MK_CONFDIR/tsm.cfg" || exit 1
 

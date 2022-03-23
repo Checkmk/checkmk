@@ -25,7 +25,7 @@ constexpr std::string_view kCmkAgentMarkerNew{
     "Check MK monitoring and management Service - "};
 constexpr std::string_view kCmdLineAsDaemon{"daemon"};
 constexpr std::string_view kCmdLinePort{"-P"};
-constexpr std::string_view kCmdLineChannel{"--agent_channel"};
+constexpr std::string_view kCmdLineChannel{"--agent-channel"};
 constexpr std::string_view kCmdLineAllowedIp{"-A"};
 constexpr std::string_view kCmdLineVersion{"-V"};
 constexpr std::string_view kCmdLineStatus{"status --json"};

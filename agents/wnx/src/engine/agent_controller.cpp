@@ -137,10 +137,11 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
     }
 
     wtools::AppRunner ar;
-    auto proc_id = ar.goExecAsDetached(BuildCommandLine(controller_name));
+    const auto cmdline = BuildCommandLine(controller_name);
+    auto proc_id = ar.goExecAsDetached(cmdline);
     if (proc_id != 0) {
-        XLOG::l.i("Agent controller '{}' started pid [{}]", controller_name,
-                  proc_id);
+        XLOG::l.i("Agent controller '{}' started pid [{}]",
+                  wtools::ToUtf8(cmdline), proc_id);
         return proc_id;
     }
     XLOG::l("Agent controller '{}' failed to start", controller_name);

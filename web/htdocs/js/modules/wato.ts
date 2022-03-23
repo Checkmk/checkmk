@@ -9,7 +9,17 @@ import * as utils from "utils";
 // General functions for WATO
 // ----------------------------------------------------------------------------
 
-var dialog_properties = null;
+interface Dialog {
+    inherited_tags;
+    check_attributes;
+    aux_tags_by_tag;
+    depends_on_tags;
+    depends_on_roles;
+    volatile_topics;
+    user_roles;
+    hide_attributes;
+}
+var dialog_properties: null | Dialog = null;
 
 export function prepare_edit_dialog(attrs) {
     dialog_properties = attrs;
@@ -22,7 +32,7 @@ export function fix_visibility() {
        They are in the same table as we are */
     var current_tags = get_effective_tags();
     if (!current_tags) return;
-
+    dialog_properties = dialog_properties!;
     var hide_topics = dialog_properties.volatile_topics.slice(0);
     /* Now loop over all attributes that have conditions. Those are
        stored in the global variable depends_on_tags, which is filled
@@ -42,11 +52,16 @@ export function fix_visibility() {
 
         // Visibility depends on roles
         if (display == "" && attrname in dialog_properties.depends_on_roles) {
-            for (index = 0; index < dialog_properties.depends_on_roles[attrname].length; index++) {
+            for (
+                index = 0;
+                index < dialog_properties.depends_on_roles[attrname].length;
+                index++
+            ) {
                 var role = dialog_properties.depends_on_roles[attrname][index];
                 var negate = role[0] == "!";
                 var rolename = negate ? role.substr(1) : role;
-                var have_role = dialog_properties.user_roles.indexOf(rolename) != -1;
+                var have_role =
+                    dialog_properties.user_roles.indexOf(rolename) != -1;
                 if (have_role == negate) {
                     display = "none";
                     break;
@@ -56,7 +71,11 @@ export function fix_visibility() {
 
         // Visibility depends on tags
         if (display == "" && attrname in dialog_properties.depends_on_tags) {
-            for (index = 0; index < dialog_properties.depends_on_tags[attrname].length; index++) {
+            for (
+                index = 0;
+                index < dialog_properties.depends_on_tags[attrname].length;
+                index++
+            ) {
                 var tag = dialog_properties.depends_on_tags[attrname][index];
                 var negate_tag = tag[0] == "!";
                 var tagname = negate_tag ? tag.substr(1) : tag;
@@ -68,14 +87,18 @@ export function fix_visibility() {
             }
         }
 
-        var oTr = document.getElementById("attr_" + attrname);
+        var oTr = document.getElementById(
+            "attr_" + attrname
+        ) as HTMLTableRowElement;
         if (oTr) {
             oTr.style.display = display;
 
             // Prepare current visibility information which is used
             // within the attribut validation in wato
             // Hidden attributes are not validated at all
-            var oAttrDisp = document.getElementById("attr_display_" + attrname);
+            var oAttrDisp = <HTMLInputElement>(
+                document.getElementById("attr_display_" + attrname)
+            );
             if (!oAttrDisp) {
                 oAttrDisp = document.createElement("input");
                 oAttrDisp.name = "attr_display_" + attrname;
@@ -97,7 +120,7 @@ export function fix_visibility() {
             }
 
             // There is at least one item in this topic -> show it
-            var topic = oTr.parentNode.childNodes[0].textContent;
+            var topic = oTr.parentNode!.childNodes[0].textContent;
             if (display == "") {
                 index = hide_topics.indexOf(topic);
                 if (index != -1) delete hide_topics[index];
@@ -111,9 +134,13 @@ export function fix_visibility() {
         var my_form = document.getElementById(available_forms[try_form]);
         if (my_form != null) {
             for (var child in my_form.childNodes) {
-                oTr = my_form.childNodes[child];
+                oTr = my_form.childNodes[child] as HTMLTableRowElement;
                 if (oTr.className == "nform") {
-                    if (hide_topics.indexOf(oTr.childNodes[0].childNodes[0].textContent) > -1)
+                    if (
+                        hide_topics.indexOf(
+                            oTr.childNodes[0].childNodes[0].textContent
+                        ) > -1
+                    )
                         oTr.style.display = "none";
                     else oTr.style.display = "";
                 }
@@ -136,27 +163,32 @@ export function toggle_attribute(oCheckbox, attrname) {
 
     if (oCheckbox.checked) {
         oEntry.style.display = "";
-        oDefault.style.display = "none";
+        oDefault!.style.display = "none";
     } else {
         oEntry.style.display = "none";
-        oDefault.style.display = "";
+        oDefault!.style.display = "";
     }
 }
 
 function get_containers() {
-    return document.getElementById("form_edit_host").querySelectorAll("table.nform");
+    return document
+        .getElementById("form_edit_host")
+        ?.querySelectorAll(
+            "table.nform"
+        ) as NodeListOf<HTMLTableSectionElement>;
 }
 
 function get_effective_tags() {
-    var current_tags = [];
+    var current_tags: HTMLElement[] = [];
 
-    var containers = get_containers();
+    var containers = get_containers()!;
 
     for (var a = 0; a < containers.length; a++) {
         var tag_container = containers[a];
         for (var i = 0; i < tag_container.rows.length; i++) {
+            dialog_properties = dialog_properties!;
             var row = tag_container.rows[i];
-            var add_tag_id = null;
+            var add_tag_id;
             if (row.tagName == "TR") {
                 var legend_cell = row.cells[0];
                 if (!utils.has_class(legend_cell, "legend")) {
@@ -182,22 +214,25 @@ function get_effective_tags() {
                 }
 
                 if (attr_enabled == false) {
-                    var attr_ident = "attr_" + checkbox.name.replace(/.*_change_/, "");
+                    var attr_ident =
+                        "attr_" + checkbox.name.replace(/.*_change_/, "");
                     if (
                         attr_ident in dialog_properties.inherited_tags &&
                         dialog_properties.inherited_tags[attr_ident] !== null
                     ) {
-                        add_tag_id = dialog_properties.inherited_tags[attr_ident];
+                        add_tag_id =
+                            dialog_properties.inherited_tags[attr_ident];
                     }
                 } else {
                     /* Find the <select>/<checkbox> object in this tr */
-                    var elements = content_cell.getElementsByTagName("input");
+                    var elements: HTMLCollectionOf<HTMLElement> =
+                        content_cell.getElementsByTagName("input");
                     if (elements.length == 0)
                         elements = content_cell.getElementsByTagName("select");
 
                     if (elements.length == 0) continue;
 
-                    var oElement = elements[0];
+                    var oElement = elements[0] as HTMLInputElement;
                     if (oElement.type == "checkbox" && oElement.checked) {
                         add_tag_id = oElement.name.substr(4);
                     } else if (oElement.tagName == "SELECT") {
@@ -208,7 +243,9 @@ function get_effective_tags() {
 
             current_tags.push(add_tag_id);
             if (dialog_properties.aux_tags_by_tag[add_tag_id]) {
-                current_tags = current_tags.concat(dialog_properties.aux_tags_by_tag[add_tag_id]);
+                current_tags = current_tags.concat(
+                    dialog_properties.aux_tags_by_tag[add_tag_id]
+                );
             }
         }
     }
@@ -218,10 +255,10 @@ function get_effective_tags() {
 export function randomize_secret(id, len) {
     var secret = "";
     for (var i = 0; i < len; i++) {
-        var c = parseInt(26 * Math.random() + 64);
+        var c = parseInt(String(26 * Math.random() + 64));
         secret += String.fromCharCode(c);
     }
-    var oInput = document.getElementById(id);
+    var oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
 }
 
@@ -290,7 +327,7 @@ export function toggle_folder(event, oDiv, on) {
 }
 
 export function toggle_rule_condition_type(select_id) {
-    var value = document.getElementById(select_id).value;
+    var value = (document.getElementById(select_id) as HTMLInputElement).value;
     $(".condition").hide();
     $(".condition." + value).show();
 }

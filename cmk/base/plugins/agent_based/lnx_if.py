@@ -310,6 +310,24 @@ register.check_plugin(
 )
 
 
+def _make_inventory_interface(interface: interfaces.Interface) -> Optional[InterfaceInv]:
+    # Always exclude dockers veth* interfaces on docker nodes.
+    # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
+    # Ignore useless half-empty tables (e.g. Viprinet-Router).
+    if interface.descr.startswith("veth") or interface.type in ("231", "232"):
+        return None
+
+    return InterfaceInv(
+        index=interface.index,
+        descr=interface.descr,
+        alias=interface.alias,
+        type=interface.type,
+        speed=int(interface.speed),
+        oper_status=int(interface.oper_status),
+        phys_address=interfaces.render_mac_address(interface.phys_address),
+    )
+
+
 def inventory_lnx_if(section: Section) -> InventoryResult:
     ifaces, ip_stats = section
 
@@ -331,20 +349,9 @@ def inventory_lnx_if(section: Section) -> InventoryResult:
             ],
         },
         (
-            InterfaceInv(
-                index=interface.index,
-                descr=interface.descr,
-                alias=interface.alias,
-                type=interface.type,
-                speed=int(interface.speed),
-                oper_status=int(interface.oper_status),
-                phys_address=interfaces.render_mac_address(interface.phys_address),
-            )
-            for interface in sorted(ifaces, key=lambda i: i.index)
-            # Always exclude dockers veth* interfaces on docker nodes.
-            # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
-            # Ignore useless half-empty tables (e.g. Viprinet-Router).
-            if not interface.descr.startswith("veth") and interface.type not in ("231", "232")
+            inv_if
+            for interface in ifaces
+            if (inv_if := _make_inventory_interface(interface)) is not None
         ),
         len(ifaces),
     )

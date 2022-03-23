@@ -1,6 +1,7 @@
 ARG IMAGE_UBUNTU_20_04
 # hadolint ignore=DL3006
-FROM ${IMAGE_UBUNTU_20_04}
+# Create base image
+FROM ${IMAGE_UBUNTU_20_04} as base
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -86,11 +87,13 @@ RUN apt-get update \
     libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
-# Install our standard tool chain for building
+
+# Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
+FROM base as builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
@@ -120,6 +123,12 @@ RUN /opt/install-clang.sh
 RUN /opt/install-shellcheck.sh
 RUN /opt/install-rust-cargo.sh
 RUN /opt/install-musl-tools.sh
+
+### Actual Image ###
+FROM base
+
+# Copy our standard tool chain for building
+COPY --from=builder /opt /opt
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

@@ -1,0 +1,19 @@
+Title: Update of Windows update checkplugin and rulespec
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1648124895
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The "WSUS (Windows Updates)" rulespec now enforces that both warning and critical levels have to be set.
+Existing configurations will be migrated automatically.
+If only a critical level have been set before, the warning level is set equal to the critical level.
+If only a warning level is set, the critical level is set to 1000 times the warning level.
+
+The checkplugin and rule for "Windows Updates" used to interpret a warn/crit level of 0 as do not check this.
+Now you can explicitely set "No Levels".
+
+The verbosity flag has been removed. If important updates are detected they are always shown in the service details.

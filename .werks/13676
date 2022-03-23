@@ -1,0 +1,13 @@
+Title: postgres_stat_database: Support DBs named with numbers only
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648206348
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p23
+
+In case that PostgreSQL databases had names which contain only numbers,
+the discovery of the "PostgreSQL DB Statistics" previously failed.

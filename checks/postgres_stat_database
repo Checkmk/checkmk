@@ -16,27 +16,27 @@ def parse_postgres_stat_database(info):
     if len(info) == 0:
         return {}
 
-    def s(x):
-        try:
-            return int(x)
-        except ValueError:
-            return x
-
     parsed = {}
     instance_name = ""
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-        elif line[0] == "datid" and line[1] == "datname":
+
+        if line[0] == "datid" and line[1] == "datname":
             headers = line
+            continue
+
+        # All values other than datid and datname must be int
+        row = {k: int(v) for k, v in zip(headers, line) if k not in ("datid", "datname")}
+        # datid should be an oid, which should be an int, but that may not be guaranteed
+        row["datid"] = line[0]
+        if instance_name:
+            db_name = "%s/%s" % (instance_name, line[1])
         else:
-            row = {k: s(v) for k, v in zip(headers, line)}
-            if instance_name:
-                db_name = "%s/%s" % (instance_name, row["datname"])
-            else:
-                db_name = row["datname"]
-            parsed[db_name] = row
+            db_name = line[1]
+
+        parsed[db_name] = row
 
     return parsed
 

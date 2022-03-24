@@ -13,3 +13,7 @@ item:
 
 discovery:
  One service is created for each BI aggregation
+
+cluster:
+ On a cluster, the service determines state based on the information of each Node, hence only one Node should have the
+ informations.

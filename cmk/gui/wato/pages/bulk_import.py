@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -437,8 +437,7 @@ class ModeBulkImport(WatoMode):
             table.row()
             for col_num in range(num_columns):
                 header = headers[col_num] if len(headers) > col_num else None
-                if header is not None:
-                    table.cell(escape_to_html(header))
+                table.cell(escape_to_html_permissive(header))
                 attribute_varname = "attribute_%d" % col_num
                 if request.var(attribute_varname):
                     attribute_method = request.get_ascii_input_mandatory(attribute_varname)

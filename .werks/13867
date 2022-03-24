@@ -1,0 +1,16 @@
+Title: Fix update preview of bulk import of hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1648109738
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b4
+
+Werk #13675 fixed a NoneType error on updating the preview but the header was
+not rendered correctly after that fix.
+
+The header is now rendered as intended with and without the option "Has title
+line".
+

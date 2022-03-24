@@ -48,15 +48,15 @@ QosClass = Literal["burstable", "besteffort", "guaranteed"]
 
 class ControllerType(enum.Enum):
     deployment = "deployment"
-    daemon_set = "daemon_set"
+    daemonset = "daemonset"
     statefulset = "statefulset"
 
     @staticmethod
     def from_str(label):
         if label == "deployment":
             return ControllerType.deployment
-        if label == "daemon_set":
-            return ControllerType.daemon_set
+        if label == "daemonset":
+            return ControllerType.daemonset
         if label == "statefulset":
             return ControllerType.statefulset
         raise ValueError(f"Unknown controller type: {label}")

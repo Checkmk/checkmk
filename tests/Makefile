@@ -31,7 +31,6 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude-dir="deprecated" \
     --exclude-dir="node_modules" \
     --exclude-dir="omd" \
-    --exclude-dir="skel" \
     --exclude="LIVEPROXYD" \
     --exclude="install-sh" \
     --exclude="code_examples.py" \

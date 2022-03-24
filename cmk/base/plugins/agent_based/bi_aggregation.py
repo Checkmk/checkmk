@@ -93,5 +93,5 @@ register.check_plugin(
     service_name="Aggr %s",
     discovery_function=discover_bi_aggregation,
     check_function=check_bi_aggregation,
-    cluster_check_function=check_cluster_bi_aggregation
+    cluster_check_function=check_cluster_bi_aggregation,
 )

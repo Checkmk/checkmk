@@ -173,6 +173,10 @@ msgstr " 来週"
 msgid " of"
 msgstr " の"
 
+#, fuzzy, python-format
+msgid " of service %s on host %s"
+msgstr "ホスト %s のサービスを表示する"
+
 #, python-format
 msgid " of the following %d Event Console %s"
 msgstr " 次の %d イベントコンソール %s の"
@@ -1298,22 +1302,6 @@ msgstr ""
 "合があります。これらのファイルは[H]でマークされています。他のファイルには、IP"
 "アドレス、ホスト名、ユーザー名、メールアドレス、または電話番号が含まれる場合"
 "があり、[M]でマークされています。"
-
-#, python-format
-msgid ""
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
-msgstr ""
-"<br> <a href=\"%s\">サブスクリプション設定<a>にカスタマーポータルの資格情報と"
-"サブスクリプションの詳細を追加してください。"
-
-#, python-format
-msgid ""
-"<br>Please add subscription details in the <a href=\"%s\">subscription "
-"settings<a>."
-msgstr ""
-"<br>サブスクリプションの詳細を追加してください<ahref= \"%s\">サブスクリプショ"
-"ン設定<a>"
 
 msgid ""
 "<br>Please note that Check_MK needs this password in clear<br>text during "
@@ -7656,8 +7644,13 @@ msgstr ""
 "このビューをマトリックスレイアウトで表示することはできません。少なくとも2つの"
 "列が必要です!"
 
-msgid "Cannot download license usage report."
-msgstr "ライセンス使用状況レポートをダウンロードできません。"
+#, fuzzy, python-format
+msgid ""
+"Cannot download license usage report.<br>Please add subscription details in "
+"the <a href=\"%s\">subscription settings<a>."
+msgstr ""
+"<br>サブスクリプションの詳細を追加してください<ahref= \"%s\">サブスクリプショ"
+"ン設定<a>"
 
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
@@ -7802,10 +7795,14 @@ msgstr "ntop REST APIからデータを取得できません: %s"
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Nagiosコアで履歴データを取得できません"
 
-#, python-format
-msgid "Cannot submit license usage report to the Checkmk license server '%s'."
+#, fuzzy, python-format
+msgid ""
+"Cannot submit license usage report to the Checkmk license server '%s'."
+"<br>Please add customer portal credentials and subscription details in the "
+"<a href=\"%s\">subscription settings<a>."
 msgstr ""
-"ライセンス使用状況レポートをCheckmkライセンスサーバー '%s'に送信できません。"
+"<br> <a href=\"%s\">サブスクリプション設定<a>にカスタマーポータルの資格情報と"
+"サブスクリプションの詳細を追加してください。"
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "テストできませんターゲットシステムのCPU数を判別できません"
@@ -9224,6 +9221,10 @@ msgstr "接続"
 
 #, fuzzy
 msgid "Cloud Run"
+msgstr "IPネットワーク"
+
+#, fuzzy
+msgid "Cloud SQL"
 msgstr "IPネットワーク"
 
 msgid "Cloud based environments"
@@ -13906,6 +13907,10 @@ msgstr "OpenVMSのディスク容量"
 msgid "Disk throughput"
 msgstr "ディスクスループット"
 
+#, fuzzy
+msgid "Disk usage"
+msgstr "Diskstate"
+
 msgid "Disk utilization"
 msgstr "ディスク使用率"
 
@@ -17951,6 +17956,10 @@ msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 msgid "Files"
 msgstr "ファイル"
 
+#, fuzzy
+msgid "Filestore"
+msgstr "戻す"
+
 msgid "Filesystem"
 msgstr "ファイルシステム"
 
@@ -18033,6 +18042,9 @@ msgstr "サイズでファイルをフィルタリングする"
 
 msgid "Filter group (see help)"
 msgstr "フィルタグループ(ヘルプを参照)"
+
+msgid "Filter out consecutive duplicated messages in the agent output"
+msgstr ""
 
 msgid "Filter out duplicated messages in Windows event log"
 msgstr ""
@@ -18954,9 +18966,28 @@ msgstr "IPネットワーク"
 msgid "GCP/Cloud Run Requests"
 msgstr "IPv6リクエスト"
 
+msgid "GCP/Cloud SQL CPU"
+msgstr ""
+
 #, fuzzy
-msgid "GCP/Function egress"
-msgstr "接続テスト"
+msgid "GCP/Cloud SQL Network"
+msgstr "IPネットワーク"
+
+#, fuzzy
+msgid "GCP/Cloud SQL disk"
+msgstr "IPネットワーク"
+
+#, fuzzy
+msgid "GCP/Cloud SQL memory"
+msgstr "IPネットワーク"
+
+#, fuzzy
+msgid "GCP/Cloud SQL status"
+msgstr "IPv6リクエスト"
+
+#, fuzzy
+msgid "GCP/Filestore"
+msgstr "ファイルシステム"
 
 #, fuzzy
 msgid "GCP/Function execution"
@@ -18965,6 +18996,10 @@ msgstr "最大同時実行"
 #, fuzzy
 msgid "GCP/Function instances"
 msgstr "インスタンスの自動検出"
+
+#, fuzzy
+msgid "GCP/Function network"
+msgstr "接続テスト"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -22223,6 +22258,14 @@ msgstr ""
 "このルールに従ってメッセージが存在しないためにオープンイベントがすでに存在す"
 "る場合は、オプションで、新しいインシデントを既存のイベントとマージするか、"
 "メッセージが存在しない間隔ごとに新しいイベントを作成できます。"
+
+msgid ""
+"If there are multiple consecutive messages with the same content, the agent "
+"delivers only the first message and then it outputs a context line with the "
+"number of lines that have been removed: [the above message was repeated n "
+"times]. Setting this flag may help to decrease the size of the agent output "
+"in case many duplicate lines are generated."
+msgstr ""
 
 msgid ""
 "If there is only one form element on the requested page, you do not need to "
@@ -25667,6 +25710,10 @@ msgstr "ライブステータスの使用レベル"
 msgid "Levels Services"
 msgstr "レベルサービス"
 
+#, fuzzy
+msgid "Levels disk"
+msgstr "レベル"
+
 #, python-format
 msgid "Levels for %s"
 msgstr "%s のレベル"
@@ -26066,7 +26113,7 @@ msgid "Levels on latency"
 msgstr "遅延のレベル"
 
 #, fuzzy
-msgid "Levels on network egress"
+msgid "Levels on network"
 msgstr "シングルコアのレベル"
 
 #, fuzzy
@@ -27706,6 +27753,9 @@ msgstr "データベースの状態をマップする"
 
 msgid "Map Device States"
 msgstr "マップデバイス状態"
+
+msgid "Map GCP status to check mk"
+msgstr ""
 
 msgid "Map RWVDMS names"
 msgstr "RWVDMS名をマップします"
@@ -30589,6 +30639,10 @@ msgstr "レベルなし"
 msgid "No logging"
 msgstr "ロギングなし"
 
+#, fuzzy
+msgid "No logs could be found."
+msgstr "ルールが見つかりません。"
+
 msgid "No logs found for this host."
 msgstr "このホストのログは見つかりませんでした"
 
@@ -31711,6 +31765,10 @@ msgstr "問題の数"
 msgid "Number of processes"
 msgstr ""
 
+#, fuzzy
+msgid "Number of read IOPS"
+msgstr "スレッド数"
+
 msgid "Number of recoveries"
 msgstr "回収数"
 
@@ -31879,6 +31937,10 @@ msgstr "ユーザー数"
 
 msgid "Number of warnings"
 msgstr "警告の数"
+
+#, fuzzy
+msgid "Number of write IOPS"
+msgstr "アイテム数"
 
 msgid "Number of zombie jobs"
 msgstr "ゾンビジョブの数"
@@ -33585,6 +33647,10 @@ msgstr "保留中のDHCPリース"
 #, fuzzy, python-format
 msgid "Pending changes (%s)"
 msgstr "保留中の変更"
+
+#, fuzzy
+msgid "Pending create"
+msgstr "保留中の更新"
 
 msgid "Pending memory"
 msgstr "保留中のメモリ"
@@ -37373,6 +37439,22 @@ msgstr "Rittal CMC-IIIユニット: 現在"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-IIIユニット:温度"
 
+#, fuzzy
+msgid "RobotMK report"
+msgstr "レポートを送信する"
+
+#, fuzzy
+msgid "RobotMK reports"
+msgstr "レポートを送信する"
+
+#, fuzzy
+msgid "Robotmk report"
+msgstr "レポートを送信する"
+
+#, fuzzy
+msgid "Robotmk report of this service"
+msgstr "サービスの名前"
+
 msgid "Role"
 msgstr "役割"
 
@@ -37671,6 +37753,10 @@ msgstr "同期して実行"
 
 msgid "Run tests"
 msgstr "テストを実行する"
+
+#, fuzzy
+msgid "Runnable"
+msgstr "有効にする"
 
 msgid "Runnable (Waiting for resource)"
 msgstr "実行可能(リソースを待機中)"
@@ -43001,6 +43087,10 @@ msgstr "診断をサポートする"
 msgid "Suppress not available sensors"
 msgstr "利用できないセンサーを抑制する"
 
+#, fuzzy
+msgid "Suspend"
+msgstr "一時停止"
+
 msgid "Suspended"
 msgstr "一時停止"
 
@@ -47967,10 +48057,10 @@ msgstr ""
 "これらのテキストは、ユーザーの言語に応じてローカライズされる場合があります。"
 "ローカリゼーション %sを構成できます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"These values can be configured in the <a href=\"%s\">subscription "
-"settings<a>."
+"These values can be configured in the <a href=\"%s\">subscription settings</"
+"a>."
 msgstr ""
 "これらの値は、 <a href=\"%s\">サブスクリプション設定<a>で構成できます。"
 
@@ -48028,6 +48118,10 @@ msgstr "このIDはすでに別の接続で使用されています。別のも�
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
+
+#, fuzzy
+msgid "This RobotMK report"
+msgstr "このクラッシュレポート"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "このルールセットは、湿度センサーのしきい値制限を設定します"
@@ -53119,6 +53213,9 @@ msgstr "不明なユーザー: %s"
 msgid "Unknown/Unreach"
 msgstr "不明/未到達"
 
+msgid "Unkown"
+msgstr ""
+
 msgid "Unlocked"
 msgstr "ロック解除"
 
@@ -57643,6 +57740,10 @@ msgstr "このグローバル設定を編集することは許可されていま
 msgid "You are not permitted to perform this action."
 msgstr "このアクションを実行することは許可されていません。"
 
+#, fuzzy
+msgid "You are not permitted to view this page"
+msgstr "このルールセットにアクセスすることは許可されていません。"
+
 msgid "You are required to change your password before proceeding."
 msgstr "続行する前にパスワードを変更する必要があります。"
 
@@ -61138,6 +61239,16 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "Cannot download license usage report."
+#~ msgstr "ライセンス使用状況レポートをダウンロードできません。"
+
+#, python-format
+#~ msgid ""
+#~ "Cannot submit license usage report to the Checkmk license server '%s'."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートをCheckmkライセンスサーバー '%s'に送信できませ"
+#~ "ん。"
+
 #~ msgid ""
 #~ "Depending on the measurement unit (defaults to bit) you can set the warn "
 #~ "and crit levels for the number of dropped bits or bytes"
@@ -63360,9 +63471,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Pending services"
 #~ msgstr "保留中のサービス"
-
-#~ msgid "Pending updates"
-#~ msgstr "保留中の更新"
 
 #~ msgid "Pending vBuckets"
 #~ msgstr "保留中のvBuckets"

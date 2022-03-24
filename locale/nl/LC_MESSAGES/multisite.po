@@ -176,6 +176,10 @@ msgstr " volgende week"
 msgid " of"
 msgstr " van"
 
+#, fuzzy, python-format
+msgid " of service %s on host %s"
+msgstr "Toon diensten van host %s"
+
 #, python-format
 msgid " of the following %d Event Console %s"
 msgstr " van de volgende %d Event Console %s"
@@ -1340,22 +1344,6 @@ msgstr ""
 "wachtwoorden. Deze bestanden zijn gemarkeerd met 'H'. Andere bestanden "
 "kunnen IP-adressen, hostnamen, gebruikersnamen, e-mailadressen of "
 "telefoonnummers bevatten en zijn gemarkeerd met 'M'."
-
-#, python-format
-msgid ""
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
-msgstr ""
-"<br>Voeg de klant portal gegevens en abonnement details toe in de <a href="
-"\"%s\">abonnement instellingen<a>."
-
-#, python-format
-msgid ""
-"<br>Please add subscription details in the <a href=\"%s\">subscription "
-"settings<a>."
-msgstr ""
-"<br>Voeg de details van het abonnement toe in de <a href=\"%s"
-"\">Inschrijvingsinstellingen<a>."
 
 msgid ""
 "<br>Please note that Check_MK needs this password in clear<br>text during "
@@ -7968,8 +7956,13 @@ msgstr ""
 "Kan deze weergave niet in matrix layout weergeven. U hebt ten minste twee "
 "kolommen nodig!"
 
-msgid "Cannot download license usage report."
-msgstr "Kan licentie gebruiksrapport niet downloaden."
+#, fuzzy, python-format
+msgid ""
+"Cannot download license usage report.<br>Please add subscription details in "
+"the <a href=\"%s\">subscription settings<a>."
+msgstr ""
+"<br>Voeg de details van het abonnement toe in de <a href=\"%s"
+"\">Inschrijvingsinstellingen<a>."
 
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
@@ -8116,11 +8109,14 @@ msgstr "Kan geen gegevens ophalen van ntop REST API: %s"
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Kan geen historische gegevens ophalen met Nagios core"
 
-#, python-format
-msgid "Cannot submit license usage report to the Checkmk license server '%s'."
+#, fuzzy, python-format
+msgid ""
+"Cannot submit license usage report to the Checkmk license server '%s'."
+"<br>Please add customer portal credentials and subscription details in the "
+"<a href=\"%s\">subscription settings<a>."
 msgstr ""
-"Kan het licentiegebruiksrapport niet indienen bij de Checkmk licentieserver "
-"'%s'."
+"<br>Voeg de klant portal gegevens en abonnement details toe in de <a href="
+"\"%s\">abonnement instellingen<a>."
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "Kan niet testen. Kan het aantal CPU's op het doelsysteem niet bepalen."
@@ -9578,6 +9574,10 @@ msgstr "Verbindingen"
 
 #, fuzzy
 msgid "Cloud Run"
+msgstr "IP-netwerk"
+
+#, fuzzy
+msgid "Cloud SQL"
 msgstr "IP-netwerk"
 
 msgid "Cloud based environments"
@@ -14382,6 +14382,10 @@ msgstr "Schijfruimte op OpenVMS"
 msgid "Disk throughput"
 msgstr "Schijfdoorvoer"
 
+#, fuzzy
+msgid "Disk usage"
+msgstr "Diskstate"
+
 msgid "Disk utilization"
 msgstr "Schijfgebruik"
 
@@ -18493,6 +18497,10 @@ msgstr "Schijfniveaus van archiefsystemen (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Bestanden"
 
+#, fuzzy
+msgid "Filestore"
+msgstr "Herstel"
+
 msgid "Filesystem"
 msgstr "Bestandssysteem"
 
@@ -18575,6 +18583,9 @@ msgstr "Bestanden filteren op grootte"
 
 msgid "Filter group (see help)"
 msgstr "Filter groep (zie help)"
+
+msgid "Filter out consecutive duplicated messages in the agent output"
+msgstr ""
 
 msgid "Filter out duplicated messages in Windows event log"
 msgstr ""
@@ -19542,9 +19553,28 @@ msgstr "IP-netwerk"
 msgid "GCP/Cloud Run Requests"
 msgstr "IPv6 Verzoeken"
 
+msgid "GCP/Cloud SQL CPU"
+msgstr ""
+
 #, fuzzy
-msgid "GCP/Function egress"
-msgstr "Verbindingstests"
+msgid "GCP/Cloud SQL Network"
+msgstr "IP-netwerk"
+
+#, fuzzy
+msgid "GCP/Cloud SQL disk"
+msgstr "IP-netwerk"
+
+#, fuzzy
+msgid "GCP/Cloud SQL memory"
+msgstr "IP-netwerk"
+
+#, fuzzy
+msgid "GCP/Cloud SQL status"
+msgstr "IPv6 Verzoeken"
+
+#, fuzzy
+msgid "GCP/Filestore"
+msgstr "Bestandssysteem"
 
 #, fuzzy
 msgid "GCP/Function execution"
@@ -19553,6 +19583,10 @@ msgstr "Maximaal aantal gelijktijdige uitvoeringen"
 #, fuzzy
 msgid "GCP/Function instances"
 msgstr "Autodetect instanties"
+
+#, fuzzy
+msgid "GCP/Function network"
+msgstr "Verbindingstests"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -23000,6 +23034,14 @@ msgstr ""
 "berichten volgens deze regel, kunt u desgewenst de nieuwe gebeurtenis "
 "samenvoegen met de bestaande gebeurtenis of een nieuwe gebeurtenis aanmaken "
 "voor elke interval met afwezige berichten."
+
+msgid ""
+"If there are multiple consecutive messages with the same content, the agent "
+"delivers only the first message and then it outputs a context line with the "
+"number of lines that have been removed: [the above message was repeated n "
+"times]. Setting this flag may help to decrease the size of the agent output "
+"in case many duplicate lines are generated."
+msgstr ""
 
 msgid ""
 "If there is only one form element on the requested page, you do not need to "
@@ -26648,6 +26690,10 @@ msgstr "Niveaus Livestatus Gebruik"
 msgid "Levels Services"
 msgstr "Niveaus Diensten"
 
+#, fuzzy
+msgid "Levels disk"
+msgstr "Niveaus"
+
 #, python-format
 msgid "Levels for %s"
 msgstr "Niveaus voor %s"
@@ -27051,7 +27097,7 @@ msgid "Levels on latency"
 msgstr "Niveaus op latentie"
 
 #, fuzzy
-msgid "Levels on network egress"
+msgid "Levels on network"
 msgstr "Niveaus op enkele kernen"
 
 #, fuzzy
@@ -28729,6 +28775,9 @@ msgstr "Kaart Database Staten"
 
 msgid "Map Device States"
 msgstr "Apparaatstatussen in kaart brengen"
+
+msgid "Map GCP status to check mk"
+msgstr ""
 
 msgid "Map RWVDMS names"
 msgstr "Kaart RWVDMS namen"
@@ -31636,6 +31685,10 @@ msgstr "Geen niveaus"
 msgid "No logging"
 msgstr "Geen logboekregistratie"
 
+#, fuzzy
+msgid "No logs could be found."
+msgstr "Geen regels gevonden."
+
 msgid "No logs found for this host."
 msgstr "Geen logs gevonden voor deze host."
 
@@ -32800,6 +32853,10 @@ msgstr "Aantal problemen"
 msgid "Number of processes"
 msgstr "Aantal processen"
 
+#, fuzzy
+msgid "Number of read IOPS"
+msgstr "Aantal draden"
+
 msgid "Number of recoveries"
 msgstr "Aantal terugvorderingen"
 
@@ -32968,6 +33025,10 @@ msgstr "Aantal gebruikers"
 
 msgid "Number of warnings"
 msgstr "Aantal waarschuwingen"
+
+#, fuzzy
+msgid "Number of write IOPS"
+msgstr "Aantal artikelen"
 
 msgid "Number of zombie jobs"
 msgstr "Aantal zombiebanen"
@@ -34717,6 +34778,10 @@ msgstr "In afwachting van DHCP leases"
 #, fuzzy, python-format
 msgid "Pending changes (%s)"
 msgstr "In afwachting van wijzigingen"
+
+#, fuzzy
+msgid "Pending create"
+msgstr "In afwachting van updates"
 
 msgid "Pending memory"
 msgstr "In afwachting van geheugen"
@@ -38612,6 +38677,22 @@ msgstr "Rittal CMC-III units: Actueel"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III units: Temperaturen"
 
+#, fuzzy
+msgid "RobotMK report"
+msgstr "Verslag indienen"
+
+#, fuzzy
+msgid "RobotMK reports"
+msgstr "Verslag indienen"
+
+#, fuzzy
+msgid "Robotmk report"
+msgstr "Verslag indienen"
+
+#, fuzzy
+msgid "Robotmk report of this service"
+msgstr "Naam van de dienst"
+
 msgid "Role"
 msgstr "Rol"
 
@@ -38922,6 +39003,10 @@ msgstr "Synchroon lopen"
 
 msgid "Run tests"
 msgstr "Tests uitvoeren"
+
+#, fuzzy
+msgid "Runnable"
+msgstr "Activeer"
 
 msgid "Runnable (Waiting for resource)"
 msgstr "Runnable (wachtend op middelen)"
@@ -44463,6 +44548,10 @@ msgstr "Ondersteunende diagnostiek"
 msgid "Suppress not available sensors"
 msgstr "Niet beschikbare sensoren onderdrukken"
 
+#, fuzzy
+msgid "Suspend"
+msgstr "Opgeschort"
+
 msgid "Suspended"
 msgstr "Opgeschort"
 
@@ -49904,10 +49993,10 @@ msgstr ""
 "Deze teksten kunnen gelokaliseerd zijn, afhankelijk van de taal van de "
 "gebruikers. U kunt de lokalisatie %s configureren."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"These values can be configured in the <a href=\"%s\">subscription "
-"settings<a>."
+"These values can be configured in the <a href=\"%s\">subscription settings</"
+"a>."
 msgstr ""
 "Deze waarden kunnen worden geconfigureerd in de <a href=\"%s"
 "\">Inschrijvingsinstellingen<a>."
@@ -49969,6 +50058,10 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Deze ID wordt gebruikt als unieke identificatiecode. Het kan later niet "
 "worden gewijzigd."
+
+#, fuzzy
+msgid "This RobotMK report"
+msgstr "Dit crash rapport"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "Deze regelset stelt de drempelwaarden voor vochtigheidssensoren in"
@@ -55520,6 +55613,9 @@ msgstr "Onbekende gebruiker: %s"
 msgid "Unknown/Unreach"
 msgstr "Onbekend/Onbereikbaar"
 
+msgid "Unkown"
+msgstr ""
+
 msgid "Unlocked"
 msgstr "Unlocked"
 
@@ -60340,6 +60436,10 @@ msgstr "Het is niet toegestaan deze globale instelling te bewerken."
 msgid "You are not permitted to perform this action."
 msgstr "Het is u niet toegestaan deze actie uit te voeren."
 
+#, fuzzy
+msgid "You are not permitted to view this page"
+msgstr "U hebt geen toegang tot deze regelset."
+
 msgid "You are required to change your password before proceeding."
 msgstr "U bent verplicht uw wachtwoord te wijzigen voordat u verder gaat."
 
@@ -64019,6 +64119,16 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
+#~ msgid "Cannot download license usage report."
+#~ msgstr "Kan licentie gebruiksrapport niet downloaden."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot submit license usage report to the Checkmk license server '%s'."
+#~ msgstr ""
+#~ "Kan het licentiegebruiksrapport niet indienen bij de Checkmk "
+#~ "licentieserver '%s'."
+
 #~ msgid ""
 #~ "Depending on the measurement unit (defaults to bit) you can set the warn "
 #~ "and crit levels for the number of dropped bits or bytes"
@@ -66399,9 +66509,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Pending services"
 #~ msgstr "In afwachting van diensten"
-
-#~ msgid "Pending updates"
-#~ msgstr "In afwachting van updates"
 
 #~ msgid "Pending vBuckets"
 #~ msgstr "In afwachting van vBuckets"

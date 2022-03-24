@@ -174,6 +174,10 @@ msgstr " săptămâna viitoare"
 msgid " of"
 msgstr "(nimic)"
 
+#, fuzzy, python-format
+msgid " of service %s on host %s"
+msgstr " pentru hostul %s"
+
 #, python-format
 msgid " of the following %d Event Console %s"
 msgstr ""
@@ -1301,18 +1305,6 @@ msgid ""
 "<br>Note: Some files may contain highly sensitive data like passwords. These "
 "files are marked with 'H'. Other files may include IP adresses, hostnames, "
 "usernames, mail adresses or phone numbers and are marked with 'M'."
-msgstr ""
-
-#, python-format
-msgid ""
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
-msgstr ""
-
-#, python-format
-msgid ""
-"<br>Please add subscription details in the <a href=\"%s\">subscription "
-"settings<a>."
 msgstr ""
 
 msgid ""
@@ -7463,7 +7455,10 @@ msgid ""
 "Cannot display this view in matrix layout. You need at least two columns!"
 msgstr ""
 
-msgid "Cannot download license usage report."
+#, python-format
+msgid ""
+"Cannot download license usage report.<br>Please add subscription details in "
+"the <a href=\"%s\">subscription settings<a>."
 msgstr ""
 
 #, python-format
@@ -7597,7 +7592,10 @@ msgid "Cannot retrieve historic data with Nagios core"
 msgstr ""
 
 #, python-format
-msgid "Cannot submit license usage report to the Checkmk license server '%s'."
+msgid ""
+"Cannot submit license usage report to the Checkmk license server '%s'."
+"<br>Please add customer portal credentials and subscription details in the "
+"<a href=\"%s\">subscription settings<a>."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -8978,6 +8976,10 @@ msgstr "Conexiuni Active"
 
 #, fuzzy
 msgid "Cloud Run"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Cloud SQL"
 msgstr "Adresă"
 
 msgid "Cloud based environments"
@@ -13821,6 +13823,10 @@ msgid "Disk throughput"
 msgstr "Grup de Disk ASM"
 
 #, fuzzy
+msgid "Disk usage"
+msgstr "% utilizare"
+
+#, fuzzy
 msgid "Disk utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -17930,6 +17936,10 @@ msgid "Files"
 msgstr ""
 
 #, fuzzy
+msgid "Filestore"
+msgstr "Spațiu liber exact"
+
+#, fuzzy
 msgid "Filesystem"
 msgstr "Spațiu liber exact"
 
@@ -18021,6 +18031,9 @@ msgstr ""
 #, fuzzy
 msgid "Filter group (see help)"
 msgstr "Reguli"
+
+msgid "Filter out consecutive duplicated messages in the agent output"
+msgstr ""
 
 msgid "Filter out duplicated messages in Windows event log"
 msgstr ""
@@ -18896,9 +18909,28 @@ msgstr "Adresă"
 msgid "GCP/Cloud Run Requests"
 msgstr "cereri"
 
+msgid "GCP/Cloud SQL CPU"
+msgstr ""
+
 #, fuzzy
-msgid "GCP/Function egress"
-msgstr "Conexiune Noua"
+msgid "GCP/Cloud SQL Network"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud SQL disk"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud SQL memory"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud SQL status"
+msgstr "cereri"
+
+#, fuzzy
+msgid "GCP/Filestore"
+msgstr "Spațiu liber exact"
 
 #, fuzzy
 msgid "GCP/Function execution"
@@ -18907,6 +18939,10 @@ msgstr "Numarul maxim de conexiuni"
 #, fuzzy
 msgid "GCP/Function instances"
 msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+msgid "GCP/Function network"
+msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -21970,6 +22006,14 @@ msgid ""
 "If there already exists an open event because of absent messages according "
 "to this rule, you can optionally merge the new incident with the exising "
 "event or create a new event for each interval with absent messages."
+msgstr ""
+
+msgid ""
+"If there are multiple consecutive messages with the same content, the agent "
+"delivers only the first message and then it outputs a context line with the "
+"number of lines that have been removed: [the above message was repeated n "
+"times]. Setting this flag may help to decrease the size of the agent output "
+"in case many duplicate lines are generated."
 msgstr ""
 
 msgid ""
@@ -25076,6 +25120,10 @@ msgstr "Conexiuni Active"
 msgid "Levels Services"
 msgstr "servicii"
 
+#, fuzzy
+msgid "Levels disk"
+msgstr "Nivelurile maxime pentru voltaj"
+
 #, python-format
 msgid "Levels for %s"
 msgstr ""
@@ -25533,7 +25581,7 @@ msgid "Levels on latency"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-msgid "Levels on network egress"
+msgid "Levels on network"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
@@ -27245,6 +27293,9 @@ msgstr ""
 #, fuzzy
 msgid "Map Device States"
 msgstr "Statusul Serverului"
+
+msgid "Map GCP status to check mk"
+msgstr ""
 
 msgid "Map RWVDMS names"
 msgstr ""
@@ -30308,6 +30359,9 @@ msgstr "doua nivele"
 msgid "No logging"
 msgstr ""
 
+msgid "No logs could be found."
+msgstr ""
+
 msgid "No logs found for this host."
 msgstr ""
 
@@ -31456,6 +31510,10 @@ msgstr ""
 msgid "Number of processes"
 msgstr "Numarul maxim de mesaje"
 
+#, fuzzy
+msgid "Number of read IOPS"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Number of recoveries"
 msgstr ""
 
@@ -31634,6 +31692,10 @@ msgstr "Numarul maxim de mesaje"
 
 msgid "Number of warnings"
 msgstr ""
+
+#, fuzzy
+msgid "Number of write IOPS"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of zombie jobs"
@@ -33360,6 +33422,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Pending changes (%s)"
 msgstr "Activare Schimbări!"
+
+#, fuzzy
+msgid "Pending create"
+msgstr "cereri"
 
 msgid "Pending memory"
 msgstr ""
@@ -37224,6 +37290,22 @@ msgstr ""
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr ""
 
+#, fuzzy
+msgid "RobotMK report"
+msgstr "Adaugă element"
+
+#, fuzzy
+msgid "RobotMK reports"
+msgstr "rapoarte"
+
+#, fuzzy
+msgid "Robotmk report"
+msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Robotmk report of this service"
+msgstr "<b>reprogramează o verificare imediată"
+
 msgid "Role"
 msgstr ""
 
@@ -37522,6 +37604,10 @@ msgstr ""
 #, fuzzy
 msgid "Run tests"
 msgstr "cereri"
+
+#, fuzzy
+msgid "Runnable"
+msgstr "Tabel"
 
 msgid "Runnable (Waiting for resource)"
 msgstr ""
@@ -42867,6 +42953,9 @@ msgstr "Adaugă informații despre contact"
 msgid "Suppress not available sensors"
 msgstr ""
 
+msgid "Suspend"
+msgstr ""
+
 msgid "Suspended"
 msgstr ""
 
@@ -47205,8 +47294,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"These values can be configured in the <a href=\"%s\">subscription "
-"settings<a>."
+"These values can be configured in the <a href=\"%s\">subscription settings</"
+"a>."
 msgstr ""
 
 msgid "They appear to be new to this node, but may still be already monitored."
@@ -47259,6 +47348,10 @@ msgstr ""
 
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
+
+#, fuzzy
+msgid "This RobotMK report"
+msgstr "Sterge Elementul"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
@@ -51667,6 +51760,9 @@ msgstr ""
 msgid "Unknown/Unreach"
 msgstr ""
 
+msgid "Unkown"
+msgstr ""
+
 msgid "Unlocked"
 msgstr ""
 
@@ -55934,6 +56030,9 @@ msgid "You are not permitted to edit this global setting."
 msgstr ""
 
 msgid "You are not permitted to perform this action."
+msgstr ""
+
+msgid "You are not permitted to view this page"
 msgstr ""
 
 msgid "You are required to change your password before proceeding."
@@ -60216,10 +60315,6 @@ msgstr ""
 #~ msgstr "Afectat de serviciu"
 
 #, fuzzy
-#~ msgid "Pending requests"
-#~ msgstr "cereri"
-
-#, fuzzy
 #~ msgid "Pending service discovery"
 #~ msgstr "(fără Nivel de serviciu)"
 
@@ -60844,10 +60939,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Forecast Graphs"
 #~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Global reports"
-#~ msgstr "rapoarte"
 
 #, fuzzy
 #~ msgid "Reset search"
@@ -63306,10 +63397,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Rule folder"
 #~ msgstr "Folder nou"
-
-#, fuzzy
-#~ msgid "Run report as this user"
-#~ msgstr "<b>reprogramează o verificare imediată"
 
 #, fuzzy
 #~ msgid "SQL-statement or procedure name"

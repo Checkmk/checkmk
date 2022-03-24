@@ -175,6 +175,10 @@ msgstr " semaine prochaine"
 msgid " of"
 msgstr " de"
 
+#, fuzzy, python-format
+msgid " of service %s on host %s"
+msgstr "Afficher les services de l'hôte %s"
+
 #, python-format
 msgid " of the following %d Event Console %s"
 msgstr " des %d Event Console %s suivants"
@@ -1350,23 +1354,6 @@ msgstr ""
 "fichiers peuvent contenir des adresses IP, des noms d'hôtes, des noms "
 "d'utilisateurs, des adresses de messagerie ou des numéros de téléphone et "
 "sont marqués d'un 'M'."
-
-#, python-format
-msgid ""
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
-msgstr ""
-"<br>Veuillez ajouter les informations d'identification du portail client et "
-"les détails de l'abonnement dans les <a href=\"%s\">paramètres de "
-"l'abonnement<a>."
-
-#, python-format
-msgid ""
-"<br>Please add subscription details in the <a href=\"%s\">subscription "
-"settings<a>."
-msgstr ""
-"<br>Veuillez ajouter les détails de l'abonnement dans les <a href=\"%s"
-"\">paramètres de l'abonnement<a>."
 
 msgid ""
 "<br>Please note that Check_MK needs this password in clear<br>text during "
@@ -8059,8 +8046,13 @@ msgstr ""
 "Impossible d'afficher cette vue en disposition matricielle. Vous avez besoin "
 "d'au moins deux colonnes !"
 
-msgid "Cannot download license usage report."
-msgstr "Impossible de télécharger le rapport d'utilisation des licences."
+#, fuzzy, python-format
+msgid ""
+"Cannot download license usage report.<br>Please add subscription details in "
+"the <a href=\"%s\">subscription settings<a>."
+msgstr ""
+"<br>Veuillez ajouter les détails de l'abonnement dans les <a href=\"%s"
+"\">paramètres de l'abonnement<a>."
 
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
@@ -8215,11 +8207,15 @@ msgstr "Impossible de récupérer les données de l'API REST de ntop : %s"
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Impossible de récupérer les données historiques avec Nagios core"
 
-#, python-format
-msgid "Cannot submit license usage report to the Checkmk license server '%s'."
+#, fuzzy, python-format
+msgid ""
+"Cannot submit license usage report to the Checkmk license server '%s'."
+"<br>Please add customer portal credentials and subscription details in the "
+"<a href=\"%s\">subscription settings<a>."
 msgstr ""
-"Impossible de soumettre le rapport d'utilisation des licences au serveur de "
-"licences Checkmk '%s'."
+"<br>Veuillez ajouter les informations d'identification du portail client et "
+"les détails de l'abonnement dans les <a href=\"%s\">paramètres de "
+"l'abonnement<a>."
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -9704,6 +9700,10 @@ msgstr "Connexions"
 
 #, fuzzy
 msgid "Cloud Run"
+msgstr "Réseau IP"
+
+#, fuzzy
+msgid "Cloud SQL"
 msgstr "Réseau IP"
 
 msgid "Cloud based environments"
@@ -14567,6 +14567,10 @@ msgstr "Espace disque sur OpenVMS"
 msgid "Disk throughput"
 msgstr "Débit du disque"
 
+#, fuzzy
+msgid "Disk usage"
+msgstr "Diskstate"
+
 msgid "Disk utilization"
 msgstr "Utilisation du disque"
 
@@ -18727,6 +18731,10 @@ msgstr "Niveaux de disques de filer (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Fichiers"
 
+#, fuzzy
+msgid "Filestore"
+msgstr "Restaurer"
+
 msgid "Filesystem"
 msgstr "Système de fichiers"
 
@@ -18810,6 +18818,9 @@ msgstr "Filtrer les fichiers par taille"
 
 msgid "Filter group (see help)"
 msgstr "Groupe de filtres (voir aide)"
+
+msgid "Filter out consecutive duplicated messages in the agent output"
+msgstr ""
 
 msgid "Filter out duplicated messages in Windows event log"
 msgstr ""
@@ -19785,9 +19796,28 @@ msgstr "Réseau IP"
 msgid "GCP/Cloud Run Requests"
 msgstr "Demandes IPv6"
 
+msgid "GCP/Cloud SQL CPU"
+msgstr ""
+
 #, fuzzy
-msgid "GCP/Function egress"
-msgstr "Tests de connexion"
+msgid "GCP/Cloud SQL Network"
+msgstr "Réseau IP"
+
+#, fuzzy
+msgid "GCP/Cloud SQL disk"
+msgstr "Réseau IP"
+
+#, fuzzy
+msgid "GCP/Cloud SQL memory"
+msgstr "Réseau IP"
+
+#, fuzzy
+msgid "GCP/Cloud SQL status"
+msgstr "Demandes IPv6"
+
+#, fuzzy
+msgid "GCP/Filestore"
+msgstr "Système de fichiers"
 
 #, fuzzy
 msgid "GCP/Function execution"
@@ -19796,6 +19826,10 @@ msgstr "Nombre maximum d'exécutions simultanées"
 #, fuzzy
 msgid "GCP/Function instances"
 msgstr "Autodétection des instances"
+
+#, fuzzy
+msgid "GCP/Function network"
+msgstr "Tests de connexion"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -23297,6 +23331,14 @@ msgstr ""
 "cette règle, vous pouvez éventuellement fusionner le nouvel incident avec "
 "l'événement existant ou créer un nouvel événement pour chaque intervalle "
 "avec des messages absents."
+
+msgid ""
+"If there are multiple consecutive messages with the same content, the agent "
+"delivers only the first message and then it outputs a context line with the "
+"number of lines that have been removed: [the above message was repeated n "
+"times]. Setting this flag may help to decrease the size of the agent output "
+"in case many duplicate lines are generated."
+msgstr ""
 
 msgid ""
 "If there is only one form element on the requested page, you do not need to "
@@ -26988,6 +27030,10 @@ msgstr "Niveaux d'utilisation de Livestatus"
 msgid "Levels Services"
 msgstr "Services de niveaux"
 
+#, fuzzy
+msgid "Levels disk"
+msgstr "Niveaux"
+
 #, python-format
 msgid "Levels for %s"
 msgstr "Niveaux pour %s"
@@ -27391,7 +27437,7 @@ msgid "Levels on latency"
 msgstr "Niveaux de latence"
 
 #, fuzzy
-msgid "Levels on network egress"
+msgid "Levels on network"
 msgstr "Niveaux sur des cœurs uniques"
 
 #, fuzzy
@@ -29091,6 +29137,9 @@ msgstr "États de la base de données cartographiques"
 
 msgid "Map Device States"
 msgstr "Cartographier les états du dispositif"
+
+msgid "Map GCP status to check mk"
+msgstr ""
 
 msgid "Map RWVDMS names"
 msgstr "Carte des noms RWVDMS"
@@ -32032,6 +32081,10 @@ msgstr "Aucun niveau"
 msgid "No logging"
 msgstr "Pas d'enregistrement"
 
+#, fuzzy
+msgid "No logs could be found."
+msgstr "Aucune règle trouvée."
+
 msgid "No logs found for this host."
 msgstr "Aucun journal trouvé pour cet hôte."
 
@@ -33211,6 +33264,10 @@ msgstr "Nombre de problèmes"
 msgid "Number of processes"
 msgstr "Nombre de processus"
 
+#, fuzzy
+msgid "Number of read IOPS"
+msgstr "Nombre de fils"
+
 msgid "Number of recoveries"
 msgstr "Nombre de recouvrements"
 
@@ -33379,6 +33436,10 @@ msgstr "Nombre d'utilisateurs"
 
 msgid "Number of warnings"
 msgstr "Nombre d'avertissements"
+
+#, fuzzy
+msgid "Number of write IOPS"
+msgstr "Nombre d'articles"
 
 msgid "Number of zombie jobs"
 msgstr "Nombre d'emplois zombies"
@@ -35153,6 +35214,10 @@ msgstr "Baux DHCP en attente"
 #, fuzzy, python-format
 msgid "Pending changes (%s)"
 msgstr "Changements en cours"
+
+#, fuzzy
+msgid "Pending create"
+msgstr "Mises à jour en cours"
 
 msgid "Pending memory"
 msgstr "Mémoire en attente"
@@ -39114,6 +39179,22 @@ msgstr "Unités CMC-III de Rittal : Courant"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unités CMC-III de Rittal : Températures"
 
+#, fuzzy
+msgid "RobotMK report"
+msgstr "Soumettre un rapport"
+
+#, fuzzy
+msgid "RobotMK reports"
+msgstr "Soumettre un rapport"
+
+#, fuzzy
+msgid "Robotmk report"
+msgstr "Soumettre un rapport"
+
+#, fuzzy
+msgid "Robotmk report of this service"
+msgstr "Nom du service"
+
 msgid "Role"
 msgstr "Rôle"
 
@@ -39430,6 +39511,10 @@ msgstr "Fonctionnement synchrone"
 
 msgid "Run tests"
 msgstr "Exécuter des tests"
+
+#, fuzzy
+msgid "Runnable"
+msgstr "Activer"
 
 msgid "Runnable (Waiting for resource)"
 msgstr "Exécutable (en attente de ressources)"
@@ -45031,6 +45116,10 @@ msgstr "Appui aux diagnostics"
 msgid "Suppress not available sensors"
 msgstr "Suppression des capteurs non disponibles"
 
+#, fuzzy
+msgid "Suspend"
+msgstr "Suspendu"
+
 msgid "Suspended"
 msgstr "Suspendu"
 
@@ -50536,10 +50625,10 @@ msgstr ""
 "Vous pouvez configurer les traductions <a href=\"%s\">dans les paramètres "
 "globaux</a>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"These values can be configured in the <a href=\"%s\">subscription "
-"settings<a>."
+"These values can be configured in the <a href=\"%s\">subscription settings</"
+"a>."
 msgstr ""
 "Ces valeurs peuvent être configurées dans les <a href=\"%s\">paramètres de "
 "l'abonnement<a>."
@@ -50601,6 +50690,10 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Cet ID est utilisé comme identifiant unique. Il ne peut pas être modifié "
 "ultérieurement."
+
+#, fuzzy
+msgid "This RobotMK report"
+msgstr "Ce rapport d'accident"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
@@ -56228,6 +56321,9 @@ msgstr "Utilisateur inconnu : %s"
 msgid "Unknown/Unreach"
 msgstr "Inconnu/Inaccessible"
 
+msgid "Unkown"
+msgstr ""
+
 msgid "Unlocked"
 msgstr "Déverrouillé"
 
@@ -61127,6 +61223,10 @@ msgstr "Vous n'êtes pas autorisé à modifier ce paramètre global."
 msgid "You are not permitted to perform this action."
 msgstr "Vous n'êtes pas autorisé à effectuer cette action."
 
+#, fuzzy
+msgid "You are not permitted to view this page"
+msgstr "Vous n'êtes pas autorisé à accéder à ce jeu de règles."
+
 msgid "You are required to change your password before proceeding."
 msgstr "Vous devez changer votre mot de passe avant de poursuivre."
 
@@ -64870,6 +64970,16 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
+#~ msgid "Cannot download license usage report."
+#~ msgstr "Impossible de télécharger le rapport d'utilisation des licences."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot submit license usage report to the Checkmk license server '%s'."
+#~ msgstr ""
+#~ "Impossible de soumettre le rapport d'utilisation des licences au serveur "
+#~ "de licences Checkmk '%s'."
+
 #~ msgid ""
 #~ "Depending on the measurement unit (defaults to bit) you can set the warn "
 #~ "and crit levels for the number of dropped bits or bytes"
@@ -67274,9 +67384,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Pending services"
 #~ msgstr "Services en attente"
-
-#~ msgid "Pending updates"
-#~ msgstr "Mises à jour en cours"
 
 #~ msgid "Pending vBuckets"
 #~ msgstr "VBuckets en attente"

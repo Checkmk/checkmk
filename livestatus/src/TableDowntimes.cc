@@ -93,17 +93,18 @@ std::string TableDowntimes::name() const { return "downtimes"; }
 std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query *query) {
+    auto is_authorized = [service_auth = core()->serviceAuthorization(),
+                          auth_user =
+                              query->authUser()](const Downtime *downtime) {
+        return downtime->_service == nullptr
+                   ? is_authorized_for_hst(auth_user, downtime->_host)
+                   : is_authorized_for_svc(service_auth, auth_user,
+                                           downtime->_service);
+    };
+
     for (const auto &[id, dt] : core()->impl<NagiosCore>()->_downtimes) {
-        if (!query->processDataset(Row{dt.get()})) {
-            break;
+        if (is_authorized(dt.get()) && !query->processDataset(Row{dt.get()})) {
+            return;
         }
     }
-}
-
-bool TableDowntimes::isAuthorized(Row row, const contact *ctc) const {
-    const auto *dt = rowData<Downtime>(row);
-    return dt->_service == nullptr
-               ? is_authorized_for_hst(ctc, dt->_host)
-               : is_authorized_for_svc(core()->serviceAuthorization(), ctc,
-                                       dt->_service);
 }

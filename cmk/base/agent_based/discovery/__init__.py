@@ -177,7 +177,7 @@ def commandline_discovery(
             )
             parsed_sections_broker, _results = make_broker(
                 sources=sources,
-                fetcher_messages=list(fetcher_messages),
+                fetcher_messages=fetcher_messages,
                 selected_sections=selected_sections,
                 file_cache_max_age=config.max_cachefile_age(),
                 mode=mode,
@@ -347,7 +347,7 @@ def automation_discovery(
         )
         parsed_sections_broker, _source_results = make_broker(
             sources=sources,
-            fetcher_messages=list(fetcher_messages),
+            fetcher_messages=fetcher_messages,
             selected_sections=NO_SELECTION,
             file_cache_max_age=max_cachefile_age,
             mode=Mode.DISCOVERY,
@@ -570,7 +570,7 @@ def commandline_check_discovery(
     )
 
     return _execute_check_discovery(
-        host_name, ipaddress, sources=sources, fetcher_messages=list(fetcher_messages)
+        host_name, ipaddress, sources=sources, fetcher_messages=fetcher_messages
     )
 
 
@@ -1277,7 +1277,7 @@ def get_check_preview(
     )
     parsed_sections_broker, _source_results = make_broker(
         sources=sources,
-        fetcher_messages=list(fetcher_messages),
+        fetcher_messages=fetcher_messages,
         selected_sections=NO_SELECTION,
         file_cache_max_age=max_cachefile_age,
         mode=Mode.DISCOVERY,

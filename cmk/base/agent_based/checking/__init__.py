@@ -150,7 +150,7 @@ def commandline_checking(
         hostname=host_name,
         ipaddress=ipaddress,
         sources=sources,
-        fetcher_messages=list(fetcher_messages),
+        fetcher_messages=fetcher_messages,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
         dry_run=dry_run,

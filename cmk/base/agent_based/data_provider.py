@@ -358,12 +358,10 @@ def make_broker(
     mode: Mode,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
     if not fetcher_messages:
-        fetcher_messages = list(
-            fetch_all(
-                sources=sources,
-                file_cache_max_age=file_cache_max_age,
-                mode=mode,
-            )
+        fetcher_messages = fetch_all(
+            sources=sources,
+            file_cache_max_age=file_cache_max_age,
+            mode=mode,
         )
 
     collected_host_sections, results = _collect_host_sections(

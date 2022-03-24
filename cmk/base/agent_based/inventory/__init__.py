@@ -284,7 +284,7 @@ def _inventorize_host(
     )
     broker, results = make_broker(
         sources=sources,
-        fetcher_messages=list(fetcher_messages),
+        fetcher_messages=fetcher_messages,
         selected_sections=selected_sections,
         file_cache_max_age=host_config.max_cachefile_age,
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),

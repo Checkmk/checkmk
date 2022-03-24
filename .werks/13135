@@ -1,0 +1,14 @@
+Title: fileinfo: Make agent rule available for Solaris and AIX
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1648118638
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b4
+
+The agent rule "Count, size and age of files" is now also applied to
+Solaris and AIX, making it possible to roll out the <tt>fileinfo.cfg</tt>
+via agent bakery for these systems.

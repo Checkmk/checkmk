@@ -10,20 +10,26 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as valuespecs from "valuespecs";
 
-var active_popup = popup_context();
+class PopUp {
+    id: string | null;
+    container: null | HTMLElement;
+    popup: null | HTMLElement | ChildNode;
+    data: JSON | null;
+    onclose: string | null;
+    onopen: string | null;
+    remove_on_close: boolean;
 
-function popup_context() {
-    const popup = {
-        id: null,
-        container: null,
-        popup: null,
-        data: null,
-        onclose: null,
-        onopen: null,
-        remove_on_close: false,
-    };
+    constructor() {
+        this.id = null;
+        this.container = null;
+        this.popup = null;
+        this.data = null;
+        this.onclose = null;
+        this.onopen = null;
+        this.remove_on_close = false;
+    }
 
-    popup.register = function (spec) {
+    register(spec) {
         spec = spec || {};
         this.id = spec.id || null;
         this.data = spec.data || null;
@@ -36,22 +42,24 @@ function popup_context() {
         }
 
         if (spec.trigger_obj) {
-            this.container = spec.trigger_obj ? spec.trigger_obj.parentNode : null;
+            this.container = spec.trigger_obj
+                ? spec.trigger_obj.parentNode
+                : null;
             this.popup = this.container ? this.container.lastChild : null;
         }
 
         if (this.container) {
             utils.add_class(this.container, "active");
         }
-    };
+    }
 
-    popup.open = function () {
+    open() {
         if (this.onopen) {
             eval(this.onopen);
         }
-    };
+    }
 
-    popup.close = function () {
+    close() {
         if (this.container) {
             utils.remove_class(this.container, "active");
             if (this.remove_on_close && this.popup) {
@@ -73,10 +81,10 @@ function popup_context() {
         this.data = null;
         this.onclose = null;
         this.remove_on_close = false;
-    };
-
-    return popup;
+    }
 }
+
+var active_popup = new PopUp();
 
 export function close_popup() {
     active_popup.close();
@@ -129,7 +137,16 @@ function handle_popup_close(event) {
 // onclose:     JavaScript code represented as a string that is evaluated when the
 //              popup is closed
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
-export function toggle_popup(event, trigger_obj, ident, method, data, onclose, onopen, resizable) {
+export function toggle_popup(
+    event,
+    trigger_obj,
+    ident,
+    method,
+    data,
+    onclose,
+    onopen,
+    resizable
+) {
     if (!event) event = window.event;
 
     if (active_popup.id) {
@@ -177,7 +194,7 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, o
     open_popup();
 }
 
-var switch_popup_timeout = null;
+var switch_popup_timeout: null | number = null;
 
 // When one of the popups of a group is open, open other popups once hovering over another popups
 // trigger. This currently only works on PopupMethodInline based popups.
@@ -192,7 +209,9 @@ export function switch_popup_menu_group(trigger, group_cls, delay) {
     }
 
     // Do not open the menu when no other dropdown is open at the moment
-    const popups = Array.prototype.slice.call(document.getElementsByClassName(group_cls));
+    const popups = Array.prototype.slice.call(
+        document.getElementsByClassName(group_cls)
+    );
     if (!popups.some(elem => utils.has_class(elem.parentNode, "active"))) {
         return;
     }
@@ -205,7 +224,7 @@ export function switch_popup_menu_group(trigger, group_cls, delay) {
     stop_popup_menu_group_switch(trigger);
 
     utils.add_class(popup.parentNode, "delayed");
-    switch_popup_timeout = setTimeout(
+    switch_popup_timeout = window.setTimeout(
         () => switch_popup_menu_group(trigger, group_cls, null),
         delay
     );
@@ -288,7 +307,10 @@ function fix_popup_menu_position(event, menu) {
 
     // Check whether or not the menu is out of the bottom border
     // -> if so, move the menu up
-    if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+    if (
+        rect.bottom >
+        (window.innerHeight || document.documentElement.clientHeight)
+    ) {
         var height = rect.bottom - rect.top;
         if (rect.top - height < 0) {
             // would hit the top border too, then put the menu to the top border
@@ -304,7 +326,9 @@ function fix_popup_menu_position(event, menu) {
     // Check whether or not the menu is out of right border and
     // a move to the left would fix the issue
     // -> if so, move the menu to the left
-    if (rect.right > (window.innerWidth || document.documentElement.clientWidth)) {
+    if (
+        rect.right > (window.innerWidth || document.documentElement.clientWidth)
+    ) {
         var width = rect.right - rect.left;
         if (rect.left - width < 0) {
             // would hit the left border too, then put the menu to the left border
@@ -321,10 +345,10 @@ function fix_popup_menu_position(event, menu) {
 // TODO: Remove this function as soon as all visuals have been
 // converted to pagetypes.py
 export function add_to_visual(visual_type, visual_name) {
-    var element_type = active_popup.data[0];
+    var element_type = active_popup.data![0];
     var create_info = {
-        context: active_popup.data[1],
-        params: active_popup.data[2],
+        context: active_popup.data![1],
+        params: active_popup.data![2],
     };
     var create_info_json = JSON.stringify(create_info);
 
@@ -356,11 +380,11 @@ export function add_to_visual(visual_type, visual_name) {
 
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 export function pagetype_add_to_container(page_type, page_name) {
-    var element_type = active_popup.data[0]; // e.g. "pnpgraph"
+    var element_type = active_popup.data![0]; // e.g. "pnpgraph"
     // complex JSON struct describing the thing
     var create_info = {
-        context: active_popup.data[1],
-        parameters: active_popup.data[2],
+        context: active_popup.data![1],
+        parameters: active_popup.data![2],
     };
     var create_info_json = JSON.stringify(create_info);
 
@@ -396,10 +420,11 @@ export function pagetype_add_to_container(page_type, page_name) {
 
 export function graph_export(page) {
     var request = {
-        specification: active_popup.data[2]["definition"]["specification"],
-        data_range: active_popup.data[2]["data_range"],
+        specification: active_popup.data![2]["definition"]["specification"],
+        data_range: active_popup.data![2]["data_range"],
     };
-    location.href = page + ".py?request=" + encodeURIComponent(JSON.stringify(request));
+    location.href =
+        page + ".py?request=" + encodeURIComponent(JSON.stringify(request));
 }
 
 /****************************************
@@ -438,7 +463,9 @@ export function resize_mega_menu_popup(menu_popup) {
         .find(e => utils.has_class(e, "extended"));
 
     if (!extended_topic || search_results) {
-        const visible_topics = Array.prototype.slice.call(topics).filter(e => utils.is_visible(e));
+        const visible_topics = Array.prototype.slice
+            .call(topics)
+            .filter(e => utils.is_visible(e));
         if (visible_topics.length === 0) {
             return;
         }
@@ -448,15 +475,20 @@ export function resize_mega_menu_popup(menu_popup) {
         // If we have only a single column, we need a bigger menu width, as the search field and
         // the more button needs to have enough space
         if (ncol === 1) {
-            Array.from(topics).forEach(topic => utils.add_class(topic, "single_column"));
+            Array.from(topics).forEach(topic =>
+                utils.add_class(topic, "single_column")
+            );
             utils.add_class(menu_popup, "single_column");
         } else if (utils.has_class(menu_popup, "single_column")) {
-            Array.from(topics).forEach(topic => utils.remove_class(topic, "single_column"));
+            Array.from(topics).forEach(topic =>
+                utils.remove_class(topic, "single_column")
+            );
             utils.remove_class(menu_popup, "single_column");
             resize_mega_menu_popup(menu_popup);
             return;
         }
-        menu_popup.style.width = Math.min(maximum_popup_width(), topic.offsetWidth * ncol) + "px";
+        menu_popup.style.width =
+            Math.min(maximum_popup_width(), topic.offsetWidth * ncol) + "px";
     } else {
         const items = extended_topic.getElementsByTagName("ul")[0];
         const visible_items = Array.prototype.slice
@@ -476,7 +508,7 @@ export function resize_mega_menu_popup(menu_popup) {
     }
 }
 
-function mega_menu_last_topic_grow(topics) {
+function mega_menu_last_topic_grow(topics: HTMLCollectionOf<HTMLElement>) {
     // For each column, let the last topic grow by setting/removing the css class "grow"
     // Return the number of columns
     if (topics.length === 0) {
@@ -484,7 +516,7 @@ function mega_menu_last_topic_grow(topics) {
     }
 
     let ncol = 1;
-    let previous_node = null;
+    let previous_node: null | HTMLElement = null;
     Array.from(topics).forEach(function (node) {
         if (utils.get_computed_style(node, "display") == "none") {
             utils.remove_class(node, "grow");
@@ -507,31 +539,34 @@ function mega_menu_last_topic_grow(topics) {
 }
 
 function maximum_popup_width() {
-    return window.innerWidth - document.getElementById("check_mk_navigation").offsetWidth;
+    return (
+        window.innerWidth -
+        document.getElementById("check_mk_navigation")!.offsetWidth
+    );
 }
 
 export function mega_menu_show_all_items(current_topic_id) {
     let current_topic = document.getElementById(current_topic_id);
     utils.remove_class(current_topic, "extendable");
     utils.add_class(current_topic, "extended");
-    utils.add_class(current_topic.closest(".main_menu"), "extended_topic");
-    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
+    utils.add_class(current_topic!.closest(".main_menu"), "extended_topic");
+    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup"));
 }
 
 export function mega_menu_show_all_topics(current_topic_id) {
     let current_topic = document.getElementById(current_topic_id);
     utils.remove_class(current_topic, "extended");
-    utils.remove_class(current_topic.closest(".main_menu"), "extended_topic");
-    mega_menu_hide_entries(current_topic.closest(".main_menu").id);
-    current_topic.getElementsByTagName("ul")[0].removeAttribute("style");
-    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
+    utils.remove_class(current_topic!.closest(".main_menu"), "extended_topic");
+    mega_menu_hide_entries(current_topic!.closest(".main_menu")?.id);
+    current_topic?.getElementsByTagName("ul")[0].removeAttribute("style");
+    resize_mega_menu_popup(current_topic?.closest(".main_menu_popup"));
 }
 
 export function mega_menu_hide_entries(menu_id) {
     let menu = document.getElementById(menu_id);
-    let more_is_active = menu.classList.contains("more");
-    let topics = menu.getElementsByClassName("topic");
-    Array.from(topics).forEach(topic => {
+    let more_is_active = menu?.classList.contains("more");
+    let topics = menu?.getElementsByClassName("topic");
+    Array.from(topics!).forEach(topic => {
         if (topic.classList.contains("extended")) return;
         let max_entry_number = Number(topic.getAttribute("data-max-entries"));
         if (!max_entry_number) {
@@ -544,21 +579,24 @@ export function mega_menu_hide_entries(menu_id) {
             let counter = 0;
             Array.from(entries).forEach(entry => {
                 if (
-                    (!more_is_active && entry.classList.contains("show_more_mode")) ||
+                    (!more_is_active &&
+                        entry.classList.contains("show_more_mode")) ||
                     entry == show_all_items_entry
                 )
                     return;
-                if (counter >= max_entry_number) utils.add_class(entry, "extended");
+                if (counter >= max_entry_number)
+                    utils.add_class(entry, "extended");
                 else utils.remove_class(entry, "extended");
                 counter++;
             });
-            if (counter > max_entry_number) utils.add_class(topic, "extendable");
+            if (counter > max_entry_number)
+                utils.add_class(topic, "extendable");
             else utils.remove_class(topic, "extendable");
         }
     });
-    resize_mega_menu_popup(menu.parentElement);
+    resize_mega_menu_popup(menu?.parentElement);
 }
 
 export function focus_search_field(input_id) {
-    document.getElementById(input_id).focus();
+    document.getElementById(input_id)?.focus();
 }

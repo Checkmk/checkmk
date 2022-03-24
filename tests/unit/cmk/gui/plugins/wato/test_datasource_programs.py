@@ -6,10 +6,8 @@
 
 import pytest
 
-from cmk.gui.plugins.wato.datasource_programs import (
-    _special_agents_innovaphone_transform,
-    MultisiteBiDatasource,
-)
+from cmk.gui.plugins.wato.datasource_programs import MultisiteBiDatasource
+from cmk.gui.plugins.wato.special_agents.innovaphone import special_agents_innovaphone_transform
 from cmk.gui.plugins.wato.special_agents.kubernetes import special_agents_kubernetes_transform
 
 
@@ -94,7 +92,7 @@ def test__special_agents_kubernetes_transform(parameters, expected_result):
     ],
 )
 def test__special_agents_innovaphone_transform(parameters, expected_result):
-    assert _special_agents_innovaphone_transform(parameters) == expected_result
+    assert special_agents_innovaphone_transform(parameters) == expected_result
 
 
 @pytest.fixture(scope="function")

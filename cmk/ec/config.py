@@ -137,6 +137,8 @@ class Rule(TypedDict, total=False):
     actions: Iterable[str]
     actions_in_downtime: bool
     autodelete: bool
+    cancel_actions: Iterable[str]
+    cancel_action_phases: str
     cancel_application: str
     cancel_priority: tuple[int, int]
     contact_groups: ContactGroups

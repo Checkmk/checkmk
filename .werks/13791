@@ -1,0 +1,16 @@
+Title: KUBE: Change controller daemon_set to daemonset
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1648117792
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, if a Pod would be controlled by a DaemonSet, the controller
+would be daemon_set. This lead to an inconsistency, because DaemonSets
+would label themselves as daemonset.
+The controller now is daemonset. This affects the PodInfo service and
+the labels on a piggyback host.
+

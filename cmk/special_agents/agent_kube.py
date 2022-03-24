@@ -513,7 +513,7 @@ class DaemonSet(PodOwner):
         super().__init__()
         self.metadata = metadata
         self.spec = spec
-        self.type_: str = "daemon_set"
+        self.type_: str = "daemonset"
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:

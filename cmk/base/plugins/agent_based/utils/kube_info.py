@@ -36,8 +36,8 @@ def result_from_control_chain(control_chain: ControlChain) -> Result:
     >>> from cmk.base.plugins.agent_based.utils.kube import ControllerType, Controller
     >>> result_from_control_chain([])
     Result(state=<State.OK: 0>, summary='Controlled by: None')
-    >>> result_from_control_chain([Controller(type_=ControllerType.daemon_set, name="kube-proxy")])
-    Result(state=<State.OK: 0>, summary='Controlled by: daemon_set/kube-proxy')
+    >>> result_from_control_chain([Controller(type_=ControllerType.daemonset, name="kube-proxy")])
+    Result(state=<State.OK: 0>, summary='Controlled by: daemonset/kube-proxy')
     """
     chain_display = " <- ".join(f"{c.type_.value}/{c.name}" for c in control_chain)
     return Result(

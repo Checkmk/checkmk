@@ -6,6 +6,7 @@
 """Performing the actual checks."""
 
 from collections import defaultdict
+from contextlib import suppress
 from typing import (
     Container,
     DefaultDict,
@@ -88,8 +89,7 @@ def active_check_checking(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    sources: Sequence[Source],
-    fetcher_messages: Sequence[FetcherMessage],
+    fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
@@ -104,8 +104,7 @@ def active_check_checking(
     return _execute_checkmk_checks(
         hostname=hostname,
         ipaddress=ipaddress,
-        sources=sources,
-        fetcher_messages=fetcher_messages,
+        fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
         dry_run=dry_run,
@@ -133,24 +132,22 @@ def commandline_checking(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = config.lookup_ip_address(host_config)
 
-    sources = make_sources(
-        config_cache,
-        host_config,
-        ipaddress,
-        selected_sections=selected_sections,
-        force_snmp_cache_refresh=False,
-        on_scan_error=OnError.RAISE,
-    )
-    fetcher_messages = fetch_all(
-        sources=sources,
+    fetched = fetch_all(
+        sources=make_sources(
+            config_cache,
+            host_config,
+            ipaddress,
+            selected_sections=selected_sections,
+            force_snmp_cache_refresh=False,
+            on_scan_error=OnError.RAISE,
+        ),
         file_cache_max_age=host_config.max_cachefile_age,
         mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
     )
     return _execute_checkmk_checks(
         hostname=host_name,
         ipaddress=ipaddress,
-        sources=sources,
-        fetcher_messages=fetcher_messages,
+        fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
         dry_run=dry_run,
@@ -162,8 +159,7 @@ def _execute_checkmk_checks(
     *,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    sources: Sequence[Source],
-    fetcher_messages: Sequence[FetcherMessage],
+    fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     dry_run: bool,
@@ -183,11 +179,9 @@ def _execute_checkmk_checks(
             ),
         )
         broker, source_results = make_broker(
-            sources=sources,
-            fetcher_messages=fetcher_messages,
+            fetched=fetched,
             selected_sections=selected_sections,
             file_cache_max_age=host_config.max_cachefile_age,
-            mode=mode,
         )
         with CPUTracker() as tracker:
             num_success, plugins_missing_data = check_host_services(
@@ -223,7 +217,7 @@ def _execute_checkmk_checks(
             ]
         return ActiveCheckResult.from_subresults(
             *timed_results,
-            _timing_results(tracker.duration, fetcher_messages),
+            _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
         )
 
     finally:
@@ -251,12 +245,7 @@ def _timing_results(
     ]
     summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
     for msg in fetcher_messages:
-        if msg.fetcher_type in (
-            FetcherType.PIGGYBACK,
-            FetcherType.PROGRAM,
-            FetcherType.SNMP,
-            FetcherType.TCP,
-        ):
+        with suppress(KeyError):
             summary[
                 {
                     FetcherType.PIGGYBACK: "agent",

@@ -128,9 +128,8 @@ class TestMakeHostSectionsHosts:
 
     def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
         host_sections = _collect_host_sections(
-            sources=(),
+            fetched=(),
             file_cache_max_age=file_cache.MaxAge.none(),
-            fetcher_messages=(),
             selected_sections=NO_SELECTION,
         )[0]
         assert not host_sections
@@ -138,23 +137,23 @@ class TestMakeHostSectionsHosts:
     def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
         raw_data: SNMPRawData = {}
         host_sections = _collect_host_sections(
-            sources=[
-                SNMPSource.snmp(
-                    hostname,
-                    ipaddress,
-                    selected_sections=NO_SELECTION,
-                    force_cache_refresh=False,
-                    on_scan_error=OnError.RAISE,
-                ),
+            fetched=[
+                (
+                    SNMPSource.snmp(
+                        hostname,
+                        ipaddress,
+                        selected_sections=NO_SELECTION,
+                        force_cache_refresh=False,
+                        on_scan_error=OnError.RAISE,
+                    ),
+                    FetcherMessage.from_raw_data(
+                        result.OK(raw_data),
+                        Snapshot.null(),
+                        FetcherType.SNMP,
+                    ),
+                )
             ],
             file_cache_max_age=file_cache.MaxAge.none(),
-            fetcher_messages=[
-                FetcherMessage.from_raw_data(
-                    result.OK(raw_data),
-                    Snapshot.null(),
-                    FetcherType.SNMP,
-                ),
-            ],
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -184,15 +183,17 @@ class TestMakeHostSectionsHosts:
         assert source.source_type is SourceType.HOST
 
         host_sections = _collect_host_sections(
-            sources=[source],
-            file_cache_max_age=file_cache.MaxAge.none(),
-            fetcher_messages=[
-                FetcherMessage.from_raw_data(
-                    result.OK(source.default_raw_data),
-                    Snapshot.null(),
-                    source.fetcher_type,
-                ),
+            fetched=[
+                (
+                    source,
+                    FetcherMessage.from_raw_data(
+                        result.OK(source.default_raw_data),
+                        Snapshot.null(),
+                        source.fetcher_type,
+                    ),
+                )
             ],
+            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -218,16 +219,18 @@ class TestMakeHostSectionsHosts:
         ]
 
         host_sections = _collect_host_sections(
-            sources=sources,
-            file_cache_max_age=file_cache.MaxAge.none(),
-            fetcher_messages=[
-                FetcherMessage.from_raw_data(
-                    result.OK(source.default_raw_data),
-                    Snapshot.null(),
-                    source.fetcher_type,
+            fetched=[
+                (
+                    source,
+                    FetcherMessage.from_raw_data(
+                        result.OK(source.default_raw_data),
+                        Snapshot.null(),
+                        source.fetcher_type,
+                    ),
                 )
                 for source in sources
             ],
+            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -252,16 +255,18 @@ class TestMakeHostSectionsHosts:
         ]
 
         host_sections = _collect_host_sections(
-            sources=sources,
-            file_cache_max_age=file_cache.MaxAge.none(),
-            fetcher_messages=[
-                FetcherMessage.from_raw_data(
-                    result.OK(source.default_raw_data),
-                    Snapshot.null(),
-                    source.fetcher_type,
+            fetched=[
+                (
+                    source,
+                    FetcherMessage.from_raw_data(
+                        result.OK(source.default_raw_data),
+                        Snapshot.null(),
+                        source.fetcher_type,
+                    ),
                 )
                 for source in sources
             ],
+            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
 
@@ -352,17 +357,18 @@ class TestMakeHostSectionsClusters:
         sources = make_cluster_sources(config_cache, host_config)
 
         host_sections = _collect_host_sections(
-            sources=sources,
-            file_cache_max_age=file_cache.MaxAge.none(),
-            fetcher_messages=[
-                # We do not pass sources explicitly but still append Piggyback.
-                FetcherMessage.from_raw_data(
-                    result.OK(AgentRawData(b"")),
-                    Snapshot.null(),
-                    FetcherType.PIGGYBACK,
+            fetched=[
+                (
+                    source,
+                    FetcherMessage.from_raw_data(
+                        result.OK(AgentRawData(b"")),
+                        Snapshot.null(),
+                        FetcherType.PIGGYBACK,
+                    ),
                 )
-                for _s in sources
+                for source in sources
             ],
+            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == len(nodes)
@@ -429,16 +435,18 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     sources = make_cluster_sources(config_cache, host_config)
 
     host_sections = _collect_host_sections(
-        sources=sources,
-        file_cache_max_age=host_config.max_cachefile_age,
-        fetcher_messages=[
-            FetcherMessage.from_raw_data(
-                result.OK(source.default_raw_data),
-                Snapshot.null(),
-                source.fetcher_type,
+        fetched=[
+            (
+                source,
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    Snapshot.null(),
+                    source.fetcher_type,
+                ),
             )
             for source in sources
         ],
+        file_cache_max_age=host_config.max_cachefile_age,
         selected_sections=NO_SELECTION,
     )[0]
     assert len(host_sections) == len(hosts) == 3

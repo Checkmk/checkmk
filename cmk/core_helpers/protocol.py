@@ -592,6 +592,30 @@ class CMCPayload(Serializer, Deserializer):
     pass
 
 
+class FetcherResultsId(Serializer, Deserializer):
+    fmt = "!QI"
+    _length = struct.calcsize(fmt)
+
+    def __init__(self, serial: int, host_name: str) -> None:
+        super().__init__()
+        self.serial: Final = serial
+        self.host_name: Final = host_name
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(serial={self.serial!r}, host_name={self.host_name})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        host_name_bytes = self.host_name.encode("utf8")
+        yield struct.pack(type(self).fmt, self.serial, len(host_name_bytes))
+        yield host_name_bytes
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> FetcherResultsId:
+        serial, host_name_length = struct.unpack(cls.fmt, data[: cls._length])
+        host_name = data[cls._length : cls._length + host_name_length].decode("utf8")
+        return cls(serial=serial, host_name=host_name)
+
+
 class FetcherResultsStats(Serializer, Deserializer):
     fmt = "!I"
     length = struct.calcsize(fmt)
@@ -629,10 +653,12 @@ class CMCResults(CMCPayload):
     def __init__(
         self,
         messages: Sequence[FetcherMessage],
+        id_: FetcherResultsId,
         stats: FetcherResultsStats,
     ) -> None:
         super().__init__()
         self.messages: Final = messages
+        self.id_: Final = id_
         self.stats: Final = stats
 
     @property
@@ -640,11 +666,12 @@ class CMCResults(CMCPayload):
         return len(self.messages)
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.messages!r}, {self.stats!r})"
+        return f"{type(self).__name__}(" f"{self.messages!r}, " f"{self.id_!r}, " f"{self.stats!r})"
 
     def __iter__(self) -> Iterator[bytes]:
         yield struct.pack(type(self).fmt, self.message_count)
         yield from (bytes(msg) for msg in self.messages)
+        yield from self.id_
         yield from self.stats
 
     @classmethod
@@ -655,7 +682,10 @@ class CMCResults(CMCPayload):
             message = FetcherMessage.from_bytes(data[index:])
             messages.append(message)
             index += len(message)
-        return cls(messages, FetcherResultsStats.from_bytes(data[index:]))
+        id_ = FetcherResultsId.from_bytes(data[index:])
+        index += len(id_)
+        stats = FetcherResultsStats.from_bytes(data[index:])
+        return cls(messages, id_, stats)
 
 
 class CMCLogging(CMCPayload):
@@ -730,9 +760,17 @@ class CMCMessage(Serializer, Deserializer):
 
     @classmethod
     def result_answer(
-        cls, messages: Sequence[FetcherMessage], timeout: int, duration: Snapshot
+        cls,
+        messages: Sequence[FetcherMessage],
+        *,
+        serial: int,
+        host_name: str,
+        timeout: int,
+        duration: Snapshot,
     ) -> CMCMessage:
-        payload = CMCResults(messages, FetcherResultsStats(timeout, duration))
+        payload = CMCResults(
+            messages, FetcherResultsId(serial, host_name), FetcherResultsStats(timeout, duration)
+        )
         return cls(
             CMCHeader(
                 name=CMCHeader.default_protocol_name(),

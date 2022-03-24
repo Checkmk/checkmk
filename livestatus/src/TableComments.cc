@@ -79,17 +79,18 @@ std::string TableComments::name() const { return "comments"; }
 std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
+    auto is_authorized = [service_auth = core()->serviceAuthorization(),
+                          auth_user =
+                              query->authUser()](const Comment *comment) {
+        return comment->_service == nullptr
+                   ? is_authorized_for_hst(auth_user, comment->_host)
+                   : is_authorized_for_svc(service_auth, auth_user,
+                                           comment->_service);
+    };
+
     for (const auto &[id, co] : core()->impl<NagiosCore>()->_comments) {
-        if (!query->processDataset(Row{co.get()})) {
-            break;
+        if (is_authorized(co.get()) && !query->processDataset(Row{co.get()})) {
+            return;
         }
     }
-}
-
-bool TableComments::isAuthorized(Row row, const contact *ctc) const {
-    const auto *co = rowData<Comment>(row);
-    return co->_service == nullptr
-               ? is_authorized_for_hst(ctc, co->_host)
-               : is_authorized_for_svc(core()->serviceAuthorization(), ctc,
-                                       co->_service);
 }

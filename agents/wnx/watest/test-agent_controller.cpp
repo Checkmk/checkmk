@@ -35,7 +35,7 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon -P {} --agent_channel localhost:{} -vv",
+              fmt::format("x daemon -P {} --agent-channel localhost:{} -vv",
                           port, windows_internal_port));
 }
 
@@ -49,7 +49,7 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          allowed, port)));
     EXPECT_EQ(
         wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-        fmt::format("x daemon -P {} --agent_channel localhost:{} -A {} -vv",
+        fmt::format("x daemon -P {} --agent-channel localhost:{} -A {} -vv",
                     port, windows_internal_port, allowed));
 }
 

@@ -125,7 +125,7 @@ export function toggle_assumption(link, site, host, service) {
 export function update_argument_hints() {
     d3.selectAll("select[onchange='cmk.bi.update_argument_hints();']").each((d, idx, nodes) => {
         let node = d3.select(nodes[idx]);
-        let rule_arguments = window.bi_rule_argument_lookup[node.property("value")];
+        let rule_arguments = window["bi_rule_argument_lookup"][node.property("value")];
         let rule_body = node.select(function () {
             return this.closest("tbody");
         });
@@ -150,6 +150,12 @@ export function update_argument_hints() {
 }
 
 export class BIPreview {
+    _root_node;
+    _preview_active: boolean;
+    _varprefix: string;
+    _last_body: string;
+    _update_interval: number;
+    _update_active: boolean;
     constructor(root_node, varprefix) {
         this._root_node = d3.select(root_node);
         this._preview_active = false;
@@ -157,17 +163,22 @@ export class BIPreview {
         this._last_body = "";
         this._update_interval = 500;
         this._update_active = false;
-        this._create_search_preview([]);
+        this._create_search_preview();
         setInterval(() => this._check_update(), this._update_interval);
     }
 
-    _check_update() {}
+    _create_search_preview() {
+    }
+
+
+    _check_update() {
+    }
 
     _get_update_url() {
         return encodeURI("ajax_bi_node_preview.py");
     }
 
-    _update_previews() {
+    _update_previews(json_data) {
         this._update_active = false;
         this._check_update();
     }
@@ -231,7 +242,7 @@ export class BIPreview {
         body_rows
             .selectAll("td")
             .data(d => {
-                let cells = [];
+                let cells: HTMLElement[] = [];
                 headers.forEach(header => {
                     cells.push(d[header]);
                 });
@@ -252,7 +263,7 @@ export class BIPreview {
     }
 
     _dict_to_url(dict) {
-        let str = [];
+        let str: string[] = [];
         for (var p in dict) {
             str.push(encodeURIComponent(p) + "=" + encodeURIComponent(dict[p]));
         }
@@ -273,7 +284,7 @@ export class BIRulePreview extends BIPreview {
         }
 
         let params = this._determine_params();
-        params.example_arguments = JSON.stringify(this._get_example_arguments());
+        params["example_arguments"] = JSON.stringify(this._get_example_arguments());
         this._trigger_update_if_required(params);
     }
 
@@ -282,7 +293,7 @@ export class BIRulePreview extends BIPreview {
     }
 
     _get_example_arguments() {
-        let example_arguments = [];
+        let example_arguments: string[] = [];
         this._root_node
             .select("span.arguments")
             .selectAll("input")
@@ -361,6 +372,8 @@ export class BIRulePreview extends BIPreview {
 }
 
 export class BIAggregationPreview extends BIPreview {
+    _preview_box;
+
     _check_update() {
         BIPreview.prototype._check_update.call(this);
         if (!this._preview_active) {

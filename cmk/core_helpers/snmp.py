@@ -451,11 +451,6 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
         return HostSections[SNMPRawDataSection](new_sections, cache_info=cache_info)
 
 
-class SNMPSummarizer(Summarizer[SNMPRawDataSection]):
-    def summarize_success(
-        self,
-        host_sections: HostSections[SNMPRawDataSection],
-        *,
-        mode: Mode,
-    ) -> Sequence[ActiveCheckResult]:
+class SNMPSummarizer(Summarizer):
+    def summarize_success(self) -> Sequence[ActiveCheckResult]:
         return [ActiveCheckResult(0, "Success")]

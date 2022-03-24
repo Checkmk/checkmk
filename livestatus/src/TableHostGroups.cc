@@ -193,10 +193,16 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableHostGroups::answerQuery(Query *query) {
-    for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        const hostgroup *r = hg;
-        if (!query->processDataset(Row(r))) {
-            break;
+    auto process = [query, group_auth = core()->groupAuthorization(),
+                    auth_user = query->authUser()](const hostgroup *group) {
+        return !is_authorized_for_host_group(group_auth, group, auth_user) ||
+               query->processDataset(Row{group});
+    };
+
+    for (const auto *group = hostgroup_list; group != nullptr;
+         group = group->next) {
+        if (!process(group)) {
+            return;
         }
     }
 }
@@ -204,9 +210,4 @@ void TableHostGroups::answerQuery(Query *query) {
 Row TableHostGroups::get(const std::string &primary_key) const {
     // "name" is the primary key
     return Row(find_hostgroup(const_cast<char *>(primary_key.c_str())));
-}
-
-bool TableHostGroups::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_host_group(core()->groupAuthorization(),
-                                        rowData<hostgroup>(row), ctc);
 }

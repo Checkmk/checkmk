@@ -1,6 +1,6 @@
 ARG IMAGE_SLES_15SP3
 # hadolint ignore=DL3006
-FROM ${IMAGE_SLES_15SP3}
+FROM ${IMAGE_SLES_15SP3} as base
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -101,6 +101,7 @@ ENV PATH="/usr/lib/mit/bin:${PATH}"
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
+FROM base as builder
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
@@ -115,9 +116,27 @@ RUN /opt/install-cmake.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
-RUN /opt/install-pipenv.sh
-RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+
+### Actual Image ###
+FROM base
+
+# Copy our standard tool chain for building
+COPY --from=builder /opt /opt
+ARG DISTRO
+ARG BRANCH_VERSION
+ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
+# Set symlinks
+RUN /opt/install-gnu-toolchain.sh link
+RUN /opt/install-valgrind.sh link
+RUN /opt/install-cmake.sh link
+RUN /opt/install-protobuf-cpp.sh --link
+RUN /opt/install-python.sh link
+RUN /opt/install-freetds.sh link
+
+# Install non cached dependencies
+RUN /opt/install-pipenv.sh
 RUN /opt/install-cmk-dependencies.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from

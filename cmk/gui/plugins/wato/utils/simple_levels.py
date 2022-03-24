@@ -47,6 +47,7 @@ def SimpleLevels(
     spec: _Spec = Float,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     default_levels: _Tuple[float, float] = (0.0, 0.0),
+    default_value: Optional[_Tuple[float, float]] = None,
     title: Optional[str] = None,
     unit: Optional[str] = None,
 ) -> Alternative:
@@ -74,5 +75,5 @@ def SimpleLevels(
         help=help,
         elements=elements,
         match=match_levels_alternative,
-        default_value=default_levels,
+        default_value=default_value,
     )

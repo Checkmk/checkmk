@@ -81,9 +81,17 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         yield Result(state=State.OK, notice="\n".join(infos))
 
 
+def check_cluster_bi_aggregation(item: str, section: Section) -> CheckResult:
+    for node, node_section in section.items():
+        if node_section.get(item):
+            yield Result(state=State.OK, summary=f"[{node}]")
+            yield from check_bi_aggregation(item, node_section)
+
+
 register.check_plugin(
     name="bi_aggregation",
     service_name="Aggr %s",
     discovery_function=discover_bi_aggregation,
     check_function=check_bi_aggregation,
+    cluster_check_function=check_cluster_bi_aggregation
 )

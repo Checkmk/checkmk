@@ -35,4 +35,5 @@ test_mk_redis_config() {
 
 }
 
+# shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

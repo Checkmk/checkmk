@@ -36,4 +36,5 @@ udp6       0      0 :::5353                 :::*" "$response"
 
 }
 
+# shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

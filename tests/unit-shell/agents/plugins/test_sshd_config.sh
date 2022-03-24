@@ -27,4 +27,5 @@ Two Second Repeated" "${result}"
 
 }
 
+# shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

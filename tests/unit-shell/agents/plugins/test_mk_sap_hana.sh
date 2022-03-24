@@ -410,5 +410,5 @@ test_mk_sap_hana_get_last_used_check_file_no_file() {
     assertEquals "" "$actual"
 }
 
-# shellcheck disable=SC1090
+# shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

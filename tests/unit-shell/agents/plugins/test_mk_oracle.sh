@@ -465,5 +465,5 @@ mocked-sql_asm_diskgroup" "$MK_SYNC_SECTIONS_QUERY"
 
 #   ------------------------------------------------------------------------
 
-# shellcheck disable=SC1090
+# shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

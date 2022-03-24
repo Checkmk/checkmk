@@ -17,6 +17,7 @@
 #include "ServiceListState.h"
 #include "StringColumn.h"
 #include "auth.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 
 namespace {
@@ -169,10 +170,18 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableServiceGroups::answerQuery(Query *query) {
-    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        const servicegroup *r = sg;
-        if (!query->processDataset(Row(r))) {
-            break;
+    auto process = [query, group_auth = core()->groupAuthorization(),
+                    service_auth = core()->serviceAuthorization(),
+                    auth_user = query->authUser()](const servicegroup *group) {
+        return !is_authorized_for_service_group(group_auth, service_auth, group,
+                                                auth_user) ||
+               query->processDataset(Row{group});
+    };
+
+    for (const auto *group = servicegroup_list; group != nullptr;
+         group = group->next) {
+        if (!process(group)) {
+            return;
         }
     }
 }
@@ -180,10 +189,4 @@ void TableServiceGroups::answerQuery(Query *query) {
 Row TableServiceGroups::get(const std::string &primary_key) const {
     // "name" is the primary key
     return Row(find_servicegroup(const_cast<char *>(primary_key.c_str())));
-}
-
-bool TableServiceGroups::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_service_group(core()->groupAuthorization(),
-                                           core()->serviceAuthorization(),
-                                           rowData<servicegroup>(row), ctc);
 }

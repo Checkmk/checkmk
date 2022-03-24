@@ -1243,48 +1243,6 @@ rulespec_registry.register(
 )
 
 
-def _factory_default_special_agents_allnet_ip_sensoric():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_allnet_ip_sensoric():
-    return Dictionary(
-        title=_("ALLNET IP Sensoric Devices"),
-        help=_(
-            "This rule selects the ALLNET IP Sensoric agent, which fetches "
-            "/xml/sensordata.xml from the device by HTTP and extracts the "
-            "needed monitoring information from this file."
-        ),
-        elements=[
-            (
-                "timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    help=_(
-                        "The network timeout in seconds when communicating via HTTP. "
-                        "The default is 10 seconds."
-                    ),
-                    default_value=10,
-                    minvalue=1,
-                    unit=_("seconds"),
-                ),
-            ),
-        ],
-        optional_keys=["timeout"],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_allnet_ip_sensoric(),
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:allnet_ip_sensoric",
-        valuespec=_valuespec_special_agents_allnet_ip_sensoric,
-    )
-)
-
-
 def _valuespec_special_agents_tinkerforge():
     return Dictionary(
         title=_("Tinkerforge"),

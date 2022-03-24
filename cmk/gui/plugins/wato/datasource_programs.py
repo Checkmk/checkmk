@@ -1217,32 +1217,6 @@ rulespec_registry.register(
 )
 
 
-def _factory_default_special_agents_hivemanager():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_hivemanager():
-    return Tuple(
-        title=_("Aerohive HiveManager"),
-        help=_("Activate monitoring of host via a HTTP connect to the HiveManager"),
-        elements=[
-            TextInput(title=_("Username")),
-            Password(title=_("Password")),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_hivemanager(),
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:hivemanager",
-        valuespec=_valuespec_special_agents_hivemanager,
-    )
-)
-
-
 def _valuespec_special_agents_tinkerforge():
     return Dictionary(
         title=_("Tinkerforge"),

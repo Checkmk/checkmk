@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import abc
 import json
 from collections import Counter
 from dataclasses import asdict, dataclass
@@ -389,155 +388,139 @@ class LicenseUsageSample:
 
 @dataclass(frozen=True)
 class MonthlyServiceAverage:
-    sample_time: float
+    sample_date: datetime
     num_services: float
 
+    def for_report(self) -> Mapping[str, float]:
+        "This method prepares the following data for javascript rendering"
+        return {
+            "sample_time": self.sample_date.timestamp(),
+            "num_services": self.num_services,
+        }
 
-class ABCMonthlyServiceAverages(abc.ABC):
+
+class MonthlyServiceAverages:
     today = datetime.today()
 
     def __init__(
         self,
         username: str,
         subscription_details: Optional[SubscriptionDetails],
+        short_samples: Sequence[Tuple[int, int]],
     ) -> None:
         self._username = username
-        self._subscription_details = subscription_details
-        self._daily_services: List[Tuple[datetime, Counter]] = []
+
+        self._subscription_start = (
+            None if subscription_details is None else subscription_details.start
+        )
+        self._subscription_end = None if subscription_details is None else subscription_details.end
+        self._subscription_limit_value = (
+            None if subscription_details is None else subscription_details.limit.limit_value
+        )
+
+        self._daily_services = self._calculate_daily_services(short_samples)
         self._monthly_service_averages: List[MonthlyServiceAverage] = []
 
-    @property
-    def subscription_start(self) -> Optional[int]:
-        return None if self._subscription_details is None else self._subscription_details.start
+    @staticmethod
+    def _calculate_daily_services(
+        short_samples: Sequence[Tuple[int, int]]
+    ) -> Sequence[MonthlyServiceAverage]:
+        daily_services: Dict[datetime, Counter] = {}
+        for sample_time, num_services in short_samples:
+            sample_date = datetime.fromtimestamp(sample_time)
+            daily_services.setdefault(
+                datetime(sample_date.year, sample_date.month, sample_date.day),
+                Counter(),
+            ).update(num_services=num_services)
 
-    @property
-    def subscription_end(self) -> Optional[int]:
-        return None if self._subscription_details is None else self._subscription_details.end
-
-    @property
-    def subscription_limit_value(self) -> Optional[int]:
-        return (
-            None
-            if self._subscription_details is None
-            else self._subscription_details.limit.limit_value
-        )
-
-    @abc.abstractmethod
-    def _calculate_daily_services(self) -> Mapping[datetime, Counter]:
-        raise NotImplementedError()
-
-    def _calculate_averages(self) -> None:
-        # Get max. 400 days, because the license usage history per site - recorded in
-        # Checkmk - is max. 400 long.
-        self._daily_services = sorted(self._calculate_daily_services().items())[-400:]
-        if not self._daily_services:
-            return
-
-        if self.subscription_start is None or self.subscription_end is None:
-            # It does not make sense to calculate monthly averages
-            # if we do not know where to start or end:
-            # Subscription must not start at the beginning of a month.
-            return
-
-        monthly_services: Dict[datetime, Counter] = {}
-        month_start = datetime.fromtimestamp(self.subscription_start).replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-        month_end = month_start + relativedelta(months=+1)
-        subscription_end_date = datetime.fromtimestamp(self.subscription_end).replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        for daily_service_date, counter in self._daily_services:
-            if daily_service_date >= month_end:
-                month_start = month_end
-                month_end = month_start + relativedelta(months=+1)
-
-            if month_end >= ABCMonthlyServiceAverages.today or month_end > subscription_end_date:
-                # Skip last, incomplete month (subscription_end_date excl.)
-                break
-
-            if month_start <= daily_service_date < month_end:
-                monthly_services.setdefault(month_start, Counter()).update(
-                    num_daily_services=1,
-                    num_services=counter["num_services"],
-                )
-
-        for month_start, counter in monthly_services.items():
-            self._monthly_service_averages.append(
-                MonthlyServiceAverage(
-                    sample_time=month_start.timestamp(),
-                    num_services=1.0 * counter["num_services"] / counter["num_daily_services"],
-                )
+        return [
+            MonthlyServiceAverage(
+                sample_date=sample_date,
+                num_services=counter["num_services"],
             )
+            # License usage history per site (recorded in Checkmk) is max. 400 long.
+            for sample_date, counter in sorted(daily_services.items())[-400:]
+        ]
 
     def get_aggregation(self) -> Dict:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
         return {
             "owner": self._username,
-            "daily_services": [
-                asdict(
-                    MonthlyServiceAverage(
-                        sample_time=daily_service_date.timestamp(),
-                        num_services=counter["num_services"],
-                    )
-                )
-                for daily_service_date, counter in self._daily_services
-            ],
-            "monthly_service_averages": [asdict(a) for a in self._monthly_service_averages],
+            "daily_services": [d.for_report() for d in self._daily_services],
+            "monthly_service_averages": [a.for_report() for a in self._monthly_service_averages],
             "last_service_report": self._get_last_service_report(),
             "highest_service_report": self._get_highest_service_report(),
             "subscription_exceeded_first": self._get_subscription_exceeded_first(),
-            "subscription_start": self.subscription_start,
-            "subscription_end": self.subscription_end,
-            "subscription_limit": self.subscription_limit_value,
+            "subscription_start": self._subscription_start,
+            "subscription_end": self._subscription_end,
+            "subscription_limit": self._subscription_limit_value,
         }
+
+    def _calculate_averages(self) -> None:
+        if not self._daily_services:
+            return
+
+        if self._subscription_start is None or self._subscription_end is None:
+            # It does not make sense to calculate monthly averages if we do not know where to
+            # start or end.
+            return
+
+        monthly_services: Dict[datetime, Counter] = {}
+        month_start = datetime.fromtimestamp(self._subscription_start).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        month_end = month_start + relativedelta(months=+1)
+        subscription_end_date = datetime.fromtimestamp(self._subscription_end).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+        for daily_service in self._daily_services:
+            if daily_service.sample_date >= month_end:
+                month_start = month_end
+                month_end = month_start + relativedelta(months=+1)
+
+            if month_end >= MonthlyServiceAverages.today or month_end > subscription_end_date:
+                # Skip last, incomplete month (subscription_end_date excl.)
+                break
+
+            if month_start <= daily_service.sample_date < month_end:
+                monthly_services.setdefault(month_start, Counter()).update(
+                    num_daily_services=1,
+                    num_services=int(daily_service.num_services),
+                )
+
+        for month_start, counter in monthly_services.items():
+            self._monthly_service_averages.append(
+                MonthlyServiceAverage(
+                    sample_date=month_start,
+                    num_services=1.0 * counter["num_services"] / counter["num_daily_services"],
+                )
+            )
 
     def _get_last_service_report(self) -> Optional[Mapping[str, float]]:
         if not self._monthly_service_averages:
             return None
-        return asdict(self._monthly_service_averages[-1])
+        return self._monthly_service_averages[-1].for_report()
 
     def _get_highest_service_report(self) -> Optional[Mapping[str, float]]:
         if not self._monthly_service_averages:
             return None
-        return asdict(max(self._monthly_service_averages, key=lambda d: d.num_services))
+        return max(self._monthly_service_averages, key=lambda d: d.num_services).for_report()
 
     def _get_subscription_exceeded_first(self) -> Optional[Mapping[str, float]]:
-        if self.subscription_limit_value is None or self.subscription_limit_value < 0:
+        if self._subscription_limit_value is None or self._subscription_limit_value < 0:
             return None
         for service_average in self._monthly_service_averages:
-            if service_average.num_services >= self.subscription_limit_value:
-                return asdict(service_average)
+            if service_average.num_services >= self._subscription_limit_value:
+                return service_average.for_report()
         return None
-
-
-class MonthlyServiceAverages(ABCMonthlyServiceAverages):
-    def __init__(
-        self,
-        username: str,
-        subscription_details: Optional[SubscriptionDetails],
-        short_samples: Sequence[Tuple[int, int]],
-    ) -> None:
-        super().__init__(username, subscription_details)
-        self._short_samples = short_samples
-
-    def _calculate_daily_services(self) -> Mapping[datetime, Counter]:
-        daily_services: Dict[datetime, Counter] = {}
-        for sample_time, num_services in self._short_samples:
-            sample_date = datetime.fromtimestamp(sample_time)
-            daily_services.setdefault(
-                datetime(sample_date.year, sample_date.month, sample_date.day),
-                Counter(),
-            ).update(num_services=num_services)
-        return daily_services
 
 
 # .

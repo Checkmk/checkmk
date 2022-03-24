@@ -727,13 +727,12 @@ void TableServices::answerQuery(Query *query) {
                query->processDataset(Row{svc});
     };
 
-    // do we know the host?
+    // If we know the host, we use it directly.
     if (auto value = query->stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
-        // TODO(sp): Remove ugly cast.
-        if (const auto *host =
-                reinterpret_cast<::host *>(core()->find_host(*value))) {
-            for (const auto *m = host->services; m != nullptr; m = m->next) {
+        if (const auto *hst =
+                reinterpret_cast<host *>(core()->find_host(*value))) {
+            for (const auto *m = hst->services; m != nullptr; m = m->next) {
                 if (!process(m->service_ptr)) {
                     return;
                 }
@@ -742,7 +741,7 @@ void TableServices::answerQuery(Query *query) {
         }
     }
 
-    // do we know the service group?
+    // If we know the service group, we simply iterate over it.
     if (auto value = query->stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
         if (const auto *sg =
@@ -756,7 +755,7 @@ void TableServices::answerQuery(Query *query) {
         return;
     }
 
-    // do we know the host group?
+    // If we know the host group, we simply iterate over it.
     if (auto value = query->stringValueRestrictionFor("host_groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
         if (const auto *hg =
@@ -773,7 +772,7 @@ void TableServices::answerQuery(Query *query) {
         return;
     }
 
-    // no index -> iterator over *all* services
+    // In the general case, we have to process all services.
     Debug(logger()) << "using full table scan";
     for (const auto *svc = service_list; svc != nullptr; svc = svc->next) {
         if (!process(svc)) {

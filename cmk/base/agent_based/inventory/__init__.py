@@ -269,25 +269,22 @@ def _inventorize_host(
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
-    sources = make_sources(
-        config_cache,
-        host_config,
-        ipaddress,
-        selected_sections=selected_sections,
-        force_snmp_cache_refresh=False,
-        on_scan_error=OnError.RAISE,
-    )
-    fetcher_messages = fetch_all(
-        sources,
+    fetched = fetch_all(
+        sources=make_sources(
+            config_cache,
+            host_config,
+            ipaddress,
+            selected_sections=selected_sections,
+            force_snmp_cache_refresh=False,
+            on_scan_error=OnError.RAISE,
+        ),
         file_cache_max_age=host_config.max_cachefile_age,
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
     broker, results = make_broker(
-        sources=sources,
-        fetcher_messages=fetcher_messages,
+        fetched=fetched,
         selected_sections=selected_sections,
         file_cache_max_age=host_config.max_cachefile_age,
-        mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
 
     parsing_errors = broker.parsing_errors()

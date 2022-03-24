@@ -1600,50 +1600,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_ucs_bladecenter():
-    return Dictionary(
-        title=_("UCS Bladecenter"),
-        help=_(
-            "This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
-            "which collects the data through the UCS Bladecenter Web API"
-        ),
-        elements=[
-            (
-                "username",
-                TextInput(
-                    title=_("Username"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "password",
-                Password(
-                    title=_("Password"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "no_cert_check",
-                FixedValue(
-                    value=True,
-                    title=_("Disable SSL certificate validation"),
-                    totext=_("SSL certificate validation is disabled"),
-                ),
-            ),
-        ],
-        optional_keys=["no_cert_check"],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:ucs_bladecenter",
-        valuespec=_valuespec_special_agents_ucs_bladecenter,
-    )
-)
-
-
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
     valuetypes: Dict[Any, Any] = {}
     for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):

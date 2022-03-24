@@ -8,7 +8,6 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsCustom,
-    RulespecGroupDatasourceProgramsHardware,
     RulespecGroupDatasourceProgramsOS,
 )
 from cmk.gui.plugins.wato.utils import HostRulespec, monitoring_macro_help, rulespec_registry
@@ -43,48 +42,6 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsCustom,
         name="datasource_programs",
         valuespec=_valuespec_datasource_programs,
-    )
-)
-
-
-def _valuespec_special_agents_tinkerforge():
-    return Dictionary(
-        title=_("Tinkerforge"),
-        elements=[
-            (
-                "port",
-                Integer(
-                    title=_("TCP port number"),
-                    help=_("Port number that AppDynamics is listening on. The default is 8090."),
-                    default_value=4223,
-                    minvalue=1,
-                    maxvalue=65535,
-                ),
-            ),
-            (
-                "segment_display_uid",
-                TextInput(
-                    title=_("7-segment display uid"),
-                    help=_(
-                        "This is the uid of the sensor you want to display in the 7-segment display, "
-                        "not the uid of the display itself. There is currently no support for "
-                        "controling multiple displays."
-                    ),
-                ),
-            ),
-            (
-                "segment_display_brightness",
-                Integer(title=_("7-segment display brightness"), minvalue=0, maxvalue=7),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:tinkerforge",
-        valuespec=_valuespec_special_agents_tinkerforge,
     )
 )
 

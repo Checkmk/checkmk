@@ -20,6 +20,7 @@
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma::cfg::details {
 namespace {
@@ -632,7 +633,7 @@ TEST(AgentConfig, InternalArray) {
     }
 }
 
-TEST(AgentConfig, WorkConfig) {
+TEST(AgentConfig, FactoryConfig) {
     auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     const auto cfg = GetLoadedConfig();
@@ -794,33 +795,33 @@ TEST(AgentConfig, WorkConfig) {
     }
 
     // system
-    {
-        auto firewall = GetNode(groups::kSystem, vars::kFirewall);
-        auto mode = GetVal(firewall, vars::kFirewallMode, std::string("xx"));
-        EXPECT_TRUE(mode == values::kModeConfigure);
-    }
 
-    {
-        auto mode =
-            GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx"));
-        EXPECT_TRUE(mode == values::kCleanupSmart);
-    }
+    // controller
+    auto controller = GetNode(groups::kSystem, vars::kController);
+    EXPECT_TRUE(GetVal(controller, vars::kControllerRun, false));
+    EXPECT_TRUE(GetVal(controller, vars::kControllerCheck, false));
+    EXPECT_FALSE(GetVal(controller, vars::kControllerForceLegacy, true));
+    EXPECT_EQ(GetVal(controller, vars::kControllerAgentChannel, ""s),
+              defaults::kControllerAgentChannelDefault);
+    EXPECT_FALSE(GetVal(controller, vars::kControllerLocalOnly, true));
 
-    {
-        auto mode = GetVal(groups::kSystem, vars::kWaitNetwork, 1);
-        EXPECT_TRUE(mode == defaults::kServiceWaitNetwork);
-    }
+    auto firewall = GetNode(groups::kSystem, vars::kFirewall);
+    EXPECT_EQ(GetVal(firewall, vars::kFirewallMode, std::string("xx")),
+              values::kModeConfigure);
 
-    {
-        auto service = GetNode(groups::kSystem, vars::kService);
-        auto restart_on_crash = GetVal(service, vars::kRestartOnCrash, false);
-        EXPECT_TRUE(restart_on_crash);
-        auto error_control =
-            GetVal(service, vars::kErrorMode, std::string("bb"));
-        EXPECT_EQ(error_control, defaults::kErrorMode);
-        auto start_mode = GetVal(service, vars::kStartMode, std::string("aaa"));
-        EXPECT_EQ(start_mode, defaults::kStartMode);
-    }
+    EXPECT_EQ(
+        GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx")),
+        values::kCleanupSmart);
+
+    EXPECT_EQ(GetVal(groups::kSystem, vars::kWaitNetwork, 1),
+              defaults::kServiceWaitNetwork);
+
+    auto service = GetNode(groups::kSystem, vars::kService);
+    EXPECT_TRUE(GetVal(service, vars::kRestartOnCrash, false));
+    EXPECT_EQ(GetVal(service, vars::kErrorMode, std::string("bb")),
+              defaults::kErrorMode);
+    EXPECT_EQ(GetVal(service, vars::kStartMode, std::string("aaa")),
+              defaults::kStartMode);
 }
 
 TEST(AgentConfig, UTF16LE) {
@@ -963,7 +964,7 @@ TEST(AgentConfig, LoadingCheck) {
     EXPECT_FALSE(groups::global.realtimeEnabled());
 }
 
-TEST(AgentConfig, FactoryConfig) {
+TEST(AgentConfig, FactoryConfigBase) {
     auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 

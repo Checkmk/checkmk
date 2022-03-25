@@ -354,7 +354,10 @@ system:
 
     #controller:
     #    run: yes        # start controller if controller presented
-    #    legacy: yes     # if yes creates data/allow-legacy-pull, if not, deletes it
+    #    check: yes                          # if yes that only controller process connections are accepted
+    #    force_legacy: no                    # if yes always created
+    #    agent_channel: "localhost:50001"    # for controller
+    #    local_only: no                      # bind to 127.0.0.1 or 0.0.0.0
 
     #firewall:
     #    mode: configure # allowed none, remove, configure

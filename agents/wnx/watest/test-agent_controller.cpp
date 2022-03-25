@@ -35,8 +35,49 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon -P {} --agent-channel localhost:{} -vv",
-                          port, windows_internal_port));
+              fmt::format("x daemon -P {} --agent-channel {} -vv", port,
+                          cfg::defaults::kControllerAgentChannelDefault));
+}
+
+TEST(AgentController, BuildCommandLineAgentChannelOk) {
+    std::tuple<std::string, uint16_t, std::string_view> mapping[] = {
+        {"ll:12345", 12345, "ll:12345"},
+        {"ll:999", kWindowsInternalPort,
+         cfg::defaults::kControllerAgentChannelDefault},
+        {"ll:-1", kWindowsInternalPort,
+         cfg::defaults::kControllerAgentChannelDefault},
+    };
+    for (const auto &e : mapping) {
+        auto temp_fs = tst::TempCfgFs::CreateNoIo();
+        ASSERT_TRUE(
+            temp_fs->loadContent(fmt::format("global:\n"
+                                             "  enabled: yes\n"
+                                             "system:\n"
+                                             "  controller:\n"
+                                             "    run: yes\n"
+                                             "    agent_channel: {}\n",
+                                             std::get<0>(e))));
+        EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+                  fmt::format("x daemon -P {} --agent-channel {} -vv",
+                              cfg::kMainPort, std::get<2>(e)));
+        EXPECT_EQ(GetConfiguredAgentChannelPort(), std::get<1>(e));
+    }
+}
+
+TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(
+        temp_fs->loadContent(fmt::format("global:\n"
+                                         "  enabled: yes\n"
+                                         "system:\n"
+                                         "  controller:\n"
+                                         "    run: yes\n"
+                                         "    agent_channel: ll\n")));
+    EXPECT_EQ(
+        wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+        fmt::format("x daemon -P {} --agent-channel {} -vv", cfg::kMainPort,
+                    cfg::defaults::kControllerAgentChannelDefault));
+    EXPECT_EQ(GetConfiguredAgentChannelPort(), kWindowsInternalPort);
 }
 
 TEST(AgentController, BuildCommandLineAllowed) {
@@ -49,8 +90,8 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          allowed, port)));
     EXPECT_EQ(
         wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-        fmt::format("x daemon -P {} --agent-channel localhost:{} -A {} -vv",
-                    port, windows_internal_port, allowed));
+        fmt::format("x daemon -P {} --agent-channel {} -A {} -vv", port,
+                    cfg::defaults::kControllerAgentChannelDefault, allowed));
 }
 
 TEST(AgentController, LegacyMode) {

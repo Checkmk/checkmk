@@ -582,7 +582,7 @@ std::optional<uint16_t> OptionallyStartAgentController(
             ac::DeleteControllerInBin(wtools::GetArgv(0));
             return {};
         }
-        return ac::windows_internal_port;
+        return ac::GetConfiguredAgentChannelPort();
     }
 
     return {};

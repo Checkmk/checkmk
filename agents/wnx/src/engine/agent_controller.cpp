@@ -60,7 +60,46 @@ fs::path CopyControllerToBin(const fs::path &service) {
     return {};
 }
 
+template <typename T>
+int ToInt(const T value) noexcept {
+    try {
+        return std::stoi(value);
+    } catch (const std::exception & /*exc*/) {
+        return -1;
+    }
+}
+
+uint16_t GetPortFromString(const std::string &str) {
+    auto table = tools::SplitString(str, ":");
+    if (table.size() != 2) {
+        return 0;
+    }
+
+    auto port = ToInt(table[1]);
+    return port < 1000 ? 0 : port;
+}
+
+std::string GetConfiguredAgentChannel() {
+    auto controller_config = cma::yml::GetNode(
+        cfg::GetLoadedConfig(), std::string{cfg::groups::kSystem},
+        std::string{cfg::vars::kController});
+    auto result =
+        cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
+                    std::string{cfg::defaults::kControllerAgentChannelDefault});
+    auto port = GetPortFromString(result);
+    if (port == 0) {
+        XLOG::l("Invalid configured agent channel '{}' use default", result);
+        return std::string{cfg::defaults::kControllerAgentChannelDefault};
+    }
+
+    return result;
+}
+
 }  // namespace
+
+uint16_t GetConfiguredAgentChannelPort() {
+    return GetPortFromString(GetConfiguredAgentChannel());
+}
 
 /// returns true if controller files DOES NOT exist
 bool DeleteControllerInBin(const fs::path &service) {
@@ -100,6 +139,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
         cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
     auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
+    auto agent_channel = GetConfiguredAgentChannel();
     std::string allowed_ip;
     if (!only_from.empty()) {
         allowed_ip = " "s + std::string{kCmdLineAllowedIp};
@@ -109,12 +149,12 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     }
 
     return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(
-               " {} {} {} {} localhost:{}{} -vv",       //
-               kCmdLineAsDaemon,                        // daemon
-               kCmdLinePort, port,                      // -P 6556
-               kCmdLineChannel, windows_internal_port,  // --channel 50001
-               allowed_ip));                            // -A ip ip ip ip
+           wtools::ConvertToUTF16(fmt::format(" {} {} {} {} {}{} -vv",  //
+                                              kCmdLineAsDaemon,    // daemon
+                                              kCmdLinePort, port,  // -P 6556
+                                              kCmdLineChannel,
+                                              agent_channel,  // --channel 50001
+                                              allowed_ip));   // -A ip ip ip ip
 }
 
 std::optional<uint32_t> StartAgentController(const fs::path &service) {

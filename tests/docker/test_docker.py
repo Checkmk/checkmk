@@ -583,8 +583,8 @@ def test_update(request, client, version):
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
-        version_spec="1.5.0p5",
-        branch="1.5.0",
+        version_spec="2.0.0p22",
+        branch="2.0.0",
         edition=testlib.CMKVersion.CRE,
     )
 
@@ -594,33 +594,6 @@ def test_update(request, client, version):
     )
     assert (
         c_orig.exec_run(["touch", "pre-update-marker"], user="cmk", workdir="/omd/sites/cmk")[0]
-        == 0
-    )
-
-    # Until we have a "old version" with .version_meta directory that we can update
-    # from produce this directory manually here.
-    # TODO: Once we update from a 1.6 version this can be dropped
-    assert c_orig.exec_run(["mkdir", ".version_meta"], user="cmk", workdir="/omd/sites/cmk")[0] == 0
-    assert (
-        c_orig.exec_run(
-            ["cp", "-pr", "version/skel", ".version_meta/"], user="cmk", workdir="/omd/sites/cmk"
-        )[0]
-        == 0
-    )
-    assert (
-        c_orig.exec_run(
-            ["cp", "-pr", "version/share/omd/skel.permissions", ".version_meta/"],
-            user="cmk",
-            workdir="/omd/sites/cmk",
-        )[0]
-        == 0
-    )
-    assert (
-        c_orig.exec_run(
-            ["bash", "-c", "echo '%s' > .version_meta/version" % old_version.omd_version()],
-            user="cmk",
-            workdir="/omd/sites/cmk",
-        )[0]
         == 0
     )
 

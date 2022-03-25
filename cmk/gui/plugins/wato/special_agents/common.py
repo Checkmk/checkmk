@@ -472,3 +472,17 @@ def validate_aws_tags(value, varprefix):
                 raise MKUserError(values_field, _("The maximum value length is 256 characters."))
             if v.startswith("aws:"):
                 raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
+
+
+def ssl_verification():
+    return (
+        "verify-cert",
+        Alternative(
+            title=_("SSL certificate verification"),
+            elements=[
+                FixedValue(value=True, title=_("Verify the certificate"), totext=""),
+                FixedValue(value=False, title=_("Ignore certificate errors (unsecure)"), totext=""),
+            ],
+            default_value=False,
+        ),
+    )

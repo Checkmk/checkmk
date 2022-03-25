@@ -12,7 +12,7 @@ from tests.testlib import SpecialAgent
 
 from cmk.base.config import SpecialAgentInfoFunctionResult
 
-from cmk.gui.plugins.wato import datasource_programs
+from cmk.gui.plugins.wato.special_agents import kube
 
 from cmk.special_agents.agent_kube import make_api_client, parse_arguments
 
@@ -487,7 +487,7 @@ def test_proxy_arguments(params, expected_proxy_arg):
 def test_valuespec_matches_agent_kube():
     """agent_kube_arguments needs to be updated, if you remove any of the two assertions below."""
 
-    valuespec = datasource_programs._valuespec_special_agents_kube()
+    valuespec = kube._valuespec_special_agents_kube()
     assert "monitored-objects" in valuespec._required_keys
     for element in valuespec._get_elements():
         if element[0] == "monitored-objects":

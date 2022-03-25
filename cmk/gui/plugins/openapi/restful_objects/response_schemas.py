@@ -328,7 +328,7 @@ class HostExtensions(BaseSchema):
     )
     attributes = gui_fields.attributes_field(
         "host",
-        "update",
+        "view",
         description="Attributes of this host.",
         example={"ipaddress": "192.168.0.123"},
     )
@@ -368,7 +368,7 @@ class FolderExtensions(BaseSchema):
     )
     attributes = gui_fields.attributes_field(
         "folder",
-        "update",
+        "view",
         description=(
             "The folder's attributes. Hosts placed in this folder will inherit " "these attributes."
         ),

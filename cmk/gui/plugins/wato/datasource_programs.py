@@ -1265,40 +1265,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_storeonce():
-    return Dictionary(
-        title=_("HPE StoreOnce"),
-        help=_(
-            "This rule set selects the special agent for HPE StoreOnce Applainces "
-            "instead of the normal Check_MK agent and allows monitoring via Web API. "
-        ),
-        optional_keys=["cert"],
-        elements=[
-            ("user", TextInput(title=_("Username"), allow_empty=False)),
-            ("password", Password(title=_("Password"), allow_empty=False)),
-            (
-                "cert",
-                DropdownChoice(
-                    title=_("SSL certificate verification"),
-                    choices=[
-                        (True, _("Activate")),
-                        (False, _("Deactivate")),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:storeonce",
-        valuespec=_valuespec_special_agents_storeonce,
-    )
-)
-
-
 def _valuespec_special_agents_storeonce4x():
     return Dictionary(
         title=_("HPE StoreOnce via REST API 4.x"),

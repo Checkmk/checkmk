@@ -19,6 +19,7 @@ import sys
 import tempfile
 import uuid
 
+import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
 
 opt_verbose = True
@@ -275,6 +276,12 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 
         new_msi_file = src_dir + "/check_mk_agent.msi"
         work_dir = tempfile.mkdtemp(prefix=tmp_dir + "/msi-update.")
+        deobfuscated_file = Path(new_msi_file)
+
+        if (
+            error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=deobfuscated_file)
+        ) != 0:
+            bail_out(f"Deobfuscate returns error {error}")
 
         # When this script is run in the build environment then we need to specify
         # paths to the msitools. When running in an OMD site, these tools are in
@@ -282,7 +289,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 
         # Export required idt files into work dir
         for entry in ["File", "Property", "Component"]:
-            export_msi_file(path_prefix, entry, msi_file_name, work_dir)
+            export_msi_file(path_prefix, entry, deobfuscated_file, work_dir)
 
         verbose("Modify extracted files..")
 
@@ -306,10 +313,6 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         patch_msi_components(work_dir)
         patch_msi_properties(work_dir, ("{%s}\r\n" % uuid.uuid1()).upper(), new_version_build)
         # ==============================================
-
-        verbose("Creating copy of original file %s -> %s" % (msi_file_name, new_msi_file))
-        if not copy_file_safe(Path(msi_file_name), Path(new_msi_file)):
-            bail_out("copy failed")
 
         # Rename modified tables
         for entry in ["Property", "File", "Component"]:

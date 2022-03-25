@@ -253,6 +253,7 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
+            (self._rewrite_password_store, "Rewriting password store"),
             (self._rewrite_visuals, "Migrate Visuals context"),
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
@@ -260,7 +261,6 @@ class UpdateConfig:
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
-            (self._rewrite_password_store, "Rewriting password store"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),

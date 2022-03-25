@@ -1,0 +1,14 @@
+Title: Fix 'ValueError: MAC check failed' error in "Rewriting rulesets" phase of update
+Class: fix
+Compatible: compat
+Component: core
+Date: 1648208167
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The update procedure from 2.0 was accessing the password store for reading
+before rewriting it to the new 2.1 format. This could make updates from 2.0 to
+2.1 fail.

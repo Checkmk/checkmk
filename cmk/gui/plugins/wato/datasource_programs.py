@@ -6,12 +6,9 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import (
-    RulespecGroupDatasourceProgramsCustom,
-    RulespecGroupDatasourceProgramsOS,
-)
+from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsCustom
 from cmk.gui.plugins.wato.utils import HostRulespec, monitoring_macro_help, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Integer, Password, TextInput
+from cmk.gui.valuespec import TextInput
 
 
 def _valuespec_datasource_programs():
@@ -42,39 +39,5 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsCustom,
         name="datasource_programs",
         valuespec=_valuespec_datasource_programs,
-    )
-)
-
-
-def _valuespec_special_agents_prism():
-    return Dictionary(
-        title=_("Nutanix Prism"),
-        elements=[
-            (
-                "port",
-                Integer(
-                    title=_("TCP port for connection"),
-                    default_value=9440,
-                    minvalue=1,
-                    maxvalue=65535,
-                ),
-            ),
-            (
-                "username",
-                TextInput(
-                    title=_("User ID for web login"),
-                ),
-            ),
-            ("password", Password(title=_("Password for this user"))),
-        ],
-        optional_keys=["port"],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsOS,
-        name="special_agents:prism",
-        valuespec=_valuespec_special_agents_prism,
     )
 )

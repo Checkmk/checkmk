@@ -14,16 +14,18 @@ from cmk.utils.type_defs import DiscoveryResult
 from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, Host
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
+
 BulkSize = NewType("BulkSize", int)
 IgnoreErrors = NewType("IgnoreErrors", bool)
 
@@ -288,6 +290,17 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             host.clear_discovery_failed()
 
         return _("discovery successful")
+
+
+def prepare_hosts_for_discovery(hostnames: Sequence[str]) -> List[DiscoveryHost]:
+    hosts_to_discover = []
+    for host_name in hostnames:
+        host = Host.host(host_name)
+        if host is None:
+            raise MKUserError(None, _("The host '%s' does not exist") % host_name)
+        host.need_permission("write")
+        hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder().path(), host_name))
+    return hosts_to_discover
 
 
 def start_bulk_discovery(

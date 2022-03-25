@@ -28,6 +28,12 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
     object_property,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.restful_objects.request_schemas import EXISTING_HOST_NAME
+from cmk.gui.watolib.bulk_discovery import (
+    BulkDiscoveryBackgroundJob,
+    prepare_hosts_for_discovery,
+    start_bulk_discovery,
+)
 from cmk.gui.watolib.services import (
     checkbox_id,
     Discovery,
@@ -347,4 +353,88 @@ def serialize_service_discovery(
         editable=False,
         deletable=False,
         extensions={},
+    )
+
+
+# Bulk discovery
+
+
+class BulkDiscovery(BaseSchema):
+    hostnames = fields.List(
+        EXISTING_HOST_NAME,
+        required=True,
+        example=["example", "sample"],
+        description="A list of host names",
+    )
+    mode = fields.String(
+        required=False,
+        description="""The mode of the discovery action. Can be one of:
+
+ * `new` - Add unmonitored services and new host labels
+ * `remove` - Remove vanished services
+ * `fix_all` - Add unmonitored services and new host labels, remove vanished services
+ * `refresh` - Refresh all services (tabula rasa), add new host labels
+ * `only_host_labels` - Only discover new host labels
+""",
+        enum=list(DISCOVERY_ACTION.keys()),
+        example="refresh",
+        load_default="new",
+    )
+    do_full_scan = fields.Boolean(
+        required=False,
+        description="The option whether to perform a full scan or not.",
+        example=False,
+        load_default=True,
+    )
+    bulk_size = fields.Integer(
+        required=False,
+        description="The number of hosts to be handled at once.",
+        example=False,
+        load_default=10,
+    )
+    ignore_errors = fields.Boolean(
+        required=False,
+        description="The option whether to ignore errors in single check plugins.",
+        example=False,
+        load_default=True,
+    )
+
+
+@Endpoint(
+    constructors.domain_type_action_href("discovery_run", "bulk-discovery-start"),
+    "cmk/activate",
+    method="post",
+    status_descriptions={
+        409: "A bulk discovery job is already active",
+    },
+    additional_status_codes=[409],
+    request_schema=BulkDiscovery,
+    response_schema=response_schemas.DomainObject,
+)
+def execute_bulk_discovery(params):
+    """Start a bulk discovery job"""
+    body = params["body"]
+    job = BulkDiscoveryBackgroundJob()
+    if job.is_active():
+        return Response(status=409)
+
+    hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
+    start_bulk_discovery(
+        job,
+        hosts_to_discover,
+        body["mode"],
+        body["do_full_scan"],
+        body["ignore_errors"],
+        body["bulk_size"],
+    )
+
+    job_id = job.get_job_id()
+    return constructors.serve_json(
+        constructors.domain_object(
+            domain_type="discovery_run",
+            identifier=job_id,
+            title=f"Background job {job_id}",
+            deletable=False,
+            editable=False,
+        )
     )

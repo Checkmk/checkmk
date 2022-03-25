@@ -19,10 +19,10 @@ from cmk.gui.watolib.bulk_discovery import (
     DiscoveryMode,
     DoFullScan,
     IgnoreErrors,
+    prepare_hosts_for_discovery,
     start_bulk_discovery,
     vs_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
 
 
 @api_call_collection_registry.register
@@ -109,17 +109,10 @@ class APICallBulkDiscovery(APICallCollection):
         )
 
     def _get_hosts_from_request(self, request: Dict) -> List[DiscoveryHost]:
-        if not request["hostnames"]:
+        if not (hostnames := request["hostnames"]):
             raise MKUserError(None, _("You have to specify some hosts"))
 
-        hosts_to_discover = []
-        for host_name in request["hostnames"]:
-            host = Host.host(host_name)
-            if host is None:
-                raise MKUserError(None, _("The host '%s' does not exist") % host_name)
-            host.need_permission("write")
-            hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder().path(), host_name))
-        return hosts_to_discover
+        return prepare_hosts_for_discovery(hostnames)
 
     def _bulk_discovery_status(self, request):
         job = BulkDiscoveryBackgroundJob()

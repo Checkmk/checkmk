@@ -9,6 +9,8 @@ from typing import Dict, Iterable, Mapping, Optional, Sequence
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, ParsedSectionName, ServiceState
 
+from cmk.core_helpers.type_defs import Mode
+
 from .data_provider import ParsedSectionContent, ParsedSectionsBroker, SourceResults
 
 _SectionKwargs = Mapping[str, ParsedSectionContent]
@@ -66,11 +68,12 @@ def get_section_cluster_kwargs(
 def check_sources(
     *,
     source_results: SourceResults,
+    mode: Mode,
     include_ok_results: bool = False,
     override_non_ok_state: Optional[ServiceState] = None,
 ) -> Iterable[ActiveCheckResult]:
     for source, host_sections in source_results:
-        subresults = source.summarize(host_sections)
+        subresults = source.summarize(host_sections, mode=mode)
         if include_ok_results or any(s.state != 0 for s in subresults):
             yield from (
                 ActiveCheckResult(

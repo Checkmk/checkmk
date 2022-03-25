@@ -15,13 +15,18 @@ from cmk.utils.exceptions import MKIPAddressLookupError, OnError
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import NO_SELECTION
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPSource
+
+
+@pytest.fixture(name="mode", params=Mode)
+def mode_fixture(request):
+    return request.param
 
 
 @pytest.fixture(name="hostname")
@@ -159,14 +164,14 @@ class TestSNMPSummaryResult:
         )
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source):
-        assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
+    def test_defaults(self, source, mode):
+        assert source.summarize(result.OK(HostSections[AgentRawDataSection]()), mode=mode) == [
             ActiveCheckResult(0, "Success")
         ]
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source):
-        assert source.summarize(result.Error(Exception())) == [ActiveCheckResult(3)]
+    def test_with_exception(self, source, mode):
+        assert source.summarize(result.Error(Exception()), mode=mode) == [ActiveCheckResult(3)]
 
 
 @pytest.fixture(name="check_plugin")

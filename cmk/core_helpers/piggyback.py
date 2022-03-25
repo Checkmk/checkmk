@@ -14,8 +14,8 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
 
-from ._base import Summarizer
-from .agent import AgentFetcher, NoCache
+from .agent import AgentFetcher, AgentRawDataSection, AgentSummarizer, NoCache
+from .host_sections import HostSections
 from .type_defs import Mode
 
 
@@ -110,7 +110,7 @@ class PiggybackFetcher(AgentFetcher):
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)
 
 
-class PiggybackSummarizer(Summarizer):
+class PiggybackSummarizer(AgentSummarizer):
     def __init__(
         self,
         exit_spec: ExitSpec,
@@ -136,8 +136,17 @@ class PiggybackSummarizer(Summarizer):
             self.always,
         )
 
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        """Returns useful information about the data source execution"""
+    def summarize_success(
+        self,
+        host_sections: HostSections[AgentRawDataSection],
+        *,
+        mode: Mode,
+    ) -> Sequence[ActiveCheckResult]:
+        """Returns useful information about the data source execution
+
+        Return only summary information in case there is piggyback data"""
+        if mode is not Mode.CHECKING:
+            return []
 
         sources: Final[Sequence[PiggybackRawDataInfo]] = list(
             itertools.chain.from_iterable(

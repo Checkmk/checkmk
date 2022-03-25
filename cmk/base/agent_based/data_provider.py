@@ -33,11 +33,12 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
+from cmk.base.sources import fetch_all
 from cmk.base.sources.agent import AgentRawDataSection
 
 if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
-    from cmk.core_helpers.type_defs import SectionNameCollection
+    from cmk.core_helpers.type_defs import Mode, SectionNameCollection
 
     from cmk.base.config import ConfigCache, HostConfig
     from cmk.base.sources import Source
@@ -284,9 +285,10 @@ class ParsedSectionsBroker:
 
 def _collect_host_sections(
     *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
-    selected_sections: SectionNameCollection,
+    sources: Sequence[Source],
     file_cache_max_age: cache.MaxAge,
+    fetcher_messages: Sequence[FetcherMessage],
+    selected_sections: SectionNameCollection,
 ) -> Tuple[
     Mapping[HostKey, HostSections],
     Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
@@ -300,11 +302,18 @@ def _collect_host_sections(
     """
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
+    # TODO(lm): Can we somehow verify that this is correct?
+    # if fetcher_message["fetcher_type"] != source.id:
+    #     raise LookupError("Checker and fetcher mismatch")
+    # (mo): this is not enough, but better than nothing:
+    if len(sources) != len(fetcher_messages):
+        raise LookupError("Checker and fetcher mismatch")
+
     collected_host_sections: Dict[HostKey, HostSections] = {}
     results: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    for source, fetcher_message in fetched:
+    for fetcher_message, source in zip(fetcher_messages, sources):
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
         source.file_cache_max_age = file_cache_max_age
@@ -326,7 +335,7 @@ def _collect_host_sections(
         else:
             console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
-    for source, _ in fetched:
+    for source in sources:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
         cmk.utils.piggyback.store_piggyback_raw_data(
@@ -342,14 +351,24 @@ def _collect_host_sections(
 
 def make_broker(
     *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    sources: Sequence[Source],
+    fetcher_messages: Sequence[FetcherMessage],
     selected_sections: SectionNameCollection,
     file_cache_max_age: cache.MaxAge,
+    mode: Mode,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
+    if not fetcher_messages:
+        fetcher_messages = fetch_all(
+            sources=sources,
+            file_cache_max_age=file_cache_max_age,
+            mode=mode,
+        )
+
     collected_host_sections, results = _collect_host_sections(
-        fetched=fetched,
-        selected_sections=selected_sections,
+        sources=sources,
         file_cache_max_age=file_cache_max_age,
+        fetcher_messages=fetcher_messages,
+        selected_sections=selected_sections,
     )
     return (
         ParsedSectionsBroker(

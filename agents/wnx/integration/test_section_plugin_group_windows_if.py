@@ -169,7 +169,7 @@ def plugin_dir_engine(request):
     return target_dir
 
 
-@pytest.fixture(name="manage_plugins", params=["netstat_an.bat", "wmic_if.bat"], autouse=True)
+@pytest.fixture(name="manage_plugins", params=["windows_if.ps1"], autouse=True)
 def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(
@@ -195,8 +195,9 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-def test_section_plugin_group(request, testconfig, expected_output, actual_output, testfile):
+def test_section_plugin_windows_if(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
+    pytest.skip("This test is not conform with latest changes on Monitoring Site")
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":
         pytest.skip("This test is not conform with latest changes on Monitoring Site")
     local_test(expected_output, actual_output, testfile, request.node.name)

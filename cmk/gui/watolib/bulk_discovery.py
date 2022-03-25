@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, MutableSequence, NamedTuple
+from typing import List, MutableSequence, NamedTuple, NewType, Sequence
+
+from livestatus import SiteId
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import DiscoveryResult
@@ -20,6 +22,11 @@ from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
+DiscoveryMode = NewType("DiscoveryMode", str)
+DoFullScan = NewType("DoFullScan", bool)
+BulkSize = NewType("BulkSize", int)
+IgnoreErrors = NewType("IgnoreErrors", bool)
+
 
 class DiscoveryHost(NamedTuple):
     site_id: str
@@ -28,31 +35,9 @@ class DiscoveryHost(NamedTuple):
 
 
 class DiscoveryTask(NamedTuple):
-    site_id: str
+    site_id: SiteId
     folder_path: str
     host_names: list
-
-
-def get_tasks(hosts_to_discover: List[DiscoveryHost], bulk_size: int) -> List[DiscoveryTask]:
-    """Create a list of tasks for the job
-
-    Each task groups the hosts together that are in the same folder and site. This is
-    mainly done to reduce the overhead of site communication and loading/saving of files
-    """
-    current_site_and_folder = None
-    tasks: List[DiscoveryTask] = []
-
-    for site_id, folder_path, host_name in sorted(hosts_to_discover):
-        if (
-            not tasks
-            or (site_id, folder_path) != current_site_and_folder
-            or len(tasks[-1].host_names) >= bulk_size
-        ):
-            tasks.append(DiscoveryTask(site_id, folder_path, [host_name]))
-        else:
-            tasks[-1].host_names.append(host_name)
-        current_site_and_folder = site_id, folder_path
-    return tasks
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
@@ -136,14 +121,21 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def _back_url(self):
         return Folder.current().url()
 
-    def do_execute(self, mode, do_scan, error_handling, tasks, job_interface=None):
+    def do_execute(
+        self,
+        mode: DiscoveryMode,
+        do_scan: DoFullScan,
+        ignore_errors: IgnoreErrors,
+        tasks: Sequence[DiscoveryTask],
+        job_interface=None,
+    ):
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
         )
         job_interface.send_progress_update(_("Bulk discovery started..."))
 
         for task in tasks:
-            self._bulk_discover_item(task, mode, do_scan, error_handling, job_interface)
+            self._bulk_discover_item(task, mode, do_scan, ignore_errors, job_interface)
 
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
@@ -185,10 +177,17 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(self, task, mode, do_scan, error_handling, job_interface):
+    def _bulk_discover_item(
+        self,
+        task: DiscoveryTask,
+        mode: DiscoveryMode,
+        do_scan: DoFullScan,
+        ignore_errors: IgnoreErrors,
+        job_interface,
+    ):
 
         try:
-            response = self._execute_discovery(task, mode, do_scan, error_handling)
+            response = self._execute_discovery(task, mode, do_scan, ignore_errors)
             self._process_discovery_results(task, job_interface, response)
         except Exception:
             self._num_hosts_failed += len(task.host_names)
@@ -203,9 +202,15 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _execute_discovery(self, task, mode, do_scan, error_handling) -> AutomationDiscoveryResult:
+    def _execute_discovery(
+        self,
+        task: DiscoveryTask,
+        mode: DiscoveryMode,
+        do_scan: DoFullScan,
+        ignore_errors: IgnoreErrors,
+    ) -> AutomationDiscoveryResult:
         flags: MutableSequence[str] = []
-        if not error_handling:
+        if not ignore_errors:
             flags.append("@raiseerrors")
         if do_scan:
             flags.append("@scan")
@@ -221,7 +226,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
     def _process_discovery_results(
         self,
-        task,
+        task: DiscoveryTask,
         job_interface,
         response: AutomationDiscoveryResult,
     ) -> None:
@@ -283,3 +288,66 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             host.clear_discovery_failed()
 
         return _("discovery successful")
+
+
+def start_bulk_discovery(
+    job: BulkDiscoveryBackgroundJob,
+    hosts: List[DiscoveryHost],
+    discovery_mode: DiscoveryMode,
+    do_full_scan: DoFullScan,
+    ignore_errors: IgnoreErrors,
+    bulk_size: BulkSize,
+) -> None:
+    """Start a bulk discovery job with the given options
+
+    Args:
+        job:
+            The BackgroundJob to use to start the bulk discovery
+
+        hosts:
+            Sequence of hosts to perform the discovery on
+
+        discovery_mode:
+            * `new` - Add unmonitored services and new host labels
+            * `remove` - Remove vanished services
+            * `fix_all` - Add unmonitored services and new host labels, remove vanished services
+            * `refresh` - Refresh all services (tabula rasa), add new host labels
+            * `only_host_labels` - Only discover new host labels
+
+        do_full_scan:
+            Boolean indicating whether to do a full scan
+
+        ignore_errors:
+            Boolean indicating whether to ignore errors or not
+
+        bulk_size:
+            The number of hosts to handle at once
+
+    """
+    tasks = _create_tasks_from_hosts(hosts, bulk_size)
+    job.set_function(job.do_execute, discovery_mode, do_full_scan, ignore_errors, tasks)
+    job.start()
+
+
+def _create_tasks_from_hosts(
+    hosts_to_discover: List[DiscoveryHost], bulk_size: BulkSize
+) -> List[DiscoveryTask]:
+    """Create a list of tasks for the job
+
+    Each task groups the hosts together that are in the same folder and site. This is
+    mainly done to reduce the overhead of site communication and loading/saving of files
+    """
+    current_site_and_folder = None
+    tasks: List[DiscoveryTask] = []
+
+    for site_id, folder_path, host_name in sorted(hosts_to_discover):
+        if (
+            not tasks
+            or (site_id, folder_path) != current_site_and_folder
+            or len(tasks[-1].host_names) >= bulk_size
+        ):
+            tasks.append(DiscoveryTask(SiteId(site_id), folder_path, [host_name]))
+        else:
+            tasks[-1].host_names.append(host_name)
+        current_site_and_folder = site_id, folder_path
+    return tasks

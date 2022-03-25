@@ -17,7 +17,7 @@ import time
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
-from typing import Any, List, Tuple
+from typing import Any, List, Mapping, Sequence, Tuple
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
@@ -26,6 +26,9 @@ import cmk.utils.password_store
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrtrace
+
+Args = argparse.Namespace
+GroupLabels = Mapping[str, Mapping[str, str]]
 
 cmk.utils.password_store.replace_passwords()
 
@@ -779,34 +782,67 @@ def gather_metrics(mgmt_client, resource, debug=False):
     return err
 
 
-def process_resource(function_args):
-    mgmt_client, resource, args = function_args
+def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> LabelsSection:
+    group_name = vm.info["group"]
+    vm_labels = dict(vm.tags)
+
+    for tag_name, tag_value in group_labels[group_name].items():
+        if tag_name not in vm.tags:
+            vm_labels[tag_name] = tag_value
+
+    labels_section = LabelsSection(vm.info["name"])
+    labels_section.add(((json.dumps(vm_labels),)))
+    return labels_section
+
+
+def process_resource(
+    function_args: Tuple[MgmtApiClient, AzureResource, GroupLabels, Args]
+) -> Sequence[Section]:
+    mgmt_client, resource, group_labels, args = function_args
+    sections: list[Section] = []
 
     resource_type = resource.info.get("type")
     if resource_type == "Microsoft.Compute/virtualMachines":
         process_vm(mgmt_client, resource, args)
+
+        if args.piggyback_vms == "self":
+            sections.append(get_vm_labels_section(resource, group_labels))
 
     err = gather_metrics(mgmt_client, resource, debug=args.debug)
 
     agent_info_section = AzureSection("agent_info")
     agent_info_section.add(("remaining-reads", mgmt_client.ratelimit))
     agent_info_section.add(err.dumpinfo())
+    sections.append(agent_info_section)
 
     section = AzureSection(resource.section, resource.piggytargets)
     section.add(resource.dumpinfo())
+    sections.append(section)
 
-    return [agent_info_section, section]
+    return sections
 
 
-def write_group_info(mgmt_client, monitored_groups, monitored_resources):
+def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]) -> GroupLabels:
+    group_labels: dict[str, dict[str, str]] = {}
 
     for group in mgmt_client.resourcegroups():
         name = group["name"]
-        tags = group.get("tags")
-        if name in monitored_groups and tags:
-            labels_section = LabelsSection(name)
-            labels_section.add((json.dumps(tags),))
-            labels_section.write()
+        tags = group.get("tags", {})
+        if name in monitored_groups:
+            group_labels[name] = {**tags, **{"resource_group": name}}
+
+    return group_labels
+
+
+def write_group_info(
+    monitored_groups: Sequence[str],
+    monitored_resources: Sequence[AzureResource],
+    group_labels: GroupLabels,
+) -> None:
+    for group_name, tags in group_labels.items():
+        labels_section = LabelsSection(group_name)
+        labels_section.add(((json.dumps(tags),)))
+        labels_section.write()
 
     section = AzureSection("agent_info")
     section.add(("monitored-groups", json.dumps(monitored_groups)))
@@ -923,12 +959,13 @@ def main_subscription(args, secret, selector, subscription):
         write_exception_to_agent_info_section(exc, "Management client")
         return
 
-    write_group_info(mgmt_client, monitored_groups, monitored_resources)
+    group_labels = get_group_labels(mgmt_client, monitored_groups)
+    write_group_info(monitored_groups, monitored_resources, group_labels)
 
     usage_client = UsageClient(mgmt_client, subscription, args.debug)
     usage_client.write_sections(monitored_groups)
 
-    func_args = ((mgmt_client, resource, args) for resource in monitored_resources)
+    func_args = ((mgmt_client, resource, group_labels, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)
     for sections in mapper(process_resource, func_args):
         for section in sections:

@@ -290,6 +290,11 @@ class ABCHostAttribute(abc.ABC):
         This makes the attribute a read only attribute in the GUI."""
         return True
 
+    def openapi_editable(self) -> bool:
+        """If True, this attribute will be editable through the REST API,
+        even when editable() is set to False."""
+        return True
+
     def is_mandatory(self) -> bool:
         """Whether it is allowed that a host has no explicit
         value here (inherited or direct value). An mandatory
@@ -335,6 +340,8 @@ class ABCHostAttribute(abc.ABC):
     def is_visible(self, for_what: str, new: bool) -> bool:
         """Gets the type of current view as argument and returns whether or not
         this attribute is shown in this type of view"""
+        if for_what == "always":
+            return True
 
         if new and not self.show_on_create():
             return False

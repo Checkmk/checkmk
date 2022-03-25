@@ -1,0 +1,25 @@
+Title: REST API: fix missing host/folder attributes
+Class: fix
+Compatible: compat
+Component: core
+Date: 1648196080
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+This werk fixes the disappearing attributes (e.g. locked_by, locked_attributes).
+
+When editing hosts or folders through the REST API there could be a case, that
+certain fields were not in the list of editable attributes. If a user attempted
+to set this field (intrepreted as a "custom attribute") it would be treated as
+a string. This would then lead to subsequent errors.
+
+This werk also prevents internal attribute names to be used in "custom attributes".
+
+While the fix is in effect immediately for all newly done REST API calls, if a previous
+API call led to inconsistent data being stored in Checkmk, it may be neccessary to repeat
+the API call which led to the error.
+
+Ideally this would fix the error, though if this is not the case, contact us.

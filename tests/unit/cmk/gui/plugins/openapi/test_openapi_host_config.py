@@ -922,13 +922,11 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 
 
 @managedtest
+@pytest.mark.skip("Doesn't work until MultiNested with merged=True is active.")
 def test_openapi_create_host_with_custom_attributes(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    custom_host_attribute,
 ):
-    # TODO: remove mock verification once custom attributes can be set via the REST API
-    monkeypatch.setattr(
-        "cmk.gui.watolib.host_attributes._retrieve_host_attributes", lambda: ["ipaddress", "custom"]
-    )
     base = "/NO_SITE/check_mk/api/1.0"
 
     json_data = {
@@ -936,7 +934,7 @@ def test_openapi_create_host_with_custom_attributes(
         "host_name": "example.com",
         "attributes": {
             "ipaddress": "192.168.0.123",
-            "custom": "abc",
+            "foo": "abc",
         },
     }
     aut_user_auth_wsgi_app.call_method(

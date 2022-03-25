@@ -137,9 +137,8 @@ class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
         raise NotImplementedError
 
 
-# TODO: the last remaining use of host_sections in summarize_success is gone; this can be simplified
-class Summarizer(Generic[TRawDataSection], abc.ABC):
-    """Class to summarize parsed data into a ServiceCheckResult.
+class Summarizer(abc.ABC):
+    """Class to summarize datasource execution into a ServiceCheckResult.
 
     Note:
         It is forbidden to add base dependencies to classes
@@ -152,19 +151,12 @@ class Summarizer(Generic[TRawDataSection], abc.ABC):
         self.exit_spec: Final[ExitSpec] = exit_spec
 
     @abc.abstractmethod
-    def summarize_success(
-        self,
-        host_sections: HostSections[TRawDataSection],
-        *,
-        mode: Mode,
-    ) -> Sequence[ActiveCheckResult]:
+    def summarize_success(self) -> Sequence[ActiveCheckResult]:
         raise NotImplementedError
 
     def summarize_failure(
         self,
         exc: Exception,
-        *,
-        mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
         return [ActiveCheckResult(self._extract_status(exc), str(exc))]
 

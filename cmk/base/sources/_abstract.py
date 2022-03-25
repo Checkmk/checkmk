@@ -123,14 +123,11 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def summarize(
         self,
         host_sections: result.Result[HostSections[TRawDataSection], Exception],
-        *,
-        mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
         summarizer = self._make_summarizer()
-        return host_sections.fold(
-            ok=partial(summarizer.summarize_success, mode=mode),
-            error=partial(summarizer.summarize_failure, mode=mode),
-        )
+        if host_sections.is_ok():
+            return summarizer.summarize_success()
+        return summarizer.summarize_failure(host_sections.error)
 
     @abc.abstractmethod
     def _make_file_cache(self) -> FileCache[TRawData]:
@@ -147,6 +144,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_summarizer(self) -> Summarizer[TRawDataSection]:
+    def _make_summarizer(self) -> Summarizer:
         """Create a summarizer with this configuration."""
         raise NotImplementedError

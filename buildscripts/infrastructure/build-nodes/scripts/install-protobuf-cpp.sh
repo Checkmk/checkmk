@@ -96,7 +96,7 @@ verify_install() {
 
 # option parsing ###############################################################
 
-if ! OPTIONS=$(getopt -o lus --long link,user,system -- "$@"); then
+if ! OPTIONS=$(getopt -o lus --long link-only,user,system -- "$@"); then
     echo "error parsing options"
     exit 1
 fi

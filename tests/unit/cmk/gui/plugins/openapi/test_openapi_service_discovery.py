@@ -884,3 +884,63 @@ def test_openapi_discover_single_service(
 
     # 'monitored' is the external name for the target_phase, internally 'old' is used.
     assert discovery_spy.call_args.kwargs["api_request"]["update_target"] == "old"
+
+
+def test_openapi_bulk_discovery_with_default_options(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    # create some sample hosts
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/actions/bulk-create/invoke",
+        params=json.dumps(
+            {
+                "entries": [
+                    {
+                        "host_name": "foobar",
+                        "folder": "/",
+                    },
+                    {
+                        "host_name": "sample",
+                        "folder": "/",
+                    },
+                ]
+            }
+        ),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+        status=200,
+        params=json.dumps(
+            {
+                "hostnames": ["foobar", "sample"],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+    assert resp.json["id"] == "bulk_discovery"
+
+    # TODO: additional tests for bulk discovery modes (CMK-10160)
+
+
+def test_openapi_bulk_discovery_with_invalid_hostname(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+        status=400,
+        params=json.dumps({"hostnames": ["wrong_hostname"]}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )

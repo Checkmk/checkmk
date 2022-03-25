@@ -1,0 +1,14 @@
+Title: Fix missing graphs in notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1648198479
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p23
+
+Since version 2.0.0, quotes are allowed in service descriptions.
+If a notification was triggered for such service, the graphs were missing.
+
+Furthermore, the mail subject showed "&quot" instead of quotes.

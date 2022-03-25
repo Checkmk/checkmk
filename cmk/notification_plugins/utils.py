@@ -123,6 +123,7 @@ def html_escape_context(context):
         'PARAMETER_REPLY_TO',
         'PARAMETER_REPLY_TO_ADDRESS',
         'PARAMETER_REPLY_TO_DISPLAY_NAME',
+        'SERVICEDESC',
     }
     if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}

@@ -50,7 +50,7 @@ build_package() {
     rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }
 
-if [ "$1" != "link" ]; then
+if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/

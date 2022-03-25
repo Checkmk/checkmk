@@ -1,0 +1,16 @@
+Title: agent_azure: Host labels added to resource group and vm
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1648552667
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+New host labels are added to hosts corresponding to resource groups
+and virtual machines in Azure.
+Resource group host had its tags as host labels so far. Now, the name
+of the resource group is added additionally.
+Virtual machine host didn't have any host labels. Now, it has its own
+tags, resource group tags and resource group name as labels.

@@ -170,11 +170,9 @@ check_info["cisco_ip_sla"] = {
     "group": "cisco_ip_sla",
     "default_levels_variable": "cisco_ip_sla_default_levels",
     "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
-    in [
-        ".1.3.6.1.4.1.9.1.2068",
-        ".1.3.6.1.4.1.9.1.1858",
-    ],
+    "snmp_scan_function": lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and "ios" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.4.1.9.9.42.1.2.2.1.37.*"),
     "snmp_info": [
         (
             ".1.3.6.1.4.1.9.9.42.1.2.2.1",

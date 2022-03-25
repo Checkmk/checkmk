@@ -130,7 +130,7 @@ build_package() {
     rm -rf /opt/src
 }
 
-if [ "$1" != "link" ]; then
+if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 set_symlinks

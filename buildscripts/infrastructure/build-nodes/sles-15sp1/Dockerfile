@@ -129,12 +129,12 @@ ARG BRANCH_VERSION
 ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
 
 # Set symlinks
-RUN /opt/install-gnu-toolchain.sh link
-RUN /opt/install-valgrind.sh link
-RUN /opt/install-cmake.sh link
-RUN /opt/install-protobuf-cpp.sh --link
-RUN /opt/install-python.sh link
-RUN /opt/install-freetds.sh link
+RUN /opt/install-gnu-toolchain.sh link-only
+RUN /opt/install-valgrind.sh link-only
+RUN /opt/install-cmake.sh link-only
+RUN /opt/install-protobuf-cpp.sh --link-only
+RUN /opt/install-python.sh link-only
+RUN /opt/install-freetds.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh

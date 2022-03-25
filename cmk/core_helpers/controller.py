@@ -254,10 +254,8 @@ def _run_fetchers_from_file(
     write(
         protocol.CMCMessage.result_answer(
             messages,
-            serial=config_path.serial,
-            host_name=host_name,
-            timeout=timeout,
-            duration=cpu_tracker.duration,
+            timeout,
+            cpu_tracker.duration,
         )
     )
     for msg in filter(

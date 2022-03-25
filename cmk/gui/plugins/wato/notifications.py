@@ -271,6 +271,8 @@ class NotificationParameterMail(NotificationParameter):
                             ("longoutput", _("Additional Plugin Output")),
                             ("ack_author", _("Acknowledgement Author")),
                             ("ack_comment", _("Acknowledgement Comment")),
+                            ("notification_author", _("Notification Author")),
+                            ("notification_comment", _("Notification Comment")),
                             ("perfdata", _("Performance Data")),
                             ("graph", _("Performance Graphs")),
                             ("notesurl", _("Custom Host/Service Notes URL")),

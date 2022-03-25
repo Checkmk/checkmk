@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.plugins.wato.datasource_programs import MultisiteBiDatasource
+from cmk.gui.plugins.wato.special_agents.bi import MultisiteBiDatasource
 from cmk.gui.plugins.wato.special_agents.innovaphone import special_agents_innovaphone_transform
 from cmk.gui.plugins.wato.special_agents.kubernetes import special_agents_kubernetes_transform
 

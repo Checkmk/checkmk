@@ -1265,34 +1265,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_salesforce():
-    return Dictionary(
-        title=_("Salesforce"),
-        help=_("This rule selects the special agent for Salesforce."),
-        elements=[
-            (
-                "instances",
-                ListOfStrings(
-                    title=_("Instances"),
-                    allow_empty=False,
-                ),
-            ),
-        ],
-        optional_keys=[],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsApps,
-        help_func=lambda: _("This rule selects the special agent for Salesforce."),
-        name="special_agents:salesforce",
-        title=lambda: _("Salesforce"),
-        valuespec=_valuespec_special_agents_salesforce,
-    )
-)
-
-
 def _special_agents_azure_azure_explicit_config():
     return ListOf(
         valuespec=Dictionary(

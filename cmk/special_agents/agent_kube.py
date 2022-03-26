@@ -2084,18 +2084,19 @@ def main(args: Optional[List[str]] = None) -> int:
                         detail="No machine sections were collected from the cluster collector",
                     )
 
-                try:
-                    write_machine_sections(
-                        cluster,
-                        {s["node_name"]: s["sections"] for s in machine_sections},
-                        piggyback_formatter_node,
-                    )
-                except Exception as e:
-                    raise CollectorHandlingException(
-                        title="Sections write out Error",
-                        detail="Metrics were successfully processed but Checkmk sections could "
-                        "not be written out",
-                    ) from e
+                if "node" in arguments.monitored_objects:
+                    try:
+                        write_machine_sections(
+                            cluster,
+                            {s["node_name"]: s["sections"] for s in machine_sections},
+                            piggyback_formatter_node,
+                        )
+                    except Exception as e:
+                        raise CollectorHandlingException(
+                            title="Sections write out Error",
+                            detail="Metrics were successfully processed but Checkmk sections could "
+                            "not be written out",
+                        ) from e
 
                 # Log when successfully queried and processed the metrics
                 collector_machine_logs.append(

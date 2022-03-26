@@ -110,6 +110,8 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     let mut tcp_stream_2 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     let mut tcp_stream_3 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
     let mut tcp_stream_4 = std::net::TcpStream::connect(format!("127.0.0.1:{}", test_port))?;
+    // NOTE(sk): Give peers some time to perform their operations.
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
     assert!(tcp_stream_1.read_exact(&mut id_buf).is_ok());
     assert!(tcp_stream_2.read_exact(&mut id_buf).is_ok());
     //TODO(au): ... on my Windows VM, this check frequently fails on the third connection without the sleep(200)

@@ -1487,13 +1487,13 @@ msgid ""
 "check timeouts</li><li>Check which checks / plugins are <a href=\"view.py?"
 "view_name=service_check_durations\">consuming most helper process time</a></"
 "li><li>Increase the <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></"
-"li></ul></p><p>But you need to be careful that you don't configure too many "
-"Checkmk check helpers, because they consume a lot of memory. Your system "
-"needs to be able to handle the memory demand for all of them at once. An "
-"additional problem is that the Checkmk helpers are initialized in parallel "
-"during startup of the Microcore, which may cause load peaks when having a "
-"lot of Checkmk helper processes configured.</p>"
+"mode=edit_configvar&varname=cmc_fetcher_helpers\">number of Checkmk helpers</"
+"a></li></ul></p><p>But you need to be careful that you don't configure too "
+"many Checkmk check helpers, because they consume a lot of memory. Your "
+"system needs to be able to handle the memory demand for all of them at once. "
+"An additional problem is that the Checkmk helpers are initialized in "
+"parallel during startup of the Microcore, which may cause load peaks when "
+"having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
 
 #, no-python-format
@@ -5949,10 +5949,6 @@ msgid "BI Pack Properties"
 msgstr "Proprietatile Folderului"
 
 #, fuzzy
-msgid "BI Packs"
-msgstr "Reguli"
-
-#, fuzzy
 msgid "BI Visualization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -5985,6 +5981,10 @@ msgstr "Adaugă bookmark"
 
 msgid "BI pack ID"
 msgstr ""
+
+#, fuzzy
+msgid "BI packs"
+msgstr "Adaugă bookmark"
 
 msgid "BI rule or aggregation"
 msgstr ""
@@ -10459,8 +10459,9 @@ msgstr ""
 msgid "Count until triggered"
 msgstr ""
 
-msgid "Count, size and age of files (Linux, Windows)"
-msgstr ""
+#, fuzzy
+msgid "Count, size and age of files"
+msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 
 msgid "Count, size and age of files - mk_filestat (Linux)"
 msgstr ""
@@ -14117,9 +14118,6 @@ msgid ""
 msgstr ""
 
 msgid "Distinguished name for binding"
-msgstr ""
-
-msgid "Distributed Monitoring"
 msgstr ""
 
 # georgem ##############
@@ -18405,13 +18403,6 @@ msgid ""
 msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
-msgstr ""
-
-msgid ""
-"For running Check_MK based checks via the Micro Core keeps a pool of "
-"specialized helpers that speed up Check_MK by avoiding process creations. "
-"The size of this pool is configured here. This is identical with the maximum "
-"number of concurrent Check_MK checks."
 msgstr ""
 
 msgid ""
@@ -23478,7 +23469,7 @@ msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
 "trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
-"\">Checkmk Exchange<a>  for packages reviewed by tribe29."
+"\">Checkmk Exchange</a>  for packages reviewed by tribe29."
 msgstr ""
 
 #, fuzzy
@@ -27844,10 +27835,6 @@ msgid "Maximum concurrent Checkmk checkers"
 msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
-msgid "Maximum concurrent Checkmk checks (deprecated)"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 msgid "Maximum concurrent Checkmk fetchers"
 msgstr "Numarul maxim de conexiuni"
 
@@ -29054,7 +29041,15 @@ msgid "Monitoring"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Monitoring Linux"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 msgid "Monitoring URL"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring Windows"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
@@ -45191,11 +45186,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The helper usage is below 50%, you may decrease the number of Checkmk "
-"helpers to reduce the memory consumption."
-msgstr ""
-
-msgid ""
 "The historic events (state changes, downtimes etc.) of your hosts and "
 "services is stored in the monitoring history as plain text log files. One "
 "history log file contains the monitoring history of a given time period of "
@@ -48230,11 +48220,6 @@ msgid ""
 "This option is only relevant when you limit the number of messages or the "
 "parsing time. It sets the behaviour in case of too many new messages in a "
 "logfile."
-msgstr ""
-
-msgid ""
-"This option is only used in case you have disabled \"Use separate fetchers "
-"and checkers\"."
 msgstr ""
 
 msgid ""
@@ -59344,6 +59329,14 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Maximum concurrent Checkmk checks (deprecated)"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "BI Packs"
+#~ msgstr "Reguli"
 
 #, fuzzy
 #~ msgid "Checkmk Agent"

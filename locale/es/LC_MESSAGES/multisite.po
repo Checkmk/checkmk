@@ -1629,7 +1629,7 @@ msgstr ""
 "paralelo durante el inicio del Microcore, lo que puede causar picos de carga "
 "cuando se tienen configurados muchos procesos auxiliares de Checkmk.</p>"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1640,13 +1640,13 @@ msgid ""
 "check timeouts</li><li>Check which checks / plugins are <a href=\"view.py?"
 "view_name=service_check_durations\">consuming most helper process time</a></"
 "li><li>Increase the <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></"
-"li></ul></p><p>But you need to be careful that you don't configure too many "
-"Checkmk check helpers, because they consume a lot of memory. Your system "
-"needs to be able to handle the memory demand for all of them at once. An "
-"additional problem is that the Checkmk helpers are initialized in parallel "
-"during startup of the Microcore, which may cause load peaks when having a "
-"lot of Checkmk helper processes configured.</p>"
+"mode=edit_configvar&varname=cmc_fetcher_helpers\">number of Checkmk helpers</"
+"a></li></ul></p><p>But you need to be careful that you don't configure too "
+"many Checkmk check helpers, because they consume a lot of memory. Your "
+"system needs to be able to handle the memory demand for all of them at once. "
+"An additional problem is that the Checkmk helpers are initialized in "
+"parallel during startup of the Microcore, which may cause load peaks when "
+"having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
 "<p>Checkmk Microcore utiliza procesos auxiliares de Checkmk para ejecutar "
 "los servicios Checkmk y Checkmk Discovery de los hosts monitoreados con "
@@ -6303,9 +6303,6 @@ msgstr "Agregaciones de nombres de host de BI"
 msgid "BI Pack Properties"
 msgstr "Propiedades del paquete BI"
 
-msgid "BI Packs"
-msgstr "Paquetes BI"
-
 msgid "BI Visualization"
 msgstr "Visualización de BI"
 
@@ -6333,6 +6330,10 @@ msgstr "Paquete BI"
 
 msgid "BI pack ID"
 msgstr "ID del paquete BI"
+
+#, fuzzy
+msgid "BI packs"
+msgstr "Paquete BI"
 
 msgid "BI rule or aggregation"
 msgstr "Regla o agregación de BI"
@@ -11197,7 +11198,8 @@ msgstr "Cuenta el número de nodos en estado OK"
 msgid "Count until triggered"
 msgstr "Cuenta hasta que se dispara"
 
-msgid "Count, size and age of files (Linux, Windows)"
+#, fuzzy
+msgid "Count, size and age of files"
 msgstr "Recuento, tamaño y antigüedad de los archivos (Linux, Windows)"
 
 msgid "Count, size and age of files - mk_filestat (Linux)"
@@ -14815,9 +14817,6 @@ msgstr ""
 
 msgid "Distinguished name for binding"
 msgstr "Nombre distintivo para la unión"
-
-msgid "Distributed Monitoring"
-msgstr "Vigilancia distribuida"
 
 msgid "Distributed monitoring"
 msgstr "Supervisión distribuida"
@@ -19152,17 +19151,6 @@ msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
 msgstr "Por ejemplo <tt>VMware vSphere 5 Standard</tt>"
-
-msgid ""
-"For running Check_MK based checks via the Micro Core keeps a pool of "
-"specialized helpers that speed up Check_MK by avoiding process creations. "
-"The size of this pool is configured here. This is identical with the maximum "
-"number of concurrent Check_MK checks."
-msgstr ""
-"Para ejecutar comprobaciones basadas en Check_MK a través del Micro Core se "
-"mantiene un pool de ayudantes especializados que aceleran Check_MK evitando "
-"la creación de procesos. El tamaño de este pool se configura aquí. Esto es "
-"idéntico al número máximo de comprobaciones concurrentes de Check_MK."
 
 msgid ""
 "For running Check_MK based checks via the Micro Core keeps a pool of "
@@ -25239,7 +25227,7 @@ msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
 "trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
-"\">Checkmk Exchange<a>  for packages reviewed by tribe29."
+"\">Checkmk Exchange</a>  for packages reviewed by tribe29."
 msgstr ""
 
 msgid "Install this package"
@@ -29518,9 +29506,6 @@ msgstr "Edad máxima de los archivos de caché para los clusters"
 msgid "Maximum concurrent Checkmk checkers"
 msgstr "Máximo de verificadores simultáneos de Checkmk"
 
-msgid "Maximum concurrent Checkmk checks (deprecated)"
-msgstr "Máximas comprobaciones concurrentes de Checkmk (obsoleto)"
-
 msgid "Maximum concurrent Checkmk fetchers"
 msgstr "Máximo número de solicitudes concurrentes de Checkmk"
 
@@ -30682,8 +30667,16 @@ msgstr "Servicios supervisados"
 msgid "Monitoring"
 msgstr "Monitorización"
 
+#, fuzzy
+msgid "Monitoring Linux"
+msgstr "URL de seguimiento"
+
 msgid "Monitoring URL"
 msgstr "URL de seguimiento"
+
+#, fuzzy
+msgid "Monitoring Windows"
+msgstr "Episodio 3: Supervisión de Windows"
 
 msgid "Monitoring agent"
 msgstr "Agente de control"
@@ -47685,13 +47678,6 @@ msgstr ""
 "limpia nada."
 
 msgid ""
-"The helper usage is below 50%, you may decrease the number of Checkmk "
-"helpers to reduce the memory consumption."
-msgstr ""
-"El uso del ayudante es inferior al 50%, puede disminuir el número de "
-"ayudantes de Checkmk para reducir el consumo de memoria."
-
-msgid ""
 "The historic events (state changes, downtimes etc.) of your hosts and "
 "services is stored in the monitoring history as plain text log files. One "
 "history log file contains the monitoring history of a given time period of "
@@ -51731,13 +51717,6 @@ msgstr ""
 "Esta opción sólo es relevante cuando se limita el número de mensajes o el "
 "tiempo de análisis. Establece el comportamiento en caso de que haya "
 "demasiados mensajes nuevos en un archivo de registro."
-
-msgid ""
-"This option is only used in case you have disabled \"Use separate fetchers "
-"and checkers\"."
-msgstr ""
-"Esta opción sólo se utiliza en caso de que haya desactivado la opción \"Usar "
-"recuperadores y verificadores separados\"."
 
 msgid ""
 "This option lets Check_MK add the string \"ISL\" to the service description "
@@ -64646,6 +64625,41 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "For running Check_MK based checks via the Micro Core keeps a pool of "
+#~ "specialized helpers that speed up Check_MK by avoiding process creations. "
+#~ "The size of this pool is configured here. This is identical with the "
+#~ "maximum number of concurrent Check_MK checks."
+#~ msgstr ""
+#~ "Para ejecutar comprobaciones basadas en Check_MK a través del Micro Core "
+#~ "se mantiene un pool de ayudantes especializados que aceleran Check_MK "
+#~ "evitando la creación de procesos. El tamaño de este pool se configura "
+#~ "aquí. Esto es idéntico al número máximo de comprobaciones concurrentes de "
+#~ "Check_MK."
+
+#~ msgid "Maximum concurrent Checkmk checks (deprecated)"
+#~ msgstr "Máximas comprobaciones concurrentes de Checkmk (obsoleto)"
+
+#~ msgid ""
+#~ "The helper usage is below 50%, you may decrease the number of Checkmk "
+#~ "helpers to reduce the memory consumption."
+#~ msgstr ""
+#~ "El uso del ayudante es inferior al 50%, puede disminuir el número de "
+#~ "ayudantes de Checkmk para reducir el consumo de memoria."
+
+#~ msgid ""
+#~ "This option is only used in case you have disabled \"Use separate "
+#~ "fetchers and checkers\"."
+#~ msgstr ""
+#~ "Esta opción sólo se utiliza en caso de que haya desactivado la opción "
+#~ "\"Usar recuperadores y verificadores separados\"."
+
+#~ msgid "BI Packs"
+#~ msgstr "Paquetes BI"
+
+#~ msgid "Distributed Monitoring"
+#~ msgstr "Vigilancia distribuida"
 
 #~ msgid "Cannot download license usage report."
 #~ msgstr "No se puede descargar el informe de uso de licencias."

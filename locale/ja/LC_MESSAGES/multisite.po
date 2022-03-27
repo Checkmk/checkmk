@@ -1571,7 +1571,7 @@ msgstr ""
 "されることです。これにより、多数のCheckmkヘルパープロセスが構成されている場合"
 "に負荷のピークが発生する可能性があります。</p>"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1582,13 +1582,13 @@ msgid ""
 "check timeouts</li><li>Check which checks / plugins are <a href=\"view.py?"
 "view_name=service_check_durations\">consuming most helper process time</a></"
 "li><li>Increase the <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></"
-"li></ul></p><p>But you need to be careful that you don't configure too many "
-"Checkmk check helpers, because they consume a lot of memory. Your system "
-"needs to be able to handle the memory demand for all of them at once. An "
-"additional problem is that the Checkmk helpers are initialized in parallel "
-"during startup of the Microcore, which may cause load peaks when having a "
-"lot of Checkmk helper processes configured.</p>"
+"mode=edit_configvar&varname=cmc_fetcher_helpers\">number of Checkmk helpers</"
+"a></li></ul></p><p>But you need to be careful that you don't configure too "
+"many Checkmk check helpers, because they consume a lot of memory. Your "
+"system needs to be able to handle the memory demand for all of them at once. "
+"An additional problem is that the Checkmk helpers are initialized in "
+"parallel during startup of the Microcore, which may cause load peaks when "
+"having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
 "<p>Checkmk Microcoreは、Checkmkヘルパープロセスを使用して、Checkmkで監視され"
 "ているホストのCheckmkおよびCheckmkDiscoveryサービスを実行します。構成された"
@@ -6053,9 +6053,6 @@ msgstr "BIホスト名の集約"
 msgid "BI Pack Properties"
 msgstr "BIパックのプロパティ"
 
-msgid "BI Packs"
-msgstr "BIパック"
-
 msgid "BI Visualization"
 msgstr "BIの視覚化"
 
@@ -6083,6 +6080,10 @@ msgstr "BIパック"
 
 msgid "BI pack ID"
 msgstr "BIパックID"
+
+#, fuzzy
+msgid "BI packs"
+msgstr "BIパック"
 
 msgid "BI rule or aggregation"
 msgstr "BIルールまたは集計"
@@ -10698,7 +10699,8 @@ msgstr "OK状態のノードの数を数えます"
 msgid "Count until triggered"
 msgstr "トリガーされるまでカウント"
 
-msgid "Count, size and age of files (Linux, Windows)"
+#, fuzzy
+msgid "Count, size and age of files"
 msgstr "ファイルの数、サイズ、および経過時間(Linux、Windows)"
 
 msgid "Count, size and age of files - mk_filestat (Linux)"
@@ -14202,9 +14204,6 @@ msgstr ""
 
 msgid "Distinguished name for binding"
 msgstr "バインディングの識別名"
-
-msgid "Distributed Monitoring"
-msgstr "分散監視"
 
 msgid "Distributed monitoring"
 msgstr "分散監視"
@@ -18444,17 +18443,6 @@ msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
 msgstr "例:<tt> VMware vSphere 5 Standard </tt>"
-
-msgid ""
-"For running Check_MK based checks via the Micro Core keeps a pool of "
-"specialized helpers that speed up Check_MK by avoiding process creations. "
-"The size of this pool is configured here. This is identical with the maximum "
-"number of concurrent Check_MK checks."
-msgstr ""
-"Micro Coreを介してCheck_MKベースのチェックを実行するために、プロセスの作成を"
-"回避することでCheck_MKを高速化する特殊なヘルパーのプールを保持します。この"
-"プールのサイズはここで構成されます。これは、同時Check_MKチェックの最大数と同"
-"じです。"
 
 msgid ""
 "For running Check_MK based checks via the Micro Core keeps a pool of "
@@ -24108,7 +24096,7 @@ msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
 "trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
-"\">Checkmk Exchange<a>  for packages reviewed by tribe29."
+"\">Checkmk Exchange</a>  for packages reviewed by tribe29."
 msgstr ""
 
 msgid "Install this package"
@@ -28257,9 +28245,6 @@ msgstr "クラスターの最大キャッシュファイル経過時間"
 msgid "Maximum concurrent Checkmk checkers"
 msgstr "最大同時Checkmkチェッカー数"
 
-msgid "Maximum concurrent Checkmk checks (deprecated)"
-msgstr ""
-
 msgid "Maximum concurrent Checkmk fetchers"
 msgstr "同時Checkmkフェッチャーの最大数"
 
@@ -29395,8 +29380,16 @@ msgstr "監視対象サービス"
 msgid "Monitoring"
 msgstr "モニタリング"
 
+#, fuzzy
+msgid "Monitoring Linux"
+msgstr "監視URL"
+
 msgid "Monitoring URL"
 msgstr "監視URL"
+
+#, fuzzy
+msgid "Monitoring Windows"
+msgstr "エピソード3: Windowsの監視"
 
 msgid "Monitoring agent"
 msgstr "監視エージェント"
@@ -45601,13 +45594,6 @@ msgstr ""
 "ンアップされません。"
 
 msgid ""
-"The helper usage is below 50%, you may decrease the number of Checkmk "
-"helpers to reduce the memory consumption."
-msgstr ""
-"ヘルパーの使用率が50%未満の場合は、Checkmkヘルパーの数を減らして、メモリ消費"
-"量を減らすことができます。"
-
-msgid ""
 "The historic events (state changes, downtimes etc.) of your hosts and "
 "services is stored in the monitoring history as plain text log files. One "
 "history log file contains the monitoring history of a given time period of "
@@ -49218,13 +49204,6 @@ msgid ""
 msgstr ""
 "このオプションは、メッセージの数または解析時間を制限する場合にのみ関係しま"
 "す。ログファイル内の新しいメッセージが多すぎる場合の動作を設定します。"
-
-msgid ""
-"This option is only used in case you have disabled \"Use separate fetchers "
-"and checkers\"."
-msgstr ""
-"このオプションは、\"個別のフェッチャーとチェッカーを使用する\"を無効にした場"
-"合にのみ使用されます。"
 
 msgid ""
 "This option lets Check_MK add the string \"ISL\" to the service description "
@@ -61238,6 +61217,37 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "For running Check_MK based checks via the Micro Core keeps a pool of "
+#~ "specialized helpers that speed up Check_MK by avoiding process creations. "
+#~ "The size of this pool is configured here. This is identical with the "
+#~ "maximum number of concurrent Check_MK checks."
+#~ msgstr ""
+#~ "Micro Coreを介してCheck_MKベースのチェックを実行するために、プロセスの作成"
+#~ "を回避することでCheck_MKを高速化する特殊なヘルパーのプールを保持します。こ"
+#~ "のプールのサイズはここで構成されます。これは、同時Check_MKチェックの最大数"
+#~ "と同じです。"
+
+#~ msgid ""
+#~ "The helper usage is below 50%, you may decrease the number of Checkmk "
+#~ "helpers to reduce the memory consumption."
+#~ msgstr ""
+#~ "ヘルパーの使用率が50%未満の場合は、Checkmkヘルパーの数を減らして、メモリ消"
+#~ "費量を減らすことができます。"
+
+#~ msgid ""
+#~ "This option is only used in case you have disabled \"Use separate "
+#~ "fetchers and checkers\"."
+#~ msgstr ""
+#~ "このオプションは、\"個別のフェッチャーとチェッカーを使用する\"を無効にした"
+#~ "場合にのみ使用されます。"
+
+#~ msgid "BI Packs"
+#~ msgstr "BIパック"
+
+#~ msgid "Distributed Monitoring"
+#~ msgstr "分散監視"
 
 #~ msgid "Cannot download license usage report."
 #~ msgstr "ライセンス使用状況レポートをダウンロードできません。"

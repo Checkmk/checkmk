@@ -545,8 +545,25 @@ class Replicas(BaseModel):
 
 
 class RollingUpdate(BaseModel):
+    """
+
+    This model is used for DaemonSets and Deployments. Although the models are
+    identical, the underlying strategies differ for the two. For a Deployment,
+    max_unavailable refers to how much the old ReplicaSet can be scaled down.
+    Thus, max_unavailable refers to the maximum number of Pods that may be
+    unavailable during the update. max_unavailable for a DaemonSet refers to
+    the number of Nodes that should be running the daemon Pod (despite what is
+    mentioned in the docs). If the number of Nodes with unavailable daemon Pods
+    reaches max_unavailable, then Kubernetes will not stop Pods on other Nodes
+    in order to update them. The same distinction applies to max_surge.
+
+    The documentation claims, that only one DaemonSet Pod is created, but as of
+    v1.21, max_surge allows a second Pod to be scheduled for the duration of
+    the update.
+    """
+
     type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
-    max_surge: str
+    max_surge: str  # This field was introduced in Kubernetes v1.21.
     max_unavailable: str
 
 

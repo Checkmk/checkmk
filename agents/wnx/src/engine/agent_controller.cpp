@@ -69,6 +69,12 @@ int ToInt(const T value) noexcept {
     }
 }
 
+YAML::Node GetControllerNode() {
+    return yml::GetNode(cfg::GetLoadedConfig(),
+                        std::string{cfg::groups::kSystem},
+                        std::string{cfg::vars::kController});
+}
+
 uint16_t GetPortFromString(const std::string &str) {
     auto table = tools::SplitString(str, ":");
     if (table.size() != 2) {
@@ -80,9 +86,7 @@ uint16_t GetPortFromString(const std::string &str) {
 }
 
 std::string GetConfiguredAgentChannel() {
-    auto controller_config = cma::yml::GetNode(
-        cfg::GetLoadedConfig(), std::string{cfg::groups::kSystem},
-        std::string{cfg::vars::kController});
+    auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
@@ -99,6 +103,12 @@ std::string GetConfiguredAgentChannel() {
 
 uint16_t GetConfiguredAgentChannelPort() {
     return GetPortFromString(GetConfiguredAgentChannel());
+}
+
+bool GetConfiguredLocalOnly() {
+    auto controller_config = GetControllerNode();
+    return cfg::GetVal(controller_config, cfg::vars::kControllerLocalOnly,
+                       cfg::defaults::kControllerLocalOnly);
 }
 
 /// returns true if controller files DOES NOT exist

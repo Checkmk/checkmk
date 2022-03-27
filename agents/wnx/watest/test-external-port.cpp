@@ -49,9 +49,11 @@ TEST(ExternalPortTest, StartStop) {
     wtools::TestProcessor2 tp;
     world::ExternalPort test_port(&tp);  //
 
-    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort()));
+    EXPECT_TRUE(
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes));
     EXPECT_TRUE(test_port.io_thread_.joinable());
-    EXPECT_FALSE(test_port.startIo(reply, tst::TestPort()));
+    EXPECT_FALSE(
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes));
 
     EXPECT_TRUE(tst::WaitForSuccessSilent(
         1000ms, [&test_port]() { return test_port.io_thread_.joinable(); }));
@@ -72,7 +74,8 @@ TEST(ExternalPortTest, Read) {
     wtools::TestProcessor2 tp;
     world::ExternalPort test_port(&tp);  //
 
-    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort()));
+    EXPECT_TRUE(
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes));
 
     asio::io_context ios;
     tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"),
@@ -102,7 +105,7 @@ public:
         return data;
     };
     void SetUp() override {
-        test_port_.startIo(reply, tst::TestPort());  //
+        test_port_.startIo(reply, tst::TestPort(), world::LocalOnly::no);  //
     }
 
     void TearDown() override {

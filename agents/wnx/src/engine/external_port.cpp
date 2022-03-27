@@ -319,44 +319,39 @@ bool sinkProc(const cma::world::AsioSession::s_ptr &asio_session,
 
 // Main IO thread
 // MAY BE RESTARTED if we have new port/ipv6 mode in config
-// OneShot - true, CMK way, connect, send data back, disconnect
-//         - false, accept send data back, no disconnect
-void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port) {
-    using namespace cma::cfg;
+void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
+                                LocalOnly local_only) {
     XLOG::t(XLOG_FUNC + " started");
     // all threads must control exceptions
     try {
-        // important diagnostic
-        {
-            if (nullptr != owner_) owner_->preContextCall();
+        if (nullptr != owner_) {
+            owner_->preContextCall();
+        }
 
-            // asio magic here
-            asio::io_context context;
+        asio::io_context context;
+        auto ipv6 = cfg::groups::global.ipv6();
 
-            auto ipv6 = groups::global.ipv6();
+        // Asio IO server start
+        XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
+        ExternalPort::server sock(context, ipv6, port, local_only);
+        sock.run_accept(sinkProc, this);
+        registerContext(&context);
 
-            // server start
-            XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
-            ExternalPort::server sock(context, ipv6, port);
-            sock.run_accept(sinkProc, this);
+        // server thread start
+        auto processor_thread =
+            std::thread(&ExternalPort::processQueue, this, reply_func);
 
-            registerContext(&context);
+        // tcp body
+        auto ret = context.run();  // run itself
+        XLOG::t(XLOG_FUNC + " ended context with code[{}]", ret);
 
-            // server thread start
-            auto processor_thread =
-                std::thread(&ExternalPort::processQueue, this, reply_func);
+        if (processor_thread.joinable()) {
+            processor_thread.join();
+        }
 
-            // tcp body
-            auto ret = context.run();  // run itself
-            XLOG::t(XLOG_FUNC + " ended context with code[{}]", ret);
-
-            if (processor_thread.joinable()) processor_thread.join();
-
-            // no more reliable context here, delete it
-            if (!registerContext(nullptr))  // no more stopping
-            {
-                XLOG::l.i(XLOG_FUNC + " terminated from outside");
-            }
+        // no more reliable context here, delete it
+        if (!registerContext(nullptr)) {
+            XLOG::l.i(XLOG_FUNC + " terminated from outside");
         }
         XLOG::l.i("IO ends...");
 
@@ -369,7 +364,8 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port) {
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port) {
+bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port,
+                           LocalOnly local_only) {
     std::lock_guard lk(io_thread_lock_);
     if (io_thread_.joinable()) {  // thread is in exec state
         return false;
@@ -377,8 +373,8 @@ bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port) {
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ =
-        std::thread(&ExternalPort::ioThreadProc, this, reply_func, port);
+    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func,
+                             port, local_only);
     io_started_ = true;
     return true;
 }

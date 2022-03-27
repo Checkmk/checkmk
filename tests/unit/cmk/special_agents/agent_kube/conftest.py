@@ -177,6 +177,13 @@ class DaemonSetStatusFactory(ModelFactory):
     __model__ = api.DaemonSetStatus
 
 
+# StatefulSet Factories
+
+
+class StatefulSetStatusFactory(ModelFactory):
+    __model__ = api.StatefulSetStatus
+
+
 # Container Status Fixtures
 @pytest.fixture
 def container_status_state() -> str:
@@ -450,6 +457,7 @@ def new_statefulset(statefulset_spec) -> Callable[[], agent_kube.StatefulSet]:
         return agent_kube.StatefulSet(
             metadata=MetaDataFactory.build(),
             spec=statefulset_spec,
+            status=StatefulSetStatusFactory.build(),
         )
 
     return _new_statefulset

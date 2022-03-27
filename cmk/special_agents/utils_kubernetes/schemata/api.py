@@ -250,11 +250,18 @@ class DaemonSet(BaseModel):
 class StatefulSetSpec(BaseModel):
     strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
     selector: Selector
+    replicas: int
+
+
+class StatefulSetStatus(BaseModel):
+    updated_replicas: int
+    ready_replicas: int
 
 
 class StatefulSet(BaseModel):
     metadata: MetaData
     spec: StatefulSetSpec
+    status: StatefulSetStatus
     pods: Sequence[PodUID]
 
 

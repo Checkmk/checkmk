@@ -584,10 +584,13 @@ def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSet
 
 
 class StatefulSet(PodOwner):
-    def __init__(self, metadata: api.MetaData, spec: api.StatefulSetSpec) -> None:
+    def __init__(
+        self, metadata: api.MetaData, spec: api.StatefulSetSpec, status: api.StatefulSetStatus
+    ) -> None:
         super().__init__()
         self.metadata = metadata
         self.spec = spec
+        self._status = status
         self.type_: str = "statefulset"
 
     def name(self, prepend_namespace: bool = False) -> str:
@@ -812,6 +815,7 @@ class Cluster:
             statefulset = StatefulSet(
                 metadata=api_statefulset.metadata,
                 spec=api_statefulset.spec,
+                status=api_statefulset.status,
             )
             cluster.add_statefulset(statefulset)
             _register_owner_for_pods(statefulset, api_statefulset.pods)

@@ -599,6 +599,27 @@ class CommonReplicas(BaseModel):
     updated: int
 
 
+class StatefulSetReplicas(CommonReplicas):
+    """section: kube_statefulset_replicas_v1
+
+    Model for a given StatefulSet supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and Deployments is the concept of ordinals. Ordinals give Pods
+    a unique identity, which is persistent across being rescheduled on a different Node. The ordinal
+    affects the order of creation and updates (see below).
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and up-to-date
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. StatefulSets can
+    # achieve readiness in different fashions depending on the value of spec.podManagementPolicy.
+    # By default, a new Pod is only created after all the Pods with lower ordinals (the ordinal is
+    # appended to the name of the Pod) are available. As of Kubernetes v1.7 Pods can be configured
+    # to be created in parallel.
+    # updated (status.updatedReplicas): the number of claimed Pods, which match updateRevision of
+    # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
+    # creation, this behaviour can't be configured as of v1.23.
+
+
 class DeploymentReplicas(CommonReplicas):
     """section: kube_deployment_replicas_v1
 

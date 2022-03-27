@@ -17,6 +17,7 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     check_kube_replicas,
     discover_kube_replicas,
     parse_kube_deployment_replicas,
+    parse_kube_statefulset_replicas,
     parse_kube_strategy,
     Replicas,
 )
@@ -25,6 +26,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
     OnDelete,
     Recreate,
     RollingUpdate,
+    StatefulSetReplicas,
     StatefulSetRollingUpdate,
     UpdateStrategy,
     VSResultAge,
@@ -45,6 +47,26 @@ def test_parse_kube_deployment_replicas() -> None:
             ]
         ]
     ) == DeploymentReplicas(
+        desired=3,
+        updated=0,
+        ready=3,
+    )
+
+
+def test_parse_kube_statefulset_replicas() -> None:
+    assert parse_kube_statefulset_replicas(
+        [
+            [
+                json.dumps(
+                    {
+                        "desired": 3,
+                        "updated": 0,
+                        "ready": 3,
+                    }
+                )
+            ]
+        ]
+    ) == StatefulSetReplicas(
         desired=3,
         updated=0,
         ready=3,

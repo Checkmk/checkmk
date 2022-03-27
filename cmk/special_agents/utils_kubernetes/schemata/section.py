@@ -413,3 +413,72 @@ class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: api.APIHealth
+
+
+class CommonReplicas(BaseModel):
+    desired: int
+    ready: int
+    updated: int
+
+
+class DaemonSetReplicas(CommonReplicas):
+    """Model for a given DaemonSet supplied to the kube_replicas check.
+
+    The key distinction to Deployments and StatefulSets is the fact, that this section counts Nodes
+    rather than Pods. On each Node only the oldest Pod is considered, that has been claimed by the
+    DaemonSet.
+    """
+
+    # desired (status.desiredNumberScheduled): the number of Nodes, which match the NodeAffinity
+    # specified by the DaemonSet.
+    # ready (status.numberReady): the number of Nodes, where the oldest claimed Pod is ready.
+    # updated (status.updatedNumberScheduled): the number of Nodes, where the oldest claimed Pod is
+    # updated. A Pod is updated, if the hash of the Pod template matches the template of the
+    # DaemonSet.
+    # misscheduled (status.numberMisscheduled): the number of Nodes, on which there is a Pod claimed
+    # by the DaemonSet (not necessarily running or ready), but which is not supposed to run a
+    # daemon Pod (since the NodeSelector or NodeAffinity term does not match the Node). In
+    # particular, there is no overlap between Nodes counted by desired and Nodes counted by
+    # misscheduled.
+    misscheduled: int
+
+
+class StatefulSetReplicas(CommonReplicas):
+    """Model for a given StatefulSet supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and Deployments is the concept of ordinals. Ordinals give Pods
+    a unique identity, which is persistent across being rescheduled on a different Node. The ordinal
+    affects the order of creation and updates (see below).
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and up-to-date
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. StatefulSets can
+    # achieve readiness in different fashions depending on the value of spec.podManagementPolicy.
+    # By default, a new Pod is only created after all the Pods with lower ordinals (the ordinal is
+    # appended to the name of the Pod) are available. As of Kubernetes v1.7 Pods can be configured
+    # to be created in parallel.
+    # updated (status.updatedReplicas): the number of claimed Pods, which match updateRevision of
+    # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
+    # creation, this behaviour can't be configured as of v1.23.
+
+
+class DeploymentReplicas(CommonReplicas):
+    """Model for a given Deployment supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and StatefulSets is that Deployments manage their Pods via
+    ReplicaSets. A Deployment controls either one or two ReplicaSets. The second ReplicaSet is
+    created whenever a Deployment needs to update its Pods. The quantities in status of Deployment
+    are often sums over the status of the two ReplicaSets.
+
+    Example: The number of unavailableReplicas may be twice the number of desired replicas, because
+    it corresponds to the number of Pods not available for both ReplicaSets. Whereas for other
+    controllers unavailableReplicas (StatefulSet) or numberUnavailable (DaemonSet) is equal to
+    desired - availableReplicas or desired - numberAvailable.
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and
+    # up-to-date.
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. This is calculated
+    # across both ReplicaSets (if present).
+    # updated (status.updatedReplicas): the number of claimed Pods, belonging the ReplicaSet with
+    # the up-to-date Pod template.

@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Any, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Mapping, MutableMapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,7 +19,7 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import DeploymentReplicas, UpdateStrategy, VSResultAge
+from .utils.kube import DeploymentReplicas, StatefulSetReplicas, UpdateStrategy, VSResultAge
 from .utils.kube_strategy import strategy_text
 
 
@@ -27,10 +27,20 @@ def parse_kube_deployment_replicas(string_table: StringTable) -> DeploymentRepli
     return DeploymentReplicas(**json.loads(string_table[0][0]))
 
 
+def parse_kube_statefulset_replicas(string_table: StringTable) -> StatefulSetReplicas:
+    return StatefulSetReplicas(**json.loads(string_table[0][0]))
+
+
 register.agent_section(
     name="kube_deployment_replicas_v1",
     parsed_section_name="kube_replicas",
     parse_function=parse_kube_deployment_replicas,
+)
+
+register.agent_section(
+    name="kube_statefulset_replicas_v1",
+    parsed_section_name="kube_replicas",
+    parse_function=parse_kube_statefulset_replicas,
 )
 
 
@@ -44,7 +54,7 @@ register.agent_section(
     parse_function=parse_kube_strategy,
 )
 
-Replicas = DeploymentReplicas
+Replicas = Union[DeploymentReplicas, StatefulSetReplicas]
 
 
 def discover_kube_replicas(

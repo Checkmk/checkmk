@@ -456,7 +456,9 @@ class DaemonSetReplicas(CommonReplicas):
 
 
 class StatefulSetReplicas(CommonReplicas):
-    """Model for a given StatefulSet supplied to the kube_replicas check.
+    """section: kube_statefulset_replicas_v1
+
+    Model for a given StatefulSet supplied to the kube_replicas check.
 
     The key distinction to DaemonSets and Deployments is the concept of ordinals. Ordinals give Pods
     a unique identity, which is persistent across being rescheduled on a different Node. The ordinal

@@ -44,7 +44,10 @@ bool IsRunController(const YAML::Node &node);
 bool IsInLegacyMode();
 void CreateControllerFlagFile();
 bool IsControllerFlagFileExists();
+
+// config
 uint16_t GetConfiguredAgentChannelPort();
+bool GetConfiguredLocalOnly();
 
 /// To be called once when cap is installed
 ///

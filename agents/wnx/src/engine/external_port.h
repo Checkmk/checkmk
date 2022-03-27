@@ -26,6 +26,9 @@ using ReplyFunc =
 
 namespace cma::world {
 
+/// Defines visibility of local socket for external world
+enum class LocalOnly { yes, no };
+
 bool IsIpAllowedAsException(const std::string &ip);
 
 // below is working example from asio
@@ -164,7 +167,11 @@ public:
     ExternalPort &operator=(ExternalPort &&) = delete;
 
     // Main API
-    bool startIo(const ReplyFunc &reply_func, uint16_t port);
+    bool startIo(const ReplyFunc &reply_func, uint16_t port,
+                 LocalOnly local_only);
+    bool startIo(const ReplyFunc &reply_func, uint16_t port) {
+        return startIo(reply_func, port, LocalOnly::no);
+    }
     void shutdownIo();
 
     // Supplementary API
@@ -178,14 +185,22 @@ public:
 
 private:
     wtools::BaseServiceProcessor *owner_ = nullptr;
-    // Internal class from  ASIO documentation
     class server {
+        asio::ip::tcp::endpoint makeEndpoint(bool ipv6, uint16_t port,
+                                             LocalOnly local_only) {
+            return local_only == LocalOnly::yes
+                       ? asio::ip::tcp::endpoint(
+                             asio::ip::make_address("127.0.0.1"), port)
+                       : asio::ip::tcp::endpoint(
+                             ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(),
+                             port);
+        }
+
+        // Internal class from  ASIO documentation
     public:
-        server(asio::io_context &io_context, bool Ipv6, uint16_t port)
-            : acceptor_(
-                  io_context,
-                  asio::ip::tcp::endpoint(
-                      Ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), port))
+        server(asio::io_context &io_context, bool Ipv6, uint16_t port,
+               LocalOnly local_only)
+            : acceptor_(io_context, makeEndpoint(Ipv6, port, local_only))
             , socket_(io_context) {}
 
         // this is the only entry point
@@ -275,7 +290,8 @@ protected:
         shutdown_thread_ = true;
     }
 
-    void ioThreadProc(const cma::world::ReplyFunc &Reply, uint16_t port);
+    void ioThreadProc(const ReplyFunc &Reply, uint16_t port,
+                      LocalOnly local_only);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth

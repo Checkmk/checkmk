@@ -673,7 +673,10 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                               answer_.getId().time_since_epoch().count());
                     return generateAnswer(ip_addr);
                 },
-                use_port);
+                use_port,
+                port.has_value() && ac::GetConfiguredLocalOnly()
+                    ? world::LocalOnly::yes
+                    : world::LocalOnly::no);
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
                 rt_device.stop();

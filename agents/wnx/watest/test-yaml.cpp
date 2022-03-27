@@ -803,7 +803,7 @@ TEST(AgentConfig, FactoryConfig) {
     EXPECT_FALSE(GetVal(controller, vars::kControllerForceLegacy, true));
     EXPECT_EQ(GetVal(controller, vars::kControllerAgentChannel, ""s),
               defaults::kControllerAgentChannelDefault);
-    EXPECT_FALSE(GetVal(controller, vars::kControllerLocalOnly, true));
+    EXPECT_TRUE(GetVal(controller, vars::kControllerLocalOnly, false));
 
     auto firewall = GetNode(groups::kSystem, vars::kFirewall);
     EXPECT_EQ(GetVal(firewall, vars::kFirewallMode, std::string("xx")),

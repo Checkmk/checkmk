@@ -19,18 +19,18 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import Replicas, UpdateStrategy, VSResultAge
+from .utils.kube import DeploymentReplicas, UpdateStrategy, VSResultAge
 from .utils.kube_strategy import strategy_text
 
 
-def parse_kube_replicas(string_table: StringTable) -> Replicas:
-    return Replicas(**json.loads(string_table[0][0]))
+def parse_kube_deployment_replicas(string_table: StringTable) -> DeploymentReplicas:
+    return DeploymentReplicas(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
-    name="kube_replicas_v1",
+    name="kube_deployment_replicas_v1",
     parsed_section_name="kube_replicas",
-    parse_function=parse_kube_replicas,
+    parse_function=parse_kube_deployment_replicas,
 )
 
 
@@ -43,6 +43,8 @@ register.agent_section(
     parsed_section_name="kube_update_strategy",
     parse_function=parse_kube_strategy,
 )
+
+Replicas = DeploymentReplicas
 
 
 def discover_kube_replicas(
@@ -107,28 +109,26 @@ def _check_kube_replicas(
 
     yield Result(
         state=State.OK,
-        summary=f"Ready: {section_kube_replicas.ready}/{section_kube_replicas.replicas}",
+        summary=f"Ready: {section_kube_replicas.ready}/{section_kube_replicas.desired}",
     )
 
     yield Result(
         state=State.OK,
-        summary=f"Up-to-date: {section_kube_replicas.updated}/{section_kube_replicas.replicas}",
+        summary=f"Up-to-date: {section_kube_replicas.updated}/{section_kube_replicas.desired}",
     )
 
-    metric_boundary = (0, section_kube_replicas.replicas)
-    yield Metric(
-        "kube_desired_replicas", section_kube_replicas.replicas, boundaries=metric_boundary
-    )
+    metric_boundary = (0, section_kube_replicas.desired)
+    yield Metric("kube_desired_replicas", section_kube_replicas.desired, boundaries=metric_boundary)
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
 
-    all_ready = section_kube_replicas.ready == section_kube_replicas.replicas
+    all_ready = section_kube_replicas.ready == section_kube_replicas.desired
     not_ready_started_ts = (
         None if all_ready else value_store.get("not_ready_started_timestamp") or now
     )
     value_store["not_ready_started_timestamp"] = not_ready_started_ts
 
-    all_updated = section_kube_replicas.updated == section_kube_replicas.replicas
+    all_updated = section_kube_replicas.updated == section_kube_replicas.desired
     update_started_ts = None if all_updated else value_store.get("update_started_timestamp") or now
     value_store["update_started_timestamp"] = update_started_ts
 

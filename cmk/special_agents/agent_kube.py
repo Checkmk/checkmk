@@ -514,8 +514,12 @@ class Deployment(PodOwner):
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
-    def replicas(self) -> api.Replicas:
-        return self.status.replicas
+    def replicas(self) -> section.DeploymentReplicas:
+        return section.DeploymentReplicas(
+            desired=self.status.replicas.replicas,
+            ready=self.status.replicas.ready,
+            updated=self.status.replicas.updated,
+        )
 
     def strategy(self) -> section.UpdateStrategy:
         return section.UpdateStrategy(strategy=self.spec.strategy)
@@ -1072,8 +1076,8 @@ def write_deployments_api_sections(
             "kube_deployment_info_v1": lambda: cluster_deployment.info(cluster_name),
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
-            "kube_replicas_v1": cluster_deployment.replicas,
             "kube_update_strategy_v1": cluster_deployment.strategy,
+            "kube_deployment_replicas_v1": cluster_deployment.replicas,
         }
         _write_sections(sections)
 

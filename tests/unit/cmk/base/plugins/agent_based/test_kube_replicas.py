@@ -16,13 +16,14 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     _check_kube_replicas,
     check_kube_replicas,
     discover_kube_replicas,
-    parse_kube_replicas,
+    parse_kube_deployment_replicas,
     parse_kube_strategy,
+    Replicas,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    DeploymentReplicas,
     OnDelete,
     Recreate,
-    Replicas,
     RollingUpdate,
     StatefulSetRollingUpdate,
     UpdateStrategy,
@@ -30,27 +31,23 @@ from cmk.base.plugins.agent_based.utils.kube import (
 )
 
 
-def test_parse_kube_replicas() -> None:
-    assert parse_kube_replicas(
+def test_parse_kube_deployment_replicas() -> None:
+    assert parse_kube_deployment_replicas(
         [
             [
                 json.dumps(
                     {
-                        "replicas": 3,
+                        "desired": 3,
                         "updated": 0,
-                        "available": 0,
                         "ready": 3,
-                        "unavailable": 0,
                     }
                 )
             ]
         ]
-    ) == Replicas(
-        replicas=3,
+    ) == DeploymentReplicas(
+        desired=3,
         updated=0,
-        available=0,
         ready=3,
-        unavailable=0,
     )
 
 
@@ -116,12 +113,10 @@ def test_parse_kube_strategy() -> None:
 
 
 def test_discover_kube_replicas() -> None:
-    replicas = Replicas(
-        replicas=3,
+    replicas = DeploymentReplicas(
+        desired=3,
         updated=0,
-        available=0,
         ready=3,
-        unavailable=3,
     )
     strategy = UpdateStrategy(
         strategy=RollingUpdate(
@@ -139,12 +134,10 @@ def test_check_kube_replicas() -> None:
     assert list(
         check_kube_replicas(
             {},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             None,
         )
@@ -162,12 +155,10 @@ def test_check_kube_replicas() -> None:
     [
         pytest.param(
             {"update_duration": "no_levels"},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -192,12 +183,10 @@ def test_check_kube_replicas() -> None:
         ),
         pytest.param(
             {"update_duration": ("levels", (900, 1000))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -222,12 +211,10 @@ def test_check_kube_replicas() -> None:
         ),
         pytest.param(
             {"update_duration": ("levels", (300, 500))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -273,12 +260,10 @@ def test_check_kube_replicas_outdated_replicas(
     [
         pytest.param(
             {"not_ready_duration": "no_levels"},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0},
             [
@@ -293,12 +278,10 @@ def test_check_kube_replicas_outdated_replicas(
         ),
         pytest.param(
             {"not_ready_duration": ("levels", (900, 1000))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0},
             [
@@ -313,12 +296,10 @@ def test_check_kube_replicas_outdated_replicas(
         ),
         pytest.param(
             {"not_ready_duration": ("levels", (300, 500))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0},
             [
@@ -356,12 +337,10 @@ def test_check_kube_replicas_not_ready_replicas(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -396,12 +375,10 @@ def test_check_kube_replicas_not_ready_replicas(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             UpdateStrategy(strategy=Recreate()),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
@@ -456,12 +433,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
@@ -482,12 +457,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
@@ -505,12 +478,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
         ),
         pytest.param(
             {},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": None, "update_started_timestamp": None},
             [
@@ -527,12 +498,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
         ),
         pytest.param(
             {},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": None, "update_started_timestamp": None},
             [

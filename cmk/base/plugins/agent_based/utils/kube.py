@@ -536,14 +536,6 @@ class PodContainers(BaseModel):
     containers: Mapping[str, ContainerStatus]
 
 
-class Replicas(BaseModel):
-    replicas: int
-    updated: int
-    available: int
-    ready: int
-    unavailable: int
-
-
 class RollingUpdate(BaseModel):
     """
 
@@ -587,3 +579,45 @@ class UpdateStrategy(BaseModel):
     """section: kube_update_strategy_v1"""
 
     strategy: DisplayableStrategy = Field(discriminator="type_")
+
+
+class CommonReplicas(BaseModel):
+    """Model shared among controllers.
+
+    Note: All controllers are relatively similiar in how they claim a Pod. A Pod will be claimed
+    if the following criterions match:
+    * the Selector matches
+    * the Pods controller field is empty or equal to that of the claiming Controller
+    * the Pod is not Succeeded or Failed
+    * neither the Pod nor the Controller have been deleted (DeletionTimestamp is null)
+    Note, that this list is somewhat heuristic and reality is a bit more complicated. For instance,
+    a Pod can sometimes still be claimed, if the DaemonSet has been deleted.
+    """
+
+    desired: int
+    ready: int
+    updated: int
+
+
+class DeploymentReplicas(CommonReplicas):
+    """section: kube_deployment_replicas_v1
+
+    Model for a given Deployment supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and StatefulSets is that Deployments manage their Pods via
+    ReplicaSets. A Deployment controls either one or two ReplicaSets. The second ReplicaSet is
+    created whenever a Deployment needs to update its Pods. The quantities in status of Deployment
+    are often sums over the status of the two ReplicaSets.
+
+    Example: The number of unavailableReplicas may be twice the number of desired replicas, because
+    it corresponds to the number of Pods not available for both ReplicaSets. Whereas for other
+    controllers unavailableReplicas (StatefulSet) or numberUnavailable (DaemonSet) is equal to
+    desired - availableReplicas or desired - numberAvailable.
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and
+    # up-to-date.
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. This is calculated
+    # across both ReplicaSets (if present).
+    # updated (status.updatedReplicas): the number of claimed Pods, belonging the ReplicaSet with
+    # the up-to-date Pod template.

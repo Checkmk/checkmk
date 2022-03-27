@@ -633,8 +633,8 @@ def deployments_api_sections() -> Sequence[str]:
         "kube_deployment_info_v1",
         "kube_deployment_conditions_v1",
         "kube_cpu_resources_v1",
-        "kube_replicas_v1",
         "kube_update_strategy_v1",
+        "kube_deployment_replicas_v1",
     ]
 
 

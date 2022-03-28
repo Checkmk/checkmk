@@ -1,0 +1,14 @@
+Title: Refactor event bulk delete method
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1654184028
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Make delete all events much faster.
+This is achieved by running one delete command
+with a list of events to delete instead of a
+separate command for each event.

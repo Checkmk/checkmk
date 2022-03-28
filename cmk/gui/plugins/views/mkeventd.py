@@ -1333,7 +1333,8 @@ class CommandECArchiveEventsOfHost(ECCommand):
                     + "Columns: event_id\n"
                     + "Filter: host_name = %s" % row["host_name"]
                 )
-                commands = ["DELETE;%s;%s" % (entry[0], user.id) for entry in data]
+                events = ",".join([entry[0] for entry in data])
+                commands = ["DELETE;%s;%s" % (events, user.id)]
 
             return commands, "<b>archive all events</b> of"
         return None

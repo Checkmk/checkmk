@@ -925,19 +925,17 @@ void TableStateHistory::process(
 
     // if (hs_state->_duration > 0)
     HostServiceState *r = hs_state;
-    _abort_query = !query->processDataset(Row(r));
+    auto service_auth = core()->serviceAuthorization();
+    const auto *auth_user = query->authUser();
+    auto is_authorized =
+        r->_host == nullptr  // TODO(sp): Can this ever happen???
+            ? auth_user == no_auth_user()
+            : r->_service == nullptr
+                  ? is_authorized_for_hst(auth_user, r->_host)
+                  : is_authorized_for_svc(service_auth, auth_user, r->_service);
+    _abort_query = is_authorized && !query->processDataset(Row{r});
 
     hs_state->_from = hs_state->_until;
-}
-
-bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
-    const auto *entry = rowData<HostServiceState>(row);
-    return entry->_host == nullptr  // TODO(sp): Can this ever happen???
-               ? ctc == no_auth_user()
-               : entry->_service == nullptr
-                     ? is_authorized_for_hst(ctc, entry->_host)
-                     : is_authorized_for_svc(core()->serviceAuthorization(),
-                                             ctc, entry->_service);
 }
 
 std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {

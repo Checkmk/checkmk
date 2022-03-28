@@ -1,0 +1,10 @@
+Title: Site overview dashlet: Remove service filters
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 2.2.0i1
+Date: 1648456721
+Class: fix
+
+In the site overview dashlet users could select service filters. However, service filters do not apply to the site overview dashlet and were thus without function. The choice of service filters is now removed from the site overview dashlet.

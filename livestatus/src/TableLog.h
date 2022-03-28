@@ -14,11 +14,9 @@
 
 #include "LogCache.h"
 #include "Table.h"
-#include "contact_fwd.h"
 class Column;
 class MonitoringCore;
 class Query;
-class Row;
 
 class TableLog : public Table {
 public:
@@ -27,7 +25,6 @@ public:
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    bool isAuthorized(Row row, const contact *ctc) const override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
 

@@ -24,6 +24,7 @@
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "auth.h"
+#include "contact_fwd.h"
 
 #ifdef CMC
 #include "cmc.h"
@@ -145,16 +146,39 @@ std::string TableLog::name() const { return "log"; }
 
 std::string TableLog::namePrefix() const { return "log_"; }
 
+namespace {
+bool rowWithoutHost(const LogRow &lr) {
+    auto clazz = lr.entry->log_class();
+    return clazz == LogEntry::Class::info ||
+           clazz == LogEntry::Class::program ||
+           clazz == LogEntry::Class::ext_command;
+}
+}  // namespace
+
 void TableLog::answerQuery(Query *query) {
     auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
     if (log_filter.classmask == 0) {
         return;
     }
-    auto process_log_entry = [core = core(), query](const LogEntry &entry) {
-        LogRow r{entry, core};
-        return query->processDataset(Row{&r});
+
+    auto is_authorized = [service_auth = core()->serviceAuthorization(),
+                          auth_user = query->authUser()](const LogRow &lr) {
+        // If we have an AuthUser, suppress entries for messages with hosts that
+        // do not exist anymore, otherwise use the common authorization logic.
+        return lr.hst == nullptr  //
+                   ? auth_user == no_auth_user() || rowWithoutHost(lr)
+                   : lr.svc == nullptr
+                         ? is_authorized_for_hst(auth_user, lr.hst)
+                         : is_authorized_for_svc(service_auth, auth_user,
+                                                 lr.svc);
     };
-    _log_cache->for_each(log_filter, process_log_entry);
+
+    auto process = [is_authorized, core = core(),
+                    query](const LogEntry &entry) {
+        LogRow r{entry, core};
+        return !is_authorized(r) || query->processDataset(Row{&r});
+    };
+    _log_cache->for_each(log_filter, process);
 }
 
 // static
@@ -183,28 +207,6 @@ LogFilter TableLog::constructFilter(Query *query,
         .since = since,
         .until = until,
     };
-}
-
-namespace {
-bool rowWithoutHost(const LogRow *lr) {
-    auto clazz = lr->entry->log_class();
-    return clazz == LogEntry::Class::info ||
-           clazz == LogEntry::Class::program ||
-           clazz == LogEntry::Class::ext_command;
-}
-
-}  // namespace
-
-bool TableLog::isAuthorized(Row row, const contact *ctc) const {
-    const auto *lr = rowData<LogRow>(row);
-    // If we have an AuthUser, suppress entries for messages with hosts that do
-    // not exist anymore.
-    return lr->hst == nullptr  //
-               ? ctc == no_auth_user() || rowWithoutHost(lr)
-               : lr->svc == nullptr
-                     ? is_authorized_for_hst(ctc, lr->hst)
-                     : is_authorized_for_svc(core()->serviceAuthorization(),
-                                             ctc, lr->svc);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

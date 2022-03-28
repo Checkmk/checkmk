@@ -1915,6 +1915,23 @@ def collector_exception_handler(logs: List[section.CollectorHandlerLog], debug: 
         )
 
 
+def custom_error_message_for_cmk(e: client.kubernetes.ApiException) -> str:
+    """
+
+    This is a modified version of __str__ method of client.kubernetes.ApiException.
+    It strips the first \n in order make the output of plugin check-mk more verbose.
+    """
+
+    error_message = "({0}, Reason: {1})\n".format(e.status, e.reason)
+    if e.headers:
+        error_message += "HTTP response headers: {0}\n".format(e.headers)
+
+    if e.body:
+        error_message += "HTTP response body: {0}\n".format(e.body)
+
+    return error_message
+
+
 def main(args: Optional[List[str]] = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -2198,7 +2215,11 @@ def main(args: Optional[List[str]] = None) -> int:
                         machine=collector_machine_logs[-1],
                     ).json()
                 )
-
+    except client.exceptions.ApiException as e:
+        if arguments.debug:
+            raise
+        sys.stderr.write(custom_error_message_for_cmk(e))
+        return 1
     except Exception as e:
         if arguments.debug:
             raise

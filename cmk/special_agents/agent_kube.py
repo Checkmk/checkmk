@@ -17,8 +17,10 @@ import contextlib
 import functools
 import json
 import logging
+import os
 import re
 import sys
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 from typing import (
@@ -59,7 +61,9 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 LOGGER = logging.getLogger()
 
-AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
+AGENT_TMP_PATH = Path(
+    cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else tempfile.gettempdir(), "agent_kube"
+)
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",

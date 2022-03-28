@@ -2829,8 +2829,9 @@ class StatusServer(ECServerThread):
     def handle_command_delete(self, arguments: list[str]) -> None:
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
-        event_id, user = arguments
-        self._event_status.delete_event(int(event_id), user)
+        event_ids, user = arguments
+        for event_id in event_ids.split(","):
+            self._event_status.delete_event(int(event_id), user)
 
     def handle_command_update(self, arguments: list[str]) -> None:
         event_id, user, acknowledged, comment, contact = arguments
@@ -2861,14 +2862,15 @@ class StatusServer(ECServerThread):
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments: list[str]) -> None:
-        event_id, user, newstate = arguments
-        event = self._event_status.event(int(event_id))
-        if not event:
-            raise MKClientError("No event with id %s" % event_id)
-        event["state"] = int(newstate)
-        if user:
-            event["owner"] = user
-        self._history.add(event, "CHANGESTATE", user)
+        event_ids, user, newstate = arguments
+        for event_id in event_ids.split(","):
+            event = self._event_status.event(int(event_id))
+            if not event:
+                raise MKClientError("No event with id %s" % event_id)
+            event["state"] = int(newstate)
+            if user:
+                event["owner"] = user
+            self._history.add(event, "CHANGESTATE", user)
 
     def handle_command_reload(self) -> None:
         reload_configuration(

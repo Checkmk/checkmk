@@ -677,6 +677,7 @@ def attributes_field(
                 custom_schema[object_type],
             ],
             metadata={"context": {"object_context": object_context}},
+            merged=True,  # to unify both models
             description=description,
             example=example,
             many=many,

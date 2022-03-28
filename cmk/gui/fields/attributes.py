@@ -754,12 +754,15 @@ class MetaData(BaseSchema):
 
     created_at = Timestamp(
         description="When has this object been created.",
+        allow_none=True,
     )
     updated_at = Timestamp(
         description="When this object was last changed.",
+        allow_none=True,
     )
     created_by = String(
         description="The user id under which this object has been created.",
+        allow_none=True,
     )
 
 

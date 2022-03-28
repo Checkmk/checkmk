@@ -8,7 +8,7 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=1.1.1l
+OPENSSL_VERSION=1.1.1n
 OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
 PYTHON_VERSION=3.8.7
 DIR_NAME=Python-${PYTHON_VERSION}

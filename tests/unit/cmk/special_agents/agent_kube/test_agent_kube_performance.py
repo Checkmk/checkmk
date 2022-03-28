@@ -14,7 +14,7 @@ from cmk.special_agents.agent_kube import (
     determine_rate_metrics,
     map_lookup_name_to_piggyback_host_name,
     MetricName,
-    pod_lookup_from_api_pod,
+    pod_lookup_from_agent_pod,
     PodLookupName,
 )
 
@@ -73,7 +73,7 @@ def test_map_lookup_name_to_piggyback_host_name(new_pod):
     pod = new_pod()
     pod_namespaced_name = PodLookupName(f"{pod.metadata.namespace}_{pod.metadata.name}")
     lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-        [pod], pod_lookup_from_api_pod
+        [pod], pod_lookup_from_agent_pod
     )
     assert pod_namespaced_name in lookup_name_piggyback_mappings
     assert lookup_name_piggyback_mappings[pod_namespaced_name] == pod.name(prepend_namespace=True)

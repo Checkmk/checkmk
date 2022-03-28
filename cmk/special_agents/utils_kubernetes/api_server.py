@@ -29,6 +29,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     cron_job_from_client,
     daemonset_from_client,
     deployment_from_client,
+    namespace_from_client,
     node_from_client,
     pod_from_client,
     statefulset_from_client,
@@ -59,12 +60,16 @@ class CoreAPI:
         self.timeout = timeout
         self.raw_pods = self._query_raw_pods()
         self.raw_nodes = self._query_raw_nodes()
+        self.raw_namespaces = self._query_raw_namespaces()
 
     def _query_raw_nodes(self) -> Sequence[client.V1Node]:
         return self.connection.list_node(_request_timeout=self.timeout).items
 
     def _query_raw_pods(self) -> Sequence[client.V1Pod]:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
+
+    def _query_raw_namespaces(self):
+        return self.connection.list_namespace(_request_timeout=self.timeout).items
 
 
 class AppsAPI:
@@ -289,6 +294,11 @@ class APIServer:
                 raw_statefulset, self._controller_to_pods[raw_statefulset.metadata.uid]
             )
             for raw_statefulset in self._external_api.raw_statefulsets
+        ]
+
+    def namespaces(self) -> Sequence[api.Namespace]:
+        return [
+            namespace_from_client(raw_namespace) for raw_namespace in self._core_api.raw_namespaces
         ]
 
     def nodes(self) -> Sequence[api.Node]:

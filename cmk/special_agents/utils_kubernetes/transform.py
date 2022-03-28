@@ -107,6 +107,14 @@ def parse_metadata(
     )
 
 
+def parse_namespace_metadata(metadata: client.V1ObjectMeta) -> api.NamespaceMetaData:
+    return api.NamespaceMetaData(
+        name=api.NamespaceName(metadata.name),
+        creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
+        labels=parse_labels(metadata.labels),
+    )
+
+
 def container_resources(container: client.V1Container) -> api.ContainerResources:
     parsed_limits = api.ResourcesRequirements()
     parsed_requests = api.ResourcesRequirements()
@@ -531,4 +539,10 @@ def statefulset_from_client(
         spec=parse_statefulset_spec(statefulset.spec),
         status=parse_statefulset_status(statefulset.status),
         pods=pod_uids,
+    )
+
+
+def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
+    return api.Namespace(
+        metadata=parse_namespace_metadata(namespace.metadata),
     )

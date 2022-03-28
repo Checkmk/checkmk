@@ -5,6 +5,7 @@
 
 #include "TableEventConsoleStatus.h"
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -14,9 +15,11 @@
 #include "ListColumn.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
+#include "contact_fwd.h"
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
-    : TableEventConsole(mc) {
+    : TableEventConsole{
+          mc, [](Row /*row*/, const contact * /*auth_user*/) { return true; }} {
     ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "status_config_load_time",

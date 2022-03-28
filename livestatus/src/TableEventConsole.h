@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -67,7 +68,8 @@ private:
 
 class TableEventConsole : public Table {
 public:
-    explicit TableEventConsole(MonitoringCore *mc);
+    TableEventConsole(MonitoringCore *mc,
+                      std::function<bool(Row, const contact *)> is_authorized);
 
     void answerQuery(Query *query) override;
 
@@ -75,6 +77,8 @@ protected:
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;
 
 private:
+    std::function<bool(Row, const contact *)> is_authorized_;
+
     bool isAuthorizedForEventViaContactGroups(
         const MonitoringCore::Contact *ctc, Row row, bool &result) const;
     bool isAuthorizedForEventViaHost(const MonitoringCore::Contact *ctc,

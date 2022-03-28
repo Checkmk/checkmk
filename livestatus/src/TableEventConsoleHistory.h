@@ -11,17 +11,13 @@
 #include <string>
 
 #include "TableEventConsole.h"
-#include "contact_fwd.h"
-
 class MonitoringCore;
-class Row;
 
 class TableEventConsoleHistory : public TableEventConsole {
 public:
     explicit TableEventConsoleHistory(MonitoringCore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    bool isAuthorized(Row row, const contact *ctc) const override;
 };
 
 #endif  // TableEventConsoleHistory_h

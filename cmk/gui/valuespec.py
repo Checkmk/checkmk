@@ -604,7 +604,7 @@ class TextInput(ValueSpec[str]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: _Optional[str] = None,
-        size: Union[int, str] = 25,
+        size: Union[int, Literal["max"]] = 25,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -752,7 +752,7 @@ class UUID(TextInput):
 
 def ID(  # pylint: disable=redefined-builtin
     label: _Optional[str] = None,
-    size: Union[int, str] = 25,
+    size: Union[int, Literal["max"]] = 25,
     try_max_width: bool = False,
     cssclass: str = "text",
     strip: bool = True,
@@ -803,7 +803,7 @@ def ID(  # pylint: disable=redefined-builtin
 
 def UserID(  # pylint: disable=redefined-builtin
     label: _Optional[str] = None,
-    size: Union[int, str] = 25,
+    size: Union[int, Literal["max"]] = 25,
     try_max_width: bool = False,
     cssclass: str = "text",
     strip: bool = True,
@@ -866,7 +866,7 @@ class RegExp(TextInput):
         maxgroups: _Optional[int] = None,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 25,
+        size: Union[int, Literal["max"]] = 25,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -1014,7 +1014,7 @@ class EmailAddress(TextInput):
         make_clickable: bool = False,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 40,
+        size: Union[int, Literal["max"]] = 40,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -1099,7 +1099,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     ip_class: Union[None, Type[ipaddress.IPv4Network], Type[ipaddress.IPv6Network]] = None,
     # TextInput
     allow_empty: bool = True,
-    size: Union[int, str] = 34,
+    size: Union[int, Literal["max"]] = 34,
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
@@ -1212,7 +1212,7 @@ class HostAddress(TextInput):
         allow_ipv6_address: bool = True,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 64,
+        size: Union[int, Literal["max"]] = 64,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -1338,7 +1338,7 @@ class HostAddress(TextInput):
 def AbsoluteDirname(  # pylint: disable=redefined-builtin
     # TextInput
     allow_empty: bool = True,
-    size: Union[int, str] = 25,
+    size: Union[int, Literal["max"]] = 25,
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
@@ -1366,7 +1366,7 @@ class Url(TextInput):
         target: _Optional[str] = None,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 64,
+        size: Union[int, Literal["max"]] = 64,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -1466,7 +1466,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     regex_error: _Optional[str] = None,
     # TextInput
     allow_empty: bool = True,
-    size: Union[int, str] = 80,
+    size: Union[int, Literal["max"]] = 80,
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
@@ -1504,12 +1504,12 @@ class TextAreaUnicode(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         cols: int = 60,
-        rows: Union[int, str] = 20,
+        rows: Union[int, Literal["auto"]] = 20,
         minrows: int = 0,
         monospaced: bool = False,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 64,
+        size: Union[int, Literal["max"]] = 64,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -1576,7 +1576,6 @@ class TextAreaUnicode(TextInput):
             rows = max(rows, self._minrows)
         else:
             attrs = {}
-            assert isinstance(self._rows, int)
             rows = self._rows
 
         if self._monospaced:
@@ -1606,7 +1605,7 @@ class Filename(TextInput):
         trans_func: _Optional[Callable[[str], str]] = None,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 60,
+        size: Union[int, Literal["max"]] = 60,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -1692,7 +1691,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         self,
         # ListOfStrings
         valuespec: _Optional[ValueSpec[str]] = None,
-        size: Union[str, int] = 25,
+        size: Union[int, Literal["max"]] = 25,
         orientation: str = "vertical",
         allow_empty: bool = True,
         empty_text: str = "",
@@ -6107,7 +6106,7 @@ class LDAPDistinguishedName(TextInput):
         enforce_suffix: _Optional[str] = None,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 25,
+        size: Union[int, Literal["max"]] = 25,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -6191,7 +6190,7 @@ class Password(TextInput):
         encrypt_value: bool = True,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 25,
+        size: Union[int, Literal["max"]] = 25,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
@@ -6314,7 +6313,7 @@ class PasswordSpec(Password):
         is_stored_plain: bool = True,
         # TextInput
         label: _Optional[str] = None,
-        size: Union[int, str] = 25,
+        size: Union[int, Literal["max"]] = 25,
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,

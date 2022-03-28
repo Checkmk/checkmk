@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "Row.h"
-#include "contact_fwd.h"
 class Column;
 class DynamicColumn;
 class Logger;
@@ -105,7 +104,6 @@ public:
     // problematic answerQuery() implementations is a "bit" chaotic, so this can
     // be a real correctness problem! This has to be fixed...
     virtual void answerQuery(Query *query) = 0;
-    virtual bool isAuthorized(Row row, const contact *ctc) const;
 
     [[nodiscard]] virtual Row get(const std::string &primary_key) const;
 

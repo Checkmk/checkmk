@@ -129,7 +129,6 @@ ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
 RUN /opt/install-gnu-toolchain.sh link-only
 RUN /opt/install-valgrind.sh link-only
 RUN /opt/install-cmake.sh link-only
-RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 

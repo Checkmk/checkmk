@@ -573,13 +573,26 @@ def test_openapi_host_custom_attributes(
         },
     )
 
-    aut_user_auth_wsgi_app.call_method(
+    update1 = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/example.com",
         status=200,
         params='{"attributes": {"foo": "bar"}}',
         headers={
             "If-Match": resp.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+    # Internal, non-editable attributes shall not be settable.
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=400,
+        params='{"attributes": {"meta_data": "bar"}}',
+        headers={
+            "If-Match": update1.headers["ETag"],
             "Accept": "application/json",
         },
         content_type="application/json",
@@ -922,7 +935,6 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 
 
 @managedtest
-@pytest.mark.skip("Doesn't work until MultiNested with merged=True is active.")
 def test_openapi_create_host_with_custom_attributes(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     custom_host_attribute,
@@ -937,7 +949,7 @@ def test_openapi_create_host_with_custom_attributes(
             "foo": "abc",
         },
     }
-    aut_user_auth_wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params=json.dumps(json_data),
@@ -945,3 +957,5 @@ def test_openapi_create_host_with_custom_attributes(
         content_type="application/json",
         headers={"Accept": "application/json"},
     )
+    assert "ipaddress" in resp.json["extensions"]["attributes"]
+    assert "foo" in resp.json["extensions"]["attributes"]

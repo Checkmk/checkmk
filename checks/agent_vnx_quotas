@@ -6,6 +6,8 @@
 
 from typing import Any, Mapping, Optional, Sequence, Union
 
+from cmk.utils import password_store
+
 
 def agent_vnx_quotas_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
@@ -14,7 +16,7 @@ def agent_vnx_quotas_arguments(
         "-u",
         params["user"],
         "-p",
-        passwordstore_get_cmdline("%s", params["password"]),
+        password_store.extract(("password", params["password"])),
         "--nas-db",
         params["nas_db"],
     ]

@@ -111,6 +111,74 @@ TEST(AgentController, CreateControllerFlagFile) {
     EXPECT_TRUE(ac::IsControllerFlagFileExists());
 }
 
+namespace {
+bool IsLegacyFileExists() {
+    std::error_code ec;
+    return fs::exists(ac::LegacyPullFile(), ec);
+}
+
+void CleanArtifacts() {
+    std::error_code ec;
+    fs::remove(ac::LegacyPullFile(), ec);
+    fs::remove(ac::ControllerFlagFile(), ec);
+}
+constexpr auto marker_new =
+    "Check MK monitoring and management Service - 2.1, 64-bit";
+constexpr auto marker_old =
+    "Check MK monitoring and management Service, 64-bit";
+
+}  // namespace
+
+TEST(AgentController, CreateLegacyPullFile) {
+    constexpr auto config_str =
+        "global:\n"
+        "  enabled: yes\n"
+        "system:\n"
+        "  controller:\n"
+        "    run: {}\n"
+        "    force_legacy: {}\n";
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    EXPECT_FALSE(ac::IsLegacyFileExists());
+    struct Param {
+        std::string run;
+        std::string force_legacy;
+        std::string marker;
+        bool exists;
+    };
+    // NOTE(sk): better to have std::array, but init is a mess
+    Param params[] = {
+        {.run = "no",
+         .force_legacy = "no",
+         .marker = marker_old,
+         .exists = false},
+        {.run = "no",
+         .force_legacy = "yes",
+         .marker = marker_old,
+         .exists = false},
+        {.run = "yes",
+         .force_legacy = "no",
+         .marker = marker_old,
+         .exists = true},
+        {.run = "yes",
+         .force_legacy = "no",
+         .marker = marker_new,
+         .exists = true},
+        {.run = "yes",
+         .force_legacy = "yes",
+         .marker = marker_old,
+         .exists = true},
+    };
+    for (auto const &p : params) {
+        auto to_load = fmt::format(config_str, p.run, p.force_legacy);
+        ASSERT_TRUE(temp_fs->loadContent(to_load));
+        ac::CreateArtifacts("", p.run == "yes");
+        EXPECT_EQ(ac::IsLegacyFileExists(), p.exists)
+            << "conf str is " << to_load;
+        CleanArtifacts();
+    }
+}
+
 TEST(AgentController, FabricConfig) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
@@ -129,10 +197,8 @@ TEST(AgentController, ConfigApiDefaults) {
 
 class AgentControllerCreateArtifacts : public ::testing::Test {
 public:
-    static constexpr std::string_view marker_2_1 =
-        "Check MK monitoring and management Service - 2.1, 64-bit";
-    static constexpr std::string_view marker_1_6_2_0 =
-        "Check MK monitoring and management Service, 64-bit";
+    static constexpr std::string_view marker_2_1 = marker_new;
+    static constexpr std::string_view marker_1_6_2_0 = marker_old;
     void SetUp() override {
         temp_fs_ = tst::TempCfgFs::Create();
         ASSERT_TRUE(temp_fs_->loadFactoryConfig());

@@ -11,10 +11,7 @@
 #include <string>
 
 #include "TableEventConsole.h"
-#include "contact_fwd.h"
-
 class MonitoringCore;
-class Row;
 class Table;
 
 class TableEventConsoleEvents : public TableEventConsole {
@@ -23,7 +20,6 @@ public:
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     static void addColumns(Table *table);
-    bool isAuthorized(Row row, const contact *ctc) const override;
 };
 
 #endif  // TableEventConsoleEvents_h

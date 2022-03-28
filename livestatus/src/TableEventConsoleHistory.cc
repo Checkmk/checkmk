@@ -5,6 +5,7 @@
 
 #include "TableEventConsoleHistory.h"
 
+#include <functional>
 #include <memory>
 
 #include "Column.h"
@@ -13,9 +14,12 @@
 #include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
 #include "TimeColumn.h"
+#include "contact_fwd.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
-    : TableEventConsole(mc) {
+    : TableEventConsole{mc, [this](Row row, const contact *auth_user) {
+                            return isAuthorizedForEvent(row, auth_user);
+                        }} {
     ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "history_line", "The line number of the event in the history file",
@@ -43,8 +47,4 @@ std::string TableEventConsoleHistory::name() const {
 
 std::string TableEventConsoleHistory::namePrefix() const {
     return "eventconsolehistory_";
-}
-
-bool TableEventConsoleHistory::isAuthorized(Row row, const contact *ctc) const {
-    return isAuthorizedForEvent(row, ctc);
 }

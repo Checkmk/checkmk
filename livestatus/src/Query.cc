@@ -640,11 +640,6 @@ bool Query::processDataset(Row row) {
         return true;
     }
 
-    if (!(_auth_user == no_auth_user() ||
-          _table.isAuthorized(row, _auth_user))) {
-        return true;
-    }
-
     _current_line++;
     if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
         return false;

@@ -81,10 +81,6 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
     return it->second->createColumn(colname2, rest.substr(sep_pos + 1));
 }
 
-bool Table::isAuthorized(Row /*unused*/, const contact * /*unused*/) const {
-    return true;
-}
-
 Row Table::get(const std::string & /*unused*/) const { return Row{nullptr}; }
 
 Row Table::getDefault() const { return Row{nullptr}; }

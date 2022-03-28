@@ -461,7 +461,40 @@ FILESTORE = GCPService(
     ],
 )
 
-SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE]}
+REDIS = GCPService(
+    name="redis",
+    metrics=[
+        GCPMetric(
+            name="redis.googleapis.com/stats/cpu_utilization",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="redis.googleapis.com/stats/memory/usage_ratio",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="redis.googleapis.com/stats/memory/system_memory_usage_ratio",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+    ],
+)
+
+SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS]}
 
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:

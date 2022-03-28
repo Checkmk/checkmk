@@ -4,6 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+####################################################################################
+# NOTE: This is considered as a workaround file and is intended to removed
+# in the future.
+# Existing factories should be moved to factory.py. Fixtures should be refactored
+# to delegate the build logic directly into the test.
+####################################################################################
+
+
 import itertools
 import uuid
 from typing import Callable, Dict, Iterator, Sequence, Type

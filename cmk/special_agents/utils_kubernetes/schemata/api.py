@@ -66,6 +66,16 @@ class PodMetaData(MetaData):
     namespace: NamespaceName
 
 
+class NamespaceMetaData(BaseModel):
+    name: NamespaceName
+    labels: Optional[Labels] = None
+    creation_timestamp: CreationTimestamp
+
+
+class Namespace(BaseModel):
+    metadata: NamespaceMetaData
+
+
 class NodeConditionStatus(str, enum.Enum):
     TRUE = "True"
     FALSE = "False"

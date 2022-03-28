@@ -1007,11 +1007,31 @@ class Cluster:
         )
 
 
-def _collect_memory_resources(pods: Collection[Pod]) -> section.Resources:
+# Namespace specific
+
+
+def namespace_info(namespace: api.Namespace, cluster_name: str):
+    return section.NamespaceInfo(
+        name=namespace_name(namespace),
+        creation_timestamp=namespace.metadata.creation_timestamp,
+        labels=namespace.metadata.labels,
+        cluster=cluster_name,
+    )
+
+
+def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
     return aggregate_resources("memory", [c for pod in pods for c in pod.spec.containers])
 
 
-def _collect_cpu_resources(pods: Collection[Pod]) -> section.Resources:
+def _collect_memory_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Resources:
+    return aggregate_resources("memory", [c for pod in pods for c in pod.spec.containers])
+
+
+def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
+    return aggregate_resources("cpu", [c for pod in pods for c in pod.spec.containers])
+
+
+def _collect_cpu_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Resources:
     return aggregate_resources("cpu", [c for pod in pods for c in pod.spec.containers])
 
 
@@ -1020,6 +1040,43 @@ def _pod_resources(pods: Collection[Pod]) -> section.PodResources:
     for pod in pods:
         resources[pod.phase].append(pod.name())
     return section.PodResources(**resources)
+
+
+def _pod_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.PodResources:
+    resources: DefaultDict[str, List[str]] = defaultdict(list)
+    for pod in pods:
+        resources[pod.status.phase].append(pod_name(pod))
+    return section.PodResources(**resources)
+
+
+def pod_name(pod: api.Pod, prepend_namespace: bool = False) -> str:
+    if not prepend_namespace:
+        return pod.metadata.name
+
+    return f"{pod.metadata.namespace}_{pod.metadata.name}"
+
+
+def filter_pods_by_namespace(
+    pods: Sequence[api.Pod], namespace: api.NamespaceName
+) -> Sequence[api.Pod]:
+    return [pod for pod in pods if pod_namespace(pod) == namespace]
+
+
+def filter_pods_by_phase(pods: Sequence[api.Pod], phase: api.Phase) -> Sequence[api.Pod]:
+    return [pod for pod in pods if pod.status.phase == phase]
+
+
+def pod_namespace(pod: api.Pod) -> api.NamespaceName:
+    return pod.metadata.namespace
+
+
+def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
+    """The name of the namespace
+    Examples:
+        >>> namespace_name(api.Namespace(metadata=api.MetaData(name="foo", creation_timestamp=0.0)))
+        'foo'
+    """
+    return namespace.metadata.name
 
 
 class JsonProtocol(Protocol):
@@ -1051,6 +1108,32 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
         ),
     }
     _write_sections(sections)
+
+
+def write_namespaces_api_sections(
+    cluster_name: str,
+    api_namespaces: Sequence[api.Namespace],
+    api_pods: Sequence[api.Pod],
+    piggyback_formatter: Callable[[str], str],
+):
+    def output_sections(namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]) -> None:
+        sections = {
+            "kube_namespace_info_v1": lambda: namespace_info(namespace, cluster_name),
+            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(namespaced_api_pods),
+            "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
+                namespaced_api_pods
+            ),
+            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(
+                namespaced_api_pods
+            ),
+        }
+        _write_sections(sections)
+
+    for api_namespace in api_namespaces:
+        with ConditionalPiggybackSection(piggyback_formatter(namespace_name(api_namespace))):
+            output_sections(
+                api_namespace, filter_pods_by_namespace(api_pods, namespace_name(api_namespace))
+            )
 
 
 def write_nodes_api_sections(
@@ -1262,7 +1345,7 @@ def _containers_from_pods(
     for pod in pods:
         # Some pods which are running according to the Kubernetes API might not yet be
         # included in the performance data due to various reasons (e.g. pod just started)
-        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
+        if (pod_lookup := pod_lookup_from_agent_pod(pod)) not in performance_pods:
             # TODO: include logging without adding false positives
             continue
         selected_pods.append(performance_pods[pod_lookup])
@@ -1605,7 +1688,7 @@ def group_container_components(
         )
 
 
-def lookup_name(namespace: str, pod_name: str) -> PodLookupName:
+def lookup_name(namespace: str, name: str) -> PodLookupName:
     """Parse the pod lookup name
 
     This function parses an identifier which is used to match the pod based on the
@@ -1616,11 +1699,15 @@ def lookup_name(namespace: str, pod_name: str) -> PodLookupName:
     (kubernetes.io/config.hash) as the pod uid for system containers and consequently differs to the
     uid reported by the Kubernetes API.
     """
-    return PodLookupName(f"{namespace}_{pod_name}")
+    return PodLookupName(f"{namespace}_{name}")
 
 
-def pod_lookup_from_api_pod(api_pod: Pod) -> PodLookupName:
-    return lookup_name(api_pod.metadata.namespace, api_pod.metadata.name)
+def pod_lookup_from_agent_pod(agent_pod: Pod) -> PodLookupName:
+    return lookup_name(agent_pod.metadata.namespace, agent_pod.metadata.name)
+
+
+def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
+    return lookup_name(pod_namespace(api_pod), pod_name(api_pod))
 
 
 def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
@@ -1642,6 +1729,16 @@ def statefulsets_from_namespaces(
 ) -> Sequence[StatefulSet]:
     return [
         statefulset for statefulset in statefulsets if statefulset.metadata.namespace in namespaces
+    ]
+
+
+def namespaces_from_monitored_namespacenames(
+    api_namespaces: Sequence[api.Namespace], namespace_names: Set[api.NamespaceName]
+) -> Sequence[api.Namespace]:
+    return [
+        api_namespace
+        for api_namespace in api_namespaces
+        if namespace_name(api_namespace) in namespace_names
     ]
 
 
@@ -1700,8 +1797,8 @@ def _filter_namespaces(
     return filtered_namespaces
 
 
-def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespace_name: str) -> str:
-    return f"{object_type}_{cluster_name}_{namespace_name}"
+def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespaced_name: str) -> str:
+    return f"{object_type}_{cluster_name}_{namespaced_name}"
 
 
 def parse_and_group_containers_performance_metrics(
@@ -1759,7 +1856,6 @@ def write_sections_based_on_performance_pods(
     piggyback_formatter,
     piggyback_formatter_node,
 ):
-
     # Write performance sections
     if "pods" in monitored_objects:
         LOGGER.info("Write pod sections based on performance data")
@@ -1768,10 +1864,10 @@ def write_sections_based_on_performance_pods(
             cluster.pods(phase=api.Phase.RUNNING), monitored_namespaces
         )
         lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-            running_pods, pod_lookup_from_api_pod
+            running_pods, pod_lookup_from_agent_pod
         )
         monitored_running_pods = monitored_pods.intersection(
-            {pod_lookup_from_api_pod(pod) for pod in running_pods}
+            {pod_lookup_from_agent_pod(pod) for pod in running_pods}
         )
 
         for pod in filter_outdated_and_non_monitored_pods(
@@ -1784,7 +1880,6 @@ def write_sections_based_on_performance_pods(
                 )
             ):
                 pod_performance_sections(pod)
-
     if "nodes" in monitored_objects:
         LOGGER.info("Write node sections based on performance data")
         for node in cluster.nodes():
@@ -1827,6 +1922,27 @@ def write_sections_based_on_performance_pods(
             )
     LOGGER.info("Write cluster sections based on performance data")
     write_kube_object_performance_section_cluster(cluster, performance_pods)
+
+
+def write_object_sections_based_on_performance_pods(
+    api_pods: Sequence[api.Pod],
+    performance_pods: Mapping[PodLookupName, PerformancePod],
+    piggyback_name: str,
+):
+    if not (pods := filter_pods_by_phase(api_pods, api.Phase.RUNNING)):
+        return
+
+    selected_pods = []
+    for pod in pods:
+        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
+            continue
+        selected_pods.append(performance_pods[pod_lookup])
+
+    if not selected_pods:
+        return
+
+    with ConditionalPiggybackSection(piggyback_name):
+        _write_object_sections([container for pod in selected_pods for container in pod.containers])
 
 
 def _identify_unsupported_node_collector_components(
@@ -1939,9 +2055,13 @@ def main(args: Optional[List[str]] = None) -> int:
                     f"at URL {e.url}"
                 )
 
+            api_pods = api_server.pods()
+
+            # Namespaces are handled independently from the cluster object in order to improve
+            # testability. The long term goal is to remove all objects from the cluster object
             cluster = Cluster.from_api_resources(
                 excluded_node_roles=arguments.roles or [],
-                pods=api_server.pods(),
+                pods=api_pods,
                 nodes=api_server.nodes(),
                 deployments=api_server.deployments(),
                 cron_jobs=api_server.cron_jobs(),
@@ -1980,6 +2100,16 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
+            if "namespaces" in arguments.monitored_objects:
+                LOGGER.info("Write namespaces sections based on API data")
+                api_namespaces = api_server.namespaces()
+                write_namespaces_api_sections(
+                    arguments.cluster,
+                    namespaces_from_monitored_namespacenames(api_namespaces, monitored_namespaces),
+                    api_pods,
+                    piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
+                )
+
             if "daemonsets" in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
                 write_daemon_sets_api_sections(
@@ -2001,7 +2131,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 )
 
             monitored_pods: Set[PodLookupName] = {
-                pod_lookup_from_api_pod(pod)
+                pod_lookup_from_agent_pod(pod)
                 for pod in pods_from_namespaces(cluster.pods(), monitored_namespaces)
             }
 
@@ -2009,7 +2139,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 # Ignore pods controlled by CronJobs
                 monitored_pods = monitored_pods.difference(
                     {
-                        pod_lookup_from_api_pod(pod)
+                        pod_lookup_from_agent_pod(pod)
                         for cron_job in cluster.cron_jobs()
                         for pod in cron_job.pods()
                     }
@@ -2022,7 +2152,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     [
                         pod
                         for pod in cluster.pods()
-                        if pod_lookup_from_api_pod(pod) in monitored_pods
+                        if pod_lookup_from_agent_pod(pod) in monitored_pods
                     ],
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
@@ -2122,6 +2252,10 @@ def main(args: Optional[List[str]] = None) -> int:
                     ) from e
 
                 try:
+                    # TODO: write_object_sections_based_on_performance_pods is the equivalent
+                    # function based solely on api.Pod rather than class Pod. All objects relying
+                    # on write_sections_based_on_performance_pods should be refactored to use the
+                    # other function similar to namespaces
                     write_sections_based_on_performance_pods(
                         performance_pods=performance_pods,
                         cluster=cluster,
@@ -2131,6 +2265,20 @@ def main(args: Optional[List[str]] = None) -> int:
                         piggyback_formatter=piggyback_formatter,
                         piggyback_formatter_node=piggyback_formatter_node,
                     )
+
+                    if "namespaces" in arguments.monitored_objects:
+                        for api_namespace in api_namespaces:
+                            write_object_sections_based_on_performance_pods(
+                                api_pods=filter_pods_by_namespace(
+                                    api_pods, namespace_name(api_namespace)
+                                ),
+                                performance_pods=performance_pods,
+                                piggyback_name=piggyback_formatter(
+                                    object_type="namespace",
+                                    namespaced_name=namespace_name(api_namespace),
+                                ),
+                            )
+
                 except Exception as e:
                     raise CollectorHandlingException(
                         title="Sections write out Error",

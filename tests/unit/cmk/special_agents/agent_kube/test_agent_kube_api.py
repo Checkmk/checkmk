@@ -11,8 +11,21 @@ from typing import Optional
 import pytest
 from pydantic_factories import ModelFactory
 
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APIPodFactory,
+    pod_phase_generator,
+    PodMetaDataFactory,
+    PodSpecFactory,
+    PodStatusFactory,
+)
+
+from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.agent_kube import aggregate_resources, Cluster
-from cmk.special_agents.utils_kubernetes.schemata import api
+from cmk.special_agents.utils_kubernetes.schemata import api, section
+
+
+class ContainerResourcesFactory(ModelFactory):
+    __model__ = api.ContainerResources
 
 
 class ClusterDetailsFactory(ModelFactory):
@@ -27,12 +40,12 @@ class APIDeployment(ModelFactory):
     __model__ = api.Deployment
 
 
-class APIPod(ModelFactory):
-    __model__ = api.Pod
-
-
 class APINode(ModelFactory):
     __model__ = api.Node
+
+
+class ResourcesRequirementsFactory(ModelFactory):
+    __model__ = api.ResourcesRequirements
 
 
 @pytest.fixture
@@ -49,7 +62,7 @@ def api_node(node_name):
 
 @pytest.fixture
 def api_pod(node_name):
-    pod = APIPod.build()
+    pod = APIPodFactory.build()
     pod.spec.node = node_name
     return pod
 
@@ -155,3 +168,110 @@ def test_aggregate_resources_with_only_zeroed_limit_memory() -> None:
     container_specs = [container_spec(limit_memory=limit) for limit in [0.0, 0.0]]
     result = aggregate_resources("memory", container_specs)
     assert result.count_zeroed_limits == 2
+
+
+@pytest.mark.parametrize("pods_count", [0, 5])
+def test_pod_resources_from_api_pods(pods_count: int):
+    pods = [
+        APIPodFactory.build(
+            metadata=PodMetaDataFactory.build(name=str(i)),
+            status=PodStatusFactory.build(
+                phase=api.Phase.RUNNING,
+            ),
+        )
+        for i in range(pods_count)
+    ]
+
+    pod_resources = agent._pod_resources_from_api_pods(pods)
+
+    assert pod_resources == section.PodResources(
+        running=[str(i) for i in range(pods_count)],
+    )
+
+
+def test_pod_name():
+    name = "name"
+    namespace = "namespace"
+    pod = APIPodFactory.build(metadata=PodMetaDataFactory.build(name=name, namespace=namespace))
+
+    pod_name = agent.pod_name(pod)
+    pod_namespaced_name = agent.pod_name(pod, prepend_namespace=True)
+
+    assert pod_name == name
+    assert pod_namespaced_name == f"{namespace}_{name}"
+
+
+def test_filter_pods_by_namespace():
+    pod_one = APIPodFactory.build(
+        metadata=PodMetaDataFactory.build(name="pod_one", namespace="one")
+    )
+    pod_two = APIPodFactory.build(
+        metadata=PodMetaDataFactory.build(name="pod_two", namespace="two")
+    )
+
+    filtered_pods = agent.filter_pods_by_namespace([pod_one, pod_two], api.NamespaceName("one"))
+
+    assert [pod.metadata.name for pod in filtered_pods] == ["pod_one"]
+
+
+@pytest.mark.parametrize(
+    "phase",
+    [
+        api.Phase.PENDING,
+        api.Phase.RUNNING,
+        api.Phase.FAILED,
+        api.Phase.SUCCEEDED,
+        api.Phase.UNKNOWN,
+    ],
+)
+def test_filter_pods_by_phase(phase: api.Phase):
+    pods_count = len(api.Phase)
+    phases = pod_phase_generator()
+    pods = [
+        APIPodFactory.build(status=PodStatusFactory.build(phase=next(phases)))
+        for _ in range(pods_count)
+    ]
+
+    pods_in_phase = agent.filter_pods_by_phase(pods, phase)
+
+    assert [pod.status.phase for pod in pods_in_phase] == [phase]
+
+
+@pytest.mark.parametrize("pods_count", [0, 5])
+def test_collect_workload_resources_from_api_pods(pods_count: int):
+    requirements = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
+    pods = [
+        APIPodFactory.build(
+            spec=PodSpecFactory.build(
+                containers=[
+                    ContainerSpecFactory.build(
+                        resources=ContainerResourcesFactory.build(
+                            limits=requirements, requests=requirements
+                        )
+                    )
+                ]
+            )
+        )
+        for _ in range(pods_count)
+    ]
+
+    memory_resources = agent._collect_memory_resources_from_api_pods(pods)
+    cpu_resources = agent._collect_cpu_resources_from_api_pods(pods)
+
+    assert memory_resources == section.Resources(
+        request=pods_count * ONE_MiB,
+        limit=pods_count * ONE_MiB,
+        count_unspecified_limits=0,
+        count_unspecified_requests=0,
+        count_zeroed_limits=0,
+        count_total=pods_count,
+    )
+
+    assert cpu_resources == section.Resources(
+        request=pods_count * 0.5,
+        limit=pods_count * 0.5,
+        count_unspecified_limits=0,
+        count_unspecified_requests=0,
+        count_zeroed_limits=0,
+        count_total=pods_count,
+    )

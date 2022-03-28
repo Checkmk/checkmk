@@ -45,6 +45,9 @@ bool IsInLegacyMode();
 void CreateControllerFlagFile();
 bool IsControllerFlagFileExists();
 
+std::filesystem::path LegacyPullFile();
+std::filesystem::path ControllerFlagFile();
+
 // config
 uint16_t GetConfiguredAgentChannelPort();
 bool GetConfiguredLocalOnly();

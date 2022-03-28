@@ -20,17 +20,17 @@ using namespace std::string_literals;
 
 namespace cma::ac {
 
-namespace {
-std::pair<fs::path, fs::path> ServiceName2TargetName(const fs::path &service) {
-    return {GetController(service), GetWorkController()};
-}
-
 fs::path LegacyPullFile() {
     return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
 }
 
 fs::path ControllerFlagFile() {
     return fs::path{cfg::GetUserDir()} / ac::kControllerFlagFile;
+}
+
+namespace {
+std::pair<fs::path, fs::path> ServiceName2TargetName(const fs::path &service) {
+    return {GetController(service), GetWorkController()};
 }
 
 fs::path CopyControllerToBin(const fs::path &service) {
@@ -97,6 +97,11 @@ std::string GetConfiguredAgentChannel() {
     }
 
     return result;
+}
+bool GetConfiguredForceLegacy() {
+    auto controller_config = GetControllerNode();
+    return cfg::GetVal(controller_config, cfg::vars::kControllerForceLegacy,
+                       cfg::defaults::kControllerForceLegacy);
 }
 
 }  // namespace
@@ -254,22 +259,22 @@ void CreateLegacyFile() {
     std::ofstream ofs(file_name.u8string());
     ofs << "Created by Windows agent";
 }
+const std::string legacy_pull_text{"File '{}'  {}, legacy pull mode {}"};
 
 bool ConditionallyCreateLegacyFile(const fs::path &marker,
                                    std::string_view message) {
-    const std::string text{"File '{}'  {}, legacy pull mode {}"};
     bool created{false};
     if (!ac::IsControllerFlagFileExists()) {
         CreateLegacyFile();
         created = true;
     }
-    XLOG::l.i(text, marker, message, created ? "ON" : "OFF");
+    XLOG::l.i(legacy_pull_text, marker, message, created ? "ON" : "OFF");
 
     return created;
 }
 }  // namespace
 
-/// Creates/Deletes file in agent-user dir to satisfy controller requirements
+/// Creates file in agent-user dir to satisfy controller requirements
 /// marker is used to determine status of the OS
 /// marker will be deleted
 bool CreateLegacyModeFile(const fs::path &marker) {
@@ -325,7 +330,11 @@ void CreateArtifacts(const fs::path &marker, bool controller_exists) {
     if (!controller_exists) {
         return;
     }
-    if (!IsControllerFlagFileExists()) {
+    if (GetConfiguredForceLegacy()) {
+        XLOG::l.i(legacy_pull_text, marker,
+                  " is ignored, configured to always create file", "ON");
+        CreateLegacyFile();
+    } else if (!IsControllerFlagFileExists()) {
         CreateLegacyModeFile(marker);
     }
     CreateControllerFlagFile();

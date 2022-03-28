@@ -29,7 +29,9 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects.request_schemas import EXISTING_HOST_NAME
+from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.bulk_discovery import (
+    bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
     prepare_hosts_for_discovery,
     start_bulk_discovery,
@@ -358,6 +360,14 @@ def serialize_service_discovery(
 
 # Bulk discovery
 
+JOB_ID = {
+    "job_id": fields.String(
+        description="The unique identifier of the background job executing the bulk discovery",
+        example="bulk_discovery",
+        required=True,
+    ),
+}
+
 
 class BulkDiscovery(BaseSchema):
     hostnames = fields.List(
@@ -409,7 +419,7 @@ class BulkDiscovery(BaseSchema):
     },
     additional_status_codes=[409],
     request_schema=BulkDiscovery,
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
 def execute_bulk_discovery(params):
     """Start a bulk discovery job"""
@@ -428,12 +438,45 @@ def execute_bulk_discovery(params):
         body["bulk_size"],
     )
 
+    return _serve_background_job(job)
+
+
+@Endpoint(
+    constructors.object_href("discovery_run", "{job_id}"),
+    "cmk/show",
+    method="get",
+    path_params=[JOB_ID],
+    status_descriptions={
+        404: "There is no running background job with this job_id.",
+    },
+    response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
+)
+def show_bulk_discovery_status(params):
+    """Show the status of a bulk discovery job"""
+
+    job_id = params["job_id"]
+    job = BulkDiscoveryBackgroundJob()
+    if job.get_job_id() != job_id:
+        raise ProblemException(
+            status=404,
+            title=f"Background job {job_id} not found.",
+        )
+    return _serve_background_job(job)
+
+
+def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
     job_id = job.get_job_id()
+    status_details = bulk_discovery_job_status(job)
     return constructors.serve_json(
         constructors.domain_object(
             domain_type="discovery_run",
             identifier=job_id,
-            title=f"Background job {job_id}",
+            title=f"Background job {job_id} {'is active' if status_details['is_active'] else 'is finished'}",
+            extensions={
+                "active": status_details["is_active"],
+                "state": status_details["job_state"],
+                "logs": status_details["logs"],
+            },
             deletable=False,
             editable=False,
         )

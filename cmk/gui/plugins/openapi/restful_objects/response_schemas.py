@@ -611,6 +611,47 @@ class ConcreteUserContactOption(BaseSchema):
     )
 
 
+class JobLogs(BaseSchema):
+    result = fields.List(
+        fields.String(),
+        description="The list of result related logs",
+    )
+    progress = fields.List(
+        fields.String(),
+        description="The list of progress related logs",
+    )
+
+
+class BackgroundJobStatus(BaseSchema):
+    active = fields.Boolean(
+        required=True,
+        description="This field indicates if the background job is active or not.",
+        example=True,
+    )
+    state = fields.String(
+        required=True,
+        description="This field indicates the current state of the background job.",
+        enum=["initialized", "running", "finished", "stopped", "exception"],
+        example="initialized",
+    )
+    logs = fields.Nested(
+        JobLogs,
+        required=True,
+        description="Logs related to the background job.",
+        example={"result": ["result1"], "progress": ["progress1"]},
+    )
+
+
+class DiscoveryBackgroundJobStatusObject(DomainObject):
+    domainType = fields.Constant(
+        "discovery_run",
+        description="The domain type of the object",
+    )
+    extensions = fields.Nested(
+        BackgroundJobStatus, description="The attributes of the background job"
+    )
+
+
 class UserAttributes(BaseSchema):
     fullname = fields.String(required=True, description="The alias or full name of the user.")
     customer = gui_fields.customer_field(

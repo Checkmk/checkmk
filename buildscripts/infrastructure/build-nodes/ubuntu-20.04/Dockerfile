@@ -144,7 +144,6 @@ RUN /opt/install-make-dist-deps.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-clang.sh
 RUN /opt/install-shellcheck.sh
-RUN /opt/install-musl-tools.sh
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh

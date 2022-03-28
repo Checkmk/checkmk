@@ -93,6 +93,7 @@ RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-pipenv.sh
 
 ### Actual Image ###
 FROM base
@@ -109,9 +110,9 @@ RUN /opt/install-valgrind.sh link-only
 RUN /opt/install-cmake.sh link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
+RUN /opt/install-pipenv.sh link-only
 
 # Install non cached dependencies
-RUN /opt/install-pipenv.sh
 RUN /opt/install-cmk-dependencies.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged

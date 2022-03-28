@@ -16,10 +16,13 @@ ARCHIVE_NAME=v${PIPENV_VERSION}.tar.gz
 DIR_NAME=pipenv-${PIPENV_VERSION}
 TARGET_DIR=/opt
 
-cd "${TARGET_DIR}"
-mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/archive/${ARCHIVE_NAME}"
-tar xf "${ARCHIVE_NAME}"
-cd "${DIR_NAME}"
+if [ "$1" != "link-only" ]; then
+    cd "${TARGET_DIR}"
+    mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/archive/${ARCHIVE_NAME}"
+    tar xf "${ARCHIVE_NAME}"
+fi
+
+cd "${TARGET_DIR}/${DIR_NAME}"
 pip3 install .
 
 ln -sf "${TARGET_DIR}/${PYTHON_DIR_NAME}/bin/pipenv"* /usr/bin

@@ -776,7 +776,7 @@ class ModeEditTimeperiod(WatoMode):
         self._validate_alias(value["name"], value["alias"], "%s_p_alias" % varprefix)
 
     def _validate_id(self, value, varprefix):
-        if value in self._timeperiods:
+        if self._name is None and value in self._timeperiods:
             raise MKUserError(
                 varprefix, _("This name is already being used by another timeperiod.")
             )
@@ -949,9 +949,8 @@ class ModeEditTimeperiod(WatoMode):
                 exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
 
         vs_spec = {
-            "name": unique_default_name_suggestion(
-                self._name or "time_period", list(self._timeperiods.keys())
-            ),
+            "name": self._name
+            or (unique_default_name_suggestion("time_period", list(self._timeperiods.keys()))),
             "alias": timeperiod_spec_alias(tp_spec),
             "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),

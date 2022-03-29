@@ -89,7 +89,16 @@ BAKE_AGENT_PARAM = {
 
 PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_hosts"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
+
+UPDATE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.edit_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
     ]
 )
@@ -107,6 +116,7 @@ PERMISSIONS = permissions.AllPerm(
 )
 def create_host(params):
     """Create a host"""
+    user.need_permission("wato.edit")
     body = params["body"]
     host_name = body["host_name"]
     folder: CREFolder = body["folder"]
@@ -135,6 +145,7 @@ def create_cluster_host(params):
 
     A cluster host groups many hosts (called nodes in this context) into a conceptual cluster.
     All the services of the individual nodes will be collated on the cluster host."""
+    user.need_permission("wato.edit")
     body = params["body"]
     host_name = body["host_name"]
     folder: CREFolder = body["folder"]
@@ -180,6 +191,7 @@ class BulkHostActionWithFailedHosts(response_schemas.ApiError):
 )
 def bulk_create_hosts(params):
     """Bulk create hosts"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
 
@@ -269,10 +281,12 @@ def _host_collection(hosts: Iterable[CREHost]) -> dict[str, Any]:
     etag="both",
     request_schema=request_schemas.UpdateNodes,
     response_schema=response_schemas.ObjectProperty,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=UPDATE_PERMISSIONS,
 )
 def update_nodes(params):
     """Update the nodes of a cluster host"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_hosts")
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
@@ -298,10 +312,12 @@ def update_nodes(params):
     etag="both",
     request_schema=request_schemas.UpdateHost,
     response_schema=response_schemas.HostConfigSchema,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=UPDATE_PERMISSIONS,
 )
 def update_host(params):
     """Update a host"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_hosts")
     host_name = params["host_name"]
     body = params["body"]
     new_attributes = body["attributes"]
@@ -345,7 +361,7 @@ def update_host(params):
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=UPDATE_PERMISSIONS,
 )
 def bulk_update_hosts(params):
     """Bulk update hosts
@@ -354,6 +370,8 @@ def bulk_update_hosts(params):
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk.
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_hosts")
     body = params["body"]
     entries = body["entries"]
 
@@ -412,6 +430,7 @@ def bulk_update_hosts(params):
 )
 def rename_host(params):
     """Rename a host"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.rename_hosts")
     if activate_changes.get_pending_changes_info():
         return problem(
@@ -442,14 +461,16 @@ def rename_host(params):
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.AllPerm(
         [
-            *PERMISSIONS.perms,
+            permissions.Perm("wato.edit"),
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.move_hosts"),
+            *PERMISSIONS.perms,
         ]
     ),
 )
 def move(params):
     """Move a host to another folder"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.move_hosts")
     host_name = params["host_name"]
     host: CREHost = Host.load_host(host_name)
@@ -484,6 +505,7 @@ def move(params):
 )
 def delete(params):
     """Delete a host"""
+    user.need_permission("wato.edit")
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
@@ -502,6 +524,7 @@ def delete(params):
 )
 def bulk_delete(params):
     """Bulk delete hosts"""
+    user.need_permission("wato.edit")
     body = params["body"]
     for host_name in body["entries"]:
         host = Host.load_host(host_name)

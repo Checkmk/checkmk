@@ -40,6 +40,7 @@ from werkzeug.datastructures import ETags
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -66,18 +67,22 @@ PATH_FOLDER_FIELD = {
     )
 }
 
-CREATE_DELETE_PERMISSIONS = permissions.AllPerm(
+RW_PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_folders"),
+        # If a folder to be deleted still contains hosts, the mange_hosts permission is required.
+        permissions.Optional(permissions.Perm("wato.manage_hosts")),
         permissions.Optional(permissions.Perm("wato.all_folders")),
     ]
 )
 
 UPDATE_PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.edit_folders"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
-    ],
+    ]
 )
 
 
@@ -88,10 +93,11 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
     etag="output",
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.CreateFolder,
-    permissions_required=CREATE_DELETE_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def create(params):
     """Create a folder"""
+    user.need_permission("wato.edit")
     put_body = params["body"]
     name = put_body["name"]
     title = put_body["title"]
@@ -137,6 +143,8 @@ def hosts_of_folder(params):
 )
 def update(params):
     """Update a folder"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_folders")
     folder = params["folder"]
     constructors.require_etag(etag_of_folder(folder))
 
@@ -192,6 +200,8 @@ def bulk_update(params):
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_folders")
     body = params["body"]
     entries = body["entries"]
     folders = []
@@ -244,10 +254,11 @@ def bulk_update(params):
     method="delete",
     path_params=[PATH_FOLDER_FIELD],
     output_empty=True,
-    permissions_required=CREATE_DELETE_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def delete(params):
     """Delete a folder"""
+    user.need_permission("wato.edit")
     folder = params["folder"]
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
@@ -262,10 +273,11 @@ def delete(params):
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.MoveFolder,
     etag="both",
-    permissions_required=CREATE_DELETE_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def move(params):
     """Move a folder"""
+    user.need_permission("wato.edit")
     folder: CREFolder = params["folder"]
     folder_id = folder.id()
 

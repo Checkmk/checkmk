@@ -19,6 +19,7 @@ from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.utils.escaping import strip_tags
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
@@ -104,7 +105,7 @@ def _serialize_ruleset(ruleset: watolib.Ruleset) -> DomainObject:
             "item_name": ruleset.item_name(),
             "item_enum": ruleset.item_enum(),
             "match_type": ruleset.match_type(),
-            "help": ruleset.help(),
+            "help": strip_tags(ruleset.help()),
             "number_of_rules": ruleset.num_rules(),
         },
     )

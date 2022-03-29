@@ -1,0 +1,15 @@
+Title: Fix listing ruleset 500 error
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1648622700
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When listing rulesets through the REST API, a 500 Internal Server error could occur.
+
+This is fixed with this Werk.
+
+There are no further actions to be taken by the user.

@@ -567,8 +567,13 @@ void WaitForNetwork(std::chrono::seconds period) {
     }
 }
 
+struct ControllerParam {
+    uint16_t port;
+    uint32_t pid;
+};
+
 ///  returns non empty port if controller had been started
-std::optional<uint16_t> OptionallyStartAgentController(
+std::optional<ControllerParam> OptionallyStartAgentController(
     std::chrono::milliseconds validate_process_delay) {
     if (!ac ::IsRunController(cfg::GetLoadedConfig())) {
         return {};
@@ -582,7 +587,8 @@ std::optional<uint16_t> OptionallyStartAgentController(
             ac::DeleteControllerInBin(wtools::GetArgv(0));
             return {};
         }
-        return ac::GetConfiguredAgentChannelPort();
+        return ControllerParam{.port = ac::GetConfiguredAgentChannelPort(),
+                               .pid = *pid};
     }
 
     return {};
@@ -618,18 +624,19 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
 
-    auto port = OptionallyStartAgentController(1000ms);
+    auto controller_params = OptionallyStartAgentController(1000ms);
     ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
-    OpenFirewall(port.has_value());
+    OpenFirewall(controller_params.has_value());
     if (cap_installed) {
         ac::CreateArtifacts(
             fs::path{tools::win::GetSomeSystemFolder(FOLDERID_ProgramData)} /
                 ac::kCmkAgentUnistall,
-            port.has_value());
+            controller_params.has_value());
     }
-    uint16_t use_port = port ? *port
-                             : cfg::GetVal(cfg::groups::kGlobal,
-                                           cfg::vars::kPort, cfg::kMainPort);
+    uint16_t use_port = controller_params
+                            ? controller_params->port
+                            : cfg::GetVal(cfg::groups::kGlobal,
+                                          cfg::vars::kPort, cfg::kMainPort);
     MailSlot mailbox(
         IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
@@ -661,8 +668,8 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         while (true) {
             rt_device.start();
             auto io_started = ex_port->startIo(
-                [this, &rt_device](
-                    const std::string &ip_addr) -> std::vector<uint8_t> {
+                [this, &rt_device,
+                 use_port](const std::string &ip_addr) -> std::vector<uint8_t> {
                     //
                     // most important entry point for external port io
                     // this is internal implementation of the io_context
@@ -674,9 +681,12 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                     return generateAnswer(ip_addr);
                 },
                 use_port,
-                port.has_value() && ac::GetConfiguredLocalOnly()
+                controller_params.has_value() && ac::GetConfiguredLocalOnly()
                     ? world::LocalOnly::yes
-                    : world::LocalOnly::no);
+                    : world::LocalOnly::no,
+                controller_params.has_value() && ac::GetConfiguredCheck()
+                    ? controller_params->pid
+                    : std::optional<uint32_t>{});
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
                 rt_device.stop();

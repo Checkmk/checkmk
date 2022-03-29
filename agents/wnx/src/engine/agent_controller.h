@@ -51,6 +51,7 @@ std::filesystem::path ControllerFlagFile();
 // config
 uint16_t GetConfiguredAgentChannelPort();
 bool GetConfiguredLocalOnly();
+bool GetConfiguredCheck();
 
 /// To be called once when cap is installed
 ///

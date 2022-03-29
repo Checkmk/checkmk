@@ -271,6 +271,7 @@ constexpr uint32_t kServiceWaitNetwork = 30;
 constexpr std::string_view kControllerAgentChannelDefault{"localhost:50001"};
 constexpr bool kControllerLocalOnly{true};
 constexpr bool kControllerForceLegacy{false};
+constexpr bool kControllerCheck{true};
 
 }  // namespace defaults
 

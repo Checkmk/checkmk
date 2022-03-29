@@ -31,24 +31,20 @@ enum class LocalOnly { yes, no };
 
 bool IsIpAllowedAsException(const std::string &ip);
 
-// below is working example from asio
-// DOUBLE verified
-
-// implements asio logic for the low level TCP transport:
-// read and write
-// NOT THREAD SAFE
+/// implements asio logic for the low level TCP transport:
+/// based on ASIO example
+/// NOT THREAD SAFE
 class AsioSession : public std::enable_shared_from_this<AsioSession> {
 public:
-    // we are good guys. Use AsioSession::s_ptr instead of millions brackets
     using s_ptr = std::shared_ptr<AsioSession>;
 
     AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
     virtual ~AsioSession() { XLOG::d("destroy connection"); }
 
-    void start(cma::world::ReplyFunc Reply) {
-        // typical functionality of current agent
+    void start(ReplyFunc reply_func) {
+        // standard functionality of current agent
         // accept connection, get data, write data, close connection
-        auto send_back = Reply(getCurrentRemoteIp());
+        auto send_back = reply_func(getCurrentRemoteIp());
 
         if (send_back.empty()) {
             XLOG::d.i("No data to send");
@@ -66,14 +62,15 @@ public:
     void read_ip();
 
 private:
-    // not g-tested
     // prints last line of the output in the log
     // to see how correct was an answer
-    void logWhenDebugging(const cma::ByteVector &send_back) const noexcept {
-        if (!tgt::IsDebug()) return;
+    void logWhenDebugging(const ByteVector &send_back) const noexcept {
+        if (!tgt::IsDebug()) {
+            return;
+        }
 
         std::string s(send_back.begin(), send_back.end());
-        auto t = cma::tools::SplitString(s, "\n");
+        auto t = tools::SplitString(s, "\n");
         XLOG::t.i("Send {} last string is {}", send_back.size(), t.back());
     }
 
@@ -87,19 +84,21 @@ private:
         try {
             std::error_code ec;
             auto remote_ep = socket_.remote_endpoint(ec);
-            if (ec.value() == 0) return remote_ep.address().to_string();
+            if (!ec) {
+                return remote_ep.address().to_string();
+            }
 
             XLOG::d(
                 "No remote endpoint, error = [{}], may happen only in <GTEST>",
                 ec.value());
         } catch (const std::exception &e) {
-            XLOG::l.bp("Unexpected exception hits '{}'", e.what());
+            XLOG::l("Unexpected exception hits '{}'", e.what());
         }
         return {};
     }
-    size_t allocCryptBuffer(const cma::encrypt::Commander *commander);
+    size_t allocCryptBuffer(const encrypt::Commander *commander);
     void do_write(const void *data_block, std::size_t data_length,
-                  cma::encrypt::Commander *crypto_commander);
+                  encrypt::Commander *crypto_commander);
 
     asio::ip::tcp::socket socket_;
 
@@ -130,7 +129,7 @@ class ExternalPort;  // forward
 // store incoming session into the queue
 using SinkFunc = std::function<bool(AsioSession::s_ptr, ExternalPort *)>;
 
-inline std::pair<std::string, bool> GetSocketInfo(
+inline std::tuple<std::string, uint16_t, bool> GetSocketInfo(
     const asio::ip::tcp::socket &sock) noexcept {
     std::error_code ec;
     auto remote_ep = sock.remote_endpoint(ec);
@@ -142,7 +141,7 @@ inline std::pair<std::string, bool> GetSocketInfo(
         auto addr = remote_ep.address();
         auto ip = addr.to_string();
         bool ipv6 = addr.is_v6();
-        return {ip, ipv6};
+        return {ip, remote_ep.port(), ipv6};
     } catch (const std::exception &e) {
         XLOG::d("Something goes wrong with socket '{}'", e.what());
     }
@@ -168,9 +167,9 @@ public:
 
     // Main API
     bool startIo(const ReplyFunc &reply_func, uint16_t port,
-                 LocalOnly local_only);
+                 LocalOnly local_only, std::optional<uint32_t> controller_pid);
     bool startIo(const ReplyFunc &reply_func, uint16_t port) {
-        return startIo(reply_func, port, LocalOnly::no);
+        return startIo(reply_func, port, LocalOnly::no, {});
     }
     void shutdownIo();
 
@@ -199,53 +198,19 @@ private:
         // Internal class from  ASIO documentation
     public:
         server(asio::io_context &io_context, bool Ipv6, uint16_t port,
-               LocalOnly local_only)
-            : acceptor_(io_context, makeEndpoint(Ipv6, port, local_only))
+               LocalOnly local_only, std::optional<uint32_t> pid)
+            : port_{port}
+            , controller_pid_{pid}
+            , acceptor_(io_context, makeEndpoint(Ipv6, port, local_only))
             , socket_(io_context) {}
 
         // this is the only entry point
         // based on the code example from asio
-        void run_accept(SinkFunc sink, ExternalPort *port) {
-            acceptor_.async_accept(socket_, [this, sink,
-                                             port](std::error_code ec) {
-                if (ec.value()) {
-                    XLOG::l("Error on connection [{}] '{}'", ec.value(),
-                            ec.message());
-                } else {
-                    try {
-                        auto [ip, ipv6] = GetSocketInfo(socket_);
-                        XLOG::d.i("Connected from '{}' ipv6 :{} -> queue", ip,
-                                  ipv6);
-
-                        auto x =
-                            std::make_shared<AsioSession>(std::move(socket_));
-
-                        if (cfg::groups::global.isIpAddressAllowed(ip) ||
-                            IsIpAllowedAsException(ip))
-                            sink(x, port);
-                        else {
-                            XLOG::d("Address '{}' is not allowed", ip);
-                        }
-
-                    } catch (const std::system_error &e) {
-                        if (e.code().value() == WSAECONNRESET) {
-                            XLOG::l(" Client closed connection");
-                        } else {
-                            XLOG::l(
-                                " Thrown unexpected exception '{}' with value {}",
-                                e.what(), e.code().value());
-                        }
-                    } catch (const std::exception &e) {
-                        XLOG::l(" Thrown unexpected exception '{}'", e.what());
-                    }
-                }
-
-                // inside we have async call, this is not recursion
-                run_accept(sink, port);
-            });
-        }
+        void run_accept(SinkFunc sink, ExternalPort *ext_port);
 
     private:
+        uint16_t port_;
+        std::optional<uint32_t> controller_pid_;
         // ASIO magic
         asio::ip::tcp::acceptor acceptor_;
         asio::ip::tcp::socket socket_;
@@ -291,7 +256,7 @@ protected:
     }
 
     void ioThreadProc(const ReplyFunc &Reply, uint16_t port,
-                      LocalOnly local_only);
+                      LocalOnly local_only, std::optional<uint32_t> pid);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth

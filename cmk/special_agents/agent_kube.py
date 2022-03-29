@@ -571,6 +571,14 @@ class DaemonSet(PodOwner):
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
+    def replicas(self) -> section.DaemonSetReplicas:
+        return section.DaemonSetReplicas(
+            desired=self._status.desired_number_scheduled,
+            updated=self._status.updated_number_scheduled,
+            misscheduled=self._status.number_misscheduled,
+            ready=self._status.number_ready,
+        )
+
     def strategy(self) -> section.UpdateStrategy:
         return section.UpdateStrategy(strategy=self.spec.strategy)
 
@@ -1109,6 +1117,7 @@ def write_daemon_sets_api_sections(
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
             "kube_daemonset_info_v1": lambda: daemonset_info(cluster_daemon_set, cluster_name),
             "kube_update_strategy_v1": cluster_daemon_set.strategy,
+            "kube_daemonset_replicas_v1": cluster_daemon_set.replicas,
         }
         _write_sections(sections)
 

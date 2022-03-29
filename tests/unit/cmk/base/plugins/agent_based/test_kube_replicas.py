@@ -16,12 +16,14 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     _check_kube_replicas,
     check_kube_replicas,
     discover_kube_replicas,
+    parse_kube_daemonset_replicas,
     parse_kube_deployment_replicas,
     parse_kube_statefulset_replicas,
     parse_kube_strategy,
     Replicas,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    DaemonSetReplicas,
     DeploymentReplicas,
     OnDelete,
     Recreate,
@@ -70,6 +72,28 @@ def test_parse_kube_statefulset_replicas() -> None:
         desired=3,
         updated=0,
         ready=3,
+    )
+
+
+def test_parse_kube_daemonset_replicas() -> None:
+    assert parse_kube_daemonset_replicas(
+        [
+            [
+                json.dumps(
+                    {
+                        "desired": 3,
+                        "updated": 0,
+                        "ready": 3,
+                        "misscheduled": 2,
+                    }
+                )
+            ]
+        ]
+    ) == DaemonSetReplicas(
+        desired=3,
+        updated=0,
+        ready=3,
+        misscheduled=2,
     )
 
 

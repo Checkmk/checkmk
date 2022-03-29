@@ -972,6 +972,10 @@ def page_edit_visual(
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy
+            if owner_id != config.user.id:
+                if not config.user.may("general.edit_foreign_%s" % what):
+                    raise MKAuthException(
+                        _("You are not allowed to edit foreign %s.") % visual_type.plural_title)
             owner_user_id = owner_id
             title = _('Edit %s') % visual_type.title
         else:  # clone explicit or edit from builtin that needs copy

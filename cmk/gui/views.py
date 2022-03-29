@@ -986,14 +986,18 @@ class GUIViewRenderer(ABCViewRenderer):
                 ("load_name", self.view.name),
             ]
 
+            clone_mode: bool = False
             if self.view.spec["owner"] != config.user.id:
                 url_vars.append(("owner", self.view.spec["owner"]))
+                if not config.user.may('general.edit_foreign_views'):
+                    clone_mode = True
 
+            url_vars.append(("mode", "clone" if clone_mode else "edit"))
             url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
 
             yield PageMenuEntry(
-                title=_("Customize view"),
-                icon_name="edit",
+                title=_("Clone view") if clone_mode else _("Customize view"),
+                icon_name="clone" if clone_mode else "edit",
                 item=make_simple_link(url),
             )
 

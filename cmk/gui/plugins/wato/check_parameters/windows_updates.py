@@ -87,6 +87,7 @@ def _FixedLevels(
 def _IntegerLevels(
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     title: Optional[str] = None,
+    default_value: Optional[tuple[float, float]] = None,
 ) -> Alternative:
     def match_levels_alternative(v: Optional[_Tuple[float, float]]) -> int:
         if v is None:
@@ -102,7 +103,7 @@ def _IntegerLevels(
         help=help,
         elements=elements,
         match=match_levels_alternative,
-        default_value=None,
+        default_value=default_value,
     )
 
 
@@ -139,11 +140,15 @@ def _parameter_valuespec_windows_updates() -> ValueSpec:
             elements=[
                 (
                     "levels_important",
-                    _IntegerLevels(title="Levels for pending important updates"),
+                    _IntegerLevels(
+                        title="Levels for pending important updates", default_value=(1, 1)
+                    ),
                 ),
                 (
                     "levels_optional",
-                    _IntegerLevels(title="Levels for pending important updates"),
+                    _IntegerLevels(
+                        title="Levels for pending optional updates", default_value=(1, 99)
+                    ),
                 ),
                 (
                     "levels_lower_forced_reboot",

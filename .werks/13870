@@ -1,0 +1,19 @@
+Title: InfluxDB: Fix connection for remote sites
+Class: fix
+Compatible: incomp
+Component: distros
+Date: 1648540117
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If you configured an InfluxDB connection for a remote site, this connection was
+not used by the remote site.
+
+The configuration for InfluxDB connections is now stored in
+~/etc/check_mk/conf.d/wato instead of ~/etc/check_mk/conf.d/.
+
+If you don't want to copy the file "influxdb_connections.mk" to the new location
+on the central site, you would need to configure your connections again.

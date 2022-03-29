@@ -3931,9 +3931,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     "body",
                                                     TextAreaUnicode(
                                                         title=_("Body"),
-                                                        help=lambda: _(
-                                                            "Text-body of the email to send. "
-                                                        )
+                                                        help=_("Text-body of the email to send. ")
                                                         + substitute_help(),
                                                         cols=64,
                                                         rows=10,
@@ -3952,7 +3950,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     "script",
                                                     TextAreaUnicode(
                                                         title=_("Script body"),
-                                                        help=lambda: _(
+                                                        help=_(
                                                             "This script will be executed using the BASH shell. "
                                                         )
                                                         + substitute_help()

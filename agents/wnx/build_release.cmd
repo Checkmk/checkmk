@@ -101,29 +101,22 @@ cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_s
 :: check result
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
-goto end
 :: Unit Tests Phase: post processing/build special modules using make
-:: this phase is skipped, there is no need to inculde unit tests in the build script
+copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
+copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
 powershell Write-Host "starting unit tests" -Foreground Cyan 
-
-pushd %arte%
-watest
+call call_unit_tests.cmd -*_Long:*Integration
 if not %errorlevel% == 0 goto error
-popd
 powershell Write-Host "Unit test SUCCESS" -Foreground Green
-
+goto end
 :error
-popd
 powershell Write-Host "Unit test failed" -Foreground Red 
 powershell Write-Host "Killing msi in artefacts" -Foreground Red 
 call %cur_dir%\clean_artefacts.cmd 
 exit 100
-
 :end
 
 :: Deploy Phase: post processing/build special modules using make
-copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
-copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
 copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
 copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
 copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 34

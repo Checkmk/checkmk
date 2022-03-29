@@ -1,0 +1,15 @@
+Title: Improved performance of various Livestatus queries
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1648543075
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b4
+
+For Livestatus queries containing an AuthUser header, authorization is now
+checked immediately before any potentially complicated filters are
+evaluated.  Those authorization checks are fairly cheap, so depending on the
+AuthUser and the filters used, performance can be improved quite a bit.

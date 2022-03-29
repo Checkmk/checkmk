@@ -19,7 +19,13 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import DeploymentReplicas, StatefulSetReplicas, UpdateStrategy, VSResultAge
+from .utils.kube import (
+    DaemonSetReplicas,
+    DeploymentReplicas,
+    StatefulSetReplicas,
+    UpdateStrategy,
+    VSResultAge,
+)
 from .utils.kube_strategy import strategy_text
 
 
@@ -29,6 +35,10 @@ def parse_kube_deployment_replicas(string_table: StringTable) -> DeploymentRepli
 
 def parse_kube_statefulset_replicas(string_table: StringTable) -> StatefulSetReplicas:
     return StatefulSetReplicas(**json.loads(string_table[0][0]))
+
+
+def parse_kube_daemonset_replicas(string_table: StringTable) -> DaemonSetReplicas:
+    return DaemonSetReplicas(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
@@ -43,6 +53,12 @@ register.agent_section(
     parse_function=parse_kube_statefulset_replicas,
 )
 
+register.agent_section(
+    name="kube_daemonset_replicas_v1",
+    parsed_section_name="kube_replicas",
+    parse_function=parse_kube_daemonset_replicas,
+)
+
 
 def parse_kube_strategy(string_table: StringTable) -> UpdateStrategy:
     return UpdateStrategy(**json.loads(string_table[0][0]))
@@ -54,7 +70,7 @@ register.agent_section(
     parse_function=parse_kube_strategy,
 )
 
-Replicas = Union[DeploymentReplicas, StatefulSetReplicas]
+Replicas = Union[DeploymentReplicas, StatefulSetReplicas, DaemonSetReplicas]
 
 
 def discover_kube_replicas(

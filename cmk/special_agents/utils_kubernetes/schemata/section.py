@@ -434,7 +434,9 @@ class CommonReplicas(BaseModel):
 
 
 class DaemonSetReplicas(CommonReplicas):
-    """Model for a given DaemonSet supplied to the kube_replicas check.
+    """section: kube_daemonset_replicas_v1
+
+    Model for a given DaemonSet supplied to the kube_replicas check.
 
     The key distinction to Deployments and StatefulSets is the fact, that this section counts Nodes
     rather than Pods. On each Node only the oldest Pod is considered, that has been claimed by the

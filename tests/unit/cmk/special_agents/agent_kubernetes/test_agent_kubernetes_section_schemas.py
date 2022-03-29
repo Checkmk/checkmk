@@ -36,6 +36,7 @@ def test_schemata_did_not_diverge() -> None:
     assert agent.UpdateStrategy.schema() == check.UpdateStrategy.schema()
     assert agent.DeploymentReplicas.schema() == check.DeploymentReplicas.schema()
     assert agent.StatefulSetReplicas.schema() == check.StatefulSetReplicas.schema()
+    assert agent.DaemonSetReplicas.schema() == check.DaemonSetReplicas.schema()
     assert agent.NodeConditions.schema() == check.NodeConditions.schema()
     assert agent.NodeCustomConditions.schema() == check.NodeCustomConditions.schema()
     assert agent.PerformanceUsage.schema() == check.PerformanceUsage.schema()

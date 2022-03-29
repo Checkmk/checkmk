@@ -599,6 +599,30 @@ class CommonReplicas(BaseModel):
     updated: int
 
 
+class DaemonSetReplicas(CommonReplicas):
+    """section: kube_daemonset_replicas_v1
+
+    Model for a given DaemonSet supplied to the kube_replicas check.
+
+    The key distinction to Deployments and StatefulSets is the fact, that this section counts Nodes
+    rather than Pods. On each Node only the oldest Pod is considered, that has been claimed by the
+    DaemonSet.
+    """
+
+    # desired (status.desiredNumberScheduled): the number of Nodes, which match the NodeAffinity
+    # specified by the DaemonSet.
+    # ready (status.numberReady): the number of Nodes, where the oldest claimed Pod is ready.
+    # updated (status.updatedNumberScheduled): the number of Nodes, where the oldest claimed Pod is
+    # updated. A Pod is updated, if the hash of the Pod template matches the template of the
+    # DaemonSet.
+    # misscheduled (status.numberMisscheduled): the number of Nodes, on which there is a Pod claimed
+    # by the DaemonSet (not necessarily running or ready), but which is not supposed to run a
+    # daemon Pod (since the NodeSelector or NodeAffinity term does not match the Node). In
+    # particular, there is no overlap between Nodes counted by desired and Nodes counted by
+    # misscheduled.
+    misscheduled: int
+
+
 class StatefulSetReplicas(CommonReplicas):
     """section: kube_statefulset_replicas_v1
 

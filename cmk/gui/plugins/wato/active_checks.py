@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Mapping
+from typing import Any, Mapping, Union
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
@@ -761,13 +761,13 @@ rulespec_registry.register(
 )
 
 
-def transform_check_sql_perfdata(perfdata):
+def transform_check_sql_perfdata(perfdata: Union[str, bool]) -> str:
     if isinstance(perfdata, str):
         return perfdata
     return "performance_data"
 
 
-def _valuespec_active_checks_sql():
+def _valuespec_active_checks_sql() -> Dictionary:
     return Dictionary(
         title=_("Check SQL Database"),
         help=_(

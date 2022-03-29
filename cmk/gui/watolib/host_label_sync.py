@@ -30,8 +30,9 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log as log
 import cmk.gui.pages
 from cmk.gui.config import load_config
+from cmk.gui.context import RequestContext
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import request, RequestContext
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.sites import get_site_config, has_wato_slave_sites, wato_slave_sites

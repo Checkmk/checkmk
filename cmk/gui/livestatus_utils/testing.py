@@ -18,8 +18,9 @@ from cmk.utils.site import omd_site
 
 from cmk.gui import http, sites
 from cmk.gui.config import get_default_config, make_config_object
+from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.globals import app_stack, PrependURLFilter, request_stack
 from cmk.gui.htmllib import html
 from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
@@ -47,7 +48,7 @@ def mock_livestatus(
             output_format="html",
         )
     if with_context:
-        app_context = AppContext(None)
+        app_context = AppContext(None, stack=app_stack())
         req_context = RequestContext(
             html_obj=html_obj,
             req=req,
@@ -57,6 +58,8 @@ def mock_livestatus(
             user=LoggedInNobody(),
             display_options=DisplayOptions(),
             prefix_logs_with_url=False,
+            stack=request_stack(),
+            url_filter=PrependURLFilter(),
         )
     else:
         app_context = contextlib.nullcontext()

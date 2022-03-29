@@ -20,6 +20,7 @@ import cmk.utils.store
 from cmk.gui import config as config_module
 from cmk.gui import htmllib, http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
     FinalizeRequest,
@@ -30,7 +31,15 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.globals import AppContext, config, html, request, RequestContext, response
+from cmk.gui.globals import (
+    app_stack,
+    config,
+    html,
+    PrependURLFilter,
+    request,
+    request_stack,
+    response,
+)
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -209,7 +218,7 @@ class CheckmkApp:
         theme = Theme()
         config_obj = config_module.make_config_object(config_module.get_default_config())
 
-        with AppContext(self), RequestContext(
+        with AppContext(self, stack=app_stack()), RequestContext(
             req=req,
             resp=resp,
             funnel=funnel,
@@ -219,6 +228,8 @@ class CheckmkApp:
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),
             theme=theme,
+            stack=request_stack(),
+            url_filter=PrependURLFilter(),
         ), patch_json(json):
             config_module.initialize()
             theme.from_config(config.ui_theme)

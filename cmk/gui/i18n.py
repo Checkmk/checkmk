@@ -16,7 +16,7 @@ from cmk.gui.globals import local
 from cmk.gui.utils.speaklater import LazyString
 
 if TYPE_CHECKING:
-    from cmk.gui.globals import RequestContext
+    from cmk.gui.context import RequestContext
 
 # .
 #   .--Gettext i18n--------------------------------------------------------.

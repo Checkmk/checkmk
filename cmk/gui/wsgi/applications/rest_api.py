@@ -29,9 +29,10 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import config, sites, userdb
 from cmk.gui.config import omd_site
+from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import AppContext, RequestContext, user
+from cmk.gui.globals import app_stack, PrependURLFilter, request_stack, user
 from cmk.gui.http import Request, Response
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
@@ -469,7 +470,7 @@ class CheckmkRESTAPI:
 
             req = Request(environ)
             resp = Response()
-            with AppContext(self), RequestContext(
+            with AppContext(self, stack=app_stack()), RequestContext(
                 req=req,
                 resp=resp,
                 funnel=OutputFunnel(resp),
@@ -477,6 +478,8 @@ class CheckmkRESTAPI:
                 endpoint=endpoint,
                 user=LoggedInNobody(),
                 display_options=DisplayOptions(),
+                stack=request_stack(),
+                url_filter=PrependURLFilter(),
             ), cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
                 config.initialize()
                 load_dynamic_permissions()

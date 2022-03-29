@@ -15,8 +15,9 @@ from typing import Any, Iterator, Mapping, Optional
 from werkzeug.test import create_environ
 
 from cmk.gui.config import get_default_config, load_config, make_config_object
+from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.globals import app_stack, PrependURLFilter, request_stack
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
 from cmk.gui.utils.logged_in import LoggedInNobody
@@ -35,7 +36,7 @@ def session_wsgi_app(debug):
 
 @contextmanager
 def application_context() -> Iterator[None]:
-    with AppContext(session_wsgi_app(debug=False)):
+    with AppContext(session_wsgi_app(debug=False), stack=app_stack()):
         yield
 
 
@@ -54,6 +55,8 @@ def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> Request
         timeout_manager=TimeoutManager(),
         theme=Theme(),
         prefix_logs_with_url=False,
+        stack=request_stack(),
+        url_filter=PrependURLFilter(),
     )
 
 

@@ -68,6 +68,9 @@ public:
     [[nodiscard]] bool is_authorized_for_host_group(const hostgroup &hg) const;
     [[nodiscard]] bool is_authorized_for_service_group(
         const servicegroup &sg) const;
+
+    // TODO(sp) Nuke this!
+    [[nodiscard]] const contact *authUser() const { return auth_user_; }
 };
 
 #endif  // auth_h

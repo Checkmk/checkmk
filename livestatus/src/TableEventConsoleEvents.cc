@@ -17,11 +17,11 @@
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
-#include "contact_fwd.h"
+class User;
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
-    : TableEventConsole{mc, [this](Row row, const contact *auth_user) {
-                            return isAuthorizedForEvent(row, auth_user);
+    : TableEventConsole{mc, [this](const User &user, Row row) {
+                            return isAuthorizedForEvent(user, row);
                         }} {
     addColumns(this);
 }

@@ -14,11 +14,11 @@
 #include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
 #include "TimeColumn.h"
-#include "contact_fwd.h"
+class User;
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
-    : TableEventConsole{mc, [this](Row row, const contact *auth_user) {
-                            return isAuthorizedForEvent(row, auth_user);
+    : TableEventConsole{mc, [this](const User &user, Row row) {
+                            return isAuthorizedForEvent(user, row);
                         }} {
     ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(

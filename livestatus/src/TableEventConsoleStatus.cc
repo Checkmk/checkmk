@@ -15,11 +15,11 @@
 #include "ListColumn.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
-#include "contact_fwd.h"
+class User;
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole{
-          mc, [](Row /*row*/, const contact * /*auth_user*/) { return true; }} {
+          mc, [](const User & /*user*/, Row /*row*/) { return true; }} {
     ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "status_config_load_time",

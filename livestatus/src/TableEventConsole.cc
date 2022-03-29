@@ -41,12 +41,14 @@ const std::vector<std::string> grepping_filters = {
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(MonitoringCore *mc, const Table &table, Query &query,
-                      std::function<bool(Row, const contact *)> is_authorized)
+                      const User &user,
+                      std::function<bool(const User &, Row)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , mc_{mc}
         , table_{table}
         , query_{query}
+        , user_{user}
         , is_authorized_{std::move(is_authorized)} {}
 
 private:
@@ -138,7 +140,7 @@ private:
                 is_header = false;
             } else {
                 ECRow row{mc_, headers, columns};
-                if (is_authorized_(Row{&row}, query_.authUser()) &&
+                if (is_authorized_(user_, Row{&row}) &&
                     !query_.processDataset(Row{&row})) {
                     return;
                 }
@@ -149,7 +151,8 @@ private:
     MonitoringCore *mc_;
     const Table &table_;
     Query &query_;
-    const std::function<bool(Row, const contact *)> is_authorized_;
+    const User &user_;
+    const std::function<bool(const User &, Row)> is_authorized_;
 };
 }  // namespace
 
@@ -237,37 +240,34 @@ std::string ECRow::get(const std::string &column_name,
 const MonitoringCore::Host *ECRow::host() const { return host_; }
 
 TableEventConsole::TableEventConsole(
-    MonitoringCore *mc, std::function<bool(Row, const contact *)> is_authorized)
+    MonitoringCore *mc, std::function<bool(const User &, Row)> is_authorized)
     : Table{mc}, is_authorized_{std::move(is_authorized)} {}
 
-void TableEventConsole::answerQuery(Query &query, const User & /*user*/) {
+void TableEventConsole::answerQuery(Query &query, const User &user) {
     if (core()->mkeventdEnabled()) {
         try {
-            ECTableConnection{core(), *this, query, is_authorized_}.run();
+            ECTableConnection{core(), *this, query, user, is_authorized_}.run();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());
         }
     }
 }
 
-bool TableEventConsole::isAuthorizedForEvent(Row row,
-                                             const contact *ctc) const {
-    if (ctc == no_auth_user()) {
+bool TableEventConsole::isAuthorizedForEvent(const User &user, Row row) const {
+    if (user.is_authorized_for_everything()) {
         return true;
     }
-    // TODO(sp) Remove evil casts below.
-    const auto *c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
     auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
     if (precedence == "rule") {
-        isAuthorizedForEventViaContactGroups(c, row, result) ||
-            isAuthorizedForEventViaHost(c, row, result);
+        isAuthorizedForEventViaContactGroups(user, row, result) ||
+            isAuthorizedForEventViaHost(user, row, result);
     } else if (precedence == "host") {
-        isAuthorizedForEventViaHost(c, row, result) ||
-            isAuthorizedForEventViaContactGroups(c, row, result);
+        isAuthorizedForEventViaHost(user, row, result) ||
+            isAuthorizedForEventViaContactGroups(user, row, result);
     } else {
         Error(logger()) << "unknown precedence '" << precedence << "' in table "
                         << name();
@@ -277,7 +277,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 }
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
-    const MonitoringCore::Contact *ctc, Row row, bool &result) const {
+    const User &user, Row row, bool &result) const {
     auto col = std::static_pointer_cast<ListColumn<ECRow>>(
         column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
@@ -288,17 +288,22 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     }
     for (const auto &name : col->getValue(row, unknown_auth_user(), 0s)) {
         if (core()->is_contact_member_of_contactgroup(
-                core()->find_contactgroup(name), ctc)) {
+                core()->find_contactgroup(name),
+                reinterpret_cast<const MonitoringCore::Contact *>(
+                    user.authUser()))) {
             return (result = true, true);
         }
     }
     return (result = false, true);
 }
 
-bool TableEventConsole::isAuthorizedForEventViaHost(
-    const MonitoringCore::Contact *ctc, Row row, bool &result) const {
+bool TableEventConsole::isAuthorizedForEventViaHost(const User &user, Row row,
+                                                    bool &result) const {
     if (const MonitoringCore::Host *hst = rowData<ECRow>(row)->host()) {
-        return (result = core()->host_has_contact(hst, ctc), true);
+        return (result = core()->host_has_contact(
+                    hst, reinterpret_cast<const MonitoringCore::Contact *>(
+                             user.authUser())),
+                true);
     }
     return false;
 }

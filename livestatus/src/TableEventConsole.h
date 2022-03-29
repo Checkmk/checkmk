@@ -19,7 +19,6 @@
 #include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "Table.h"
-#include "contact_fwd.h"
 
 class ColumnOffsets;
 template <class T>
@@ -70,20 +69,20 @@ private:
 class TableEventConsole : public Table {
 public:
     TableEventConsole(MonitoringCore *mc,
-                      std::function<bool(Row, const contact *)> is_authorized);
+                      std::function<bool(const User &, Row)> is_authorized);
 
     void answerQuery(Query &query, const User &user) override;
 
 protected:
-    bool isAuthorizedForEvent(Row row, const contact *ctc) const;
+    [[nodiscard]] bool isAuthorizedForEvent(const User &user, Row row) const;
 
 private:
-    std::function<bool(Row, const contact *)> is_authorized_;
+    std::function<bool(const User &, Row)> is_authorized_;
 
-    bool isAuthorizedForEventViaContactGroups(
-        const MonitoringCore::Contact *ctc, Row row, bool &result) const;
-    bool isAuthorizedForEventViaHost(const MonitoringCore::Contact *ctc,
-                                     Row row, bool &result) const;
+    bool isAuthorizedForEventViaContactGroups(const User &user, Row row,
+                                              bool &result) const;
+    bool isAuthorizedForEventViaHost(const User &user, Row row,
+                                     bool &result) const;
 };
 
 #endif  // TableEventConsole_h

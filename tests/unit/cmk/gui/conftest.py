@@ -295,9 +295,11 @@ class WebTestAppForCMK(webtest.TestApp):
             for key, val in kwargs.items():
                 setattr(config, key, val)
 
-        config_module.register_post_config_load_hook(_set_config)
-        yield
-        config_module._post_config_load_hooks.remove(_set_config)
+        try:
+            config_module.register_post_config_load_hook(_set_config)
+            yield
+        finally:
+            config_module._post_config_load_hooks.remove(_set_config)
 
     def login(self, username: str, password: str) -> WebTestAppForCMK:
         self.username = username

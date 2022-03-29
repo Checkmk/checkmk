@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, MutableSequence, NamedTuple, NewType, Sequence
+from typing import List, MutableSequence, NamedTuple, NewType, Sequence, TypedDict
 
 from livestatus import SiteId
 
@@ -301,6 +301,29 @@ def prepare_hosts_for_discovery(hostnames: Sequence[str]) -> List[DiscoveryHost]
         host.need_permission("write")
         hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder().path(), host_name))
     return hosts_to_discover
+
+
+class JobLogs(TypedDict):
+    result: Sequence[str]
+    progress: Sequence[str]
+
+
+class BulkDiscoveryStatus(TypedDict):
+    is_active: bool
+    job_state: str
+    logs: JobLogs
+
+
+def bulk_discovery_job_status(job: BulkDiscoveryBackgroundJob) -> BulkDiscoveryStatus:
+    status = job.get_status()
+    return BulkDiscoveryStatus(
+        is_active=job.is_active(),
+        job_state=status["state"],
+        logs=JobLogs(
+            result=status["loginfo"]["JobResult"],
+            progress=status["loginfo"]["JobProgressUpdate"],
+        ),
+    )
 
 
 def start_bulk_discovery(

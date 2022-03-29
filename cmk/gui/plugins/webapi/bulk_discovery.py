@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 from cmk.gui.watolib.bulk_discovery import (
+    bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
     BulkSize,
     DiscoveryHost,
@@ -116,12 +117,12 @@ class APICallBulkDiscovery(APICallCollection):
 
     def _bulk_discovery_status(self, request):
         job = BulkDiscoveryBackgroundJob()
-        status = job.get_status()
+        status_details = bulk_discovery_job_status(job)
         return {
-            "is_active": job.is_active(),
+            "is_active": status_details["is_active"],
             "job": {
-                "state": status["state"],
-                "result_msg": "\n".join(status["loginfo"]["JobResult"]),
-                "output": "\n".join(status["loginfo"]["JobProgressUpdate"]),
+                "state": status_details["job_state"],
+                "result_msg": "\n".join(status_details["logs"]["result"]),
+                "output": "\n".join(status_details["logs"]["progress"]),
             },
         }

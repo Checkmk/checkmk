@@ -37,6 +37,33 @@ JobParameters = Dict[str, Any]
 JobStatusSpec = Dict[str, Any]
 
 
+class JobStatusStates:
+    INITIALIZED = "initialized"
+    RUNNING = "running"
+    FINISHED = "finished"
+    STOPPED = "stopped"
+    EXCEPTION = "exception"
+
+
+# TODO: this is intended as a replacement to the Dict[str, Any] typing
+# but requires that initial_status.update(self._kwargs) gets refactored
+# class JobStatusSpec(TypedDict, total=False):
+#     state: str
+#     started: float
+#     pid: Optional[int]
+#     ppid: Optional[int]
+#     loginfo: Dict[str, List[str]]
+#     is_active: bool
+#     title: str
+#     statusfile: str
+#     duration: float
+#     lock_wato: bool
+#     acknowledged_by: UserId
+#     stoppable: bool
+#     may_stop: bool
+#     may_delete: bool
+
+
 class BackgroundJobAlreadyRunning(MKGeneralException):
     pass
 
@@ -543,14 +570,6 @@ class BackgroundJob:
         """Wait for background job to be complete."""
         while self.is_active():
             time.sleep(0.5)
-
-
-class JobStatusStates:
-    INITIALIZED = "initialized"
-    RUNNING = "running"
-    FINISHED = "finished"
-    STOPPED = "stopped"
-    EXCEPTION = "exception"
 
 
 class JobStatus:

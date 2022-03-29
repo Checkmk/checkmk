@@ -931,9 +931,9 @@ class Cluster:
             ),
         )
 
-    def namespaces(self) -> Set[api.Namespace]:
-        namespaces: Set[api.Namespace] = set()
-        namespaces.update(api.Namespace(pod.metadata.namespace) for pod in self._pods.values())
+    def namespaces(self) -> Set[api.NamespaceName]:
+        namespaces: Set[api.NamespaceName] = set()
+        namespaces.update(api.NamespaceName(pod.metadata.namespace) for pod in self._pods.values())
         return namespaces
 
     def pods(
@@ -1627,18 +1627,18 @@ def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
     return lookup_name(metric["namespace"], metric["pod_name"])
 
 
-def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.Namespace]) -> Sequence[Pod]:
+def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.NamespaceName]) -> Sequence[Pod]:
     return [pod for pod in pods if pod.metadata.namespace in namespaces]
 
 
 def deployments_from_namespaces(
-    deployments: Sequence[Deployment], namespaces: Set[api.Namespace]
+    deployments: Sequence[Deployment], namespaces: Set[api.NamespaceName]
 ) -> Sequence[Deployment]:
     return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
 
 
 def statefulsets_from_namespaces(
-    statefulsets: Sequence[StatefulSet], namespaces: Set[api.Namespace]
+    statefulsets: Sequence[StatefulSet], namespaces: Set[api.NamespaceName]
 ) -> Sequence[StatefulSet]:
     return [
         statefulset for statefulset in statefulsets if statefulset.metadata.namespace in namespaces
@@ -1646,21 +1646,21 @@ def statefulsets_from_namespaces(
 
 
 def filter_monitored_namespaces(
-    cluster_namespaces: Set[api.Namespace],
+    cluster_namespaces: Set[api.NamespaceName],
     namespace_include_patterns: Sequence[str],
     namespace_exclude_patterns: Sequence[str],
-) -> Set[api.Namespace]:
+) -> Set[api.NamespaceName]:
     """Filter Kubernetes namespaces based on the provided patterns
 
     Examples:
-        >>> filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar")}, ["foo"], [])
+        >>> filter_monitored_namespaces({api.NamespaceName("foo"), api.NamespaceName("bar")}, ["foo"], [])
         {'foo'}
 
-        >>> filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar")}, [], ["foo"])
+        >>> filter_monitored_namespaces({api.NamespaceName("foo"), api.NamespaceName("bar")}, [], ["foo"])
         {'bar'}
 
-        >>> sorted(filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar"),
-        ... api.Namespace("man")}, ["foo", "bar"], []))
+        >>> sorted(filter_monitored_namespaces({api.NamespaceName("foo"), api.NamespaceName("bar"),
+        ... api.NamespaceName("man")}, ["foo", "bar"], []))
         ['bar', 'foo']
 
     """
@@ -1683,13 +1683,13 @@ def filter_monitored_namespaces(
 
 
 def _filter_namespaces(
-    kubernetes_namespaces: Set[api.Namespace], re_patterns: Sequence[str]
-) -> Set[api.Namespace]:
+    kubernetes_namespaces: Set[api.NamespaceName], re_patterns: Sequence[str]
+) -> Set[api.NamespaceName]:
     """Filter namespaces based on the provided regular expression patterns
 
     Examples:
-         >>> sorted(_filter_namespaces({api.Namespace("foo"), api.Namespace("bar"),
-         ... api.Namespace("man")}, ["foo", "man"]))
+         >>> sorted(_filter_namespaces({api.NamespaceName("foo"), api.NamespaceName("bar"),
+         ... api.NamespaceName("man")}, ["foo", "man"]))
          ['foo', 'man']
     """
     filtered_namespaces = set()
@@ -1755,7 +1755,7 @@ def write_sections_based_on_performance_pods(
     monitored_objects: Sequence[str],
     monitored_pods: Set[PodLookupName],
     cluster: Cluster,
-    monitored_namespaces: Set[api.Namespace],
+    monitored_namespaces: Set[api.NamespaceName],
     piggyback_formatter,
     piggyback_formatter_node,
 ):

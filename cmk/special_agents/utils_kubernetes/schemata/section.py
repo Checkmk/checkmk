@@ -167,7 +167,7 @@ ControlChain = Sequence[Controller]
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: Optional[api.Namespace]
+    namespace: Optional[api.NamespaceName]
     name: str
     creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels  # used for host labels
@@ -327,7 +327,7 @@ class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
-    namespace: api.Namespace
+    namespace: api.NamespaceName
     labels: api.Labels
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
@@ -339,7 +339,7 @@ class DaemonSetInfo(BaseModel):
     """section: kube_daemonset_info_v1"""
 
     name: str
-    namespace: api.Namespace
+    namespace: api.NamespaceName
     labels: api.Labels
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
@@ -351,7 +351,7 @@ class StatefulSetInfo(BaseModel):
     """section: kube_statefulset_info_v1"""
 
     name: str
-    namespace: api.Namespace
+    namespace: api.NamespaceName
     labels: api.Labels
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp

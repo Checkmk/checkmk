@@ -885,10 +885,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [](const host & /*r*/) { return -1; }));
 }
 
-void TableHosts::answerQuery(Query *query) {
-    auto process = [query, auth_user = query->authUser()](const host *hst) {
-        return !is_authorized_for_hst(auth_user, hst) ||
-               query->processDataset(Row{hst});
+void TableHosts::answerQuery(Query *query, const User &user) {
+    auto process = [&](const host &hst) {
+        return !user.is_authorized_for_host(hst) ||
+               query->processDataset(Row{&hst});
     };
 
     // If we know the host, we use it directly.
@@ -896,7 +896,7 @@ void TableHosts::answerQuery(Query *query) {
         Debug(logger()) << "using host name index with '" << *value << "'";
         if (const auto *hst =
                 reinterpret_cast<const host *>(core()->find_host(*value))) {
-            process(hst);
+            process(*hst);
         }
         return;
     }
@@ -907,7 +907,7 @@ void TableHosts::answerQuery(Query *query) {
         if (const auto *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
             for (const auto *m = hg->members; m != nullptr; m = m->next) {
-                if (!process(m->host_ptr)) {
+                if (!process(*m->host_ptr)) {
                     return;
                 }
             }
@@ -918,7 +918,7 @@ void TableHosts::answerQuery(Query *query) {
     // In the general case, we have to process all hosts.
     Debug(logger()) << "using full table scan";
     for (const auto *hst = host_list; hst != nullptr; hst = hst->next) {
-        if (!process(hst)) {
+        if (!process(*hst)) {
             return;
         }
     }

@@ -172,7 +172,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
             }));
 }
 
-void TableContacts::answerQuery(Query *query) {
+void TableContacts::answerQuery(Query *query, const User & /*user*/) {
     for (const contact *ct = contact_list; ct != nullptr; ct = ct->next) {
         if (!query->processDataset(Row{ct})) {
             break;

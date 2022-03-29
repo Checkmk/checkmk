@@ -138,3 +138,30 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
     return true;
 #endif
 }
+
+User::User(const contact *auth_user, ServiceAuthorization service_auth,
+           GroupAuthorization group_auth)
+    : auth_user_{auth_user}
+    , service_auth_{service_auth}
+    , group_auth_{group_auth} {}
+
+bool User::is_authorized_for_everything() const {
+    return auth_user_ == no_auth_user();
+}
+
+bool User::is_authorized_for_host(const host &hst) const {
+    return ::is_authorized_for_hst(auth_user_, &hst);
+}
+
+bool User::is_authorized_for_service(const service &svc) const {
+    return ::is_authorized_for_svc(service_auth_, auth_user_, &svc);
+}
+
+bool User::is_authorized_for_host_group(const hostgroup &hg) const {
+    return ::is_authorized_for_host_group(group_auth_, &hg, auth_user_);
+}
+
+bool User::is_authorized_for_service_group(const servicegroup &sg) const {
+    return ::is_authorized_for_service_group(group_auth_, service_auth_, &sg,
+                                             auth_user_);
+}

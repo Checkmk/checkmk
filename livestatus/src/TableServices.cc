@@ -720,11 +720,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
 }
 
-void TableServices::answerQuery(Query *query) {
-    auto process = [query, service_auth = core()->serviceAuthorization(),
-                    auth_user = query->authUser()](const service *svc) {
-        return !is_authorized_for_svc(service_auth, auth_user, svc) ||
-               query->processDataset(Row{svc});
+void TableServices::answerQuery(Query *query, const User &user) {
+    auto process = [&](const service &svc) {
+        return !user.is_authorized_for_service(svc) ||
+               query->processDataset(Row{&svc});
     };
 
     // If we know the host, we use it directly.
@@ -733,7 +732,7 @@ void TableServices::answerQuery(Query *query) {
         if (const auto *hst =
                 reinterpret_cast<host *>(core()->find_host(*value))) {
             for (const auto *m = hst->services; m != nullptr; m = m->next) {
-                if (!process(m->service_ptr)) {
+                if (!process(*m->service_ptr)) {
                     return;
                 }
             }
@@ -747,7 +746,7 @@ void TableServices::answerQuery(Query *query) {
         if (const auto *sg =
                 find_servicegroup(const_cast<char *>(value->c_str()))) {
             for (const auto *m = sg->members; m != nullptr; m = m->next) {
-                if (!process(m->service_ptr)) {
+                if (!process(*m->service_ptr)) {
                     return;
                 }
             }
@@ -763,7 +762,7 @@ void TableServices::answerQuery(Query *query) {
             for (const auto *m = hg->members; m != nullptr; m = m->next) {
                 for (const auto *smem = m->host_ptr->services; smem != nullptr;
                      smem = smem->next) {
-                    if (!process(smem->service_ptr)) {
+                    if (!process(*smem->service_ptr)) {
                         return;
                     }
                 }
@@ -775,7 +774,7 @@ void TableServices::answerQuery(Query *query) {
     // In the general case, we have to process all services.
     Debug(logger()) << "using full table scan";
     for (const auto *svc = service_list; svc != nullptr; svc = svc->next) {
-        if (!process(svc)) {
+        if (!process(*svc)) {
             return;
         }
     }

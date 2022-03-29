@@ -9,7 +9,6 @@
 
 #include "Column.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableServiceGroups.h"
@@ -40,13 +39,10 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
-void TableServicesByGroup::answerQuery(Query *query) {
-    auto process = [query, service_auth = core()->serviceAuthorization(),
-                    auth_user = query->authUser()](const service *svc,
-                                                   const servicegroup *group) {
-        service_and_group sag{svc, group};
-        return !is_authorized_for_svc(service_auth, auth_user, svc) ||
-               query->processDataset(Row(&sag));
+void TableServicesByGroup::answerQuery(Query *query, const User &user) {
+    auto process = [&](const service_and_group &sag) {
+        return !user.is_authorized_for_service(*sag.svc) ||
+               query->processDataset(Row{&sag});
     };
 
     // If we know the service group, we simply iterate over it.
@@ -54,12 +50,10 @@ void TableServicesByGroup::answerQuery(Query *query) {
         Debug(logger()) << "using service group index with '" << *value << "'";
         if (const auto *group =
                 find_servicegroup(const_cast<char *>(value->c_str()))) {
-            if (is_authorized_for_service_group(core()->groupAuthorization(),
-                                                core()->serviceAuthorization(),
-                                                group, query->authUser())) {
+            if (user.is_authorized_for_service_group(*group)) {
                 for (const auto *m = group->members; m != nullptr;
                      m = m->next) {
-                    if (!process(m->service_ptr, group)) {
+                    if (!process(service_and_group{m->service_ptr, group})) {
                         return;
                     }
                 }
@@ -72,11 +66,9 @@ void TableServicesByGroup::answerQuery(Query *query) {
     Debug(logger()) << "using full table scan";
     for (const auto *group = servicegroup_list; group != nullptr;
          group = group->next) {
-        if (is_authorized_for_service_group(core()->groupAuthorization(),
-                                            core()->serviceAuthorization(),
-                                            group, query->authUser())) {
+        if (user.is_authorized_for_service_group(*group)) {
             for (const auto *m = group->members; m != nullptr; m = m->next) {
-                if (!process(m->service_ptr, group)) {
+                if (!process(service_and_group{m->service_ptr, group})) {
                     return;
                 }
             }

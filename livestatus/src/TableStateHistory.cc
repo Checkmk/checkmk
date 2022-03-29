@@ -293,13 +293,13 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
         });
 }
 
-void TableStateHistory::answerQuery(Query *query) {
-    _log_cache->apply([this, query](const LogFiles &log_cache) {
-        answerQueryInternal(query, log_cache);
+void TableStateHistory::answerQuery(Query *query, const User &user) {
+    _log_cache->apply([this, query, &user](const LogFiles &log_cache) {
+        answerQueryInternal(query, user, log_cache);
     });
 }
 
-void TableStateHistory::answerQueryInternal(Query *query,
+void TableStateHistory::answerQueryInternal(Query *query, const User &user,
                                             const LogFiles &log_files) {
     if (log_files.begin() == log_files.end()) {
         return;
@@ -587,16 +587,16 @@ void TableStateHistory::answerQueryInternal(Query *query,
                     state = it_hst->second;
                 }
 
-                auto state_changed =
-                    updateHostServiceState(query, query_timeframe, entry, state,
-                                           only_update, notification_periods);
+                auto state_changed = updateHostServiceState(
+                    query, user, query_timeframe, entry, state, only_update,
+                    notification_periods);
                 // Host downtime or state changes also affect its services
                 if (entry->kind() == LogEntryKind::alert_host ||
                     entry->kind() == LogEntryKind::state_host ||
                     entry->kind() == LogEntryKind::downtime_alert_host) {
                     if (state_changed == ModificationStatus::changed) {
                         for (auto &svc : state->_services) {
-                            updateHostServiceState(query, query_timeframe,
+                            updateHostServiceState(query, user, query_timeframe,
                                                    entry, svc, only_update,
                                                    notification_periods);
                         }
@@ -609,9 +609,9 @@ void TableStateHistory::answerQueryInternal(Query *query,
                     TimeperiodTransition tpt(entry->options());
                     notification_periods[tpt.name()] = tpt.to();
                     for (auto &it_hst : state_info) {
-                        updateHostServiceState(query, query_timeframe, entry,
-                                               it_hst.second, only_update,
-                                               notification_periods);
+                        updateHostServiceState(
+                            query, user, query_timeframe, entry, it_hst.second,
+                            only_update, notification_periods);
                     }
                 } catch (const std::logic_error &e) {
                     Warning(logger())
@@ -651,7 +651,7 @@ void TableStateHistory::answerQueryInternal(Query *query,
                 // Log last known state up to nagios restart
                 hst->_time = hst->_last_known_time;
                 hst->_until = hst->_last_known_time;
-                process(query, query_timeframe, hst);
+                process(query, user, query_timeframe, hst);
 
                 // Set absent state
                 hst->_state = -1;
@@ -663,7 +663,7 @@ void TableStateHistory::answerQueryInternal(Query *query,
             hst->_time = until - 1s;
             hst->_until = hst->_time;
 
-            process(query, query_timeframe, hst);
+            process(query, user, query_timeframe, hst);
             ++it_hst;
         }
     }
@@ -679,8 +679,9 @@ void TableStateHistory::answerQueryInternal(Query *query,
 }
 
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
-    Query *query, std::chrono::system_clock::duration query_timeframe,
-    const LogEntry *entry, HostServiceState *hs_state, bool only_update,
+    Query *query, const User &user,
+    std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
+    HostServiceState *hs_state, bool only_update,
     const std::map<std::string, int> &notification_periods) {
     ModificationStatus state_changed{ModificationStatus::changed};
 
@@ -690,7 +691,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         hs_state->_time = hs_state->_last_known_time;
         hs_state->_until = hs_state->_last_known_time;
         if (!only_update) {
-            process(query, query_timeframe, hs_state);
+            process(query, user, query_timeframe, hs_state);
         }
 
         hs_state->_may_no_longer_exist = false;
@@ -753,7 +754,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             if (hs_state->_is_host) {
                 if (hs_state->_state != entry->state()) {
                     if (!only_update) {
-                        process(query, query_timeframe, hs_state);
+                        process(query, user, query_timeframe, hs_state);
                     }
                     hs_state->_state = entry->state();
                     hs_state->_host_down = static_cast<int>(entry->state() > 0);
@@ -764,7 +765,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             } else if (hs_state->_host_down !=
                        static_cast<int>(entry->state() > 0)) {
                 if (!only_update) {
-                    process(query, query_timeframe, hs_state);
+                    process(query, user, query_timeframe, hs_state);
                 }
                 hs_state->_host_down = static_cast<int>(entry->state() > 0);
                 hs_state->_debug_info = "SVC HOST STATE";
@@ -776,7 +777,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         case LogEntryKind::alert_service: {
             if (hs_state->_state != entry->state()) {
                 if (!only_update) {
-                    process(query, query_timeframe, hs_state);
+                    process(query, user, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info = "SVC ALERT";
                 hs_state->_state = entry->state();
@@ -789,7 +790,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
 
             if (hs_state->_in_host_downtime != downtime_active) {
                 if (!only_update) {
-                    process(query, query_timeframe, hs_state);
+                    process(query, user, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info =
                     hs_state->_is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
@@ -807,7 +808,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) {
-                    process(query, query_timeframe, hs_state);
+                    process(query, user, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info = "DOWNTIME SERVICE";
                 hs_state->_in_downtime = downtime_active;
@@ -820,7 +821,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) {
-                    process(query, query_timeframe, hs_state);
+                    process(query, user, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info = "FLAPPING ";
                 hs_state->_is_flapping = flapping_active;
@@ -838,7 +839,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                     tpt.name() == hs_state->_notification_period) {
                     if (tpt.to() != hs_state->_in_notification_period) {
                         if (!only_update) {
-                            process(query, query_timeframe, hs_state);
+                            process(query, user, query_timeframe, hs_state);
                         }
                         hs_state->_debug_info = "TIMEPERIOD ";
                         hs_state->_in_notification_period = tpt.to();
@@ -849,7 +850,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                     tpt.name() == hs_state->_service_period) {
                     if (tpt.to() != hs_state->_in_service_period) {
                         if (!only_update) {
-                            process(query, query_timeframe, hs_state);
+                            process(query, user, query_timeframe, hs_state);
                         }
                         hs_state->_debug_info = "TIMEPERIOD ";
                         hs_state->_in_service_period = tpt.to();
@@ -876,7 +877,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
 }
 
 void TableStateHistory::process(
-    Query *query, std::chrono::system_clock::duration query_timeframe,
+    Query *query, const User &user,
+    std::chrono::system_clock::duration query_timeframe,
     HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
     hs_state->_duration_part =
@@ -925,14 +927,12 @@ void TableStateHistory::process(
 
     // if (hs_state->_duration > 0)
     HostServiceState *r = hs_state;
-    auto service_auth = core()->serviceAuthorization();
-    const auto *auth_user = query->authUser();
     auto is_authorized =
         r->_host == nullptr  // TODO(sp): Can this ever happen???
-            ? auth_user == no_auth_user()
+            ? user.is_authorized_for_everything()
             : r->_service == nullptr
-                  ? is_authorized_for_hst(auth_user, r->_host)
-                  : is_authorized_for_svc(service_auth, auth_user, r->_service);
+                  ? user.is_authorized_for_host(*r->_host)
+                  : user.is_authorized_for_service(*r->_service);
     _abort_query = is_authorized && !query->processDataset(Row{r});
 
     hs_state->_from = hs_state->_until;

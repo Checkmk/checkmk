@@ -53,4 +53,21 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      const servicegroup *sg,
                                      const contact *ctc);
 
+class User {
+    const contact *auth_user_;
+    ServiceAuthorization service_auth_;
+    GroupAuthorization group_auth_;
+
+public:
+    User(const contact *auth_user, ServiceAuthorization service_auth,
+         GroupAuthorization group_auth);
+
+    [[nodiscard]] bool is_authorized_for_everything() const;
+    [[nodiscard]] bool is_authorized_for_host(const host &hst) const;
+    [[nodiscard]] bool is_authorized_for_service(const service &svc) const;
+    [[nodiscard]] bool is_authorized_for_host_group(const hostgroup &hg) const;
+    [[nodiscard]] bool is_authorized_for_service_group(
+        const servicegroup &sg) const;
+};
+
 #endif  // auth_h

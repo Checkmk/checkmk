@@ -28,6 +28,7 @@ std::string TableEventConsoleReplication::namePrefix() const {
     return "eventconsolereplication_";
 }
 
-void TableEventConsoleReplication::answerQuery(Query *query) {
+void TableEventConsoleReplication::answerQuery(Query *query,
+                                               const User & /*user*/) {
     query->processDataset(Row(this));
 }

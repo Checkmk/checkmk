@@ -283,8 +283,14 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
 bool Store::answerGetRequest(const std::list<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
-    return Query(lines, findTable(output, tablename), _mc->dataEncoding(),
-                 _mc->maxResponseSize(), output, logger())
+    return Query{lines,
+                 findTable(output, tablename),
+                 _mc->dataEncoding(),
+                 _mc->maxResponseSize(),
+                 _mc->serviceAuthorization(),
+                 _mc->groupAuthorization(),
+                 output,
+                 logger()}
         .process();
 }
 

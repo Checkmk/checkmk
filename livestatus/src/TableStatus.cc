@@ -330,9 +330,8 @@ std::string TableStatus::name() const { return "status"; }
 
 std::string TableStatus::namePrefix() const { return "status_"; }
 
-void TableStatus::answerQuery(Query *query) {
-    const TableStatus *r = this;
-    query->processDataset(Row(r));
+void TableStatus::answerQuery(Query *query, const User & /*user*/) {
+    query->processDataset(Row{this});
 }
 
 Row TableStatus::getDefault() const { return Row{this}; }

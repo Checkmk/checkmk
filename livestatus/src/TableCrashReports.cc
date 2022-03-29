@@ -37,7 +37,7 @@ std::string TableCrashReports::name() const { return "crashreports"; }
 
 std::string TableCrashReports::namePrefix() const { return "crashreport_"; }
 
-void TableCrashReports::answerQuery(Query *query) {
+void TableCrashReports::answerQuery(Query *query, const User & /*user*/) {
     mk::crash_report::any(core()->crashReportPath(),
                           [&query](const CrashReport &cr) {
                               const CrashReport *r = &cr;

@@ -19,6 +19,7 @@ class DynamicColumn;
 class Logger;
 class MonitoringCore;
 class Query;
+class User;
 
 /// A table-like view for some underlying data, exposed via LQL.
 ///
@@ -103,7 +104,7 @@ public:
     // are non-const. Tables are shared between threads and the locking in the
     // problematic answerQuery() implementations is a "bit" chaotic, so this can
     // be a real correctness problem! This has to be fixed...
-    virtual void answerQuery(Query *query) = 0;
+    virtual void answerQuery(Query *query, const User &user) = 0;
 
     [[nodiscard]] virtual Row get(const std::string &primary_key) const;
 

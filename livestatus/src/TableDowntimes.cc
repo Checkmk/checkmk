@@ -9,6 +9,7 @@
 #include <map>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 #include "ChronoUtils.h"
 #include "Column.h"
@@ -92,18 +93,15 @@ std::string TableDowntimes::name() const { return "downtimes"; }
 
 std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
-void TableDowntimes::answerQuery(Query *query) {
-    auto is_authorized = [service_auth = core()->serviceAuthorization(),
-                          auth_user =
-                              query->authUser()](const Downtime *downtime) {
-        return downtime->_service == nullptr
-                   ? is_authorized_for_hst(auth_user, downtime->_host)
-                   : is_authorized_for_svc(service_auth, auth_user,
-                                           downtime->_service);
+void TableDowntimes::answerQuery(Query *query, const User &user) {
+    auto is_authorized = [&](const Downtime &downtime) {
+        return downtime._service == nullptr
+                   ? user.is_authorized_for_host(*downtime._host)
+                   : user.is_authorized_for_service(*downtime._service);
     };
 
     for (const auto &[id, dt] : core()->impl<NagiosCore>()->_downtimes) {
-        if (is_authorized(dt.get()) && !query->processDataset(Row{dt.get()})) {
+        if (is_authorized(*dt) && !query->processDataset(Row{dt.get()})) {
             return;
         }
     }

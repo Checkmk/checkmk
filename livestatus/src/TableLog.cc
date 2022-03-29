@@ -155,22 +155,20 @@ bool rowWithoutHost(const LogRow &lr) {
 }
 }  // namespace
 
-void TableLog::answerQuery(Query *query) {
+void TableLog::answerQuery(Query *query, const User &user) {
     auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
     if (log_filter.classmask == 0) {
         return;
     }
 
-    auto is_authorized = [service_auth = core()->serviceAuthorization(),
-                          auth_user = query->authUser()](const LogRow &lr) {
+    auto is_authorized = [&](const LogRow &lr) {
         // If we have an AuthUser, suppress entries for messages with hosts that
         // do not exist anymore, otherwise use the common authorization logic.
         return lr.hst == nullptr  //
-                   ? auth_user == no_auth_user() || rowWithoutHost(lr)
+                   ? user.is_authorized_for_everything() || rowWithoutHost(lr)
                    : lr.svc == nullptr
-                         ? is_authorized_for_hst(auth_user, lr.hst)
-                         : is_authorized_for_svc(service_auth, auth_user,
-                                                 lr.svc);
+                         ? user.is_authorized_for_host(*lr.hst)
+                         : user.is_authorized_for_service(*lr.svc);
     };
 
     auto process = [is_authorized, core = core(),

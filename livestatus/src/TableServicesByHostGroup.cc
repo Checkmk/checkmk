@@ -6,7 +6,6 @@
 #include "TableServicesByHostGroup.h"
 
 #include "Column.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"
@@ -39,12 +38,9 @@ std::string TableServicesByHostGroup::name() const {
 
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
-void TableServicesByHostGroup::answerQuery(Query *query) {
-    auto process = [query, service_auth = core()->serviceAuthorization(),
-                    auth_user = query->authUser()](const service *svc,
-                                                   const hostgroup *group) {
-        service_and_group sag{svc, group};
-        return !is_authorized_for_svc(service_auth, auth_user, svc) ||
+void TableServicesByHostGroup::answerQuery(Query *query, const User &user) {
+    auto process = [&](const service_and_group &sag) {
+        return !user.is_authorized_for_service(*sag.svc) ||
                query->processDataset(Row{&sag});
     };
 
@@ -53,7 +49,7 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
         for (const auto *hm = group->members; hm != nullptr; hm = hm->next) {
             for (const auto *sm = hm->host_ptr->services; sm != nullptr;
                  sm = sm->next) {
-                if (!process(sm->service_ptr, group)) {
+                if (!process(service_and_group{sm->service_ptr, group})) {
                     return;
                 }
             }

@@ -14,6 +14,7 @@
 #include "Table.h"
 class MonitoringCore;
 class Query;
+class User;
 
 class TableContactGroups : public Table {
 public:
@@ -21,7 +22,7 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
+    void answerQuery(Query *query, const User &user) override;
     [[nodiscard]] Row get(const std::string &primary_key) const override;
 };
 

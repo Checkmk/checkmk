@@ -16,6 +16,7 @@
 class ColumnOffsets;
 class MonitoringCore;
 class Query;
+class User;
 
 class TableStatus : public Table {
 public:
@@ -23,7 +24,7 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
+    void answerQuery(Query *query, const User &user) override;
     [[nodiscard]] Row getDefault() const override;
 
 private:

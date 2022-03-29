@@ -240,7 +240,7 @@ TableEventConsole::TableEventConsole(
     MonitoringCore *mc, std::function<bool(Row, const contact *)> is_authorized)
     : Table{mc}, is_authorized_{std::move(is_authorized)} {}
 
-void TableEventConsole::answerQuery(Query *query) {
+void TableEventConsole::answerQuery(Query *query, const User & /*user*/) {
     if (core()->mkeventdEnabled()) {
         try {
             ECTableConnection{core(), *this, query, is_authorized_}.run();

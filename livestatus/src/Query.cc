@@ -10,6 +10,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
+#include <memory>
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
@@ -58,6 +59,7 @@ void checkNoArguments(const char *line) {
 
 Query::Query(const std::list<std::string> &lines, Table &table,
              Encoding data_encoding, size_t max_response_size,
+             ServiceAuthorization service_auth, GroupAuthorization group_auth,
              OutputBuffer &output, Logger *logger)
     : _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
@@ -75,7 +77,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _limit(-1)
     , _current_line(0)
     , _timezone_offset(0)
-    , _logger(logger) {
+    , _logger(logger)
+    , service_auth_{service_auth}
+    , group_auth_{group_auth} {
     FilterStack filters;
     FilterStack wait_conditions;
     for (const auto &line : lines) {
@@ -577,7 +581,7 @@ bool Query::process() {
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(this);
+    _table.answerQuery(this, User{_auth_user, service_auth_, group_auth_});
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);

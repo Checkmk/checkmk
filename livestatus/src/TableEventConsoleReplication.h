@@ -13,13 +13,14 @@
 #include "Table.h"
 class MonitoringCore;
 class Query;
+class User;
 
 class TableEventConsoleReplication : public Table {
 public:
     explicit TableEventConsoleReplication(MonitoringCore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
+    void answerQuery(Query *query, const User &user) override;
 };
 
 #endif  // TableEventConsoleReplication_h

@@ -49,6 +49,7 @@ class InputBuffer;
 class Logger;
 class MonitoringCore;
 class OutputBuffer;
+class User;
 
 #ifdef CMC
 #include "TableCachedStatehist.h"
@@ -90,7 +91,7 @@ private:
         [[nodiscard]] std::string namePrefix() const override {
             return "dummy_";
         }
-        void answerQuery(Query * /*unused*/) override {}
+        void answerQuery(Query * /*unused*/, const User & /*user*/) override {}
     };
 
     MonitoringCore *_mc;

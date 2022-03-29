@@ -13,6 +13,7 @@
 #include "Table.h"
 class MonitoringCore;
 class Query;
+class User;
 
 class TableTimeperiods : public Table {
 public:
@@ -20,7 +21,7 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
+    void answerQuery(Query *query, const User &user) override;
 };
 
 #endif  // TableTimeperiods_h

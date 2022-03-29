@@ -169,18 +169,15 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                          ServiceListState::Type::num_hard_unknown}));
 }
 
-void TableServiceGroups::answerQuery(Query *query) {
-    auto process = [query, group_auth = core()->groupAuthorization(),
-                    service_auth = core()->serviceAuthorization(),
-                    auth_user = query->authUser()](const servicegroup *group) {
-        return !is_authorized_for_service_group(group_auth, service_auth, group,
-                                                auth_user) ||
-               query->processDataset(Row{group});
+void TableServiceGroups::answerQuery(Query *query, const User &user) {
+    auto process = [&](const servicegroup &group) {
+        return !user.is_authorized_for_service_group(group) ||
+               query->processDataset(Row{&group});
     };
 
     for (const auto *group = servicegroup_list; group != nullptr;
          group = group->next) {
-        if (!process(group)) {
+        if (!process(*group)) {
             return;
         }
     }

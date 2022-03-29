@@ -9,12 +9,15 @@
 
 #include <Sddl.h>
 #include <comdef.h>
+#include <iphlpapi.h>
 #include <shellapi.h>
+#include <ws2tcpip.h>
 
 #include "psapi.h"
-#pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
-#pragma comment(lib, "psapi.lib")     /// Microsoft Specific
-#pragma comment(lib, "Sensapi.lib")   /// Microsoft Specific
+#pragma comment(lib, "wbemuuid.lib")
+#pragma comment(lib, "psapi.lib")
+#pragma comment(lib, "Sensapi.lib")
+#pragma comment(lib, "iphlpapi.lib")
 #endif
 
 #include <cstdint>
@@ -2993,6 +2996,109 @@ std::string RunCommand(std::wstring_view cmd) {
     return r;
 }
 
+std::string_view TcpStateToName(int state) noexcept {
+    switch (state) {
+        case MIB_TCP_STATE_CLOSED:
+            return "CLOSED";
+        case MIB_TCP_STATE_LISTEN:
+            return "LISTEN";
+        case MIB_TCP_STATE_SYN_SENT:
+            return "SYN-SENT";
+        case MIB_TCP_STATE_SYN_RCVD:
+            return "SYN-RECEIVED";
+        case MIB_TCP_STATE_ESTAB:
+            return "ESTABLISHED";
+        case MIB_TCP_STATE_FIN_WAIT1:
+            return "FIN-WAIT-1";
+        case MIB_TCP_STATE_FIN_WAIT2:
+            return "FIN-WAIT-2 ";
+        case MIB_TCP_STATE_CLOSE_WAIT:
+            return "CLOSE-WAIT";
+        case MIB_TCP_STATE_CLOSING:
+            return "CLOSING";
+        case MIB_TCP_STATE_LAST_ACK:
+            return "LAST-ACK";
+        case MIB_TCP_STATE_TIME_WAIT:
+            return "TIME-WAIT";
+        case MIB_TCP_STATE_DELETE_TCB:
+            return "DELETE-TCB";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+namespace {
+class MibTcpTable2Wrapper {
+public:
+    MibTcpTable2Wrapper() {
+        auto size = static_cast<DWORD>(sizeof(MIB_TCPTABLE2));
+        reallocateBuffer(size);
+
+        while (true) {
+            auto ret = ::GetTcpTable2(table_, &size, TRUE);
+            switch (ret) {
+                case ERROR_INSUFFICIENT_BUFFER:
+                    reallocateBuffer(size);
+                    continue;
+                case ERROR_SUCCESS:
+                    return;
+                default:
+                    delete static_cast<void *>(table_);
+                    table_ = nullptr;
+                    XLOG::l("Error [{}] GetTcpTable2", ret);
+                    return;
+            }
+        }
+    }
+
+    MibTcpTable2Wrapper(const MibTcpTable2Wrapper &) = delete;
+    MibTcpTable2Wrapper &operator=(const MibTcpTable2Wrapper &) = delete;
+    MibTcpTable2Wrapper(MibTcpTable2Wrapper &&) = delete;
+    MibTcpTable2Wrapper &operator=(MibTcpTable2Wrapper &&) = delete;
+
+    ~MibTcpTable2Wrapper() { delete static_cast<void *>(table_); }
+
+    const MIB_TCPROW2 *row(size_t index) const {
+        return table_ == nullptr || index >= table_->dwNumEntries
+                   ? nullptr
+                   : table_->table + index;
+    }
+    size_t count() const {
+        return table_ == nullptr ? 0U : table_->dwNumEntries;
+    }
+
+private:
+    void reallocateBuffer(size_t size) {
+        delete static_cast<void *>(table_);
+        table_ = static_cast<MIB_TCPTABLE2 *>(::operator new(size));
+    }
+
+    MIB_TCPTABLE2 *table_{nullptr};
+};
+}  // namespace
+
+bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port) {
+    MibTcpTable2Wrapper table;
+    auto p_port = ::htons(peer_port);
+    auto r_port = ::htons(port);
+    for (size_t i = 0; i < table.count(); ++i) {
+        const auto *row = table.row(i);
+        if (row == nullptr) {
+            break;
+        }
+        const auto &entry = *row;
+        if (entry.dwRemotePort == r_port && entry.dwLocalPort == p_port &&
+            pid == entry.dwOwningPid) {
+            XLOG::d.i(
+                "Peer/local {:>6} remote {:>6} state {:10} from pid {:>6}",
+                p_port, r_port, TcpStateToName(entry.dwState),
+                entry.dwOwningPid);
+            return true;
+        }
+    }
+    return false;
+}
+
 #if 0
 /// <summary>
 ///  The code below is a reference code from MSDN
@@ -3101,7 +3207,8 @@ Cleanup:
 }  // namespace wtools
 
 // verified code from the legacy client
-SOCKET RemoveSocketInheritance(SOCKET socket) {
+SOCKET
+RemoveSocketInheritance(SOCKET socket) {
     HANDLE new_handle = nullptr;
 
     ::DuplicateHandle(::GetCurrentProcess(), reinterpret_cast<HANDLE>(socket),

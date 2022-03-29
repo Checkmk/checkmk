@@ -50,10 +50,10 @@ TEST(ExternalPortTest, StartStop) {
     world::ExternalPort test_port(&tp);  //
 
     EXPECT_TRUE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes));
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
     EXPECT_TRUE(test_port.io_thread_.joinable());
     EXPECT_FALSE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes));
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
 
     EXPECT_TRUE(tst::WaitForSuccessSilent(
         1000ms, [&test_port]() { return test_port.io_thread_.joinable(); }));
@@ -75,7 +75,7 @@ TEST(ExternalPortTest, Read) {
     world::ExternalPort test_port(&tp);  //
 
     EXPECT_TRUE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes));
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
 
     asio::io_context ios;
     tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"),
@@ -94,6 +94,48 @@ TEST(ExternalPortTest, Read) {
     EXPECT_EQ(remote_ip, text);
 }
 
+class ExternalPortCheckProcessFixture : public ::testing::Test {
+public:
+    ReplyFunc reply = [this](const std::string ip) -> std::vector<uint8_t> {
+        remote_ip = ip;
+        return {};
+    };
+    void TearDown() override { remote_ip.clear(); }
+    std::string remote_ip;
+    wtools::TestProcessor2 tp;
+    world::ExternalPort test_port{&tp};
+    const std::string text{"abcdef"};
+    void writeToSocket() {
+        asio::io_context ios;
+        tcp::endpoint endpoint{asio::ip::make_address("127.0.0.1"),
+                               tst::TestPort()};
+        tcp::socket socket{ios};
+        socket.connect(endpoint);
+        asio::error_code error;
+        auto count = socket.write_some(asio::buffer(text, 6), error);
+        socket.close();
+    }
+};
+
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
+    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort(), LocalOnly::yes, 1));
+
+    writeToSocket();
+    std::this_thread::sleep_for(300ms);
+    test_port.shutdownIo();  // this is long operation
+    EXPECT_TRUE(remote_ip.empty());
+}
+
+TEST_F(ExternalPortCheckProcessFixture, ValidProcess) {
+    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort(), LocalOnly::yes,
+                                  ::GetCurrentProcessId()));
+
+    writeToSocket();
+    tst::WaitForSuccessSilent(100ms, [&]() { return !remote_ip.empty(); });
+    test_port.shutdownIo();  // this is long operation
+    EXPECT_EQ(remote_ip, text);
+}
+
 class ExternalPortTestFixture : public ::testing::Test {
 public:
     ReplyFunc reply = [this](const std::string /*ip*/) -> std::vector<uint8_t> {
@@ -105,7 +147,8 @@ public:
         return data;
     };
     void SetUp() override {
-        test_port_.startIo(reply, tst::TestPort(), world::LocalOnly::no);  //
+        test_port_.startIo(reply, tst::TestPort(), world::LocalOnly::no,
+                           {});  //
     }
 
     void TearDown() override {
@@ -139,8 +182,9 @@ TEST_F(ExternalPortTestFixture, ReadIntegration) {
         return ec.value() == 0;
     }));
 
-    auto [ip, ipv6] = GetSocketInfo(sock_);
+    auto [ip, p, ipv6] = GetSocketInfo(sock_);
     EXPECT_TRUE(ip == "127.0.0.1");
+    EXPECT_TRUE(p != 0U);
     EXPECT_FALSE(ipv6);
 
     auto text = readSock();

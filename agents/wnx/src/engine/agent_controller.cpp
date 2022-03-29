@@ -116,6 +116,12 @@ bool GetConfiguredLocalOnly() {
                        cfg::defaults::kControllerLocalOnly);
 }
 
+bool GetConfiguredCheck() {
+    auto controller_config = GetControllerNode();
+    return cfg::GetVal(controller_config, cfg::vars::kControllerCheck,
+                       cfg::defaults::kControllerCheck);
+}
+
 /// returns true if controller files DOES NOT exist
 bool DeleteControllerInBin(const fs::path &service) {
     const auto [_, tgt] = ServiceName2TargetName(service);

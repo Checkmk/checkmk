@@ -799,7 +799,7 @@ TEST(AgentConfig, FactoryConfig) {
     // controller
     auto controller = GetNode(groups::kSystem, vars::kController);
     EXPECT_TRUE(GetVal(controller, vars::kControllerRun, false));
-    EXPECT_TRUE(GetVal(controller, vars::kControllerCheck, false));
+    EXPECT_FALSE(GetVal(controller, vars::kControllerCheck, true));
     EXPECT_FALSE(GetVal(controller, vars::kControllerForceLegacy, true));
     EXPECT_EQ(GetVal(controller, vars::kControllerAgentChannel, ""s),
               defaults::kControllerAgentChannelDefault);

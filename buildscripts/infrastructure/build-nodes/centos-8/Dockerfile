@@ -123,8 +123,8 @@ RUN yum -y makecache \
 # Avoid the annobin chaos on CentOS 8, part 2:
 # See also: omd/omd.spec.in
 RUN if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then \
-        rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1 \
-        && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
+    rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1 \
+    && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
     fi
 
 # Install our standard tool chain for building
@@ -149,6 +149,8 @@ RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
 RUN /opt/install-pipenv.sh
+
+RUN /opt/install-nodejs.sh
 
 ### Actual Image ###
 FROM base

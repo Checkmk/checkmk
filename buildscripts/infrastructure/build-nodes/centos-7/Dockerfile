@@ -117,6 +117,8 @@ RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
 RUN /opt/install-pipenv.sh
 
+RUN /opt/install-nodejs.sh
+
 ### Actual Image ###
 FROM base
 

@@ -618,7 +618,7 @@ def deployments_api_sections() -> Sequence[str]:
         "kube_deployment_conditions_v1",
         "kube_cpu_resources_v1",
         "kube_replicas_v1",
-        "kube_deployment_strategy_v1",
+        "kube_update_strategy_v1",
     ]
 
 
@@ -629,7 +629,7 @@ def daemon_sets_api_sections() -> Sequence[str]:
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
         "kube_daemonset_info_v1",
-        "kube_daemonset_strategy_v1",
+        "kube_update_strategy_v1",
     ]
 
 
@@ -640,7 +640,7 @@ def statefulsets_api_sections() -> Sequence[str]:
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
         "kube_statefulset_info_v1",
-        "kube_statefulset_strategy_v1",
+        "kube_update_strategy_v1",
     ]
 
 

@@ -204,7 +204,7 @@ class RollingUpdate(BaseModel):
 
 
 class StatefulSetRollingUpdate(BaseModel):
-    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate", const=True)
     partition: int
 
 

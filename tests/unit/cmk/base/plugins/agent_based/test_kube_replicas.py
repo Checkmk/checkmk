@@ -16,14 +16,16 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     _check_kube_replicas,
     check_kube_replicas,
     discover_kube_replicas,
-    parse_kube_deployment_strategy,
     parse_kube_replicas,
+    parse_kube_strategy,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
-    DeploymentStrategy,
+    OnDelete,
     Recreate,
     Replicas,
     RollingUpdate,
+    StatefulSetRollingUpdate,
+    UpdateStrategy,
     VSResultAge,
 )
 
@@ -52,8 +54,8 @@ def test_parse_kube_replicas() -> None:
     )
 
 
-def test_parse_kube_deployment_strategy() -> None:
-    assert parse_kube_deployment_strategy(
+def test_parse_kube_strategy() -> None:
+    assert parse_kube_strategy(
         [
             [
                 json.dumps(
@@ -67,9 +69,9 @@ def test_parse_kube_deployment_strategy() -> None:
                 )
             ]
         ]
-    ) == DeploymentStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
+    ) == UpdateStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
 
-    assert parse_kube_deployment_strategy(
+    assert parse_kube_strategy(
         [
             [
                 json.dumps(
@@ -81,7 +83,36 @@ def test_parse_kube_deployment_strategy() -> None:
                 )
             ]
         ]
-    ) == DeploymentStrategy(strategy=Recreate())
+    ) == UpdateStrategy(strategy=Recreate())
+
+    assert parse_kube_strategy(
+        [
+            [
+                json.dumps(
+                    {
+                        "strategy": {
+                            "type_": "OnDelete",
+                        },
+                    }
+                )
+            ]
+        ]
+    ) == UpdateStrategy(strategy=OnDelete())
+
+    assert parse_kube_strategy(
+        [
+            [
+                json.dumps(
+                    {
+                        "strategy": {
+                            "type_": "StatefulSetRollingUpdate",
+                            "partition": 0,
+                        },
+                    }
+                )
+            ]
+        ]
+    ) == UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0))
 
 
 def test_discover_kube_replicas() -> None:
@@ -92,7 +123,7 @@ def test_discover_kube_replicas() -> None:
         ready=3,
         unavailable=3,
     )
-    strategy = DeploymentStrategy(
+    strategy = UpdateStrategy(
         strategy=RollingUpdate(
             max_surge="25%",
             max_unavailable="25%",
@@ -138,7 +169,7 @@ def test_check_kube_replicas() -> None:
                 ready=3,
                 unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -168,7 +199,7 @@ def test_check_kube_replicas() -> None:
                 ready=3,
                 unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -198,7 +229,7 @@ def test_check_kube_replicas() -> None:
                 ready=3,
                 unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -227,7 +258,7 @@ def test_check_kube_replicas() -> None:
 def test_check_kube_replicas_outdated_replicas(
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
-    strategy: DeploymentStrategy,
+    strategy: UpdateStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
 ) -> None:
@@ -332,7 +363,7 @@ def test_check_kube_replicas_not_ready_replicas(
                 ready=0,
                 unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -372,7 +403,7 @@ def test_check_kube_replicas_not_ready_replicas(
                 ready=0,
                 unavailable=0,
             ),
-            DeploymentStrategy(strategy=Recreate()),
+            UpdateStrategy(strategy=Recreate()),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
@@ -400,7 +431,7 @@ def test_check_kube_replicas_not_ready_replicas(
 def test_check_kube_replicas_not_ready_and_outdated(
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
-    strategy: DeploymentStrategy,
+    strategy: UpdateStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
     monkeypatch: pytest.MonkeyPatch,

@@ -19,7 +19,7 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import DeploymentStrategy, Replicas, VSResultAge
+from .utils.kube import Replicas, UpdateStrategy, VSResultAge
 from .utils.kube_strategy import strategy_text
 
 
@@ -34,20 +34,20 @@ register.agent_section(
 )
 
 
-def parse_kube_deployment_strategy(string_table: StringTable) -> DeploymentStrategy:
-    return DeploymentStrategy(**json.loads(string_table[0][0]))
+def parse_kube_strategy(string_table: StringTable) -> UpdateStrategy:
+    return UpdateStrategy(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
-    name="kube_deployment_strategy_v1",
-    parsed_section_name="kube_deployment_strategy",
-    parse_function=parse_kube_deployment_strategy,
+    name="kube_update_strategy_v1",
+    parsed_section_name="kube_update_strategy",
+    parse_function=parse_kube_strategy,
 )
 
 
 def discover_kube_replicas(
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
 ) -> DiscoveryResult:
     if section_kube_replicas is not None:
         yield Service()
@@ -82,12 +82,12 @@ def _levels(
 def check_kube_replicas(
     params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
 ) -> CheckResult:
     yield from _check_kube_replicas(
         params,
         section_kube_replicas,
-        section_kube_deployment_strategy,
+        section_kube_update_strategy,
         now=time.time(),
         value_store=get_value_store(),
     )
@@ -96,7 +96,7 @@ def check_kube_replicas(
 def _check_kube_replicas(
     params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
     *,
     now: float,
     value_store: MutableMapping[str, Any],
@@ -149,18 +149,18 @@ def _check_kube_replicas(
         "Not updated for",
     )
 
-    if section_kube_deployment_strategy is None or all_updated:
+    if section_kube_update_strategy is None or all_updated:
         return
 
     yield Result(
         state=State.OK,
-        summary=f"Strategy: {strategy_text(section_kube_deployment_strategy.strategy)}",
+        summary=f"Strategy: {strategy_text(section_kube_update_strategy.strategy)}",
     )
 
 
 register.check_plugin(
     name="kube_replicas",
-    sections=["kube_replicas", "kube_deployment_strategy"],
+    sections=["kube_replicas", "kube_update_strategy"],
     service_name="Replicas",
     discovery_function=discover_kube_replicas,
     check_function=check_kube_replicas,

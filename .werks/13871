@@ -1,0 +1,13 @@
+Title: Fix possibility to edit foreign visuals without permission
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1648557330
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+A user without the permission "Edit foreign ..." was able to edit
+visuals (Views, Dashboards, ...) of other users.

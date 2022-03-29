@@ -215,10 +215,24 @@ class TestDefaultFileCache_and_SNMPFileCache:
         assert file_cache.read(mode) is None
 
 
+class StubFileCache(DefaultAgentFileCache):
+    """Holds the data to be cached in-memory for testing"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache: Optional[AgentRawData] = None
+
+    def write(self, raw_data: AgentRawData, mode: Mode) -> None:
+        self.cache = raw_data
+
+    def read(self, mode: Mode) -> Optional[AgentRawData]:
+        return self.cache
+
+
 class TestIPMIFetcher:
     @pytest.fixture
     def file_cache(self) -> DefaultAgentFileCache:
-        return DefaultAgentFileCache(
+        return StubFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
@@ -247,6 +261,25 @@ class TestIPMIFetcher:
         assert other.username == fetcher.username
         assert other.password == fetcher.password
 
+    def test_with_cached_does_not_open(
+        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+    ) -> None:
+        def open_(*args):
+            raise IpmiException()
+
+        monkeypatch.setattr(IPMIFetcher, "open", open_)
+
+        file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
+        with IPMIFetcher(
+            file_cache,
+            address="127.0.0.1",
+            username="",
+            password="",
+        ) as fetcher:
+            fetched = fetcher.fetch(Mode.CHECKING)
+
+        assert fetched.is_ok()
+
     def test_command_raises_IpmiException_handling(
         self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:
@@ -255,14 +288,15 @@ class TestIPMIFetcher:
 
         monkeypatch.setattr(IPMIFetcher, "open", open_)
 
-        with pytest.raises(MKFetcherError):
-            with IPMIFetcher(
-                file_cache,
-                address="127.0.0.1",
-                username="",
-                password="",
-            ):
-                pass
+        with IPMIFetcher(
+            file_cache,
+            address="127.0.0.1",
+            username="",
+            password="",
+        ) as fetcher:
+            fetched = fetcher.fetch(Mode.CHECKING)
+
+        assert isinstance(fetched.error, MKFetcherError)
 
     def test_parse_sensor_reading_standard_case(self, fetcher: IPMIFetcher) -> None:
         reading = SensorReading(  #
@@ -708,20 +742,6 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         assert fetcher.fetch(Mode.CHECKING) == result.OK({})
 
 
-class StubFileCache(DefaultAgentFileCache):
-    """Holds the data to be cached in-memory for testing"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cache: Optional[AgentRawData] = None
-
-    def write(self, raw_data: AgentRawData, mode: Mode) -> None:
-        self.cache = raw_data
-
-    def read(self, mode: Mode) -> Optional[AgentRawData]:
-        return self.cache
-
-
 class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self) -> StubFileCache:
@@ -781,7 +801,7 @@ class _MockSock:
 class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self) -> DefaultAgentFileCache:
-        return DefaultAgentFileCache(
+        return StubFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
@@ -813,6 +833,39 @@ class TestTCPFetcher:
         assert other.timeout == fetcher.timeout
         assert other.encryption_settings == fetcher.encryption_settings
         assert other.use_only_cache == fetcher.use_only_cache
+
+    def test_with_cached_does_not_open(
+        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+    ) -> None:
+        file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
+        with TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("This is not an IP address. Connecting would fail.", 6556),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.1,
+            encryption_settings={"use_regular": "allow"},
+            use_only_cache=False,
+        ) as fetcher:
+            fetched = fetcher.fetch(Mode.CHECKING)
+
+        assert fetched.is_ok()
+
+    def test_open_exception_becomes_fetche_rerror(
+        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+    ) -> None:
+        with TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("This is not an IP address. Connecting fails.", 6556),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.1,
+            encryption_settings={"use_regular": "allow"},
+            use_only_cache=False,
+        ) as fetcher:
+            fetched = fetcher.fetch(Mode.CHECKING)
+
+        assert isinstance(fetched.error, MKFetcherError)
 
     def test_decrypt_plaintext_is_noop(self, file_cache: DefaultAgentFileCache) -> None:
         settings = {"use_regular": "allow"}

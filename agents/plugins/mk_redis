@@ -21,6 +21,11 @@ CMK_VERSION="2.0.0p23"
 #
 # REDIS_HOST_My_First_Redis="127.0.0.1"
 # REDIS_PORT_My_First_Redis="6380"
+# REDIS_USER_My_First_Redis="MYUSER"
+# REDIS_PASSWORD_My_First_Redis='MYPASSWORD'
+#
+# REDIS_HOST_My_First_Redis="127.0.0.1"
+# REDIS_PORT_My_First_Redis="6380"
 # REDIS_PASSWORD_My_First_Redis='MYPASSWORD'
 #
 # REDIS_HOST_My_Second_Redis="127.0.0.1"
@@ -49,6 +54,7 @@ redis_args() {
 
     HOST="REDIS_HOST_$INSTANCE"
     PORT="REDIS_PORT_$INSTANCE"
+    USER="REDIS_USER_$INSTANCE"
     PASSWORD="REDIS_PASSWORD_$INSTANCE"
 
     # if autodetection is used, rewrite instance name for section output
@@ -62,8 +68,12 @@ redis_args() {
         REDIS_ARGS=("-h" "${!HOST}" "-p" "${!PORT}")
     fi
 
+    if [[ "${!USER}" ]]; then
+        REDIS_ARGS+=("--user" "${!USER}")
+    fi
+
     if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_ARGS+=("-a" "${!PASSWORD}")
+        export REDISCLI_AUTH=${!PASSWORD}
     fi
 
     REDIS_ARGS+=("info")

@@ -39,6 +39,7 @@ def parse_cisco_stack(info):
         "1": "master",
         "2": "member",
         "3": "notMember",
+        "4": "standby",
     }
 
     parsed = {}

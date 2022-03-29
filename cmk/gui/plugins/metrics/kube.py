@@ -187,6 +187,12 @@ metric_info["kube_updated_replicas"] = {
     "color": "31/a",
 }
 
+metric_info["kube_misscheduled_replicas"] = {
+    "title": _("Misscheduled replicas"),
+    "unit": "count",
+    "color": "32/a",
+}
+
 
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

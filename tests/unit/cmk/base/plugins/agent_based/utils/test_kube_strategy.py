@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Union
+
 from cmk.base.plugins.agent_based.utils.kube import (
+    DisplayableStrategy,
     OnDelete,
     Recreate,
     RollingUpdate,
     StatefulSetRollingUpdate,
 )
-from cmk.base.plugins.agent_based.utils.kube_strategy import (
-    statefulset_strategy_text,
-    strategy_text,
-)
+from cmk.base.plugins.agent_based.utils.kube_strategy import strategy_text
 
 
 def test_strategy_text() -> None:
@@ -23,11 +23,17 @@ def test_strategy_text() -> None:
     )
     assert strategy_text(Recreate()) == "Recreate"
     assert strategy_text(OnDelete()) == "OnDelete"
-
-
-def test_statefulset_strategy_text() -> None:
     assert (
-        statefulset_strategy_text(StatefulSetRollingUpdate(partition=0))
-        == "RollingUpdate (partitioned at: 0)"
+        strategy_text(StatefulSetRollingUpdate(partition=0)) == "RollingUpdate (partitioned at: 0)"
     )
-    assert statefulset_strategy_text(OnDelete()) == "OnDelete"
+
+
+def test_strategy_is_displayable() -> None:
+    """
+
+    Any entry of DisplayableStrategy needs to be handled by strategy_text. By
+    default, strategy_text will simply display type_. If this is the intended
+    behaviour or you have reworked strategy_text to handle the new strategy,
+    then you may add it here.
+    """
+    assert DisplayableStrategy == Union[RollingUpdate, Recreate, OnDelete, StatefulSetRollingUpdate]

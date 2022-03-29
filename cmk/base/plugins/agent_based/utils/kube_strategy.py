@@ -4,18 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
-
 from cmk.base.plugins.agent_based.utils.kube import (
-    OnDelete,
-    Recreate,
+    DisplayableStrategy,
     RollingUpdate,
     StatefulSetRollingUpdate,
 )
 
 
-def strategy_text(strategy: Union[RollingUpdate, Recreate, OnDelete]) -> str:
-    """Used for Deployment and DaemonSet"""
+def strategy_text(strategy: DisplayableStrategy) -> str:
+    """Used for Deployment, StatefulSet and DaemonSet"""
 
     if isinstance(strategy, RollingUpdate):
         return (
@@ -23,10 +20,6 @@ def strategy_text(strategy: Union[RollingUpdate, Recreate, OnDelete]) -> str:
             f"(max surge: {strategy.max_surge}, "
             f"max unavailable: {strategy.max_unavailable})"
         )
-    return strategy.type_
-
-
-def statefulset_strategy_text(strategy: Union[StatefulSetRollingUpdate, OnDelete]) -> str:
     if isinstance(strategy, StatefulSetRollingUpdate):
-        return f"{strategy.type_} (partitioned at: {strategy.partition})"
+        return f"RollingUpdate (partitioned at: {strategy.partition})"
     return strategy.type_

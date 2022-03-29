@@ -575,24 +575,15 @@ class OnDelete(BaseModel):
     type_: Literal["OnDelete"] = Field("OnDelete", const=True)
 
 
-class DeploymentStrategy(BaseModel):
-    """section: kube_deployment_strategy_v1"""
-
-    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
-
-
-class DaemonSetStrategy(BaseModel):
-    """section: kube_daemonset_strategy_v1"""
-
-    strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
-
-
 class StatefulSetRollingUpdate(BaseModel):
-    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate", const=True)
     partition: int
 
 
-class StatefulSetStrategy(BaseModel):
-    """section: kube_statefulset_strategy_v1"""
+DisplayableStrategy = Union[OnDelete, Recreate, RollingUpdate, StatefulSetRollingUpdate]
 
-    strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
+
+class UpdateStrategy(BaseModel):
+    """section: kube_update_strategy_v1"""
+
+    strategy: DisplayableStrategy = Field(discriminator="type_")

@@ -517,8 +517,8 @@ class Deployment(PodOwner):
     def replicas(self) -> api.Replicas:
         return self.status.replicas
 
-    def strategy(self) -> section.DeploymentStrategy:
-        return section.DeploymentStrategy(strategy=self.spec.strategy)
+    def strategy(self) -> section.UpdateStrategy:
+        return section.UpdateStrategy(strategy=self.spec.strategy)
 
 
 def _thin_containers(pods: Collection[Pod]) -> section.ThinContainers:
@@ -564,8 +564,8 @@ class DaemonSet(PodOwner):
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
-    def strategy(self) -> section.DaemonSetStrategy:
-        return section.DaemonSetStrategy(strategy=self.spec.strategy)
+    def strategy(self) -> section.UpdateStrategy:
+        return section.UpdateStrategy(strategy=self.spec.strategy)
 
 
 def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSetInfo:
@@ -610,8 +610,8 @@ class StatefulSet(PodOwner):
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
-    def strategy(self) -> section.StatefulSetStrategy:
-        return section.StatefulSetStrategy(strategy=self.spec.strategy)
+    def strategy(self) -> section.UpdateStrategy:
+        return section.UpdateStrategy(strategy=self.spec.strategy)
 
 
 def statefulset_info(statefulset: StatefulSet, cluster_name: str) -> section.StatefulSetInfo:
@@ -1065,7 +1065,7 @@ def write_deployments_api_sections(
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
             "kube_replicas_v1": cluster_deployment.replicas,
-            "kube_deployment_strategy_v1": cluster_deployment.strategy,
+            "kube_update_strategy_v1": cluster_deployment.strategy,
         }
         _write_sections(sections)
 
@@ -1089,7 +1089,7 @@ def write_daemon_sets_api_sections(
             "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
             "kube_daemonset_info_v1": lambda: daemonset_info(cluster_daemon_set, cluster_name),
-            "kube_daemonset_strategy_v1": cluster_daemon_set.strategy,
+            "kube_update_strategy_v1": cluster_daemon_set.strategy,
         }
         _write_sections(sections)
 
@@ -1113,7 +1113,7 @@ def write_statefulsets_api_sections(
             "kube_memory_resources_v1": cluster_statefulset.memory_resources,
             "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
             "kube_statefulset_info_v1": lambda: statefulset_info(cluster_statefulset, cluster_name),
-            "kube_statefulset_strategy_v1": cluster_statefulset.strategy,
+            "kube_update_strategy_v1": cluster_statefulset.strategy,
         }
         _write_sections(sections)
 

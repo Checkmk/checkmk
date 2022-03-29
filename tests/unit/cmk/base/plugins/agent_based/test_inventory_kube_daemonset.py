@@ -13,10 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_daemonset import inventory_kube_daemonset
 from cmk.base.plugins.agent_based.utils.kube import (
     DaemonSetInfo,
-    DaemonSetStrategy,
+    OnDelete,
     RollingUpdate,
     Selector,
     ThinContainers,
+    UpdateStrategy,
 )
 
 from .utils_inventory import sort_inventory_result
@@ -35,7 +36,7 @@ from .utils_inventory import sort_inventory_result
                 containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
             ),
-            DaemonSetStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="0",
                     max_unavailable="1",
@@ -60,7 +61,7 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inventory_kube_daemonset(
     section_info: DaemonSetInfo,
-    section_strategy: DaemonSetStrategy,
+    section_strategy: UpdateStrategy,
     expected_inventory_result: Sequence[Any],
 ) -> None:
     assert sort_inventory_result(
@@ -78,10 +79,7 @@ def test_inventory_kube_daemonset_calls_labels_to_table(mocker):
 
     section_info = DaemonSetInfoFactory.build()
 
-    class DaemonSetStrategyFactory(ModelFactory):
-        __model__ = DaemonSetStrategy
-
-    section_strategy = DaemonSetStrategyFactory.build()
+    section_strategy = UpdateStrategy(strategy=OnDelete())
 
     mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_daemonset.labels_to_table")
     list(inventory_kube_daemonset(section_info, section_strategy))

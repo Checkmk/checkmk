@@ -375,22 +375,15 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class DeploymentStrategy(BaseModel):
-    """section: kube_deployment_strategy_v1"""
-
-    strategy: Union[api.Recreate, api.RollingUpdate] = Field(discriminator="type_")
-
-
-class DaemonSetStrategy(BaseModel):
-    """section: kube_daemonset_strategy_v1"""
-
-    strategy: Union[api.OnDelete, api.RollingUpdate] = Field(discriminator="type_")
+DisplayableStrategy = Union[
+    api.OnDelete, api.Recreate, api.RollingUpdate, api.StatefulSetRollingUpdate
+]
 
 
-class StatefulSetStrategy(BaseModel):
-    """section: kube_statefulset_strategy_v1"""
+class UpdateStrategy(BaseModel):
+    """section: kube_update_strategy_v1"""
 
-    strategy: Union[api.OnDelete, api.StatefulSetRollingUpdate] = Field(discriminator="type_")
+    strategy: DisplayableStrategy = Field(discriminator="type_")
 
 
 class Memory(BaseModel):

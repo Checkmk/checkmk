@@ -12,11 +12,12 @@ from pydantic_factories import ModelFactory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_statefulset import inventory_kube_statefulset
 from cmk.base.plugins.agent_based.utils.kube import (
+    Recreate,
     Selector,
     StatefulSetInfo,
     StatefulSetRollingUpdate,
-    StatefulSetStrategy,
     ThinContainers,
+    UpdateStrategy,
 )
 
 from .utils_inventory import sort_inventory_result
@@ -35,7 +36,7 @@ from .utils_inventory import sort_inventory_result
                 containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
             ),
-            StatefulSetStrategy(strategy=StatefulSetRollingUpdate(partition=0)),
+            UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0)),
             [
                 Attributes(
                     path=["software", "applications", "kube", "statefulset"],
@@ -55,7 +56,7 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inventory_kube_statefulset(
     section_info: StatefulSetInfo,
-    section_strategy: StatefulSetStrategy,
+    section_strategy: UpdateStrategy,
     expected_inventory_result: Sequence[Any],
 ) -> None:
     assert sort_inventory_result(
@@ -73,10 +74,7 @@ def test_inventory_kube_statefulset_calls_labels_to_table(mocker):
 
     section_info = StatefulSetInfoFactory.build()
 
-    class StatefulSetStrategyFactory(ModelFactory):
-        __model__ = StatefulSetStrategy
-
-    section_strategy = StatefulSetStrategyFactory.build()
+    section_strategy = UpdateStrategy(strategy=Recreate())
 
     mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_statefulset.labels_to_table")
     list(inventory_kube_statefulset(section_info, section_strategy))

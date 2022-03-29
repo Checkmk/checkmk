@@ -371,7 +371,7 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
     return result
 
 
-def process_result(result, warn, crit, metrics=False, debug=False):
+def process_result(result, warn, crit, metrics, debug):
     """Process the first row (!) of the result of the SQL command.
 
     Only the first row of the result (result[0]) is considered.

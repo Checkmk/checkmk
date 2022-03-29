@@ -102,6 +102,25 @@ def test_discover_labels(sql_services: Sequence[Service]):
     }
 
 
+def test_discover_labels_labels_without_user_labels():
+    asset_table = [
+        ['{"project":"backup-255820"}'],
+        [
+            '{"name": "//cloudsql.googleapis.com/projects/tribe29-check-development/instances/checktest", "asset_type": "sqladmin.googleapis.com/Instance", "resource": {"version": "v1beta4", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/sqladmin/v1beta4/rest", "discovery_name": "DatabaseInstance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"serviceAccountEmailAddress": "p1074106860578-yhxe0q@gcp-sa-cloud-sql.iam.gserviceaccount.com", "instanceType": "CLOUDSQL_INSTANCE", "settings": {"dataDiskSizeGb": "20", "kind": "sql#settings", "storageAutoResize": true, "availabilityType": "ZONAL", "settingsVersion": "1", "backupConfiguration": {"kind": "sql#backupConfiguration", "backupRetentionSettings": {"retainedBackups": 7.0, "retentionUnit": "COUNT"}, "startTime": "01:00", "enabled": true, "transactionLogRetentionDays": 7.0, "binaryLogEnabled": false, "location": "us"}, "activationPolicy": "ALWAYS", "replicationType": "SYNCHRONOUS", "pricingPlan": "PER_USE", "locationPreference": {"kind": "sql#locationPreference", "zone": "us-central1-f"}, "storageAutoResizeLimit": "0", "dataDiskType": "PD_HDD", "ipConfiguration": {"ipv4Enabled": true}, "tier": "db-custom-4-26624", "maintenanceWindow": {"hour": 0.0, "day": 0.0, "kind": "sql#maintenanceWindow"}}, "ipAddresses": [{"ipAddress": "34.121.172.190", "type": "PRIMARY"}], "selfLink": "https://sqladmin.googleapis.com/sql/v1beta4/projects/tribe29-check-development/instances/checktest", "region": "us-central1", "backendType": "SECOND_GEN", "databaseInstalledVersion": "MYSQL_5_7_36", "createTime": "2022-03-15T08:48:13.998Z", "connectionName": "tribe29-check-development:us-central1:checktest", "kind": "sql#instance", "serverCaCert": {"expirationTime": "2032-03-12T08:51:12.19Z", "kind": "sql#sslCert", "certSerialNumber": "0", "instance": "checktest", "sha1Fingerprint": "05e6c602375a78bd86ca46d9b80709d9bb43a0f2", "createTime": "2022-03-15T08:50:12.19Z", "commonName": "C=US,O=Google\\\\, Inc,CN=Google Cloud SQL Server CA,dnQualifier=8c6bc987-8655-4ff1-aebc-01d408409866"}, "databaseVersion": "MYSQL_5_7", "gceZone": "us-central1-f", "project": "tribe29-check-development", "state": "RUNNABLE", "name": "checktest"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-15T08:53:30.997492Z", "org_policy": []}'
+        ],
+    ]
+    asset_section = gcp.parse_assets(asset_table)
+    servers = list(discover(section_gcp_service_cloud_sql=None, section_gcp_assets=asset_section))
+    labels = servers[0].labels
+    assert set(labels) == {
+        ServiceLabel("gcp/cloud_sql/name", "checktest"),
+        ServiceLabel("gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
+        ServiceLabel("gcp/cloud_sql/availability", "ZONAL"),
+        ServiceLabel("gcp/location", "us-central1"),
+        ServiceLabel("gcp/projectId", "backup-255820"),
+    }
+
+
 ITEM = "checktest"
 
 

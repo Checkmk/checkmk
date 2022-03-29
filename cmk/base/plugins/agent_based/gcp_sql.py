@@ -36,9 +36,11 @@ def discover(
     for service in services:
         data = service.asset.resource.data
         item = data["name"]
-        labels = [
-            ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()
-        ]
+        labels = (
+            [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
+            if "userLabels" in data["settings"]
+            else []
+        )
         labels.extend(
             [
                 ServiceLabel("gcp/location", service.asset.resource.location),

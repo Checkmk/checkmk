@@ -110,6 +110,24 @@ def test_discover_bucket_labels(buckets: Sequence[Service]):
     }
 
 
+def test_discover_bucket_labels_without_user_labels():
+    asset_table = [
+        ['{"project":"backup-255820"}'],
+        [
+            '{"name": "//storage.googleapis.com/backup-home-ml-free", "asset_type": "storage.googleapis.com/Bucket", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/storage/v1/rest", "discovery_name": "Bucket", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {"name": "backup-home-ml-free", "id": "backup-home-ml-free", "labels": {}, "projectNumber": 360989076580.0, "timeCreated": "2019-11-03T13:48:57.905Z", "lifecycle": {"rule": []}, "metageneration": 1.0, "cors": [], "storageClass": "STANDARD", "etag": "CAE=", "kind": "storage#bucket", "billing": {}, "versioning": {}, "iamConfiguration": {"uniformBucketLevelAccess": {"enabled": false}, "bucketPolicyOnly": {"enabled": false}}, "owner": {}, "encryption": {}, "updated": "2019-11-03T13:48:57.905Z", "locationType": "region", "logging": {}, "acl": [], "retentionPolicy": {}, "defaultObjectAcl": [], "location": "US-CENTRAL1", "selfLink": "https://www.googleapis.com/storage/v1/b/backup-home-ml-free", "website": {}, "autoclass": {}}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/360989076580"], "update_time": "2021-09-20T20:35:59.747Z", "org_policy": []}'
+        ],
+    ]
+    asset_section = gcp.parse_assets(asset_table)
+    buckets = list(discover(section_gcp_service_gcs=None, section_gcp_assets=asset_section))
+    labels = buckets[0].labels
+    assert set(labels) == {
+        ServiceLabel("gcp/location", "US-CENTRAL1"),
+        ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
+        ServiceLabel("gcp/bucket/locationType", "region"),
+        ServiceLabel("gcp/projectId", "backup-255820"),
+    }
+
+
 @pytest.fixture(name="gcs_section")
 def fixture_section():
     return parse_gcp_gcs(SECTION_TABLE)

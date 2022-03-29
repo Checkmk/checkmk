@@ -56,13 +56,13 @@ def _parameter_valuespec_windows_updates() -> ValueSpec:
                 (
                     "levels_important",
                     SimpleLevels(
-                        Integer, title="Levels for pending important updates", default_value=None
+                        Integer, title="Levels for pending important updates", default_value=(1, 1)
                     ),
                 ),
                 (
                     "levels_optional",
                     SimpleLevels(
-                        Integer, title="Levels for pending important updates", default_value=None
+                        Integer, title="Levels for pending optional updates", default_value=(1, 99)
                     ),
                 ),
                 (

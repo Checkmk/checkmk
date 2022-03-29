@@ -104,8 +104,8 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check_windows_updates,
     check_default_parameters=dict(
-        levels_important=None,
-        levels_optional=None,
+        levels_important=(1, 1),
+        levels_optional=(1, 99),
         levels_lower_forced_reboot=(604800, 172800),
     ),
 )

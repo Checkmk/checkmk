@@ -70,9 +70,9 @@ def test_collect_cpu_resources():
 
 def test_filter_pods_from_namespaces():
     pod_one = default_pod(
-        "one", metadata=api.PodMetaData(name="one", namespace=api.Namespace("default"))
+        "one", metadata=api.PodMetaData(name="one", namespace=api.NamespaceName("default"))
     )
     pod_two = default_pod(
-        "two", metadata=api.PodMetaData(name="two", namespace=api.Namespace("standard"))
+        "two", metadata=api.PodMetaData(name="two", namespace=api.NamespaceName("standard"))
     )
-    assert pods_from_namespaces([pod_one, pod_two], {api.Namespace("default")}) == [pod_one]
+    assert pods_from_namespaces([pod_one, pod_two], {api.NamespaceName("default")}) == [pod_one]

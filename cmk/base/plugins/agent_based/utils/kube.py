@@ -26,7 +26,7 @@ Labels = Mapping[LabelName, Label]
 CreationTimestamp = NewType("CreationTimestamp", float)
 HostName = NewType("HostName", str)
 IpAddress = NewType("IpAddress", str)
-Namespace = NewType("Namespace", str)
+NamespaceName = NewType("NamespaceName", str)
 NodeName = NewType("NodeName", str)
 OsName = NewType("OsName", str)
 PodUID = NewType("PodUID", str)
@@ -336,7 +336,7 @@ class APIHealth(BaseModel):
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: Optional[Namespace]
+    namespace: Optional[NamespaceName]
     name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
@@ -498,7 +498,7 @@ class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
-    namespace: Namespace
+    namespace: NamespaceName
     labels: Labels
     selector: Selector
     creation_timestamp: CreationTimestamp
@@ -510,7 +510,7 @@ class DaemonSetInfo(BaseModel):
     """section: kube_daemonset_info_v1"""
 
     name: str
-    namespace: Namespace
+    namespace: NamespaceName
     labels: Labels
     selector: Selector
     creation_timestamp: CreationTimestamp
@@ -522,7 +522,7 @@ class StatefulSetInfo(BaseModel):
     """section: kube_statefulset_info_v1"""
 
     name: str
-    namespace: Namespace
+    namespace: NamespaceName
     labels: Labels
     selector: Selector
     creation_timestamp: CreationTimestamp

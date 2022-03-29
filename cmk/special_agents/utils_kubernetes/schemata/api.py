@@ -45,14 +45,14 @@ RestartPolicy = Literal["Always", "OnFailure", "Never"]
 QosClass = Literal["burstable", "besteffort", "guaranteed"]
 
 CreationTimestamp = NewType("CreationTimestamp", float)
-Namespace = NewType("Namespace", str)
+NamespaceName = NewType("NamespaceName", str)
 NodeName = NewType("NodeName", str)
 IpAddress = NewType("IpAddress", str)
 
 
 class MetaData(BaseModel):
     name: str
-    namespace: Optional[Namespace] = None
+    namespace: Optional[NamespaceName] = None
     creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
 
@@ -63,7 +63,7 @@ class NodeMetaData(MetaData):
 
 
 class PodMetaData(MetaData):
-    namespace: Namespace
+    namespace: NamespaceName
 
 
 class NodeConditionStatus(str, enum.Enum):

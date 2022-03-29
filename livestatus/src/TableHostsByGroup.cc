@@ -34,14 +34,14 @@ std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
 
 std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
-void TableHostsByGroup::answerQuery(Query *query, const User &user) {
+void TableHostsByGroup::answerQuery(Query &query, const User &user) {
     for (const auto *grp = hostgroup_list; grp != nullptr; grp = grp->next) {
         if (user.is_authorized_for_host_group(*grp)) {
             for (const auto *m = grp->members; m != nullptr; m = m->next) {
                 const auto *hst = m->host_ptr;
                 if (user.is_authorized_for_host(*hst)) {
                     host_and_group hag{hst, grp};
-                    if (!query->processDataset(Row{&hag})) {
+                    if (!query.processDataset(Row{&hag})) {
                         return;
                     }
                 }

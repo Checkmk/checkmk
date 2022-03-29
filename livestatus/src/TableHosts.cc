@@ -885,14 +885,14 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [](const host & /*r*/) { return -1; }));
 }
 
-void TableHosts::answerQuery(Query *query, const User &user) {
+void TableHosts::answerQuery(Query &query, const User &user) {
     auto process = [&](const host &hst) {
         return !user.is_authorized_for_host(hst) ||
-               query->processDataset(Row{&hst});
+               query.processDataset(Row{&hst});
     };
 
     // If we know the host, we use it directly.
-    if (auto value = query->stringValueRestrictionFor("name")) {
+    if (auto value = query.stringValueRestrictionFor("name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
         if (const auto *hst =
                 reinterpret_cast<const host *>(core()->find_host(*value))) {
@@ -902,7 +902,7 @@ void TableHosts::answerQuery(Query *query, const User &user) {
     }
 
     // If we know the host group, we simply iterate over it.
-    if (auto value = query->stringValueRestrictionFor("groups")) {
+    if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
         if (const auto *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {

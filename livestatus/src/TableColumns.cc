@@ -39,11 +39,10 @@ std::string TableColumns::namePrefix() const { return "column_"; }
 
 void TableColumns::addTable(const Table &table) { _tables.push_back(&table); }
 
-void TableColumns::answerQuery(Query *query, const User & /*user*/) {
+void TableColumns::answerQuery(Query &query, const User & /*user*/) {
     for (const auto *const table : _tables) {
-        table->any_column([&](const auto &c) {
-            return !query->processDataset(Row(c.get()));
-        });
+        table->any_column(
+            [&](const auto &c) { return !query.processDataset(Row{c.get()}); });
     }
 }
 

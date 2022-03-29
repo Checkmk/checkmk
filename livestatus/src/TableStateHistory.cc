@@ -293,18 +293,18 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
         });
 }
 
-void TableStateHistory::answerQuery(Query *query, const User &user) {
-    _log_cache->apply([this, query, &user](const LogFiles &log_cache) {
+void TableStateHistory::answerQuery(Query &query, const User &user) {
+    _log_cache->apply([this, &query, &user](const LogFiles &log_cache) {
         answerQueryInternal(query, user, log_cache);
     });
 }
 
-void TableStateHistory::answerQueryInternal(Query *query, const User &user,
+void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const LogFiles &log_files) {
     if (log_files.begin() == log_files.end()) {
         return;
     }
-    auto object_filter = createPartialFilter(*query);
+    auto object_filter = createPartialFilter(query);
 
     // This flag might be set to true by the return value of processDataset(...)
     _abort_query = false;
@@ -319,9 +319,9 @@ void TableStateHistory::answerQueryInternal(Query *query, const User &user,
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
-    auto glb = query->greatestLowerBoundFor("time");
+    auto glb = query.greatestLowerBoundFor("time");
     if (!glb) {
-        query->invalidRequest(
+        query.invalidRequest(
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
@@ -329,7 +329,7 @@ void TableStateHistory::answerQueryInternal(Query *query, const User &user,
     // which is quite awkward: Half-open intervals are the way to go!
     auto since = std::chrono::system_clock::from_time_t(*glb);
 
-    auto lub = query->leastUpperBoundFor("time");
+    auto lub = query.leastUpperBoundFor("time");
     auto until = (lub ? std::chrono::system_clock::from_time_t(*lub)
                       : std::chrono::system_clock::now()) +
                  1s;
@@ -473,8 +473,8 @@ void TableStateHistory::answerQueryInternal(Query *query, const User &user,
                     // since they might be needed for service states
                     if (!entry->service_description().empty()) {
                         if (!object_filter->accepts(Row(state),
-                                                    query->authUser(),
-                                                    query->timezoneOffset())) {
+                                                    query.authUser(),
+                                                    query.timezoneOffset())) {
                             object_blacklist.insert(key);
                             delete state;
                             continue;
@@ -679,7 +679,7 @@ void TableStateHistory::answerQueryInternal(Query *query, const User &user,
 }
 
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
-    Query *query, const User &user,
+    Query &query, const User &user,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
     HostServiceState *hs_state, bool only_update,
     const std::map<std::string, int> &notification_periods) {
@@ -877,7 +877,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
 }
 
 void TableStateHistory::process(
-    Query *query, const User &user,
+    Query &query, const User &user,
     std::chrono::system_clock::duration query_timeframe,
     HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
@@ -933,7 +933,7 @@ void TableStateHistory::process(
             : r->_service == nullptr
                   ? user.is_authorized_for_host(*r->_host)
                   : user.is_authorized_for_service(*r->_service);
-    _abort_query = is_authorized && !query->processDataset(Row{r});
+    _abort_query = is_authorized && !query.processDataset(Row{r});
 
     hs_state->_from = hs_state->_until;
 }

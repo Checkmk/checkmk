@@ -91,7 +91,7 @@ private:
         [[nodiscard]] std::string namePrefix() const override {
             return "dummy_";
         }
-        void answerQuery(Query * /*unused*/, const User & /*user*/) override {}
+        void answerQuery(Query & /*unused*/, const User & /*user*/) override {}
     };
 
     MonitoringCore *_mc;

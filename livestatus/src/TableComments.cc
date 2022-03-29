@@ -79,7 +79,7 @@ std::string TableComments::name() const { return "comments"; }
 
 std::string TableComments::namePrefix() const { return "comment_"; }
 
-void TableComments::answerQuery(Query *query, const User &user) {
+void TableComments::answerQuery(Query &query, const User &user) {
     auto is_authorized = [&](const Comment &comment) {
         return comment._service == nullptr
                    ? user.is_authorized_for_host(*comment._host)
@@ -87,7 +87,7 @@ void TableComments::answerQuery(Query *query, const User &user) {
     };
 
     for (const auto &[id, co] : core()->impl<NagiosCore>()->_comments) {
-        if (is_authorized(*co) && !query->processDataset(Row{co.get()})) {
+        if (is_authorized(*co) && !query.processDataset(Row{co.get()})) {
             return;
         }
     }

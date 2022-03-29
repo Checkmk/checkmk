@@ -720,14 +720,14 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
 }
 
-void TableServices::answerQuery(Query *query, const User &user) {
+void TableServices::answerQuery(Query &query, const User &user) {
     auto process = [&](const service &svc) {
         return !user.is_authorized_for_service(svc) ||
-               query->processDataset(Row{&svc});
+               query.processDataset(Row{&svc});
     };
 
     // If we know the host, we use it directly.
-    if (auto value = query->stringValueRestrictionFor("host_name")) {
+    if (auto value = query.stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
         if (const auto *hst =
                 reinterpret_cast<host *>(core()->find_host(*value))) {
@@ -741,7 +741,7 @@ void TableServices::answerQuery(Query *query, const User &user) {
     }
 
     // If we know the service group, we simply iterate over it.
-    if (auto value = query->stringValueRestrictionFor("groups")) {
+    if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
         if (const auto *sg =
                 find_servicegroup(const_cast<char *>(value->c_str()))) {
@@ -755,7 +755,7 @@ void TableServices::answerQuery(Query *query, const User &user) {
     }
 
     // If we know the host group, we simply iterate over it.
-    if (auto value = query->stringValueRestrictionFor("host_groups")) {
+    if (auto value = query.stringValueRestrictionFor("host_groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
         if (const auto *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {

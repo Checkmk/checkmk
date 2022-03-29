@@ -42,10 +42,10 @@ std::string TableContactGroups::name() const { return "contactgroups"; }
 
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
-void TableContactGroups::answerQuery(Query *query, const User & /*user*/) {
+void TableContactGroups::answerQuery(Query &query, const User & /*user*/) {
     for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
         const contactgroup *r = cg;
-        if (!query->processDataset(Row(r))) {
+        if (!query.processDataset(Row{r})) {
             break;
         }
     }

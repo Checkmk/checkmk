@@ -581,7 +581,7 @@ bool Query::process() {
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(this, User{_auth_user, service_auth_, group_auth_});
+    _table.answerQuery(*this, User{_auth_user, service_auth_, group_auth_});
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);

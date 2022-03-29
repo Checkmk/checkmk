@@ -40,7 +40,7 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, const Table &table, Query *query,
+    ECTableConnection(MonitoringCore *mc, const Table &table, Query &query,
                       std::function<bool(Row, const contact *)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
@@ -72,7 +72,7 @@ private:
     void emitColumnsHeader(std::ostream &os) {
         os << "\nColumns:";
         // Initially we consider all columns used in the query...
-        auto all = query_->allColumns();
+        auto all = query_.allColumns();
         // ... then we add some special columns which we might need irrespective
         // of the actual query...
         static std::unordered_set<std::string> special_columns{
@@ -98,21 +98,21 @@ private:
     }
 
     void emitTimeRangeFilter(std::ostream &os) {
-        if (auto glb = query_->greatestLowerBoundFor("history_time")) {
+        if (auto glb = query_.greatestLowerBoundFor("history_time")) {
             os << "\nFilter: history_time >= " << *glb;
         }
-        if (auto lub = query_->leastUpperBoundFor("history_time")) {
+        if (auto lub = query_.leastUpperBoundFor("history_time")) {
             os << "\nFilter: history_time <= " << *lub;
         }
     }
 
     void emitGreppingFilter(std::ostream &os) {
         for (const auto &column_name : grepping_filters) {
-            if (auto svr = query_->stringValueRestrictionFor(column_name)) {
+            if (auto svr = query_.stringValueRestrictionFor(column_name)) {
                 os << "\nFilter: " << column_name << " = " << *svr;
             } else {
-                auto glb = query_->greatestLowerBoundFor(column_name);
-                auto lub = query_->leastUpperBoundFor(column_name);
+                auto glb = query_.greatestLowerBoundFor(column_name);
+                auto lub = query_.leastUpperBoundFor(column_name);
                 if (glb && lub && glb == lub) {
                     os << "\nFilter: " << column_name << " = " << *glb;
                 }
@@ -138,8 +138,8 @@ private:
                 is_header = false;
             } else {
                 ECRow row{mc_, headers, columns};
-                if (is_authorized_(Row{&row}, query_->authUser()) &&
-                    !query_->processDataset(Row{&row})) {
+                if (is_authorized_(Row{&row}, query_.authUser()) &&
+                    !query_.processDataset(Row{&row})) {
                     return;
                 }
             }
@@ -148,7 +148,7 @@ private:
 
     MonitoringCore *mc_;
     const Table &table_;
-    Query *query_;
+    Query &query_;
     const std::function<bool(Row, const contact *)> is_authorized_;
 };
 }  // namespace
@@ -240,12 +240,12 @@ TableEventConsole::TableEventConsole(
     MonitoringCore *mc, std::function<bool(Row, const contact *)> is_authorized)
     : Table{mc}, is_authorized_{std::move(is_authorized)} {}
 
-void TableEventConsole::answerQuery(Query *query, const User & /*user*/) {
+void TableEventConsole::answerQuery(Query &query, const User & /*user*/) {
     if (core()->mkeventdEnabled()) {
         try {
             ECTableConnection{core(), *this, query, is_authorized_}.run();
         } catch (const std::runtime_error &err) {
-            query->badGateway(err.what());
+            query.badGateway(err.what());
         }
     }
 }

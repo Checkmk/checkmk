@@ -192,10 +192,10 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
                       HostListState::Type::num_svc_hard_unknown}));
 }
 
-void TableHostGroups::answerQuery(Query *query, const User &user) {
+void TableHostGroups::answerQuery(Query &query, const User &user) {
     auto process = [&](const hostgroup &group) {
         return !user.is_authorized_for_host_group(group) ||
-               query->processDataset(Row{&group});
+               query.processDataset(Row{&group});
     };
 
     for (const auto *group = hostgroup_list; group != nullptr;

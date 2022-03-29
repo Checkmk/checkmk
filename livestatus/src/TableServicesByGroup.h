@@ -20,7 +20,7 @@ public:
     explicit TableServicesByGroup(MonitoringCore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query, const User &user) override;
+    void answerQuery(Query &query, const User &user) override;
     // NOTE: We do *not* implement findObject() here, because we don't know
     // which service group we should refer to: Every service can be part of many
     // service groups.

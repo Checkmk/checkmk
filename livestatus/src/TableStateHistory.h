@@ -33,7 +33,7 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query, const User &user) override;
+    void answerQuery(Query &query, const User &user) override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);
@@ -44,7 +44,7 @@ private:
 
     enum class ModificationStatus { unchanged, changed };
 
-    void answerQueryInternal(Query *query, const User &user,
+    void answerQueryInternal(Query &query, const User &user,
                              const LogFiles &log_files);
     const Logfile::map_type *getEntries(Logfile *logfile);
     void getPreviousLogentry(const LogFiles &log_files,
@@ -55,11 +55,11 @@ private:
                               LogFiles::const_iterator &it_logs,
                               const Logfile::map_type *&entries,
                               Logfile::const_iterator &it_entries);
-    void process(Query *query, const User &user,
+    void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hs_state);
     ModificationStatus updateHostServiceState(
-        Query *query, const User &user,
+        Query &query, const User &user,
         std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, HostServiceState *hs_state, bool only_update,
         const std::map<std::string, int> &notification_periods);

@@ -72,7 +72,7 @@ public:
     TableEventConsole(MonitoringCore *mc,
                       std::function<bool(Row, const contact *)> is_authorized);
 
-    void answerQuery(Query *query, const User &user) override;
+    void answerQuery(Query &query, const User &user) override;
 
 protected:
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;

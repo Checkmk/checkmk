@@ -25,14 +25,14 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query, const User &user) override;
+    void answerQuery(Query &query, const User &user) override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
 
 private:
     LogCache *_log_cache;
 
-    static LogFilter constructFilter(Query *query,
+    static LogFilter constructFilter(Query &query,
                                      size_t max_lines_per_logfile);
 };
 

@@ -25,7 +25,7 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query, const User &user) override;
+    void answerQuery(Query &query, const User &user) override;
 
     void addTable(const Table &table);
     [[nodiscard]] std::string getValue(const Column &column, Type colcol) const;

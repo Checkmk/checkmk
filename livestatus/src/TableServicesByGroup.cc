@@ -39,14 +39,14 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
-void TableServicesByGroup::answerQuery(Query *query, const User &user) {
+void TableServicesByGroup::answerQuery(Query &query, const User &user) {
     auto process = [&](const service_and_group &sag) {
         return !user.is_authorized_for_service(*sag.svc) ||
-               query->processDataset(Row{&sag});
+               query.processDataset(Row{&sag});
     };
 
     // If we know the service group, we simply iterate over it.
-    if (auto value = query->stringValueRestrictionFor("groups")) {
+    if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
         if (const auto *group =
                 find_servicegroup(const_cast<char *>(value->c_str()))) {

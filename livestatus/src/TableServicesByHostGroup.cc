@@ -38,10 +38,10 @@ std::string TableServicesByHostGroup::name() const {
 
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
-void TableServicesByHostGroup::answerQuery(Query *query, const User &user) {
+void TableServicesByHostGroup::answerQuery(Query &query, const User &user) {
     auto process = [&](const service_and_group &sag) {
         return !user.is_authorized_for_service(*sag.svc) ||
-               query->processDataset(Row{&sag});
+               query.processDataset(Row{&sag});
     };
 
     for (const auto *group = hostgroup_list; group != nullptr;

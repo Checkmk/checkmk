@@ -155,7 +155,7 @@ bool rowWithoutHost(const LogRow &lr) {
 }
 }  // namespace
 
-void TableLog::answerQuery(Query *query, const User &user) {
+void TableLog::answerQuery(Query &query, const User &user) {
     auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
     if (log_filter.classmask == 0) {
         return;
@@ -172,31 +172,31 @@ void TableLog::answerQuery(Query *query, const User &user) {
     };
 
     auto process = [is_authorized, core = core(),
-                    query](const LogEntry &entry) {
+                    &query](const LogEntry &entry) {
         LogRow r{entry, core};
-        return !is_authorized(r) || query->processDataset(Row{&r});
+        return !is_authorized(r) || query.processDataset(Row{&r});
     };
     _log_cache->for_each(log_filter, process);
 }
 
 // static
-LogFilter TableLog::constructFilter(Query *query,
+LogFilter TableLog::constructFilter(Query &query,
                                     size_t max_lines_per_logfile) {
     // Optimize time interval for the query. In log querys there should always
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
     auto since = std::chrono::system_clock::from_time_t(
-        query->greatestLowerBoundFor("time").value_or(0));
+        query.greatestLowerBoundFor("time").value_or(0));
     auto now =
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     auto until = std::chrono::system_clock::from_time_t(
-        query->leastUpperBoundFor("time").value_or(now) + 1);
+        query.leastUpperBoundFor("time").value_or(now) + 1);
 
     // The second optimization is for log message types. We want to load only
     // those log type that are queried.
     auto classmask =
-        static_cast<unsigned>(query->valueSetLeastUpperBoundFor("class")
+        static_cast<unsigned>(query.valueSetLeastUpperBoundFor("class")
                                   .value_or(~std::bitset<32>())
                                   .to_ulong());
     return {

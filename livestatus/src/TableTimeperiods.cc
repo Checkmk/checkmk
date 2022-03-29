@@ -71,9 +71,9 @@ std::string TableTimeperiods::name() const { return "timeperiods"; }
 
 std::string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
-void TableTimeperiods::answerQuery(Query *query, const User & /*user*/) {
+void TableTimeperiods::answerQuery(Query &query, const User & /*user*/) {
     for (const timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        if (!query->processDataset(Row{tp})) {
+        if (!query.processDataset(Row{tp})) {
             break;
         }
     }

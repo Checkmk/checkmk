@@ -48,10 +48,10 @@ def check_gcp_function_instances(
     section = section_gcp_service_cloud_functions
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
-            "cloudfunctions.googleapis.com/function/instance_count", str
+            "cloudfunctions.googleapis.com/function/instance_count", "Instances", str
         ),
         "faas_active_instance_count": gcp.MetricSpec(
-            "cloudfunctions.googleapis.com/function/active_instances", str
+            "cloudfunctions.googleapis.com/function/active_instances", "Active instances", str
         ),
     }
     timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
@@ -81,14 +81,15 @@ def check_gcp_function_execution(
     metrics = {
         # TODO: this is the total. Separate by state
         "faas_execution_count": gcp.MetricSpec(
-            "cloudfunctions.googleapis.com/function/execution_count", str
+            "cloudfunctions.googleapis.com/function/execution_count", "Executions count", str
         ),
         "aws_lambda_memory_size_absolute": gcp.MetricSpec(
-            "cloudfunctions.googleapis.com/function/user_memory_bytes", render.bytes
+            "cloudfunctions.googleapis.com/function/user_memory_bytes", "Memory", render.bytes
         ),
         # execution times are given in nanoseconds. timespan expects seconds.
         "faas_execution_times": gcp.MetricSpec(
             "cloudfunctions.googleapis.com/function/execution_times",
+            "Execution times",
             render.timespan,
             scale=1e-9,
         ),
@@ -119,7 +120,7 @@ def check_gcp_function_network(
     section = section_gcp_service_cloud_functions
     metrics = {
         "net_data_sent": gcp.MetricSpec(
-            "cloudfunctions.googleapis.com/function/network_egress", render.networkbandwidth
+            "cloudfunctions.googleapis.com/function/network_egress", "Out", render.networkbandwidth
         ),
     }
     timeseries = section.get(item, gcp.SectionItem(rows=[])).rows

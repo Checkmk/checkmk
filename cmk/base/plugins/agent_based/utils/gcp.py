@@ -71,6 +71,7 @@ def parse_assets(string_table: StringTable) -> AssetSection:
 @dataclass(frozen=True)
 class MetricSpec:
     metric_type: str
+    label: str
     render_func: Callable
     scale: float = 1.0
     # TODO: use enum
@@ -107,6 +108,7 @@ def generic_check(
                 metric_name=metric_name,
                 render_func=metric_spec.render_func,
                 levels=levels_upper,
+                label=metric_spec.label,
             )
         else:
             yield from check_levels(
@@ -114,4 +116,5 @@ def generic_check(
                 metric_name=metric_name,
                 render_func=metric_spec.render_func,
                 levels_upper=levels_upper,
+                label=metric_spec.label,
             )

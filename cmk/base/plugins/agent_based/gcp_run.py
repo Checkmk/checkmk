@@ -47,10 +47,12 @@ def check_gcp_run_network(
         return
     metrics = {
         "net_data_recv": gcp.MetricSpec(
-            "run.googleapis.com/container/network/received_bytes_count", render.networkbandwidth
+            "run.googleapis.com/container/network/received_bytes_count",
+            "Out",
+            render.networkbandwidth,
         ),
         "net_data_sent": gcp.MetricSpec(
-            "run.googleapis.com/container/network/sent_bytes_count", render.networkbandwidth
+            "run.googleapis.com/container/network/sent_bytes_count", "In", render.networkbandwidth
         ),
     }
     timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
@@ -79,7 +81,7 @@ def check_gcp_run_memory(
     metrics = {
         # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
-            "run.googleapis.com/container/memory/utilizations", render.percent, scale=1e2
+            "run.googleapis.com/container/memory/utilizations", "Memory", render.percent, scale=1e2
         ),
     }
     timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
@@ -107,7 +109,7 @@ def check_gcp_run_cpu(
         return
     metrics = {
         "util": gcp.MetricSpec(
-            "run.googleapis.com/container/cpu/utilizations", render.percent, scale=1e2
+            "run.googleapis.com/container/cpu/utilizations", "CPU", render.percent, scale=1e2
         ),
     }
     timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
@@ -135,17 +137,22 @@ def check_gcp_run_requests(
         return
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
-            "run.googleapis.com/container/instance_count", str, dtype="int"
+            "run.googleapis.com/container/instance_count", "Instances", str, dtype="int"
         ),
         "faas_execution_count": gcp.MetricSpec(
-            "run.googleapis.com/container/request_count", str, dtype="int"
+            "run.googleapis.com/container/request_count", "Requests", str, dtype="int"
         ),
         "gcp_billable_time": gcp.MetricSpec(
-            "run.googleapis.com/container/billable_instance_time", lambda x: f"{x:.2f} s/s"
+            "run.googleapis.com/container/billable_instance_time",
+            "Billable Time",
+            lambda x: f"{x:.2f} s/s",
         ),
         # timespan renderer expects seconds not milliseconds
         "faas_execution_times": gcp.MetricSpec(
-            "run.googleapis.com/container/request_latencies", render.timespan, scale=1e3
+            "run.googleapis.com/container/request_latencies",
+            "Latencies",
+            render.timespan,
+            scale=1e3,
         ),
     }
     timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows

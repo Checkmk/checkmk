@@ -70,7 +70,9 @@ def check_gcp_sql_status(
     if item not in section_gcp_service_cloud_sql:
         return
     metrics = {
-        "up": gcp.MetricSpec("cloudsql.googleapis.com/database/up", str, dtype="int"),
+        "up": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/up", "Up:", lambda x: str(bool(x)), dtype="int"
+        ),
     }
     timeseries = section_gcp_service_cloud_sql[item].rows
     yield from gcp.generic_check(metrics, timeseries, {})
@@ -117,7 +119,10 @@ def check_gcp_sql_memory(
     metrics = {
         # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/memory/utilization", render.percent, scale=1e2
+            "cloudsql.googleapis.com/database/memory/utilization",
+            "Memory",
+            render.percent,
+            scale=1e2,
         ),
     }
     timeseries = section_gcp_service_cloud_sql[item].rows
@@ -147,7 +152,7 @@ def check_gcp_sql_cpu(
         return
     metrics = {
         "util": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/cpu/utilization", render.percent, scale=1e2
+            "cloudsql.googleapis.com/database/cpu/utilization", "CPU", render.percent, scale=1e2
         ),
     }
     timeseries = section_gcp_service_cloud_sql[item].rows
@@ -178,10 +183,12 @@ def check_gcp_sql_network(
     metrics = {
         "net_data_recv": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/network/received_bytes_count",
+            "In",
             render.networkbandwidth,
         ),
         "net_data_sent": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/network/sent_bytes_count",
+            "Out",
             render.networkbandwidth,
         ),
     }
@@ -213,14 +220,15 @@ def check_gcp_sql_disk(
     metrics = {
         "fs_used_percent": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/disk/utilization",
+            "Disk utilization",
             lambda x: f"usage: {render.percent(x)}",
             scale=1e2,
         ),
         "disk_write_ios": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/write_ops_count", lambda x: f"write: {x} IOPS"
+            "cloudsql.googleapis.com/database/disk/write_ops_count", "Write operations", str
         ),
         "disk_read_ios": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/read_ops_count", lambda x: f"read: {x} IOPS"
+            "cloudsql.googleapis.com/database/disk/read_ops_count", "Read operations", str
         ),
     }
     timeseries = section_gcp_service_cloud_sql[item].rows

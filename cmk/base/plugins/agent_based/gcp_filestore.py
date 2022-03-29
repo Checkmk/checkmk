@@ -49,10 +49,14 @@ def check(
     section = section_gcp_service_filestore
     metrics = {
         "fs_used_percent": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/used_bytes_percent", render.percent, scale=1e2
+            "file.googleapis.com/nfs/server/used_bytes_percent", "Usage", render.percent, scale=1e2
         ),
-        "disk_read_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/read_ops_count", str),
-        "disk_write_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/write_ops_count", str),
+        "disk_read_ios": gcp.MetricSpec(
+            "file.googleapis.com/nfs/server/read_ops_count", "Read operations", str
+        ),
+        "disk_write_ios": gcp.MetricSpec(
+            "file.googleapis.com/nfs/server/write_ops_count", "Write operations", str
+        ),
     }
     timeseries = section[item].rows
     yield from gcp.generic_check(metrics, timeseries, params)

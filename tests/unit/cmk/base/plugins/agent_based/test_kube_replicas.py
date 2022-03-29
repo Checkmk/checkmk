@@ -305,6 +305,89 @@ def test_check_kube_replicas_outdated_replicas(
     "params,replicas,value_store,expected_check_result",
     [
         pytest.param(
+            {"misscheduled_duration": "no_levels"},
+            DaemonSetReplicas(
+                desired=3,
+                updated=3,
+                ready=3,
+                misscheduled=1,
+            ),
+            {"misscheduled_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Misscheduled: 1"),
+                Metric("kube_misscheduled_replicas", 1.0),
+                Result(state=State.OK, summary="Misscheduled for: 11 minutes 40 seconds"),
+            ],
+            id="Misscheduled is OK when no parameters are specified",
+        ),
+        pytest.param(
+            {"misscheduled_duration": ("levels", (900, 1000))},
+            DaemonSetReplicas(
+                desired=3,
+                updated=3,
+                ready=3,
+                misscheduled=1,
+            ),
+            {"misscheduled_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Misscheduled: 1"),
+                Metric("kube_misscheduled_replicas", 1.0),
+                Result(state=State.OK, summary="Misscheduled for: 11 minutes 40 seconds"),
+            ],
+            id="Misscheduled is OK when thresholds are not reached",
+        ),
+        pytest.param(
+            {"misscheduled_duration": ("levels", (300, 500))},
+            DaemonSetReplicas(
+                desired=3,
+                updated=3,
+                ready=3,
+                misscheduled=1,
+            ),
+            {"misscheduled_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Misscheduled: 1"),
+                Metric("kube_misscheduled_replicas", 1.0),
+                Result(
+                    state=State.CRIT,
+                    summary="Misscheduled for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
+                ),
+            ],
+            id="Misscheduled thresholds are applied",
+        ),
+    ],
+)
+def test_check_kube_replicas_misscheduled_pods(
+    params: Mapping[str, VSResultAge],
+    replicas: DaemonSetReplicas,
+    value_store: MutableMapping[str, Any],
+    expected_check_result: Sequence[Union[Result, Metric]],
+) -> None:
+    assert (
+        list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
+        == expected_check_result
+    )
+
+
+@pytest.mark.parametrize(
+    "params,replicas,value_store,expected_check_result",
+    [
+        pytest.param(
             {"not_ready_duration": "no_levels"},
             DeploymentReplicas(
                 desired=3,

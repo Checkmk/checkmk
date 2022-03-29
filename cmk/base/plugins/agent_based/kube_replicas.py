@@ -83,7 +83,9 @@ def discover_kube_replicas(
 
 def _check_duration(
     transition_complete: bool,
-    value_store_key: Literal["not_ready_started_timestamp", "update_started_timestamp"],
+    value_store_key: Literal[
+        "not_ready_started_timestamp", "update_started_timestamp", "misscheduled_timestamp"
+    ],
     now: float,
     value_store: MutableMapping[str, Any],
     levels_upper: Optional[Tuple[int, int]],
@@ -158,6 +160,13 @@ def _check_kube_replicas(
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
 
+    if isinstance(section_kube_replicas, DaemonSetReplicas):
+        yield Result(
+            state=State.OK,
+            summary=f"Misscheduled: {section_kube_replicas.misscheduled}",
+        )
+        yield Metric("kube_misscheduled_replicas", section_kube_replicas.misscheduled)
+
     yield from _check_duration(
         section_kube_replicas.ready == section_kube_replicas.desired,
         "not_ready_started_timestamp",
@@ -176,6 +185,16 @@ def _check_kube_replicas(
         _levels(params, "update_duration"),
         "Not updated for",
     )
+
+    if isinstance(section_kube_replicas, DaemonSetReplicas):
+        yield from _check_duration(
+            section_kube_replicas.misscheduled == 0,
+            "misscheduled_timestamp",
+            now,
+            value_store,
+            _levels(params, "misscheduled_duration"),
+            "Misscheduled for",
+        )
 
     if section_kube_update_strategy is None or all_updated:
         return
@@ -196,5 +215,6 @@ register.check_plugin(
     check_default_parameters={
         "update_duration": ("levels", (300, 600)),
         "not_ready_duration": ("levels", (300, 600)),
+        "misscheduled_duration": ("levels", (300, 600)),
     },
 )

@@ -1763,8 +1763,6 @@ _CheckingOptions = TypedDict(
         "detect-sections": Set[SectionName],
         "plugins": Set[CheckPluginName],
         "detect-plugins": Set[str],
-        "keepalive": bool,
-        "keepalive-fd": int,
     },
     total=False,
 )
@@ -1773,20 +1771,6 @@ _CheckingOptions = TypedDict(
 def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
-
-    try:
-        import cmk.base.cee.keepalive as keepalive  # pylint: disable=import-outside-toplevel
-    except ImportError:
-        keepalive = None  # type: ignore[assignment]
-
-    if keepalive and "keepalive" in options:
-        # handle CMC check helper
-        keepalive.enable()
-        if "keepalive-fd" in options:
-            keepalive.fd.set_(options["keepalive-fd"])
-
-        keepalive.check.do_keepalive()
-        return
 
     if "no-submit" in options:
         # this has no effect for the new Check API. For the old one (cmk/base/check_api.py)
@@ -1846,14 +1830,6 @@ modes.register(
             _option_sections,
             _get_plugins_option(CheckPluginName),
             _option_detect_plugins,
-            keepalive_option,
-            Option(
-                long_option="keepalive-fd",
-                argument=True,
-                argument_descr="I",
-                argument_conv=int,
-                short_help="File descriptor to send output to",
-            ),
         ],
     )
 )

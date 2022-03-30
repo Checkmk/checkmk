@@ -10,7 +10,9 @@ import logging
 from functools import partial
 from typing import Any, TYPE_CHECKING
 
-from werkzeug.local import LocalProxy, LocalStack
+from werkzeug.local import LocalProxy
+
+from cmk.gui.ctx_stack import _lookup_app_object, request_local_attr
 
 #####################################################################
 # a namespace for storing data during an application context
@@ -29,63 +31,6 @@ if TYPE_CHECKING:
     from cmk.gui.utils.transaction_manager import TransactionManager
     from cmk.gui.utils.user_errors import UserErrors
 
-#####################################################################
-# application context
-
-_app_ctx_stack = LocalStack()
-
-
-def app_stack() -> LocalStack:
-    return _app_ctx_stack
-
-
-def _lookup_app_object(name):
-    top = _app_ctx_stack.top
-    if top is None:
-        raise RuntimeError("Working outside of application context.")
-    return getattr(top, name)
-
-
-current_app = LocalProxy(partial(_lookup_app_object, "app"))
-g: Any = LocalProxy(partial(_lookup_app_object, "g"))
-
-
-_request_ctx_stack = LocalStack()
-
-
-def request_stack() -> LocalStack:
-    return _request_ctx_stack
-
-
-# NOTE: Flask offers the proxies below, and we should go into that direction,
-# too. But currently our html class is a swiss army knife with tons of
-# responsibilities which we should really, really split up...
-def request_local_attr(name=None):
-    """Delegate access to the corresponding attribute on RequestContext
-
-    When the returned object is accessed, the Proxy will fetch the current
-    RequestContext from the LocalStack and return the attribute given by `name`.
-
-    Args:
-        name (str): The name of the attribute on RequestContext
-
-    Returns:
-        A proxy which wraps the value stored on RequestContext.
-
-    """
-    return LocalProxy(partial(_lookup_req_object, name))
-
-
-def _lookup_req_object(name):
-    top = _request_ctx_stack.top
-    if top is None:
-        raise RuntimeError("Working outside of request context.")
-
-    if name is None:
-        return top
-
-    return getattr(top, name)
-
 
 ######################################################################
 # TODO: This should live somewhere else...
@@ -96,11 +41,17 @@ class PrependURLFilter(logging.Filter):
         return True
 
 
+# From app context
+current_app = LocalProxy(partial(_lookup_app_object, "app"))
+g: Any = LocalProxy(partial(_lookup_app_object, "g"))
+
+
 # NOTE: All types FOO below are actually a Union[Foo, LocalProxy], but
 # LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse
 # mypy. LocalProxy uses a lot of reflection magic, which can't be understood by
 # tools in general.
 
+# From request context
 local: RequestContext = request_local_attr()  # None as name will get the whole object.
 user: LoggedInUser = request_local_attr("user")
 request: http.Request = request_local_attr("request")

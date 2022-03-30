@@ -12,7 +12,8 @@ simplicity. In case we have such a generic thing, it will be easy to switch to i
 
 from typing import List, Union
 
-from cmk.gui.globals import _request_ctx_stack, session
+from cmk.gui.ctx_stack import request_stack
+from cmk.gui.globals import session
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 
@@ -35,12 +36,12 @@ def get_flashed_messages() -> List[HTML]:
     Move the flashes from the session object to the current request once and
     cache them for the current request.
     """
-    flashes = _request_ctx_stack.top.flashes
+    flashes = request_stack().top.flashes
     if flashes is None:
         if not hasattr(session, "session_info") or not session.session_info.flashes:
-            _request_ctx_stack.top.flashes = []
+            request_stack().top.flashes = []
         else:
-            _request_ctx_stack.top.flashes = session.session_info.flashes
+            request_stack().top.flashes = session.session_info.flashes
             session.session_info.flashes = []
 
-    return [HTML(s) for s in _request_ctx_stack.top.flashes]
+    return [HTML(s) for s in request_stack().top.flashes]

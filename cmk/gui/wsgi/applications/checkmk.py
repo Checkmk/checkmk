@@ -21,6 +21,7 @@ from cmk.gui import config as config_module
 from cmk.gui import htmllib, http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.context import AppContext, RequestContext
+from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
     FinalizeRequest,
@@ -31,15 +32,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.globals import (
-    app_stack,
-    config,
-    html,
-    PrependURLFilter,
-    request,
-    request_stack,
-    response,
-)
+from cmk.gui.globals import config, html, PrependURLFilter, request, response
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

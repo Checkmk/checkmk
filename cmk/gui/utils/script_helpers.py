@@ -16,8 +16,9 @@ from werkzeug.test import create_environ
 
 from cmk.gui.config import get_default_config, load_config, make_config_object
 from cmk.gui.context import AppContext, RequestContext
+from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import app_stack, PrependURLFilter, request_stack
+from cmk.gui.globals import PrependURLFilter
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
 from cmk.gui.utils.logged_in import LoggedInNobody

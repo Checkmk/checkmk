@@ -1,0 +1,23 @@
+diff --git a/openssl.c b/openssl.c
+index 9d1eaf4..b5db2a8 100644
+--- a/openssl.c
++++ b/openssl.c
+@@ -229,9 +229,16 @@ ssl_select_method(const char *uhp)
+ 					"Unsupported SSL method \"%s\"\n"), cp);
+ 			method = SSLv23_client_method();
+ #endif
+-		} else if (equal(cp, "ssl3"))
++		} else if (equal(cp, "ssl3")) {
++#ifndef OPENSSL_NO_SSL3_METHOD
+ 			method = SSLv3_client_method();
+-		else if (equal(cp, "tls1"))
++#else
++	/* no SSLv3 support */
++			fprintf(stderr, catgets(catd, CATSET, 244,
++					"Unsupported SSL method \"%s\"\n"), cp);
++			method = SSLv23_client_method();
++#endif
++		} else if (equal(cp, "tls1"))
+ 			method = TLSv1_client_method();
+ 		else {
+ 			fprintf(stderr, catgets(catd, CATSET, 244,

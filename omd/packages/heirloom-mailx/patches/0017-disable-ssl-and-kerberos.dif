@@ -11,7 +11,7 @@
  #include <prinit.h>
 @@ -425,16 +425,16 @@
  !
- 
+
  <$tmp2.c link_check gssapi 'for GSSAPI in libgss' \
 -		'#define USE_GSSAPI' '-lgss' ||
 +		'#define DONT_USE_GSSAPI' '-lgss' ||
@@ -28,5 +28,5 @@
 -#include <gssapi/gssapi.h>
 +#include <gssapi/gssapiDESTROY.h>
  #include <gssapi/gssapi_generic.h>
- 
+
  int main(void)

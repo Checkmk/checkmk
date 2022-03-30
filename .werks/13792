@@ -1,0 +1,13 @@
+Title: KUBE: kube_replicas supports StatefulSet and DaemonSet
+Class: feature
+Compatible: comp
+Component: checks
+Date: 1648648614
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces the Replicas service to StatefulSets and DaemonSets. Moreover, the
+kube_replicas check has been updated to support Pods, which have been misscheduled and are claimed
+by a DaemonSet.

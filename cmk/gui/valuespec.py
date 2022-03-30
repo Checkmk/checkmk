@@ -3552,7 +3552,7 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
         render_function: _Optional[Callable[[ListChoiceChoiceIdent, str], str]] = None,
         toggle_all: bool = False,
         # TODO: Rename to "orientation" to be in line with other valuespecs
-        render_orientation: str = "horizontal",
+        render_orientation: Literal["horizontal", "vertical"] = "horizontal",
         no_elements_text: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -3570,7 +3570,7 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
             render_function if render_function is not None else (lambda id, val: val)
         )
         self._toggle_all = toggle_all
-        self._render_orientation = render_orientation  # other: vertical
+        self._render_orientation = render_orientation
         self._no_elements_text = (
             no_elements_text
             if no_elements_text is not None
@@ -3710,7 +3710,7 @@ class DualListChoice(ListChoice):
         render_function: _Optional[Callable[[ListChoiceChoiceIdent, str], str]] = None,
         toggle_all: bool = False,
         # TODO: Rename to "orientation" to be in line with other valuespecs
-        render_orientation: str = "horizontal",
+        render_orientation: Literal["horizontal", "vertical"] = "horizontal",
         no_elements_text: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -5176,7 +5176,7 @@ class Alternative(ValueSpec):
         match: _Optional[Callable[[Any], int]] = None,
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
-        orientation: str = "vertical",
+        orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -5475,8 +5475,8 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         ignored_keys: _Optional[list[str]] = None,
         default_keys: _Optional[list[str]] = None,
         hidden_keys: _Optional[list[str]] = None,
-        columns: int = 1,
-        render: str = "normal",
+        columns: Literal[1, 2] = 1,
+        render: Literal["normal", "form", "form_part"] = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
         headers: _Optional[list[Union[tuple[str, list[str]], tuple[str, str, list[str]]]]] = None,
@@ -5514,8 +5514,8 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         else:
             self._optional_keys = False
 
-        self._columns = columns  # possible: 1 or 2
-        self._render = render  # also: "form" -> use forms.section()
+        self._columns = columns
+        self._render = render
         self._form_narrow = form_narrow  # used if render == "form"
         self._form_isopen = form_isopen  # used if render == "form"
         self._headers = headers
@@ -6532,7 +6532,7 @@ class UploadOrPasteTextFile(Alternative):
         match: _Optional[Callable[[Any], int]] = lambda val: 0 if isinstance(val, tuple) else 1,
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
-        orientation: str = "vertical",
+        orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -7484,7 +7484,7 @@ class CAorCAChain(UploadOrPasteTextFile):
         # Alternative
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
-        orientation: str = "vertical",
+        orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,

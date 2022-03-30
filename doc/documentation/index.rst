@@ -13,6 +13,7 @@ Welcome to Checkmk's developer documentation
    arch-index.rst
    api-index.rst
    arch-build-chain.rst
+   graphs.rst
 
 Indices and tables
 ==================

@@ -1,0 +1,15 @@
+Title: Crash check job: Cannot render negative timespan
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648630146
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+When the system time is incorrect the start time of a job can be in the future.
+This caused the job check to crash when rendering the age of the job.
+
+Now the absolute value is displayed and a note to check the system time is added.

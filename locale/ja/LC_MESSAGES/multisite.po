@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-03-28 15:26+0000\n"
+"PO-Revision-Date: 2022-03-29 06:00+0000\n"
 "Last-Translator: hirokotoguchi <toguchi@jtc-i.co.jp>\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "software/ja/>\n"
@@ -392,9 +392,9 @@ msgstr ""
 msgid "%d open incompatible werks"
 msgstr "%d互換性のないwerksを開く"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d pending changes"
-msgstr "保留中の変更はありません"
+msgstr "%d 個の変更"
 
 #, python-format
 msgid "%d rows"
@@ -516,9 +516,9 @@ msgstr "%s ホストの %d が開始されました (%s)…"
 msgid "%s for all hosts started..."
 msgstr "すべてのホストの%sが開始されました..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s instances"
-msgstr "DBインスタンス"
+msgstr "%s インスタンス"
 
 #, python-format
 msgid "%s into %s"
@@ -11262,12 +11262,6 @@ msgstr "上記の場合はクリティカル"
 msgid "Critical if at"
 msgstr ""
 
-msgid "Critical if at least this number of important updates are pending"
-msgstr "少なくともこの数の重要な更新が保留中の場合は重要です"
-
-msgid "Critical if at least this number of optional updates are pending"
-msgstr "少なくともこの数のオプションの更新が保留中の場合は重要です"
-
 msgid "Critical if below"
 msgstr "以下の場合はクリティカル"
 
@@ -11288,9 +11282,6 @@ msgstr "より古い場合は重要"
 
 msgid "Critical if over"
 msgstr "終わったらクリティカル"
-
-msgid "Critical if time time until forced reboot is less then"
-msgstr "強制再起動までの時間が短い場合は重要です"
 
 msgid "Critical if under"
 msgstr "アンダーの場合はクリティカル"
@@ -27007,9 +26998,8 @@ msgstr "ログイン可能"
 msgid "Login session idle timeout"
 msgstr "ログインセッションのアイドルタイムアウト"
 
-#, fuzzy
 msgid "Login token"
-msgstr "ログインモード"
+msgstr "ログイントークン"
 
 msgid "Login username"
 msgstr "ログインユーザー名"
@@ -29102,6 +29092,22 @@ msgstr "モバイル:リスト"
 
 msgid "Mobile: Table"
 msgstr "モバイル:テーブル"
+
+#, fuzzy
+msgid "MobileIron API"
+msgstr "モバイルGUI"
+
+#, fuzzy
+msgid "Mobileiron Device"
+msgstr "冷却装置"
+
+#, fuzzy
+msgid "Mobileiron compliance parameters"
+msgstr "スペックパラメータがありません"
+
+#, fuzzy
+msgid "Mobileiron miscellaneous parameters"
+msgstr "レンダリングパラメータがありません"
 
 msgid "Mode"
 msgstr "モード"
@@ -31971,7 +31977,7 @@ msgid "OFFLINE"
 msgstr "オフライン"
 
 msgid "OK"
-msgstr "services"
+msgstr "OK"
 
 msgid "OK - do not alert, just display"
 msgstr "OK - 警告せず、表示するだけ"
@@ -34813,6 +34819,10 @@ msgstr "ポリシー名"
 msgid "Policy specific levels (Clustermode only)"
 msgstr "ポリシー固有のレベル(クラスターモードのみ)"
 
+#, fuzzy
+msgid "Policy violation levels"
+msgstr "視覚化レベル"
+
 msgid "Pool name"
 msgstr "プール名"
 
@@ -37363,6 +37373,10 @@ msgstr "準備完了メッセージ"
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
 
+#, fuzzy
+msgid "Retrieve information about the following partitions"
+msgstr "次のパラメータを使用して通知を作成します"
+
 msgid "Retrieve information about..."
 msgstr "関する情報を取得する..."
 
@@ -38309,13 +38323,13 @@ msgid "Scheduled Checkmk Report $TITLE$.\n"
 msgstr ""
 
 msgid "Scheduled Downtimes"
-msgstr "スケジュールされたダウンタイム"
+msgstr "予定ダウンタイム"
 
 msgid "Scheduled Jobs"
-msgstr "スケジュールされたジョブ"
+msgstr "予定ジョブ"
 
 msgid "Scheduled downtime"
-msgstr "スケジュールされたダウンタイム"
+msgstr "予定ダウンタイム"
 
 msgid "Scheduled downtime depth"
 msgstr "スケジュールされたダウンタイムの深度"
@@ -46676,6 +46690,10 @@ msgstr ""
 msgid "The port on which the ntopng instance is reachable."
 msgstr "ntopngインスタンスが到達可能なポート。"
 
+#, fuzzy
+msgid "The port that is used for the API call."
+msgstr "API呼び出しに使用されるポート。"
+
 msgid "The port that is used for the api call."
 msgstr "API呼び出しに使用されるポート。"
 
@@ -54353,6 +54371,10 @@ msgid "Use proxy"
 msgstr "プロキシを使う"
 
 #, fuzzy
+msgid "Use proxy for MobileIron API connection"
+msgstr "すべての接続に使用"
+
+#, fuzzy
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr "プロセス環境からのプロキシ設定を使用する"
 
@@ -55850,12 +55872,6 @@ msgstr "上記の場合の警告"
 msgid "Warning if at"
 msgstr "の場合の警告"
 
-msgid "Warning if at least this number of important updates are pending"
-msgstr "少なくともこの数の重要な更新が保留中の場合の警告"
-
-msgid "Warning if at least this number of optional updates are pending"
-msgstr "少なくともこの数のオプションの更新が保留中の場合の警告"
-
 msgid "Warning if below"
 msgstr "以下の場合の警告"
 
@@ -55876,9 +55892,6 @@ msgstr "より古い場合の警告"
 
 msgid "Warning if over"
 msgstr "終わったら警告"
-
-msgid "Warning if time until forced reboot is less then"
-msgstr ""
 
 msgid "Warning if under"
 msgstr "下の場合 警告"
@@ -59695,9 +59708,6 @@ msgstr "検出がスキップされました:ホストが監視されていま�
 msgid "discovery successful"
 msgstr "発見に成功"
 
-msgid "display all important updates verbosely"
-msgstr "すべての重要な更新を詳細に表示する"
-
 #, python-format
 msgid "do not activate this %s"
 msgstr "この%sをアクティブにしないでください"
@@ -61216,6 +61226,24 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Critical if at least this number of important updates are pending"
+#~ msgstr "少なくともこの数の重要な更新が保留中の場合は重要です"
+
+#~ msgid "Critical if at least this number of optional updates are pending"
+#~ msgstr "少なくともこの数のオプションの更新が保留中の場合は重要です"
+
+#~ msgid "Critical if time time until forced reboot is less then"
+#~ msgstr "強制再起動までの時間が短い場合は重要です"
+
+#~ msgid "Warning if at least this number of important updates are pending"
+#~ msgstr "少なくともこの数の重要な更新が保留中の場合の警告"
+
+#~ msgid "Warning if at least this number of optional updates are pending"
+#~ msgstr "少なくともこの数のオプションの更新が保留中の場合の警告"
+
+#~ msgid "display all important updates verbosely"
+#~ msgstr "すべての重要な更新を詳細に表示する"
 
 #~ msgid ""
 #~ "For running Check_MK based checks via the Micro Core keeps a pool of "

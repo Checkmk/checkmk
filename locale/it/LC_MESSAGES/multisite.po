@@ -11718,14 +11718,6 @@ msgstr "Critico se sopra"
 msgid "Critical if at"
 msgstr "Critico se a"
 
-msgid "Critical if at least this number of important updates are pending"
-msgstr ""
-"Critico se almeno questo numero di aggiornamenti importanti è in sospeso"
-
-msgid "Critical if at least this number of optional updates are pending"
-msgstr ""
-"Critico se almeno questo numero di aggiornamenti opzionali è in sospeso"
-
 msgid "Critical if below"
 msgstr "Critico se al di sotto di"
 
@@ -11746,9 +11738,6 @@ msgstr "Critico se più vecchio di"
 
 msgid "Critical if over"
 msgstr "Critico se oltre"
-
-msgid "Critical if time time until forced reboot is less then"
-msgstr "Critico se il tempo fino al riavvio forzato è inferiore a"
 
 msgid "Critical if under"
 msgstr "Critico se sotto"
@@ -30209,6 +30198,22 @@ msgstr "Mobile: Lista"
 msgid "Mobile: Table"
 msgstr "Mobile: Tabella"
 
+#, fuzzy
+msgid "MobileIron API"
+msgstr "GUI mobile"
+
+#, fuzzy
+msgid "Mobileiron Device"
+msgstr "Dispositivo di raffreddamento"
+
+#, fuzzy
+msgid "Mobileiron compliance parameters"
+msgstr "Parametro spec mancante"
+
+#, fuzzy
+msgid "Mobileiron miscellaneous parameters"
+msgstr "Parametro di rendering mancante"
+
 msgid "Mode"
 msgstr "Modo"
 
@@ -36112,6 +36117,10 @@ msgstr "Nome della politica"
 msgid "Policy specific levels (Clustermode only)"
 msgstr "Livelli specifici della politica (solo modalità Cluster)"
 
+#, fuzzy
+msgid "Policy violation levels"
+msgstr "Livelli di visualizzazione"
+
 msgid "Pool name"
 msgstr "Nome della piscina"
 
@@ -38717,6 +38726,10 @@ msgstr "Messaggi pronti"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
+
+#, fuzzy
+msgid "Retrieve information about the following partitions"
+msgstr "Crea una notifica con i seguenti parametri"
 
 msgid "Retrieve information about..."
 msgstr "Recupera informazioni su..."
@@ -48586,6 +48599,10 @@ msgstr ""
 msgid "The port on which the ntopng instance is reachable."
 msgstr "La porta su cui l'istanza ntopng è raggiungibile."
 
+#, fuzzy
+msgid "The port that is used for the API call."
+msgstr "La porta utilizzata per la chiamata api."
+
 msgid "The port that is used for the api call."
 msgstr "La porta utilizzata per la chiamata api."
 
@@ -56902,6 +56919,10 @@ msgid "Use proxy"
 msgstr "Utilizzare il proxy"
 
 #, fuzzy
+msgid "Use proxy for MobileIron API connection"
+msgstr "Utilizzare per tutte le connessioni"
+
+#, fuzzy
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr "Utilizzare le impostazioni proxy dall'ambiente di processo"
 
@@ -58476,13 +58497,6 @@ msgstr "Attenzione se sopra"
 msgid "Warning if at"
 msgstr "Attenzione se a"
 
-msgid "Warning if at least this number of important updates are pending"
-msgstr ""
-"Attenzione se almeno questo numero di aggiornamenti importanti è in sospeso"
-
-msgid "Warning if at least this number of optional updates are pending"
-msgstr "Avviso se almeno questo numero di aggiornamenti opzionali è in sospeso"
-
 msgid "Warning if below"
 msgstr "Attenzione se sotto"
 
@@ -58503,9 +58517,6 @@ msgstr "Attenzione se più vecchio di"
 
 msgid "Warning if over"
 msgstr "Attenzione se oltre"
-
-msgid "Warning if time until forced reboot is less then"
-msgstr "Attenzione, se il tempo fino al riavvio forzato è inferiore a"
 
 msgid "Warning if under"
 msgstr "Attenzione se sotto"
@@ -62694,9 +62705,6 @@ msgstr "scoperta saltata: host non monitorato"
 msgid "discovery successful"
 msgstr "scoperta riuscita"
 
-msgid "display all important updates verbosely"
-msgstr "mostra verbalmente tutti gli aggiornamenti importanti"
-
 #, python-format
 msgid "do not activate this %s"
 msgstr "non attivare questo %s"
@@ -64225,6 +64233,32 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Critical if at least this number of important updates are pending"
+#~ msgstr ""
+#~ "Critico se almeno questo numero di aggiornamenti importanti è in sospeso"
+
+#~ msgid "Critical if at least this number of optional updates are pending"
+#~ msgstr ""
+#~ "Critico se almeno questo numero di aggiornamenti opzionali è in sospeso"
+
+#~ msgid "Critical if time time until forced reboot is less then"
+#~ msgstr "Critico se il tempo fino al riavvio forzato è inferiore a"
+
+#~ msgid "Warning if at least this number of important updates are pending"
+#~ msgstr ""
+#~ "Attenzione se almeno questo numero di aggiornamenti importanti è in "
+#~ "sospeso"
+
+#~ msgid "Warning if at least this number of optional updates are pending"
+#~ msgstr ""
+#~ "Avviso se almeno questo numero di aggiornamenti opzionali è in sospeso"
+
+#~ msgid "Warning if time until forced reboot is less then"
+#~ msgstr "Attenzione, se il tempo fino al riavvio forzato è inferiore a"
+
+#~ msgid "display all important updates verbosely"
+#~ msgstr "mostra verbalmente tutti gli aggiornamenti importanti"
 
 #~ msgid ""
 #~ "For running Check_MK based checks via the Micro Core keeps a pool of "

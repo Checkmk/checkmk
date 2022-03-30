@@ -11061,12 +11061,6 @@ msgstr ""
 msgid "Critical if at"
 msgstr ""
 
-msgid "Critical if at least this number of important updates are pending"
-msgstr ""
-
-msgid "Critical if at least this number of optional updates are pending"
-msgstr ""
-
 msgid "Critical if below"
 msgstr ""
 
@@ -11086,9 +11080,6 @@ msgid "Critical if older than"
 msgstr ""
 
 msgid "Critical if over"
-msgstr ""
-
-msgid "Critical if time time until forced reboot is less then"
 msgstr ""
 
 msgid "Critical if under"
@@ -28751,6 +28742,20 @@ msgstr ""
 msgid "Mobile: Table"
 msgstr ""
 
+msgid "MobileIron API"
+msgstr ""
+
+#, fuzzy
+msgid "Mobileiron Device"
+msgstr "sesiuni"
+
+#, fuzzy
+msgid "Mobileiron compliance parameters"
+msgstr "(fără parametri)"
+
+msgid "Mobileiron miscellaneous parameters"
+msgstr ""
+
 msgid "Mode"
 msgstr ""
 
@@ -34549,6 +34554,10 @@ msgid "Policy specific levels (Clustermode only)"
 msgstr ""
 
 #, fuzzy
+msgid "Policy violation levels"
+msgstr "doua nivele"
+
+#, fuzzy
 msgid "Pool name"
 msgstr "Nume AP"
 
@@ -37215,6 +37224,10 @@ msgstr "Mesajul Text"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
+
+#, fuzzy
+msgid "Retrieve information about the following partitions"
+msgstr "(nu trimite notificări câtre Event Console)"
 
 msgid "Retrieve information about..."
 msgstr ""
@@ -46128,6 +46141,10 @@ msgstr ""
 msgid "The port on which the ntopng instance is reachable."
 msgstr "Numele elementului pentru eveniment"
 
+#, fuzzy
+msgid "The port that is used for the API call."
+msgstr "rapoarte"
+
 msgid "The port that is used for the api call."
 msgstr ""
 
@@ -53007,6 +53024,10 @@ msgstr ""
 msgid "Use proxy"
 msgstr ""
 
+#, fuzzy
+msgid "Use proxy for MobileIron API connection"
+msgstr "Conexiune Noua"
+
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 
@@ -54459,12 +54480,6 @@ msgstr ""
 msgid "Warning if at"
 msgstr ""
 
-msgid "Warning if at least this number of important updates are pending"
-msgstr ""
-
-msgid "Warning if at least this number of optional updates are pending"
-msgstr ""
-
 msgid "Warning if below"
 msgstr ""
 
@@ -54484,9 +54499,6 @@ msgid "Warning if older than"
 msgstr ""
 
 msgid "Warning if over"
-msgstr ""
-
-msgid "Warning if time until forced reboot is less then"
 msgstr ""
 
 msgid "Warning if under"
@@ -57735,9 +57747,6 @@ msgid "discovery skipped: host not monitored"
 msgstr ""
 
 msgid "discovery successful"
-msgstr ""
-
-msgid "display all important updates verbosely"
 msgstr ""
 
 #, python-format

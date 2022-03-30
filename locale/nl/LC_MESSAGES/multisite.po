@@ -11688,13 +11688,6 @@ msgstr "Kritisch indien boven"
 msgid "Critical if at"
 msgstr "Kritisch als op"
 
-msgid "Critical if at least this number of important updates are pending"
-msgstr ""
-"Kritisch als ten minste dit aantal belangrijke updates in afwachting is"
-
-msgid "Critical if at least this number of optional updates are pending"
-msgstr "Kritisch als ten minste dit aantal optionele updates in afwachting is"
-
 msgid "Critical if below"
 msgstr "Kritisch indien onder"
 
@@ -11715,9 +11708,6 @@ msgstr "Kritisch indien ouder dan"
 
 msgid "Critical if over"
 msgstr "Kritisch indien meer dan"
-
-msgid "Critical if time time until forced reboot is less then"
-msgstr "Kritisch als de tijd tot de geforceerde herstart korter is dan"
 
 msgid "Critical if under"
 msgstr "Kritisch indien onder"
@@ -30143,6 +30133,22 @@ msgstr "Mobiel: Lijst"
 msgid "Mobile: Table"
 msgstr "Mobiel: Tabel"
 
+#, fuzzy
+msgid "MobileIron API"
+msgstr "Mobiele GUI"
+
+#, fuzzy
+msgid "Mobileiron Device"
+msgstr "Koelapparaat"
+
+#, fuzzy
+msgid "Mobileiron compliance parameters"
+msgstr "Ontbrekende spec parameter"
+
+#, fuzzy
+msgid "Mobileiron miscellaneous parameters"
+msgstr "Ontbrekende render parameter"
+
 msgid "Mode"
 msgstr "Modus"
 
@@ -36011,6 +36017,10 @@ msgstr "Naam van het beleid"
 msgid "Policy specific levels (Clustermode only)"
 msgstr "Beleidsspecifieke niveaus (alleen Clustermodus)"
 
+#, fuzzy
+msgid "Policy violation levels"
+msgstr "Visualisatieniveaus"
+
 msgid "Pool name"
 msgstr "Naam zwembad"
 
@@ -38601,6 +38611,10 @@ msgstr "Klaar berichten"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
+
+#, fuzzy
+msgid "Retrieve information about the following partitions"
+msgstr "Maak een melding met de volgende parameters"
 
 msgid "Retrieve information about..."
 msgstr "Informatie ophalen over..."
@@ -48475,6 +48489,10 @@ msgstr ""
 msgid "The port on which the ntopng instance is reachable."
 msgstr "De poort waarop de ntopng instantie bereikbaar is."
 
+#, fuzzy
+msgid "The port that is used for the API call."
+msgstr "De poort die wordt gebruikt voor de api call."
+
 msgid "The port that is used for the api call."
 msgstr "De poort die wordt gebruikt voor de api call."
 
@@ -56774,6 +56792,10 @@ msgid "Use proxy"
 msgstr "Gebruik proxy"
 
 #, fuzzy
+msgid "Use proxy for MobileIron API connection"
+msgstr "Gebruik voor alle verbindingen"
+
+#, fuzzy
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr "Gebruik proxy-instellingen van de procesomgeving"
 
@@ -58344,15 +58366,6 @@ msgstr "Waarschuwing indien boven"
 msgid "Warning if at"
 msgstr "Waarschuwing indien bij"
 
-msgid "Warning if at least this number of important updates are pending"
-msgstr ""
-"Waarschuwing indien minstens dit aantal belangrijke updates in afwachting "
-"zijn"
-
-msgid "Warning if at least this number of optional updates are pending"
-msgstr ""
-"Waarschuwing als ten minste dit aantal optionele updates in behandeling is"
-
 msgid "Warning if below"
 msgstr "Waarschuwing indien onder"
 
@@ -58373,9 +58386,6 @@ msgstr "Waarschuwing indien ouder dan"
 
 msgid "Warning if over"
 msgstr "Waarschuwing indien meer dan"
-
-msgid "Warning if time until forced reboot is less then"
-msgstr "Waarschuwing als de tijd tot gedwongen herstart korter is dan"
 
 msgid "Warning if under"
 msgstr "Waarschuwing indien onder"
@@ -62567,9 +62577,6 @@ msgstr "ontdekking overgeslagen: host wordt niet bewaakt"
 msgid "discovery successful"
 msgstr "ontdekking succesvol"
 
-msgid "display all important updates verbosely"
-msgstr "alle belangrijke updates verbosely tonen"
-
 #, python-format
 msgid "do not activate this %s"
 msgstr "activeer deze %s niet"
@@ -64096,6 +64103,32 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Critical if at least this number of important updates are pending"
+#~ msgstr ""
+#~ "Kritisch als ten minste dit aantal belangrijke updates in afwachting is"
+
+#~ msgid "Critical if at least this number of optional updates are pending"
+#~ msgstr ""
+#~ "Kritisch als ten minste dit aantal optionele updates in afwachting is"
+
+#~ msgid "Critical if time time until forced reboot is less then"
+#~ msgstr "Kritisch als de tijd tot de geforceerde herstart korter is dan"
+
+#~ msgid "Warning if at least this number of important updates are pending"
+#~ msgstr ""
+#~ "Waarschuwing indien minstens dit aantal belangrijke updates in afwachting "
+#~ "zijn"
+
+#~ msgid "Warning if at least this number of optional updates are pending"
+#~ msgstr ""
+#~ "Waarschuwing als ten minste dit aantal optionele updates in behandeling is"
+
+#~ msgid "Warning if time until forced reboot is less then"
+#~ msgstr "Waarschuwing als de tijd tot gedwongen herstart korter is dan"
+
+#~ msgid "display all important updates verbosely"
+#~ msgstr "alle belangrijke updates verbosely tonen"
 
 #~ msgid ""
 #~ "For running Check_MK based checks via the Micro Core keeps a pool of "

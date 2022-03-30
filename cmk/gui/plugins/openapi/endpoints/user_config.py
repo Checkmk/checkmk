@@ -68,7 +68,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     permissions_required=PERMISSIONS,
 )
 def show_user(params):
-    """Show an user"""
+    """Show a user"""
     user.need_permission("wato.users")
     username = params["username"]
     try:
@@ -171,7 +171,7 @@ def delete_user(params):
     permissions_required=RW_PERMISSIONS,
 )
 def edit_user(params):
-    """Edit an user"""
+    """Edit a user"""
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]
     api_attrs = params["body"]

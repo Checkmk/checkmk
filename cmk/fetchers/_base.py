@@ -141,10 +141,6 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
 
         path = self.make_path(mode)
         if not path.exists():
-            if self.simulation:
-                raise MKFetcherError(
-                    "Got no data (Simulation mode enabled and no cachefile present)")
-
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
@@ -223,19 +219,6 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
     @final
     def __enter__(self) -> 'ABCFetcher':
-        """Prepare the data source. Only needed if simulation mode is
-        disabled"""
-        if self.file_cache.simulation:
-            return self
-
-        try:
-            self.open()
-        except MKFetcherError:
-            raise
-        except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
         return self
 
     @final
@@ -278,12 +261,25 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
             self.file_cache,
         )
         raw_data = self.file_cache.read(mode)
-        if raw_data:
+        if raw_data is not None:
             self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
             return raw_data
 
+        if self.file_cache.simulation:
+            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
+
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
-        raw_data = self._fetch_from_io(mode)
+
+        try:
+            self.open()
+            raw_data = self._fetch_from_io(mode)
+        except MKFetcherError:
+            raise
+        except Exception as exc:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
+
         self.file_cache.write(raw_data, mode)
         return raw_data
 

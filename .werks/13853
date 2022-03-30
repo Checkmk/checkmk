@@ -1,0 +1,26 @@
+Title: WATO supports windows agent controller parameters
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1648641067
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.2.0i1
+
+Available parameters:
+"Monitoring data security" - limits access to the monitoring data
+only to the windows agent controller.
+"Legacy communication" - allows usage of the  legacy communication
+as a fallback in all cases.
+"Agent internal TCP port used to communicate with controller" - allows
+to change default TCP port used for communication between agent and
+controller
+
+For the Raw edition above mentioned parameters could be configured using
+check_mk.user.yml. Corresponding keys are located in the system.controller
+section
+To set "Monitoring data security" use key "check".
+To set "Legacy communication" use key "force_legacy".
+To set "Agent internal TCP port used to communicate with controller" use
+key "agent_channel"

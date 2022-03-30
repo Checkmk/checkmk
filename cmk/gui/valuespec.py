@@ -5195,7 +5195,7 @@ class Alternative(ValueSpec):
     # that always one matches. No error handling here.
     # This may also tranform the input value in case it gets
     # "decorated" in the from_html_vars function
-    def matching_alternative(self, value):
+    def matching_alternative(self, value: Any) -> tuple[_Optional[ValueSpec], Any]:
         if self._match:
             return self._elements[self._match(value)], value
 
@@ -5254,7 +5254,7 @@ class Alternative(ValueSpec):
             html.close_tr()
             html.close_table()
 
-    def set_focus(self, varprefix):
+    def set_focus(self, varprefix: str) -> None:
         # TODO: Set focus to currently active option
         pass
 
@@ -5278,13 +5278,15 @@ class Alternative(ValueSpec):
         vs, value = self.matching_alternative(value)
         if vs:
             output = HTML()
-            if self._show_alternative_title and vs.title():
-                output = escaping.escape_to_html(vs.title()) + html.render_br()
+            if self._show_alternative_title and (title := vs.title()):
+                output = escaping.escape_to_html(title) + html.render_br()
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
     def value_to_json(self, value: Any) -> JSONValue:
         vs, match_value = self.matching_alternative(value)
+        if vs is None:
+            raise ValueError(_("Invalid value: %s") % vs)
         return vs.value_to_json(match_value)
 
     def value_from_json(self, json_value: JSONValue) -> Any:
@@ -5296,6 +5298,8 @@ class Alternative(ValueSpec):
 
     def value_to_json_safe(self, value: Any) -> JSONValue:
         vs, match_value = self.matching_alternative(value)
+        if vs is None:
+            raise ValueError(_("Invalid value: %s") % vs)
         return vs.value_to_json_safe(match_value)
 
     def from_html_vars(self, varprefix: str) -> Any:
@@ -5312,7 +5316,7 @@ class Alternative(ValueSpec):
                 pass
         raise MKUserError(
             varprefix,
-            _("The data type of the value does not match any of the " "allowed alternatives."),
+            _("The data type of the value does not match any of the allowed alternatives."),
         )
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
@@ -5320,6 +5324,11 @@ class Alternative(ValueSpec):
         for nr, v in enumerate(self._elements):
             if vs == v:
                 vs.validate_value(value, varprefix + "_%d" % nr)
+                return
+        raise MKUserError(
+            varprefix,
+            _("The data type of the value does not match any of the allowed alternatives."),
+        )
 
 
 class Tuple(ValueSpec):
@@ -5412,7 +5421,7 @@ class Tuple(ValueSpec):
         if self._orientation != "float":
             html.close_table()
 
-    def set_focus(self, varprefix):
+    def set_focus(self, varprefix: str) -> None:
         self._elements[0].set_focus(varprefix + "_0")
 
     def _iter_value(self, value: Sequence[Any]) -> Iterable[tuple[int, ValueSpec, Any]]:
@@ -5698,7 +5707,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             vs.render_input(vp, value.get(param, vs.default_value()))
             html.close_div()
 
-    def set_focus(self, varprefix):
+    def set_focus(self, varprefix: str) -> None:
         first_element = next(iter(self._get_elements()), None)
         if first_element:
             first_element[1].set_focus(varprefix + "_p_" + first_element[0])

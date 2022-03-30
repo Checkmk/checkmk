@@ -1,0 +1,9 @@
+Title: Update postgres from 10.12 to 10.20
+Class: security
+Compatible: compat
+Component: core
+Date: 1648619449
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p23

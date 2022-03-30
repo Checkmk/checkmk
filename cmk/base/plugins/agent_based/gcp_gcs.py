@@ -88,7 +88,7 @@ register.check_plugin(
     check_ruleset_name="gcp_gcs_network",
     discovery_function=discover,
     check_function=check_gcp_gcs_network,
-    check_default_parameters={},
+    check_default_parameters={"net_data_sent": None, "net_data_recv": None},
 )
 
 
@@ -119,5 +119,5 @@ register.check_plugin(
     check_ruleset_name="gcp_gcs_objects",
     discovery_function=discover,
     check_function=check_gcp_gcs_object,
-    check_default_parameters={},
+    check_default_parameters={"aws_bucket_size": None, "aws_num_objects": None},
 )

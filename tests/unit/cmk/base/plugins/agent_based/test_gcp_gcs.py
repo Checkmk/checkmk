@@ -222,7 +222,7 @@ class TestDefaultMetricValues:
             assert result.value != 0.0
 
     def test_zero_default_if_item_does_not_exist(self, gcs_section, checkplugin: Plugin):
-        params = {k: None for k in ["requests"]}
+        params = {k: None for k in checkplugin.metrics}
         results = (
             el
             for el in checkplugin.function(

@@ -86,8 +86,8 @@ def _vs_function_instances() -> ValueSpec:
     return Dictionary(
         title=_("Levels on instances"),
         elements=[
-            ("aws_lambda_provisioned_concurrent_executions", Levels(title=_("instances"))),
-            ("aws_lambda_concurrent_executions", Levels(title=_("active instances"))),
+            ("faas_total_instance_count", Levels(title=_("instances"))),
+            ("faas_active_instance_count", Levels(title=_("active instances"))),
         ],
     )
 
@@ -107,9 +107,9 @@ def _vs_function_execution() -> ValueSpec:
     return Dictionary(
         title=_("Levels on performance"),
         elements=[
-            ("execution_count", Levels(title=_("execution count"))),
+            ("faas_execution_count", Levels(title=_("execution count"))),
             ("aws_lambda_memory_size_absolute", SimpleLevels(Filesize, title=_("memory"))),
-            ("aws_lambda_duration", Levels(title=_("execution time"), unit="s")),
+            ("faas_execution_times", Levels(title=_("execution time"), unit="s")),
         ],
     )
 

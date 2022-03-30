@@ -69,5 +69,9 @@ register.check_plugin(
     check_ruleset_name="gcp_filestore_disk",
     discovery_function=discover,
     check_function=check,
-    check_default_parameters={},
+    check_default_parameters={
+        "fs_used_percent": None,
+        "disk_read_ios": None,
+        "disk_write_ios": None,
+    },
 )

@@ -65,7 +65,10 @@ register.check_plugin(
     check_ruleset_name="gcp_function_instances",
     discovery_function=discover,
     check_function=check_gcp_function_instances,
-    check_default_parameters={},
+    check_default_parameters={
+        "faas_total_instance_count": None,
+        "faas_active_instance_count": None,
+    },
 )
 
 
@@ -105,7 +108,11 @@ register.check_plugin(
     check_ruleset_name="gcp_function_execution",
     discovery_function=discover,
     check_function=check_gcp_function_execution,
-    check_default_parameters={},
+    check_default_parameters={
+        "faas_execution_count": None,
+        "faas_execution_times": None,
+        "aws_lambda_memory_size_absolute": None,
+    },
 )
 
 
@@ -134,5 +141,5 @@ register.check_plugin(
     check_ruleset_name="gcp_function_network",
     discovery_function=discover,
     check_function=check_gcp_function_network,
-    check_default_parameters={},
+    check_default_parameters={"net_data_sent": None},
 )

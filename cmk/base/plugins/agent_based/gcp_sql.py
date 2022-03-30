@@ -75,7 +75,7 @@ def check_gcp_sql_status(
         ),
     }
     timeseries = section_gcp_service_cloud_sql[item].rows
-    yield from gcp.generic_check(metrics, timeseries, {})
+    yield from gcp.generic_check(metrics, timeseries, {"up": None})
 
     metric_type = "cloudsql.googleapis.com/database/state"
     if (metric := next((r for r in timeseries if r.ts.metric.type == metric_type), None)) is None:
@@ -136,7 +136,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_memory",
     discovery_function=discover,
     check_function=check_gcp_sql_memory,
-    check_default_parameters={},
+    check_default_parameters={"memory_util": None},
 )
 
 
@@ -166,7 +166,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_cpu",
     discovery_function=discover,
     check_function=check_gcp_sql_cpu,
-    check_default_parameters={},
+    check_default_parameters={"util": None},
 )
 
 
@@ -203,7 +203,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_network",
     discovery_function=discover,
     check_function=check_gcp_sql_network,
-    check_default_parameters={},
+    check_default_parameters={"net_data_sent": None, "net_data_recv": None},
 )
 
 
@@ -242,5 +242,9 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_disk",
     discovery_function=discover,
     check_function=check_gcp_sql_disk,
-    check_default_parameters={},
+    check_default_parameters={
+        "fs_used_percent": None,
+        "disk_write_ios": None,
+        "disk_read_ios": None,
+    },
 )

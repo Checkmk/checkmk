@@ -66,7 +66,7 @@ register.check_plugin(
     check_ruleset_name="gcp_run_network",
     discovery_function=discover,
     check_function=check_gcp_run_network,
-    check_default_parameters={},
+    check_default_parameters={"net_data_sent": None, "net_data_recv": None},
 )
 
 
@@ -95,7 +95,7 @@ register.check_plugin(
     check_ruleset_name="gcp_run_memory",
     discovery_function=discover,
     check_function=check_gcp_run_memory,
-    check_default_parameters={},
+    check_default_parameters={"memory_util": None},
 )
 
 
@@ -123,7 +123,7 @@ register.check_plugin(
     check_ruleset_name="gcp_run_cpu",
     discovery_function=discover,
     check_function=check_gcp_run_cpu,
-    check_default_parameters={},
+    check_default_parameters={"util": None},
 )
 
 
@@ -166,5 +166,10 @@ register.check_plugin(
     check_ruleset_name="gcp_run_requests",
     discovery_function=discover,
     check_function=check_gcp_run_requests,
-    check_default_parameters={},
+    check_default_parameters={
+        "faas_total_instance_count": None,
+        "faas_execution_count": None,
+        "gcp_billable_time": None,
+        "faas_execution_times": None,
+    },
 )

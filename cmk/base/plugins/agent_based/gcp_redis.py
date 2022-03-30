@@ -65,7 +65,7 @@ register.check_plugin(
     check_ruleset_name="gcp_redis_cpu",
     discovery_function=discover,
     check_function=check_cpu_util,
-    check_default_parameters={},
+    check_default_parameters={"util": None},
 )
 
 
@@ -102,5 +102,5 @@ register.check_plugin(
     check_ruleset_name="gcp_redis_memory",
     discovery_function=discover,
     check_function=check_memory_util,
-    check_default_parameters={},
+    check_default_parameters={"memory_util": None, "system_memory_util": None},
 )

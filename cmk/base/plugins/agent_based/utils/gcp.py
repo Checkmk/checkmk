@@ -101,7 +101,7 @@ def generic_check(
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
         value = _get_value(timeseries, metric_spec)
-        levels_upper = params.get(metric_name)
+        levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
             yield from check_levels_predictive(
                 value,

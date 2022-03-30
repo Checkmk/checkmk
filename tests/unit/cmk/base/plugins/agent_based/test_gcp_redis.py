@@ -173,7 +173,7 @@ class TestDefaultMetricValues:
 
     # objects does contain example data
     def test_non_zero_if_metric_exist(self, redis_section):
-        params = {k: None for k in ["memory_util"]}
+        params = {k: None for k in ["memory_util", "system_memory_util"]}
         results = (
             el
             for el in check_memory_util(
@@ -188,7 +188,7 @@ class TestDefaultMetricValues:
             assert result.value != 0.0
 
     def test_zero_default_if_item_does_not_exist(self, redis_section, checkplugin: Plugin):
-        params = {k: None for k in ["util"]}
+        params = {k: None for k in checkplugin.metrics}
         results = (
             el
             for el in checkplugin.function(

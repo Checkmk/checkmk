@@ -666,3 +666,12 @@ class DeploymentReplicas(CommonReplicas):
     # across both ReplicaSets (if present).
     # updated (status.updatedReplicas): the number of claimed Pods, belonging the ReplicaSet with
     # the up-to-date Pod template.
+
+
+class NamespaceInfo(BaseModel):
+    """section: kube_namespace_info_v1"""
+
+    name: NamespaceName
+    creation_timestamp: Optional[CreationTimestamp]
+    labels: Labels
+    cluster: str

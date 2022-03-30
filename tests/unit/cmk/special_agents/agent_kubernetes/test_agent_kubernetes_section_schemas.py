@@ -22,6 +22,7 @@ def test_schemata_did_not_diverge() -> None:
     assert api.ContainerWaitingState.schema() == check.ContainerWaitingState.schema()
     assert agent.DeploymentConditions.schema() == check.DeploymentConditions.schema()
     assert api.KubeletInfo.schema() == check.KubeletInfo.schema()
+    assert agent.NamespaceInfo.schema() == check.NamespaceInfo.schema()
     assert agent.NodeCount.schema() == check.NodeCount.schema()
     assert agent.NodeInfo.schema() == check.NodeInfo.schema()
     assert agent.PodCondition.schema() == check.PodCondition.schema()

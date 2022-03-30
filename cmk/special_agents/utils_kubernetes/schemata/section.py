@@ -83,6 +83,8 @@ class Components(BaseModel):
 
 
 class NamespaceInfo(BaseModel):
+    """section: kube_namespace_info_v1"""
+
     name: api.NamespaceName
     creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels

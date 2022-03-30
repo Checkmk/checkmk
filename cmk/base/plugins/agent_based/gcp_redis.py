@@ -51,7 +51,7 @@ def check_cpu_util(
         return
     metrics = {
         "util": gcp.MetricSpec(
-            "redis.googleapis.com/stats/cpu_utilization", render.percent, scale=1e2
+            "redis.googleapis.com/stats/cpu_utilization", "Utilization", render.percent, scale=1e2
         )
     }
     timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
@@ -79,10 +79,16 @@ def check_memory_util(
         return
     metrics = {
         "memory_util": gcp.MetricSpec(
-            "redis.googleapis.com/stats/memory/usage_ratio", render.percent, scale=1e2
+            "redis.googleapis.com/stats/memory/usage_ratio",
+            "Memory utilization",
+            render.percent,
+            scale=1e2,
         ),
         "system_memory_util": gcp.MetricSpec(
-            "redis.googleapis.com/stats/memory/system_memory_usage_ratio", render.percent, scale=1e2
+            "redis.googleapis.com/stats/memory/system_memory_usage_ratio",
+            "System memory utilization",
+            render.percent,
+            scale=1e2,
         ),
     }
     timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows

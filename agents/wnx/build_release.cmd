@@ -143,7 +143,9 @@ copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
 if not "%2" == "" (
 powershell Write-Host "Signing MSI" -Foreground White
-copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_no_sign.msi
+copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi
+:: obfuscate
+python ..\..\cmk\utils\obfuscate.py -obfuscate %arte%\check_mk_agent_unsigned.msi %arte%\check_mk_agent_unsigned.msi
 @call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
 )
 

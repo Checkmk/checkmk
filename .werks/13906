@@ -1,0 +1,13 @@
+Title: Fix perf data not sent to Carbon if no state is selected
+Class: fix
+Compatible: compat
+Component: core
+Date: 1648639708
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p23
+
+After Werk 12704, if none of "State", "Acknowledged", or "Scheduled
+downtime depth" was selected in the rule, then no performance data
+was sent to the Graphite/InfluxDB connection.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0b4
+Version: 2.1.0b5
 
 The plugin now correctly displays the switch role "standby".
 Previously "unknown" has been displayed.

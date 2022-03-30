@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b4"
+CMK_VERSION="2.1.0b5"
 
 #SuSE-release is deprecated and was removed with SLE 15. os-release should be used for the new versions.
 

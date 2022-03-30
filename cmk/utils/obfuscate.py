@@ -131,9 +131,9 @@ if __name__ == "__main__":
     parser.add_argument("file_in", type=Path, help="input file")
     parser.add_argument("file_out", type=Path, help="output file")
     args = parser.parse_args()
-    if args.encrypt:
+    if args.obfuscate:
         exit(obfuscate_file(args.file_in, file_out=args.file_out))
-    if args.decrypt:
+    if args.deobfuscate:
         exit(deobfuscate_file(args.file_in, file_out=args.file_out))
     else:
         exit(1)

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0b4
+Version: 2.1.0b5
 
 This werk adds an optional argument '--metrics' to check_sql that will
 be used as metric name for the perfomance data.

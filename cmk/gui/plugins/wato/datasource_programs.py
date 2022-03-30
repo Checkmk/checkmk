@@ -1165,55 +1165,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_gcp():
-    return Dictionary(
-        title=_("Google Cloud Platform"),
-        elements=[
-            ("project", TextInput(title=_("Project ID"), allow_empty=False, size=50)),
-            (
-                "credentials",
-                IndividualOrStoredPassword(
-                    title=_("JSON credentials for service account"), allow_empty=False
-                ),
-            ),
-            (
-                "services",
-                ListChoice(
-                    title=_("GCP services to monitor"),
-                    choices=[
-                        ("gcs", _("Google Cloud Storage (GCS)")),
-                        ("cloud_run", _("Cloud Run")),
-                        ("cloud_functions", _("Cloud Functions")),
-                        ("cloud_sql", _("Cloud SQL")),
-                        ("filestore", _("Filestore")),
-                        ("redis", _("Memorystore Redis")),
-                    ],
-                    default_value=[
-                        "gcs",
-                        "cloud_run",
-                        "cloud_functions",
-                        "cloud_sql",
-                        "filestore",
-                        "redis",
-                    ],
-                    allow_empty=False,
-                ),
-            ),
-        ],
-        optional_keys=[],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupVMCloudContainer,
-        name="special_agents:gcp",
-        title=lambda: _("Google Cloud Platform (GCP)"),
-        valuespec=_valuespec_special_agents_gcp,
-    )
-)
-
-
 def _factory_default_special_agents_vnx_quotas():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED

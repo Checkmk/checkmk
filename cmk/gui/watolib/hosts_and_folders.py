@@ -1947,7 +1947,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         choices: Choices = []
 
         if may_use_redis():
-            return get_wato_redis_client().choices_for_moving(self.path(), _MoveType(what))
+            return self._get_sorted_choices(
+                get_wato_redis_client().choices_for_moving(self.path(), _MoveType(what))
+            )
 
         for folder_path, folder in Folder.all_folders().items():
             if not folder.may("write"):
@@ -1966,6 +1968,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             msg = "/".join(str(p) for p in folder.title_path_without_root())
             choices.append((folder_path, msg))
 
+        return self._get_sorted_choices(choices)
+
+    def _get_sorted_choices(self, choices: Choices) -> Choices:
         choices.sort(key=lambda x: x[1].lower())
         return choices
 

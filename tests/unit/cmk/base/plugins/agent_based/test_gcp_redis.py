@@ -4,15 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
-from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.api.agent_based.checking_classes import (
+    CheckFunction,
+    IgnoreResults,
+    Service,
+    ServiceLabel,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_redis import (
     check_cpu_util,
+    check_hitratio,
     check_memory_util,
     discover,
     parse,
@@ -34,6 +43,9 @@ SECTION_TABLE = [
     ],
     [
         '{"metric": {"type": "redis.googleapis.com/stats/memory/system_memory_usage_ratio", "labels": {}}, "resource": {"type": "redis_instance", "labels": {"instance_id": "projects/tribe29-check-development/locations/us-central1/instances/red", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-28T13:12:56.015707Z", "end_time": "2022-03-28T13:12:56.015707Z"}, "value": {"double_value": 0.005088621550775129}}, {"interval": {"start_time": "2022-03-28T13:11:56.015707Z", "end_time": "2022-03-28T13:11:56.015707Z"}, "value": {"double_value": 0.005135066470805022}}, {"interval": {"start_time": "2022-03-28T13:10:56.015707Z", "end_time": "2022-03-28T13:10:56.015707Z"}, "value": {"double_value": 0.005187317005838651}}, {"interval": {"start_time": "2022-03-28T13:09:56.015707Z", "end_time": "2022-03-28T13:09:56.015707Z"}, "value": {"double_value": 0.005222150695861071}}, {"interval": {"start_time": "2022-03-28T13:08:56.015707Z", "end_time": "2022-03-28T13:08:56.015707Z"}, "value": {"double_value": 0.005097329973280734}}, {"interval": {"start_time": "2022-03-28T13:07:56.015707Z", "end_time": "2022-03-28T13:07:56.015707Z"}, "value": {"double_value": 0.0051815113908349145}}, {"interval": {"start_time": "2022-03-28T13:06:56.015707Z", "end_time": "2022-03-28T13:06:56.015707Z"}, "value": {"double_value": 0.005210539465853598}}, {"interval": {"start_time": "2022-03-28T13:05:56.015707Z", "end_time": "2022-03-28T13:05:56.015707Z"}, "value": {"double_value": 0.005062496283258315}}, {"interval": {"start_time": "2022-03-28T13:04:56.015707Z", "end_time": "2022-03-28T13:04:56.015707Z"}, "value": {"double_value": 0.005129260855801286}}, {"interval": {"start_time": "2022-03-28T13:03:56.015707Z", "end_time": "2022-03-28T13:03:56.015707Z"}, "value": {"double_value": 0.0052047338508498615}}, {"interval": {"start_time": "2022-03-28T13:02:56.015707Z", "end_time": "2022-03-28T13:02:56.015707Z"}, "value": {"double_value": 0.005082815935771393}}, {"interval": {"start_time": "2022-03-28T13:01:56.015707Z", "end_time": "2022-03-28T13:01:56.015707Z"}, "value": {"double_value": 0.00517280296832931}}, {"interval": {"start_time": "2022-03-28T13:00:56.015707Z", "end_time": "2022-03-28T13:00:56.015707Z"}, "value": {"double_value": 0.005059593475756447}}, {"interval": {"start_time": "2022-03-28T12:59:56.015707Z", "end_time": "2022-03-28T12:59:56.015707Z"}, "value": {"double_value": 0.0050915243582769975}}, {"interval": {"start_time": "2022-03-28T12:58:56.015707Z", "end_time": "2022-03-28T12:58:56.015707Z"}, "value": {"double_value": 0.005175705775831178}}, {"interval": {"start_time": "2022-03-28T12:57:56.015707Z", "end_time": "2022-03-28T12:57:56.015707Z"}, "value": {"double_value": 0.005068301898262051}}, {"interval": {"start_time": "2022-03-28T12:56:56.015707Z", "end_time": "2022-03-28T12:56:56.015707Z"}, "value": {"double_value": 0.005135066470805022}}, {"interval": {"start_time": "2022-03-28T12:55:56.015707Z", "end_time": "2022-03-28T12:55:56.015707Z"}, "value": {"double_value": 0.005175705775831178}}], "unit": ""}'
+    ],
+    [
+        '{"metric": {"type": "redis.googleapis.com/stats/cache_hit_ratio", "labels": {}}, "resource": {"type": "redis_instance", "labels": {"instance_id": "projects/tribe29-check-development/locations/us-central1/instances/blue", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-01T10:45:29.989061Z", "end_time": "2022-04-01T10:45:29.989061Z"}, "value": {"double_value": 0.3333333333333333}}, {"interval": {"start_time": "2022-04-01T10:44:29.989061Z", "end_time": "2022-04-01T10:44:29.989061Z"}, "value": {"double_value": 0.3333333333333333}}], "unit": ""}'
     ],
 ]
 
@@ -233,3 +245,86 @@ class TestConfiguredNotificationLevels:
         results = [r for r in results if isinstance(r, Result)]
         for r in results:
             assert r.state == State.CRIT
+
+
+class ABCTestRedisChecks(abc.ABC):
+    ITEM = "redis1"
+    METRIC_NAME = "hitratio"
+
+    @abc.abstractmethod
+    def _section_kwargs(self, section: Any) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _section(self, hitratio: float, item: str) -> Any:
+        raise NotImplementedError
+
+    def _parametrize(self, hitratio: float, params: Mapping[str, Any]) -> Mapping[str, Any]:
+        kwargs: dict[str, Any] = {}
+        kwargs["item"] = self.ITEM
+        kwargs["params"] = params
+        for k, v in self._section_kwargs(self._section(hitratio, self.ITEM)).items():
+            kwargs[k] = v
+        return kwargs
+
+    def run(
+        self, hitratio: float, params: Mapping[str, Any], check: CheckFunction
+    ) -> Sequence[Union[IgnoreResults, Result, Metric]]:
+        kwargs = self._parametrize(hitratio, params=params)
+        return list(check(**kwargs))
+
+    def test_expected_number_of_results_and_metrics(self, check: CheckFunction):
+        params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
+        results = self.run(50, params, check)
+        assert len(results) == 2
+
+    @pytest.mark.parametrize(
+        "state, hitratio, summary_ext",
+        [
+            pytest.param(State.OK, 0.5, "", id="ok"),
+            pytest.param(State.WARN, 0.85, " (warn/crit at 80.00%/90.00%)", id="warning upper"),
+            pytest.param(State.CRIT, 0.95, " (warn/crit at 80.00%/90.00%)", id="critical upper"),
+            pytest.param(State.WARN, 0.35, " (warn/crit below 40.00%/30.00%)", id="warning lower"),
+            pytest.param(State.CRIT, 0.25, " (warn/crit below 40.00%/30.00%)", id="critial lower"),
+        ],
+    )
+    def test_yield_levels(
+        self, state: State, hitratio: float, check: CheckFunction, summary_ext: str
+    ):
+        levels_upper = (80, 90)
+        levels_lower = (40, 30)
+        params = {"levels_upper_hitratio": levels_upper, "levels_lower_hitratio": levels_lower}
+        results = [el for el in self.run(hitratio, params, check) if isinstance(el, Result)]
+        summary = f"Hitratio: {(hitratio*100):.2f}%{summary_ext}"
+        assert results[0] == Result(state=state, summary=summary)
+
+    @given(hitratio=st.floats(min_value=0, max_value=1))
+    def test_yield_no_levels(self, hitratio: float, check: CheckFunction):
+        params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
+        results = [el for el in self.run(hitratio, params, check) if isinstance(el, Result)]
+        assert results[0].state == State.OK
+
+    @given(hitratio=st.floats(min_value=0, max_value=1))
+    def test_metric(self, hitratio: float, check: CheckFunction):
+        params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
+        metrics = [el for el in self.run(hitratio, params, check) if isinstance(el, Metric)]
+        assert metrics[0] == Metric(self.METRIC_NAME, hitratio * 100)
+
+
+class TestRedisGCP(ABCTestRedisChecks):
+    @staticmethod
+    @pytest.fixture(scope="class")
+    def check() -> CheckFunction:
+        return check_hitratio
+
+    def _section_kwargs(self, section: gcp.Section) -> dict[str, Optional[gcp.Section]]:
+        return {
+            "section_gcp_service_redis": section,
+            "section_gcp_assets": None,
+        }
+
+    def _section(self, hitratio: float, item: str) -> gcp.Section:
+        data = f'{{"metric": {{"type": "redis.googleapis.com/stats/cache_hit_ratio", "labels": {{}}}}, "resource": {{"type": "redis_instance", "labels": {{"instance_id": "projects/tribe29-check-development/locations/us-central1/instances/blue", "project_id": "tribe29-check-development"}}}}, "metric_kind": 1, "value_type": 3, "points": [{{"interval": {{"start_time": "2022-04-01T10:45:29.989061Z", "end_time": "2022-04-01T10:45:29.989061Z"}}, "value": {{"double_value": {hitratio}}}}}], "unit": ""}}'
+        row = gcp.GCPResult.deserialize(data)
+        section_item = gcp.SectionItem(rows=[row])
+        return {item: section_item}

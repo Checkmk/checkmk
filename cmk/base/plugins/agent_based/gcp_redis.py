@@ -6,7 +6,7 @@ from typing import Any, Mapping, Optional
 
 from .agent_based_api.v1 import register, render, Service, ServiceLabel
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import gcp
+from .utils import gcp, redis
 
 
 def parse(string_table: StringTable) -> gcp.Section:
@@ -103,4 +103,33 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check_memory_util,
     check_default_parameters={"memory_util": None, "system_memory_util": None},
+)
+
+
+def check_hitratio(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_redis: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    if section_gcp_service_redis is None:
+        return
+    metric = gcp.MetricSpec(
+        "redis.googleapis.com/stats/cache_hit_ratio",
+        "",
+        str,
+    )
+    timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
+    hitratio = gcp._get_value(timeseries, metric)
+    yield from redis.check_cache_hitratio(hitratio, params)
+
+
+register.check_plugin(
+    name="gcp_redis_hitratio",
+    sections=["gcp_service_redis", "gcp_assets"],
+    service_name="GCP Redis Hitratio: %s",
+    check_ruleset_name="redis_hitratio",
+    discovery_function=discover,
+    check_function=check_hitratio,
+    check_default_parameters={"levels_upper_hitratio": None, "levels_lower_hitratio": None},
 )

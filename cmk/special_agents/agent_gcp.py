@@ -491,6 +491,15 @@ REDIS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
+        GCPMetric(
+            name="redis.googleapis.com/stats/cache_hit_ratio",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.instance_id"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
     ],
 )
 

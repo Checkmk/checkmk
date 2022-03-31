@@ -27,7 +27,7 @@ from typing import (
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
 
-import cmk.gui.crash_reporting as crash_reporting
+import cmk.gui.crash_handler as crash_handler
 import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -815,7 +815,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
             )
             return output_funnel.drain()
 
-        crash_reporting.handle_exception_as_gui_crash_report(
+        crash_handler.handle_exception_as_gui_crash_report(
             details={
                 "dashlet_id": dashlet.dashlet_id,
                 "dashlet_type": dashlet.type_name(),

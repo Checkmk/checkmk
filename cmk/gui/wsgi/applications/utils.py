@@ -13,7 +13,7 @@ import cmk.utils.store
 from cmk.utils.site import url_prefix
 
 from cmk.gui import login, pages
-from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
+from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.globals import g, request, response, theme
 from cmk.gui.http import Response

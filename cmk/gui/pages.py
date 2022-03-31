@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Mapping, Optional, Type
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
 
+from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.globals import config, g, html, request, response
 from cmk.gui.log import logger
@@ -73,9 +74,6 @@ class AjaxPage(Page, abc.ABC):
         raise NotImplementedError()
 
     def _handle_exc(self, method) -> None:
-        # FIXME: cyclical link between crash_reporting.py and pages.py
-        from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-
         try:
             # FIXME: These methods write to the response themselves. This needs to be refactored.
             method()
@@ -95,9 +93,6 @@ class AjaxPage(Page, abc.ABC):
 
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""
-        # FIXME: cyclical link between crash_reporting.py and pages.py
-        from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-
         response.set_content_type("application/json")
         try:
             action_response = self.page()

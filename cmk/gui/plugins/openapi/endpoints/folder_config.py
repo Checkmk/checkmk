@@ -41,7 +41,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.host_config import host_collection
+from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -105,7 +105,7 @@ def create(params):
 def hosts_of_folder(params):
     """Show all hosts in a folder"""
     folder: watolib.CREFolder = params["folder"]
-    return host_collection(folder.hosts().values())
+    return serve_host_collection(folder.hosts().values())
 
 
 @Endpoint(

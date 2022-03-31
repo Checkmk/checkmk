@@ -87,7 +87,7 @@ def test__create_sample(
 
     monkeypatch.setattr(
         license_usage,
-        "_get_extensions",
+        "load_extensions",
         lambda: LicenseUsageExtensions(ntop=False),
     )
 

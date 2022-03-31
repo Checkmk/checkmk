@@ -45,6 +45,7 @@ import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.license_usage import save_extensions
 from cmk.utils.license_usage.export import LicenseUsageExtensions
 from cmk.utils.site import omd_site
 
@@ -2064,15 +2065,11 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
 
 def _add_extensions_for_license_usage():
-    license_usage_dir = cmk.utils.paths.license_usage_dir
-    license_usage_dir.mkdir(parents=True, exist_ok=True)
-    extensions_filepath = license_usage_dir.joinpath("extensions.json")
-
-    with store.locked(extensions_filepath):
-        extensions = LicenseUsageExtensions(
+    save_extensions(
+        LicenseUsageExtensions(
             ntop=is_ntop_configured(),
         )
-        store.save_bytes_to_file(extensions_filepath, extensions.serialize())
+    )
 
 
 def _update_links_for_agent_receiver() -> None:

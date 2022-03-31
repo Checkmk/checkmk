@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
@@ -288,13 +287,8 @@ def validate_subscription_period(attrs: Dict) -> None:
 class LicenseUsageExtensions:
     ntop: bool
 
-    def serialize(self) -> bytes:
-        return serialize_dump(self)
-
-    @classmethod
-    def deserialize(cls, raw_extensions: bytes) -> LicenseUsageExtensions:
-        extensions = deserialize_dump(raw_extensions)
-        return cls(ntop=extensions.get("ntop", False))
+    def for_report(self) -> Mapping[str, Any]:
+        return asdict(self)
 
     @classmethod
     def parse(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageExtensions:
@@ -324,6 +318,9 @@ class LicenseUsageSample:
     num_services: int
     num_services_excluded: int
     extension_ntop: bool
+
+    def for_report(self) -> Mapping[str, Any]:
+        return asdict(self)
 
     @classmethod
     def get_parser(cls, report_version: str) -> Callable[[Mapping[str, Any]], LicenseUsageSample]:
@@ -524,37 +521,3 @@ class MonthlyServiceAverages:
 
 
 # .
-#   .--helper--------------------------------------------------------------.
-#   |                    _          _                                      |
-#   |                   | |__   ___| |_ __   ___ _ __                      |
-#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
-#   |                   | | | |  __/ | |_) |  __/ |                        |
-#   |                   |_| |_|\___|_| .__/ \___|_|                        |
-#   |                                |_|                                   |
-#   '----------------------------------------------------------------------'
-
-
-def serialize_dump(dump: Any) -> bytes:
-    dump_str = json.dumps(asdict(dump))
-    return rot47(dump_str).encode("utf-8")
-
-
-def deserialize_dump(raw_dump: bytes) -> Mapping[str, Any]:
-    dump_str = rot47(raw_dump.decode("utf-8"))
-
-    try:
-        return json.loads(dump_str)
-    except json.decoder.JSONDecodeError:
-        return {}
-
-
-def rot47(input_str: str) -> str:
-    decoded_str = ""
-    for char in input_str:
-        ord_char = ord(char)
-        if 33 <= ord_char <= 126:
-            decoded_char = chr(33 + ((ord_char + 14) % 94))
-        else:
-            decoded_char = char
-        decoded_str += decoded_char
-    return decoded_str

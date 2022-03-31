@@ -4,27 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import Any, Mapping
 
 import pytest
 
+from cmk.utils.license_usage import (
+    _serialize_dump,
+    LicenseUsageHistoryDump,
+    LicenseUsageHistoryDumpVersion,
+)
 from cmk.utils.license_usage.export import (
     LicenseUsageSample,
-    rot47,
-    serialize_dump,
     SubscriptionDetails,
     SubscriptionDetailsError,
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
     SubscriptionDetailsSource,
 )
-from cmk.utils.license_usage.samples import LicenseUsageHistoryDump, LicenseUsageHistoryDumpVersion
 
 
 def test_serialize_dump():
     assert (
-        serialize_dump(
+        _serialize_dump(
             LicenseUsageSample(
                 version="version",
                 edition="edition",
@@ -37,14 +38,10 @@ def test_serialize_dump():
                 num_hosts_excluded=4,
                 num_services_excluded=5,
                 extension_ntop=False,
-            ),
+            ).for_report(),
         )
         == b"LQG6CD:@?Qi QG6CD:@?Q[ Q65:E:@?Qi Q65:E:@?Q[ QA=2E7@C>Qi QA=2E7@C>Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QE:>6K@?6Q[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi c[ Q?F>0D6CG:46DQi b[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi 72=D6N"
     )
-
-
-def _make_dump(raw_report: Mapping[str, Any]) -> bytes:
-    return rot47(json.dumps(raw_report)).encode("utf-8")
 
 
 @pytest.mark.parametrize(
@@ -317,7 +314,7 @@ def _make_dump(raw_report: Mapping[str, Any]) -> bytes:
 def test_history_dump(
     raw_report: Mapping[str, Any], expected_report: LicenseUsageHistoryDump
 ) -> None:
-    assert LicenseUsageHistoryDump.deserialize(_make_dump(raw_report)) == expected_report
+    assert LicenseUsageHistoryDump.parse(raw_report) == expected_report
 
 
 def test_history_dump_add_sample() -> None:

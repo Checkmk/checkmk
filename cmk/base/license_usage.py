@@ -12,20 +12,22 @@ from typing import NamedTuple, Optional, Tuple
 
 import livestatus
 
-import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.license_usage.export import LicenseUsageExtensions, LicenseUsageSample, rot47
-from cmk.utils.license_usage.samples import LicenseUsageHistoryDump
+from cmk.utils.license_usage import (
+    get_history_dump_filepath,
+    LicenseUsageHistoryDump,
+    load_extensions,
+    load_history_dump,
+    rot47,
+    save_history_dump,
+)
+from cmk.utils.license_usage.export import LicenseUsageSample
+from cmk.utils.paths import license_usage_dir
 
 import cmk.base.crash_reporting as crash_reporting
 
 logger = logging.getLogger("cmk.base.license_usage")
-
-license_usage_dir = cmk.utils.paths.license_usage_dir
-next_run_filepath = license_usage_dir.joinpath("next_run")
-history_filepath = license_usage_dir.joinpath("history.json")
-extensions_filepath = license_usage_dir.joinpath("extensions.json")
 
 _last_update_try_ts = 0.0
 
@@ -52,8 +54,10 @@ def _try_history_update() -> None:
     logger.debug("Try license usage history update.")
 
     license_usage_dir.mkdir(parents=True, exist_ok=True)
+    history_dump_filepath = get_history_dump_filepath()
+    next_run_filepath = license_usage_dir / "next_run"
 
-    with store.locked(next_run_filepath), store.locked(history_filepath):
+    with store.locked(next_run_filepath), store.locked(history_dump_filepath):
         now = datetime.now()
         next_run_ts = int(rot47(store.load_text_from_file(next_run_filepath, default="_")))
 
@@ -61,7 +65,8 @@ def _try_history_update() -> None:
             return
 
         history_dump = _create_or_update_history_dump()
-        store.save_bytes_to_file(history_filepath, history_dump.serialize())
+        save_history_dump(history_dump)
+
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
         logger.debug("Successfully updated history.")
 
@@ -96,19 +101,11 @@ def _create_or_update_history_dump() -> LicenseUsageHistoryDump:
     we create a new one and add a new sample to it.
 
     The history has a max. length of 400 (days)."""
-    history_dump = _load_history_dump()
+    history_dump = load_history_dump()
     sample = _create_sample()
     if sample is not None:
         history_dump.add_sample(sample)
     return history_dump
-
-
-def _load_history_dump() -> LicenseUsageHistoryDump:
-    raw_history_dump = store.load_bytes_from_file(
-        history_filepath,
-        default=b"{}",
-    )
-    return LicenseUsageHistoryDump.deserialize(raw_history_dump)
 
 
 def _create_sample() -> Optional[LicenseUsageSample]:
@@ -124,7 +121,7 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         return None
 
     general_infos = cmk_version.get_general_version_infos()
-    extensions = _get_extensions()
+    extensions = load_extensions()
     return LicenseUsageSample(
         version=cmk_version.omd_version(),
         edition=general_infos["edition"],
@@ -138,15 +135,6 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         timezone=time.localtime().tm_zone,
         extension_ntop=extensions.ntop,
     )
-
-
-def _get_extensions() -> LicenseUsageExtensions:
-    with store.locked(extensions_filepath):
-        raw_extensions = store.load_bytes_from_file(
-            extensions_filepath,
-            default=b"{}",
-        )
-    return LicenseUsageExtensions.deserialize(raw_extensions)
 
 
 class EntityCounter(NamedTuple):

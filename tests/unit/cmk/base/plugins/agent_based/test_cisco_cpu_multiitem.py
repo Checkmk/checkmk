@@ -22,8 +22,16 @@ from cmk.base.plugins.agent_based.cisco_cpu_multiitem import (
 def parsed_section_fixture() -> Section:
     return parse_cisco_cpu_multiitem(
         [
-            [["2001", "5"], ["3001", "10"], ["4001", "10"]],
-            [["2001", "cpu 2", "12"], ["3001", "another cpu 3", "12"], ["4001", "A FAN", "7"]],
+            [
+                ["1", "2001", "5"],
+                ["2", "3001", "10"],
+                ["3", "4001", "10"],
+            ],
+            [
+                ["2001", "cpu 2", "12"],
+                ["3001", "another cpu 3", "12"],
+                ["4001", "A FAN", "7"],
+            ],
         ]
     )
 
@@ -92,17 +100,155 @@ def test_discover_cisco_cpu_multiitem(
     )
 
 
-def test_zero_cpm_cpu_total_physical_index() -> None:
-    # if cpmCPUTotalPhysicalIndex is 0 we should ignore the item
-    assert parse_cisco_cpu_multiitem(
-        [[["0", "5"], ["3001", "10"]], [["2001", "cpu 2", "12"], ["3001", "another cpu 3", "12"]]]
-    ) == {"another cpu 3": CPUInfo(util=10.0), "average": CPUInfo(util=10.0)}
-
-
 def test_ignore_non_cpu_entities() -> None:
-    assert (
-        parse_cisco_cpu_multiitem(
-            [[["2001", "5"], ["3001", "10"]], [["2001", "FAN", "7"], ["3001", "Chassis", "3"]]]
-        )
-        == {}
-    )
+    # chassis can actually have cpus!
+    assert parse_cisco_cpu_multiitem(
+        [
+            [
+                ["1", "2001", "5"],
+                ["2", "3001", "10"],
+            ],
+            [
+                ["2001", "FAN", "7"],
+                ["3001", "Chassis", "3"],
+            ],
+        ]
+    ) == {
+        "Chassis": CPUInfo(util=10.0),
+        "average": CPUInfo(util=10.0),
+    }
+
+
+data = [
+    pytest.param(
+        [
+            # Number of CPUs: 1
+            # Remark: only one entry in 109er table
+            [
+                ["1", "0", "1"],
+            ],
+            [
+                ["1", "CISCO2921/K9", "3"],
+                ["2", "C2921 Chassis Slot 0", "5"],
+                ["3", "C2921 Mother board 3GE, integrated VPN and 4W on Slot 0", "9"],
+                ["4", "DaughterCard Slot 0 on Card 0", "5"],
+            ],
+        ],
+        {
+            "1": CPUInfo(util=1.0),
+            "average": CPUInfo(util=1.0),
+        },
+        id="cisco_router_c2921",
+    ),
+    pytest.param(
+        [
+            # Number of CPUs: 1
+            # Remark: here, the physical name is replaced with `???`
+            [
+                ["1", "0", "7"],
+            ],
+            [
+                ["1001", "???", "3"],
+            ],
+        ],
+        {
+            "1": CPUInfo(util=7.0),
+            "average": CPUInfo(util=7.0),
+        },
+        id="cisco_switch_c2960",
+    ),
+    pytest.param(
+        [
+            # Number of CPUs: 4 (but in enity table we see 8 CPUs + 1 chassis)
+            # CPU 2+3 are directly referenced, 1 and 4 only virtual
+            [
+                ["1", "0", "10"],
+                ["2", "2", "20"],
+                ["3", "3", "30"],
+                ["4", "0", "40"],
+            ],
+            [
+                # the names are no original data, but derived from the descirption
+                ["1", "1 firepower", "3"],
+                ["2", "2 cpu", "12"],
+                ["3", "3 cpu", "12"],
+                ["4", "4 cpu", "12"],
+                ["5", "5 cpu", "12"],
+                ["6", "6 cpu", "12"],
+                ["7", "7 cpu", "12"],
+                ["8", "8 accelerator", "12"],
+                ["9", "9 slot", "12"],
+            ],
+        ],
+        {
+            "1": CPUInfo(util=10.0),
+            "2 cpu": CPUInfo(util=20.0),
+            "3 cpu": CPUInfo(util=30.0),
+            "4": CPUInfo(util=40.0),
+            "average": CPUInfo(util=25.0),
+        },
+        id="cisco_asa_5508_x",
+    ),
+    pytest.param(
+        [
+            # Number of CPUs: one or two... we're not sure...
+            # Remark: Item 9001 is not listed in CPU table... so we also do not have a value for it...
+            [
+                ["7", "7035", "10"],
+            ],
+            [
+                ["7035", "CPU 7035 ???", "12"],
+                ["9001", "CPU 9001 ???", "12"],
+            ],
+        ],
+        {
+            "7035 ???": CPUInfo(util=10.0),
+            "average": CPUInfo(util=10.0),
+        },
+        id="cisco_isr_router",
+    ),
+    pytest.param(
+        [
+            [
+                ["1", "1001", "36"],
+            ],
+            [
+                ["1", "1 ???", "11"],
+                ["1001", "CPU 1001 ???", "3"],
+                ["1002", "1002 ???", "9"],
+            ],
+        ],
+        {
+            "1001 ???": CPUInfo(util=36.0),
+            "average": CPUInfo(util=36.0),
+        },
+        id="cisco_c2960x_stack",
+    ),
+    pytest.param(
+        [
+            # Number of CPUs: 2
+            # Remark: Total5minRev is dummy data.
+            [
+                ["11", "1000", "3"],
+                ["12", "2000", "4"],
+            ],
+            [
+                ["1", "???", "11"],
+                ["1000", "CPU 1000", "3"],
+                ["1001", "???", "1"],
+                ["2000", "CPU 2000", "3"],
+            ],
+        ],
+        {
+            "1000": CPUInfo(util=3.0),
+            "2000": CPUInfo(util=4.0),
+            "average": CPUInfo(util=3.5),
+        },
+        id="cisco_c9200l_stack",
+    ),
+]
+
+
+@pytest.mark.parametrize("string_table, expected", data)
+def test_parse(string_table, expected) -> None:
+    assert parse_cisco_cpu_multiitem(string_table) == expected

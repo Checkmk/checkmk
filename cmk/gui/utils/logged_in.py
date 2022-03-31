@@ -19,7 +19,7 @@ from cmk.utils.type_defs import UserId
 from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
-import cmk.gui.sites as sites
+import cmk.gui.site_config as site_config
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.context import local
 from cmk.gui.exceptions import MKAuthException
@@ -335,7 +335,7 @@ class LoggedInUser:
         self, unfiltered_sites: Optional[SiteConfigurations] = None
     ) -> SiteConfigurations:
         if unfiltered_sites is None:
-            unfiltered_sites = sites.allsites()
+            unfiltered_sites = site_config.allsites()
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
@@ -350,12 +350,12 @@ class LoggedInUser:
         )
 
     def authorized_login_sites(self) -> SiteConfigurations:
-        login_site_ids = sites.get_login_slave_sites()
+        login_site_ids = site_config.get_login_slave_sites()
         return self.authorized_sites(
             SiteConfigurations(
                 {
                     site_id: s
-                    for site_id, s in sites.allsites().items()
+                    for site_id, s in site_config.allsites().items()
                     if site_id in login_site_ids  #
                 }
             )

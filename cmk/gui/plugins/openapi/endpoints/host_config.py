@@ -41,10 +41,11 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import json
 import operator
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Sequence
 from urllib.parse import urlencode
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import fields as gui_fields
@@ -159,9 +160,10 @@ def bulk_create_hosts(params):
     body = params["body"]
     entries = body["entries"]
 
-    failed_hosts = []
+    failed_hosts: Dict[HostName, str] = {}
+    succeeded_hosts: List[HostName] = []
     folder: CREFolder
-    for folder, grouped_hosts in itertools.groupby(body["entries"], operator.itemgetter("folder")):
+    for folder, grouped_hosts in itertools.groupby(entries, operator.itemgetter("folder")):
         validated_entries = []
         folder.prepare_create_hosts()
         for host in grouped_hosts:
@@ -169,24 +171,37 @@ def bulk_create_hosts(params):
             attributes = host["attributes"]
             try:
                 folder.verify_host_details(host_name, attributes)
-            except (MKUserError, MKAuthException):
-                failed_hosts.append(host_name)
-            validated_entries.append((host_name, attributes, None))
+                validated_entries.append((host_name, attributes, None))
+            except (MKUserError, MKAuthException) as e:
+                failed_hosts[host_name] = f"Validation failed: {e}"
 
         folder.create_validated_hosts(validated_entries, bake_hosts=False)
+        succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if params[BAKE_AGENT_PARAM_NAME]:
-        hosts_and_folders.try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
+        hosts_and_folders.try_bake_agents_for_hosts(succeeded_hosts)
 
+    return _bulk_host_action_response(
+        failed_hosts, [watolib.Host.load_host(host_name) for host_name in succeeded_hosts]
+    )
+
+
+def _bulk_host_action_response(
+    failed_hosts: Dict[HostName, str], succeeded_hosts: Sequence[watolib.CREHost]
+) -> Response:
     if failed_hosts:
         return problem(
             status=400,
-            title="Provided details for some hosts are faulty",
-            detail=f"Validated hosts were saved. The configurations for following hosts are faulty and "
+            title="Some actions failed",
+            detail=f"Some of the actions were performed but the following were faulty and "
             f"were skipped: {' ,'.join(failed_hosts)}.",
+            ext={
+                "succeeded_hosts": _host_collection(succeeded_hosts),
+                "failed_hosts": failed_hosts,
+            },
         )
-    hosts = [watolib.Host.load_host(entry["host_name"]) for entry in entries]
-    return host_collection(hosts)
+
+    return serve_host_collection(succeeded_hosts)
 
 
 @Endpoint(
@@ -196,21 +211,24 @@ def bulk_create_hosts(params):
     response_schema=response_schemas.HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def list_hosts(param):
+def list_hosts(param) -> Response:
     """Show all hosts"""
     root_folder = watolib.Folder.root_folder()
     root_folder.need_recursive_permission("read")
-    return host_collection(root_folder.all_hosts_recursively().values())
+    return serve_host_collection(root_folder.all_hosts_recursively().values())
 
 
-def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
-    _hosts = {
+def serve_host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
+    return constructors.serve_json(_host_collection(hosts))
+
+
+def _host_collection(hosts: Iterable[watolib.CREHost]) -> dict[str, Any]:
+    return {
         "id": "host",
         "domainType": "host_config",
         "value": [serialize_host(host, effective_attributes=False) for host in hosts],
         "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
     }
-    return constructors.serve_json(_hosts)
 
 
 @Endpoint(
@@ -312,8 +330,8 @@ def bulk_update_hosts(params):
     body = params["body"]
     entries = body["entries"]
 
-    hosts = []
-    faulty_hosts = []
+    succeeded_hosts: List[watolib.CREHost] = []
+    failed_hosts: Dict[HostName, str] = {}
     for update_detail in entries:
         host_name = update_detail["host_name"]
         new_attributes = update_detail["attributes"]
@@ -333,22 +351,15 @@ def bulk_update_hosts(params):
                 faulty_attributes.append(attribute)
 
         if faulty_attributes:
-            faulty_hosts.append(f"{host_name} ({', '.join(faulty_attributes)})")
+            failed_hosts[host_name] = "Failed to remove {', '.join(faulty_attributes)}"
             continue
 
         if remove_attributes:
             host.clean_attributes(remove_attributes)
 
-        hosts.append(host)
+        succeeded_hosts.append(host)
 
-    if faulty_hosts:
-        return problem(
-            status=400,
-            title="Some attributes could not be removed",
-            detail=f"The attributes of the following hosts could not be removed: {', '.join(faulty_hosts)}",
-        )
-
-    return host_collection(hosts)
+    return _bulk_host_action_response(failed_hosts, succeeded_hosts)
 
 
 @Endpoint(

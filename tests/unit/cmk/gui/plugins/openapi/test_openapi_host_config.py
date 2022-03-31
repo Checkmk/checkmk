@@ -16,6 +16,7 @@ from cmk.utils import version
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -672,6 +673,37 @@ def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK):
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_bulk_with_failed(
+    base: str,
+    monkeypatch: pytest.MonkeyPatch,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
+    def _raise(_self, _host_name, _attributes):
+        if _host_name == "foobar":
+            raise MKUserError(None, "fail")
+
+    monkeypatch.setattr("cmk.gui.watolib.hosts_and_folders.CREFolder.verify_host_details", _raise)
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/actions/bulk-create/invoke",
+        params=json.dumps(
+            {
+                "entries": [
+                    {"host_name": "foobar", "folder": "/", "attributes": {}},
+                    {"host_name": "example.com", "folder": "/", "attributes": {}},
+                ]
+            }
+        ),
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+    assert resp.json["ext"]["failed_hosts"] == {"foobar": "Validation failed: fail"}
+    assert [e["id"] for e in resp.json["ext"]["succeeded_hosts"]["value"]] == ["example.com"]
 
 
 @pytest.fixture(name="custom_host_attribute")

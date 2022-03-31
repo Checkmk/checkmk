@@ -1165,33 +1165,6 @@ rulespec_registry.register(
 )
 
 
-def _factory_default_special_agents_vnx_quotas():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_vnx_quotas():
-    return Dictionary(
-        title=_("VNX quotas and filesystems"),
-        elements=[
-            ("user", TextInput(title=_("NAS DB user name"))),
-            ("password", Password(title=_("Password"))),
-            ("nas_db", TextInput(title=_("NAS DB path"))),
-        ],
-        optional_keys=[],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_vnx_quotas(),
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:vnx_quotas",
-        valuespec=_valuespec_special_agents_vnx_quotas,
-    )
-)
-
-
 def _factory_default_special_agents_elasticsearch():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED

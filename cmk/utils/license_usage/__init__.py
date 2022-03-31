@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, List, Mapping
+from typing import Any, Mapping
 
 import cmk.utils.store as store
-from cmk.utils.license_usage.export import LicenseUsageExtensions, LicenseUsageSample
+from cmk.utils.license_usage.export import LicenseUsageExtensions, LicenseUsageHistory
 from cmk.utils.paths import license_usage_dir
 
 LicenseUsageHistoryDumpVersion = "1.3"
@@ -21,10 +21,7 @@ LicenseUsageHistoryDumpVersion = "1.3"
 @dataclass
 class LicenseUsageHistoryDump:
     VERSION: str
-    history: List[LicenseUsageSample]
-
-    def add_sample(self, sample: LicenseUsageSample) -> None:
-        self.history = ([sample] + self.history)[:400]
+    history: LicenseUsageHistory
 
     def for_report(self) -> Mapping[str, Any]:
         return asdict(self)
@@ -32,14 +29,13 @@ class LicenseUsageHistoryDump:
     @classmethod
     def parse(cls, raw_dump: Mapping[str, Any]) -> LicenseUsageHistoryDump:
         if "VERSION" in raw_dump and "history" in raw_dump:
-            parser = LicenseUsageSample.get_parser(raw_dump["VERSION"])
             return cls(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[parser(s) for s in raw_dump["history"]],
+                history=LicenseUsageHistory.parse(raw_dump["VERSION"], raw_dump["history"]),
             )
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
-            history=[],
+            history=LicenseUsageHistory([]),
         )
 
 

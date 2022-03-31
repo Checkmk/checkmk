@@ -14,6 +14,7 @@ from cmk.utils.license_usage import (
     LicenseUsageHistoryDumpVersion,
 )
 from cmk.utils.license_usage.export import (
+    LicenseUsageHistory,
     LicenseUsageSample,
     SubscriptionDetails,
     SubscriptionDetailsError,
@@ -51,7 +52,7 @@ def test_serialize_dump():
             {},
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[],
+                history=LicenseUsageHistory([]),
             ),
         ),
         (
@@ -61,7 +62,7 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[],
+                history=LicenseUsageHistory([]),
             ),
         ),
         (
@@ -85,21 +86,23 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[
-                    LicenseUsageSample(
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_services=4,
-                        num_hosts_excluded=0,
-                        num_services_excluded=0,
-                        extension_ntop=False,
-                    ),
-                ],
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_services=4,
+                            num_hosts_excluded=0,
+                            num_services_excluded=0,
+                            extension_ntop=False,
+                        ),
+                    ]
+                ),
             ),
         ),
         (
@@ -125,21 +128,23 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[
-                    LicenseUsageSample(
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_hosts_excluded=3,
-                        num_services=4,
-                        num_services_excluded=5,
-                        extension_ntop=False,
-                    ),
-                ],
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_hosts_excluded=3,
+                            num_services=4,
+                            num_services_excluded=5,
+                            extension_ntop=False,
+                        ),
+                    ]
+                ),
             ),
         ),
         (
@@ -168,21 +173,23 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[
-                    LicenseUsageSample(
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_hosts_excluded=3,
-                        num_services=4,
-                        num_services_excluded=5,
-                        extension_ntop=True,
-                    ),
-                ],
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_hosts_excluded=3,
+                            num_services=4,
+                            num_services_excluded=5,
+                            extension_ntop=True,
+                        ),
+                    ]
+                ),
             ),
         ),
         (
@@ -208,21 +215,23 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[
-                    LicenseUsageSample(
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_hosts_excluded=3,
-                        num_services=4,
-                        num_services_excluded=5,
-                        extension_ntop=False,
-                    ),
-                ],
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_hosts_excluded=3,
+                            num_services=4,
+                            num_services_excluded=5,
+                            extension_ntop=False,
+                        ),
+                    ]
+                ),
             ),
         ),
         (
@@ -251,21 +260,23 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[
-                    LicenseUsageSample(
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_hosts_excluded=3,
-                        num_services=4,
-                        num_services_excluded=5,
-                        extension_ntop=True,
-                    ),
-                ],
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_hosts_excluded=3,
+                            num_services=4,
+                            num_services_excluded=5,
+                            extension_ntop=True,
+                        ),
+                    ]
+                ),
             ),
         ),
         (
@@ -292,21 +303,23 @@ def test_serialize_dump():
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=[
-                    LicenseUsageSample(
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_hosts_excluded=3,
-                        num_services=4,
-                        num_services_excluded=5,
-                        extension_ntop=True,
-                    ),
-                ],
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_hosts_excluded=3,
+                            num_services=4,
+                            num_services_excluded=5,
+                            extension_ntop=True,
+                        ),
+                    ]
+                ),
             ),
         ),
     ],
@@ -314,13 +327,16 @@ def test_serialize_dump():
 def test_history_dump(
     raw_report: Mapping[str, Any], expected_report: LicenseUsageHistoryDump
 ) -> None:
-    assert LicenseUsageHistoryDump.parse(raw_report) == expected_report
+    dump = LicenseUsageHistoryDump.parse(raw_report)
+    assert dump.VERSION == expected_report.VERSION
+    for sample, expected_sample in zip(dump.history, expected_report.history):
+        assert sample == expected_sample
 
 
 def test_history_dump_add_sample() -> None:
-    history_dump = LicenseUsageHistoryDump(VERSION="1.0", history=[])
+    history_dump = LicenseUsageHistoryDump(VERSION="1.0", history=LicenseUsageHistory([]))
     for idx in range(450):
-        history_dump.add_sample(
+        history_dump.history.add_sample(
             LicenseUsageSample(
                 version="version",
                 edition="edition",
@@ -336,6 +352,19 @@ def test_history_dump_add_sample() -> None:
             ),
         )
     assert len(history_dump.history) == 400
+    assert history_dump.history.last == LicenseUsageSample(
+        version="version",
+        edition="edition",
+        platform="platform",
+        is_cma=False,
+        sample_time=449,
+        timezone="timezone",
+        num_hosts=2,
+        num_services=3,
+        num_hosts_excluded=4,
+        num_services_excluded=5,
+        extension_ntop=False,
+    )
 
 
 @pytest.mark.parametrize(

@@ -102,9 +102,8 @@ def _create_or_update_history_dump() -> LicenseUsageHistoryDump:
 
     The history has a max. length of 400 (days)."""
     history_dump = load_history_dump()
-    sample = _create_sample()
-    if sample is not None:
-        history_dump.add_sample(sample)
+    if sample := _create_sample():
+        history_dump.history.add_sample(sample)
     return history_dump
 
 

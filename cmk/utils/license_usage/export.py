@@ -7,11 +7,24 @@
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from dateutil.relativedelta import relativedelta
 
@@ -370,6 +383,45 @@ class LicenseUsageSample:
     def _restrict_platform(platform: str) -> str:
         # Restrict platform string to 50 chars due to the restriction of the license DB field.
         return platform[:50]
+
+
+# .
+#   .--history-------------------------------------------------------------.
+#   |                   _     _     _                                      |
+#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
+#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
+#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
+#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
+#   |                                             |___/                    |
+#   '----------------------------------------------------------------------'
+
+
+class LicenseUsageHistory:
+    def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
+        self._samples = deque(iterable, maxlen=400)
+
+    def __iter__(self) -> Iterator[LicenseUsageSample]:
+        return iter(self._samples)
+
+    def __len__(self) -> int:
+        return len(self._samples)
+
+    @property
+    def last(self) -> Optional[LicenseUsageSample]:
+        return self._samples[0] if self._samples else None
+
+    def for_report(self) -> Sequence[Mapping[str, Any]]:
+        return [sample.for_report() for sample in self]
+
+    @classmethod
+    def parse(
+        cls, report_version: str, raw_history: Sequence[Mapping[str, Any]]
+    ) -> LicenseUsageHistory:
+        parser = LicenseUsageSample.get_parser(report_version)
+        return cls(parser(raw_sample) for raw_sample in raw_history)
+
+    def add_sample(self, sample: LicenseUsageSample) -> None:
+        self._samples.appendleft(sample)
 
 
 # .

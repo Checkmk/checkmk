@@ -1,0 +1,20 @@
+Title: Add RobotMK GUI integration
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1648737439
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.2.0i1
+
+If you use the RobotMK extension package (mkp), each RobotMK service will now
+have an icon for the last log file and the last error log file in the action
+menu of the service, depending on the service labels
+"robotmk/html_last_log:yes" and "robotmk/html_last_error_log:yes".
+
+These icons lead to a new page on which the respective file is displayed and
+downloadable.
+
+Please note:
+You have to use at least version 1.2.9 of the extension package.

@@ -1,0 +1,14 @@
+Title: Agent Linux/Solaris: Fix skipped agent plugins section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648758336
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The agent section "agent plugins" could not be skipped using the
+corresponding WATO ruleset.
+On Linux, the plugins section has been skipped if the labels section
+was configured to be skipped.

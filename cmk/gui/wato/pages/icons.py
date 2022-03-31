@@ -14,7 +14,7 @@ import cmk.utils.store as store
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, theme, transactions
+from cmk.gui.globals import config, html, request, theme
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import (
@@ -26,6 +26,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
 
 

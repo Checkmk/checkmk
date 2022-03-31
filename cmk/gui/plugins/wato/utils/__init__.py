@@ -32,7 +32,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.globals import config, html, request
 from cmk.gui.groups import (
     GroupSpecs,
     load_contact_group_information,
@@ -91,6 +91,7 @@ from cmk.gui.sites import get_activation_site_choices, get_site_config
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice,

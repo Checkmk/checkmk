@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
-from cmk.gui.globals import html, output_funnel, request, transactions
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.page_menu import (
@@ -41,6 +41,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,

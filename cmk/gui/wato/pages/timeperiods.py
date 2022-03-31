@@ -22,7 +22,7 @@ import cmk.gui.wato.mkeventd
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.globals import config, html, request
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -45,6 +45,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,

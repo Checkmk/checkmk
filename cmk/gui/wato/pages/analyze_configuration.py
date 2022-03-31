@@ -25,7 +25,7 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -41,6 +41,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.sites import activation_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,

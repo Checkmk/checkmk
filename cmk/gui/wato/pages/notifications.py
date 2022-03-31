@@ -20,7 +20,7 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.globals import config, html, request
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -49,6 +49,7 @@ from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     Age,

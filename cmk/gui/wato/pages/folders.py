@@ -19,7 +19,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, output_funnel, request, transactions
+from cmk.gui.globals import config, html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -52,6 +52,7 @@ from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
     make_confirm_link,

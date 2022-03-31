@@ -6,10 +6,11 @@
 
 from typing import List, Optional, Tuple, Union
 
-from cmk.gui.globals import html, request, response, transactions
+from cmk.gui.globals import html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.transaction_manager import transactions
 
 
 def confirm_with_preview(

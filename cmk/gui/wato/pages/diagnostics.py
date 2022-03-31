@@ -40,7 +40,7 @@ from cmk.automations.results import CreateDiagnosticsDumpResult
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.globals import html, request, response, transactions
+from cmk.gui.globals import html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -56,6 +56,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.sites import get_activation_site_choices
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,

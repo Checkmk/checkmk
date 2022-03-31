@@ -22,7 +22,7 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.globals import config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -38,6 +38,7 @@ from cmk.gui.plugins.views.utils import make_host_breadcrumb
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
 
 #   .--HTML Output---------------------------------------------------------.

@@ -14,9 +14,8 @@ import pytest
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.http as http
-from cmk.gui.globals import transactions
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.transaction_manager import TransactionManager, transactions
 
 
 @pytest.fixture()

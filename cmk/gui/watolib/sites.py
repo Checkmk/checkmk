@@ -23,10 +23,11 @@ import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.config import default_single_site_configuration, load_config, prepare_raw_site_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, request, transactions
+from cmk.gui.globals import config, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
     Alternative,

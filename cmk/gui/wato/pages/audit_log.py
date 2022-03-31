@@ -13,15 +13,7 @@ import cmk.utils.render as render
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import (
-    display_options,
-    html,
-    output_funnel,
-    request,
-    response,
-    transactions,
-    user_errors,
-)
+from cmk.gui.globals import display_options, html, output_funnel, request, response, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -39,6 +31,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     AbsoluteDate,

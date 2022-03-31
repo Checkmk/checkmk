@@ -62,7 +62,6 @@ from cmk.gui.globals import (
     output_funnel,
     request,
     response,
-    transactions,
     user_errors,
 )
 
@@ -191,6 +190,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,

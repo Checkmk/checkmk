@@ -13,7 +13,7 @@ import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -34,6 +34,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,

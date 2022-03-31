@@ -10,6 +10,7 @@ import random
 import time
 from typing import List, Optional, TYPE_CHECKING
 
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import Request
 
 if TYPE_CHECKING:
@@ -134,3 +135,6 @@ class TransactionManager:
         except ValueError:
             return
         self._user.save_transids(valid_ids)
+
+
+transactions: TransactionManager = request_local_attr("transactions")

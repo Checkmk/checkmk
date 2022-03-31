@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING, Un
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, theme, transactions, user_errors
+from cmk.gui.globals import html, request, theme, user_errors
 from cmk.gui.htmllib.foldable_container import (
     foldable_container_id,
     foldable_container_img_id,
@@ -18,6 +18,7 @@ from cmk.gui.htmllib.foldable_container import (
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.transaction_manager import transactions
 
 if TYPE_CHECKING:
     from typing import Sequence

@@ -22,7 +22,7 @@ import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -38,6 +38,7 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,

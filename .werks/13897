@@ -1,0 +1,27 @@
+Title: Fix command injection vulnerability
+Class: security
+Compatible: incomp
+Component: notifications
+Date: 1648720315
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.2.0i1
+
+Previously to this Werk an attacker who could control certain notification
+variables such as <tt>NOTIFICATIONTYPE</tt> or <tt>HOSTNAME</tt> was able to
+inject commands to the fall-back mail command. The commands were then executed
+as site user.
+
+With this werk the variable <tt>MAIL_COMMAND</tt> is no longer available in
+notification scripts.
+
+You can reduce the risk of exploitation with disabling the listening of the
+notification spooler (the default is disabled) (CEE/CME only feature).
+
+All maintained versions (>=1.6) are subject to this vulnerability. It is likely
+that also previous versions were vulnerable.
+
+To detect possible exploitation <tt>var/log/mknotifyd.log</tt> and
+<tt>var/log/notify.log</tt> can be checked for special shell characters like
+<tt>&&</tt> and odd quoting.

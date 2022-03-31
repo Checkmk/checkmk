@@ -12,8 +12,13 @@
 checkname = 'cisco_cpu_multiitem'
 
 
-info = [[[u'1008', u'24'], ['4001', '10']],
-        [['1008', 'CPU 7', '12'], ['4001', 'I AM A FAN, please do not discover me as CPU...', '7']]]
+info = [[
+    ['2', u'1008', u'24'],
+    ['3', '4001', '10'],
+], [
+    ['1008', 'CPU 7', '12'],
+    ['4001', 'I AM A FAN, please do not discover me as CPU...', '7']
+]]
 
 
 discovery = {'': [(u'7', {})]}

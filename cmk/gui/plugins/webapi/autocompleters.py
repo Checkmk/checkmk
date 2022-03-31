@@ -35,6 +35,11 @@ from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import autocompleter_registry
 
 
+def _filter_choices(value: str, choices: Choices) -> Choices:
+    value_to_search = value.lower()
+    return [(value, title) for value, title in choices if value_to_search in title.lower()]
+
+
 def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choices:
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
@@ -133,7 +138,7 @@ def service_levels_autocompleter(value: str, params: Dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     choices: Choices = mkeventd.service_levels()
     empty_choices: Choices = [("", "")]
-    return empty_choices + choices
+    return empty_choices + _filter_choices(value, choices)
 
 
 @autocompleter_registry.register_expression("syslog_facilities")
@@ -142,7 +147,7 @@ def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
     empty_choices: Choices = [("", "")]
-    return empty_choices + choices
+    return empty_choices + _filter_choices(value, choices)
 
 
 @autocompleter_registry.register_expression("monitored_service_description")

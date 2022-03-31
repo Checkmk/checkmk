@@ -12,6 +12,7 @@ import pytest
 from tests.testlib.site import Site
 
 import cmk.utils.msi_engine as msi_engine
+import cmk.utils.obfuscate as obfuscate
 
 MSI_LOCATION = "share/check_mk/agents/windows"
 
@@ -48,8 +49,10 @@ def test_export_msi_file(site: Site, tmp_path):
     bin_path = site.path("bin/")
     try:
         out_dir.mkdir()
+        deobfuscated_file = out_dir / "deobfuscated.msi"
+        obfuscate.deobfuscate_file(msi_file, file_out=deobfuscated_file)
         for entry in ["File", "Property", "Component"]:
-            msi_engine.export_msi_file(bin_path, entry, str(msi_file), str(out_dir))
+            msi_engine.export_msi_file(bin_path, entry, str(deobfuscated_file), str(out_dir))
             f = out_dir / (entry + ".idt")
             assert f.exists(), "Ups for [{}] {}".format(entry, f)
     finally:

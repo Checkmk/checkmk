@@ -1265,10 +1265,10 @@ class RobotmkIcon(Icon):
 
     @classmethod
     def title(cls) -> str:
-        return _("Robotmk report")
+        return _("Robot Framework: Last log")
 
     def service_columns(self) -> List[str]:
-        return ["check_command"]
+        return ["labels"]
 
     def render(
         self,
@@ -1277,15 +1277,55 @@ class RobotmkIcon(Icon):
         tags: List[TagID],
         custom_vars: Dict[str, str],
     ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
-        if row.get("service_check_command") != "check_mk-robotmk":
+        if not row.get("service_labels", {}).get("robotmk/html_last_log"):
             return None
 
         return (
-            "robotmk",  # TODO add icon
-            _("Robotmk report of this service"),
+            "robotmk",
+            self.title(),
             makeuri_contextless(
                 request,
                 [
+                    ("report_type", self.ident()),
+                    ("site", row["site"]),
+                    ("host", row["host_name"]),
+                    ("service", row["service_description"]),
+                ],
+                filename="robotmk.py",
+            ),
+        )
+
+
+@icon_and_action_registry.register
+class RobotmkErrorIcon(Icon):
+    @classmethod
+    def ident(cls) -> str:
+        return "robotmk_error"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Robot Framework: Last error log")
+
+    def service_columns(self) -> List[str]:
+        return ["labels"]
+
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: List[TagID],
+        custom_vars: Dict[str, str],
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+        if not row.get("service_labels", {}).get("robotmk/html_last_error_log"):
+            return None
+
+        return (
+            "robotmk_error",
+            self.title(),
+            makeuri_contextless(
+                request,
+                [
+                    ("report_type", self.ident()),
                     ("site", row["site"]),
                     ("host", row["host_name"]),
                     ("service", row["service_description"]),

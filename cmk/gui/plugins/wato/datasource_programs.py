@@ -1165,57 +1165,6 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_couchbase():
-    return Dictionary(
-        title=_("Couchbase servers"),
-        help=_(
-            "This rule allows to select a Couchbase server to monitor as well as "
-            "configure buckets for further checks"
-        ),
-        elements=[
-            (
-                "buckets",
-                ListOfStrings(title=_("Bucket names"), help=_("Name of the Buckets to monitor.")),
-            ),
-            (
-                "timeout",
-                Integer(
-                    title=_("Timeout"), default_value=10, help=_("Timeout for requests in seconds.")
-                ),
-            ),
-            (
-                "port",
-                Integer(
-                    title=_("Port"),
-                    default_value=8091,
-                    help=_("The port that is used for the api call."),
-                ),
-            ),
-            (
-                "authentication",
-                Tuple(
-                    title=_("Authentication"),
-                    help=_("The credentials for api calls with authentication."),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False),
-                        PasswordFromStore(title=_("Password of the user"), allow_empty=False),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:couchbase",
-        valuespec=_valuespec_special_agents_couchbase,
-    )
-)
-
-
 def _valuespec_special_agents_datadog() -> Dictionary:
     return Dictionary(
         title=_("Datadog"),

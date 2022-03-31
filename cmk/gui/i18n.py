@@ -12,7 +12,7 @@ from typing import Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
 
 import cmk.utils.paths
 
-from cmk.gui.globals import local
+from cmk.gui.context import local
 from cmk.gui.utils.speaklater import LazyString
 
 if TYPE_CHECKING:

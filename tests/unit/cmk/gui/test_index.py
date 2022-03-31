@@ -10,7 +10,8 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
-from cmk.gui.globals import config, html, local, user
+from cmk.gui.context import local
+from cmk.gui.globals import config, html, user
 
 RequestContextFixture = Iterator[None]
 

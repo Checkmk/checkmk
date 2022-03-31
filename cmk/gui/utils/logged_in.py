@@ -21,8 +21,9 @@ from cmk.utils.version import __version__, Version
 import cmk.gui.permissions as permissions
 import cmk.gui.sites as sites
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.context import local
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, endpoint, local, request
+from cmk.gui.globals import config, endpoint, request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager

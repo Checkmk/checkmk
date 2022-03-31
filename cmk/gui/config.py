@@ -24,8 +24,9 @@ from cmk.utils.site import omd_site, url_prefix
 import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.utils as utils
+from cmk.gui.context import local
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import config, local
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 
 # Kept for compatibility with pre 1.6 GUI plugins

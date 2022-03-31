@@ -43,8 +43,9 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.context import local
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, html, local, request, response, session
+from cmk.gui.globals import config, html, request, response, session
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

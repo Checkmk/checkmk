@@ -26,6 +26,7 @@ import cmk.gui.mobile
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.context import local
 from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
@@ -33,17 +34,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import (
-    config,
-    html,
-    local,
-    request,
-    response,
-    theme,
-    transactions,
-    user,
-    user_errors,
-)
+from cmk.gui.globals import config, html, request, response, theme, transactions, user, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.http import Request
 from cmk.gui.i18n import _

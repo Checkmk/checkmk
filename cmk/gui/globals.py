@@ -21,7 +21,6 @@ if TYPE_CHECKING:
     # Import cycles
     from cmk.gui import htmllib, http, userdb
     from cmk.gui.config import Config
-    from cmk.gui.context import RequestContext
     from cmk.gui.display_options import DisplayOptions
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.utils.logged_in import LoggedInUser
@@ -52,7 +51,6 @@ g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 # tools in general.
 
 # From request context
-local: RequestContext = request_local_attr()  # None as name will get the whole object.
 user: LoggedInUser = request_local_attr("user")
 request: http.Request = request_local_attr("request")
 response: http.Response = request_local_attr("response")

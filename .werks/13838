@@ -9,13 +9,9 @@ Level: 1
 State: unknown
 Version: 2.2.0i1
 
-When fetching the data from a Checkmk agent (unix/windows),
-the fetcher would establish a connection before checking
-the cache file. If the cached data was still valid the
-connections has been closed.
+When fetching the data from a Checkmk agent (unix/windows), the fetcher would establish a connection before checking the cache file.
+If the cached data was still valid the connection has been closed.
 
-These "unused" connections could lead to unwanted agent
-executions or, in Checkmk 2.1, to irritating errors
-in the log of <tt>cmk-agent-ctl</tt> on the monitored host,
-such as <i>"Request failed: tls handshake eof"</i> or
-<i>"Request failed: Connection reset by peer (os error 104)"</i>.
+These "unused" connections could lead to unwanted agent executions, which in turn can lead to lost logwatch messages or a flapping hardware/software inventory.
+
+In Checkmk 2.1 it additionally lead to irritating errors in the log of <tt>cmk-agent-ctl</tt> on the monitored host, such as <i>"Request failed: tls handshake eof"</i> or <i>"Request failed: Connection reset by peer (os error 104)"</i>.

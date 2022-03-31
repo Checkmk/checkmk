@@ -1,0 +1,18 @@
+Title: mk_apt: Check crashes on single-line agent sections
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648736095
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+This fixes a regression that got introduced with Werk #13578.
+
+While the above mentioned Werk fixed an issue with ignored security updates
+for the "APT normal and security updates" plugin, it made a wrong assumption
+to the output of the underlying <tt>apt-get</tt> command, that lead to a crash
+for outputs that exactly consist of one security update item.
+

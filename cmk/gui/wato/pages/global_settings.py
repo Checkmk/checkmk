@@ -16,7 +16,7 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -43,6 +43,7 @@ from cmk.gui.plugins.watolib.utils import (
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
 from cmk.gui.watolib.search import (

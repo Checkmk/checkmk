@@ -22,7 +22,7 @@ import cmk.gui.watolib
 import cmk.gui.watolib.read_only
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
-from cmk.gui.globals import config, request, response, user
+from cmk.gui.globals import config, request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.permissions import Permission, permission_registry
@@ -36,6 +36,7 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     check_hostname,
     validate_config_hash,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib.activate_changes import update_config_generation
 
 

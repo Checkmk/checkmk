@@ -9,10 +9,11 @@ import json
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import render_link, SidebarSnapin, snapin_registry
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri_contextless
 
 

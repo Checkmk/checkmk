@@ -36,7 +36,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, transactions, user, user_errors
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -60,7 +60,7 @@ from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-from cmk.gui.utils.logged_in import save_user_file
+from cmk.gui.utils.logged_in import save_user_file, user
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.urls import (

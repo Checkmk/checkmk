@@ -10,12 +10,13 @@ from typing import List, Optional
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, theme, user
+from cmk.gui.globals import request, theme
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.userdb.utils import validate_start_url
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled

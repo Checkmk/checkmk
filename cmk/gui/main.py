@@ -9,10 +9,11 @@ from cmk.utils.site import omd_site
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.globals import config, html, request, response, user
+from cmk.gui.globals import config, html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.sites import get_site_config
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
 

@@ -24,12 +24,12 @@ import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, output_funnel, request, response, theme, user
+from cmk.gui.globals import config, html, output_funnel, request, response, theme
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
-from cmk.gui.utils.logged_in import LoggedInUser
+from cmk.gui.utils.logged_in import LoggedInUser, user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.werks import may_acknowledge

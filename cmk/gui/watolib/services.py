@@ -21,9 +21,10 @@ from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
-from cmk.gui.globals import config, user
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local
+from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib.automations import sync_changes_before_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition

@@ -40,12 +40,13 @@ import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, request, user
+from cmk.gui.globals import config, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_domain_registry, DomainSettings
 from cmk.gui.sites import activation_sites, site_is_local
 from cmk.gui.utils import escaping
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib import search

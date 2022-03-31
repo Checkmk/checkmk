@@ -18,12 +18,13 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.i18n import _
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
 from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.check_mk_automations import get_agent_output

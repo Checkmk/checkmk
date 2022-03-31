@@ -7,7 +7,7 @@
 import time
 
 import cmk.gui.key_mgmt as key_mgmt
-from cmk.gui.globals import user
+from cmk.gui.utils.logged_in import user
 
 
 def test_key_mgmt_create_key(request_context, monkeypatch):

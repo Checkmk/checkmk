@@ -9,7 +9,7 @@ from typing import List, Optional, Type
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, user
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     ConfigDomainCore,
@@ -19,6 +19,7 @@ from cmk.gui.plugins.wato.utils import (
     SimpleModeType,
     WatoMode,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,

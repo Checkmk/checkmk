@@ -9,8 +9,9 @@ import re
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, response, user
+from cmk.gui.globals import request, response
 from cmk.gui.i18n import _
+from cmk.gui.utils.logged_in import user
 
 
 @cmk.gui.pages.register("tree_openclose")

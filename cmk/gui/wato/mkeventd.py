@@ -50,7 +50,7 @@ import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.page_menu import (
@@ -103,6 +103,7 @@ from cmk.gui.sites import allsites, get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeuri_contextless,

@@ -6,13 +6,13 @@
 
 import pytest
 
-from cmk.gui.globals import user
 from cmk.gui.plugins.views.utils import (
     _encode_sorter_url,
     _parse_url_sorters,
     replace_action_url_macros,
     SorterSpec,
 )
+from cmk.gui.utils.logged_in import user
 
 
 @pytest.mark.parametrize(

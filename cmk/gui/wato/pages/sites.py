@@ -27,7 +27,7 @@ import cmk.gui.sites
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request, transactions, user, user_errors
+from cmk.gui.globals import config, html, request, transactions, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
@@ -48,6 +48,7 @@ from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_loca
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, UserId
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import (
     DocReference,
     make_confirm_link,

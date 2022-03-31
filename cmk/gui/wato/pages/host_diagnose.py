@@ -12,7 +12,7 @@ import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, transactions, user, user_errors
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_form_submit_link,
@@ -31,6 +31,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,

@@ -15,10 +15,10 @@ import cmk.utils
 import cmk.utils.paths
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.utils.logged_in import user
 
 
 def add_message(message: str) -> None:

@@ -27,7 +27,7 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui import sites
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import config, html, output_funnel, request, theme, user
+from cmk.gui.globals import config, html, output_funnel, request, theme
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
@@ -39,6 +39,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, VisualContext
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import DropdownChoiceEntries
 

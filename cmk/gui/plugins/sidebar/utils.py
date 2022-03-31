@@ -15,7 +15,7 @@ from cmk.utils.site import url_prefix
 
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.globals import html, user
+from cmk.gui.globals import html
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
@@ -30,6 +30,7 @@ from cmk.gui.type_defs import (
     Visual,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import user
 from cmk.gui.visuals import visual_title
 
 # TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell

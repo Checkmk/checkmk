@@ -47,7 +47,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, output_funnel, request, response, transactions, user
+from cmk.gui.globals import html, output_funnel, request, response, transactions
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -107,6 +107,7 @@ from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import (

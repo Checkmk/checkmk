@@ -8,10 +8,11 @@ import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, user
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
 from cmk.gui.type_defs import UserId
+from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Age,
     Alternative,

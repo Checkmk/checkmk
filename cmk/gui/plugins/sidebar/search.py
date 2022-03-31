@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 import cmk.gui.sites as sites
 import cmk.gui.utils
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import config, html, output_funnel, request, user
+from cmk.gui.globals import config, html, output_funnel, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -45,6 +45,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
     Labels,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher

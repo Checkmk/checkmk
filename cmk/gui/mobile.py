@@ -13,7 +13,7 @@ import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, display_options, html, request, user
+from cmk.gui.globals import config, display_options, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -29,6 +29,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, requested_file_name
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]

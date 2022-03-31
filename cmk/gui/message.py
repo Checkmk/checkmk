@@ -21,7 +21,7 @@ import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, html, transactions, user
+from cmk.gui.globals import config, html, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
@@ -35,6 +35,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     AbsoluteDate,
     CascadingDropdown,

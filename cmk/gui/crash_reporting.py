@@ -34,7 +34,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, response, transactions, user, user_errors
+from cmk.gui.globals import config, html, request, response, transactions, user_errors
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -48,6 +48,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import (
     makeuri,

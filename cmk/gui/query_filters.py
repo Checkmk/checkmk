@@ -19,10 +19,11 @@ import cmk.gui.inventory as inventory
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, user, user_errors
+from cmk.gui.globals import config, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
+from cmk.gui.utils.logged_in import user
 
 Options = List[Tuple[str, str]]
 

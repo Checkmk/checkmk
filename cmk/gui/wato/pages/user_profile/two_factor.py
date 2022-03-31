@@ -24,17 +24,7 @@ from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import (
-    g,
-    html,
-    request,
-    response,
-    session,
-    theme,
-    transactions,
-    user,
-    user_errors,
-)
+from cmk.gui.globals import g, html, request, response, session, theme, transactions, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -61,6 +51,7 @@ from cmk.gui.userdb import (
     set_two_factor_completed,
 )
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import DocReference, make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 

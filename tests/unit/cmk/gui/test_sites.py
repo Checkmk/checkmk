@@ -9,7 +9,7 @@ import pytest
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import user
+from cmk.gui.utils.logged_in import user
 
 
 @pytest.mark.parametrize(

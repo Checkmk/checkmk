@@ -17,7 +17,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, user
+from cmk.gui.globals import html, request
 from cmk.gui.groups import (
     AllGroupSpecs,
     GroupName,
@@ -30,6 +30,7 @@ from cmk.gui.groups import (
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change

@@ -20,7 +20,6 @@ from cmk.gui.globals import (
     request,
     response,
     transactions,
-    user,
     user_errors,
 )
 from cmk.gui.htmllib import HTML
@@ -39,6 +38,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     AbsoluteDate,

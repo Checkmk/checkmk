@@ -33,13 +33,13 @@ from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import PrependURLFilter, user
+from cmk.gui.globals import PrependURLFilter
 from cmk.gui.http import Request, Response
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
-from cmk.gui.utils.logged_in import LoggedInNobody
+from cmk.gui.utils.logged_in import LoggedInNobody, user
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import OverrideRequestMethod

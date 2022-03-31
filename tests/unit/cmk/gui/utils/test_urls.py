@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.globals import user
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlencode_vars
 
 

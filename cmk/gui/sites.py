@@ -25,7 +25,6 @@ from cmk.utils.type_defs import UserId
 from cmk.utils.version import is_managed_edition
 
 from cmk.gui.globals import config, g, request
-from cmk.gui.globals import user as global_user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
@@ -44,6 +43,7 @@ from cmk.gui.site_config import (  # pylint: disable=unused-import
     wato_slave_sites,
 )
 from cmk.gui.utils.logged_in import LoggedInUser
+from cmk.gui.utils.logged_in import user as global_user
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

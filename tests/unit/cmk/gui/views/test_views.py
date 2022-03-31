@@ -16,10 +16,11 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.plugins.views
 import cmk.gui.views
-from cmk.gui.globals import config, html, user
+from cmk.gui.globals import config, html
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import PainterSpec
+from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import ValueSpec
 
 

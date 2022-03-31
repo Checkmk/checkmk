@@ -63,7 +63,6 @@ from cmk.gui.globals import (
     request,
     response,
     transactions,
-    user,
     user_errors,
 )
 
@@ -191,6 +190,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,

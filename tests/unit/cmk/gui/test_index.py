@@ -11,7 +11,8 @@ from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
 from cmk.gui.context import local
-from cmk.gui.globals import config, html, user
+from cmk.gui.globals import config, html
+from cmk.gui.utils.logged_in import user
 
 RequestContextFixture = Iterator[None]
 

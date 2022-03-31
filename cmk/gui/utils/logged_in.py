@@ -22,6 +22,7 @@ import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.context import local
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config, endpoint, request
 from cmk.gui.i18n import _
@@ -552,3 +553,6 @@ def save_user_file(name: str, data: Any, user_id: UserId) -> None:
     path = cmk.utils.paths.profile_dir.joinpath(user_id, name + ".mk")
     store.mkdir(path.parent)
     store.save_object_to_file(path, data)
+
+
+user: LoggedInUser = request_local_attr("user")

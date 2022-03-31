@@ -22,7 +22,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages
 from cmk.gui.log import logger
@@ -53,6 +53,7 @@ from cmk.gui.sites import get_configured_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, UserSpec
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless

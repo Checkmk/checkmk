@@ -15,10 +15,11 @@ from cmk.utils.site import url_prefix
 from cmk.gui import login, pages
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.globals import g, request, response, theme, user
+from cmk.gui.globals import g, request, response, theme
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 
 # TODO

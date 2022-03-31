@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import config, display_options, request, response, user
+from cmk.gui.globals import config, display_options, request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 

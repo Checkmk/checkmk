@@ -17,9 +17,9 @@ from cmk.utils.type_defs import Labels as _Labels
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.utils.logged_in import user
 
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded

@@ -9,8 +9,9 @@ from typing import Optional
 import pytest
 
 import cmk.gui.sidebar as sidebar
-from cmk.gui.globals import config, html, user
+from cmk.gui.globals import config, html
 from cmk.gui.sidebar import UserSidebarSnapin
+from cmk.gui.utils.logged_in import user
 
 
 @pytest.fixture(scope="function", autouse=True)

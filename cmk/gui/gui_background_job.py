@@ -16,7 +16,7 @@ import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request, timeout_manager, transactions, user
+from cmk.gui.globals import html, request, timeout_manager, transactions
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
     Permission,
@@ -25,6 +25,7 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 
 import cmk

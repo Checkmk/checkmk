@@ -9,7 +9,7 @@ from typing import List, Tuple
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.views as views
-from cmk.gui.globals import config, user
+from cmk.gui.globals import config
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_visualization import ParentChildTopologyPage
@@ -22,6 +22,7 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
+from cmk.gui.utils.logged_in import user
 
 
 @snapin_registry.register

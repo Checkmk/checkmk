@@ -9,13 +9,14 @@ from typing import Optional
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.globals import html, request, response, user
+from cmk.gui.globals import html, request, response
 from cmk.gui.i18n import _, _u, localize
 from cmk.gui.pages import page_registry
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.utils.logged_in import user
 from cmk.gui.wato.pages.users import select_language
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.users import get_vs_flexible_notifications

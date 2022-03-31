@@ -13,7 +13,7 @@ from typing import Optional, Type
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request, transactions, user
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import (
@@ -25,6 +25,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.logged_in import user
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 

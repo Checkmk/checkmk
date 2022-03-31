@@ -13,12 +13,13 @@ import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import get_hostnames_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.logged_in import user
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,

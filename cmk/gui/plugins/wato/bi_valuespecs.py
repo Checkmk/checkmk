@@ -28,9 +28,9 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import DictHostTagCondition, LabelCondition
+from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,

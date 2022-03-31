@@ -52,7 +52,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, theme, transactions, user, user_errors
+from cmk.gui.globals import config, theme, transactions, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -72,6 +72,7 @@ from cmk.gui.type_defs import (
     Icon,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name

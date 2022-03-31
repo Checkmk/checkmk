@@ -63,7 +63,7 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, display_options, html, request, response, theme, user
+from cmk.gui.globals import config, display_options, html, request, response, theme
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
@@ -92,6 +92,7 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
     VisualName,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import DropdownChoice, ValueSpec

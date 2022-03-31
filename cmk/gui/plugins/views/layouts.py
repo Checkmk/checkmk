@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, html, theme, user
+from cmk.gui.globals import config, html, theme
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     EmptyCell,
@@ -23,6 +23,7 @@ from cmk.gui.plugins.views.utils import (
     row_id,
 )
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.utils.logged_in import user
 
 
 def render_checkbox(view, row, num_tds):

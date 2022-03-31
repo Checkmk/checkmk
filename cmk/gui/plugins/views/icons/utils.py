@@ -16,7 +16,7 @@ import cmk.utils.regex
 from cmk.utils.type_defs import TagID
 
 from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
-from cmk.gui.globals import config, html, user
+from cmk.gui.globals import config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
@@ -24,6 +24,7 @@ from cmk.gui.permissions import declare_permission, permission_section_registry,
 # Imported for plugins
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.logged_in import user
 
 
 @permission_section_registry.register

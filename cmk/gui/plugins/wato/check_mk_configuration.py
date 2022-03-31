@@ -18,7 +18,7 @@ from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.globals import config, request, user
+from cmk.gui.globals import config, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
@@ -66,6 +66,7 @@ from cmk.gui.plugins.wato.utils import (
     UserIconOrAction,
     valuespec_check_plugin_selection,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (

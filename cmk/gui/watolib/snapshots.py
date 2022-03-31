@@ -22,9 +22,10 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, user
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib.changes import log_audit
 
 DomainSpec = Dict

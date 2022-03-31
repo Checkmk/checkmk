@@ -27,7 +27,7 @@ import cmk.gui.watolib.snapshots
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import config, display_options, html, request, transactions, user
+from cmk.gui.globals import config, display_options, html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
@@ -46,6 +46,7 @@ from cmk.gui.sites import activation_sites
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes

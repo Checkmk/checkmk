@@ -49,7 +49,7 @@ import cmk.gui.utils as utils
 from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
+from cmk.gui.globals import config, g, html, output_funnel, request, transactions
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -95,7 +95,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.logged_in import save_user_file
+from cmk.gui.utils.logged_in import save_user_file, user
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.urls import (
     file_name_and_query_vars_from_url,

@@ -16,8 +16,9 @@ import cmk.gui.permissions as permissions
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config
-from cmk.gui.globals import user as global_user
-from cmk.gui.utils.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext
+from cmk.gui.utils.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
+from cmk.gui.utils.logged_in import user as global_user
+from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 

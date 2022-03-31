@@ -11,7 +11,7 @@ from typing import ContextManager, Dict, List, Tuple
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -21,6 +21,7 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
     write_snapin_exception,
 )
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri_contextless
 
 

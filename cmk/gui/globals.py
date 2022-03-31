@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from cmk.gui.config import Config
     from cmk.gui.display_options import DisplayOptions
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
-    from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
     from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -51,7 +50,6 @@ g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 # tools in general.
 
 # From request context
-user: LoggedInUser = request_local_attr("user")
 request: http.Request = request_local_attr("request")
 response: http.Response = request_local_attr("response")
 output_funnel: OutputFunnel = request_local_attr("output_funnel")

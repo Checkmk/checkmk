@@ -12,10 +12,11 @@ from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.render
 
-from cmk.gui.globals import request, theme, user
+from cmk.gui.globals import request, theme
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
 from cmk.gui.plugins.metrics.utils import unit_info
+from cmk.gui.utils.logged_in import user
 
 Label = Tuple[int, Optional[str], int]
 

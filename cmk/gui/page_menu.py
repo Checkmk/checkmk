@@ -20,10 +20,11 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, output_funnel, request, user
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.urls import (
     doc_reference_url,

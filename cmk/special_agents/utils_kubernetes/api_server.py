@@ -11,7 +11,6 @@ from typing import (
     Dict,
     Generic,
     Iterable,
-    Iterator,
     List,
     Literal,
     Mapping,
@@ -43,10 +42,10 @@ class BatchAPI:
         self.raw_jobs = self._query_raw_jobs()
         self.raw_cron_jobs = self._query_raw_cron_jobs()
 
-    def _query_raw_cron_jobs(self) -> Iterator[client.V1CronJob]:
+    def _query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
         return self.connection.list_cron_job_for_all_namespaces(_request_timeout=self.timeout).items
 
-    def _query_raw_jobs(self) -> Iterator[client.V1Job]:
+    def _query_raw_jobs(self) -> Sequence[client.V1Job]:
         return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
 
 

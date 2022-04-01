@@ -19,9 +19,9 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.logged_in import user
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import CREFolder

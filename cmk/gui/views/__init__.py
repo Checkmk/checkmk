@@ -77,6 +77,7 @@ from cmk.gui.inventory import (
     LoadStructuredDataError,
     parse_tree_path,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
@@ -190,7 +191,6 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
-from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,

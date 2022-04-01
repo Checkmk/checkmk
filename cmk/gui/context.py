@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     from cmk.gui.config import Config
     from cmk.gui.display_options import DisplayOptions
     from cmk.gui.i18n import Translation
+    from cmk.gui.logged_in import LoggedInUser
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
-    from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
     from cmk.gui.utils.timeout_manager import TimeoutManager

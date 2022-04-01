@@ -68,6 +68,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
@@ -92,7 +93,6 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
     VisualName,
 )
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import DropdownChoice, ValueSpec

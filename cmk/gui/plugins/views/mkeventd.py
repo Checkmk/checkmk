@@ -18,6 +18,7 @@ from cmk.gui.config import builtin_role_ids
 from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
@@ -40,7 +41,6 @@ from cmk.gui.plugins.views.utils import (
     RowTableLivestatus,
 )
 from cmk.gui.type_defs import HTTPVariables, Row
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 

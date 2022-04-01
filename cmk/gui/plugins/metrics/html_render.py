@@ -19,13 +19,13 @@ from cmk.gui.globals import config, html, output_funnel, request, response, them
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import GraphRecipe, render_color_icon
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import GraphIdentifier
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless

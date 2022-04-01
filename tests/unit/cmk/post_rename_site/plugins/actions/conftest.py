@@ -9,7 +9,7 @@ import pytest
 # This GUI specific fixture is also needed in this context
 from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 
 

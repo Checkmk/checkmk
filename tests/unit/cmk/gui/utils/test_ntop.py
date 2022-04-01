@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.version as cmk_version
 
 from cmk.gui.globals import config
-from cmk.gui.utils.logged_in import user
+from cmk.gui.logged_in import user
 from cmk.gui.utils.ntop import (
     get_ntop_misconfiguration_reason,
     is_ntop_available,

@@ -14,6 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import request, transactions
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import (
     begin_footnote_links,
     end_footnote_links,
@@ -24,7 +25,6 @@ from cmk.gui.plugins.sidebar.utils import (
 )
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils import is_allowed_url
-from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Alternative,
     FixedValue,

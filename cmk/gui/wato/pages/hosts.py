@@ -16,6 +16,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_form_submit_link,
     make_simple_form_page_menu,
@@ -37,7 +38,6 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
 from cmk.gui.wato.pages.folders import ModeFolder

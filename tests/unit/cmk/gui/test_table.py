@@ -12,9 +12,9 @@ from bs4 import BeautifulSoup as bs  # type: ignore[import]
 from tests.testlib import compare_html
 
 from cmk.gui.globals import html, output_funnel, response
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.table import table_element
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.logged_in import LoggedInNobody
 
 
 def read_out_simple_table(text):

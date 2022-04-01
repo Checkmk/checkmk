@@ -50,6 +50,7 @@ from cmk.gui.globals import config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.utils import (
@@ -60,7 +61,6 @@ from cmk.gui.plugins.views.utils import (
     url_to_visual,
 )
 from cmk.gui.type_defs import Row, VisualLinkSpec
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode

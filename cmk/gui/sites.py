@@ -27,6 +27,8 @@ from cmk.utils.version import is_managed_edition
 from cmk.gui.globals import config, g, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.logged_in import user as global_user
 
 # This keeps the API compatible with previous versions where
 # both modules were merged.
@@ -42,8 +44,6 @@ from cmk.gui.site_config import (  # pylint: disable=unused-import
     sitenames,
     wato_slave_sites,
 )
-from cmk.gui.utils.logged_in import LoggedInUser
-from cmk.gui.utils.logged_in import user as global_user
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

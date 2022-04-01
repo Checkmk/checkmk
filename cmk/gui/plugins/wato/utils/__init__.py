@@ -42,6 +42,7 @@ from cmk.gui.groups import (
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _u
+from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
@@ -89,7 +90,6 @@ from cmk.gui.sites import get_activation_site_choices, get_site_config
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice,

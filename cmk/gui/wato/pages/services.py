@@ -39,6 +39,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, transactions
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, ungettext
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     disable_page_menu_entry,
     enable_page_menu_entry,
@@ -57,7 +58,6 @@ from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import sitenames
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost

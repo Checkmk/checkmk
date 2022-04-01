@@ -18,8 +18,8 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedE
 from cmk.gui.globals import g, request, response, theme
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.utils.language_cookie import set_language_cookie
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 
 # TODO

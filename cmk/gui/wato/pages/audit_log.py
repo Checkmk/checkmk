@@ -24,6 +24,7 @@ from cmk.gui.globals import (
 )
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_link,
@@ -38,7 +39,6 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     AbsoluteDate,

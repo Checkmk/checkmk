@@ -19,6 +19,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.i18n import _, _l, _u, ungettext
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
     Permission,
     permission_registry,
@@ -34,7 +35,6 @@ from cmk.gui.plugins.views.utils import (
     CommandSpec,
 )
 from cmk.gui.type_defs import Choices, Row
-from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 

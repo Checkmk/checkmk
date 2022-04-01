@@ -13,8 +13,8 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import config, html, request
 from cmk.gui.i18n import _, ungettext
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import CustomizableSidebarSnapin, link, snapin_registry
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput
 

@@ -11,8 +11,8 @@ import cmk.utils.plugin_registry
 
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.globals import request
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 

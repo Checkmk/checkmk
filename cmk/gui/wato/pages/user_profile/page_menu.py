@@ -7,8 +7,8 @@
 from typing import Iterator
 
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 

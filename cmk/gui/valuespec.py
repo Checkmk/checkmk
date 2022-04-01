@@ -77,6 +77,7 @@ from cmk.gui.htmllib import HTMLTagAttributes
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.html import HTML
@@ -87,7 +88,6 @@ from cmk.gui.utils.labels import (
     label_help_text,
     parse_labels_value,
 )
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode

@@ -18,6 +18,7 @@ from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config, g, html, request, transactions
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_link,
@@ -34,7 +35,6 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions

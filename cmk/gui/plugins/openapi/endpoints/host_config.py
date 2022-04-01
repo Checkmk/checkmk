@@ -51,6 +51,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -62,7 +63,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
-from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder

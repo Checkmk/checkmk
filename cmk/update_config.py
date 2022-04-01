@@ -85,6 +85,7 @@ from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
+from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     get_all_dashboards,
@@ -102,7 +103,6 @@ from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
-from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import (
     ActivateChangesWriter,

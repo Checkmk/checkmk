@@ -20,6 +20,7 @@ from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralExcept
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -32,7 +33,6 @@ from cmk.gui.plugins.wato.utils import flash, mode_registry, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,

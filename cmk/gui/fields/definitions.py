@@ -32,8 +32,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.groups import GroupName, GroupType, load_group_information
+from cmk.gui.logged_in import user
 from cmk.gui.sites import allsites
-from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
 from cmk.fields import base, DateTime

@@ -8,11 +8,11 @@ from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related

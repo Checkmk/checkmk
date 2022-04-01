@@ -6,10 +6,10 @@
 
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.utils import url_to_visual
 from cmk.gui.type_defs import VisualLinkSpec
-from cmk.gui.utils.logged_in import user
 
 
 @icon_and_action_registry.register

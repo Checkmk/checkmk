@@ -20,10 +20,10 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils import is_allowed_url
-from cmk.gui.utils.logged_in import LoggedInUser, save_user_file, user
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible

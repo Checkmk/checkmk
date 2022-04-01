@@ -16,9 +16,9 @@ from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTa
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.globals import html, request, theme
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CSSClass = Optional[str]

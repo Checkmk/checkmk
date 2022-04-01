@@ -33,9 +33,9 @@ import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import main_modules, watolib
 from cmk.gui.globals import config
+from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
 

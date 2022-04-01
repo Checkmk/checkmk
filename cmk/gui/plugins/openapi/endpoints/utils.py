@@ -14,9 +14,9 @@ from cmk.utils.version import is_managed_edition
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.utils.logged_in import user
 from cmk.gui.watolib import CREFolder
 from cmk.gui.watolib.groups import check_modify_group_permissions, edit_group, GroupType
 

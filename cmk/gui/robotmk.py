@@ -21,6 +21,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -30,7 +31,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.sites import live, only_sites
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 

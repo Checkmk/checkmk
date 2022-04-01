@@ -13,7 +13,7 @@ from typing import List, Optional, TYPE_CHECKING
 from cmk.gui.http import Request
 
 if TYPE_CHECKING:
-    from cmk.gui.utils.logged_in import LoggedInUser
+    from cmk.gui.logged_in import LoggedInUser
 
 
 class TransactionManager:

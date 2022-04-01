@@ -12,6 +12,7 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config, html, theme
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
     EmptyCell,
     group_value,
@@ -23,7 +24,6 @@ from cmk.gui.plugins.views.utils import (
     row_id,
 )
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.utils.logged_in import user
 
 
 def render_checkbox(view, row, num_tds):

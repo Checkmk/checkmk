@@ -55,7 +55,7 @@ nkrndRn3MoyHIO3cuT7inOlFb/VYPRWP
 @pytest.fixture(name="user_may_not")
 def fixture_user_may_not(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.utils.logged_in.LoggedInUser.may",
+        "cmk.gui.logged_in.LoggedInUser.may",
         return_value=False,
     )
 

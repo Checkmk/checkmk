@@ -28,6 +28,7 @@ from cmk.gui.globals import g, html, request, response, session, theme, transact
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_form_submit_link,
@@ -51,7 +52,6 @@ from cmk.gui.userdb import (
     set_two_factor_completed,
 )
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import DocReference, make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 

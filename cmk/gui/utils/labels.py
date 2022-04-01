@@ -19,7 +19,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.utils.logged_in import user
+from cmk.gui.logged_in import user
 
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded

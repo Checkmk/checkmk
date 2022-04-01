@@ -28,9 +28,9 @@ from cmk.gui.groups import (
     load_group_information,
 )
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change

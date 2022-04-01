@@ -35,9 +35,9 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import g, output_funnel, request
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
+from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.pages import get_page_handler
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
-from cmk.gui.utils.logged_in import SuperUserContext, user
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.utils import may_edit_ruleset
 

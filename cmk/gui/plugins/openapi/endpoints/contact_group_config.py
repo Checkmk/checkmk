@@ -25,6 +25,7 @@ from cmk.utils import version
 from cmk.gui import watolib
 from cmk.gui.globals import endpoint
 from cmk.gui.http import Response
+from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -44,7 +45,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,

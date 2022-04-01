@@ -26,9 +26,9 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.utils.logged_in import user
 
 from cmk import fields
 

@@ -43,6 +43,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.globals import config, g, html, output_funnel, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_form_submit_link,
     make_simple_form_page_menu,
@@ -73,7 +74,6 @@ from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,

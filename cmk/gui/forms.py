@@ -16,8 +16,8 @@ from cmk.gui.htmllib.foldable_container import (
     foldable_container_onclick,
 )
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.logged_in import user
 
 if TYPE_CHECKING:
     from typing import Sequence

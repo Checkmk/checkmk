@@ -23,7 +23,7 @@ from cmk.utils.type_defs import TagConfigSpec
 import cmk.gui.watolib as watolib
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
-from cmk.gui.utils.logged_in import user
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 

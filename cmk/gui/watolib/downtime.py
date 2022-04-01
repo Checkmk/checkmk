@@ -6,7 +6,7 @@
 
 import livestatus
 
-from cmk.gui.utils.logged_in import user
+from cmk.gui.logged_in import user
 
 
 def determine_downtime_mode(recurring_number, delayed_duration):

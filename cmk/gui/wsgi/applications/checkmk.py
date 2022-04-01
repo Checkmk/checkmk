@@ -36,8 +36,8 @@ from cmk.gui.globals import config, html, PrependURLFilter, request, response
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager

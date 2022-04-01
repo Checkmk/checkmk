@@ -21,9 +21,9 @@ from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.escaping import escape_to_html
-from cmk.gui.utils.logged_in import user
 
 # TODO: Clean up all call sites in the GUI and only use them in WATO config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS

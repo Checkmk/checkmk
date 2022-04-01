@@ -16,7 +16,7 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import response
 from cmk.gui.log import logger
-from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.logged_in import SuperUserContext
 
 multisite_cronjobs = []
 

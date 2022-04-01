@@ -23,6 +23,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request, transactions
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_form_submit_link,
     make_simple_form_page_menu,
@@ -35,7 +36,6 @@ from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect,
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_to_html_permissive
-from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,

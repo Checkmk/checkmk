@@ -12,7 +12,7 @@ from typing import Dict, Optional
 
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.utils.logged_in import user
+from cmk.gui.logged_in import user
 
 
 def get_ntop_connection() -> Optional[Dict]:

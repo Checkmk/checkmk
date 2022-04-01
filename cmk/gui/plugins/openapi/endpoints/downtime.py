@@ -45,6 +45,7 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -52,7 +53,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.utils.logged_in import user
 
 from cmk import fields
 

@@ -41,6 +41,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import cmp_service_name_equiv
 from cmk.gui.type_defs import (
     FilterHeader,
@@ -51,7 +52,6 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import (
     Age,

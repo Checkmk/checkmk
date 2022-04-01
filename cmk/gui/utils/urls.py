@@ -11,9 +11,9 @@ from functools import lru_cache
 from typing import Mapping, Optional, Sequence, Tuple, Union
 
 from cmk.gui.http import Request
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 QueryVars = Mapping[str, Sequence[str]]

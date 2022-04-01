@@ -67,6 +67,7 @@ from cmk.gui.globals import request as _request
 from cmk.gui.globals import timeout_manager
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
 from cmk.gui.plugins.watolib.utils import (
     DomainRequest,
@@ -81,7 +82,6 @@ from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local, SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.changes import log_audit, SiteChanges

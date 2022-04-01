@@ -22,6 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
@@ -50,7 +51,6 @@ from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import (
     DocReference,

@@ -15,6 +15,7 @@ from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import config, display_options, html, request, transactions, user_errors
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import (
@@ -24,7 +25,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 )
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.utils.logged_in import user
 from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit

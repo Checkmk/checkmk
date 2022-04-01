@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import List
 
 from cmk.gui import watolib
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
     RulesetCollection,
@@ -19,7 +20,6 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.utils.logged_in import user
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 

@@ -21,6 +21,7 @@ from cmk.utils.paths import omd_root
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -30,7 +31,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.utils.logged_in import user
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 

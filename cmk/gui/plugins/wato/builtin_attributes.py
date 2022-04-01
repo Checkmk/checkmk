@@ -18,6 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeNagiosValueSpec,
@@ -36,7 +37,6 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
 )
 from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,

@@ -47,6 +47,7 @@ from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, transactions
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import user
 from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
     make_checkbox_selection_json_text,
@@ -79,7 +80,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeactionuri,

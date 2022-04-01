@@ -12,7 +12,7 @@ from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import PrependURLFilter
 from cmk.gui.http import Request, Response
-from cmk.gui.utils.logged_in import LoggedInNobody
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.script_helpers import session_wsgi_app
 

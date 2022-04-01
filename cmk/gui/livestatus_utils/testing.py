@@ -23,7 +23,7 @@ from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import PrependURLFilter
 from cmk.gui.htmllib import html
-from cmk.gui.utils.logged_in import LoggedInNobody
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 
 

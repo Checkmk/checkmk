@@ -13,9 +13,9 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.dashboard.utils import ABCFigureDashlet, dashlet_registry
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
 

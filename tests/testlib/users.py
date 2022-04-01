@@ -12,8 +12,8 @@ import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
+from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.utils import get_random_string
-from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.watolib.users import delete_users, edit_users
 
 

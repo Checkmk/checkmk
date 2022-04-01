@@ -15,7 +15,7 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.http as http
 from cmk.gui.globals import transactions
-from cmk.gui.utils.logged_in import LoggedInUser
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 

@@ -10,11 +10,11 @@ from cmk.gui import forms, login, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.users import verify_password_policy
 

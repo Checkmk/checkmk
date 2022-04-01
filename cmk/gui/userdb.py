@@ -49,6 +49,7 @@ from cmk.gui.globals import config, html, request, response, session
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
 from cmk.gui.plugins.userdb.utils import (
@@ -67,7 +68,6 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, UserSpec
-from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (

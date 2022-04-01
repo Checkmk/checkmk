@@ -42,8 +42,8 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
-from cmk.gui.utils.logged_in import user
 from cmk.gui.valuespec import TextInput, ValueSpec
 
 # TODO Cleanup variation:

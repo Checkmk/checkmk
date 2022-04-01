@@ -696,6 +696,10 @@ inventory_displayhints.update({
     ".software.applications.kube.containers:*.restart_count": {"title": _l("Restart count")},
     ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
 
+    ".software.applications.kube.cluster.": {"title": _l("Cluster")},
+    ".software.applications.kube.cluster.name": {"title": _l("Name")},
+    ".software.applications.kube.cluster.version": {"title": _l("Version")},
+
     ".software.applications.kube.deployment.": {"title": _l("Deployment")},
     ".software.applications.kube.deployment.name": {"title": _l("Name")},
     ".software.applications.kube.deployment.namespace": {"title": _l("Namespace")},

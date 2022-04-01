@@ -662,10 +662,8 @@ section_tcp() {
 
 section_multipathing() {
     if inpath multipath; then
-        if [ -f /etc/multipath.conf ]; then
-            echo '<<<multipath>>>'
-            multipath -l
-        fi
+        echo '<<<multipath>>>'
+        multipath -l
     fi
 }
 

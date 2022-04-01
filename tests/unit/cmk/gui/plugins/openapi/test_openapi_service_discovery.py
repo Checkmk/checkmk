@@ -929,7 +929,7 @@ def test_openapi_bulk_discovery_with_default_options(
     assert resp.json["id"] == "bulk_discovery"
     assert resp.json["title"].endswith("is active")
     assert resp.json["extensions"]["active"] is True
-    assert resp.json["extensions"]["state"] == "initialized"
+    assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
 
@@ -939,7 +939,8 @@ def test_openapi_bulk_discovery_with_default_options(
         status=200,
         headers={"Accept": "application/json"},
     )
-    assert status_resp.json == resp.json
+    assert status_resp.json["id"] == resp.json["id"]
+    assert status_resp.json["extensions"]["active"] is True
 
     # TODO: additional tests for bulk discovery modes (CMK-10160)
 

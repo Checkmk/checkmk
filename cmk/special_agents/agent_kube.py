@@ -1287,7 +1287,7 @@ def pod_api_based_checkmk_sections(cluster_name: str, pod: Pod):
 
 
 def filter_outdated_and_non_monitored_pods(
-    live_pods: Sequence[PerformancePod],
+    performance_pods: Sequence[PerformancePod],
     lookup_name_to_piggyback_mappings: Set[PodLookupName],
 ) -> Sequence[PerformancePod]:
     """Filter out all performance data based pods that are not in the API data based lookup table
@@ -1307,14 +1307,14 @@ def filter_outdated_and_non_monitored_pods(
     LOGGER.info("Filtering out outdated and non-monitored pods from performance data")
     current_pods = []
     outdated_and_non_monitored_pods = []
-    for live_pod in live_pods:
-        if live_pod.lookup_name in lookup_name_to_piggyback_mappings:
-            current_pods.append(live_pod)
+    for performance_pod in performance_pods:
+        if performance_pod.lookup_name in lookup_name_to_piggyback_mappings:
+            current_pods.append(performance_pod)
             continue
-        outdated_and_non_monitored_pods.append(live_pod.lookup_name)
+        outdated_and_non_monitored_pods.append(performance_pod.lookup_name)
 
     LOGGER.debug(
-        "Outdated or non-monitored live pods: %s", ", ".join(outdated_and_non_monitored_pods)
+        "Outdated or non-monitored performance pods: %s", ", ".join(outdated_and_non_monitored_pods)
     )
     return current_pods
 
@@ -1422,7 +1422,6 @@ def _aggregate_rate_metric(
 
 
 def _write_performance_section(section_name: SectionName, section_output: BaseModel):
-    # TODO: change live to performance (including checks)
     with SectionWriter(f"kube_performance_{section_name}_v1") as writer:
         writer.append(section_output.json())
 

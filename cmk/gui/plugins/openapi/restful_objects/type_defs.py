@@ -393,6 +393,7 @@ ParameterKey = Tuple[str, ...]
 StatusCodeInt = Literal[
     200, 204, 301, 302, 400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428
 ]
+ErrorStatusCodeInt = Literal[400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428, 500]
 StatusCode = Literal[
     "200",
     "204",

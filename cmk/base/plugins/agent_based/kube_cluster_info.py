@@ -25,9 +25,9 @@ from cmk.base.plugins.agent_based.utils.kube import ClusterInfo
 def parse_kube_cluster_info(string_table: StringTable) -> ClusterInfo:
     """
     >>> parse_kube_cluster_info([[
-    ... '{"name": "cluster"}'
+    ... '{"name": "cluster", "version": "v1.22.2"}'
     ... ]])
-    ClusterInfo(name='cluster')
+    ClusterInfo(name='cluster', version='v1.22.2')
     """
     return ClusterInfo(**json.loads(string_table[0][0]))
 

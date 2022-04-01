@@ -18,8 +18,7 @@ from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, H
                 api_health=APIHealth(
                     ready=HealthZ(status_code=200, response="ok", verbose_response=None),
                     live=HealthZ(status_code=200, response="ok", verbose_response=None),
-                ),
-                version="v1.22.2",
+                )
             ),
             [
                 Result(state=State.OK, summary="Live"),
@@ -34,8 +33,7 @@ from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, H
                         status_code=500, response="nok", verbose_response="some\nvery\nlong\noutput"
                     ),
                     live=HealthZ(status_code=200, response="ok", verbose_response=None),
-                ),
-                version="v1.22.2",
+                )
             ),
             [
                 Result(state=State.OK, summary="Live"),

@@ -413,3 +413,10 @@ class ClusterInfo(BaseModel):
     """section: kube_cluster_info_v1"""
 
     name: str
+    version: api.GitVersion
+
+
+class ClusterDetails(BaseModel):
+    """section: kube_cluster_details_v1"""
+
+    api_health: api.APIHealth

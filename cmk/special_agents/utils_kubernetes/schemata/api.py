@@ -370,7 +370,6 @@ class CronJob(BaseModel):
 
 
 class ClusterDetails(BaseModel):
-    """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
     version: GitVersion

@@ -282,6 +282,7 @@ class ClusterInfo(BaseModel):
     """section: kube_cluster_info_v1"""
 
     name: str
+    version: GitVersion
 
 
 VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
@@ -357,7 +358,6 @@ class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
-    version: GitVersion
 
 
 class PodResources(BaseModel):

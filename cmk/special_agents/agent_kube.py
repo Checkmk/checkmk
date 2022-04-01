@@ -952,8 +952,8 @@ class Cluster:
                     node_count.worker.not_ready += 1
         return node_count
 
-    def cluster_details(self) -> api.ClusterDetails:
-        return self._cluster_details
+    def cluster_details(self) -> section.ClusterDetails:
+        return section.ClusterDetails(api_health=self._cluster_details.api_health)
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._cluster_aggregation_pods)
@@ -1019,7 +1019,9 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
         "kube_cpu_resources_v1": cluster.cpu_resources,
         "kube_allocatable_memory_resource_v1": cluster.allocatable_memory_resource,
         "kube_allocatable_cpu_resource_v1": cluster.allocatable_cpu_resource,
-        "kube_cluster_info_v1": lambda: section.ClusterInfo(name=cluster_name),
+        "kube_cluster_info_v1": lambda: section.ClusterInfo(
+            name=cluster_name, version=cluster._cluster_details.version
+        ),
     }
     _write_sections(sections)
 

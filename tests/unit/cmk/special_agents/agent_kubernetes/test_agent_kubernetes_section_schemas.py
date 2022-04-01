@@ -12,7 +12,7 @@ from cmk.special_agents.utils_kubernetes.schemata import section as agent
 
 
 def test_schemata_did_not_diverge() -> None:
-    assert api.ClusterDetails.schema() == check.ClusterDetails.schema()
+    assert agent.ClusterDetails.schema() == check.ClusterDetails.schema()
     assert agent.ClusterInfo.schema() == check.ClusterInfo.schema()
     assert agent.CollectorProcessingLogs.schema() == check.CollectorProcessingLogs.schema()
     assert agent.CollectorComponentsMetadata.schema() == check.CollectorComponentsMetadata.schema()

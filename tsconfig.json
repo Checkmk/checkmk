@@ -8,7 +8,10 @@
         "typeRoots": [
             "./node_modules/@types"
         ],
-        "strict": false,
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitAny": false,
+        "noImplicitThis": false,
         "noEmit": true,
         "moduleResolution": "node",
         "esModuleInterop": false,

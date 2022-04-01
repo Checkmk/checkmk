@@ -28,9 +28,9 @@ class Query:
         if method == "GET":
             return QueryGET(status_server, raw_query, logger)
         if method == "REPLICATE":
-            return _QueryREPLICATE(status_server, raw_query, logger)
+            return QueryREPLICATE(status_server, raw_query, logger)
         if method == "COMMAND":
-            return _QueryCOMMAND(status_server, raw_query, logger)
+            return QueryCOMMAND(status_server, raw_query, logger)
         raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
 
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
@@ -39,10 +39,10 @@ class Query:
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-        self.method, self.method_arg = parts
+        self.__method, self.method_arg = parts
 
     def __repr__(self) -> str:
-        return self.method + " " + self.method_arg
+        return self.__method + " " + self.method_arg
 
 
 def filter_operator_in(a: Any, b: Any) -> bool:
@@ -159,9 +159,9 @@ class QueryGET(Query):
         )
 
 
-class _QueryREPLICATE(Query):
+class QueryREPLICATE(Query):
     pass
 
 
-class _QueryCOMMAND(Query):
+class QueryCOMMAND(Query):
     pass

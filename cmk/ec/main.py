@@ -69,7 +69,7 @@ from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
 from .history import ActiveHistoryPeriod, get_logfile, History, quote_tab, scrub_string
 from .host_config import HostConfig, HostInfo
-from .query import filter_operator_in, MKClientError, Query, QueryGET
+from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
@@ -2741,42 +2741,35 @@ class StatusServer(ECServerThread):
     def handle_client(
         self, client_socket: socket.socket, allow_commands: bool, client_ip: str
     ) -> None:
-        response: Response = None
         for query in Queries(self, client_socket, self._logger):
             self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:
-                if query.method == "GET":
-                    if not isinstance(query, QueryGET):
-                        raise NotImplementedError()  # make mypy happy
-                    response = self.table(query.table_name).query(query)
-
-                elif query.method == "REPLICATE":
+                # TODO: What we really want is a method in Query returning a response instead of this dispatching horror.
+                if isinstance(query, QueryGET):
+                    response: Response = self.table(query.table_name).query(query)
+                elif isinstance(query, QueryREPLICATE):
                     response = self.handle_replicate(query.method_arg, client_ip)
-
-                elif query.method == "COMMAND":
-                    if not allow_commands:
-                        raise MKClientError("Sorry. Commands are disallowed via TCP")
-                    self.handle_command_request(query.method_arg)
-                    response = None
-
+                elif isinstance(query, QueryCOMMAND):
+                    self.handle_command_request(query.method_arg, allow_commands)
+                    response = None  # pylint and mypy are braindead and don't understand that None is a value
                 else:
-                    raise NotImplementedError()
+                    raise NotImplementedError()  # can never happen
 
                 try:
                     self._answer_query(client_socket, query, response)
                 except OSError as e:
-                    if e.errno == errno.EPIPE:
-                        pass
-                    else:
+                    if e.errno != errno.EPIPE:
                         raise
 
-        client_socket.close()
+        client_socket.close()  # TODO: This should be in a finally somehow.
 
     # Only GET queries have customizable output formats. COMMAND is always
     # a dictionary and COMMAND is always None and always output as "python"
+    # TODO: We should probably nuke these silly cases. Currently the allowed
+    # type of the response depends on the value of query. :-/
     def _answer_query(self, client_socket: socket.socket, query: Query, response: Any) -> None:
-        if query.method != "GET":
+        if not isinstance(query, QueryGET):
             self._answer_query_python(client_socket, response)
             return
         if response is None:
@@ -2801,7 +2794,9 @@ class StatusServer(ECServerThread):
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
     # All commands are already locked with self._event_status.lock
-    def handle_command_request(self, commandline: str) -> None:
+    def handle_command_request(self, commandline: str, allow_commands: bool) -> None:
+        if not allow_commands:
+            raise MKClientError("Sorry. Commands are disallowed via TCP")
         self._logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]

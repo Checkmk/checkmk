@@ -34,6 +34,7 @@ PodSequence = Sequence[str]
 PythonCompiler = NewType("PythonCompiler", str)
 Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
+GitVersion = NewType("GitVersion", str)
 
 
 # This information is from the one-page API overview v1.22
@@ -356,6 +357,7 @@ class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
+    version: GitVersion
 
 
 class PodResources(BaseModel):

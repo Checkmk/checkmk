@@ -953,8 +953,6 @@ class Cluster:
         return node_count
 
     def cluster_details(self) -> api.ClusterDetails:
-        if self._cluster_details is None:
-            raise AttributeError("cluster_details was not provided")
         return self._cluster_details
 
     def memory_resources(self) -> section.Resources:

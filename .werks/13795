@@ -1,0 +1,14 @@
+Title: KUBE: update section kube_replicas_v1
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1648822387
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+The incompability of this change only affects users, who use the check API to write custom
+Kubernetes checks. The section kube_replicas_v1 has been renamed to kube_deployment_replicas_v1 and
+its model has been updated. Moreover, the parsed section kube_replicas now has an updated model.

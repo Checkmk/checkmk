@@ -6,18 +6,10 @@
 
 from typing import List, Tuple
 
-import cmk.utils.version as cmk_version
-
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.views as views
-from cmk.gui.globals import config
-
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
-else:
-    reporting = None  # type: ignore[assignment]
-from cmk.gui.globals import user
+from cmk.gui.globals import config, user
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_visualization import ParentChildTopologyPage
@@ -89,10 +81,6 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
     visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
-
-    if reporting:
-        reporting.load_reports()
-        visuals_to_show += [("reports", e) for e in reporting.permitted_reports().items()]
 
     return make_topic_menu(visuals_to_show)
 

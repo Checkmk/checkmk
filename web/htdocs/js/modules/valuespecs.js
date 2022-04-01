@@ -831,9 +831,6 @@ function select2_vs_autocomplete(container) {
         .find("select.ajax-vals")
         .each((i, elem) => {
             let autocompleter = JSON.parse(elem.dataset.autocompleter);
-
-            console.log(autocompleter);
-
             // TODO: move placeholder_title to python autocompleter config!
             let field_element =
                 ["hostname", "service", "metric", "graph"].find(el =>

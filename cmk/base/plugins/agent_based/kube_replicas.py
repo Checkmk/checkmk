@@ -148,28 +148,28 @@ def _check_kube_replicas(
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
 
-    all_ready = section_kube_replicas.ready == section_kube_replicas.desired
-    not_ready_started_ts = (
-        None if all_ready else value_store.get("not_ready_started_timestamp") or now
-    )
-    value_store["not_ready_started_timestamp"] = not_ready_started_ts
+    if section_kube_replicas.ready == section_kube_replicas.desired:
+        value_store["not_ready_started_timestamp"] = None
+    else:
+        value_store["not_ready_started_timestamp"] = (
+            value_store.get("not_ready_started_timestamp") or now
+        )
 
     all_updated = section_kube_replicas.updated == section_kube_replicas.desired
-    update_started_ts = None if all_updated else value_store.get("update_started_timestamp") or now
-    value_store["update_started_timestamp"] = update_started_ts
-
-    if all_ready and all_updated:
-        return
+    if all_updated:
+        value_store["update_started_timestamp"] = None
+    else:
+        value_store["update_started_timestamp"] = value_store.get("update_started_timestamp") or now
 
     yield from _check_duration(
-        not_ready_started_ts,
+        value_store["not_ready_started_timestamp"],
         now,
         _levels(params, "not_ready_duration"),
         "Not ready for",
     )
 
     yield from _check_duration(
-        update_started_ts,
+        value_store["update_started_timestamp"],
         now,
         _levels(params, "update_duration"),
         "Not updated for",

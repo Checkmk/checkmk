@@ -16,8 +16,12 @@ import * as utils from "utils";
 //#   | and moves a parent element of the picked element to another place. |
 //#   | On dropping, the page is being reloaded for persisting the move.   |
 //#   '--------------------------------------------------------------------
-
-var g_element_dragging = null;
+interface element_dragging{
+    dragging: any,
+    moved: boolean,
+    drop_handler: any,
+}
+var g_element_dragging :null|element_dragging= null;
 
 export function start(event, dragger, dragging_tag, drop_handler) {
     if (!event) event = window.event;
@@ -54,8 +58,8 @@ function element_dragging(event) {
 }
 
 function position_dragging_object(event) {
-    var dragging = g_element_dragging.dragging,
-        container = g_element_dragging.dragging.parentNode;
+    var dragging = g_element_dragging?.dragging,
+        container = g_element_dragging?.dragging.parentNode;
 
     var get_previous = function (node) {
         var previous = node.previousElementSibling;
@@ -76,7 +80,7 @@ function position_dragging_object(event) {
     // Move it up?
     var previous = get_previous(dragging);
     while (previous && mouse_offset_to_middle(previous, event).y < 0) {
-        g_element_dragging.moved = true;
+        g_element_dragging!.moved = true;
         container.insertBefore(dragging, previous);
         previous = get_previous(dragging);
     }
@@ -84,7 +88,7 @@ function position_dragging_object(event) {
     // Move it down?
     var next = get_next(dragging);
     while (next && mouse_offset_to_middle(next, event).y > 0) {
-        g_element_dragging.moved = true;
+        g_element_dragging!.moved = true;
         container.insertBefore(dragging, next.nextElementSibling);
         next = get_next(dragging);
     }
@@ -112,10 +116,10 @@ function element_drag_stop(event) {
 }
 
 function finalize_dragging() {
-    var dragging = g_element_dragging.dragging;
+    var dragging = g_element_dragging?.dragging;
     utils.remove_class(dragging, "dragging");
 
-    if (!g_element_dragging.moved) return; // Nothing changed. Fine.
+    if (!g_element_dragging?.moved) return; // Nothing changed. Fine.
 
     var elements = dragging.parentNode.children;
 

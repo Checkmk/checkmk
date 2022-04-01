@@ -77,7 +77,6 @@ RawMetrics = Mapping[str, str]
 
 MetricName = NewType("MetricName", str)
 ContainerName = NewType("ContainerName", str)
-SectionName = NewType("SectionName", str)
 PodLookupName = NewType("PodLookupName", str)
 PodNamespacedName = NewType("PodNamespacedName", str)
 
@@ -1321,24 +1320,22 @@ def filter_outdated_and_non_monitored_pods(
 
 def _write_object_sections(containers: Collection[PerformanceContainer]):
     # Memory section
-    _write_performance_section(
-        section_name=SectionName("memory"),
-        section_output=section.PerformanceUsage(
+    with SectionWriter("kube_performance_memory_v1") as writer:
+        section_json = section.PerformanceUsage(
             resource=section.Memory(
                 usage=_aggregate_metric(containers, MetricName("memory_working_set_bytes"))
             ),
-        ),
-    )
+        ).json()
+        writer.append(section_json)
 
     # CPU section
-    _write_performance_section(
-        section_name=SectionName("cpu"),
-        section_output=section.PerformanceUsage(
+    with SectionWriter("kube_performance_cpu_v1") as writer:
+        section_json = section.PerformanceUsage(
             resource=section.Cpu(
                 usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
             ),
-        ),
-    )
+        ).json()
+        writer.append(section_json)
 
 
 def _containers_from_pods(
@@ -1419,11 +1416,6 @@ def _aggregate_rate_metric(
             if container.rate_metrics is not None and rate_metric in container.rate_metrics
         ]
     )
-
-
-def _write_performance_section(section_name: SectionName, section_output: BaseModel):
-    with SectionWriter(f"kube_performance_{section_name}_v1") as writer:
-        writer.append(section_output.json())
 
 
 def _supported_cluster_collector_major_version(

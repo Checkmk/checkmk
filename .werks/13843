@@ -1,0 +1,16 @@
+Title: Active discovery check: use cached data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649225122
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The active discovery check <i>Check_MK Discovery</i> did not use cached data.
+This could lead to lost logwatch messages.
+
+Upon retriggering the <i>Check_MK Discovery</i> service, we now firstly trigger the <i>Check_MK</i> service (thereby updating the caches) and then run the <i>Check_MK Discovery</i> service on the cached data.
+That way, we get the live information without loosing log messages.

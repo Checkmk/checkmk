@@ -3842,6 +3842,23 @@ class PageRescheduleCheck(AjaxPage):
             add_filter = ""
 
         now = int(time.time())
+
+        if service in ("Check_MK Discovery", "Check_MK Inventory"):
+            # During discovery, the allowed cache age is (by default) 120 seconds, such that the
+            # discovery service won't steal data in the TCP case.
+            # But we do want to see new services, so for SNMP we set the cache age to zero.
+            # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
+            # user manually triggers "Check_MK Discovery".
+            self._force_check(now, "SVC", f"{host};Check_MK", site)
+            _ = self._wait_for(
+                site,
+                host,
+                "service",
+                f"{host};Check_MK",
+                now,
+                "Filter: service_description = Check_MK\n",
+            )
+
         self._force_check(now, cmd, spec, site)
         row = self._wait_for(site, host, what, wait_spec, now, add_filter)
 

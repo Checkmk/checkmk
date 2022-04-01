@@ -25,6 +25,7 @@ JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
 LabelName = NewType("LabelName", str)
 LabelValue = NewType("LabelValue", str)
+GitVersion = NewType("GitVersion", str)
 
 
 class Label(BaseModel):
@@ -372,6 +373,7 @@ class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
+    version: GitVersion
 
 
 class API(Protocol):

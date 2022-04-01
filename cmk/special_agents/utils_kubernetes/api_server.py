@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import itertools
 from dataclasses import dataclass
 from typing import (
@@ -162,6 +163,14 @@ class RawAPI:
             verbose_response=verbose_response,
         )
 
+    def query_version(self) -> api.GitVersion:
+        # We cannot use json instead of ast here, because the Kubernetes client converts the JSON
+        # to a string by replacing " by ' (hence it no longer is JSON). It may be possible to fix
+        # this by looking into the parameters for client.APIClient.call_api.
+        return ast.literal_eval(self._request("GET", "/version", response_type=str).response)[
+            "gitVersion"
+        ]
+
     def query_api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
@@ -239,6 +248,7 @@ class APIServer:
             for raw_node in self._core_api.raw_nodes
         }
         self.api_health = raw_api.query_api_health()
+        self.version = raw_api.query_version()
 
         self._controller_to_pods = _match_controllers(
             pods=self._core_api.raw_pods,
@@ -292,4 +302,4 @@ class APIServer:
         return [pod_from_client(pod) for pod in self._core_api.raw_pods]
 
     def cluster_details(self) -> api.ClusterDetails:
-        return api.ClusterDetails(api_health=self.api_health)
+        return api.ClusterDetails(api_health=self.api_health, version=self.version)

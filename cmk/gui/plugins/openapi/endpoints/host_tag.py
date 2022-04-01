@@ -156,10 +156,12 @@ def update_host_tag_group(params):
         edit_tag_group(ident, TagGroup.from_config(group_details), allow_repair=body["repair"])
     except RepairError:
         return problem(
-            401,
-            f'Updating this host tag group "{ident}" requires additional authorization',
-            "The host tag group you intend to edit is used by other instances. You must authorize Checkmk "
-            "to update the relevant instances using the repair parameter",
+            status=401,
+            title=f'Updating this host tag group "{ident}" requires additional authorization',
+            detail=(
+                "The host tag group you intend to edit is used by other instances. You must "
+                "authorize Checkmk to update the relevant instances using the repair parameter"
+            ),
         )
     updated_tag_group = _retrieve_group(ident)
     return _serve_host_tag_group(updated_tag_group.get_dict_format())
@@ -190,10 +192,12 @@ def delete_host_tag_group(params):
     if any(affected):
         if not params["repair"]:
             return problem(
-                401,
-                f'Deleting this host tag group "{ident}" requires additional authorization',
-                "The host tag group you intend to delete is used by other instances. You must authorize Checkmk "
-                "to update the relevant instances using the repair parameter",
+                status=401,
+                title=f'Deleting this host tag group "{ident}" requires additional authorization',
+                detail=(
+                    "The host tag group you intend to delete is used by other instances. You must "
+                    "authorize Checkmk to update the relevant instances using the repair parameter"
+                ),
             )
         watolib.host_attributes.undeclare_host_tag_attribute(ident)
         _ = change_host_tags_in_folders(

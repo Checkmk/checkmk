@@ -130,9 +130,9 @@ def delete_user(params):
         delete_users([username])
     except MKUserError:
         return problem(
-            404,
-            f'User "{username}" is not known.',
-            "The user to delete does not exist. Please check for eventual misspellings.",
+            status=404,
+            title=f'User "{username}" is not known.',
+            detail="The user to delete does not exist. Please check for eventual misspellings.",
         )
     return Response(status=204)
 

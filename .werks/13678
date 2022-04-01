@@ -1,0 +1,20 @@
+Title: super_server: Add rule to deactivate Solaris network service
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1648820368
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It is now possible to prevent the Solaris .pkg package from the agent bakery
+to install an inetd service on the target systems.
+
+This can be configured by the agent rule "Checkmk agent network service (Solaris)",
+that can be found at the "Generic options" agent rules section.
+
+Sidenote: Alongside this change, the corresponding Linux-related rule "Checkmk agent network
+service (Linux)" also moves to the "Generic options" section. This only affects
+the presentation on the GUI and has no further consequences. 
+

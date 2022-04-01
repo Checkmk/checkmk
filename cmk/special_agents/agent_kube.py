@@ -1006,6 +1006,9 @@ class Cluster:
             ),
         )
 
+    def version(self) -> api.GitVersion:
+        return self._cluster_details.version
+
 
 # Namespace specific
 
@@ -1104,7 +1107,7 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
         "kube_allocatable_memory_resource_v1": cluster.allocatable_memory_resource,
         "kube_allocatable_cpu_resource_v1": cluster.allocatable_cpu_resource,
         "kube_cluster_info_v1": lambda: section.ClusterInfo(
-            name=cluster_name, version=cluster._cluster_details.version
+            name=cluster_name, version=cluster.version()
         ),
     }
     _write_sections(sections)

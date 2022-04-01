@@ -6,15 +6,10 @@
 
 from typing import List, Tuple
 
-import cmk.utils.version as cmk_version
 import cmk.gui.config as config
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
-else:
-    reporting = None  # type: ignore[assignment]
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.plugins.sidebar import (
@@ -84,10 +79,6 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
     visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
-
-    if reporting:
-        reporting.load_reports()
-        visuals_to_show += [("reports", e) for e in reporting.permitted_reports().items()]
 
     return make_topic_menu(visuals_to_show)
 

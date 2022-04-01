@@ -1,0 +1,12 @@
+Title: Remove reports from 'Views' sidebar snapin
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1648821684
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p23
+
+Reports were shown in the 'Views' sidebar snapin and the 'Reports' sidebar snapin.
+They will now only be shown in the 'Reports' snapin.

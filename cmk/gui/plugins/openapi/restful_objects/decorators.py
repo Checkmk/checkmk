@@ -14,7 +14,20 @@ import hashlib
 import http.client
 import json
 from types import FunctionType
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -41,6 +54,7 @@ from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ContentObject,
     EndpointTarget,
+    ErrorStatusCodeInt,
     ETagBehaviour,
     HTTPMethod,
     LinkRelation,
@@ -112,9 +126,10 @@ def coalesce_schemas(
     return rv
 
 
-def _path_item(
+def _render_path_item(
     status_code: int,
     description: str,
+    error_schema: Type[Schema],
     content: Optional[Dict[str, Any]] = None,
     headers: Optional[Dict[str, OpenAPIParameter]] = None,
 ) -> PathItem:
@@ -122,10 +137,13 @@ def _path_item(
 
     Examples:
 
-        >>> _path_item(404, "Godot is still not here.")  # doctest: +ELLIPSIS
+        >>> class Error(Schema):
+        ...     pass
+
+        >>> _render_path_item(404, "Godot is still not here.", Error)  # doctest: +ELLIPSIS
         {'description': 'Not Found: Godot is still not here.', 'content': ...}
 
-        >>> _path_item(422, "What's this?")  # doctest: +ELLIPSIS
+        >>> _render_path_item(422, "What's this?", Error)  # doctest: +ELLIPSIS
         {'description': "Unprocessable Entity: What's this?", 'content': ...}
 
     Args:
@@ -140,14 +158,15 @@ def _path_item(
             the form of {'schema': <marshmallowschema>}
 
         headers:
-
+            A dictionary which has header names as keys and their content as values.
 
     Returns:
+        A PathItem segment of the OpenAPI specification.
 
     """
     response: PathItem = {"description": f"{http.client.responses[status_code]}: {description}"}
     if status_code >= 400 and content is None:
-        content = {"application/problem+json": {"schema": ApiError}}
+        content = {"application/problem+json": {"schema": error_schema}}
     if content is None:
         content = {}
     response["content"] = content
@@ -213,6 +232,10 @@ class Endpoint:
             When set to `True`, no output will be sent to the client and the HTTP status code
             will be set to 204 (OK, no-content). No response validation will be done.
 
+        error_schemas:
+            A dictionary of error schemas. The keys are the HTTP status codes and the values
+            are the schemas.
+
         response_schema:
             The Schema subclass with which to validate the HTTP response.
 
@@ -267,6 +290,7 @@ class Endpoint:
         method: HTTPMethod = "get",
         content_type: str = "application/json",
         output_empty: bool = False,
+        error_schemas: Optional[Mapping[ErrorStatusCodeInt, Type[Schema]]] = None,
         response_schema: Optional[RawParameter] = None,
         request_schema: Optional[RawParameter] = None,
         convert_response: bool = True,
@@ -275,7 +299,7 @@ class Endpoint:
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
         etag: Optional[ETagBehaviour] = None,
-        status_descriptions: Optional[Dict[int, str]] = None,
+        status_descriptions: Optional[Dict[StatusCodeInt, str]] = None,
         options: Optional[Dict[str, str]] = None,
         tag_group: Literal["Monitoring", "Setup", "Checkmk Internal"] = "Setup",
         blacklist_in: Optional[Sequence[EndpointTarget]] = None,
@@ -295,6 +319,7 @@ class Endpoint:
         self.response_schema = response_schema
         self.convert_response = convert_response
         self.skip_locking = skip_locking
+        self.error_schemas = dict(error_schemas) if error_schemas is not None else {}
         self.request_schema = request_schema
         self.path_params = path_params
         self.query_params = query_params
@@ -347,10 +372,19 @@ class Endpoint:
             self._expected_status_codes.append(412)  # precondition failed
             self._expected_status_codes.append(428)  # precondition required
 
+        for error_status_code in self.error_schemas:
+            if error_status_code < 400:
+                raise RuntimeError(f"Error schema not allowed for status code {error_status_code}.")
+            if error_status_code not in self._expected_status_codes:
+                raise RuntimeError(
+                    f"Error schema for status code {error_status_code} not allowed, due to it "
+                    "not being in the expected status codes."
+                )
+
         for status_code, _ in self.status_descriptions.items():
             if status_code not in self._expected_status_codes:
                 raise RuntimeError(
-                    f"Unexpected custom status description. "
+                    "Unexpected custom status description. "
                     f"Status code {status_code} not expected for endpoint: {method.upper()} {path}"
                 )
 
@@ -506,7 +540,7 @@ class Endpoint:
                     status=status_code,
                     title=http.client.responses[status_code],
                     detail=f"These fields have problems: {_format_fields(exc_.messages)}",
-                    ext={"fields": messages},
+                    fields=messages,
                 )
 
             if self.method in ("post", "put") and request.get_data(cache=True):
@@ -587,7 +621,7 @@ class Endpoint:
                 return problem(
                     status=500,
                     title=f"Unexpected status code returned: {response.status_code}",
-                    detail=(f"Endpoint {self.operation_id}\n" "This is a bug, please report."),
+                    detail=f"Endpoint {self.operation_id}\nThis is a bug, please report.",
                     ext={"codes": self._expected_status_codes},
                 )
 
@@ -693,7 +727,7 @@ class Endpoint:
 
     def _path_item(
         self,
-        status_code: int,
+        status_code: StatusCodeInt,
         description: str,
         content: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, OpenAPIParameter]] = None,
@@ -701,7 +735,13 @@ class Endpoint:
         message = self.status_descriptions.get(status_code)
         if message is None:
             message = description
-        return _path_item(status_code, message, content, headers)
+        return _render_path_item(
+            status_code,
+            message,
+            error_schema=self.error_schemas.get(status_code, ApiError),  # type: ignore[arg-type]
+            content=content,
+            headers=headers,
+        )
 
     def to_operation_dict(self) -> OperationSpecType:
         """Generate the openapi spec part of this endpoint.
@@ -750,8 +790,8 @@ class Endpoint:
             responses["423"] = self._path_item(423, "This resource is currently locked.")
 
         if 405 in self._expected_status_codes:
-            responses["405"] = _path_item(
-                405, "Method not allowed: This request is only allowed " "with other HTTP methods"
+            responses["405"] = self._path_item(
+                405, "Method not allowed: This request is only allowed with other HTTP methods"
             )
 
         if 409 in self._expected_status_codes:

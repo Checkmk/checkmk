@@ -104,9 +104,9 @@ def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     )
     assert "detail" in resp.json
     assert "title" in resp.json
-    assert "crash_report" in resp.json
-    assert "check_mk" in resp.json["crash_report"]["href"]
-    assert "crash_id" in resp.json
+    assert "crash_report" in resp.json["ext"]
+    assert "check_mk" in resp.json["ext"]["crash_report"]["href"]
+    assert "crash_id" in resp.json["ext"]
 
 
 @pytest.mark.skip

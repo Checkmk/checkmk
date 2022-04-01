@@ -21,6 +21,8 @@ from cmk import fields
 
 
 class ApiError(BaseSchema):
+    """This is the base class for all API errors."""
+
     code = fields.Integer(
         description="The HTTP status code.",
         required=True,
@@ -37,10 +39,16 @@ class ApiError(BaseSchema):
         example="Not found",
     )
     _fields = fields.Dict(
-        data_key="fields",  # mypy
+        data_key="fields",  # mypy, due to attribute "fields" being used in marshmallow.Schema
         keys=fields.String(description="The field name"),
         values=fields.List(fields.String(description="The error messages")),
         description="Detailed error messages on all fields failing validation.",
+        required=False,
+    )
+    ext = fields.Dict(
+        keys=fields.String(description="The key name"),
+        values=fields.String(description="The value"),
+        description="Additional information about the error.",
         required=False,
     )
 

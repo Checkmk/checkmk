@@ -29,6 +29,21 @@ def fixture_base() -> str:
     return "/NO_SITE/check_mk/api/1.0"
 
 
+def test_openapi_missing_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/foobar",
+        status=404,
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json_body == {
+        "detail": "These fields have problems: host_name",
+        "fields": {"host_name": ["Host not found: 'foobar'"]},
+        "status": 404,
+        "title": "Not Found",
+    }
+
+
 @pytest.mark.usefixtures("with_host")
 def test_openapi_cluster_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
@@ -687,8 +702,8 @@ def test_openapi_bulk_with_failed(
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
-    assert resp.json["failed_hosts"] == {"foobar": "Validation failed: fail"}
-    assert [e["id"] for e in resp.json["succeeded_hosts"]["value"]] == ["example.com"]
+    assert resp.json["ext"]["failed_hosts"] == {"foobar": "Validation failed: fail"}
+    assert [e["id"] for e in resp.json["ext"]["succeeded_hosts"]["value"]] == ["example.com"]
 
 
 @pytest.fixture(name="custom_host_attribute")

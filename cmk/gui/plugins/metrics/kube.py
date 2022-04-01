@@ -287,8 +287,8 @@ graph_info["kube_pod_restarts"] = {
 graph_info["kube_replica_state"] = {
     "title": _("Replica state"),
     "metrics": [
-        ("kube_desired_replicas", "area"),
-        ("kube_ready_replicas", "line"),
+        ("kube_desired_replicas", "line"),
+        ("kube_ready_replicas", "area"),
     ],
 }
 
@@ -296,7 +296,7 @@ graph_info["kube_replica_state"] = {
 graph_info["kube_replica_update_state"] = {
     "title": _("Replica update state"),
     "metrics": [
-        ("kube_desired_replicas", "area"),
-        ("kube_updated_replicas", "line"),
+        ("kube_desired_replicas", "line"),
+        ("kube_updated_replicas", "area"),
     ],
 }

@@ -1345,6 +1345,9 @@ def _containers_from_pods(
     performance_pods: Mapping[PodLookupName, PerformancePod], pods: Collection[Pod]
 ) -> Sequence[PerformanceContainer]:
     selected_pods = []
+    # the containers with "POD" in their cAdvisor generated name represent the container's
+    # respective parent cgroup. A multitude of memory calculation references omit these for
+    # container level calculations. We keep them as we calculate values at least on the pod level.
     for pod in pods:
         # Some pods which are running according to the Kubernetes API might not yet be
         # included in the performance data due to various reasons (e.g. pod just started)
@@ -1386,15 +1389,12 @@ def write_kube_object_performance_section_cluster(
     _write_object_sections(containers)
 
 
-def pod_performance_sections(pod: PerformancePod) -> None:
-    """Write pod sections based on collected performance metrics"""
+def write_kube_object_performance_section_pod(pod: PerformancePod, piggyback_name: str) -> None:
+    """Write Pod sections based on collected performance metrics"""
     if not pod.containers:
         return
-
-    # the containers with "POD" in their cAdvisor generated name represent the container's
-    # respective parent cgroup. A multitude of memory calculation references omit these for
-    # container level calculations. We keep them as we calculate values at least on the pod level.
-    _write_object_sections(pod.containers)
+    with ConditionalPiggybackSection(piggyback_name):
+        _write_object_sections(pod.containers)
 
 
 def _aggregate_metric(
@@ -1876,13 +1876,14 @@ def write_sections_based_on_performance_pods(
         for pod in filter_outdated_and_non_monitored_pods(
             list(performance_pods.values()), monitored_running_pods
         ):
-            with ConditionalPiggybackSection(
-                piggyback_formatter(
+            write_kube_object_performance_section_pod(
+                pod,
+                piggyback_name=piggyback_formatter(
                     object_type="pod",
                     namespaced_name=lookup_name_piggyback_mappings[pod.lookup_name],
-                )
-            ):
-                pod_performance_sections(pod)
+                ),
+            )
+
     if "nodes" in monitored_objects:
         LOGGER.info("Write node sections based on performance data")
         for node in cluster.nodes():

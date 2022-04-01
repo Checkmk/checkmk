@@ -1,0 +1,15 @@
+Title: Avoid redundant and unwanted listing of processes in ps based checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648812438
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+To avoid listing of all processes in the details of "State and count of processes" regardless of actually
+reached levels defined for "Levels on CPU utilization of a single process" output will now only be generated
+in case at leat WARN level has been reached by a given process.
+In case a full list of processes is desired, one should enable `process_info`, i.E."Enable per-process
+details in long-output"

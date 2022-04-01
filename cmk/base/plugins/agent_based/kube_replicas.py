@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Any, Mapping, MutableMapping, Optional, Tuple, Union
+from typing import Any, Literal, Mapping, MutableMapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -82,16 +82,26 @@ def discover_kube_replicas(
 
 
 def _check_duration(
-    reference_ts: Optional[float],
+    transition_complete: bool,
+    value_store_key: Literal["not_ready_started_timestamp", "update_started_timestamp"],
     now: float,
+    value_store: MutableMapping[str, Any],
     levels_upper: Optional[Tuple[int, int]],
     label: str,
 ) -> CheckResult:
-    if reference_ts is None:
+    """Update/read value_store and check the duration of undesired replica states.
+
+    This function has side effects: It mutates the value_store.
+    """
+
+    if transition_complete:
+        value_store[value_store_key] = None
         return
+    ts = value_store.get(value_store_key) or now
+    value_store[value_store_key] = ts
 
     yield from check_levels(
-        now - reference_ts,
+        now - ts,
         levels_upper=levels_upper,
         render_func=render.timespan,
         label=label,
@@ -148,29 +158,21 @@ def _check_kube_replicas(
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
 
-    if section_kube_replicas.ready == section_kube_replicas.desired:
-        value_store["not_ready_started_timestamp"] = None
-    else:
-        value_store["not_ready_started_timestamp"] = (
-            value_store.get("not_ready_started_timestamp") or now
-        )
-
-    all_updated = section_kube_replicas.updated == section_kube_replicas.desired
-    if all_updated:
-        value_store["update_started_timestamp"] = None
-    else:
-        value_store["update_started_timestamp"] = value_store.get("update_started_timestamp") or now
-
     yield from _check_duration(
-        value_store["not_ready_started_timestamp"],
+        section_kube_replicas.ready == section_kube_replicas.desired,
+        "not_ready_started_timestamp",
         now,
+        value_store,
         _levels(params, "not_ready_duration"),
         "Not ready for",
     )
 
+    all_updated = section_kube_replicas.updated == section_kube_replicas.desired
     yield from _check_duration(
-        value_store["update_started_timestamp"],
+        all_updated,
+        "update_started_timestamp",
         now,
+        value_store,
         _levels(params, "update_duration"),
         "Not updated for",
     )

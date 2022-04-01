@@ -89,9 +89,9 @@ def update_password(params):
         password_details = load_password_to_modify(ident)
     except KeyError:
         return problem(
-            404,
-            f'Password "{ident}" is not known.',
-            "The password you asked for is not known. Please check for eventual misspellings.",
+            status=404,
+            title=f'Password "{ident}" is not known.',
+            detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
     password_details.update(body)
     save_password(ident, password_details)
@@ -111,9 +111,9 @@ def delete_password(params):
     ident = params["name"]
     if ident not in load_passwords():
         return problem(
-            404,
-            f'Password "{ident}" is not known.',
-            "The password you asked for is not known. Please check for eventual misspellings.",
+            status=404,
+            title='Password "{ident}" is not known.',
+            detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
     remove_password(ident)
     return Response(status=204)
@@ -133,9 +133,9 @@ def show_password(params):
     passwords = load_passwords()
     if ident not in passwords:
         return problem(
-            404,
-            f'Password "{ident}" is not known.',
-            "The password you asked for is not known. Please check for eventual misspellings.",
+            status=404,
+            title=f'Password "{ident}" is not known.',
+            detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
     password_details = passwords[ident]
     return _serve_password(ident, password_details)

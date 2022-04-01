@@ -180,8 +180,16 @@ def _parse_config(serial: ConfigSerial, host_name: HostName) -> Iterator[ABCFetc
 def _parse_fetcher_config(data: Dict[str, Any]) -> Iterator[ABCFetcher]:
     # Hard crash on parser errors: The interface is versioned and internal.
     # Crashing on error really *is* the best way to catch bonehead mistakes.
-    yield from (FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
-                for entry in data["fetchers"])
+    for entry in data["fetchers"]:
+        fetcher = FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
+        if isinstance(fetcher, SNMPFetcher):
+            fetcher.file_cache.max_age = MaxAge(
+                checking=fetcher.file_cache.max_age.checking,
+                discovery=0,
+                inventory=fetcher.file_cache.max_age.inventory,
+            )
+
+        yield fetcher
 
 
 def _parse_cluster_config(data: Dict[str, Any], serial: ConfigSerial) -> Iterator[ABCFetcher]:

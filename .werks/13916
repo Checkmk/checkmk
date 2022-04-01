@@ -1,0 +1,10 @@
+Title: Barplot dashlet: Fix the bar coloring
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1648809110
+Class: fix
+
+The styling of barplot bars was not strict. Some bars appeared in black and not as expected in a light blue. This is fixed and all barplot bars are now colored in light blue again.

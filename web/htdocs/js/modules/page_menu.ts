@@ -57,7 +57,7 @@ export function enable_menu_entry(id, enabled) {
     var oEntry = document.getElementById("menu_entry_" + id);
     utils.change_class(oEntry, from, to);
 
-    if (enabled && oEntry.getAttribute("title")) {
+    if (enabled && oEntry?.getAttribute("title")) {
         oEntry.removeAttribute("title");
     }
 
@@ -149,7 +149,7 @@ export function register_on_close_handler(popup_id, handler) {
     on_close[popup_id] = handler;
 }
 
-var on_toggle_suggestions = null;
+var on_toggle_suggestions : null|Function = null;
 
 export function register_on_toggle_suggestions_handler(handler) {
     on_toggle_suggestions = handler;
@@ -180,7 +180,7 @@ export function form_submit(form_name, button_name) {
     field.name = button_name;
     field.value = "SET";
     field.style.display = "none";
-    form.appendChild(field);
+    form?.appendChild(field);
 
     field.click();
 }
@@ -218,7 +218,7 @@ export function on_filter_popup_close() {
 // Scroll to the top after adding new filters
 export function update_filter_list_scroll(filter_list_id) {
     let filter_list = document.getElementById(filter_list_id);
-    let scrollable = filter_list.getElementsByClassName("simplebar-content-wrapper")[0];
+    let scrollable = filter_list!.getElementsByClassName("simplebar-content-wrapper")[0];
     try {
         // scrollTo() is not supported in IE
         setTimeout(() => {
@@ -231,16 +231,16 @@ export function update_filter_list_scroll(filter_list_id) {
 
 export function side_popup_add_simplebar_scrollbar(popup_id) {
     let popup = document.getElementById(popup_id);
-    let content = popup.getElementsByClassName("side_popup_content")[0];
+    let content = popup!.getElementsByClassName("side_popup_content")[0];
     utils.add_simplebar_scrollbar_to_object(content);
 }
 
 export function inpage_search_init(reset_button_id, was_submitted) {
-    const reset_button = document.getElementById(reset_button_id);
+    const reset_button = document.getElementById(reset_button_id) as HTMLButtonElement;
     if (!reset_button) return;
 
     if (was_submitted) {
-        const submit_button = reset_button.parentNode.getElementsByClassName("button submit")[0];
+        const submit_button = (reset_button.parentNode as HTMLElement).getElementsByClassName("button submit")[0];
         utils.add_class(submit_button, "hidden");
     } else {
         reset_button.disabled = true;

@@ -308,6 +308,7 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="modules.h" />
     <ClInclude Include="onlyfrom.h" />
     <ClInclude Include="on_start.h" />
+    <ClInclude Include="providers\agent_plugins.h" />
     <ClInclude Include="providers\check_mk.h" />
     <ClInclude Include="providers\df.h" />
     <ClInclude Include="providers\fileinfo.h" />
@@ -537,6 +538,7 @@ cd $(ProjectDir)</Command>
     <ClCompile Include="modules.cpp" />
     <ClCompile Include="onlyfrom.cpp" />
     <ClCompile Include="on_start.cpp" />
+    <ClCompile Include="providers\agent_plugins.cpp" />
     <ClCompile Include="providers\check_mk.cpp" />
     <ClCompile Include="providers\df.cpp" />
     <ClCompile Include="providers\fileinfo.cpp" />

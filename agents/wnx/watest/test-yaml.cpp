@@ -305,7 +305,7 @@ TEST(AgentConfig, SmartMerge) {
         ASSERT_EQ(run_node.size(), 3);
 
         sections_enabled = GetInternalArray(gl, vars::kSectionsEnabled);
-        ASSERT_EQ(sections_enabled.size(), 20);
+        ASSERT_EQ(sections_enabled.size(), 21);
 
         ASSERT_EQ(gl[vars::kSectionsDisabled].size(), 0);
     }
@@ -676,7 +676,7 @@ TEST(AgentConfig, FactoryConfig) {
     {
         auto sections_enabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        EXPECT_EQ(sections_enabled.size(), 20);
+        EXPECT_EQ(sections_enabled.size(), 21);
 
         auto sections_disabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);

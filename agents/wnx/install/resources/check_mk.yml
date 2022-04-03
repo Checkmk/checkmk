@@ -71,7 +71,8 @@ global:
         - ps 
         - fileinfo 
         - logwatch 
-        - openhardwaremonitor 
+        - openhardwaremonitor
+        - agent_plugins
     
     # sections to be skipped
     disabled_sections: []

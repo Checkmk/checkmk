@@ -104,6 +104,7 @@ global:
         - fileinfo 
         - logwatch 
         - openhardwaremonitor 
+        - agent_plugins
 
     # Useful example
     # sections: ~   # <--- this line is skipped as undefined

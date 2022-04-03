@@ -28,6 +28,7 @@
 #include "external_port.h"
 #include "logger.h"
 #include "modules.h"
+#include "providers/agent_plugins.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/fileinfo.h"
@@ -659,6 +660,8 @@ private:
     SectionProvider<provider::OhmProvider> ohm_provider_{
         provider::kOhm, provider::ohm::kSepChar};
     SectionProvider<provider::SpoolProvider> spool_provider_;
+    SectionProvider<provider::AgentPlugins> agent_plugins_{
+        provider::kAgentPlugins, provider::AgentPlugins::kSepChar};
 
     SectionProvider<provider::Wmi> dotnet_clrmemory_provider_{
         provider::kDotNetClrMemory, cma::provider::wmi::kSepChar};

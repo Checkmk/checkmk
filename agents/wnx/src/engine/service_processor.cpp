@@ -429,6 +429,7 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     tryToKick(skype_provider_, answer_id, ip_addr);
     tryToKick(spool_provider_, answer_id, ip_addr);
     tryToKick(ohm_provider_, answer_id, ip_addr);
+    tryToKick(agent_plugins_, answer_id, ip_addr);
 
     checkMaxWaitTime();
 

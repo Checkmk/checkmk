@@ -340,6 +340,7 @@
     <ClCompile Include="test-plugin.cpp" />
     <ClCompile Include="test-realtime.cpp" />
     <ClCompile Include="test-runperf.cpp" />
+    <ClCompile Include="test-section_agent_plugins.cpp" />
     <ClCompile Include="test-section_df.cpp" />
     <ClCompile Include="test-section_fileinfo.cpp" />
     <ClCompile Include="test-section_logwatchevent.cpp" />

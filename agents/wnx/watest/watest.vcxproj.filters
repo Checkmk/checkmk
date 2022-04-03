@@ -154,8 +154,13 @@
     <ClCompile Include="test-zip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test-fmt_ext.cpp" />
     <ClCompile Include="test-agent_controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-fmt_ext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-section_agent_plugins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

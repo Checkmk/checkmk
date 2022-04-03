@@ -6,13 +6,20 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence
 
 import cmk.utils.store as store
-from cmk.utils.license_usage.export import LicenseUsageExtensions, LicenseUsageHistory
+from cmk.utils.license_usage.export import (
+    LicenseUsageExtensions,
+    LicenseUsageHistoryWithSiteHash,
+    LicenseUsageSample,
+    LicenseUsageSampleWithSiteHash,
+)
 from cmk.utils.paths import license_usage_dir
 
 LicenseUsageHistoryDumpVersion = "1.3"
@@ -42,6 +49,75 @@ class LicenseUsageHistoryDump:
         )
 
 
+#   .--history-------------------------------------------------------------.
+#   |                   _     _     _                                      |
+#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
+#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
+#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
+#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
+#   |                                             |___/                    |
+#   '----------------------------------------------------------------------'
+
+
+class LicenseUsageHistory:
+    def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
+        self._samples = deque(iterable, maxlen=400)
+
+    def __iter__(self) -> Iterator[LicenseUsageSample]:
+        return iter(self._samples)
+
+    def __len__(self) -> int:
+        return len(self._samples)
+
+    @property
+    def last(self) -> Optional[LicenseUsageSample]:
+        return self._samples[0] if self._samples else None
+
+    def for_report(self) -> Sequence[Mapping[str, Any]]:
+        return [sample.for_report() for sample in self]
+
+    @classmethod
+    def parse(
+        cls, report_version: str, raw_history: Sequence[Mapping[str, Any]]
+    ) -> LicenseUsageHistory:
+        parser = LicenseUsageSample.get_parser(report_version)
+        return cls(parser(raw_sample) for raw_sample in raw_history)
+
+    def add_sample(self, sample: LicenseUsageSample) -> None:
+        self._samples.appendleft(sample)
+
+    def add_site_hash(self, raw_site_id: str) -> LicenseUsageHistoryWithSiteHash:
+        site_hash = self._hash_site_id(raw_site_id)
+        return LicenseUsageHistoryWithSiteHash(
+            [
+                LicenseUsageSampleWithSiteHash(
+                    version=sample.version,
+                    edition=sample.edition,
+                    platform=sample.platform,
+                    is_cma=sample.is_cma,
+                    sample_time=sample.sample_time,
+                    timezone=sample.timezone,
+                    num_hosts=sample.num_hosts,
+                    num_services=sample.num_services,
+                    num_hosts_excluded=sample.num_hosts_excluded,
+                    num_services_excluded=sample.num_services_excluded,
+                    extension_ntop=sample.extension_ntop,
+                    site_hash=site_hash,
+                )
+                for sample in self
+            ]
+        )
+
+    @staticmethod
+    def _hash_site_id(raw_site_id: str) -> str:
+        # We have to hash the site ID because some sites contain project names.
+        # This hash also has to be constant because it will be used as an DB index.
+        h = hashlib.new("sha256")
+        h.update(raw_site_id.encode("utf-8"))
+        return h.hexdigest()
+
+
+# .
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
 #   |                   | |__   ___| |_ __   ___ _ __                      |

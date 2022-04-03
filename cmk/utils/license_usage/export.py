@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections import Counter, deque
+from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from enum import auto, Enum
@@ -385,6 +385,42 @@ class LicenseUsageSample:
         return platform[:50]
 
 
+@dataclass
+class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
+    site_hash: str
+
+    @classmethod
+    def get_parser(
+        cls, report_version: str
+    ) -> Callable[[Mapping[str, Any]], LicenseUsageSampleWithSiteHash]:
+        return lambda raw_sample: cls._parse(
+            LicenseUsageSample.get_parser(report_version),
+            raw_sample,
+        )
+
+    @classmethod
+    def _parse(
+        cls,
+        parser: Callable[[Mapping[str, Any]], LicenseUsageSample],
+        raw_sample: Mapping[str, Any],
+    ) -> LicenseUsageSampleWithSiteHash:
+        parsed_sample = parser({k: v for k, v in raw_sample.items() if k != "site_hash"})
+        return cls(
+            version=parsed_sample.version,
+            edition=parsed_sample.edition,
+            platform=parsed_sample.platform,
+            is_cma=parsed_sample.is_cma,
+            sample_time=parsed_sample.sample_time,
+            timezone=parsed_sample.timezone,
+            num_hosts=parsed_sample.num_hosts,
+            num_services=parsed_sample.num_services,
+            num_hosts_excluded=parsed_sample.num_hosts_excluded,
+            num_services_excluded=parsed_sample.num_services_excluded,
+            extension_ntop=parsed_sample.extension_ntop,
+            site_hash=raw_sample["site_hash"],
+        )
+
+
 # .
 #   .--history-------------------------------------------------------------.
 #   |                   _     _     _                                      |
@@ -396,32 +432,22 @@ class LicenseUsageSample:
 #   '----------------------------------------------------------------------'
 
 
-class LicenseUsageHistory:
-    def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
-        self._samples = deque(iterable, maxlen=400)
+class LicenseUsageHistoryWithSiteHash:
+    def __init__(self, iterable: Iterable[LicenseUsageSampleWithSiteHash]) -> None:
+        self._samples = iterable
 
-    def __iter__(self) -> Iterator[LicenseUsageSample]:
+    def __iter__(self) -> Iterator[LicenseUsageSampleWithSiteHash]:
         return iter(self._samples)
 
-    def __len__(self) -> int:
-        return len(self._samples)
-
-    @property
-    def last(self) -> Optional[LicenseUsageSample]:
-        return self._samples[0] if self._samples else None
-
     def for_report(self) -> Sequence[Mapping[str, Any]]:
-        return [sample.for_report() for sample in self]
+        return [sample.for_report() for sample in self._samples]
 
     @classmethod
     def parse(
         cls, report_version: str, raw_history: Sequence[Mapping[str, Any]]
-    ) -> LicenseUsageHistory:
-        parser = LicenseUsageSample.get_parser(report_version)
+    ) -> LicenseUsageHistoryWithSiteHash:
+        parser = LicenseUsageSampleWithSiteHash.get_parser(report_version)
         return cls(parser(raw_sample) for raw_sample in raw_history)
-
-    def add_sample(self, sample: LicenseUsageSample) -> None:
-        self._samples.appendleft(sample)
 
 
 # .

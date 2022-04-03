@@ -10,11 +10,11 @@ import pytest
 
 from cmk.utils.license_usage import (
     _serialize_dump,
+    LicenseUsageHistory,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
 )
 from cmk.utils.license_usage.export import (
-    LicenseUsageHistory,
     LicenseUsageSample,
     SubscriptionDetails,
     SubscriptionDetailsError,
@@ -337,9 +337,26 @@ def test_history_dump(
     raw_report: Mapping[str, Any], expected_report: LicenseUsageHistoryDump
 ) -> None:
     dump = LicenseUsageHistoryDump.parse(raw_report)
+
     assert dump.VERSION == expected_report.VERSION
-    for sample, expected_sample in zip(dump.history, expected_report.history):
-        assert sample == expected_sample
+
+    history_of_site = dump.history.add_site_hash("the-site")
+    for sample, sample_with_site_hash in zip(dump.history, history_of_site):
+        assert (
+            sample_with_site_hash.site_hash
+            == "76911aba682fcf9148b378cf18bbcebd624024c1499df42ceeb2a6c1fb41d80c"
+        )
+        assert sample.version == sample_with_site_hash.version
+        assert sample.edition == sample_with_site_hash.edition
+        assert sample.platform == sample_with_site_hash.platform
+        assert sample.is_cma == sample_with_site_hash.is_cma
+        assert sample.sample_time == sample_with_site_hash.sample_time
+        assert sample.timezone == sample_with_site_hash.timezone
+        assert sample.num_hosts == sample_with_site_hash.num_hosts
+        assert sample.num_hosts_excluded == sample_with_site_hash.num_hosts_excluded
+        assert sample.num_services == sample_with_site_hash.num_services
+        assert sample.num_services_excluded == sample_with_site_hash.num_services_excluded
+        assert sample.extension_ntop == sample_with_site_hash.extension_ntop
 
 
 def test_history_dump_add_sample() -> None:

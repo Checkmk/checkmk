@@ -1097,6 +1097,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     delvars=["show_checkboxes", "selection"],
                 )
             ),
+            css_classes=["context_pdf_export"],
         )
 
         # Link related reports

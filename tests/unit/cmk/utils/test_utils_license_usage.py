@@ -24,24 +24,33 @@ from cmk.utils.license_usage.export import (
 )
 
 
-def test_serialize_dump():
+def test_serialize_history_dump():
+    history_dump = LicenseUsageHistoryDump.parse(
+        {
+            "VERSION": "1.2",
+            "history": [
+                {
+                    "version": "",
+                    "edition": "",
+                    "platform": (
+                        "A very long string with len>50 describing the platform"
+                        " a Checkmk server is operating on."
+                    ),
+                    "is_cma": False,
+                    "sample_time": 1,
+                    "timezone": "",
+                    "num_hosts": 2,
+                    "num_hosts_excluded": 3,
+                    "num_services": 4,
+                    "num_services_excluded": 5,
+                    "extension_ntop": True,
+                },
+            ],
+        }
+    )
     assert (
-        _serialize_dump(
-            LicenseUsageSample(
-                version="version",
-                edition="edition",
-                platform="platform",
-                is_cma=False,
-                sample_time=1,
-                timezone="timezone",
-                num_hosts=2,
-                num_services=3,
-                num_hosts_excluded=4,
-                num_services_excluded=5,
-                extension_ntop=False,
-            ).for_report(),
-        )
-        == b"LQG6CD:@?Qi QG6CD:@?Q[ Q65:E:@?Qi Q65:E:@?Q[ QA=2E7@C>Qi QA=2E7@C>Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QE:>6K@?6Q[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi c[ Q?F>0D6CG:46DQi b[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi 72=D6N"
+        _serialize_dump(history_dump.for_report())
+        == b"LQ't#$x~}Qi Q`]bQ[ Q9:DE@CJQi ,LQG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 

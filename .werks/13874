@@ -1,0 +1,14 @@
+Title: Fix ignored timerange of graphs on PDF export
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1649055025
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+If you exported a graph via "This view as PDF" and selected a different
+timerange for the graph before, e.g. "The last 8 days", the timerange was
+ignored and the default timerange "The last 4 hours" was used.

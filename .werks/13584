@@ -1,0 +1,17 @@
+Title: check_snmp "External command error with no output"
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1649063100
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+With Checkmk, we deliver nagios plugins, like check_snmp.
+You're affected, if you're using this plugin and seeing the following output:
+<tt>External command error with no output</tt>
+
+The built binary was broken in previous 2.1 beta versions due to our package build cache.
+
+

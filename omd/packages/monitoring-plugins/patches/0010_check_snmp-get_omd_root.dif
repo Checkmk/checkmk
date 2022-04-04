@@ -1,0 +1,34 @@
+--- a/plugins/check_snmp.c	2021-04-10 14:13:41.000000000 +0200
++++ b/plugins/check_snmp.c	2022-04-04 10:58:04.707730748 +0200
+@@ -299,9 +299,21 @@
+ 		snmpcmd = strdup (PATH_TO_SNMPGET);
+ 	}
+
++        // We need to dynamically get the OMD_ROOT env variable as we do not know it during compile time:
++        // We're caching the compiled monitoring-plugins and reusing it for multiple versions of checkmk
++        char *omd_root = getenv("OMD_ROOT");
++        if (omd_root == NULL) {
++            die(STATE_UNKNOWN, _("OMD_ROOT not set"));
++        }
++
++        size_t absolute_cmd_lengths = strlen(omd_root) + strlen(snmpcmd) + 1;
++        char *absolute_snmpcmd_path[absolute_cmd_lengths];
++        strcat(absolute_snmpcmd_path, omd_root);
++        strcat(absolute_snmpcmd_path, snmpcmd);
++
+ 	/* 10 arguments to pass before context and authpriv options + 1 for host and numoids. Add one for terminating NULL */
+ 	command_line = calloc (10 + numcontext + numauthpriv + 1 + numoids + 1, sizeof (char *));
+-	command_line[0] = snmpcmd;
++	command_line[0] = absolute_snmpcmd_path;
+ 	command_line[1] = strdup ("-Le");
+ 	command_line[2] = strdup ("-t");
+ 	xasprintf (&command_line[3], "%d", timeout_interval);
+@@ -324,7 +336,7 @@
+
+ 	/* This is just for display purposes, so it can remain a string */
+ 	xasprintf(&cl_hidden_auth, "%s -Le -t %d -r %d -m %s -v %s %s %s %s:%s",
+-		snmpcmd, timeout_interval, retries, strlen(miblist) ? miblist : "''", proto, "[context]", "[authpriv]",
++		absolute_snmpcmd_path, timeout_interval, retries, strlen(miblist) ? miblist : "''", proto, "[context]", "[authpriv]",
+ 		server_address, port);
+
+ 	for (i = 0; i < numoids; i++) {

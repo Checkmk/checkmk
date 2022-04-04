@@ -542,8 +542,14 @@ def agent_proxmox_ve_main(args: Args) -> None:
 
     #  overwrite all the start time strings with timezone aware start strings
     for vmid in logged_backup_data:
+        try:
+            # Happens when the VM has backup data but is not in all_vms
+            tz = node_timezones[all_vms[vmid]["node"]]
+        except KeyError:
+            # get the first value of the first key
+            tz = next(iter(node_timezones.values()))
         logged_backup_data[vmid]["started_time"] = date_to_utc(
-            logged_backup_data[vmid]["started_time"], node_timezones[all_vms[vmid]["node"]]
+            logged_backup_data[vmid]["started_time"], tz
         )
 
     LOGGER.info("all VMs:          %r", backup_data["vmids"])

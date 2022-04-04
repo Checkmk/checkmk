@@ -323,6 +323,9 @@ def update_host(params):
     method="put",
     request_schema=request_schemas.BulkUpdateHost,
     response_schema=response_schemas.HostConfigCollection,
+    error_schemas={
+        400: BulkHostActionWithFailedHosts,
+    },
 )
 def bulk_update_hosts(params):
     """Bulk update hosts

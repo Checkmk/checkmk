@@ -201,15 +201,16 @@ impl Pairing for Api {
             .json(&PairingBody { csr })
             .send()?;
         let status = response.status();
-        // Get the text() instead of directly calling json(), because both methods would consume the response.
-        // Otherwise, in case of a json parsing error, we would have no information about the body.
-        let body = response.text()?;
 
-        if let StatusCode::OK = status {
-            Ok(serde_json::from_str::<PairingResponse>(&body)
-                .context(format!("Error parsing this response body: {}", body))?)
+        if status == StatusCode::OK {
+            let body = response.text().context("Failed to obtain response body")?;
+            serde_json::from_str::<PairingResponse>(&body)
+                .context(format!("Error parsing this response body: {}", body))
         } else {
-            Err(anyhow!("Request failed with code {}: {}", status, body))
+            Err(anyhow!(Api::error_response_description(
+                status,
+                response.text().ok()
+            )))
         }
     }
 }

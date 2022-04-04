@@ -3775,6 +3775,37 @@ class PageRescheduleCheck(AjaxPage):
         api_request = request.get_request()
         return self._do_reschedule(api_request)
 
+    @staticmethod
+    def _force_check(now: int, cmd: str, spec: str, site: SiteId) -> None:
+        sites.live().command(
+            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
+        )
+
+    @staticmethod
+    def _wait_for(
+        site: SiteId, host: str, what: str, wait_spec: str, now: int, add_filter: str
+    ) -> livestatus.LivestatusRow:
+        with sites.only_sites(site):
+            return sites.live().query_row(
+                (
+                    "GET %ss\n"
+                    "WaitObject: %s\n"
+                    "WaitCondition: last_check >= %d\n"
+                    "WaitTimeout: %d\n"
+                    "WaitTrigger: check\n"
+                    "Columns: last_check state plugin_output\n"
+                    "Filter: host_name = %s\n%s"
+                )
+                % (
+                    what,
+                    livestatus.lqencode(wait_spec),
+                    now,
+                    config.reschedule_timeout * 1000,
+                    livestatus.lqencode(host),
+                    add_filter,
+                )
+            )
+
     def _do_reschedule(self, api_request: Dict[str, Any]) -> AjaxPageResult:
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
@@ -3806,29 +3837,8 @@ class PageRescheduleCheck(AjaxPage):
             add_filter = ""
 
         now = int(time.time())
-        sites.live().command(
-            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
-        )
-
-        query = (
-            "GET %ss\n"
-            "WaitObject: %s\n"
-            "WaitCondition: last_check >= %d\n"
-            "WaitTimeout: %d\n"
-            "WaitTrigger: check\n"
-            "Columns: last_check state plugin_output\n"
-            "Filter: host_name = %s\n%s"
-            % (
-                what,
-                livestatus.lqencode(wait_spec),
-                now,
-                config.reschedule_timeout * 1000,
-                livestatus.lqencode(host),
-                add_filter,
-            )
-        )
-        with sites.only_sites(site):
-            row = sites.live().query_row(query)
+        self._force_check(now, cmd, spec, site)
+        row = self._wait_for(site, host, what, wait_spec, now, add_filter)
 
         last_check = row[0]
         if last_check < now:

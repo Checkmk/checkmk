@@ -475,6 +475,7 @@ def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetSta
         updated_number_scheduled=status.updated_number_scheduled or 0,
         number_misscheduled=status.number_misscheduled,
         number_ready=status.number_ready,
+        number_available=status.number_available or 0,
     )
 
 

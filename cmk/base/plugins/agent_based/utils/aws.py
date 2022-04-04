@@ -113,6 +113,7 @@ def extract_aws_metrics_by_labels(
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Optional[Iterable[str]] = None,
+    convert_sum_stats_to_rate=True,
 ) -> Mapping[str, Dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []
@@ -136,7 +137,7 @@ def extract_aws_metrics_by_labels(
                 # convert the metric value to a rate. For all other metrics, the time period is
                 # None.
                 value, time_period = row_values[0]
-                if time_period is not None:
+                if convert_sum_stats_to_rate and time_period is not None:
                     value /= time_period
             except IndexError:
                 continue

@@ -631,7 +631,7 @@ def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
 
 
 @pytest.mark.parametrize(
-    "expected_metric_names, section, expected_result",
+    "expected_metric_names, section, extra_kwargs, expected_result",
     [
         (
             [
@@ -726,6 +726,7 @@ def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
                     "StatusCode": "Complete",
                 },
             ],
+            {},
             {
                 "172.31.41.207-eu-central-1-i-08363bfeff774e12c": {
                     "CPUCreditUsage": 0.0021155,
@@ -741,11 +742,123 @@ def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
                     "StatusCheckFailed_System": 0.0,
                 }
             },
-        )
+        ),
+        (
+            [
+                "Requests",
+                "BytesDownloaded",
+                "BytesUploaded",
+                "TotalErrorRate",
+                "4xxErrorRate",
+                "5xxErrorRate",
+            ],
+            [
+                {
+                    "Id": "id_0_Requests",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_BytesDownloaded",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_BytesUploaded",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_TotalErrorRate",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_4xxErrorRate",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_5xxErrorRate",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_Requests",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[88.0, 600]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_BytesDownloaded",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[582911.0, 600]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_BytesUploaded",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, 600]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_TotalErrorRate",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, None]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_4xxErrorRate",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, None]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_5xxErrorRate",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, None]],
+                    "StatusCode": "Complete",
+                },
+            ],
+            {"convert_sum_stats_to_rate": False},
+            {
+                "EWN6C0UT7HBX0": {
+                    "Requests": 88.0,
+                    "BytesDownloaded": 582911.0,
+                    "BytesUploaded": 0.0,
+                    "TotalErrorRate": 0.0,
+                    "4xxErrorRate": 0.0,
+                    "5xxErrorRate": 0.0,
+                }
+            },
+        ),
     ],
 )
-def test_extract_aws_metrics_by_labels(expected_metric_names, section, expected_result):
-    assert extract_aws_metrics_by_labels(expected_metric_names, section) == expected_result
+def test_extract_aws_metrics_by_labels(
+    expected_metric_names, section, extra_kwargs, expected_result
+):
+    assert (
+        extract_aws_metrics_by_labels(expected_metric_names, section, **extra_kwargs)
+        == expected_result
+    )
 
 
 SECTION_AWS_LAMBDA_SUMMARY: LambdaSummarySection = {

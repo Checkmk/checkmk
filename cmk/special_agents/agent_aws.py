@@ -15,7 +15,7 @@ import itertools
 import json
 import logging
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from time import sleep
@@ -24,6 +24,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     Optional,
@@ -388,7 +389,67 @@ def _get_wafv2_web_acls(
     return web_acls
 
 
-# .
+def _fetch_tagged_resources_with_types(tagging_client, resource_type_filters: List[str]) -> list:
+    tagged_resources = []
+    # The get_resource API call has a matching rule (AND) different than the one that we use in
+    # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
+    # matching rule.
+    # We are calling it with empty `TagFilter` param so get every resource that ever had a tag.
+    # For the tags matching rules or other info, look at the documentation of the API call:
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
+    for page in tagging_client.get_paginator("get_resources").paginate(
+        TagFilters=[],
+        ResourceTypeFilters=resource_type_filters,
+    ):
+        tagged_resources.extend(page.get("ResourceTagMappingList", []))
+
+    return tagged_resources
+
+
+def fetch_resources_matching_tags(
+    tagging_client,
+    tags_to_match: List[Dict[Literal["Key", "Value"], str]],
+    resource_type_filters: List[str],
+) -> Set[str]:
+    """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
+
+    This is useful when the service-specific API is not returning tags for every resource as this
+    allows you to get all the tags with a single API call rather than calling get_tags for every
+    resource.
+
+    For example, the CloudFront APIs don't allow to get tags for all the distributions and the only
+    way to have the tags would be to call the `list_tags_for_resource` API for every single
+    distribution.
+    To prevent that, we can call this method with
+    `resource_type_filters=['cloudfront:distribution']` and with the tags you want to filter.
+
+    More info on the format of the resources type on the underlying API call documentation:
+    https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
+    """
+
+    if not tags_to_match:
+        return set()
+
+    tags_to_match_by_id = defaultdict(set)
+    for curr_tag in tags_to_match:
+        tags_to_match_by_id[curr_tag["Key"]].add(curr_tag["Value"])
+
+    tagged_resources = _fetch_tagged_resources_with_types(tagging_client, resource_type_filters)
+
+    matching_resources_arn = set()
+    for resource in tagged_resources:
+        resource_tags = resource["Tags"]
+        is_any_tag_matching = any(
+            curr_tag["Key"] in tags_to_match_by_id
+            and curr_tag["Value"] in tags_to_match_by_id[curr_tag["Key"]]
+            for curr_tag in resource_tags
+        )
+        if is_any_tag_matching:
+            matching_resources_arn.add(resource["ResourceARN"])
+    return matching_resources_arn
+
+
+#
 #   .--section API---------------------------------------------------------.
 #   |                       _   _                  _    ____ ___           |
 #   |         ___  ___  ___| |_(_) ___  _ __      / \  |  _ \_ _|          |
@@ -3437,6 +3498,172 @@ class RDS(AWSSectionCloudwatch):
         return [AWSSectionResult("", computed_content.content)]
 
 
+#   .--CloudFront----------------------------------------------------------.
+#   |          ____ _                 _ _____                _             |
+#   |         / ___| | ___  _   _  __| |  ___| __ ___  _ __ | |_           |
+#   |        | |   | |/ _ \| | | |/ _` | |_ | '__/ _ \| '_ \| __|          |
+#   |        | |___| | (_) | |_| | (_| |  _|| | | (_) | | | | |_           |
+#   |         \____|_|\___/ \__,_|\__,_|_|  |_|  \___/|_| |_|\__|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+# .
+
+
+class CloudFrontSummary(AWSSection):
+    def __init__(self, client, tagging_client, region, config, distributor=None):
+        super().__init__(client, region, config, distributor=distributor)
+        self._tagging_client = tagging_client
+        self._names = self._config.service_config["cloudfront_names"]
+        self._tags = self._prepare_tags_for_api_response(
+            self._config.service_config["cloudfront_tags"]
+        )
+
+    @property
+    def name(self):
+        return "cloudfront_summary"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, *args):
+        distributions = []
+
+        for page in self._client.get_paginator("list_distributions").paginate():
+            fetched_distributions = self._get_response_content(
+                page, "DistributionList", dflt={}
+            ).get("Items", [])
+            distributions.extend(fetched_distributions)
+
+        if self._names:
+            return [d for d in distributions if d["Id"] in self._names]
+
+        if self._tags:
+            distributions_arn_matching_tags = fetch_resources_matching_tags(
+                self._tagging_client, self._tags, ["cloudfront:distribution"]
+            )
+            return [d for d in distributions if d["ARN"] in distributions_arn_matching_tags]
+
+        return distributions
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class CloudFront(AWSSectionCloudwatch):
+    def __init__(
+        self,
+        client,
+        region,
+        config,
+        host_assignment: Literal["aws_host", "domain_host"],
+        distributor=None,
+    ):
+        super().__init__(client, region, config, distributor=distributor)
+        self.assign_to_origin_domain_host = host_assignment == "domain_host"
+
+    @property
+    def name(self):
+        return "cloudfront_cloudwatch"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get("cloudfront_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = []
+        for idx, instance in enumerate(colleague_contents.content):
+            distribution_id = instance["Id"]
+            for metric_name, stat, unit in [
+                ("Requests", "Sum", "None"),
+                ("BytesDownloaded", "Sum", "None"),
+                ("BytesUploaded", "Sum", "None"),
+                ("TotalErrorRate", "Average", "Percent"),
+                ("4xxErrorRate", "Average", "Percent"),
+                ("5xxErrorRate", "Average", "Percent"),
+            ]:
+                metric = {
+                    "Id": self._create_id_for_metric_data_query(idx, metric_name),
+                    "Label": distribution_id,
+                    "MetricStat": {
+                        "Metric": {
+                            "Namespace": "AWS/CloudFront",
+                            "MetricName": metric_name,
+                            "Dimensions": [
+                                {
+                                    "Name": "DistributionId",
+                                    "Value": distribution_id,
+                                },
+                                {
+                                    "Name": "Region",
+                                    "Value": "Global",
+                                },
+                            ],
+                        },
+                        "Period": self.period,
+                        "Stat": stat,
+                        "Unit": unit,
+                    },
+                }
+                metrics.append(metric)
+        return metrics
+
+    def _get_piggyback_host_by_distribution(self, cloudfront_summary):
+        if not cloudfront_summary:
+            return {}
+
+        host_by_distribution: dict[str, str] = {}
+        for distribution_data in cloudfront_summary:
+            distribution_id = distribution_data.get("Id")
+            origins = distribution_data.get("Origins", {}).get("Items")
+            if not distribution_id or not origins:
+                continue
+            distribution_origin = origins[0].get("DomainName", "")
+            host_by_distribution[distribution_id] = distribution_origin
+        return host_by_distribution
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_host = defaultdict(list)
+        host_by_distribution: Mapping[str, str] = {}
+        if self.assign_to_origin_domain_host:
+            host_by_distribution = self._get_piggyback_host_by_distribution(
+                colleague_contents.content
+            )
+        for distribution_data in raw_content.content:
+            distribution_id = distribution_data.get("Label", "")
+            piggyback_host = host_by_distribution.get(distribution_id, "")
+            content_by_host[piggyback_host].append(distribution_data)
+        return AWSComputedContent(content_by_host, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_host, content)
+            for piggyback_host, content in computed_content.content.items()
+        ]
+
+
 # .
 #   .--Cloudwatch----------------------------------------------------------.
 #   |         ____ _                 _               _       _             |
@@ -4853,6 +5080,7 @@ class AWSSectionsUSEast(AWSSections):
             self._sections.append(CostsAndUsage(self._init_client("ce"), region, config))
 
         cloudwatch_client = self._init_client("cloudwatch")
+        tagging_client = self._init_client("resourcegroupstaggingapi")
         if "wafv2" in services and config.service_config["wafv2_cloudfront"]:
             wafv2_client = self._init_client("wafv2")
             wafv2_limits_distributor = ResultDistributor()
@@ -4881,6 +5109,22 @@ class AWSSectionsUSEast(AWSSections):
             )
             self._sections.append(route53_health_checks)
             self._sections.append(route53_cloudwatch)
+
+        if "cloudfront" in services:
+            cloudfront_client = self._init_client("cloudfront")
+            cloudfront_summary_distributor = ResultDistributor()
+            cloudfront_summary = CloudFrontSummary(
+                cloudfront_client, tagging_client, region, config, cloudfront_summary_distributor
+            )
+            cloudfront = CloudFront(
+                cloudwatch_client,
+                region,
+                config,
+                config.service_config["cloudfront_host_assignment"],
+            )
+            cloudfront_summary_distributor.add(cloudfront)
+            self._sections.append(cloudfront_summary)
+            self._sections.append(cloudfront)
 
 
 def _create_lamdba_sections(
@@ -5330,6 +5574,14 @@ AWSServices = [
         filter_by_tags=True,
         limits=True,
     ),
+    AWSServiceAttributes(
+        key="cloudfront",
+        title="CloudFront",
+        global_service=True,
+        filter_by_names=True,
+        filter_by_tags=True,
+        limits=False,
+    ),
 ]
 
 
@@ -5409,6 +5661,10 @@ def parse_arguments(argv):
         "--wafv2-cloudfront",
         action="store_true",
         help="Also monitor global WAFs in front of CloudFront resources.",
+    )
+    parser.add_argument(
+        "--cloudfront-host-assignment",
+        help="Assign CloudFront services to the AWS host or to the origin domain host",
     )
     parser.add_argument("--hostname", required=True)
 
@@ -5601,12 +5857,24 @@ def _configure_aws(args: argparse.Namespace, sys_argv: list) -> AWSConfig:
         ),
         ("route53", args.route53_names, (args.route53_tag_key, args.route53_tag_values), None),
         ("sns", args.sns_names, (args.sns_tag_key, args.sns_tag_values), args.sns_limits),
+        (
+            "cloudfront",
+            args.cloudfront_names,
+            (args.cloudfront_tag_key, args.cloudfront_tag_values),
+            None,
+        ),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)
         aws_config.add_single_service_config("%s_limits" % service_key, service_limits)
 
-    for arg in ["s3_requests", "cloudwatch_alarms_limits", "cloudwatch_alarms", "wafv2_cloudfront"]:
+    for arg in [
+        "s3_requests",
+        "cloudwatch_alarms_limits",
+        "cloudwatch_alarms",
+        "wafv2_cloudfront",
+        "cloudfront_host_assignment",
+    ]:
         aws_config.add_single_service_config(arg, getattr(args, arg))
 
     return aws_config

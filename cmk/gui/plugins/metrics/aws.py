@@ -926,6 +926,30 @@ metric_info["aws_sns_topics_fifo"] = {
     "unit": "count",
     "color": "46/a",
 }
+metric_info["aws_cloudfront_requests"] = {
+    "title": _l("Requests"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["aws_cloudfront_total_error_rate"] = {
+    "title": _l("Total error rate"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["aws_cloudfront_4xx_error_rate"] = {
+    "title": _l("4xx error rate"),
+    "unit": "%",
+    "color": "32/a",
+}
+
+metric_info["aws_cloudfront_5xx_error_rate"] = {
+    "title": _l("5xx error rate"),
+    "unit": "%",
+    "color": "42/a",
+}
+
 
 # .
 #   .--Graphs--------------------------------------------------------------.
@@ -1036,5 +1060,14 @@ graph_info["aws_wafv2_web_acl_requests"] = {
         ("aws_wafv2_allowed_requests_rate", "stack"),
         ("aws_wafv2_blocked_requests_rate", "stack"),
         ("aws_wafv2_requests_rate", "line"),
+    ],
+}
+
+graph_info["aws_cloudfront_errors_rate"] = {
+    "title": _l("Error rates"),
+    "metrics": [
+        ("aws_cloudfront_total_error_rate", "stack"),
+        ("aws_cloudfront_4xx_error_rate", "stack"),
+        ("aws_cloudfront_5xx_error_rate", "stack"),
     ],
 }

@@ -68,7 +68,7 @@ def _proxy_args(details: Mapping[str, Any]) -> Sequence[Any]:
     return proxy_args
 
 
-def agent_aws_arguments(
+def agent_aws_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Any]:
     args = [
@@ -99,6 +99,7 @@ def agent_aws_arguments(
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
         args += sorted(global_services)
+        args += _get_services_config(global_services)
 
     services = params.get("services", {})
 
@@ -126,6 +127,10 @@ def agent_aws_arguments(
 
     if "cloudfront" in services.get("wafv2", {}):
         args += ["--wafv2-cloudfront"]
+
+    if "cloudfront" in global_services:
+        cloudfront_host_assignment = global_services["cloudfront"]["host_assignment"]
+        args += ["--cloudfront-host-assignment", cloudfront_host_assignment]
 
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
     args += _get_tag_options(params.get("overall_tags", []), "overall")

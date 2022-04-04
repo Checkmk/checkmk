@@ -192,6 +192,43 @@ def _valuespec_special_agents_aws():
                                     value=None, totext=_("Monitor Route53"), title=_("Route53")
                                 ),
                             ),
+                            (
+                                "cloudfront",
+                                Dictionary(
+                                    title=_("CloudFront"),
+                                    elements=[
+                                        _vs_element_aws_service_selection(),
+                                        (
+                                            "host_assignment",
+                                            CascadingDropdown(
+                                                title=_("Define Host Assignment"),
+                                                help=_(
+                                                    "Define the host to assign the discovered CloudFront services."
+                                                    " You can assign them to the AWS host as any other AWS service or"
+                                                    " to a piggyback host that will be named as the 'Origin Domain'"
+                                                    " specified in the CloudFront distribution - in case you select the"
+                                                    " second option, you will have to create the piggyback host(s)"
+                                                ),
+                                                choices=[
+                                                    (
+                                                        "aws_host",
+                                                        _("Assign services to AWS host"),
+                                                    ),
+                                                    (
+                                                        "domain_host",
+                                                        _(
+                                                            "Assign services to piggyback host(s) named as the"
+                                                            " 'Origin Domain' configured in AWS"
+                                                        ),
+                                                    ),
+                                                ],
+                                            ),
+                                        ),
+                                    ],
+                                    default_keys=[],
+                                    optional_keys=[],
+                                ),
+                            ),
                         ],
                     ),
                 ),

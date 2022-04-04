@@ -1,0 +1,19 @@
+Title: Add AWS/CloudFront check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1654535612
+Edition: cpe
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk adds the AWS/CloudFront check.
+
+With this check, you can monitor and add alarms on the following
+metrics for each CloudFront distribution: Requests, Bytes downloaded,
+Bytes uploaded, Total error rate, 4xx error rate, 5xx error rate.
+
+A new service will be created for each CloudFront distribution and you
+can filter the ones to monitor by distribution ID or by AWS tags.
+

@@ -911,6 +911,7 @@ class GUIViewRenderer(ABCViewRenderer):
             title=_("This view as PDF"),
             icon_name="report",
             item=make_simple_link(makeuri(global_request, [], filename="report_instant.py")),
+            css_classes="context_pdf_export",
         )
 
         # Link related reports

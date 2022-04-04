@@ -874,7 +874,8 @@ class ModeEditTimeperiod(WatoMode):
 
         vs_spec = {
             "name": unique_default_name_suggestion(self._name or "time_period",
-                                                   list(self._timeperiods.keys())),
+                                                   list(self._timeperiods.keys()))
+                    if self._new else self._name,
             "alias": timeperiod_spec_alias(tp_spec),
             "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),

@@ -1,0 +1,14 @@
+Title: Fix name of time period in edit mode
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1649062552
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p23
+
+If a time period was edited, the name showed the suggestion for a new time
+period instead of the name of the currently edited time period.
+
+This was just a display error and had no effect on the configuration.

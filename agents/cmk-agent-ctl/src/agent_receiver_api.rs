@@ -74,6 +74,11 @@ pub enum StatusError {
     UnspecifiedError(#[from] AnyhowError),
 }
 
+#[derive(Deserialize)]
+struct ErrorResponse {
+    pub detail: String,
+}
+
 fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
     Ok(base64::encode_config(
         certs::parse_pem(cert)?.contents,
@@ -152,15 +157,32 @@ impl Api {
         ))
     }
 
+    fn error_response_description(status: StatusCode, body: Option<String>) -> String {
+        match body {
+            None => format!(
+                "Request failed with code {}, could not obtain response body",
+                status
+            ),
+            Some(body) => format!(
+                "Request failed with code {}: {}",
+                status,
+                match serde_json::from_str::<ErrorResponse>(&body) {
+                    Ok(error_response) => error_response.detail,
+                    _ => body,
+                }
+            ),
+        }
+    }
+
     fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
-        if let StatusCode::NO_CONTENT = response.status() {
+        let status = response.status();
+        if status == StatusCode::NO_CONTENT {
             Ok(())
         } else {
-            Err(anyhow!(
-                "Request failed with code {}: {}",
-                response.status(),
-                response.text().unwrap_or_else(|_| String::from(""))
-            ))
+            Err(anyhow!(Api::error_response_description(
+                status,
+                response.text().ok()
+            )))
         }
     }
 }
@@ -319,6 +341,36 @@ mod test_api {
     }
 
     #[test]
+    fn test_error_response_description_body_missing() {
+        assert_eq!(
+            Api::error_response_description(StatusCode::INTERNAL_SERVER_ERROR, None,),
+            "Request failed with code 500 Internal Server Error, could not obtain response body"
+        )
+    }
+
+    #[test]
+    fn test_error_response_description_body_parsable() {
+        assert_eq!(
+            Api::error_response_description(
+                StatusCode::BAD_REQUEST,
+                Some(String::from("{\"detail\": \"Something went wrong\"}")),
+            ),
+            "Request failed with code 400 Bad Request: Something went wrong"
+        )
+    }
+
+    #[test]
+    fn test_error_response_description_body_not_parsable() {
+        assert_eq!(
+            Api::error_response_description(
+                StatusCode::NOT_FOUND,
+                Some(String::from("{\"detail\": {\"title\": \"whatever\"}}")),
+            ),
+            "Request failed with code 404 Not Found: {\"detail\": {\"title\": \"whatever\"}}"
+        )
+    }
+
+    #[test]
     fn test_check_response_204_ok() {
         assert!(Api::check_response_204(reqwest::blocking::Response::from(
             http::Response::builder()
@@ -340,7 +392,7 @@ mod test_api {
             Err(err) => {
                 assert_eq!(
                     format!("{}", err),
-                    "Request failed with code 401 Unauthorized: {\"detail\": \"Insufficient permissions\"}"
+                    "Request failed with code 401 Unauthorized: Insufficient permissions"
                 )
             }
             _ => panic!("Expected an error"),

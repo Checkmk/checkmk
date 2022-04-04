@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -24,7 +24,10 @@ class LicenseUsageHistoryDump:
     history: LicenseUsageHistory
 
     def for_report(self) -> Mapping[str, Any]:
-        return asdict(self)
+        return {
+            "VERSION": self.VERSION,
+            "history": self.history.for_report(),
+        }
 
     @classmethod
     def parse(cls, raw_dump: Mapping[str, Any]) -> LicenseUsageHistoryDump:

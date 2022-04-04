@@ -8,6 +8,7 @@ import json
 
 from livestatus import SiteId
 
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.i18n import _
@@ -109,7 +110,7 @@ class SiteStatus(SidebarSnapin):
             for info in switch_var.split(","):
                 sitename_str, onoff = info.split(":")
                 sitename = SiteId(sitename_str)
-                if sitename not in sites.sitenames():
+                if sitename not in site_config.sitenames():
                     continue
 
                 if onoff == "on":

@@ -9,6 +9,7 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 from cmk.utils.prediction import lq_logic
 
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.globals import config, html
@@ -42,7 +43,7 @@ class FilterWatoFolder(Filter):
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
-        return config.wato_enabled or watolib.is_wato_slave_site()
+        return config.wato_enabled or site_config.is_wato_slave_site()
 
     def load_wato_data(self):
         self.tree = watolib.Folder.root_folder()

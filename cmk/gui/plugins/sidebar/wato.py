@@ -7,6 +7,7 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import cmk.gui.dashboard as dashboard
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.views as views
 import cmk.gui.watolib as watolib
@@ -305,7 +306,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         )
 
     def show(self):
-        if not watolib.is_wato_slave_site():
+        if not site_config.is_wato_slave_site():
             if not config.wato_enabled:
                 html.write_text(_("Setup is disabled."))
                 return False

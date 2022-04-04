@@ -23,7 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
-from cmk.gui.sites import get_site_config, site_is_local
+from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.watolib import automation_command_registry, AutomationCommand

@@ -38,7 +38,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.sites import get_site_config
+from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,

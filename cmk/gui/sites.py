@@ -34,8 +34,6 @@ from cmk.gui.logged_in import user as global_user
 # both modules were merged.
 from cmk.gui.site_config import (  # pylint: disable=unused-import
     allsites,
-    get_login_sites,
-    get_login_slave_sites,
     get_site_config,
     has_wato_slave_sites,
     is_single_local_site,

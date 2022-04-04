@@ -9,7 +9,7 @@ from livestatus import SiteId
 from cmk.utils.i18n import _
 from cmk.utils.log.console import warning
 
-from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 
 from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction

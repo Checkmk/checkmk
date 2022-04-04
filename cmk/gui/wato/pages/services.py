@@ -56,7 +56,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
-from cmk.gui.sites import sitenames
+from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels

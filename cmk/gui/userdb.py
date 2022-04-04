@@ -66,7 +66,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserAttribute,
     UserConnector,
 )
-from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, UserSpec
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless

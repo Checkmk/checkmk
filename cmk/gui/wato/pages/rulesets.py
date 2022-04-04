@@ -70,7 +70,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
-from cmk.gui.sites import wato_slave_sites
+from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags

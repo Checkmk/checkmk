@@ -79,7 +79,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.sites import allsites, is_wato_slave_site
+from cmk.gui.site_config import allsites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.valuespec import Choices

@@ -13,7 +13,7 @@ from cmk.gui.globals import config, html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import SidebarRenderer
-from cmk.gui.sites import get_site_config
+from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
 

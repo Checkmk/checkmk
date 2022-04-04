@@ -16,7 +16,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
 from cmk.gui.globals import config, request
 from cmk.gui.i18n import _
-from cmk.gui.sites import get_login_slave_sites, get_site_config, is_wato_slave_site
+from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException

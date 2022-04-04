@@ -26,7 +26,7 @@ from cmk.utils.type_defs import DiscoveredHostLabelsDict, HostName, ServiceName,
 from cmk.automations import results
 
 from cmk.gui.i18n import _
-from cmk.gui.sites import site_is_local
+from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,

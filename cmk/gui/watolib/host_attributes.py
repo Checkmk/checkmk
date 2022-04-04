@@ -25,7 +25,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
-from cmk.gui.sites import allsites
+from cmk.gui.site_config import allsites
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils import escaping
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec

@@ -29,7 +29,7 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.sites import get_site_config
+from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.view_utils import get_labels

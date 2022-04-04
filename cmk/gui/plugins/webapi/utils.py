@@ -21,7 +21,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.sites import allsites
+from cmk.gui.site_config import allsites
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, host_attribute_registry

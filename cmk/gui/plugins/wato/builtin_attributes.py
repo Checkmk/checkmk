@@ -36,7 +36,7 @@ from cmk.gui.plugins.wato.utils import (
     IPMIParameters,
     SNMPCredentials,
 )
-from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,

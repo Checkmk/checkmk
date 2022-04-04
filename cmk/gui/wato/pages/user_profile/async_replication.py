@@ -20,7 +20,7 @@ from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.sites import get_site_config, sitenames
+from cmk.gui.site_config import get_site_config, sitenames
 from cmk.gui.watolib.activate_changes import ActivateChanges, ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper

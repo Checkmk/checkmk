@@ -8,7 +8,7 @@ import cmk.gui.watolib.automations
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
-from cmk.gui.sites import get_site_config, sitenames, wato_slave_sites
+from cmk.gui.site_config import get_site_config, sitenames, wato_slave_sites
 
 
 @api_call_collection_registry.register

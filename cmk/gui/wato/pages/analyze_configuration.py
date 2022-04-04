@@ -37,7 +37,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
-from cmk.gui.sites import activation_sites, get_site_config, site_is_local
+from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.sites import activation_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeactionuri

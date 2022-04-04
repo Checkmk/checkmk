@@ -35,7 +35,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.sites import get_site_config, has_wato_slave_sites, wato_slave_sites
+from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.script_helpers import make_request_context
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation

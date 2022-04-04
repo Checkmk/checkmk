@@ -37,7 +37,13 @@ from cmk.gui.plugins.wato.utils import (
     ConfigDomainOMD,
     SiteBackupJobs,
 )
-from cmk.gui.sites import get_site_config, has_wato_slave_sites, sitenames, wato_slave_sites
+from cmk.gui.site_config import (
+    get_site_config,
+    has_wato_slave_sites,
+    is_wato_slave_site,
+    sitenames,
+    wato_slave_sites,
+)
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.sites import SiteManagementFactory
 
@@ -134,7 +140,7 @@ class ACTestLiveproxyd(ACTest):
         if _site_is_using_livestatus_proxy(site_id):
             yield ACResultOK(_("Site is using the Livestatus Proxy Daemon"))
 
-        elif not watolib.is_wato_slave_site():
+        elif not is_wato_slave_site():
             yield ACResultWARN(
                 _(
                     "The Livestatus Proxy is not only good for slave sites, "

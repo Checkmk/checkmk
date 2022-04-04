@@ -54,7 +54,7 @@ from cmk.gui.plugins.views.utils import (
     transform_action_url,
     VisualLinkSpec,
 )
-from cmk.gui.sites import get_site_config
+from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax

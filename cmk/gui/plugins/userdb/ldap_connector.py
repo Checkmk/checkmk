@@ -76,7 +76,7 @@ from cmk.gui.plugins.userdb.utils import (
     user_sync_config,
     UserConnector,
 )
-from cmk.gui.sites import has_wato_slave_sites
+from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,

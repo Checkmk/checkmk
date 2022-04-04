@@ -19,7 +19,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.sites import get_effective_global_setting
 

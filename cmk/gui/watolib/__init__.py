@@ -70,7 +70,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 
 # TODO: cleanup all call sites to this name
-from cmk.gui.sites import is_wato_slave_site, site_choices
 from cmk.gui.valuespec import (
     Age,
     AjaxDropdownChoice,

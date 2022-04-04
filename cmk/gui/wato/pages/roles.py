@@ -58,7 +58,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.sites import get_login_sites
+from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 

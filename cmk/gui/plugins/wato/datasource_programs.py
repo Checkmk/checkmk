@@ -978,7 +978,7 @@ def _valuespec_special_agents_kube():
                 ),
             ),
             (
-                "roles",
+                "cluster-resource-aggregation",
                 CascadingDropdown(
                     title=("Cluster resource aggregation"),
                     choices=[

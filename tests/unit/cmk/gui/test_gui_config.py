@@ -711,6 +711,12 @@ def test_registered_permissions():
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
+            "dashboard.kubernetes_cluster",
+            "dashboard.kubernetes_daemonset",
+            "dashboard.kubernetes_deployment",
+            "dashboard.kubernetes_namespace",
+            "dashboard.kubernetes_overview",
+            "dashboard.kubernetes_statefulset",
             "dashboard.linux_hosts_overview",
             "dashboard.linux_single_overview",
             "dashboard.windows_hosts_overview",

@@ -1,0 +1,11 @@
+Title: KUBE: add dashboards
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1649079845
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b5
+
+Add dashboards for kubernetes objects.

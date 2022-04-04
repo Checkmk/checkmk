@@ -45,7 +45,7 @@ class ApiError(BaseSchema):
         description="Detailed error messages on all fields failing validation.",
         required=False,
     )
-    ext = fields.Dict(
+    ext: fields.Field = fields.Dict(
         keys=fields.String(description="The key name"),
         values=fields.String(description="The value"),
         description="Additional information about the error.",

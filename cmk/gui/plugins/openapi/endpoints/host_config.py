@@ -51,6 +51,7 @@ import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import fields as gui_fields
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -134,12 +135,34 @@ def create_cluster_host(params):
     return _serve_host(host, effective_attributes=False)
 
 
+class FailedHosts(BaseSchema):
+    succeeded_hosts = fields.Nested(
+        response_schemas.HostConfigCollection(),
+        description="The list of succeeded host objects",
+    )
+    failed_hosts = fields.Dict(
+        keys=fields.String(description="Name of the host"),
+        values=fields.List(fields.String(description="The error messages")),
+        description="Detailed error messages on hosts failing the action",
+    )
+
+
+class BulkHostActionWithFailedHosts(response_schemas.ApiError):
+    ext = fields.Nested(
+        FailedHosts,
+        description="Details for which hosts have failed",
+    )
+
+
 @Endpoint(
     constructors.domain_type_action_href("host_config", "bulk-create"),
     "cmk/bulk_create",
     method="post",
     request_schema=request_schemas.BulkCreateHost,
     response_schema=response_schemas.HostConfigCollection,
+    error_schemas={
+        400: BulkHostActionWithFailedHosts,
+    },
     query_params=[BAKE_AGENT_PARAM],
 )
 def bulk_create_hosts(params):

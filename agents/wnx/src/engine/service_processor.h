@@ -189,6 +189,11 @@ protected:
 // Thread Safe
 class ServiceProcessor : public wtools::BaseServiceProcessor {
 public:
+    struct ControllerParam {
+        uint16_t port;
+        uint32_t pid;
+    };
+
     using thread_callback = std::function<bool(const void *)>;
     using AnswerDataBlock = cma::srv::AsyncAnswer::DataBlock;
     ServiceProcessor(std::chrono::milliseconds delay, thread_callback callback)
@@ -315,7 +320,7 @@ private:
     enum class Signal { restart, quit };
 
     // returns break type(what todo)
-    Signal mainWaitLoop();
+    Signal mainWaitLoop(std::optional<ControllerParam> &controller_param);
 
     AsyncAnswer answer_;  // queue in the future, now only one answer for all
 

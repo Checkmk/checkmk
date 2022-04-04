@@ -17,6 +17,7 @@ from agent_receiver.checkmk_rest_api import (
     get_root_cert,
     host_exists,
     link_host_with_uuid,
+    parse_error_response_body,
     post_csr,
 )
 from agent_receiver.constants import REGISTRATION_REQUESTS
@@ -66,7 +67,7 @@ async def pairing(
         )
         raise HTTPException(
             status_code=rest_api_root_cert_resp.status_code,
-            detail=rest_api_root_cert_resp.text,
+            detail=parse_error_response_body(rest_api_root_cert_resp.text),
         )
     logger.info(
         "uuid=%s Got root cert",
@@ -86,7 +87,7 @@ async def pairing(
         )
         raise HTTPException(
             status_code=rest_api_csr_resp.status_code,
-            detail=rest_api_csr_resp.text,
+            detail=parse_error_response_body(rest_api_csr_resp.text),
         )
     logger.info(
         "uuid=%s CSR signed",

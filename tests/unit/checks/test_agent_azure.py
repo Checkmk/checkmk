@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Mapping, Sequence, Tuple, Type
 
 import pytest
 

@@ -11,7 +11,6 @@
 #include <filesystem>
 #include <iosfwd>
 #include <iostream>
-#include <optional>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -258,32 +257,41 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user, Row row) const {
         return true;
     }
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
-    bool result = true;
     auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
+    // TODO(sp) Use std::optional's or_else() below when we have C++23.
     if (precedence == "rule") {
-        isAuthorizedForEventViaContactGroups(user, row, result) ||
-            isAuthorizedForEventViaHost(user, row, result);
-    } else if (precedence == "host") {
-        isAuthorizedForEventViaHost(user, row, result) ||
-            isAuthorizedForEventViaContactGroups(user, row, result);
-    } else {
-        Error(logger()) << "unknown precedence '" << precedence << "' in table "
-                        << name();
-        result = false;
+        if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
+            return *opt_auth;
+        }
+        if (auto opt_auth = isAuthorizedForEventViaHost(user, row)) {
+            return *opt_auth;
+        }
+        return true;
     }
-    return result;
+    if (precedence == "host") {
+        if (auto opt_auth = isAuthorizedForEventViaHost(user, row)) {
+            return *opt_auth;
+        }
+        if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
+            return *opt_auth;
+        }
+        return true;
+    }
+    Error(logger()) << "unknown precedence '" << precedence << "' in table "
+                    << name();
+    return false;
 }
 
-bool TableEventConsole::isAuthorizedForEventViaContactGroups(
-    const User &user, Row row, bool &result) const {
+std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
+    const User &user, Row row) const {
     auto col = std::static_pointer_cast<ListColumn<ECRow>>(
         column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
         // TODO(sp) This check for None is a hack...
         if (r->getString(col->name()) == "\002") {
-            return false;
+            return {};
         }
     }
     for (const auto &name : col->getValue(row, unknown_auth_user(), 0s)) {
@@ -291,19 +299,18 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
                 core()->find_contactgroup(name),
                 reinterpret_cast<const MonitoringCore::Contact *>(
                     user.authUser()))) {
-            return (result = true, true);
+            return true;
         }
     }
-    return (result = false, true);
+    return false;
 }
 
-bool TableEventConsole::isAuthorizedForEventViaHost(const User &user, Row row,
-                                                    bool &result) const {
+std::optional<bool> TableEventConsole::isAuthorizedForEventViaHost(
+    const User &user, Row row) const {
     if (const MonitoringCore::Host *hst = rowData<ECRow>(row)->host()) {
-        return (result = core()->host_has_contact(
-                    hst, reinterpret_cast<const MonitoringCore::Contact *>(
-                             user.authUser())),
-                true);
+        return core()->host_has_contact(
+            hst,
+            reinterpret_cast<const MonitoringCore::Contact *>(user.authUser()));
     }
-    return false;
+    return {};
 }

@@ -12,6 +12,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -79,10 +80,10 @@ protected:
 private:
     std::function<bool(const User &, Row)> is_authorized_;
 
-    bool isAuthorizedForEventViaContactGroups(const User &user, Row row,
-                                              bool &result) const;
-    bool isAuthorizedForEventViaHost(const User &user, Row row,
-                                     bool &result) const;
+    std::optional<bool> isAuthorizedForEventViaContactGroups(const User &user,
+                                                             Row row) const;
+    std::optional<bool> isAuthorizedForEventViaHost(const User &user,
+                                                    Row row) const;
 };
 
 #endif  // TableEventConsole_h

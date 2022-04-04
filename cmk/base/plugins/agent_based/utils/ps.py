@@ -541,7 +541,7 @@ def check_ps_common(
     if processes.min_elapsed is not None and processes.max_elapsed is not None:
         yield from uptime_check(processes.min_elapsed, processes.max_elapsed, params)
 
-    if params.get("process_info") and processes.count:
+    if processes.count and params.get("process_info") is not None:
         yield Result(
             state=state.OK,
             notice=format_process_list(processes, params["process_info"] == "html"),
@@ -668,18 +668,21 @@ def individual_process_check(
             elif the_item.startswith("cpu usage"):
                 cpu_usage += value
 
-        result = list(
-            check_levels(
-                cpu_usage,
-                levels_upper=levels,
-                render_func=render.percent,
-                label=str(name) + (" with PID %s CPU" % pid if pid else ""),
-            ))[0]
-        assert isinstance(result, Result)
-        yield Result(
-            state=result.state,
-            notice=result.summary,
+        result, *_ = check_levels(
+            cpu_usage,
+            levels_upper=levels,
+            render_func=render.percent,
+            label=str(name) + (" with PID %s CPU" % pid if pid else ""),
         )
+        # To avoid listing of all processes regardless of level setting we
+        # only generate output in case WARN level has been reached.
+        # In case a full list of processes is desired, one should enable
+        # `process_info`, i.E."Enable per-process details in long-output"
+        if result.state is not state.OK:
+            yield Result(
+                state=result.state,
+                notice=result.summary,
+            )
 
 
 def uptime_check(

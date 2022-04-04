@@ -450,18 +450,6 @@ check_results = [
         Metric("pcpu", 0.0, levels=(90.0, 98.0)),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(
-            state=state.OK,
-            notice='svchost.exe with PID 600 CPU: 0%',
-        ),
-        Result(
-            state=state.OK,
-            notice='svchost.exe with PID 676 CPU: 0%',
-        ),
-        Result(
-            state=state.OK,
-            notice='svchost.exe with PID 764 CPU: 0%',
-        ),
-        Result(
             state=state.WARN,
             summary="Process handles: 1204 (warn/crit at 1000/2000)",
         ),
@@ -751,10 +739,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
         Metric("rss", 1106568),
         Metric('pcpu', cpu_util),
         Result(state=state.OK, summary="CPU: %s" % cpu_util_s),
-        Result(state=state.OK, notice='firefox with PID 25576 CPU: 0%'),
-        Result(state=state.OK, notice='firefox with PID 25664 CPU: 0%'),
-        Result(state=state.OK, notice='firefox with PID 25758 CPU: 0%'),
-        Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.00%'),
+        # beware! an item will be inserted here
         Result(state=state.OK, summary='Youngest running for: 6 minutes 57 seconds'),
         Result(state=state.OK, summary='Oldest running for: 26 minutes 58 seconds'),
         Result(state=state.OK, notice="\r\n".join([
@@ -769,10 +754,13 @@ def test_cpu_util_single_process_levels(cpu_cores):
             % cpu_util,
         ])),
     ]
-
-    if cpu_util > params['single_cpulevels'][1]:
-        reference[11] = Result(state=state.CRIT, summary=single_msg)
-    elif cpu_util > params['single_cpulevels'][0]:
-        reference[11] = Result(state=state.WARN, summary=single_msg)
+    if cpu_util >= params["single_cpulevels"][0]:
+        reference.insert(
+            8,
+            Result(
+                state=state.WARN if cpu_util < params["single_cpulevels"][1] else state.CRIT,
+                summary=single_msg,
+            ),
+        )
 
     assert output == reference

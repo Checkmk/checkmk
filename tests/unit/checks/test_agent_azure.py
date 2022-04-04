@@ -216,6 +216,8 @@ def test_process_vm(
     expected_tags: Mapping[str, str],
     expected_piggyback_targets: Sequence[str],
 ):
+
+    vmach = vmach[:]
     process_vm(mgmt_client, vmach, args)
 
     assert vmach.info == expected_info

@@ -72,6 +72,8 @@ timeout(time: 12, unit: 'HOURS') {
                                             " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" + 
                                             " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
                                             " --build-arg DISTRO='$DISTRO'" +
+                                            " --build-arg NEXUS_USERNAME='$USERNAME'" + 
+                                            " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
                                             " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
                                             " --build-arg VERS_TAG='$VERS_TAG'" +
                                             " --build-arg BRANCH_VERSION='$BRANCH_VERSION'" +

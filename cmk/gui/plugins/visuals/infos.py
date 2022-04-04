@@ -8,6 +8,7 @@ from typing import List, Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.visuals.utils import visual_info_registry, VisualInfo
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Integer,
     MonitoredHostname,
@@ -61,7 +62,18 @@ class VisualInfoService(VisualInfo):
     @property
     def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ("service", MonitoredServiceDescription(title=_("Service Description"), strict="True"))
+            (
+                "service",
+                MonitoredServiceDescription(
+                    # TODO: replace MonitoredServiceDescription with AjaxDropdownChoice
+                    title=_("Service Description"),
+                    autocompleter=ContextAutocompleterConfig(
+                        ident=MonitoredServiceDescription.ident,
+                        strict=True,
+                        show_independent_of_context=True,
+                    ),
+                ),
+            )
         ]
 
     @property

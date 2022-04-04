@@ -26,4 +26,13 @@ def check_sql():
     ],
 )
 def test_process_result(check_sql, result, warn, crit, reference):
-    assert check_sql.process_result(result, warn, crit) == reference
+    assert (
+        check_sql.process_result(
+            result=result,
+            warn=warn,
+            crit=crit,
+            metrics=None,
+            debug=False,
+        )
+        == reference
+    )

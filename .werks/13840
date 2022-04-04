@@ -1,0 +1,17 @@
+Title: check_sql: Used metric name is now configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1648583329
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+This werk adds an optional argument '--metrics' to check_sql that will
+be used as metric name for the perfomance data.
+If no argument is passed, "performance_data" is still the default metric name.
+
+It can be configured using the WATO ruleset
+<i>"Check SQL Database"</i>.

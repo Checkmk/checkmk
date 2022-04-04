@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import re
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
@@ -28,6 +29,7 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
+from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, Labels
@@ -70,12 +72,14 @@ class AjaxDropdownFilter(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.AjaxDropdownFilterQueryProtocol,
+        autocompleter: AutocompleterConfig,
+        query_filter: Union[query_filters.TextQuery, query_filters.KubernetesQuery],
         link_columns: Optional[List[ColumnName]] = None,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
     ) -> None:
         self.query_filter = query_filter
+        self.autocompleter = autocompleter
 
         super().__init__(
             ident=self.query_filter.ident,
@@ -106,8 +110,8 @@ class AjaxDropdownFilter(Filter):
             choices,
             current_value,
             style="width: 250px;",
-            class_=["ajax-vals", self.query_filter.autocompleter_name],
-            data_strict="True" if self.query_filter.op == "=" else "False",
+            class_=["ajax-vals"],
+            data_autocompleter=json.dumps(self.autocompleter.config),
         )
 
         if self.query_filter.negateable:
@@ -123,13 +127,13 @@ filter_registry.register(
         title=_l("Hostname"),
         sort_index=100,
         info="host",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=AutocompleterConfig(ident="monitored_hostname"),
+        query_filter=query_filters.TextQuery(
             ident="hostregex",
             column="host_name",
             request_var="host_regex",
             op="~~",
             negateable=True,
-            autocompleter_name="monitored_hostname",
         ),
         description=_l("Search field allowing regular expressions and partial matches"),
     )
@@ -140,12 +144,12 @@ filter_registry.register(
         title=_l("Hostname (exact match)"),
         sort_index=101,
         info="host",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
+        query_filter=query_filters.TextQuery(
             ident="host",
             column="host_name",
             op="=",
             negateable=True,
-            autocompleter_name="monitored_hostname",
         ),
         description=_l("Exact match, used for linking"),
         is_show_more=True,
@@ -170,13 +174,13 @@ filter_registry.register(
         title=_l("Service"),
         sort_index=200,
         info="service",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=AutocompleterConfig(ident="monitored_service_description"),
+        query_filter=query_filters.TextQuery(
             ident="serviceregex",
             column="service_description",
             request_var="service_regex",
             op="~~",
             negateable=True,
-            autocompleter_name="monitored_service_description",
         ),
         description=_l("Search field allowing regular expressions and partial matches"),
     )
@@ -187,11 +191,11 @@ filter_registry.register(
         title=_l("Service (exact match)"),
         sort_index=201,
         info="service",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=AutocompleterConfig(ident="monitored_service_description", strict=True),
+        query_filter=query_filters.TextQuery(
             ident="service",
             column="service_description",
             op="=",
-            autocompleter_name="monitored_service_description",
         ),
         description=_l("Exact match, used for linking"),
         is_show_more=True,
@@ -388,7 +392,8 @@ class FilterGroupCombo(AjaxDropdownFilter):
         title: Union[str, LazyString],
         sort_index: int,
         group_type: GroupType,
-        query_filter: query_filters.AjaxDropdownFilterQueryProtocol,
+        autocompleter: AutocompleterConfig,
+        query_filter: query_filters.TextQuery,
         description: Union[None, str, LazyString] = None,
     ) -> None:
         self.query_filter = query_filter
@@ -398,6 +403,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             title=title,
             sort_index=sort_index,
             info=group_type.split("_")[0],
+            autocompleter=autocompleter,
             query_filter=query_filter,
             link_columns=[group_type + "group_name"],
             description=description,
@@ -433,13 +439,13 @@ filter_registry.register(
         title=_l("Host is in Group"),
         sort_index=104,
         description=_l("Optional selection of host group"),
-        query_filter=query_filters.AutocompletedMultipleQuery(
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="host"),
+        query_filter=query_filters.MultipleQuery(
             ident="opthostgroup",
             request_var="opthost_group",
             column="host_groups",
             op=">=",
             negateable=True,
-            autocompleter_name="allgroups",
         ),
         group_type="host",
     )
@@ -450,13 +456,13 @@ filter_registry.register(
         title=_l("Service is in Group"),
         sort_index=204,
         description=_l("Optional selection of service group"),
-        query_filter=query_filters.AutocompletedMultipleQuery(
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="service"),
+        query_filter=query_filters.MultipleQuery(
             ident="optservicegroup",
             request_var="optservice_group",
             column="service_groups",
             op=">=",
             negateable=True,
-            autocompleter_name="allgroups",
         ),
         group_type="service",
     )
@@ -467,13 +473,13 @@ filter_registry.register(
         title=_l("Host Contact Group"),
         sort_index=106,
         description=_l("Optional selection of host contact group"),
-        query_filter=query_filters.AutocompletedMultipleQuery(
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
+        query_filter=query_filters.MultipleQuery(
             ident="opthost_contactgroup",
             request_var="opthost_contact_group",
             column="host_contact_groups",
             op=">=",
             negateable=True,
-            autocompleter_name="allgroups",
         ),
         group_type="host_contact",
     )
@@ -484,13 +490,13 @@ filter_registry.register(
         title=_l("Service Contact Group"),
         sort_index=206,
         description=_l("Optional selection of service contact group"),
-        query_filter=query_filters.AutocompletedMultipleQuery(
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="service"),
+        query_filter=query_filters.MultipleQuery(
             ident="optservice_contactgroup",
             request_var="optservice_contact_group",
             column="service_contact_groups",
             op=">=",
             negateable=True,
-            autocompleter_name="allgroups",
         ),
         group_type="service_contact",
     )
@@ -550,11 +556,11 @@ filter_registry.register(
         sort_index=104,
         description=_l("Selection of the host group"),
         info="hostgroup",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="host", strict=True),
+        query_filter=query_filters.TextQuery(
             ident="hostgroup",
             column="hostgroup_name",
             op="=",
-            autocompleter_name="allgroups",
         ),
     )
 )
@@ -565,11 +571,13 @@ filter_registry.register(
         sort_index=104,
         description=_l("Selection of the service group"),
         info="servicegroup",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=GroupAutocompleterConfig(
+            ident="allgroups", group_type="service", strict=True
+        ),
+        query_filter=query_filters.TextQuery(
             ident="servicegroup",
             column="servicegroup_name",
             op="=",
-            autocompleter_name="allgroups",
         ),
     )
 )
@@ -608,17 +616,19 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    AjaxDropdownFilter(
         title=_l("Service group (enforced)"),
         sort_index=101,
         description=_l("Exact match, used for linking"),
         info="servicegroup",
-        query_filter=query_filters.AutocompletedTextQuery(
+        autocompleter=GroupAutocompleterConfig(
+            ident="allgroups", group_type="service", strict=True
+        ),
+        query_filter=query_filters.TextQuery(
             ident="servicegroupname",
             column="servicegroup_name",
             request_var="servicegroup_name",
             op="=",
-            autocompleter_name="allgroups",
         ),
     )
 )
@@ -629,8 +639,10 @@ filter_registry.register(
         title=_l("Host check command"),
         sort_index=110,
         info="host",
+        autocompleter=AutocompleterConfig(ident="check_cmd"),
         query_filter=query_filters.CheckCommandQuery(
-            ident="host_check_command", op="~", autocompleter_name="check_cmd"
+            ident="host_check_command",
+            op="~",
         ),
     )
 )
@@ -640,15 +652,14 @@ filter_registry.register(
         title=_l("Service check command"),
         sort_index=210,
         info="service",
+        autocompleter=AutocompleterConfig(ident="check_cmd"),
         query_filter=query_filters.CheckCommandQuery(
             ident="check_command",
             op="~",
             column="service_check_command",
-            autocompleter_name="check_cmd",
         ),
     )
 )
-
 
 # TODO: I would be great to split this in two filters for host & service kind of problems
 @filter_registry.register_instance
@@ -986,8 +997,13 @@ class SiteFilter(Filter):
             choices,
             current_value,
             style="width: 250px;",
-            class_=["ajax-vals", "sites"],
-            data_strict="True" if self.query_filter.ident == "site" else "False",
+            class_=["ajax-vals"],
+            data_autocompleter=json.dumps(
+                AutocompleterConfig(
+                    ident="sites",
+                    strict=self.query_filter.ident == "site",
+                ).config
+            ),
         )
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
@@ -1404,7 +1420,7 @@ class TagFilter(Filter):
 
         html.open_table()
         for num in range(self.query_filter.count):
-            prefix = "%s%d" % (self.query_filter.var_prefix, num)
+            prefix = "%s_%d" % (self.query_filter.var_prefix, num)
             html.open_tr()
             html.open_td()
             grp_value = value.get(prefix + "_grp", "")
@@ -1414,7 +1430,13 @@ class TagFilter(Filter):
                 grp_choices,
                 grp_value,
                 style="width: 129px;",
-                class_=["ajax-vals", "tag_groups"],
+                class_=["ajax-vals"],
+                data_autocompleter=json.dumps(
+                    AutocompleterConfig(
+                        ident="tag_groups",
+                        strict=True,
+                    ).config
+                ),
             )
 
             html.close_td()
@@ -1436,7 +1458,14 @@ class TagFilter(Filter):
                 choices,
                 current_value,
                 style="width: 129px;",
-                class_=["ajax-vals", "tag_groups_opt"],
+                class_=["ajax-vals"],
+                data_autocompleter=json.dumps(
+                    AutocompleterConfig(
+                        ident="tag_groups_opt",
+                        strict=True,
+                        dynamic_params_callback_name="tag_group_options_autocompleter",
+                    ).config
+                ),
             )
 
             html.close_td()
@@ -1450,14 +1479,14 @@ class TagFilter(Filter):
 filter_registry.register(
     TagFilter(
         title=_l("Host Tags"),
-        query_filter=query_filters.TagsQuery(ident="host_tags", object_type="host"),
+        query_filter=query_filters.TagsQuery(object_type="host"),
     )
 )
 
 filter_registry.register(
     TagFilter(
         title=_l("Tags"),
-        query_filter=query_filters.TagsQuery(ident="service_tags", object_type="service"),
+        query_filter=query_filters.TagsQuery(object_type="service"),
         is_show_more=True,
     )
 )
@@ -1466,27 +1495,20 @@ filter_registry.register(
 @filter_registry.register_instance
 class FilterHostAuxTags(Filter):
     def __init__(self):
-        self.count = 3
-        self.prefix = "host_auxtags"
-
-        htmlvars = []
-        for num in range(self.count):
-            htmlvars.append("%s_%d" % (self.prefix, num))
-            htmlvars.append("%s_%d_neg" % (self.prefix, num))
-
+        self.query_filter = query_filters.AuxTagsQuery(object_type="host")
         super().__init__(
-            ident="host_auxtags",
+            ident=self.query_filter.ident,
             title=_l("Host Auxiliary Tags"),
             sort_index=302,
-            info="host",
-            htmlvars=htmlvars,
+            info=self.query_filter.object_type,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=True,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        for num in range(self.count):
-            varname = "%s_%d" % (self.prefix, num)
+        for num in range(self.query_filter.count):
+            varname = "%s_%d" % (self.query_filter.var_prefix, num)
             html.dropdown(
                 varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_="neg"
             )
@@ -1500,7 +1522,7 @@ class FilterHostAuxTags(Filter):
         return aux_tag_choices + list(config.tags.aux_tag_list.get_choices())
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return query_filters.host_aux_tags_lq(self.prefix, value)
+        return self.query_filter.filter(value)
 
 
 class LabelFilter(Filter):
@@ -1510,7 +1532,7 @@ class LabelFilter(Filter):
         title: Union[str, LazyString],
         object_type: Literal["host", "service"],
     ) -> None:
-        self.query_filter = query_filters.LabelsQuery(object_type=object_type)
+        self.query_filter = query_filters.AllLabelsQuery(object_type=object_type)
         super().__init__(
             ident=self.query_filter.ident,
             title=title,
@@ -1521,7 +1543,7 @@ class LabelFilter(Filter):
         )
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
-        return " ".join(":".join(e) for e in sorted(self.query_filter.parse_value(value)))
+        return " ".join(f"{e.id}:{e.value}" for e in sorted(self.query_filter.parse_value(value)))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.ident]}
@@ -1531,7 +1553,8 @@ class LabelFilter(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         self._valuespec().render_input(
-            self.query_filter.request_vars[0], dict(self.query_filter.parse_value(value))
+            self.query_filter.request_vars[0],
+            {e.id: e.value for e in self.query_filter.parse_value(value)},
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -1551,6 +1574,35 @@ filter_registry.register(
         object_type="service",
     )
 )
+
+
+def filter_kubernetes_register(
+    title: str,
+    object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
+):
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=title,
+            sort_index=-1,  # TODO!
+            info="host",
+            autocompleter=GroupAutocompleterConfig(
+                ident="kubernetes_labels",
+                group_type=object_name,
+                strict=True,
+            ),
+            query_filter=query_filters.KubernetesQuery(
+                ident=f"kubernetes_{object_name}", kubernetes_object_type=object_name
+            ),
+        )
+    )
+
+
+filter_kubernetes_register(_("Kubernetes Cluster"), "cluster")
+filter_kubernetes_register(_("Kubernetes Namespace"), "namespace")
+filter_kubernetes_register(_("Kubernetes Node"), "node")
+filter_kubernetes_register(_("Kubernetes Deployment"), "deployment")
+filter_kubernetes_register(_("Kubernetes Daemonset"), "daemonset")
+filter_kubernetes_register(_("Kubernetes Statefulset"), "statefulset")
 
 
 class FilterCustomAttribute(Filter):
@@ -2349,9 +2401,8 @@ filter_registry.register(
         title=_l("Syslog Facility"),
         sort_index=210,
         info="event",
-        query_filter=query_filters.AutocompletedTextQuery(
-            ident="event_facility", op="=", autocompleter_name="syslog_facilities"
-        ),
+        autocompleter=AutocompleterConfig(ident="syslog_facilities", strict=True),
+        query_filter=query_filters.TextQuery(ident="event_facility", op="="),
     )
 )
 
@@ -2360,9 +2411,8 @@ filter_registry.register(
         title=_l("Service Level at least"),
         sort_index=211,
         info="event",
-        query_filter=query_filters.AutocompletedTextQuery(
-            ident="event_sl", op=">=", autocompleter_name="service_levels"
-        ),
+        autocompleter=AutocompleterConfig(ident="service_levels"),
+        query_filter=query_filters.TextQuery(ident="event_sl", op=">="),
     )
 )
 
@@ -2371,9 +2421,8 @@ filter_registry.register(
         title=_l("Service Level at most"),
         sort_index=211,
         info="event",
-        query_filter=query_filters.AutocompletedTextQuery(
-            ident="event_sl_max", op="<=", column="event_sl", autocompleter_name="service_levels"
-        ),
+        autocompleter=AutocompleterConfig(ident="service_levels"),
+        query_filter=query_filters.TextQuery(ident="event_sl_max", op="<=", column="event_sl"),
     )
 )
 
@@ -2385,6 +2434,7 @@ class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
             title=_l("Contact group (effective)"),
             sort_index=212,
             group_type="event_effective_contact",
+            autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
             query_filter=query_filters.OptEventEffectiveContactgroupQuery(),
         )
 

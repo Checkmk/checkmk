@@ -29,7 +29,7 @@ constexpr std::string_view kCmdLineChannel{"--agent-channel"};
 constexpr std::string_view kCmdLineAllowedIp{"-A"};
 constexpr std::string_view kCmdLineVersion{"-V"};
 constexpr std::string_view kCmdLineStatus{"status --json"};
-constexpr uint16_t windows_internal_port{50001};
+constexpr uint16_t kWindowsInternalPort{50001};
 
 std::filesystem::path GetController(const std::filesystem::path &service);
 std::filesystem::path GetWorkController();
@@ -44,6 +44,14 @@ bool IsRunController(const YAML::Node &node);
 bool IsInLegacyMode();
 void CreateControllerFlagFile();
 bool IsControllerFlagFileExists();
+
+std::filesystem::path LegacyPullFile();
+std::filesystem::path ControllerFlagFile();
+
+// config
+uint16_t GetConfiguredAgentChannelPort();
+bool GetConfiguredLocalOnly();
+bool GetConfiguredCheck();
 
 /// To be called once when cap is installed
 ///

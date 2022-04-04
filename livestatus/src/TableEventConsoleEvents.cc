@@ -5,6 +5,7 @@
 
 #include "TableEventConsoleEvents.h"
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -16,9 +17,12 @@
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
+#include "contact_fwd.h"
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
-    : TableEventConsole(mc) {
+    : TableEventConsole{mc, [this](Row row, const contact *auth_user) {
+                            return isAuthorizedForEvent(row, auth_user);
+                        }} {
     addColumns(this);
 }
 
@@ -91,8 +95,4 @@ std::string TableEventConsoleEvents::name() const {
 
 std::string TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
-}
-
-bool TableEventConsoleEvents::isAuthorized(Row row, const contact *ctc) const {
-    return isAuthorizedForEvent(row, ctc);
 }

@@ -205,7 +205,8 @@ TEST(OnlyFromTest, LocalAllowedIpv6) {
 
     ip_received.clear();
     world::ExternalPort test_port(nullptr);
-    ASSERT_TRUE(test_port.startIo(RegisterIp, tst::TestPort()));
+    ASSERT_TRUE(test_port.startIo(RegisterIp, tst::TestPort(),
+                                  world::LocalOnly::no, {}));
     WriteToSocket("::1");
     EXPECT_EQ(ip_received, "::1");
     test_port.shutdownIo();

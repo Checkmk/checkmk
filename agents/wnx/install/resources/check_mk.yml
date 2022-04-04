@@ -277,7 +277,13 @@ system:
     enabled: yes
 
     controller:
-        run: yes        # start controller if controller presented
+        run: yes                            # start controller if controller presented
+
+        check: no                           # if yes that only controller process connections are accepted
+        force_legacy: no                    # if yes always created for version with controller
+        agent_channel: "localhost:50001"    # for controller
+        local_only: yes                     # bind to 127.0.0.1 or 0.0.0.0
+
 
     firewall:
         mode: configure # allowed none, remove, configure

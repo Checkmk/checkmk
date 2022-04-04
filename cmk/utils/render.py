@@ -95,15 +95,19 @@ def time_since(timestamp: int) -> str:
 class Age:
     """Format time difference seconds into approximated human readable text"""
 
-    def __init__(self, secs: float) -> None:
+    def __init__(self, secs: float, precision: Optional[int] = None) -> None:
         super().__init__()
         self.__secs = secs
+        self.__precision = precision
 
     def __str__(self) -> str:
         secs = self.__secs
+        precision = self.__precision
 
         if secs < 0:
             return "-" + approx_age(-secs)
+        if precision and secs < 10 ** ((-1) * precision):
+            return fmt_number_with_precision(secs, unit=_("s"), precision=precision)
         if 0 < secs < 1:  # ms
             return physical_precision(secs, 3, _("s"))
         if secs < 10:

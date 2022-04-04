@@ -194,8 +194,12 @@ constexpr std::string_view kModulesPython = "python";  // string
 constexpr std::string_view kModulesQuickReinstall = "quick_reinstall";  // bool
 
 // group "system"
-constexpr const char *const kController = "controller";  // dictionary
-constexpr const char *const kControllerRun = "run";      // bool
+constexpr std::string_view kController = "controller";  // dictionary
+constexpr std::string_view kControllerRun = "run";      // bool
+constexpr std::string_view kControllerCheck = "check";  // bool
+constexpr std::string_view kControllerForceLegacy = "force_legacy";    // bool
+constexpr std::string_view kControllerAgentChannel = "agent_channel";  // str
+constexpr std::string_view kControllerLocalOnly = "local_only";        // bool
 
 constexpr const char *const kFirewall = "firewall";  // dictionary
 constexpr const char *const kFirewallMode = "mode";  // string
@@ -264,6 +268,10 @@ constexpr std::string_view kModulesDir = "modules\\{}";
 constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 constexpr uint32_t kServiceWaitNetwork = 30;
+constexpr std::string_view kControllerAgentChannelDefault{"localhost:50001"};
+constexpr bool kControllerLocalOnly{true};
+constexpr bool kControllerForceLegacy{false};
+constexpr bool kControllerCheck{true};
 
 }  // namespace defaults
 

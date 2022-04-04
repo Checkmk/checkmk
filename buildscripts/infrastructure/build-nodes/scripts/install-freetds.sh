@@ -50,5 +50,7 @@ register_library() {
     cp -pr "${TARGET_DIR}/${DIR_NAME}/include/"* /usr/include
 }
 
-cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+if [ "$1" != "link-only" ]; then
+    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+fi
 register_library

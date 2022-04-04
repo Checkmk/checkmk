@@ -1,0 +1,16 @@
+Title: TCP fetcher: don't connect if no data is needed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648541755
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b5
+
+When fetching the data from a Checkmk agent (unix/windows), the fetcher would establish a connection before checking the cache file.
+If the cached data was still valid the connection has been closed.
+
+These "unused" connections could lead to unwanted agent executions, which in turn can lead to lost logwatch messages or a flapping hardware/software inventory.
+
+In Checkmk 2.1 it additionally lead to irritating errors in the log of <tt>cmk-agent-ctl</tt> on the monitored host, such as <i>"Request failed: tls handshake eof"</i> or <i>"Request failed: Connection reset by peer (os error 104)"</i>.

@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
-#include <functional>
 #include <iosfwd>
 #include <iostream>
 #include <optional>
@@ -41,12 +40,14 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, const Table &table, Query *query)
+    ECTableConnection(MonitoringCore *mc, const Table &table, Query *query,
+                      std::function<bool(Row, const contact *)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
-        , mc_(mc)
-        , table_(table)
-        , query_(query) {}
+        , mc_{mc}
+        , table_{table}
+        , query_{query}
+        , is_authorized_{std::move(is_authorized)} {}
 
 private:
     void sendRequest(std::ostream &os) override {
@@ -137,7 +138,8 @@ private:
                 is_header = false;
             } else {
                 ECRow row{mc_, headers, columns};
-                if (!query_->processDataset(Row(&row))) {
+                if (is_authorized_(Row{&row}, query_->authUser()) &&
+                    !query_->processDataset(Row{&row})) {
                     return;
                 }
             }
@@ -147,6 +149,7 @@ private:
     MonitoringCore *mc_;
     const Table &table_;
     Query *query_;
+    const std::function<bool(Row, const contact *)> is_authorized_;
 };
 }  // namespace
 
@@ -233,12 +236,14 @@ std::string ECRow::get(const std::string &column_name,
 
 const MonitoringCore::Host *ECRow::host() const { return host_; }
 
-TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table(mc) {}
+TableEventConsole::TableEventConsole(
+    MonitoringCore *mc, std::function<bool(Row, const contact *)> is_authorized)
+    : Table{mc}, is_authorized_{std::move(is_authorized)} {}
 
 void TableEventConsole::answerQuery(Query *query) {
     if (core()->mkeventdEnabled()) {
         try {
-            ECTableConnection(core(), *this, query).run();
+            ECTableConnection{core(), *this, query, is_authorized_}.run();
         } catch (const std::runtime_error &err) {
             query->badGateway(err.what());
         }

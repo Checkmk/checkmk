@@ -78,6 +78,8 @@ node (NODE) {
                             " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +
                             " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
                             " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
+                            " --build-arg NEXUS_USERNAME='$NEXUS_USERNAME'" +
+                            " --build-arg NEXUS_PASSWORD='$NEXUS_PASSWORD'" +
                             " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
                             "  ${WORKSPACE}/buildscripts/infrastructure/build-nodes/aws/");
                         def BUILD_IMAGE = docker.build("build-image:ami_toolchain", DOCKER_ARGS);

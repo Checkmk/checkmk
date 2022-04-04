@@ -11,6 +11,7 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # provide common functions
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 DEFAULT_TOOLCHAIN="stable-x86_64-unknown-linux-gnu"
@@ -30,12 +31,12 @@ build_package() {
     echo "TMP:" "$WORK_DIR"
 
     if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
-      echo "Could not create temp dir"
-      exit 1
+        echo "Could not create temp dir"
+        exit 1
     fi
 
     function cleanup {
-      rm -rf "$WORK_DIR"
+        rm -rf "$WORK_DIR"
     }
     trap cleanup EXIT
 
@@ -49,5 +50,7 @@ build_package() {
     rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }
 
-cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+if [ "$1" != "link-only" ]; then
+    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+fi
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/

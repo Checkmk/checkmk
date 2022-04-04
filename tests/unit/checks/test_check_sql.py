@@ -22,6 +22,7 @@ pytestmark = pytest.mark.checks
                 "user": "hans",
                 "password": "wurst",
                 "sql": (""),
+                "perfdata": "my_metric_name",
             },
             [
                 "--hostname=$HOSTADDRESS$",
@@ -29,6 +30,7 @@ pytestmark = pytest.mark.checks
                 "--name=bar",
                 "--user=hans",
                 "--password=wurst",
+                "--metrics=my_metric_name",
                 "",
             ],
         ),

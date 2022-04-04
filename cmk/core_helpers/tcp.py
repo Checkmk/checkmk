@@ -104,17 +104,20 @@ class TCPFetcher(AgentFetcher):
             self._socket.connect(self.address)
             self._socket.settimeout(None)
         except socket.error as e:
-            self._socket.close()
-            self._opt_socket = None
+            self._close_socket()
 
             if cmk.utils.debug.enabled():
                 raise
             raise MKFetcherError("Communication failed: %s" % e)
 
     def close(self) -> None:
+        self._close_socket()
+
+    def _close_socket(self) -> None:
+        if self._opt_socket is None:
+            return
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
-        if self._socket is not None:
-            self._socket.close()
+        self._opt_socket.close()
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:

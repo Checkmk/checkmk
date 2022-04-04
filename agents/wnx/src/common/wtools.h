@@ -1101,6 +1101,9 @@ std::vector<char> ReadFromHandle(HANDLE handle);
 /// Wraps AppRunner
 std::string RunCommand(std::wstring_view cmd);
 
+/// Validates pid is connected to the port<summary>
+bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port);
+
 }  // namespace wtools
 
 #endif  // wtools_h__

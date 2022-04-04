@@ -556,7 +556,6 @@ class ErrorReporter:
         ("check", "watchdog_sensors_humidity", "checkgroup_parameters:humidity"),
         ("check", "websphere_mq_channels", "checkgroup_parameters:websphere_mq_channels"),
         ("check", "windows_multipath", "checkgroup_parameters:windows_multipath"),
-        ("check", "windows_updates", "checkgroup_parameters:windows_updates"),
         ("check", "wmi_cpuload", "checkgroup_parameters:cpu_load"),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
         ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),

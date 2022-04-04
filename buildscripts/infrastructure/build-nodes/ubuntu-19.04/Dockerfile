@@ -1,6 +1,6 @@
 ARG IMAGE_UBUNTU_19_04
 # hadolint ignore=DL3006
-FROM ${IMAGE_UBUNTU_19_04}
+FROM ${IMAGE_UBUNTU_19_04} as base
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -86,10 +86,13 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
+FROM base as builder
 ARG NEXUS_ARCHIVES_URL
+ARG NEXUS_USERNAME
+ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
 
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
@@ -98,8 +101,27 @@ RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
-RUN /opt/install-pipenv.sh
 RUN /opt/install-freetds.sh
+
+### Actual Image ###
+FROM base
+
+# Copy our standard tool chain for building
+COPY --from=builder /opt /opt
+ARG DISTRO
+ARG BRANCH_VERSION
+ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
+# Set symlinks
+RUN /opt/install-gnu-toolchain.sh link-only
+RUN /opt/install-valgrind.sh link-only
+RUN /opt/install-cmake.sh link-only
+RUN /opt/install-protobuf-cpp.sh --link-only
+RUN /opt/install-python.sh link-only
+RUN /opt/install-freetds.sh link-only
+
+# Install non cached dependencies
+RUN /opt/install-pipenv.sh
 RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
 

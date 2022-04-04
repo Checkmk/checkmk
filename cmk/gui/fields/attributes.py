@@ -476,6 +476,33 @@ class NetworkScanResult(BaseSchema):
     )
 
 
+class LockedBy(BaseSchema, CheckmkTuple):
+    """
+    >>> schema = LockedBy()
+    >>> rv = schema.dump(("site", "dcd", "conn"))
+    >>> rv
+    {'site_id': 'site', 'program_id': 'dcd', 'instance_id': 'conn'}
+
+    >>> schema.load(rv)
+    ('site', 'dcd', 'conn')
+    """
+
+    tuple_fields = ("site_id", "program_id", "instance_id")
+    cast_to_dict = True
+    site_id = String(
+        description="Site ID",
+        required=True,
+    )
+    program_id = String(
+        description="Program ID",
+        required=True,
+    )
+    instance_id = String(
+        description="Instance ID",
+        required=True,
+    )
+
+
 AUTH_PROT_MAP = {
     "MD5-96": "md5",
     "SHA-1-96": "sha",
@@ -754,12 +781,15 @@ class MetaData(BaseSchema):
 
     created_at = Timestamp(
         description="When has this object been created.",
+        allow_none=True,
     )
     updated_at = Timestamp(
         description="When this object was last changed.",
+        allow_none=True,
     )
     created_by = String(
         description="The user id under which this object has been created.",
+        allow_none=True,
     )
 
 

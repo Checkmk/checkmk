@@ -73,7 +73,7 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.store as _store
-from cmk.utils.exceptions import MKFetcherError, MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -389,10 +389,6 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         path = self.make_path(mode)
         if not path.exists():
-            if self.simulation:
-                raise MKFetcherError(
-                    "Got no data (Simulation mode enabled and no cachefile present)"
-                )
             self._logger.debug("Not using cache (Does not exist)")
             return None
 

@@ -5,13 +5,11 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
 VERSION="0.14.3"
 INSTALL_PREFIX=/opt/patchelf-${VERSION}
 
 failure() {
-    echo "$(basename $0):" "$@" >&2
+    echo "$(basename "$0"):" "$@" >&2
     exit 1
 }
 
@@ -23,21 +21,21 @@ if [[ -z ${WORK_DIR} || ! -d ${WORK_DIR} ]]; then
 fi
 
 cleanup() {
-    rm -rf ${WORK_DIR}
+    rm -rf "${WORK_DIR}"
     echo "deleted temporary working directory ${WORK_DIR}"
 }
 trap cleanup EXIT
 
 # build/install ################################################################
 
-cd ${WORK_DIR}
+cd "${WORK_DIR}"
 git clone \
     --depth 1 \
     --branch ${VERSION} \
     https://github.com/NixOS/patchelf.git
 
 cd patchelf
-echo $PWD
+echo "$PWD"
 ./bootstrap.sh
 ./configure --prefix=${INSTALL_PREFIX}
 make -j8 install

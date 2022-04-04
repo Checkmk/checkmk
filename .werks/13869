@@ -1,0 +1,12 @@
+Title: Fix error on editing of timeperiods
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1648456428
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b5
+
+If timeperiods were edited, the error "This name is already being used by
+another timeperiod." occurred.

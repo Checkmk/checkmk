@@ -6,7 +6,9 @@
 
 import re
 from itertools import chain
-from typing import Dict, Iterable, Mapping, Tuple
+from typing import Callable, Collection, Dict, Iterable, Mapping, Tuple
+
+from livestatus import LivestatusColumn, MultiSiteConnection
 
 from cmk.utils.type_defs import MetricName
 
@@ -32,24 +34,42 @@ from cmk.gui.plugins.visuals.utils import (
 )
 from cmk.gui.query_filters import sites_options
 from cmk.gui.type_defs import Choices
+from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.gui.valuespec import autocompleter_registry
+
+
+def __live_query_to_choices(
+    query_callback: Callable[[MultiSiteConnection], Collection[LivestatusColumn]],
+    limit: int,
+    value: str,
+    params: Dict,
+) -> Choices:
+    selected_sites = get_only_sites_from_context(params.get("context", {}))
+    with sites.only_sites(selected_sites), sites.set_limit(limit):
+        query_result = query_callback(sites.live())
+        choices = [(h, h) for h in sorted(query_result, key=lambda h: h.lower())]
+
+    if len(choices) > limit:
+        choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))
+
+    if (value, value) not in choices and params["strict"] is False:
+        choices.insert(0, (value, value))  # User is allowed to enter anything they want
+    return choices
+
+
+def _filter_choices(value: str, choices: Choices) -> Choices:
+    value_to_search = value.lower()
+    return [(value, title) for value, title in choices if value_to_search in title.lower()]
 
 
 def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choices:
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
-    selected_sites = get_only_sites_from_context(params.get("context", {}))
-    with sites.only_sites(selected_sites), sites.set_limit(limit):
-        choices = [
-            (h, h) for h in sorted(sites.live().query_column_unique(query), key=lambda h: h.lower())
-        ]
 
-    if len(choices) > limit:
-        choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))
+    def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
+        return sites_live.query_column_unique(query)
 
-    if (value, value) not in choices and params["strict"] == "False":
-        choices.insert(0, (value, value))  # User is allowed to enter anything they want
-    return choices
+    return __live_query_to_choices(_query_callback, limit, value, params)
 
 
 @autocompleter_registry.register_expression("monitored_hostname")
@@ -103,10 +123,6 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     group_type = params["group_type"]
-    # Have something without ifs
-    group_type = (
-        "contact" if "_contact" in group_type else "host" if "host" in group_type else "service"
-    )
     choices: Choices = sorted(
         (v for v in sites.all_groups(group_type) if value.lower() in v[1].lower()),
         key=lambda a: a[1].lower(),
@@ -137,7 +153,7 @@ def service_levels_autocompleter(value: str, params: Dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     choices: Choices = mkeventd.service_levels()
     empty_choices: Choices = [("", "")]
-    return empty_choices + choices
+    return empty_choices + _filter_choices(value, choices)
 
 
 @autocompleter_registry.register_expression("syslog_facilities")
@@ -146,7 +162,7 @@ def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
     empty_choices: Choices = [("", "")]
-    return empty_choices + choices
+    return empty_choices + _filter_choices(value, choices)
 
 
 @autocompleter_registry.register_expression("monitored_service_description")
@@ -154,13 +170,15 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     context = params.get("context", {})
-    if not any((context.get("host"), context.get("hostregex"))) and params["strict"] == "withHost":
+    if not any((context.get("host", {}).get("host"), context.get("hostregex"))) and not params.get(
+        "show_independent_of_context", True
+    ):
         return []
     context.pop("service", None)
     context["serviceregex"] = {"service_regex": value or "."}
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
-
-    return _sorted_unique_lq(query, 200, value, params)
+    result = _sorted_unique_lq(query, 200, value, params)
+    return result
 
 
 @autocompleter_registry.register_expression("wato_folder_choices")
@@ -168,12 +186,41 @@ def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
     return watolib.Folder.folder_choices_fulltitle()
 
 
+@autocompleter_registry.register_expression("kubernetes_labels")
+def kubernetes_labels_autocompleter(value: str, params: Dict) -> Choices:
+    filter_id = params["group_type"]
+    object_type = filter_id.removeprefix("kubernetes_")
+    label_name = f"cmk/kubernetes/{object_type}"
+
+    def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
+        """
+        we search for hosts having a certain label
+        ('cmk/kubernets/object:{object_type}') and want a list of unique labels
+        values of labels with the key label_name.
+        """
+        label_filter = encode_label_for_livestatus(
+            column="labels",
+            label=Label("cmk/kubernetes/object", object_type, False),
+        )
+        query = f"GET hosts\nColumns: labels\n{label_filter}"
+
+        query_result = sites_live.query_column(query)
+        label_values = set()
+        for element in query_result:
+            for label_key, label_value in element.items():
+                if label_key == label_name:
+                    label_values.add(label_value)
+        return label_values
+
+    return __live_query_to_choices(_query_callback, 200, value, params)
+
+
 @autocompleter_registry.register_expression("monitored_metrics")
 def metrics_autocompleter(value: str, params: Dict) -> Choices:
     context = params.get("context", {})
     host = context.get("host", {}).get("host", "")
     service = context.get("service", {}).get("service", "")
-    if params.get("strict") == "withSource" and not all((host, service)):
+    if not params.get("show_independent_of_context") and not all((host, service)):
         return []
 
     if context:
@@ -231,7 +278,7 @@ def graph_templates_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
-    if not params.get("context") and params.get("strict", "False") == "False":
+    if not params.get("context") and params.get("show_independent_of_context") is True:
         choices: Iterable[Tuple[str, str]] = (
             (
                 graph_id,

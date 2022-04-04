@@ -224,7 +224,7 @@ def _call_hook(name: str) -> None:
     # TODO: cyclical import with hooks -> globals
     from cmk.gui import hooks
 
-    hooks.call("request-context-exit")
+    hooks.call(name)
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,

@@ -193,7 +193,7 @@ impl PullConfig {
         let agent_channel = types::AgentChannel::from(
             pull_args
                 .agent_channel
-                .unwrap_or(setup::agent_channel())
+                .unwrap_or_else(setup::agent_channel)
                 .as_str(),
         );
         Ok(PullConfig {

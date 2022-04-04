@@ -6,10 +6,11 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 failure() {
-    echo "$(basename $0):" "$@" >&2
+    echo "$(basename "$0"):" "$@" >&2
     exit 1
 }
 
@@ -65,5 +66,7 @@ build_package() {
     rm -rf /opt/src
 }
 
-cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+if [ "$1" != "link-only" ]; then
+    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"

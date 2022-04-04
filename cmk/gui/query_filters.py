@@ -9,7 +9,7 @@
 
 import re
 import time
-from typing import Callable, List, Literal, Optional, Protocol, Tuple, Union
+from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import livestatus
 
@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.labels import encode_label_for_livestatus, Labels, parse_labels_value
+from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
 
 Options = List[Tuple[str, str]]
 
@@ -404,23 +404,32 @@ class TimeQuery(NumberRangeQuery):
             return None
 
 
-class AjaxDropdownFilterQueryProtocol(Protocol):
-    ident: str
-    request_vars: List[str]
-    link_columns: List[str]
-    negateable: bool
-    column: str
-    op: str  # TODO: will be removed in next refactoring step
+class KubernetesQuery(Query):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        kubernetes_object_type: str,
+    ):
+        super().__init__(ident=ident, request_vars=[ident])
+        self.column = "host_labels"
+        self.link_columns: List[str] = []
+        self.negateable = False
+        self._kubernetes_object_type = kubernetes_object_type
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        ...
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        ...
-
-    @property
-    def autocompleter_name(self) -> str:
-        ...
+        if filter_value := value.get(self.request_vars[0]):
+            return encode_labels_for_livestatus(
+                column=self.column,
+                labels=[
+                    Label(
+                        f"cmk/kubernetes/{self._kubernetes_object_type}",
+                        filter_value,
+                        False,
+                    )
+                ],
+            )
+        return ""
 
 
 class TextQuery(Query):
@@ -459,31 +468,6 @@ class TextQuery(Query):
             self.op,
             livestatus.lqencode(value[self.request_vars[0]]),
         )
-
-
-class AutocompletedTextQuery(TextQuery):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        op: str,
-        autocompleter_name: str,
-        negateable: bool = False,
-        request_var: Optional[str] = None,
-        column: Optional[str] = None,
-    ):
-        super().__init__(
-            ident=ident,
-            op=op,
-            negateable=negateable,
-            request_var=request_var,
-            column=column,
-        )
-        self._autocompleter_name = autocompleter_name
-
-    @property
-    def autocompleter_name(self) -> str:
-        return self._autocompleter_name
 
 
 class TableTextQuery(TextQuery):
@@ -553,7 +537,7 @@ def filter_in_host_inventory_range(
     return row_filter
 
 
-class CheckCommandQuery(AutocompletedTextQuery):
+class CheckCommandQuery(TextQuery):
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return "Filter: %s %s ^%s(!.*)?\n" % (
             self.column,
@@ -602,10 +586,6 @@ class OptEventEffectiveContactgroupQuery(TextQuery):
             "And: 2\n"
             "Or: 2\n" % (negate, selected_value, negate, selected_value)
         )
-
-    @property
-    def autocompleter_name(self) -> str:
-        return "allgroups"
 
 
 class IPAddressQuery(Query):
@@ -687,117 +667,84 @@ class MultipleQuery(TextQuery):
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
 
 
-class AutocompletedMultipleQuery(MultipleQuery):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        op: str,
-        autocompleter_name: str,
-        negateable: bool = False,
-        request_var: Optional[str] = None,
-        column: Optional[str] = None,
-    ):
-        super().__init__(
-            ident=ident,
-            op=op,
-            negateable=negateable,
-            request_var=request_var,
-            column=column,
-        )
-        self._autocompleter_name = autocompleter_name
-
-    @property
-    def autocompleter_name(self) -> str:
-        return self._autocompleter_name
-
-
 class LabelsQuery(Query):
-    def __init__(
-        self,
-        *,
-        object_type: Literal["host", "service"],
-    ):
-        self.object_type = object_type
-        super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
+    column: str
+    object_type: Literal["host", "service"]
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return encode_labels_for_livestatus(self.column, self.parse_value(value))
 
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         return parse_labels_value(value.get(self.request_vars[0], ""))
 
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = [
-            encode_label_for_livestatus(self.ident, label_id, label_value)
-            for label_id, label_value in self.parse_value(value)
-        ]
-        if headers:
-            return "\n".join(headers) + "\n"
-        return ""
+
+class AllLabelsQuery(LabelsQuery):
+    def __init__(self, *, object_type: Literal["host", "service"]):
+        self.object_type = object_type
+        self.column = f"{object_type}_labels"
+        super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
 
 
-class TagsQuery(Query):
+class TagsQuery(LabelsQuery):
     def __init__(
         self,
         *,
-        ident: str,
         object_type: Literal["host", "service"],
     ):
-        self.count = 3
         self.object_type = object_type
-        self.var_prefix = "%s_tag_" % object_type
+        self.column = f"{object_type}_tags"
+
+        self.count = 3
+        self.var_prefix = "%s_tag" % object_type
 
         request_vars: List[str] = []
         for num in range(self.count):
             request_vars += [
-                "%s%d_grp" % (self.var_prefix, num),
-                "%s%d_op" % (self.var_prefix, num),
-                "%s%d_val" % (self.var_prefix, num),
+                "%s_%d_grp" % (self.var_prefix, num),
+                "%s_%d_op" % (self.var_prefix, num),
+                "%s_%d_val" % (self.var_prefix, num),
             ]
+        super().__init__(ident=f"{object_type}_tags", request_vars=request_vars)
 
-        super().__init__(ident=ident, request_vars=request_vars)
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = []
-
+    def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
         # via an URL, e.g. from the virtual host tree snapin
         num = 0
-        column = livestatus.lqencode(self.object_type) + "_tags"
-        while value.get("%s%d_grp" % (self.var_prefix, num)):
-            prefix = "%s%d" % (self.var_prefix, num)
+        while value.get("%s_%d_grp" % (self.var_prefix, num)):
+            prefix = "%s_%d" % (self.var_prefix, num)
             num += 1
 
             op = value.get(prefix + "_op")
             tag_group = config.tags.get_tag_group(value.get(prefix + "_grp", ""))
-            tag = value.get(prefix + "_val", "")
 
-            if not tag_group or not op:
-                continue
-
-            headers.append(
-                encode_label_for_livestatus(column, tag_group.id, tag, negate=op != "is")
-            )
-
-        if headers:
-            return "\n".join(headers) + "\n"
-        return ""
+            if tag_group and op:
+                tag = value.get(prefix + "_val", "")
+                yield Label(tag_group.id, tag, negate=op != "is")
 
 
-def host_aux_tags_lq(prefix: str, value: FilterHTTPVariables) -> FilterHeader:
-    headers = []
+class AuxTagsQuery(LabelsQuery):
+    def __init__(self, *, object_type: Literal["host"]):
+        self.object_type = object_type
+        self.column = f"{object_type}_tags"
+        self.count = 3
+        self.var_prefix = f"{object_type}_auxtags"
 
-    # Do not restrict to a certain number, because we'd like to link to this
-    # via an URL, e.g. from the virtual host tree snapin
-    num = 0
-    while (this_tag := value.get("%s_%d" % (prefix, num))) is not None:
-        if this_tag:
-            negate = bool(value.get("%s_%d_neg" % (prefix, num)))
-            headers.append(encode_label_for_livestatus("host_tags", this_tag, this_tag, negate))
+        request_vars = []
+        for num in range(self.count):
+            request_vars += ["%s_%d" % (self.var_prefix, num), "%s_%d_neg" % (self.var_prefix, num)]
 
-        num += 1
+        super().__init__(ident=f"{object_type}_auxtags", request_vars=request_vars)
 
-    if headers:
-        return "\n".join(headers) + "\n"
-    return ""
+    def parse_value(self, value: FilterHTTPVariables) -> Labels:
+        # Do not restrict to a certain number, because we'd like to link to this
+        # via an URL, e.g. from the virtual host tree snapin
+        num = 0
+        while (this_tag := value.get("%s_%d" % (self.var_prefix, num))) is not None:
+            if this_tag:
+                negate = bool(value.get("%s_%d_neg" % (self.var_prefix, num)))
+                yield Label(this_tag, this_tag, negate)
+
+            num += 1
 
 
 def service_state_filter(prefix: str, value: FilterHTTPVariables) -> FilterHeader:

@@ -1,0 +1,22 @@
+Title: Agent bakery: Windows agent MSI is not signed anymore
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1649091977
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, provided by the WATO MSI file with Windows agent 
+retained a digital code signature from the original MSI file. 
+Because, in fact, the MSI file is a patched( rebuilt ) 
+version of the original file from the distro, Windows 
+considered this signature to be invalid. Having a wrong signature 
+is worse than having no signature at all. Since we have currently 
+no mechanism to sign MSI files in the bakery, we removed the 
+signature completely from these files.
+
+Since this release, WATO bakes agent's MSI using the unsigned 
+version of the MSI file, thus solving the problem.
+

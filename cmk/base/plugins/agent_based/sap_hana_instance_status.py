@@ -38,7 +38,7 @@ def _parse_elapsed_time(time_string):
     try:
         time = datetime.strptime(time_string, "%H:%M:%S")
     except ValueError:
-        return
+        return None
 
     elapsed_time = timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
     return elapsed_time.total_seconds()

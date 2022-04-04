@@ -59,7 +59,7 @@ def _parse_maybe_bool(value):
         return True
     if value.lower() == "false":
         return False
-    return
+    return None
 
 
 def discovery_sap_hana_license(section: sap_hana.ParsedSection) -> DiscoveryResult:

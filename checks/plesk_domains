@@ -8,6 +8,7 @@
 def inventory_plesk_domains(info):
     if info and info[0]:
         return [(None, None)]
+    return None
 
 
 def check_plesk_domains(_no_item, _no_params, info):

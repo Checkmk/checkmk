@@ -57,7 +57,7 @@ def parse_int(val):
     try:
         return int(val)
     except ValueError:
-        return
+        return None
 
 
 def parse_haproxy(string_table: StringTable) -> Section:

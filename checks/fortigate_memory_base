@@ -43,7 +43,7 @@ def check_fortigate_memory_base(_item, params, parsed):
         levels = (mode, (abs(warn) * scale, abs(crit) * scale))
 
     if not parsed:
-        return
+        return None
     used, total = parsed
 
     return check_memory_element("Used", used, total, levels, metric_name="mem_used")

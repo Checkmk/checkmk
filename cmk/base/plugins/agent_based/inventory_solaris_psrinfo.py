@@ -32,13 +32,21 @@
 # The physical processor has 8 virtual processors (0-7)
 #  SPARC-T5 (chipid 0, clock 3600 MHz)
 
-
-def inv_solaris_psrinfo(info):
-    node = inv_tree("hardware.cpu.")
-    node["Model"] = info[-1][0]
-    node["Maximum Speed"] = "%s %s" % (info[-1][-2], info[-1][-1].strip(")"))
+from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
-inv_info["solaris_psrinfo"] = {
-    "inv_function": inv_solaris_psrinfo,
-}
+def inventory_solaris_psrinfo(section: StringTable) -> InventoryResult:
+    yield Attributes(
+        path=["hardware", "cpu"],
+        inventory_attributes={
+            "Model": section[-1][0],
+            "Maximum Speed": f"{section[-1][-2]} {section[-1][-1].strip(')')}",
+        },
+    )
+
+
+register.inventory_plugin(
+    name="solaris_psrinfo",
+    inventory_function=inventory_solaris_psrinfo,
+)

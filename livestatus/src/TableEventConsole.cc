@@ -19,12 +19,12 @@
 #include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "TimeColumn.h"
-#include "auth.h"
 
 using namespace std::chrono_literals;
 
@@ -236,7 +236,7 @@ std::string ECRow::get(const std::string &column_name,
     return it == map_.end() ? default_value : it->second;
 }
 
-const MonitoringCore::Host *ECRow::host() const { return host_; }
+const ::host *ECRow::host() const { return host_; }
 
 TableEventConsole::TableEventConsole(
     MonitoringCore *mc, std::function<bool(const User &, Row)> is_authorized)
@@ -307,10 +307,8 @@ std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
 
 std::optional<bool> TableEventConsole::isAuthorizedForEventViaHost(
     const User &user, Row row) const {
-    if (const MonitoringCore::Host *hst = rowData<ECRow>(row)->host()) {
-        return core()->host_has_contact(
-            hst,
-            reinterpret_cast<const MonitoringCore::Contact *>(user.authUser()));
+    if (const auto *hst = rowData<ECRow>(row)->host()) {
+        return user.is_authorized_for_host(*hst);
     }
     return {};
 }

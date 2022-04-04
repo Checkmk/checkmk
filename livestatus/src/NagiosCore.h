@@ -65,13 +65,12 @@ public:
                NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
-    Host *getHostByDesignation(const std::string &designation) override;
+    host *getHostByDesignation(const std::string &designation) override;
     Service *find_service(const std::string &host_name,
                           const std::string &service_description) override;
     ContactGroup *find_contactgroup(const std::string &name) override;
 
     const Contact *find_contact(const std::string &name) override;
-    bool host_has_contact(const Host *host, const Contact *contact) override;
     bool is_contact_member_of_contactgroup(const ContactGroup *group,
                                            const Contact *contact) override;
 

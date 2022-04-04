@@ -18,19 +18,23 @@
 
 #include "IntColumn.h"
 #include "ListColumn.h"
-#include "MonitoringCore.h"
 #include "Table.h"
+#include "auth.h"  // IWYU pragma: keep
 
 class ColumnOffsets;
 template <class T>
 class DoubleColumn;
+class MonitoringCore;
 class Query;
 class Row;
 template <class T>
 class StringColumn;
 template <class T>
 class TimeColumn;
-class User;
+
+#ifndef CMC
+#include "nagios.h"
+#endif
 
 class ECRow {
 public:
@@ -57,11 +61,11 @@ public:
     [[nodiscard]] int32_t getInt(const std::string &column_name) const;
     [[nodiscard]] double getDouble(const std::string &column_name) const;
 
-    [[nodiscard]] const MonitoringCore::Host *host() const;
+    [[nodiscard]] const ::host *host() const;
 
 private:
     std::map<std::string, std::string> map_;
-    MonitoringCore::Host *host_;
+    const ::host *host_;
 
     [[nodiscard]] std::string get(const std::string &column_name,
                                   const std::string &default_value) const;
@@ -80,10 +84,10 @@ protected:
 private:
     std::function<bool(const User &, Row)> is_authorized_;
 
-    std::optional<bool> isAuthorizedForEventViaContactGroups(const User &user,
-                                                             Row row) const;
-    std::optional<bool> isAuthorizedForEventViaHost(const User &user,
-                                                    Row row) const;
+    [[nodiscard]] std::optional<bool> isAuthorizedForEventViaContactGroups(
+        const User &user, Row row) const;
+    [[nodiscard]] std::optional<bool> isAuthorizedForEventViaHost(
+        const User &user, Row row) const;
 };
 
 #endif  // TableEventConsole_h

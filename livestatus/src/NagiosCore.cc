@@ -56,10 +56,9 @@ NagiosCore::Host *NagiosCore::find_host(const std::string &name) {
     return fromImpl(::find_host(const_cast<char *>(name.c_str())));
 }
 
-NagiosCore::Host *NagiosCore::getHostByDesignation(
-    const std::string &designation) {
+host *NagiosCore::getHostByDesignation(const std::string &designation) {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
-    return it == _hosts_by_designation.end() ? nullptr : fromImpl(it->second);
+    return it == _hosts_by_designation.end() ? nullptr : it->second;
 }
 
 NagiosCore::Service *NagiosCore::find_service(
@@ -79,10 +78,6 @@ NagiosCore::ContactGroup *NagiosCore::find_contactgroup(
 const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
-}
-
-bool NagiosCore::host_has_contact(const Host *host, const Contact *contact) {
-    return is_authorized_for_hst(toImpl(contact), toImpl(host));
 }
 
 bool NagiosCore::is_contact_member_of_contactgroup(const ContactGroup *group,

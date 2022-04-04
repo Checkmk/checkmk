@@ -19,6 +19,12 @@
 #include "TimeColumn.h"
 class User;
 
+#ifdef CMC
+class Host;
+#else
+struct host_struct;
+#endif
+
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole{mc, [this](const User &user, Row row) {
                             return isAuthorizedForEvent(user, row);

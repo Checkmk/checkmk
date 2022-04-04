@@ -24,6 +24,7 @@ class Tuploid:
             return other_value.tuple == self.tuple
         if isinstance(other_value, tuple):
             return all(x == y for x, y in zip(other_value, self.tuple))
+        return None
 
     def __ne__(self, other_value):
         return not self.__eq__(other_value)

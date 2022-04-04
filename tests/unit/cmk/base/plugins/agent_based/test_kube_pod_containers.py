@@ -62,6 +62,7 @@ def container_state_dict(container_state, start_time, exit_code):
             "reason": "VeryReason",
             "detail": "so detail",
         }
+    return None
 
 
 @pytest.fixture

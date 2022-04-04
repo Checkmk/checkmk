@@ -357,6 +357,7 @@ class Version:
             return (vtype_map["s"], 0)
         if isinstance(v, (_BetaVersion, _InnovationVersion, _PatchVersion)):
             return (vtype_map[v.vtype], v.patch)
+        return None
 
     def _cmp_date(self, o_v: _Version) -> int:
         v = self.version

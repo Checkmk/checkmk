@@ -290,7 +290,7 @@ class TestErrorResultMessage:
             pyghmi.exceptions.IpmiException,
         ]
     )
-    def exception(self, request):
+    def exception(self, request):  # pylint:disable=inconsistent-return-statements
         try:
             raise request.param("some helpful message")
         except Exception as exc:

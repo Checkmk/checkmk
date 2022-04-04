@@ -264,6 +264,7 @@ class BICompiler:
             if not client.exists("bi:aggregation_lookup"):
                 self.load_compiled_aggregations()
                 self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
+            return None
         finally:
             if lookup_lock.owned():
                 lookup_lock.release()

@@ -149,6 +149,8 @@ def _execute_automation(
     if parse_data:
         return results.result_type_registry[cmd].deserialize(stdout)
 
+    return None
+
 
 def test_automation_discovery_no_host(test_cfg, site: Site):
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!

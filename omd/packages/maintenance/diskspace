@@ -159,6 +159,7 @@ def _get_free_space():
         if filesystem[0] == "/":
             _vol, _size_bytes, _used_bytes, free_bytes, _used_perc, _mp = filesystem.split()
             return int(free_bytes)
+    return None
 
 
 def _above_threshold(bytes_free: int) -> bool:

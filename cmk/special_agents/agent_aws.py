@@ -192,7 +192,7 @@ class AWSConfig:
             return [
                 {"Name": "tag:%s" % k, "Values": v} for k, v in zip([k[0] for k in keys], values)
             ]
-        return
+        return None
 
     def add_single_service_config(self, key, value):
         self.service_config.setdefault(key, value)
@@ -270,7 +270,7 @@ def _get_ec2_piggyback_hostname(inst, region):
     try:
         return "%s-%s-%s" % (inst["PrivateIpAddress"], region, inst["InstanceId"])
     except KeyError:
-        return
+        return None
 
 
 def _hostname_from_name_and_region(name, region):
@@ -694,7 +694,7 @@ class AWSSection(DataCache):
         [{'Key': KEY, 'Value': VALUE}, ...]
         """
         if not tags:
-            return
+            return None
         prepared_tags = []
         for tag in tags:
             tag_name = tag["Name"]

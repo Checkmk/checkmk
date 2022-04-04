@@ -208,6 +208,7 @@ def test_discover_decorator_returned_name():
         required_entries = ["used", "ready"]
         if all(data in value for data in required_entries):
             return key.upper()
+        return None
 
     data = {
         "host": [["mysql", 10, 10], ["home", 5, 8]],

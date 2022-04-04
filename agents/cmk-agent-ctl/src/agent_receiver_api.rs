@@ -74,18 +74,6 @@ pub enum StatusError {
     UnspecifiedError(#[from] AnyhowError),
 }
 
-fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
-    if let StatusCode::NO_CONTENT = response.status() {
-        Ok(())
-    } else {
-        Err(anyhow!(
-            "Request failed with code {}: {}",
-            response.status(),
-            response.text().unwrap_or_else(|_| String::from(""))
-        ))
-    }
-}
-
 fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
     Ok(base64::encode_config(
         certs::parse_pem(cert)?.contents,
@@ -163,6 +151,18 @@ impl Api {
             endpoint_segments.join(", ")
         ))
     }
+
+    fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
+        if let StatusCode::NO_CONTENT = response.status() {
+            Ok(())
+        } else {
+            Err(anyhow!(
+                "Request failed with code {}: {}",
+                response.status(),
+                response.text().unwrap_or_else(|_| String::from(""))
+            ))
+        }
+    }
 }
 
 impl Pairing for Api {
@@ -201,7 +201,7 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()> {
-        check_response_204(
+        Api::check_response_204(
             certs::client(Some(root_cert))?
                 .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
@@ -221,7 +221,7 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
-        check_response_204(
+        Api::check_response_204(
             certs::client(Some(root_cert))?
                 .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
@@ -244,7 +244,7 @@ impl AgentData for Api {
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
-        check_response_204(
+        Api::check_response_204(
             certs::client(Some(root_cert))?
                 .post(Self::endpoint_url(
                     base_url,
@@ -316,5 +316,34 @@ mod test_api {
             .to_string(),
             "https://my_server:7766/site2/agent-receiver/some/endpoint"
         );
+    }
+
+    #[test]
+    fn test_check_response_204_ok() {
+        assert!(Api::check_response_204(reqwest::blocking::Response::from(
+            http::Response::builder()
+                .status(StatusCode::NO_CONTENT)
+                .body("")
+                .unwrap(),
+        ))
+        .is_ok());
+    }
+
+    #[test]
+    fn test_check_response_204_error() {
+        match Api::check_response_204(reqwest::blocking::Response::from(
+            http::Response::builder()
+                .status(StatusCode::UNAUTHORIZED)
+                .body("{\"detail\": \"Insufficient permissions\"}")
+                .unwrap(),
+        )) {
+            Err(err) => {
+                assert_eq!(
+                    format!("{}", err),
+                    "Request failed with code 401 Unauthorized: {\"detail\": \"Insufficient permissions\"}"
+                )
+            }
+            _ => panic!("Expected an error"),
+        }
     }
 }

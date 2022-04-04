@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from typing import Callable, Optional
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
@@ -38,9 +38,9 @@ def _parse_version_int(version_str: str) -> Optional[int]:
         return None
 
 
-def _parse_plugin(line: str, prefix: str) -> Optional[Plugin]:
+def _parse_plugin_lnx(line: str, prefix: str) -> Optional[Plugin]:
     """
-    >>> _parse_plugin(
+    >>> _parse_plugin_lnx(
     ...    '/usr/lib/check_mk_agent/plugins/mk_filestats.py:__version__ = "2.1.0i1"',
     ...    '/usr/lib/check_mk_agent/plugins',
     ... )
@@ -65,7 +65,34 @@ def _parse_plugin(line: str, prefix: str) -> Optional[Plugin]:
     )
 
 
-def parse_checkmk_agent_plugins_lnx(string_table: StringTable) -> PluginSection:
+def _parse_plugin_win(line: str, prefix: str) -> Optional[Plugin]:
+    """
+    >>> _parse_plugin_win(
+    ...    'c:\\ProgramData\\checkmk\\agent\\plugins\\windows_if.py:CMK_VERSION = "2.1.0i1"',
+    ...    'c:\\ProgramData\\checkmk\\agent\\plugins',
+    ... )
+    Plugin(name='windows_if.py', version='2.1.0i1', version_int=2010010100, cache_interval=None)
+    """
+    if not line.startswith(prefix):
+        return None
+
+    if "CMK_VERSION" in line:
+        raw_path, raw_version = line[len(prefix) :].split(":CMK_VERSION", 1)
+    else:
+        return None
+
+    version = raw_version.strip(" ='\"")
+    return Plugin(
+        name=raw_path.rsplit("\\", 1)[-1],
+        version=version,
+        version_int=_parse_version_int(version),
+        cache_interval=_extract_cache_interval(raw_path),
+    )
+
+
+def _parse_checkmk_agent_plugins_core(
+    string_table: StringTable, parser: Callable[[str, str], Optional[Plugin]]
+) -> PluginSection:
 
     assert string_table[0][0].startswith("pluginsdir ")
     plugins_dir = string_table[0][0][len("pluginsdir ") :]
@@ -77,19 +104,31 @@ def parse_checkmk_agent_plugins_lnx(string_table: StringTable) -> PluginSection:
         plugins=[
             plugin
             for line, in string_table[2:]
-            if (plugin := _parse_plugin(line, plugins_dir)) is not None
+            if (plugin := parser(line, plugins_dir)) is not None
         ],
         local_checks=[
-            lcheck
-            for line, in string_table[2:]
-            if (lcheck := _parse_plugin(line, local_dir)) is not None
+            lcheck for line, in string_table[2:] if (lcheck := parser(line, local_dir)) is not None
         ],
     )
+
+
+def parse_checkmk_agent_plugins_lnx(string_table: StringTable) -> PluginSection:
+    return _parse_checkmk_agent_plugins_core(string_table, _parse_plugin_lnx)
+
+
+def parse_checkmk_agent_plugins_win(string_table: StringTable) -> PluginSection:
+    return _parse_checkmk_agent_plugins_core(string_table, _parse_plugin_win)
 
 
 register.agent_section(
     name="checkmk_agent_plugins_lnx",
     parse_function=parse_checkmk_agent_plugins_lnx,
+    parsed_section_name="checkmk_agent_plugins",
+)
+
+register.agent_section(
+    name="checkmk_agent_plugins_win",
+    parse_function=parse_checkmk_agent_plugins_win,
     parsed_section_name="checkmk_agent_plugins",
 )
 

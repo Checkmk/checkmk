@@ -8,15 +8,12 @@ from __future__ import annotations
 
 import gettext as gettext_module
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import cmk.utils.paths
 
-from cmk.gui.context import local
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.utils.speaklater import LazyString
-
-if TYPE_CHECKING:
-    from cmk.gui.context import RequestContext
 
 # .
 #   .--Gettext i18n--------------------------------------------------------.
@@ -37,13 +34,9 @@ class Translation(NamedTuple):
     name: str
 
 
-def _request_context() -> RequestContext:
-    return local
-
-
 def _translation() -> Optional[Translation]:
     try:
-        return _request_context().translation
+        return request_local_attr().translation
     except RuntimeError:
         # TODO: Once we cleaned up all wrong _() to _l(), we can clean this up
         pass
@@ -142,7 +135,7 @@ def get_languages() -> List[Tuple[str, str]]:
 
 
 def unlocalize() -> None:
-    _request_context().translation = None
+    request_local_attr().translation = None
 
 
 def localize(lang: Optional[str]) -> None:
@@ -155,7 +148,7 @@ def localize(lang: Optional[str]) -> None:
         unlocalize()
         return
 
-    _request_context().translation = Translation(translation=gettext_translation, name=lang)
+    request_local_attr().translation = Translation(translation=gettext_translation, name=lang)
 
 
 def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:

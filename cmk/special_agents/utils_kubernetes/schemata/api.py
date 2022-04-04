@@ -248,6 +248,7 @@ class DaemonSetStatus(BaseModel):
     updated_number_scheduled: int
     number_misscheduled: int
     number_ready: int
+    number_available: int
 
 
 class DaemonSet(BaseModel):

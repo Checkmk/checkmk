@@ -34,22 +34,22 @@ struct RemoteConnectionStatus {
 }
 
 #[derive(serde::Serialize)]
-enum RemoteConnectionError {
+enum RemoteError {
     #[serde(rename = "invalid_url")]
     InvalidUrl,
     #[serde(rename = "connection_refused")]
     ConnRefused,
     #[serde(rename = "certificate_invalid")]
     CertInvalid,
-    #[serde(rename = "unspeficied_error")]
-    Unspecified,
+    #[serde(rename = "other_error")]
+    Other(String),
 }
 
 #[derive(serde::Serialize)]
 #[serde(untagged)]
 enum RemoteConnectionStatusResponse {
     Success(RemoteConnectionStatus),
-    Error(RemoteConnectionError),
+    Error(RemoteError),
 }
 
 #[serde_with::serde_as]
@@ -91,32 +91,26 @@ impl CertParsingResult {
     }
 }
 
-impl RemoteConnectionError {
-    fn from(status_err: agent_receiver_api::StatusError) -> RemoteConnectionError {
+impl RemoteError {
+    fn from(status_err: agent_receiver_api::StatusError) -> RemoteError {
         match status_err {
-            agent_receiver_api::StatusError::ConnectionRefused(..) => {
-                RemoteConnectionError::ConnRefused
-            }
-            agent_receiver_api::StatusError::CertificateInvalid => {
-                RemoteConnectionError::CertInvalid
-            }
-            agent_receiver_api::StatusError::UnspecifiedError(..) => {
-                RemoteConnectionError::Unspecified
-            }
+            agent_receiver_api::StatusError::ConnectionRefused(..) => RemoteError::ConnRefused,
+            agent_receiver_api::StatusError::CertificateInvalid => RemoteError::CertInvalid,
+            agent_receiver_api::StatusError::Other(err) => RemoteError::Other(format!("{}", err)),
         }
     }
 }
 
-impl std::fmt::Display for RemoteConnectionError {
+impl std::fmt::Display for RemoteError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                RemoteConnectionError::InvalidUrl => "URL invalid",
-                RemoteConnectionError::ConnRefused => "refused",
-                RemoteConnectionError::CertInvalid => "certificate invalid",
-                RemoteConnectionError::Unspecified => "unspecified error",
+                RemoteError::InvalidUrl => "URL invalid",
+                RemoteError::ConnRefused => "connection refused",
+                RemoteError::CertInvalid => "certificate invalid",
+                RemoteError::Other(err) => err,
             }
         )
     }
@@ -143,12 +137,10 @@ impl RemoteConnectionStatusResponse {
                             host_name: status_response.hostname,
                         })
                     }
-                    Err(err) => {
-                        RemoteConnectionStatusResponse::Error(RemoteConnectionError::from(err))
-                    }
+                    Err(err) => RemoteConnectionStatusResponse::Error(RemoteError::from(err)),
                 }
             }
-            _ => RemoteConnectionStatusResponse::Error(RemoteConnectionError::InvalidUrl),
+            _ => RemoteConnectionStatusResponse::Error(RemoteError::InvalidUrl),
         }
     }
 }
@@ -269,7 +261,7 @@ impl ConnectionStatus {
                     )
                 }
                 RemoteConnectionStatusResponse::Error(err) => {
-                    vec![format!("Connection error: {} (!!)", err)]
+                    vec![format!("Error: {} (!!)", err)]
                 }
             },
             None => vec![String::from("No remote address (imported connection)")],
@@ -544,7 +536,7 @@ mod test_status {
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
                     },
                     remote: Some(RemoteConnectionStatusResponse::Error(
-                        RemoteConnectionError::InvalidUrl
+                        RemoteError::InvalidUrl
                     ))
                 }
             ),
@@ -555,7 +547,7 @@ mod test_status {
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
-                 \t\tConnection error: URL invalid (!!)"
+                 \t\tError: URL invalid (!!)"
             )
         );
     }
@@ -574,9 +566,11 @@ mod test_status {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Error(
-                        RemoteConnectionError::Unspecified
-                    ))
+                    remote: Some(RemoteConnectionStatusResponse::Error(RemoteError::Other(
+                        String::from(
+                            "Request failed with code 400 Bad Request: Unable to load certificate"
+                        )
+                    )))
                 }
             ),
             String::from(
@@ -586,7 +580,7 @@ mod test_status {
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
-                 \t\tConnection error: unspecified error (!!)"
+                 \t\tError: Request failed with code 400 Bad Request: Unable to load certificate (!!)"
             )
         );
     }
@@ -608,7 +602,7 @@ mod test_status {
                         })
                     },
                     remote: Some(RemoteConnectionStatusResponse::Error(
-                        RemoteConnectionError::ConnRefused
+                        RemoteError::ConnRefused
                     ))
                 }
             ),
@@ -620,7 +614,7 @@ mod test_status {
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection error: refused (!!)"
+                 \t\tError: connection refused (!!)"
             )
         );
     }

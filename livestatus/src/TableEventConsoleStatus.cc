@@ -18,8 +18,9 @@
 class User;
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
-    : TableEventConsole{
-          mc, [](const User & /*user*/, Row /*row*/) { return true; }} {
+    : TableEventConsole{mc, [](const User & /*user*/, const ECRow & /*row*/) {
+                            return true;
+                        }} {
     ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "status_config_load_time",

@@ -39,9 +39,9 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, const Table &table, Query &query,
-                      const User &user,
-                      std::function<bool(const User &, Row)> is_authorized)
+    ECTableConnection(
+        MonitoringCore *mc, const Table &table, Query &query, const User &user,
+        std::function<bool(const User &, const ECRow &)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , mc_{mc}
@@ -139,7 +139,7 @@ private:
                 is_header = false;
             } else {
                 ECRow row{mc_, headers, columns};
-                if (is_authorized_(user_, Row{&row}) &&
+                if (is_authorized_(user_, row) &&
                     !query_.processDataset(Row{&row})) {
                     return;
                 }
@@ -151,7 +151,7 @@ private:
     const Table &table_;
     Query &query_;
     const User &user_;
-    const std::function<bool(const User &, Row)> is_authorized_;
+    const std::function<bool(const User &, const ECRow &)> is_authorized_;
 };
 }  // namespace
 
@@ -239,7 +239,8 @@ std::string ECRow::get(const std::string &column_name,
 const ::host *ECRow::host() const { return host_; }
 
 TableEventConsole::TableEventConsole(
-    MonitoringCore *mc, std::function<bool(const User &, Row)> is_authorized)
+    MonitoringCore *mc,
+    std::function<bool(const User &, const ECRow &)> is_authorized)
     : Table{mc}, is_authorized_{std::move(is_authorized)} {}
 
 void TableEventConsole::answerQuery(Query &query, const User &user) {
@@ -252,25 +253,26 @@ void TableEventConsole::answerQuery(Query &query, const User &user) {
     }
 }
 
-bool TableEventConsole::isAuthorizedForEvent(const User &user, Row row) const {
+bool TableEventConsole::isAuthorizedForEvent(const User &user,
+                                             const ECRow &row) const {
     if (user.is_authorized_for_everything()) {
         return true;
     }
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
                           column("event_contact_groups_precedence"))
-                          ->getValue(row);
+                          ->getValue(Row{&row});
     if (precedence == "rule") {
         if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
             return *opt_auth;
         }
-        if (const auto *hst = rowData<ECRow>(row)->host()) {
+        if (const auto *hst = row.host()) {
             return user.is_authorized_for_host(*hst);
         }
         return true;
     }
     if (precedence == "host") {
-        if (const auto *hst = rowData<ECRow>(row)->host()) {
+        if (const auto *hst = row.host()) {
             return user.is_authorized_for_host(*hst);
         }
         if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
@@ -284,16 +286,16 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user, Row row) const {
 }
 
 std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
-    const User &user, Row row) const {
+    const User &user, const ECRow &row) const {
     auto col = std::static_pointer_cast<ListColumn<ECRow>>(
         column("event_contact_groups"));
-    if (const auto *r = col->columnData<ECRow>(row)) {
+    if (const auto *r = col->columnData<ECRow>(Row{&row})) {
         // TODO(sp) This check for None is a hack...
         if (r->getString(col->name()) == "\002") {
             return {};
         }
     }
-    for (const auto &name : col->getValue(row, unknown_auth_user(), 0s)) {
+    for (const auto &name : col->getValue(Row{&row}, unknown_auth_user(), 0s)) {
         if (core()->is_contact_member_of_contactgroup(
                 core()->find_contactgroup(name),
                 reinterpret_cast<const MonitoringCore::Contact *>(

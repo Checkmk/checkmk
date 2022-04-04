@@ -10,13 +10,13 @@
 
 #include "Column.h"
 #include "IntColumn.h"
-#include "Row.h"
 #include "StringColumn.h"
 class User;
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
-    : TableEventConsole{
-          mc, [](const User & /*user*/, Row /*row*/) { return true; }} {
+    : TableEventConsole{mc, [](const User & /*user*/, const ECRow & /*row*/) {
+                            return true;
+                        }} {
     ColumnOffsets offsets{};
     addColumn(
         ECRow::makeStringColumn("rule_id", "The ID of the rule", offsets));

@@ -26,7 +26,7 @@ struct host_struct;
 #endif
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
-    : TableEventConsole{mc, [this](const User &user, Row row) {
+    : TableEventConsole{mc, [this](const User &user, const ECRow &row) {
                             return isAuthorizedForEvent(user, row);
                         }} {
     addColumns(this);

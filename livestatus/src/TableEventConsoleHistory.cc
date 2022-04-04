@@ -10,14 +10,13 @@
 
 #include "Column.h"
 #include "IntColumn.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
 #include "TimeColumn.h"
 class User;
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
-    : TableEventConsole{mc, [this](const User &user, Row row) {
+    : TableEventConsole{mc, [this](const User &user, const ECRow &row) {
                             return isAuthorizedForEvent(user, row);
                         }} {
     ColumnOffsets offsets{};

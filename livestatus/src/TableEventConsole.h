@@ -26,7 +26,6 @@ template <class T>
 class DoubleColumn;
 class MonitoringCore;
 class Query;
-class Row;
 template <class T>
 class StringColumn;
 template <class T>
@@ -73,19 +72,21 @@ private:
 
 class TableEventConsole : public Table {
 public:
-    TableEventConsole(MonitoringCore *mc,
-                      std::function<bool(const User &, Row)> is_authorized);
+    TableEventConsole(
+        MonitoringCore *mc,
+        std::function<bool(const User &, const ECRow &)> is_authorized);
 
     void answerQuery(Query &query, const User &user) override;
 
 protected:
-    [[nodiscard]] bool isAuthorizedForEvent(const User &user, Row row) const;
+    [[nodiscard]] bool isAuthorizedForEvent(const User &user,
+                                            const ECRow &row) const;
 
 private:
-    std::function<bool(const User &, Row)> is_authorized_;
+    std::function<bool(const User &, const ECRow &)> is_authorized_;
 
     [[nodiscard]] std::optional<bool> isAuthorizedForEventViaContactGroups(
-        const User &user, Row row) const;
+        const User &user, const ECRow &row) const;
 };
 
 #endif  // TableEventConsole_h

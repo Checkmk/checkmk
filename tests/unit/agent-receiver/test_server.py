@@ -33,6 +33,80 @@ def deactivate_certificate_validation(mocker: MockerFixture) -> None:
     )
 
 
+def test_register_register_with_hostname_host_missing(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    mocker.patch(
+        "agent_receiver.server.host_exists",
+        return_value=False,
+    )
+    response = client.post(
+        "/register_with_hostname",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+        },
+    )
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Host myhost does not exist"}
+
+
+def test_register_register_with_hostname_unauthorized(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    mocker.patch(
+        "agent_receiver.server.host_exists",
+        return_value=True,
+    )
+    mocker.patch(
+        "agent_receiver.server.link_host_with_uuid",
+        side_effect=HTTPException(
+            status_code=403,
+            detail="You do not have the permission for agent pairing.",
+        ),
+    )
+    response = client.post(
+        "/register_with_hostname",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "You do not have the permission for agent pairing."}
+
+
+def test_register_register_with_hostname_ok(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    mocker.patch(
+        "agent_receiver.server.host_exists",
+        return_value=True,
+    )
+    mocker.patch(
+        "agent_receiver.server.link_host_with_uuid",
+        return_value=None,
+    )
+    response = client.post(
+        "/register_with_hostname",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+        },
+    )
+    assert response.status_code == 204
+    assert not response.text
+
+
 def test_register_with_labels_unauthenticated(
     mocker: MockerFixture,
     client: TestClient,

@@ -483,6 +483,21 @@ ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
     return makeTestString("No Answer");
 }
 
+namespace {
+bool FindProcessByPid(uint32_t pid) {
+    bool found = false;
+    wtools::ScanProcessList(
+        [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
+            if (entry.th32ProcessID == pid) {
+                found = true;
+            }
+            return true;
+        });
+    return found;
+}
+
+}  // namespace
+
 bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
     // this may race condition, still probability is zero
     // Config Reload is for manual usage
@@ -498,7 +513,8 @@ bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
 }
 
 // returns break type(what todo)
-ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
+ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
+    std::optional<ControllerParam> &controller_param) {
     XLOG::l.i("main Wait Loop");
     // memorize vars to check for changes in loop below
     auto ipv6 = cfg::groups::global.ipv6();
@@ -506,14 +522,16 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     auto uniq_cfg_id = cfg::GetCfg().uniqId();
     ProcessServiceConfiguration(kServiceName);
 
+    auto last_check = std::chrono::steady_clock::now();
+
     // Perform main service function here...
     while (true) {
         if (!callback_(static_cast<const void *>(this))) {
-            break;  // special case when thread is one time run
+            break;
         }
 
         if (delay_ == 0ms) {
-            break;
+            break;  // special case when thread is one time run
         }
 
         // check for config update and inform external port
@@ -523,6 +541,17 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
                       new_port, new_port);
             return Signal::restart;
+        }
+
+        if (controller_param.has_value() &&
+            (std::chrono::steady_clock::now() - last_check) > 30s) {
+            if (!FindProcessByPid(controller_param->pid)) {
+                XLOG::l("Process of the controller is died [{}]",
+                        controller_param->pid);
+                controller_param.reset();
+                return Signal::restart;
+            }
+            last_check = std::chrono::steady_clock::now();
         }
 
         // wait and check
@@ -568,13 +597,8 @@ void WaitForNetwork(std::chrono::seconds period) {
     }
 }
 
-struct ControllerParam {
-    uint16_t port;
-    uint32_t pid;
-};
-
 ///  returns non empty port if controller had been started
-std::optional<ControllerParam> OptionallyStartAgentController(
+std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     std::chrono::milliseconds validate_process_delay) {
     if (!ac ::IsRunController(cfg::GetLoadedConfig())) {
         return {};
@@ -588,8 +612,10 @@ std::optional<ControllerParam> OptionallyStartAgentController(
             ac::DeleteControllerInBin(wtools::GetArgv(0));
             return {};
         }
-        return ControllerParam{.port = ac::GetConfiguredAgentChannelPort(),
-                               .pid = *pid};
+        return ServiceProcessor::ControllerParam{
+            .port = ac::GetConfiguredAgentChannelPort(),
+            .pid = *pid,
+        };
     }
 
     return {};
@@ -634,10 +660,6 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 ac::kCmkAgentUnistall,
             controller_params.has_value());
     }
-    uint16_t use_port = controller_params
-                            ? controller_params->port
-                            : cfg::GetVal(cfg::groups::kGlobal,
-                                          cfg::vars::kPort, cfg::kMainPort);
     MailSlot mailbox(
         IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
@@ -667,6 +689,11 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
 
         // Main Processing Loop
         while (true) {
+            uint16_t use_port =
+                controller_params
+                    ? controller_params->port
+                    : cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
+                                  cfg::kMainPort);
             rt_device.start();
             auto io_started = ex_port->startIo(
                 [this, &rt_device,
@@ -699,7 +726,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             }
 
             // we wait her to the end of the External port
-            if (mainWaitLoop() == Signal::quit) {
+            if (mainWaitLoop(controller_params) == Signal::quit) {
                 break;
             }
             XLOG::l.i("restart main loop");

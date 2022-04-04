@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import os
 from enum import Enum
 from http import HTTPStatus
@@ -142,7 +143,7 @@ def link_host_with_uuid(
     ).status_code != HTTPStatus.NO_CONTENT:
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text,
+            detail=parse_error_response_body(response.text),
         )
 
 
@@ -158,3 +159,28 @@ def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
         status_code=response.status_code,
         detail="User authentication failed",
     )
+
+
+def parse_error_response_body(body: str) -> str:
+    """
+    The REST API often returns JSON error bodies such as
+    {"title": "You do not have the permission for agent pairing.", "status": 403}
+    from which we want to extract the title field.
+
+    >>> parse_error_response_body("123")
+    '123'
+    >>> parse_error_response_body('["x", "y"]')
+    '["x", "y"]'
+    >>> parse_error_response_body('{"message": "Hands off this component!", "status": 403}')
+    '{"message": "Hands off this component!", "status": 403}'
+    >>> parse_error_response_body('{"title": "You do not have the permission for agent pairing.", "status": 403}')
+    'You do not have the permission for agent pairing.'
+    """
+    try:
+        deserialized_body = json.loads(body)
+    except json.JSONDecodeError:
+        return body
+    try:
+        return deserialized_body["title"]
+    except (TypeError, KeyError):
+        return body

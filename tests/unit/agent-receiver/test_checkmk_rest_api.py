@@ -39,10 +39,7 @@ def test_link_host_with_uuid_unauthorized(
         )
 
     assert excpt_info.value.status_code == 403
-    assert (
-        excpt_info.value.detail
-        == '{"title": "You do not have the permission for agent pairing.", "status": 403}'
-    )
+    assert excpt_info.value.detail == "You do not have the permission for agent pairing."
 
 
 def test_link_host_with_uuid_ok(

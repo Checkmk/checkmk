@@ -86,8 +86,6 @@ private:
 
     [[nodiscard]] std::optional<bool> isAuthorizedForEventViaContactGroups(
         const User &user, Row row) const;
-    [[nodiscard]] std::optional<bool> isAuthorizedForEventViaHost(
-        const User &user, Row row) const;
 };
 
 #endif  // TableEventConsole_h

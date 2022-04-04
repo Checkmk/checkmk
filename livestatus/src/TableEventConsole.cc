@@ -260,19 +260,18 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user, Row row) const {
     auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
-    // TODO(sp) Use std::optional's or_else() below when we have C++23.
     if (precedence == "rule") {
         if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
             return *opt_auth;
         }
-        if (auto opt_auth = isAuthorizedForEventViaHost(user, row)) {
-            return *opt_auth;
+        if (const auto *hst = rowData<ECRow>(row)->host()) {
+            return user.is_authorized_for_host(*hst);
         }
         return true;
     }
     if (precedence == "host") {
-        if (auto opt_auth = isAuthorizedForEventViaHost(user, row)) {
-            return *opt_auth;
+        if (const auto *hst = rowData<ECRow>(row)->host()) {
+            return user.is_authorized_for_host(*hst);
         }
         if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
             return *opt_auth;
@@ -303,12 +302,4 @@ std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
         }
     }
     return false;
-}
-
-std::optional<bool> TableEventConsole::isAuthorizedForEventViaHost(
-    const User &user, Row row) const {
-    if (const auto *hst = rowData<ECRow>(row)->host()) {
-        return user.is_authorized_for_host(*hst);
-    }
-    return {};
 }

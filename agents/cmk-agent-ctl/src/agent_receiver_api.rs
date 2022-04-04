@@ -71,7 +71,7 @@ pub enum StatusError {
     CertificateInvalid,
 
     #[error(transparent)]
-    UnspecifiedError(#[from] AnyhowError),
+    Other(#[from] AnyhowError),
 }
 
 #[derive(Deserialize)]
@@ -307,19 +307,17 @@ impl Status for Api {
             .map_err(StatusError::ConnectionRefused)?;
 
         match response.status() {
-            StatusCode::OK => Ok(serde_json::from_str::<StatusResponse>(
-                &response.text().context("Failed to obtain response body")?,
-            )
-            .context("Failed to deserialize response body")?),
+            StatusCode::OK => {
+                let body = response
+                    .text()
+                    .map_err(|_| StatusError::Other(anyhow!("Failed to obtain response body")))?;
+                Ok(serde_json::from_str::<StatusResponse>(&body)
+                    .context(format!("Failed to deserialize response body: {}", body))?)
+            }
             StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
-            _ => Err(StatusError::UnspecifiedError(anyhow!(format!(
-                "{}",
-                response
-                    .json::<serde_json::Value>()
-                    .context("Failed to deserialize response body to JSON")?
-                    .get("detail")
-                    .context("Unknown failure")?
-            )))),
+            _ => Err(StatusError::Other(anyhow!(
+                Api::error_response_description(response.status(), response.text().ok())
+            ))),
         }
     }
 }

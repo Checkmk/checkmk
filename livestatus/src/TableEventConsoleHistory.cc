@@ -16,7 +16,7 @@
 class User;
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
-    : TableEventConsole{mc, [this](const User &user, const ECRow &row) {
+    : TableEventConsole{mc, [](const User &user, const ECRow &row) {
                             return isAuthorizedForEvent(user, row);
                         }} {
     ColumnOffsets offsets{};

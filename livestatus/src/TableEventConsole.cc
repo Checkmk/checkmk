@@ -20,7 +20,6 @@
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
-#include "Logger.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -263,33 +262,28 @@ void TableEventConsole::answerQuery(Query &query, const User &user) {
     }
 }
 
-namespace {
-std::optional<bool> isAuthorizedForEventViaContactGroups(
-    const User &user, const std::string &contact_groups) {
-    if (is_none(contact_groups)) {
-        return {};
-    }
-    auto groups{split_list(contact_groups)};
-    return std::any_of(
-        groups.begin(), groups.end(), [&user](const auto &group) {
-            return ::is_member_of_contactgroup(group, user.authUser());
-        });
-}
-}  // namespace
-
+// NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
+// static
 bool TableEventConsole::isAuthorizedForEvent(const User &user,
-                                             const ECRow &row) const {
-    if (user.is_authorized_for_everything()) {
-        return true;
-    }
-    // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
+                                             const ECRow &row) {
     auto precedence = row.getString("event_contact_groups_precedence");
     auto contact_groups = row.getString("event_contact_groups");
     const auto *hst = row.host();
+
+    if (user.is_authorized_for_everything()) {
+        return true;
+    }
+    auto is_authorized_via_contactgroups = [&user, &contact_groups]() {
+        auto groups{split_list(contact_groups)};
+        return std::any_of(
+            groups.begin(), groups.end(), [&user](const auto &group) {
+                return ::is_member_of_contactgroup(group, user.authUser());
+            });
+    };
+
     if (precedence == "rule") {
-        if (auto opt_auth =
-                isAuthorizedForEventViaContactGroups(user, contact_groups)) {
-            return *opt_auth;
+        if (!is_none(contact_groups)) {
+            return is_authorized_via_contactgroups();
         }
         if (hst != nullptr) {
             return user.is_authorized_for_host(*hst);
@@ -300,13 +294,10 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user,
         if (hst != nullptr) {
             return user.is_authorized_for_host(*hst);
         }
-        if (auto opt_auth =
-                isAuthorizedForEventViaContactGroups(user, contact_groups)) {
-            return *opt_auth;
+        if (!is_none(contact_groups)) {
+            return is_authorized_via_contactgroups();
         }
         return true;
     }
-    Error(logger()) << "unknown precedence '" << precedence << "' in table "
-                    << name();
     return false;
 }

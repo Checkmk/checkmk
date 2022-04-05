@@ -78,8 +78,8 @@ public:
     void answerQuery(Query &query, const User &user) override;
 
 protected:
-    [[nodiscard]] bool isAuthorizedForEvent(const User &user,
-                                            const ECRow &row) const;
+    [[nodiscard]] static bool isAuthorizedForEvent(const User &user,
+                                                   const ECRow &row);
 
 private:
     std::function<bool(const User &, const ECRow &)> is_authorized_;

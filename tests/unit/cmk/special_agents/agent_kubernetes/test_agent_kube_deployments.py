@@ -1,10 +1,10 @@
 import json
 
-from mocket import Mocketizer
-from mocket.mockhttp import Entry
+from mocket import Mocketizer  # type: ignore[import]
+from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.utils_kubernetes.transform import deployment_conditions
 from cmk.special_agents.utils_kubernetes.schemata import api
+from cmk.special_agents.utils_kubernetes.transform import deployment_conditions
 
 
 class TestAPIDeployments:

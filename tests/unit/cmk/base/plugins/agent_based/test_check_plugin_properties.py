@@ -132,6 +132,7 @@ def test_no_plugins_with_trivial_sections(fix_register):
             "solaris_prtdiag",
             "solaris_prtpicl",
             "solaris_psrinfo",
+            "solaris_psrinfo_table",
             "solaris_routes",
             "solaris_uname",
             "statgrab_net",

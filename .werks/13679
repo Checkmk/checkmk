@@ -1,0 +1,27 @@
+Title: Better detection of physical CPUs and CPU cores on Solaris
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1649164711
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+The hardware/software-inventory plugin now uses some <tt>psrinfo</tt>
+commands to determine information about physical CPUs,
+cores, and virtual CPUs.
+
+The previous method of parsing the output of <tt>prtpicl</tt> turned
+out insufficient on some Solaris systems.
+
+Furthermore, if some information is not available via <tt>psrinfo</tt>
+(This may be the case for the number of cores), it will be left out
+in the HW/SW inventory table instead of displaying a misleading <tt>0</tt>.
+
+In order to apply the better detection, you have to redeploy the inventory
+agent plugin to your Solaris hosts.
+
+Checkmk 2.1 will continue to work with the old agent plugin, however, in
+Checkmk 2.2, this compatibility will be dropped.

@@ -23,12 +23,14 @@ from cmk import fields
 class ApiError(BaseSchema):
     """This is the base class for all API errors."""
 
-    code = fields.Integer(
+    cast_to_dict = True
+
+    status = fields.Integer(
         description="The HTTP status code.",
         required=True,
         example=404,
     )
-    message = fields.String(
+    detail = fields.String(
         description="Detailed information on what exactly went wrong.",
         required=True,
         example="The resource could not be found.",
@@ -40,14 +42,13 @@ class ApiError(BaseSchema):
     )
     _fields = fields.Dict(
         data_key="fields",  # mypy, due to attribute "fields" being used in marshmallow.Schema
-        keys=fields.String(description="The field name"),
-        values=fields.List(fields.String(description="The error messages")),
+        attribute="fields",
+        keys=fields.String(description="The key name"),
         description="Detailed error messages on all fields failing validation.",
         required=False,
     )
     ext: fields.Field = fields.Dict(
         keys=fields.String(description="The key name"),
-        values=fields.String(description="The value"),
         description="Additional information about the error.",
         required=False,
     )

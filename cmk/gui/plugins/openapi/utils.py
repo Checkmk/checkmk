@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Dict, List, Literal, Optional
+from typing import Any, cast, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -22,8 +22,8 @@ def problem(
     title: str = "A problem occurred.",
     detail: Optional[str] = None,
     type_: Optional[str] = None,
-    fields: Optional[Dict[str, List[str]]] = None,
-    ext: Optional[Dict[str, Any]] = None,
+    fields: Optional[dict[str, Any]] = None,
+    ext: Optional[dict[str, Any]] = None,
 ) -> Response:
     problem_dict = {
         "title": title,

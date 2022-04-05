@@ -5,6 +5,7 @@
 
 #include "TableEventConsole.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -297,10 +298,10 @@ std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
     if (is_none(event_contact_groups)) {
         return {};
     }
-    for (const auto &group : split_list(event_contact_groups)) {
-        if (core()->is_contact_member_of_contactgroup(group, user.authUser())) {
-            return true;
-        }
-    }
-    return false;
+    auto groups{split_list(event_contact_groups)};
+    return std::any_of(groups.begin(), groups.end(),
+                       [this, &user](const auto &group) {
+                           return core()->is_contact_member_of_contactgroup(
+                               group, user.authUser());
+                       });
 }

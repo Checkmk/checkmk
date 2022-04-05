@@ -43,7 +43,7 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.context import local
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.globals import config, html, request, response, session
 from cmk.gui.hooks import request_memoize
@@ -581,7 +581,7 @@ def _initialize_session(username: UserId) -> str:
 
 
 def _set_session(user_id: UserId, session_info: SessionInfo) -> None:
-    local.session = Session(user_id=user_id, session_info=session_info)
+    request_local_attr().session = Session(user_id=user_id, session_info=session_info)
 
 
 def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, SessionInfo]:

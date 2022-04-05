@@ -24,7 +24,7 @@ from cmk.utils.site import omd_site, url_prefix
 import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.utils as utils
-from cmk.gui.context import local
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
@@ -156,7 +156,7 @@ def load_config() -> None:
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 
-    local.config = make_config_object(raw_config)
+    request_local_attr().config = make_config_object(raw_config)
 
     execute_post_config_load_hooks()
 

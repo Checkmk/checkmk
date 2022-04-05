@@ -10,7 +10,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
-from cmk.gui.context import local
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.globals import config, html
 from cmk.gui.logged_in import user
 
@@ -38,6 +38,7 @@ def test_get_start_url_user_config(
         def start_url(self) -> str:
             return "user_url.py"
 
+    local = request_local_attr()
     monkeypatch.setattr(local, "user", MockUser())
 
     assert cmk.gui.main._get_start_url() == "user_url.py"

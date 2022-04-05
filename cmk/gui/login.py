@@ -26,7 +26,7 @@ import cmk.gui.mobile
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.context import local
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
@@ -448,10 +448,10 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId):
 
 
 def set_auth_type(_auth_type: AuthType) -> None:
-    local.auth_type = _auth_type
+    request_local_attr().auth_type = _auth_type
 
 
-auth_type: Union[AuthType, LocalProxy] = LocalProxy(lambda: local.auth_type)
+auth_type: Union[AuthType, LocalProxy] = LocalProxy(lambda: request_local_attr().auth_type)
 
 
 @page_registry.register_page("login")

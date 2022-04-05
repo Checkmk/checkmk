@@ -21,7 +21,6 @@ from cmk.utils.version import __version__, Version
 import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.context import local
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config, endpoint, request
@@ -498,12 +497,12 @@ def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
     """Managing authenticated user context
 
     After the user has been authenticated, initialize the global user object."""
-    old_user = local.user
+    old_user = request_local_attr().user
     try:
-        local.user = user_obj
+        request_local_attr().user = user_obj
         yield
     finally:
-        local.user = old_user
+        request_local_attr().user = old_user
 
 
 def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:

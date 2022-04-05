@@ -14,7 +14,6 @@ from typing import List, Optional, TYPE_CHECKING
 
 from werkzeug.local import LocalStack
 
-from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.utils.user_errors import UserErrors
 
 if TYPE_CHECKING:
@@ -186,6 +185,3 @@ def _call_hook(name: str) -> None:
     from cmk.gui import hooks
 
     hooks.call(name)
-
-
-local: RequestContext = request_local_attr()  # None as name will get the whole object.

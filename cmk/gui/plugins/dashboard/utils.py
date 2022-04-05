@@ -1231,7 +1231,8 @@ def create_data_for_single_metric(
 
 def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic(board["topic"])
+        mega_menu_registry.menu_monitoring(),
+        PagetypeTopics.get_topic(board["topic"]).title(),
     )
     breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
     return breadcrumb

@@ -596,7 +596,7 @@ class View:
 
             breadcrumb = make_topic_breadcrumb(
                 mega_menu_registry.menu_monitoring(),
-                pagetypes.PagetypeTopics.get_topic(self.spec["topic"]),
+                pagetypes.PagetypeTopics.get_topic(self.spec["topic"]).title(),
             )
             breadcrumb.append(
                 BreadcrumbItem(

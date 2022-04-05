@@ -8,15 +8,12 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from typing import Iterable, List, MutableSequence, NamedTuple, Optional, TYPE_CHECKING, Union
+from typing import Iterable, List, MutableSequence, NamedTuple, Optional, Union
 
 from cmk.gui.globals import html
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.speaklater import LazyString
-
-if TYPE_CHECKING:
-    from cmk.gui.pagetypes import PagetypeTopics
 
 
 class BreadcrumbItem(NamedTuple):
@@ -81,7 +78,10 @@ def make_current_page_breadcrumb_item(title: str) -> BreadcrumbItem:
     )
 
 
-def make_topic_breadcrumb(menu: MegaMenu, topic: "PagetypeTopics") -> Breadcrumb:
+def make_topic_breadcrumb(
+    menu: MegaMenu,
+    topic_title: Union[str, LazyString],
+) -> Breadcrumb:
     """Helper to create a breadcrumb down to topic level"""
     # 1. Main menu level
     breadcrumb = make_main_menu_breadcrumb(menu)
@@ -89,7 +89,7 @@ def make_topic_breadcrumb(menu: MegaMenu, topic: "PagetypeTopics") -> Breadcrumb
     # 2. Topic level
     breadcrumb.append(
         BreadcrumbItem(
-            title=topic.title(),
+            title=topic_title,
             url=None,
         )
     )

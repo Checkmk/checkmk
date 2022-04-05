@@ -2498,7 +2498,8 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     allhosts_view_spec = permitted_views["allhosts"]
 
     breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic(allhosts_view_spec["topic"])
+        mega_menu_registry.menu_monitoring(),
+        PagetypeTopics.get_topic(allhosts_view_spec["topic"]).title(),
     )
 
     # 1. level: list of all hosts

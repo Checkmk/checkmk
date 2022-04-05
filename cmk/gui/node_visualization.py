@@ -187,7 +187,8 @@ class ParentChildTopologyPage(Page):
     def show_topology(self, topology_settings: TopologySettings) -> None:
         visual_spec = ParentChildTopologyPage.visual_spec()
         breadcrumb = make_topic_breadcrumb(
-            mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic(visual_spec["topic"])
+            mega_menu_registry.menu_monitoring(),
+            PagetypeTopics.get_topic(visual_spec["topic"]).title(),
         )
         breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
         page_menu = PageMenu(breadcrumb=breadcrumb)

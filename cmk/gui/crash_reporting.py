@@ -146,7 +146,8 @@ class PageCrash(ABCCrashReportPage):
 
     def _breadcrumb(self, title: str) -> Breadcrumb:
         breadcrumb = make_topic_breadcrumb(
-            mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic("analyze")
+            mega_menu_registry.menu_monitoring(),
+            PagetypeTopics.get_topic("analyze").title(),
         )
 
         # Add the parent element: List of all crashes

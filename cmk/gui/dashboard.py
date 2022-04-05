@@ -2086,7 +2086,8 @@ def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic(board["topic"])
+        mega_menu_registry.menu_monitoring(),
+        PagetypeTopics.get_topic(board["topic"]).title(),
     )
     breadcrumb.append(
         BreadcrumbItem(

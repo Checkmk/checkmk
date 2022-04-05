@@ -205,17 +205,25 @@ std::unique_ptr<TimeColumn<ECRow>> ECRow::makeTimeColumn(
         });
 }
 
+namespace {
+// The funny encoding of an Optional[Iterable[str]] is done in
+// cmk.ec.history.quote_tab().
+
+bool is_none(const std::string &str) { return str == "\002"; }
+
+std::vector<std::string> split_list(const std::string &str) {
+    return str.empty() || is_none(str) ? std::vector<std::string>()
+                                       : mk::split(str.substr(1), '\001');
+}
+}  // namespace
+
 // static
 std::unique_ptr<ListColumn<ECRow>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
     return std::make_unique<ListColumn<ECRow>>(
-        name, description, offsets, [name](const ECRow &r) {
-            auto result = r.getString(name);
-            return result.empty() || result == "\002"
-                       ? std::vector<std::string>()
-                       : mk::split(result.substr(1), '\001');
-        });
+        name, description, offsets,
+        [name](const ECRow &r) { return split_list(r.getString(name)); });
 }
 
 std::string ECRow::getString(const std::string &column_name) const {
@@ -285,15 +293,11 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user,
 
 std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
     const User &user, const ECRow &row) const {
-    auto col = std::static_pointer_cast<ListColumn<ECRow>>(
-        column("event_contact_groups"));
-    if (const auto *r = col->columnData<ECRow>(Row{&row})) {
-        // TODO(sp) This check for None is a hack...
-        if (r->getString(col->name()) == "\002") {
-            return {};
-        }
+    auto event_contact_groups = row.getString("event_contact_groups");
+    if (is_none(event_contact_groups)) {
+        return {};
     }
-    for (const auto &name : col->getValue(Row{&row}, unknown_auth_user(), 0s)) {
+    for (const auto &name : split_list(event_contact_groups)) {
         if (core()->is_contact_member_of_contactgroup(
                 core()->find_contactgroup(name),
                 reinterpret_cast<const MonitoringCore::Contact *>(

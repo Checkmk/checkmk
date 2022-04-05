@@ -1200,7 +1200,6 @@ def Hostname(  # pylint: disable=redefined-builtin
         title=title,
         help=help,
         default_value=default_value,
-        size=45,
     )
 
 

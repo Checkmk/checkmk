@@ -1220,7 +1220,7 @@ def _active_checks_http_proxyspec():
     return Dictionary(
         title=_("Use proxy"),
         elements=[
-            ("address", Hostname(title=_("Proxy server address"))),
+            ("address", TextInput(title=_("Proxy server address"))),
             ("port", _active_checks_http_portspec(80)),
             (
                 "auth",
@@ -1253,17 +1253,18 @@ def _active_checks_http_hostspec():
             "HTTP/1.1 is used."
         ),
         elements=[
-            ("address", Hostname(title=_("Hosts name / IP address"))),
+            ("address", TextInput(title=_("Hosts name / IP address"), allow_empty=False)),
             ("port", _active_checks_http_portspec(443)),
             _ip_address_family_element(),
             (
                 "virthost",
-                Hostname(
+                TextInput(
                     title=_("Virtual host"),
                     help=_(
                         "Set this in order to specify the name of the"
                         " virtual host for the query."
                     ),
+                    allow_empty=False,
                 ),
             ),
         ],
@@ -1354,7 +1355,6 @@ def _valuespec_active_checks_http():
                             "<tt>HTTP</tt> or <tt>HTTPS</tt>."
                         ),
                         allow_empty=False,
-                        size=45,
                         validate=_validate_active_check_http_name,
                     ),
                 ),
@@ -1374,13 +1374,14 @@ def _valuespec_active_checks_http():
                                     elements=[
                                         (
                                             "uri",
-                                            Hostname(
+                                            TextInput(
                                                 title=_("URI to fetch (default is <tt>/</tt>)"),
                                                 help=_(
                                                     "The URI of the request. This should start with"
                                                     " '/' and not include the domain"
                                                     " (e.g. '/index.html')."
                                                 ),
+                                                allow_empty=False,
                                                 default_value="/",
                                             ),
                                         ),

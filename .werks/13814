@@ -1,0 +1,14 @@
+Title: KUBE addition of namespace object as monitored entity
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649169706
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk adds the Kubernetes namespace object as new monitored entity.
+The user can configure in the Kubernetes datasource rule if namespaces
+should be monitored separately or not. A piggyback host will be created
+for each monitored namespace.

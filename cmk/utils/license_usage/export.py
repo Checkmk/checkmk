@@ -434,7 +434,7 @@ class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
 
 class LicenseUsageHistoryWithSiteHash:
     def __init__(self, iterable: Iterable[LicenseUsageSampleWithSiteHash]) -> None:
-        self._samples = iterable
+        self._samples = list(iterable)
 
     def __iter__(self) -> Iterator[LicenseUsageSampleWithSiteHash]:
         return iter(self._samples)

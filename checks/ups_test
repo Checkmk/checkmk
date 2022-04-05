@@ -70,6 +70,15 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 
 ups_test_default = (0, 0)
 
+_TEST_RESULT_SUMMARY_MAP = {
+    "1": "passed",
+    "2": "warning",
+    "3": "error",
+    "4": "aborted",
+    "5": "in progress",
+    "6": "no tests initiated",
+}
+
 
 def inventory_ups_test(info):
     if info[1]:
@@ -93,8 +102,8 @@ def check_ups_test(_no_item, params, info):
         state = 2
     elif ResultsSummary in ["2"]:
         state = 1
-    if upsTestResultsDetail or state:
-        yield state, upsTestResultsDetail
+    details = f" ({upsTestResultsDetail})" if upsTestResultsDetail else ""
+    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[ResultsSummary]}{details}"
 
     # Elapsed time since last start of test
     elapsed = uptime - start_time

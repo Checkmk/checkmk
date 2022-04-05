@@ -116,6 +116,13 @@ bool GetConfiguredLocalOnly() {
                        cfg::defaults::kControllerLocalOnly);
 }
 
+bool IsConfiguredEmergencyOnCrash() {
+    auto controller_config = GetControllerNode();
+    return cfg::GetVal(controller_config, cfg::vars::kControllerOnCrash,
+                       std::string{cfg::defaults::kControllerOnCrashDefault}) ==
+           cfg::values::kControllerOnCrashEmergency;
+}
+
 bool GetConfiguredCheck() {
     auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerCheck,

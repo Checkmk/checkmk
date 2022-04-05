@@ -259,9 +259,7 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user,
         return true;
     }
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
-    auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
-                          column("event_contact_groups_precedence"))
-                          ->getValue(Row{&row});
+    auto precedence = row.getString("event_contact_groups_precedence");
     if (precedence == "rule") {
         if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
             return *opt_auth;

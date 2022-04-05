@@ -13,9 +13,12 @@ string concatenation.
 It's implementation is still a bit rudimentary but supports most necessary concepts already.
 
 """
+from __future__ import annotations
 
 import abc
-from typing import Any, List, Tuple
+from typing import List, Tuple, Union
+
+Primitives = Union[str, int, bool, float, list, tuple]
 
 # TODO: column functions
 # TODO: more tests
@@ -81,50 +84,52 @@ class UnaryExpression(abc.ABC):
     def __init__(self, value) -> None:  # type:ignore[no-untyped-def]
         self.value = value
 
-    def op(self, operator: str, other: Any) -> "BinaryExpression":
-        # TODO: typing
+    def op(self, operator: str, other: UnaryExpression | Primitives) -> BinaryExpression:
+        other_expr: UnaryExpression
         if isinstance(other, (list, tuple)):
-            other = LiteralExpression(" ".join(other))
-        if not isinstance(other, UnaryExpression):
-            other = LiteralExpression(other)
-        return BinaryExpression(self, other, operator)
+            other_expr = LiteralExpression(" ".join(other))
+        elif isinstance(other, UnaryExpression):
+            other_expr = other
+        else:
+            other_expr = LiteralExpression(other)
+        return BinaryExpression(self, other_expr, operator)
 
     def __repr__(self) -> str:
         return "<%s %s 0x%x>" % (self.__class__.__name__, self.value, id(self))
 
     @abc.abstractmethod
-    def __eq__(self, other):
+    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         raise NotImplementedError()
 
-    def __lt__(self, other):
+    def __lt__(self, other: Primitives) -> BinaryExpression:
         return self.op("<", other)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Primitives) -> BinaryExpression:
         return self.op(">", other)
 
-    def __le__(self, other):
+    def __le__(self, other: Primitives) -> BinaryExpression:
         return self.op("<=", other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Primitives) -> BinaryExpression:
         return self.op(">=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: Primitives) -> Not:  # type: ignore[override]
         return Not(self.__eq__(other))
 
     @abc.abstractmethod
-    def equals(self, other, ignore_case=False):
+    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def contains(self, other, ignore_case=False):
+    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def disparity(self, other, ignore_case=False):
+    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def empty(self):
+    def empty(self) -> BinaryExpression:
         raise NotImplementedError()
 
 
@@ -148,25 +153,25 @@ class ScalarExpression(UnaryExpression):
     >= 	Larger or equal 	Lexicographically larger or equal
     """
 
-    def __eq__(self, other):
+    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         return self.op("=", other)
 
-    def equals(self, other, ignore_case=False):
+    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             return self.op("=~", other)
 
         return self.op("=", other)
 
-    def contains(self, other, ignore_case=False):
+    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             return self.op("~~", other)
 
         return self.op("~", other)
 
-    def empty(self):
+    def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
-    def disparity(self, other, ignore_case=False):
+    def disparity(self, other, ignore_case=False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
 
@@ -185,10 +190,10 @@ class ListExpression(UnaryExpression):
 
     """
 
-    def __eq__(self, other):
+    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         return self.equals(other)
 
-    def equals(self, other, ignore_case=False):
+    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if not other:
             # Check for empty list
             op = "="
@@ -201,17 +206,17 @@ class ListExpression(UnaryExpression):
                 op = ">="
         return self.op(op, other)
 
-    def disparity(self, other, ignore_case=False):
+    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             op = ">"
         else:
             op = "<"
         return self.op(op, other)
 
-    def contains(self, other, ignore_case=False):
+    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         return self.op("~~", other)
 
-    def empty(self):
+    def empty(self) -> BinaryExpression:
         return self.op("=", LiteralExpression(""))
 
 
@@ -230,10 +235,10 @@ class LiteralExpression(ScalarExpression):
 
     """
 
-    def disparity(self, other, ignore_case=False):
+    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
-    def empty(self):
+    def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
     def render(self) -> RenderIntermediary:
@@ -248,7 +253,7 @@ class BinaryExpression(QueryExpression):
 
     Examples:
 
-        >>> fexp = LiteralExpression("hurz") == LiteralExpression("blah")
+        >>> fexp: BinaryExpression = LiteralExpression("hurz") == LiteralExpression("blah")
         >>> fexp.render()
         [('Filter', 'hurz = blah')]
 
@@ -305,10 +310,7 @@ class BinaryExpression(QueryExpression):
 
 
 class BoolExpression(QueryExpression):
-    @property
-    @abc.abstractmethod
-    def expr(self):
-        raise NotImplementedError()
+    expr: str
 
     def __init__(self, *args: QueryExpression) -> None:
         self.args = args

@@ -116,7 +116,7 @@ pytestmark = pytest.mark.checks
                     "endpoint": "https://11.211.3.32:20026",
                     "verify-cert": False,
                 },
-                "monitored-objects": ["pods"],
+                "monitored-objects": ["pods", "namespaces"],
             },
             [
                 "--cluster",
@@ -125,6 +125,7 @@ pytestmark = pytest.mark.checks
                 "randomtoken",
                 "--monitored-objects",
                 "pods",
+                "namespaces",
                 "--cluster-aggregation-exclude-node-roles",
                 "control-plane",
                 "infra",

@@ -45,7 +45,7 @@ import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, html, request, response, session
+from cmk.gui.globals import config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -517,6 +517,9 @@ class Session:
 
     user_id: UserId
     session_info: SessionInfo
+
+
+session: Session = request_local_attr("session")
 
 
 def _is_valid_user_session(

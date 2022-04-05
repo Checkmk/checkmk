@@ -9,8 +9,7 @@ import pytest
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.login as login
-from cmk.gui.globals import session
-from cmk.gui.userdb import on_access, on_succeeded_login
+from cmk.gui.userdb import on_access, on_succeeded_login, session
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.script_helpers import application_and_request_context

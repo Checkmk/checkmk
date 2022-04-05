@@ -24,7 +24,7 @@ from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import g, html, request, response, session, theme, user_errors
+from cmk.gui.globals import g, html, request, response, theme, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -49,6 +49,7 @@ from cmk.gui.userdb import (
     load_two_factor_credentials,
     make_two_factor_backup_codes,
     save_two_factor_credentials,
+    session,
     set_two_factor_completed,
 )
 from cmk.gui.utils.flashed_messages import flash

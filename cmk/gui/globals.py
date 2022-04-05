@@ -19,7 +19,7 @@ from cmk.gui.ctx_stack import _lookup_app_object, request_local_attr
 
 if TYPE_CHECKING:
     # Import cycles
-    from cmk.gui import htmllib, http, userdb
+    from cmk.gui import htmllib, http
     from cmk.gui.config import Config
     from cmk.gui.display_options import DisplayOptions
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
@@ -53,7 +53,6 @@ request: http.Request = request_local_attr("request")
 response: http.Response = request_local_attr("response")
 output_funnel: OutputFunnel = request_local_attr("output_funnel")
 config: Config = request_local_attr("config")
-session: userdb.Session = request_local_attr("session")
 endpoint: Endpoint = request_local_attr("endpoint")
 user_errors: UserErrors = request_local_attr("user_errors")
 

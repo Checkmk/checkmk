@@ -76,7 +76,16 @@ class BaseSchema(Schema):
 
 
 class FieldWrapper:
-    def __init__(self, field: fields.Field):
+    """Wrapper for marshmallow fields.
+
+    We need this because marshmallow automatically registers fields as attributes on schemas to its
+    `declared_fields` dictionary and removes it from the class's __dict__.
+
+    This is not what we want in some cases. Therefore, we wrap the fields to make sure they are not
+    registered as attributes.
+    """
+
+    def __init__(self, field: fields.Field) -> None:
         self.field = field
 
 

@@ -10,8 +10,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 
 check_name = "ups_test"
 
-DEFAULT_PARAMS = {"auto-migration-wrapper-key": (0, 0)}
-PARAMS = {"auto-migration-wrapper-key": (2, 3)}
+_DAYS = 3600 * 24
+
+DEFAULT_PARAMS = {"levels_elapsed_time": None}
+PARAMS = {"levels_elapsed_time": (2 * _DAYS, 3 * _DAYS)}
 
 
 # TODO: drop this after migration
@@ -37,9 +39,7 @@ def test_discover_nothing(discover_ups_test) -> None:
 
 
 def test_discover(discover_ups_test) -> None:
-    assert list(discover_ups_test([[["3600"]], [["1", "15000000", ""]]])) == [
-        Service(parameters=DEFAULT_PARAMS)
-    ]
+    assert list(discover_ups_test([[["3600"]], [["1", "15000000", ""]]])) == [Service()]
 
 
 @pytest.mark.parametrize(

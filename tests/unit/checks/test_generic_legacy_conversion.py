@@ -869,7 +869,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "ups_modulys_outphase_default_levels",
         "ups_out_voltage_default_levels",
         "ups_power_default_levels",
-        "ups_test_default",
         "varnish_backend_success_ratio_default_levels",
         "varnish_cache_hit_ratio_default_levels",
         "varnish_esi_default_levels",

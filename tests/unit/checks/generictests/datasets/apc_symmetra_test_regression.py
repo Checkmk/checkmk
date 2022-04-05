@@ -15,9 +15,9 @@ checkname = 'apc_symmetra_test'
 info = [[u'1', u'03/09/2015']]
 
 
-discovery = {'': [(None, 'ups_test_default')]}
+discovery = {'': [(None, {})]}
 
 
 checks = {'': [(None,
-                (0, 0),
+                {"levels_elapsed_time": None},
                 [(0, u'Result of self test: OK, Date of last test: 03/09/2015', [])])]}

@@ -372,7 +372,6 @@ class ErrorReporter:
         ("check", "apc_symmetra", "checkgroup_parameters:apc_symentra"),
         ("check", "apc_symmetra_power", "checkgroup_parameters:apc_power"),
         ("check", "apc_symmetra_temp", "checkgroup_parameters:temperature"),
-        ("check", "apc_symmetra_test", "checkgroup_parameters:ups_test"),
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),
         ("check", "apt", "checkgroup_parameters:apt"),
@@ -544,7 +543,6 @@ class ErrorReporter:
         ("check", "ups_power", "checkgroup_parameters:epower"),
         ("check", "ups_socomec_in_voltage", "checkgroup_parameters:evolt"),
         ("check", "ups_socomec_out_voltage", "checkgroup_parameters:evolt"),
-        ("check", "ups_test", "checkgroup_parameters:ups_test"),
         ("check", "veeam_tapejobs", "checkgroup_parameters:veeam_tapejobs"),
         ("check", "vms_system_procs", "checkgroup_parameters:vms_procs"),
         (

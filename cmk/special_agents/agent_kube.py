@@ -1879,7 +1879,7 @@ def write_sections_based_on_performance_pods(
             with ConditionalPiggybackSection(
                 piggyback_formatter(
                     object_type="pod",
-                    namespace_name=lookup_name_piggyback_mappings[pod.lookup_name],
+                    namespaced_name=lookup_name_piggyback_mappings[pod.lookup_name],
                 )
             ):
                 pod_performance_sections(pod)
@@ -1899,7 +1899,7 @@ def write_sections_based_on_performance_pods(
                 performance_pods,
                 piggyback_name=piggyback_formatter(
                     object_type="deployment",
-                    namespace_name=deployment.name(prepend_namespace=True),
+                    namespaced_name=deployment.name(prepend_namespace=True),
                 ),
             )
     if "daemonsets" in monitored_objects:
@@ -1909,7 +1909,7 @@ def write_sections_based_on_performance_pods(
                 daemonset,
                 performance_pods,
                 piggyback_name=piggyback_formatter(
-                    object_type="daemonset", namespace_name=daemonset.name(prepend_namespace=True)
+                    object_type="daemonset", namespaced_name=daemonset.name(prepend_namespace=True)
                 ),
             )
     if "statefulsets" in monitored_objects:
@@ -1920,7 +1920,7 @@ def write_sections_based_on_performance_pods(
                 performance_pods,
                 piggyback_name=piggyback_formatter(
                     object_type="statefulset",
-                    namespace_name=statefulset.name(prepend_namespace=True),
+                    namespaced_name=statefulset.name(prepend_namespace=True),
                 ),
             )
     LOGGER.info("Write cluster sections based on performance data")

@@ -51,16 +51,28 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
             echo "SerialNumber: $SN"
             prtdiag -v
         fi
-
-        if type prtpicl >/dev/null; then
-            echo "<<<solaris_prtpicl:persist($UNTIL)>>>"
-            prtpicl -v
-        fi
     fi
 
     if type psrinfo >/dev/null; then
+        # Previously, we only had this single psrinfo section
+        # Keep the name to avoid incompatibilities.
         echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
         psrinfo -p -v
+
+        # Name the section containing the plain "psrinfo" output
+        # _virtual instead, as this is what it basically contains
+        echo "<<<solaris_psrinfo_virtual:persist($UNTIL)>>>"
+        psrinfo
+
+        echo "<<<solaris_psrinfo_physical:persist($UNTIL)>>>"
+        psrinfo -p
+
+        # -t option is not available on older systems
+        PSRINFO_T=$(psrinfo -t 2>/dev/null)
+        if [ -n "$PSRINFO_T" ]; then
+            echo "<<<solaris_psrinfo_table:persist($UNTIL)>>>"
+            psrinfo -t
+        fi
     fi
 
     if type pkginfo >/dev/null; then

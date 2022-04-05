@@ -22,7 +22,7 @@ def problem(
     title: str = "A problem occurred.",
     detail: Optional[str] = None,
     type_: Optional[str] = None,
-    fields: Optional[dict[str, list[str]]] = None,
+    fields: Optional[dict[str, Any]] = None,
     ext: Optional[dict[str, Any]] = None,
 ) -> Response:
     problem_dict = {

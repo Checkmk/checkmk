@@ -348,7 +348,7 @@ class Endpoint:
         method: HTTPMethod = "get",
         content_type: str = "application/json",
         output_empty: bool = False,
-        error_schemas: Optional[Mapping[ErrorStatusCodeInt, Type[Schema]]] = None,
+        error_schemas: Optional[Mapping[ErrorStatusCodeInt, Type[ApiError]]] = None,
         response_schema: Optional[RawParameter] = None,
         request_schema: Optional[RawParameter] = None,
         convert_response: bool = True,
@@ -450,6 +450,10 @@ class Endpoint:
                     "Unexpected custom status description. "
                     f"Status code {status_code} not expected for endpoint: {method.upper()} {path}"
                 )
+
+    def error_schema(self, status_code: ErrorStatusCodeInt) -> ApiError:
+        schema: Type[ApiError] = self.error_schemas.get(status_code, ApiError)
+        return schema()
 
     @contextlib.contextmanager
     def do_not_track_permissions(self) -> typing.Iterator[None]:
@@ -696,7 +700,7 @@ class Endpoint:
             try:
                 response = self.func(_params)
             except ValidationError as exc:
-                return _problem(exc, status_code=400)
+                response = _problem(exc, status_code=400)
 
             # We don't expect a permission to be triggered when an endpoint ran into an error.
             if response.status_code < 400:
@@ -783,6 +787,20 @@ class Endpoint:
 
                 if self.convert_response:
                     response.set_data(json.dumps(outbound))
+            elif response.headers["Content-Type"] == "application/problem+json" and response.data:
+                data = response.data.decode("utf-8")
+                try:
+                    json.loads(data)
+                except ValidationError as exc:
+                    return problem(
+                        status=500,
+                        title="Server was about to send an invalid response.",
+                        detail="This is an error of the implementation.",
+                        ext={
+                            "errors": exc.messages,
+                            "orig": data,
+                        },
+                    )
 
             response.freeze()
             return response

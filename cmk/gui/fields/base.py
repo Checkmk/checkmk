@@ -56,10 +56,21 @@ class BaseSchema(Schema):
 
     @pre_dump(pass_many=True)
     def validate_dump_fields(self, data, **kwargs):
-        if self.validate_on_dump and isinstance(data, dict):
-            for key in data:
-                if key not in self.declared_fields:
-                    raise ValidationError({key: "Unknown field."})
+        if not self.validate_on_dump:
+            return data
+
+        if not isinstance(data, dict):
+            return data
+
+        # Some fields may use `data_key` or `attribute` to specify the key in the data dict.
+        field_names = [
+            field.data_key if field.data_key is not None else name
+            for name, field in self.declared_fields.items()
+        ]
+        for key in data:
+            if key not in field_names:
+                raise ValidationError({key: "Unknown field."})
+
         return data
 
 

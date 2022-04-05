@@ -767,15 +767,14 @@ def test_openapi_host_created_timestamp(
     assert created_at_post == created_at_get == created_at_put
 
 
+@pytest.mark.usefixtures("with_host")
 def test_openapi_host_custom_attributes(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
     custom_host_attribute,
 ):
-    base = "/NO_SITE/check_mk/api/1.0"
-
     # Known custom attribute
-
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/example.com",

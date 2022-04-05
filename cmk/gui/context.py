@@ -14,6 +14,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from werkzeug.local import LocalStack
 
+from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.user_errors import UserErrors
 
 if TYPE_CHECKING:
@@ -27,7 +28,6 @@ if TYPE_CHECKING:
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
     from cmk.gui.utils.timeout_manager import TimeoutManager
-    from cmk.gui.utils.transaction_manager import TransactionManager
 
 _sentinel = object()
 
@@ -139,6 +139,7 @@ class RequestContext:
         self.output_funnel = funnel
         self.config = config_obj
         self._user = user
+        self._transactions = TransactionManager(self.request, self._user)
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = url_filter
@@ -156,7 +157,7 @@ class RequestContext:
 
     @property
     def transactions(self) -> TransactionManager:
-        return self._user.transactions
+        return self._transactions
 
     def __enter__(self):
         self._stack.push(self)

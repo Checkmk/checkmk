@@ -8,13 +8,11 @@ from __future__ import annotations
 
 import random
 import time
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import Request
-
-if TYPE_CHECKING:
-    from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.logged_in import LoggedInUser
 
 
 class TransactionManager:
@@ -28,7 +26,6 @@ class TransactionManager:
         self._new_transids: List[str] = []
         self._ignore_transids = False
         self._current_transid: Optional[str] = None
-        self._user = user
 
     def ignore(self) -> None:
         """Makes the GUI skip all transaction validation steps"""

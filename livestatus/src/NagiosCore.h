@@ -71,8 +71,8 @@ public:
     ContactGroup *find_contactgroup(const std::string &name) override;
 
     const Contact *find_contact(const std::string &name) override;
-    bool is_contact_member_of_contactgroup(const ContactGroup *group,
-                                           const Contact *contact) override;
+    bool is_contact_member_of_contactgroup(const std::string &group,
+                                           const contact *contact) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
     std::chrono::system_clock::time_point last_config_change() override;

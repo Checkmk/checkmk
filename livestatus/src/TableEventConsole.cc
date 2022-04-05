@@ -297,11 +297,8 @@ std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
     if (is_none(event_contact_groups)) {
         return {};
     }
-    for (const auto &name : split_list(event_contact_groups)) {
-        if (core()->is_contact_member_of_contactgroup(
-                core()->find_contactgroup(name),
-                reinterpret_cast<const MonitoringCore::Contact *>(
-                    user.authUser()))) {
+    for (const auto &group : split_list(event_contact_groups)) {
+        if (core()->is_contact_member_of_contactgroup(group, user.authUser())) {
             return true;
         }
     }

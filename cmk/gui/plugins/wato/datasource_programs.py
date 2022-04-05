@@ -1014,7 +1014,7 @@ def _valuespec_special_agents_kube():
                 ),
             ),
         ],
-        optional_keys=["namespaces", "cluster-collector", "roles"],
+        optional_keys=["namespaces", "cluster-collector", "cluster-resource-aggregation"],
         default_keys=["cluster-collector"],
         title=_("Kubernetes"),
     )

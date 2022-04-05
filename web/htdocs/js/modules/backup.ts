@@ -33,7 +33,11 @@ function handle_job_detail_response(handler_data, response_body) {
     container!.innerHTML = response_body;
 
     if (!had_message) {
-        refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
+        refresh_job_details(
+            handler_data["url"],
+            handler_data["ident"],
+            handler_data["is_site"]
+        );
     } else {
         utils.reload_whole_page();
     }
@@ -52,7 +56,8 @@ function handle_job_detail_error(handler_data, status_code, error_msg) {
     msg.className = "message";
 
     var txt = "Could not update the job details.";
-    if (handler_data.is_site) txt += " The site will be started again after the restore.";
+    if (handler_data.is_site)
+        txt += " The site will be started again after the restore.";
     else txt += " Maybe the device is currently being rebooted.";
 
     txt += "<br>Will continue trying to refresh the job details.";
@@ -62,7 +67,11 @@ function handle_job_detail_error(handler_data, status_code, error_msg) {
 
     msg.innerHTML = txt;
 
-    refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
+    refresh_job_details(
+        handler_data["url"],
+        handler_data["ident"],
+        handler_data["is_site"]
+    );
 }
 
 function hide_job_detail_msg() {

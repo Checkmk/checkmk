@@ -73,7 +73,8 @@ function reschedule_check_response_handler(handler_data, ajax_response) {
         window.location.reload();
     } else if (response.result.state === "TIMEOUT") {
         utils.add_class(img, "reload_failed");
-        img.title = "Timeout while performing action: " + response.result.message;
+        img.title =
+            "Timeout while performing action: " + response.result.message;
     } else {
         utils.add_class(img, "reload_failed");
         img.title = response.result.message;

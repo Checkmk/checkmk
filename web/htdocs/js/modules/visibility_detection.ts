@@ -26,7 +26,10 @@ export function initialize() {
     else if ((hidden_attr_name = "mozHidden") in document)
         document.addEventListener("mozvisibilitychange", on_visibility_change);
     else if ((hidden_attr_name = "webkitHidden") in document)
-        document.addEventListener("webkitvisibilitychange", on_visibility_change);
+        document.addEventListener(
+            "webkitvisibilitychange",
+            on_visibility_change
+        );
     else if ((hidden_attr_name = "msHidden") in document)
         document.addEventListener("msvisibilitychange", on_visibility_change);
 
@@ -82,5 +85,7 @@ export function initialize() {
 
     // set the initial state (but only if browser supports the Page Visibility API)
     if (document[hidden_attr_name] !== undefined)
-        on_visibility_change({type: document[hidden_attr_name] ? "blur" : "focus"});
+        on_visibility_change({
+            type: document[hidden_attr_name] ? "blur" : "focus",
+        });
 }

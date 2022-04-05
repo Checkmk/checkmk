@@ -21,7 +21,7 @@ export function create_graph(cid, ft, ut, vmi, vma) {
     // Keep important data as global variables, needed by
     // render_curve()
     canvas_id = cid;
-    var canvas =<HTMLCanvasElement> document.getElementById(canvas_id);
+    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     from_time = ft;
     until_time = ut;
     v_min = vmi;
@@ -125,12 +125,20 @@ export function render_coordinates(v_scala, t_scala) {
     line(c, from_time, v_min, from_time, v_max);
     line(c, from_time, v_min, until_time, v_min);
     arrow_up(c, left_border, top_border, 1, 8, "#000000");
-    arrow_right(c, width - right_border, height - bottom_border, 8, 8, "#000000");
+    arrow_right(
+        c,
+        width - right_border,
+        height - bottom_border,
+        8,
+        8,
+        "#000000"
+    );
 }
 
 function point(t, v) {
     return [
-        left_border + ((t - from_time) / (until_time - from_time)) * netto_width,
+        left_border +
+            ((t - from_time) / (until_time - from_time)) * netto_width,
         height - bottom_border - ((v - v_min) / (v_max - v_min)) * netto_height,
     ];
 }

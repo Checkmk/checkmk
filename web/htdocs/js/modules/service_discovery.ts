@@ -17,13 +17,22 @@ import * as async_progress from "async_progress";
 var g_service_discovery_result = null;
 var g_show_updating_timer = null;
 
-export function start(host_name, folder_path, discovery_options, transid, request_vars) {
+export function start(
+    host_name,
+    folder_path,
+    discovery_options,
+    transid,
+    request_vars
+) {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = setTimeout(function () {
         async_progress.show_info("Updating...");
     }, 2000);
 
-    lock_controls(true, get_state_independent_controls().concat(get_page_menu_controls()));
+    lock_controls(
+        true,
+        get_state_independent_controls().concat(get_page_menu_controls())
+    );
     async_progress.monitor({
         update_url: "ajax_service_discovery.py",
         host_name: host_name,
@@ -34,11 +43,23 @@ export function start(host_name, folder_path, discovery_options, transid, reques
         update_function: update,
         finish_function: finish,
         error_function: error,
-        post_data: get_post_data(host_name, folder_path, discovery_options, transid, request_vars),
+        post_data: get_post_data(
+            host_name,
+            folder_path,
+            discovery_options,
+            transid,
+            request_vars
+        ),
     });
 }
 
-function get_post_data(host_name, folder_path, discovery_options, transid, request_vars) {
+function get_post_data(
+    host_name,
+    folder_path,
+    discovery_options,
+    transid,
+    request_vars
+) {
     var request = {
         host_name: host_name,
         folder_path: folder_path,
@@ -52,7 +73,9 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
 
     if (["bulk_update", "update_services"].includes(discovery_options.action)) {
         var checked_checkboxes = [];
-        var checkboxes = document.getElementsByClassName("service_checkbox") as  HTMLCollectionOf<HTMLInputElement>;
+        var checkboxes = document.getElementsByClassName(
+            "service_checkbox"
+        ) as HTMLCollectionOf<HTMLInputElement>;
         for (var i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
                 checked_checkboxes.push(checkboxes[i].name);
@@ -65,7 +88,8 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
 
     // Can currently not be put into "request" because the generic transaction
     // manager relies on the HTTP var _transid.
-    if (transid !== undefined) post_data += "&_transid=" + encodeURIComponent(transid);
+    if (transid !== undefined)
+        post_data += "&_transid=" + encodeURIComponent(transid);
 
     return post_data;
 }
@@ -137,10 +161,16 @@ function update(handler_data, response) {
 function get_state_independent_controls() {
     var elements = [];
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByClassName("service_checkbox"), 0)
+        Array.prototype.slice.call(
+            document.getElementsByClassName("service_checkbox"),
+            0
+        )
     );
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByClassName("service_button"), 0)
+        Array.prototype.slice.call(
+            document.getElementsByClassName("service_button"),
+            0
+        )
     );
     elements = elements.concat(
         Array.prototype.slice.call(document.getElementsByClassName("toggle"), 0)
@@ -149,7 +179,10 @@ function get_state_independent_controls() {
 }
 
 function get_page_menu_controls() {
-    return Array.prototype.slice.call(document.getElementsByClassName("action"), 0);
+    return Array.prototype.slice.call(
+        document.getElementsByClassName("action"),
+        0
+    );
 }
 
 function lock_controls(lock, elements) {
@@ -167,7 +200,14 @@ function lock_controls(lock, elements) {
 
 var g_delayed_active_checks = [];
 
-export function register_delayed_active_check(site, folder_path, hostname, checktype, item, divid) {
+export function register_delayed_active_check(
+    site,
+    folder_path,
+    hostname,
+    checktype,
+    item,
+    divid
+) {
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
         utils

@@ -88,7 +88,10 @@ export function update_position(event_) {
     const container_size = utils.content_wrapper_size();
     let covers_full_width = false;
 
-    if (hoverLeft + g_hover_menu.clientWidth > scrollLeft + container_size.width!) {
+    if (
+        hoverLeft + g_hover_menu.clientWidth >
+        scrollLeft + container_size.width!
+    ) {
         // The hover menu runs out of screen horizontally
         if (g_hover_menu.clientWidth + hoverSpacer <= x) {
             // Put the hover menu to the left of the cursor
@@ -97,20 +100,35 @@ export function update_position(event_) {
                 scrollLeft + x - g_hover_menu.clientWidth - hoverSpacer + "px";
         } else {
             // Stretch the hover menu to full screen width
-            stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer);
+            stretch_to_full_width(
+                g_hover_menu,
+                container_size,
+                scrollLeft,
+                hoverSpacer
+            );
             covers_full_width = true;
         }
     }
 
     let hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
-    if (hoverTop + g_hover_menu.clientHeight > scrollTop + container_size.height!) {
+    if (
+        hoverTop + g_hover_menu.clientHeight >
+        scrollTop + container_size.height!
+    ) {
         // The hover menu runs out of screen vertically
         if (g_hover_menu.clientHeight + hoverSpacer <= container_size.height!) {
             // The hover menu fits into the screen vertically
-            if (covers_full_width && g_hover_menu.clientHeight + hoverSpacer < y) {
+            if (
+                covers_full_width &&
+                g_hover_menu.clientHeight + hoverSpacer < y
+            ) {
                 // Put the hover menu with full screen width above the cursor
                 g_hover_menu.style.top =
-                    scrollTop + y - g_hover_menu.clientHeight - hoverSpacer + "px";
+                    scrollTop +
+                    y -
+                    g_hover_menu.clientHeight -
+                    hoverSpacer +
+                    "px";
             } else if (!covers_full_width) {
                 // Pull the hover menu as far to the top as needed
                 g_hover_menu.style.top =
@@ -120,17 +138,32 @@ export function update_position(event_) {
                     hoverSpacer +
                     "px";
             } else {
-                stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer);
+                stretch_to_full_width(
+                    g_hover_menu,
+                    container_size,
+                    scrollLeft,
+                    hoverSpacer
+                );
             }
         } else {
-            stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer);
+            stretch_to_full_width(
+                g_hover_menu,
+                container_size,
+                scrollLeft,
+                hoverSpacer
+            );
         }
     }
 
     g_hover_menu.style.visibility = "visible";
 }
 
-function stretch_to_full_width(hover_menu, container_size, scrollLeft, hoverSpacer) {
+function stretch_to_full_width(
+    hover_menu,
+    container_size,
+    scrollLeft,
+    hoverSpacer
+) {
     g_hover_menu!.style.left = hoverSpacer + scrollLeft + "px";
     g_hover_menu!.style.width = container_size.width - 2 * hoverSpacer + "px";
 }
@@ -144,7 +177,9 @@ function hover_container() {
         return document.body;
     }
 
-    const simplebar_wrapper = container.getElementsByClassName("simplebar-content-wrapper");
+    const simplebar_wrapper = container.getElementsByClassName(
+        "simplebar-content-wrapper"
+    );
     if (simplebar_wrapper.length == 0) {
         return container;
     }

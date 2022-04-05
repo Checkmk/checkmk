@@ -2,10 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-
 import "core-js/stable";
 import "canvas-5-polyfill"; // needed for IE11
-
 
 import $ from "jquery";
 import * as d3 from "d3";
@@ -52,8 +50,7 @@ import "cmk_figures_plugins";
 
 try {
     require("cmk_figures_plugins_cee");
-} catch (e) {
-}
+} catch (e) {}
 import * as graphs from "graphs";
 
 import * as node_visualization from "node_visualization";
@@ -120,7 +117,6 @@ $(() => {
     // TODO: only register when needed?
     element_dragging.register_event_handlers();
 });
-
 
 export const cmk_export = {
     crossfilter: crossfilter.default,

@@ -16,12 +16,12 @@ import * as utils from "utils";
 //#   | and moves a parent element of the picked element to another place. |
 //#   | On dropping, the page is being reloaded for persisting the move.   |
 //#   '--------------------------------------------------------------------
-interface element_dragging{
-    dragging: any,
-    moved: boolean,
-    drop_handler: any,
+interface element_dragging {
+    dragging: any;
+    moved: boolean;
+    drop_handler: any;
 }
-var g_element_dragging :null|element_dragging= null;
+var g_element_dragging: null | element_dragging = null;
 
 export function start(event, dragger, dragging_tag, drop_handler) {
     if (!event) event = window.event;
@@ -33,10 +33,16 @@ export function start(event, dragger, dragging_tag, drop_handler) {
 
     // Find the first parent of the given tag type
     var dragging = dragger;
-    while (dragging && dragging.tagName != dragging_tag) dragging = dragging.parentNode;
+    while (dragging && dragging.tagName != dragging_tag)
+        dragging = dragging.parentNode;
 
     if (dragging.tagName != dragging_tag)
-        throw "Failed to find the parent node of " + dragger + " having the tag " + dragging_tag;
+        throw (
+            "Failed to find the parent node of " +
+            dragger +
+            " having the tag " +
+            dragging_tag
+        );
 
     utils.add_class(dragging, "dragging");
 
@@ -66,7 +72,12 @@ function position_dragging_object(event) {
 
         // In case this is a header TR, don't move it above this!
         // TODO: Does not work with all tables! See comment in finalize_dragging()
-        if (previous && previous.children && previous.children[0].tagName == "TH") return null;
+        if (
+            previous &&
+            previous.children &&
+            previous.children[0].tagName == "TH"
+        )
+            return null;
         // Do not move above the action rows of tables rendered with "table.py"
         if (previous && utils.has_class(previous, "actions")) return null;
 
@@ -132,7 +143,8 @@ function finalize_dragging() {
     if (has_header) index -= 1;
 
     // - possible existing "table.py" second header (actions in tables)
-    var has_action_row = elements.length > 1 && utils.has_class(elements[1], "actions");
+    var has_action_row =
+        elements.length > 1 && utils.has_class(elements[1], "actions");
     if (has_action_row) index -= 1;
 
     g_element_dragging.drop_handler(index);

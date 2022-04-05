@@ -12,19 +12,23 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import {initialize_autocompleters} from "valuespecs";
 
-export function enable_dynamic_form_elements(container: HTMLElement|null = null) {
+export function enable_dynamic_form_elements(
+    container: HTMLElement | null = null
+) {
     enable_select2_dropdowns(container);
     enable_label_input_fields(container);
 }
 
-var g_previous_timeout_id :number|null= null;
+var g_previous_timeout_id: number | null = null;
 var g_ajax_obj;
 
 export function enable_select2_dropdowns(container) {
     let elements;
     if (!container) container = $(document);
 
-    elements = $(container).find(".select2-enable").not(".vlof_prototype .select2-enable");
+    elements = $(container)
+        .find(".select2-enable")
+        .not(".vlof_prototype .select2-enable");
     elements.select2({
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
@@ -32,7 +36,13 @@ export function enable_select2_dropdowns(container) {
     initialize_autocompleters(container);
 
     // workaround for select2-input not being in focus
-    $(document).on("select2:open", () => (document.querySelector(".select2-search__field")as HTMLSelectElement)?.focus());
+    $(document).on("select2:open", () =>
+        (
+            document.querySelector(
+                ".select2-search__field"
+            ) as HTMLSelectElement
+        )?.focus()
+    );
 }
 
 function enable_label_input_fields(container) {
@@ -70,17 +80,27 @@ function enable_label_input_fields(container) {
         tagify.settings.validate = (t => {
             return add_label => {
                 let label_key = add_label.value.split(":", 1)[0];
-                let key_error_msg = "Only one value per KEY can be used at a time.";
+                let key_error_msg =
+                    "Only one value per KEY can be used at a time.";
                 if (tagify.settings.maxTags == 1) {
                     let label_type = element.getAttribute("class");
                     let existing_tags = document.querySelectorAll(
-                        `.tagify.${label_type.replace(" ", ".")} .tagify__tag-text`
+                        `.tagify.${label_type.replace(
+                            " ",
+                            "."
+                        )} .tagify__tag-text`
                     );
-                    let existing_keys_array = Array.prototype.map.call(existing_tags, function (x) {
-                        return x.textContent.split(":")[0];
-                    });
+                    let existing_keys_array = Array.prototype.map.call(
+                        existing_tags,
+                        function (x) {
+                            return x.textContent.split(":")[0];
+                        }
+                    );
 
-                    if (existing_keys_array.includes(label_key) && !t.state.editing) {
+                    if (
+                        existing_keys_array.includes(label_key) &&
+                        !t.state.editing
+                    ) {
                         return key_error_msg;
                     }
                 } else {
@@ -90,7 +110,10 @@ function enable_label_input_fields(container) {
                         if (t.state.editing) {
                             continue;
                         }
-                        let existing_key = existing_label.value.split(":", 1)[0];
+                        let existing_key = existing_label.value.split(
+                            ":",
+                            1
+                        )[0];
 
                         if (label_key == existing_key) {
                             return key_error_msg;
@@ -103,10 +126,14 @@ function enable_label_input_fields(container) {
 
         tagify.on("invalid", function (e) {
             let message;
-            if (e.type == "invalid" && e.detail.message == "number of tags exceeded") {
+            if (
+                e.type == "invalid" &&
+                e.detail.message == "number of tags exceeded"
+            ) {
                 message = "Only one tag allowed";
             } else if (
-                (e.type == "invalid" && e.detail.message.includes("Only one value per KEY")) ||
+                (e.type == "invalid" &&
+                    e.detail.message.includes("Only one value per KEY")) ||
                 e.detail.message == "already exists"
             ) {
                 message =
@@ -156,7 +183,12 @@ function enable_label_input_fields(container) {
             }
             g_previous_timeout_id = window.setTimeout(function () {
                 kill_previous_autocomplete_call();
-                ajax_call_autocomplete_labels(post_data, tagify, value, element);
+                ajax_call_autocomplete_labels(
+                    post_data,
+                    tagify,
+                    value,
+                    element
+                );
             }, 300);
         });
     });
@@ -176,7 +208,9 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
         response_handler: function (handler_data, ajax_response) {
             var response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
-                console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
+                console.log(
+                    "Error [" + response.result_code + "]: " + response.result
+                ); // eslint-disable-line
                 return;
             }
 
@@ -187,21 +221,28 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
             );
             // render the suggestions dropdown
             handler_data.tagify.loading(false);
-            handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
+            handler_data.tagify.dropdown.show.call(
+                handler_data.tagify,
+                handler_data.value
+            );
 
-            let tagify__input = element?.parentElement?.querySelector(".tagify__input");
+            let tagify__input =
+                element?.parentElement?.querySelector(".tagify__input");
             if (tagify__input) {
                 let max = value.length;
                 handler_data.tagify.suggestedListItems.forEach(entry => {
                     max = Math.max(entry.value.length, max);
                 });
                 let fontSize = parseInt(
-                    window.getComputedStyle(tagify__input, null).getPropertyValue("font-size")
+                    window
+                        .getComputedStyle(tagify__input, null)
+                        .getPropertyValue("font-size")
                 );
                 // Minimum width set by tagify
                 let size = Math.max(110, max * (fontSize / 2 + 1));
                 tagify__input.style.width = size.toString() + "px";
-                tagify__input.parentElement.style.width = (size + 10).toString() + "px";
+                tagify__input.parentElement.style.width =
+                    (size + 10).toString() + "px";
             }
         },
         handler_data: {

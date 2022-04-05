@@ -51,7 +51,9 @@ function handle_update(handler_data, response_json) {
 
 function handle_error(handler_data, status_code, error_msg) {
     if (utils.time() - handler_data.start_time <= 10 && status_code == 503) {
-        show_info("Failed to fetch state. This may be normal for a period of some seconds.");
+        show_info(
+            "Failed to fetch state. This may be normal for a period of some seconds."
+        );
     } else if (status_code == 0) {
         return; // not really an error. Reached when navigating away from the page
     } else {

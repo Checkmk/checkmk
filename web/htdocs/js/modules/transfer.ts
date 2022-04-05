@@ -10,8 +10,6 @@ declare var XDomainRequest;
 //# '--------------------------------------------------------------------'
 
 export function submit_crash_report(url, post_data) {
-
-
     document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
@@ -30,7 +28,11 @@ export function submit_crash_report(url, post_data) {
         // workaround this issue by doing some iframe / form magic
         submit_with_ie(url, post_data);
     } else {
-        handle_report_error(null, null, "Your browser does not support direct reporting.");
+        handle_report_error(
+            null,
+            null,
+            "Your browser does not support direct reporting."
+        );
     }
 }
 
@@ -46,14 +48,21 @@ export function submit_license_usage_report(url, authorization, post_data) {
 
                 var success_container = document.getElementById("success_msg")!;
                 success_container.style.display = "block";
-                (success_container.children[0] as HTMLElement).innerText += " " + response_msg;
+                (success_container.children[0] as HTMLElement).innerText +=
+                    " " + response_msg;
             },
-            error_handler: function (_unused_data, _unused_status, _unused_error, response_msg) {
+            error_handler: function (
+                _unused_data,
+                _unused_status,
+                _unused_error,
+                response_msg
+            ) {
                 hide_report_processing_msg();
 
                 var fail_container = document.getElementById("fail_msg")!;
                 fail_container.style.display = "block";
-                (fail_container.children[0] as HTMLElement).innerText += " (" + response_msg + ")";
+                (fail_container.children[0] as HTMLElement).innerText +=
+                    " (" + response_msg + ")";
             },
             add_ajax_id: false,
             handler_data: {
@@ -63,7 +72,11 @@ export function submit_license_usage_report(url, authorization, post_data) {
             authorization: authorization,
         });
     } else {
-        handle_report_error(null, null, "Your browser does not support direct reporting.");
+        handle_report_error(
+            null,
+            null,
+            "Your browser does not support direct reporting."
+        );
     }
 }
 
@@ -84,8 +97,7 @@ function submit_with_ie(url, post_data) {
     xdr.onerror = function () {
         handle_report_error(handler_data, null, xdr.responseText);
     };
-    xdr.onprogress = function () {
-    };
+    xdr.onprogress = function () {};
     xdr.open("post", url);
     xdr.send(post_data);
 }
@@ -97,7 +109,10 @@ function handle_report_response(handler_data, response_body) {
         var id = response_body.split(" ")[1];
         var success_container = document.getElementById("success_msg")!;
         success_container.style.display = "block";
-        success_container.innerHTML = success_container.innerHTML.replace(/###ID###/, id);
+        success_container.innerHTML = success_container.innerHTML.replace(
+            /###ID###/,
+            id
+        );
     } else {
         var fail_container = document.getElementById("fail_msg")!;
         fail_container.style.display = "block";
@@ -131,7 +146,8 @@ function hide_report_processing_msg() {
 
 export function download(data_url) {
     var link = document.createElement("a");
-    link.download = "Check_MK_GUI_Crash-" + new Date().toISOString() + ".tar.gz";
+    link.download =
+        "Check_MK_GUI_Crash-" + new Date().toISOString() + ".tar.gz";
     link.href = data_url;
     document.body.appendChild(link);
     link.click();

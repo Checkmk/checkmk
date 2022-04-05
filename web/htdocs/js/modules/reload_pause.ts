@@ -6,7 +6,7 @@ import * as utils from "utils";
 
 // Stores the reload pause timer object once the regular reload has
 // been paused e.g. by modifying a graphs timerange or vertical axis.
-var g_reload_pause_timer:number|null = null;
+var g_reload_pause_timer: number | null = null;
 
 // Sets the reload timer in pause mode for X seconds. This is shown to
 // the user with a pause overlay icon. The icon also shows the time when
@@ -59,7 +59,7 @@ function update_timer(seconds_left) {
 }
 
 function draw_overlay(seconds) {
-    var container = <HTMLAnchorElement> document.getElementById("reload_pause");
+    var container = <HTMLAnchorElement>document.getElementById("reload_pause");
     var counter;
     if (container) {
         // only render once. Just update the counter.
@@ -68,7 +68,7 @@ function draw_overlay(seconds) {
         return;
     }
 
-    container = <HTMLAnchorElement> document.createElement("a");
+    container = <HTMLAnchorElement>document.createElement("a");
     container.setAttribute("id", "reload_pause");
     container.href = "javascript:window.location.reload(false)";
     // FIXME: Localize

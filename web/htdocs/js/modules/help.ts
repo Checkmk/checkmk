@@ -15,7 +15,9 @@ import * as ajax from "ajax";
 //#   '--------------------------------------------------------------------'
 
 function is_help_active() {
-    const helpdivs = document.getElementsByClassName("help") as HTMLCollectionOf<HTMLElement>;
+    const helpdivs = document.getElementsByClassName(
+        "help"
+    ) as HTMLCollectionOf<HTMLElement>;
     return helpdivs.length !== 0 && helpdivs[0].style.display === "block";
 }
 
@@ -31,7 +33,9 @@ export function toggle(title_show, title_hide) {
 
 function switch_help(how) {
     // recursive scan for all div class=help elements
-    var helpdivs = document.getElementsByClassName("help") as HTMLCollectionOf<HTMLElement>;
+    var helpdivs = document.getElementsByClassName(
+        "help"
+    ) as HTMLCollectionOf<HTMLElement>;
     var i;
     for (i = 0; i < helpdivs.length; i++) {
         helpdivs[i].style.display = how ? "block" : "none";
@@ -58,6 +62,7 @@ function switch_help(how) {
 }
 
 function switch_help_text(title) {
-    var helpspan = document.getElementById("menu_entry_inline_help")!.childNodes[0].childNodes[1];
+    var helpspan = document.getElementById("menu_entry_inline_help")!
+        .childNodes[0].childNodes[1];
     helpspan.textContent = title;
 }

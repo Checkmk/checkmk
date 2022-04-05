@@ -34,7 +34,10 @@ export function details_period_click(td, sla_period) {
 }
 
 export function details_table_hover(tr, row_id, onoff) {
-    var sla_period_elements = tr.closest("table").closest("tbody").getElementsByClassName(row_id);
+    var sla_period_elements = tr
+        .closest("table")
+        .closest("tbody")
+        .getElementsByClassName(row_id);
     for (var i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
             utils.add_class(sla_period_elements[i], "sla_hilite");

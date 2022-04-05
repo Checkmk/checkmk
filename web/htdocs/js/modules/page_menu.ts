@@ -14,8 +14,12 @@ export function close_active_dropdown() {
 }
 
 export function set_checkbox_entry(id_stem, checked) {
-    var oEntryChecked = document.getElementById("menu_entry_" + id_stem + "_checked");
-    var oEntryUnhecked = document.getElementById("menu_entry_" + id_stem + "_unchecked");
+    var oEntryChecked = document.getElementById(
+        "menu_entry_" + id_stem + "_checked"
+    );
+    var oEntryUnhecked = document.getElementById(
+        "menu_entry_" + id_stem + "_unchecked"
+    );
 
     if (checked) {
         utils.change_class(oEntryChecked, "invisible", "visible");
@@ -149,7 +153,7 @@ export function register_on_close_handler(popup_id, handler) {
     on_close[popup_id] = handler;
 }
 
-var on_toggle_suggestions : null|Function = null;
+var on_toggle_suggestions: null | Function = null;
 
 export function register_on_toggle_suggestions_handler(handler) {
     on_toggle_suggestions = handler;
@@ -200,7 +204,11 @@ export function confirmed_form_submit(form_name, button_name, message) {
 // Show / hide all entries of this group
 export function toggle_popup_filter_list(trigger, filter_list_id) {
     utils.toggle_class(trigger, "active", "inactive");
-    utils.toggle_class(document.getElementById(filter_list_id), "active", "inactive");
+    utils.toggle_class(
+        document.getElementById(filter_list_id),
+        "active",
+        "inactive"
+    );
 }
 
 export function toggle_filter_group_display(filter_group) {
@@ -218,7 +226,9 @@ export function on_filter_popup_close() {
 // Scroll to the top after adding new filters
 export function update_filter_list_scroll(filter_list_id) {
     let filter_list = document.getElementById(filter_list_id);
-    let scrollable = filter_list!.getElementsByClassName("simplebar-content-wrapper")[0];
+    let scrollable = filter_list!.getElementsByClassName(
+        "simplebar-content-wrapper"
+    )[0];
     try {
         // scrollTo() is not supported in IE
         setTimeout(() => {
@@ -236,11 +246,15 @@ export function side_popup_add_simplebar_scrollbar(popup_id) {
 }
 
 export function inpage_search_init(reset_button_id, was_submitted) {
-    const reset_button = document.getElementById(reset_button_id) as HTMLButtonElement;
+    const reset_button = document.getElementById(
+        reset_button_id
+    ) as HTMLButtonElement;
     if (!reset_button) return;
 
     if (was_submitted) {
-        const submit_button = (reset_button.parentNode as HTMLElement).getElementsByClassName("button submit")[0];
+        const submit_button = (
+            reset_button.parentNode as HTMLElement
+        ).getElementsByClassName("button submit")[0];
         utils.add_class(submit_button, "hidden");
     } else {
         reset_button.disabled = true;

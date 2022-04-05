@@ -5,7 +5,6 @@
 
 #include "TableEventConsole.h"
 
-#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -266,38 +265,7 @@ void TableEventConsole::answerQuery(Query &query, const User &user) {
 // static
 bool TableEventConsole::isAuthorizedForEvent(const User &user,
                                              const ECRow &row) {
-    auto precedence = row.getString("event_contact_groups_precedence");
-    auto contact_groups = row.getString("event_contact_groups");
-    const auto *hst = row.host();
-
-    if (user.is_authorized_for_everything()) {
-        return true;
-    }
-    auto is_authorized_via_contactgroups = [&user, &contact_groups]() {
-        auto groups{split_list(contact_groups)};
-        return std::any_of(
-            groups.begin(), groups.end(), [&user](const auto &group) {
-                return ::is_member_of_contactgroup(group, user.authUser());
-            });
-    };
-
-    if (precedence == "rule") {
-        if (!is_none(contact_groups)) {
-            return is_authorized_via_contactgroups();
-        }
-        if (hst != nullptr) {
-            return user.is_authorized_for_host(*hst);
-        }
-        return true;
-    }
-    if (precedence == "host") {
-        if (hst != nullptr) {
-            return user.is_authorized_for_host(*hst);
-        }
-        if (!is_none(contact_groups)) {
-            return is_authorized_via_contactgroups();
-        }
-        return true;
-    }
-    return false;
+    return user.is_authorized_for_event(
+        row.getString("event_contact_groups_precedence"),
+        row.getString("event_contact_groups"), row.host());
 }

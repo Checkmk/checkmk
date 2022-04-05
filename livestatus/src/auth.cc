@@ -5,9 +5,12 @@
 
 #include "auth.h"
 
-#ifdef CMC
 #include <algorithm>
+#include <vector>
 
+#include "StringUtils.h"
+
+#ifdef CMC
 #include "ContactGroup.h"
 #include "Host.h"         // IWYU pragma: keep
 #include "ObjectGroup.h"  // IWYU pragma: keep
@@ -141,6 +144,7 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
 #endif
 }
 
+namespace {
 bool is_member_of_contactgroup(const std::string &group,
                                const contact *contact) {
 #ifdef CMC
@@ -153,6 +157,7 @@ bool is_member_of_contactgroup(const std::string &group,
                const_cast< ::contact *>(contact)) != 0;
 #endif
 }
+}  // namespace
 
 User::User(const contact *auth_user, ServiceAuthorization service_auth,
            GroupAuthorization group_auth)
@@ -179,4 +184,52 @@ bool User::is_authorized_for_host_group(const hostgroup &hg) const {
 bool User::is_authorized_for_service_group(const servicegroup &sg) const {
     return ::is_authorized_for_service_group(group_auth_, service_auth_, &sg,
                                              auth_user_);
+}
+
+namespace {
+// The funny encoding of an Optional[Iterable[str]] is done in
+// cmk.ec.history.quote_tab().
+
+bool is_none(const std::string &str) { return str == "\002"; }
+
+std::vector<std::string> split_list(const std::string &str) {
+    return str.empty() || is_none(str) ? std::vector<std::string>()
+                                       : mk::split(str.substr(1), '\001');
+}
+}  // namespace
+
+bool User::is_authorized_for_event(const std::string &precedence,
+                                   const std::string &contact_groups,
+                                   const host *hst) const {
+    if (auth_user_ == no_auth_user()) {
+        return true;
+    }
+
+    auto is_member = [this](const auto &group) {
+        return is_member_of_contactgroup(group, auth_user_);
+    };
+    auto is_authorized_via_contactgroups = [is_member, &contact_groups]() {
+        auto groups{split_list(contact_groups)};
+        return std::any_of(groups.begin(), groups.end(), is_member);
+    };
+
+    if (precedence == "rule") {
+        if (!is_none(contact_groups)) {
+            return is_authorized_via_contactgroups();
+        }
+        if (hst != nullptr) {
+            return is_authorized_for_host(*hst);
+        }
+        return true;
+    }
+    if (precedence == "host") {
+        if (hst != nullptr) {
+            return is_authorized_for_host(*hst);
+        }
+        if (!is_none(contact_groups)) {
+            return is_authorized_via_contactgroups();
+        }
+        return true;
+    }
+    return false;
 }

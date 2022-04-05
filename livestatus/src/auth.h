@@ -54,8 +54,6 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc);
-bool is_member_of_contactgroup(const std::string &group,
-                               const contact *contact);
 
 class User {
     const contact *auth_user_;
@@ -72,6 +70,9 @@ public:
     [[nodiscard]] bool is_authorized_for_host_group(const hostgroup &hg) const;
     [[nodiscard]] bool is_authorized_for_service_group(
         const servicegroup &sg) const;
+    [[nodiscard]] bool is_authorized_for_event(
+        const std::string &precedence, const std::string &contact_groups,
+        const host *hst) const;
 
     // TODO(sp) Nuke this!
     [[nodiscard]] const contact *authUser() const { return auth_user_; }

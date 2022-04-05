@@ -78,49 +78,51 @@ _TEST_RESULT_SUMMARY_MAP = {
     "6": "no tests initiated",
 }
 
+_SUMMARY_STATE_MAP = {
+    "2": 1,
+    "3": 2,
+    "4": 2,
+}
 
-def inventory_ups_test(info):
+
+def discover_ups_test(info):
     if info[1]:
         return [(None, {})]
 
 
 def check_ups_test(_no_item, params, info):
-    warn, crit = params.get("levels_elapsed_time") or (0, 0)  # TODO clean this up
 
     uptime_info, bat_info = info
     if not uptime_info or not bat_info:
         return
 
-    ResultsSummary, StartTime, upsTestResultsDetail = bat_info[0]
+    results_summary, raw_start_time, ups_test_results_detail = bat_info[0]
     uptime = parse_snmp_uptime(uptime_info[0][0])
-    start_time = parse_snmp_uptime(StartTime)
+    start_time = parse_snmp_uptime(raw_start_time)
 
     # State of test
-    state = 0
-    if ResultsSummary in ["3", "4"]:
-        state = 2
-    elif ResultsSummary in ["2"]:
-        state = 1
-    details = f" ({upsTestResultsDetail})" if upsTestResultsDetail else ""
-    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[ResultsSummary]}{details}"
+    state = _SUMMARY_STATE_MAP.get(results_summary, 0)
+    details = f" ({ups_test_results_detail})" if ups_test_results_detail else ""
+    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[results_summary]}{details}"
+
+    if start_time:
+        label = "Time since start of last test"
+    else:
+        yield 0, "No battery test since start of device"
+        label = "Uptime"
 
     # Elapsed time since last start of test
-    elapsed = uptime - start_time
-    state = 0
-    if crit and elapsed >= crit:
-        state = 2
-    elif warn and elapsed >= warn:
-        state = 1
-    if start_time:
-        yield state, "time elapsed since start of last test: %s" % get_age_human_readable(elapsed)
-    else:
-        yield state, "no battery test since start of device (%s ago)" % get_age_human_readable(
-            uptime
-        )
+    yield check_levels(
+        uptime - start_time,
+        None,
+        params.get("levels_elapsed_time"),
+        human_readable_func=get_age_human_readable,
+        infoname=label,
+    )
 
 
 check_info["ups_test"] = {
-    "inventory_function": inventory_ups_test,
+    "inventory_function": discover_ups_test,
     "check_function": check_ups_test,
     "service_description": "Self Test",
     "group": "ups_test",

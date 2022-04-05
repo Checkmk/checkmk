@@ -20,6 +20,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
 )
 from cmk.gui.valuespec import (
+    AbsoluteDirname,
     Age,
     Alternative,
     CascadingDropdown,
@@ -1220,7 +1221,7 @@ def _active_checks_http_proxyspec():
     return Dictionary(
         title=_("Use proxy"),
         elements=[
-            ("address", TextInput(title=_("Proxy server address"))),
+            ("address", TextInput(title=_("Proxy server address"), size=45)),
             ("port", _active_checks_http_portspec(80)),
             (
                 "auth",
@@ -1253,7 +1254,7 @@ def _active_checks_http_hostspec():
             "HTTP/1.1 is used."
         ),
         elements=[
-            ("address", TextInput(title=_("Hosts name / IP address"), allow_empty=False)),
+            ("address", TextInput(title=_("Hostname / IP address"), allow_empty=False, size=45)),
             ("port", _active_checks_http_portspec(443)),
             _ip_address_family_element(),
             (
@@ -1265,6 +1266,7 @@ def _active_checks_http_hostspec():
                         " virtual host for the query."
                     ),
                     allow_empty=False,
+                    size=45,
                 ),
             ),
         ],
@@ -1356,6 +1358,7 @@ def _valuespec_active_checks_http():
                         ),
                         allow_empty=False,
                         validate=_validate_active_check_http_name,
+                        size=45,
                     ),
                 ),
                 ("host", _active_checks_http_hostspec()),
@@ -1374,7 +1377,7 @@ def _valuespec_active_checks_http():
                                     elements=[
                                         (
                                             "uri",
-                                            TextInput(
+                                            AbsoluteDirname(
                                                 title=_("URI to fetch (default is <tt>/</tt>)"),
                                                 help=_(
                                                     "The URI of the request. This should start with"
@@ -1383,6 +1386,7 @@ def _valuespec_active_checks_http():
                                                 ),
                                                 allow_empty=False,
                                                 default_value="/",
+                                                size=45,
                                             ),
                                         ),
                                         (

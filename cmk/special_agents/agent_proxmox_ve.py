@@ -498,7 +498,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
     all_vms = {
         str(entry["vmid"]): entry
         for entry in data["cluster"]["resources"]
-        if entry["type"] in ("lxc", "qemu")
+        if entry["type"] in {"lxc", "qemu"} and entry["status"] not in {"unknown"}
     }
 
     backup_data = {

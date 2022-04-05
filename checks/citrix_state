@@ -54,7 +54,7 @@ def inventory_citrix_state_controller(parsed):
 
 
 def check_citrix_state_controller(_no_item, _no_params, parsed):
-    return 0, parsed["controller"]
+    return 0, "Machine powered off" if parsed["controller"] == '' else parsed["controller"]
 
 
 check_info["citrix_state.controller"] = {

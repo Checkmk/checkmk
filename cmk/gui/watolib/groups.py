@@ -11,7 +11,7 @@ from typing import Any, Dict, get_args, List, Literal, Optional, Tuple, Type, Un
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import timeperiod_spec_alias
+from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
 
 import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
@@ -411,7 +411,7 @@ def _find_usages_of_contact_group_in_dashboards(name: str) -> List[Tuple[str, st
     return used_in
 
 
-def _used_in_notification_rule(name: str, rule: Dict) -> bool:
+def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
 
 

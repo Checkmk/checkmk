@@ -272,7 +272,6 @@ class DiscoveryResult:
 
 
 UserId = NewType("UserId", str)
-EventRule = Dict[str, Any]  # TODO Improve this
 
 # This def is used to keep the API-exposed object in sync with our
 # implementation.

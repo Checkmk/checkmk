@@ -12,6 +12,7 @@ from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import cmk.utils.store as store
+from cmk.utils.type_defs import EventRule
 
 import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
@@ -86,8 +87,6 @@ from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     save_notification_rules,
 )
-
-NotificationRule = Dict[str, Any]
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -1126,11 +1125,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self._start_async_repl = False
 
     @abc.abstractmethod
-    def _load_rules(self) -> List[NotificationRule]:
+    def _load_rules(self) -> List[EventRule]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _save_rules(self, rules: List[NotificationRule]) -> None:
+    def _save_rules(self, rules: List[EventRule]) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1149,12 +1148,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def _log_text(self, edit_nr: int) -> str:
         raise NotImplementedError()
 
-    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+    def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         """Optional method to update the rule after editing with the valuespec"""
         return rule
 
     # TODO: Refactor this
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._clone_nr = request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
@@ -1163,7 +1162,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         if self._new:
             if self._clone_nr >= 0 and not request.var("_clear"):
-                self._rule = {}
+                self._rule = EventRule()
                 try:
                     self._rule.update(self._rules[self._clone_nr])
                 except IndexError:
@@ -1676,10 +1675,10 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeNotifications
 
-    def _load_rules(self) -> List[NotificationRule]:
+    def _load_rules(self) -> List[EventRule]:
         return load_notification_rules(lock=transactions.is_transaction())
 
-    def _save_rules(self, rules: List[NotificationRule]) -> None:
+    def _save_rules(self, rules: List[EventRule]) -> None:
         save_notification_rules(rules)
 
     def _user_id(self):
@@ -1700,7 +1699,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
 
 
 class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
-    def _load_rules(self) -> List[NotificationRule]:
+    def _load_rules(self) -> List[EventRule]:
         self._users = userdb.load_users(lock=transactions.is_transaction())
         if self._user_id() not in self._users:
             raise MKUserError(
@@ -1709,10 +1708,10 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         user_spec = self._users[self._user_id()]
         return user_spec.setdefault("notification_rules", [])
 
-    def _save_rules(self, rules: List[NotificationRule]) -> None:
+    def _save_rules(self, rules: List[EventRule]) -> None:
         userdb.save_users(self._users)
 
-    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+    def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         # Force selection of our user
         rule["contact_users"] = [self._user_id()]
 

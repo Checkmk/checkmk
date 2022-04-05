@@ -12,6 +12,7 @@ from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
+from cmk.utils.type_defs import EventRule
 
 from cmk.gui.log import logger
 from cmk.gui.plugins.watolib.utils import sample_config_generator_registry, SampleConfigGenerator
@@ -274,15 +275,15 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.save()
 
         notification_rules = [
-            {
-                "allow_disable": True,
-                "contact_all": False,
-                "contact_all_with_email": False,
-                "contact_object": True,
-                "description": "Notify all contacts of a host/service via HTML email",
-                "disabled": False,
-                "notify_plugin": ("mail", {}),
-            },
+            EventRule(
+                allow_disable=True,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=True,
+                description="Notify all contacts of a host/service via HTML email",
+                disabled=False,
+                notify_plugin=("mail", {}),
+            ),
         ]
         save_notification_rules(notification_rules)
 

@@ -32,6 +32,7 @@ from typing import (
     Dict,
     FrozenSet,
     List,
+    Literal,
     Mapping,
     Optional,
     overload,
@@ -529,12 +530,7 @@ def _create_notifications(
     contacts = rbn_rule_contacts(rule, raw_context)
     contactstxt = ", ".join(contacts)
 
-    # Handle old-style and new-style rules
-    if "notify_method" in rule:  # old-style
-        plugin_name = rule["notify_plugin"]
-        plugin_parameters = rule["notify_method"]  # None: do cancel, [ str ]: plugin parameters
-    else:
-        plugin_name, plugin_parameters = rule["notify_plugin"]
+    plugin_name, plugin_parameters = rule["notify_plugin"]
     _transform_parameters(plugin_name, plugin_parameters)
 
     plugintxt = plugin_name or "plain email"
@@ -1151,7 +1147,9 @@ def rbn_match_servicelabels(rule: EventRule, context: EventContext) -> Optional[
     return None
 
 
-def _rbn_handle_labels(rule: EventRule, context: EventContext, what: str) -> Optional[str]:
+def _rbn_handle_labels(
+    rule: EventRule, context: EventContext, what: Literal["host", "service"]
+) -> Optional[str]:
     labels: Dict[str, Any] = {}
     context_str = "%sLABEL" % what.upper()
     labels = {
@@ -1160,8 +1158,11 @@ def _rbn_handle_labels(rule: EventRule, context: EventContext, what: str) -> Opt
         if variable.startswith(context_str)
     }
 
-    if not set(labels.items()).issuperset(set(rule["match_%slabels" % what].items())):
-        return "The %s labels %s did not match %s" % (what, rule["match_%slabels" % what], labels)
+    key: Literal["match_servicelabels", "match_hostlabels"] = (
+        "match_servicelabels" if what == "service" else "match_hostlabels"
+    )
+    if not set(labels.items()).issuperset(set(rule[key].items())):
+        return "The %s labels %s did not match %s" % (what, rule[key], labels)
 
     return None
 

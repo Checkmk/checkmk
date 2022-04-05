@@ -1497,6 +1497,8 @@ class UpdateConfig:
             if "mgmt_types" in params:
                 continue
 
+            assert isinstance(params, dict)
+
             incident_params = {
                 key: params.pop(key)
                 for key in [

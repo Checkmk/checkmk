@@ -15,7 +15,7 @@ from cmk.gui.globals import config
 from cmk.gui.watolib.utils import wato_root_dir
 
 
-def load_notification_rules(lock: bool = False) -> List[Dict]:
+def load_notification_rules(lock: bool = False) -> List[EventRule]:
     filename = wato_root_dir() + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
 
@@ -30,7 +30,7 @@ def load_notification_rules(lock: bool = False) -> List[Dict]:
     return notification_rules
 
 
-def save_notification_rules(rules: List[Dict]) -> None:
+def save_notification_rules(rules: list[EventRule]) -> None:
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(
         wato_root_dir() + "notifications.mk",

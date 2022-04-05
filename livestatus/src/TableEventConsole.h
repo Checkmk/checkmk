@@ -86,7 +86,7 @@ private:
     std::function<bool(const User &, const ECRow &)> is_authorized_;
 
     [[nodiscard]] std::optional<bool> isAuthorizedForEventViaContactGroups(
-        const User &user, const ECRow &row) const;
+        const User &user, const std::string &contact_groups) const;
 };
 
 #endif  // TableEventConsole_h

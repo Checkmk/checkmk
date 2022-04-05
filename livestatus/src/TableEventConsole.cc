@@ -269,20 +269,24 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user,
     }
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     auto precedence = row.getString("event_contact_groups_precedence");
+    auto contact_groups = row.getString("event_contact_groups");
+    const auto *hst = row.host();
     if (precedence == "rule") {
-        if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
+        if (auto opt_auth =
+                isAuthorizedForEventViaContactGroups(user, contact_groups)) {
             return *opt_auth;
         }
-        if (const auto *hst = row.host()) {
+        if (hst != nullptr) {
             return user.is_authorized_for_host(*hst);
         }
         return true;
     }
     if (precedence == "host") {
-        if (const auto *hst = row.host()) {
+        if (hst != nullptr) {
             return user.is_authorized_for_host(*hst);
         }
-        if (auto opt_auth = isAuthorizedForEventViaContactGroups(user, row)) {
+        if (auto opt_auth =
+                isAuthorizedForEventViaContactGroups(user, contact_groups)) {
             return *opt_auth;
         }
         return true;
@@ -293,12 +297,11 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user,
 }
 
 std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
-    const User &user, const ECRow &row) const {
-    auto event_contact_groups = row.getString("event_contact_groups");
-    if (is_none(event_contact_groups)) {
+    const User &user, const std::string &contact_groups) const {
+    if (is_none(contact_groups)) {
         return {};
     }
-    auto groups{split_list(event_contact_groups)};
+    auto groups{split_list(contact_groups)};
     return std::any_of(groups.begin(), groups.end(),
                        [this, &user](const auto &group) {
                            return core()->is_contact_member_of_contactgroup(

@@ -278,9 +278,8 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         work_dir = tempfile.mkdtemp(prefix=tmp_dir + "/msi-update.")
         deobfuscated_file = Path(new_msi_file)
 
-        if (
-            error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=deobfuscated_file)
-        ) != 0:
+        if (error := obfuscate.deobfuscate_file(Path(msi_file_name),
+                                                file_out=deobfuscated_file)) != 0:
             bail_out(f"Deobfuscate returns error {error}")
 
         # When this script is run in the build environment then we need to specify

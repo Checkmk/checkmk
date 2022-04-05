@@ -8,9 +8,11 @@
 #ifdef CMC
 #include <algorithm>
 
+#include "ContactGroup.h"
 #include "Host.h"         // IWYU pragma: keep
 #include "ObjectGroup.h"  // IWYU pragma: keep
 #include "Service.h"      // IWYU pragma: keep
+#include "World.h"
 #include "cmc.h"
 #endif
 
@@ -136,6 +138,19 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
         }
     }
     return true;
+#endif
+}
+
+bool is_member_of_contactgroup(const std::string &group,
+                               const contact *contact) {
+#ifdef CMC
+    const auto *cg = g_live_world->getContactGroup(group);
+    return cg != nullptr && cg->isMember(contact);
+#else
+    // Older Nagios headers are not const-correct... :-P
+    return ::is_contact_member_of_contactgroup(
+               ::find_contactgroup(const_cast<char *>(group.c_str())),
+               const_cast< ::contact *>(contact)) != 0;
 #endif
 }
 

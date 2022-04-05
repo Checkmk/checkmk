@@ -80,14 +80,6 @@ const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
     return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
 }
 
-bool NagiosCore::is_contact_member_of_contactgroup(const std::string &group,
-                                                   const contact *contact) {
-    // Older Nagios headers are not const-correct... :-P
-    return ::is_contact_member_of_contactgroup(
-               ::find_contactgroup(const_cast<char *>(group.c_str())),
-               const_cast<::contact *>(contact)) != 0;
-}
-
 std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation() {
     // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
     // instead of this 'extern' hack...

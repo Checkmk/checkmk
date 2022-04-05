@@ -69,10 +69,7 @@ public:
     Service *find_service(const std::string &host_name,
                           const std::string &service_description) override;
     ContactGroup *find_contactgroup(const std::string &name) override;
-
     const Contact *find_contact(const std::string &name) override;
-    bool is_contact_member_of_contactgroup(const std::string &group,
-                                           const contact *contact) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
     std::chrono::system_clock::time_point last_config_change() override;

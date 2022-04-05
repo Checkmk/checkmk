@@ -8,6 +8,8 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <string>
+
 #ifdef CMC
 #include "contact_fwd.h"
 class Host;  // IWYU pragma: keep
@@ -52,6 +54,8 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc);
+bool is_member_of_contactgroup(const std::string &group,
+                               const contact *contact);
 
 class User {
     const contact *auth_user_;

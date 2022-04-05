@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -262,6 +263,20 @@ void TableEventConsole::answerQuery(Query &query, const User &user) {
     }
 }
 
+namespace {
+std::optional<bool> isAuthorizedForEventViaContactGroups(
+    const User &user, const std::string &contact_groups) {
+    if (is_none(contact_groups)) {
+        return {};
+    }
+    auto groups{split_list(contact_groups)};
+    return std::any_of(
+        groups.begin(), groups.end(), [&user](const auto &group) {
+            return ::is_member_of_contactgroup(group, user.authUser());
+        });
+}
+}  // namespace
+
 bool TableEventConsole::isAuthorizedForEvent(const User &user,
                                              const ECRow &row) const {
     if (user.is_authorized_for_everything()) {
@@ -294,17 +309,4 @@ bool TableEventConsole::isAuthorizedForEvent(const User &user,
     Error(logger()) << "unknown precedence '" << precedence << "' in table "
                     << name();
     return false;
-}
-
-std::optional<bool> TableEventConsole::isAuthorizedForEventViaContactGroups(
-    const User &user, const std::string &contact_groups) const {
-    if (is_none(contact_groups)) {
-        return {};
-    }
-    auto groups{split_list(contact_groups)};
-    return std::any_of(groups.begin(), groups.end(),
-                       [this, &user](const auto &group) {
-                           return core()->is_contact_member_of_contactgroup(
-                               group, user.authUser());
-                       });
 }

@@ -2333,7 +2333,7 @@ def main(args: Optional[List[str]] = None) -> int:
                         detail="No machine sections were collected from the cluster collector",
                     )
 
-                if "node" in arguments.monitored_objects:
+                if "nodes" in arguments.monitored_objects:
                     try:
                         write_machine_sections(
                             cluster,

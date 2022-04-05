@@ -911,7 +911,7 @@ def _transform_add_address_family(v):
 def _active_checks_http_proxyspec():
     return Dictionary(title=_("Use proxy"),
                       elements=[
-                          ("address", Hostname(title=_("Proxy server address"))),
+                          ("address", TextAscii(title=_("Proxy server address"))),
                           ("port", _active_checks_http_portspec(80)),
                           ("auth",
                            Tuple(title=_("Proxy basic authorization"),
@@ -935,14 +935,14 @@ def _active_checks_http_hostspec():
                " not resolvable by DNS). In this case the HTTP Host header will be set and "
                "HTTP/1.1 is used."),
         elements=[
-            ("address", Hostname(title=_("Hosts name / IP address"), allow_empty=False)),
+            ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
             ("port", _active_checks_http_portspec(443)),
             _ip_address_family_element(),
             ("virthost",
-             Hostname(title=_("Virtual host"),
-                      help=_("Set this in order to specify the name of the"
-                             " virtual host for the query."),
-                      allow_empty=False)),
+             TextAscii(title=_("Virtual host"),
+                       help=_("Set this in order to specify the name of the"
+                              " virtual host for the query."),
+                       allow_empty=False)),
         ],
     )
 
@@ -1027,7 +1027,6 @@ def _valuespec_active_checks_http():
                          "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
                      allow_empty=False,
                      validate=_validate_active_check_http_name,
-                     size=45,
                  )),
                 ("host", _active_checks_http_hostspec()),
                 ("proxy", _active_checks_http_proxyspec()),
@@ -1048,7 +1047,6 @@ def _valuespec_active_checks_http():
                                               " (e.g. '/index.html')."),
                                        allow_empty=False,
                                        default_value="/",
-                                       size=45,
                                    )),
                                   ("ssl",
                                    Transform(

@@ -11,6 +11,7 @@ from typing import Any, Mapping
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    AbsoluteDirname,
     Dictionary,
     Tuple,
     Integer,
@@ -911,7 +912,7 @@ def _transform_add_address_family(v):
 def _active_checks_http_proxyspec():
     return Dictionary(title=_("Use proxy"),
                       elements=[
-                          ("address", TextAscii(title=_("Proxy server address"))),
+                          ("address", TextAscii(title=_("Proxy server address"), size=45)),
                           ("port", _active_checks_http_portspec(80)),
                           ("auth",
                            Tuple(title=_("Proxy basic authorization"),
@@ -935,14 +936,17 @@ def _active_checks_http_hostspec():
                " not resolvable by DNS). In this case the HTTP Host header will be set and "
                "HTTP/1.1 is used."),
         elements=[
-            ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
+            ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False, size=45)),
             ("port", _active_checks_http_portspec(443)),
             _ip_address_family_element(),
             ("virthost",
-             TextAscii(title=_("Virtual host"),
-                       help=_("Set this in order to specify the name of the"
-                              " virtual host for the query."),
-                       allow_empty=False)),
+             TextAscii(
+                 title=_("Virtual host"),
+                 help=_("Set this in order to specify the name of the"
+                        " virtual host for the query."),
+                 allow_empty=False,
+                 size=45,
+             )),
         ],
     )
 
@@ -1027,7 +1031,7 @@ def _valuespec_active_checks_http():
                          "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
                      allow_empty=False,
                      validate=_validate_active_check_http_name,
-                 )),
+                     size=45)),
                 ("host", _active_checks_http_hostspec()),
                 ("proxy", _active_checks_http_proxyspec()),
                 ("mode",
@@ -1040,14 +1044,14 @@ def _valuespec_active_checks_http():
                               title=_("URL Checking"),
                               elements=[
                                   ("uri",
-                                   TextAscii(
+                                   AbsoluteDirname(
                                        title=_("URI to fetch (default is <tt>/</tt>)"),
                                        help=_("The URI of the request. This should start with"
                                               " '/' and not include the domain"
                                               " (e.g. '/index.html')."),
                                        allow_empty=False,
                                        default_value="/",
-                                   )),
+                                       size=45)),
                                   ("ssl",
                                    Transform(
                                        DropdownChoice(

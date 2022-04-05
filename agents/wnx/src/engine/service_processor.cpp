@@ -546,10 +546,12 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         if (controller_param.has_value() &&
             (std::chrono::steady_clock::now() - last_check) > 30s) {
             if (!FindProcessByPid(controller_param->pid)) {
-                XLOG::l("Process of the controller is died [{}]",
+                XLOG::d("Process of the controller is dead [{}]",
                         controller_param->pid);
-                controller_param.reset();
-                return Signal::restart;
+                if (ac::IsConfiguredEmergencyOnCrash()) {
+                    controller_param.reset();
+                    return Signal::restart;
+                }
             }
             last_check = std::chrono::steady_clock::now();
         }

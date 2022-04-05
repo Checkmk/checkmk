@@ -284,6 +284,8 @@ system:
         force_legacy: no                    # if yes always created for version with controller
         agent_channel: "localhost:50001"    # for controller
         local_only: yes                     # bind to 127.0.0.1 or 0.0.0.0
+        on_crash: "ignore"                  # possible values "ignore" or "emergency_mode". This is safety switch.
+                                            # Use "emergency_mode" if controller crashes/disappear.
 
 
     firewall:

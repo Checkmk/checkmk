@@ -200,6 +200,7 @@ constexpr std::string_view kControllerCheck = "check";  // bool
 constexpr std::string_view kControllerForceLegacy = "force_legacy";    // bool
 constexpr std::string_view kControllerAgentChannel = "agent_channel";  // str
 constexpr std::string_view kControllerLocalOnly = "local_only";        // bool
+constexpr std::string_view kControllerOnCrash = "on_crash";            // string
 
 constexpr const char *const kFirewall = "firewall";  // dictionary
 constexpr const char *const kFirewallMode = "mode";  // string
@@ -253,6 +254,10 @@ constexpr const char *const kTryKillSafe = "safe";  // only well known processes
 constexpr const char *const kTryKillAll = "all";    // all plugins
 constexpr const char *const kTryKillNo = "no";      //
 
+// system.controlle.on_crash
+constexpr std::string_view kControllerOnCrashIgnore{"ignore"};
+constexpr std::string_view kControllerOnCrashEmergency{"emergency_mode"};
+
 }  // namespace values
 
 namespace defaults {
@@ -269,6 +274,8 @@ constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 constexpr uint32_t kServiceWaitNetwork = 30;
 constexpr std::string_view kControllerAgentChannelDefault{"localhost:50001"};
+constexpr std::string_view kControllerOnCrashDefault{
+    values::kControllerOnCrashIgnore};
 constexpr bool kControllerLocalOnly{true};
 constexpr bool kControllerForceLegacy{false};
 constexpr bool kControllerCheck{true};

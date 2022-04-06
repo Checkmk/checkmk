@@ -23,6 +23,7 @@ from .utils.printer import DETECT_PRINTER
 printer_io_units = {
     "-1": "unknown",
     "0": "unknown",
+    "1": "unknown",
     "2": "unknown",  # defined by PrtCapacityUnitTC used in newer revs.
     "3": "1/10000 in",
     "4": "micrometers",
@@ -217,13 +218,17 @@ def check_printer_io(
         return  # totally skip this info when level is unknown or not limited
 
     if tray.capacity_max in (-2, -1, 0):
-        # -2: unknown, -1: no restriction, 0: due to saveint
-        yield Result(state=State.OK, summary="Capacity: %s%s" % (tray.level, tray.capacity_unit))
+        if tray.capacity_unit != " unknown":
+            # -2: unknown, -1: no restriction, 0: due to saveint
+            yield Result(
+                state=State.OK, summary="Capacity: %s%s" % (tray.level, tray.capacity_unit)
+            )
         return
 
-    yield Result(
-        state=State.OK, summary=f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}"
-    )
+    if tray.capacity_unit != " unknown":
+        yield Result(
+            state=State.OK, summary=f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}"
+        )
 
     quantity_message = "remaining" if io_type == IOType.INPUT else "filled"
 

@@ -12,6 +12,7 @@ is supported: https://github.com/kubernetes-client/python
 
 from __future__ import annotations
 
+import abc
 import argparse
 import contextlib
 import functools
@@ -284,7 +285,7 @@ def setup_logging(verbosity: int) -> None:
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
-class PodOwner:
+class PodOwner(abc.ABC):
     def __init__(self):
         self._pods: List[Pod] = []
 

@@ -26,12 +26,13 @@ public:
     explicit ServiceGroupMembersGetter(MonitoringCore *mc) : mc_{mc} {};
     std::vector<::column::service_group_members::Entry> operator()(
         const servicegroup &sm, const contact *auth_user) const {
+        User user{auth_user, mc_->serviceAuthorization(),
+                  mc_->groupAuthorization()};
         std::vector<::column::service_group_members::Entry> entries;
         for (servicesmember *mem = sm.members; mem != nullptr;
              mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
-                                      svc)) {
+            if (user.is_authorized_for_service(*svc)) {
                 entries.emplace_back(
                     svc->host_name, svc->description,
                     static_cast<ServiceState>(svc->current_state),

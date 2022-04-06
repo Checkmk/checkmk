@@ -633,13 +633,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "groups", "A list of all service groups this object is in",
         offsets, [mc](const service &svc, const contact *auth_user) {
+            User user{auth_user, mc->serviceAuthorization(),
+                      mc->groupAuthorization()};
             std::vector<std::string> group_names;
             for (objectlist *list = svc.servicegroups_ptr; list != nullptr;
                  list = list->next) {
                 auto *sg = static_cast<servicegroup *>(list->object_ptr);
-                if (is_authorized_for_service_group(mc->groupAuthorization(),
-                                                    mc->serviceAuthorization(),
-                                                    sg, auth_user)) {
+                if (user.is_authorized_for_service_group(*sg)) {
                     group_names.emplace_back(sg->group_name);
                 }
             }

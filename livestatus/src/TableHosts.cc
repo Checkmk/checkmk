@@ -74,12 +74,13 @@ public:
     explicit ServiceListGetter(MonitoringCore *mc) : mc_{mc} {}
     std::vector<::column::service_list::Entry> operator()(
         const host &hst, const contact *auth_user) const {
+        User user{auth_user, mc_->serviceAuthorization(),
+                  mc_->groupAuthorization()};
         std::vector<::column::service_list::Entry> entries{};
         for (servicesmember *mem = hst.services; mem != nullptr;
              mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
-                                      svc)) {
+            if (user.is_authorized_for_service(*svc)) {
                 entries.emplace_back(
                     svc->description,
                     static_cast<ServiceState>(svc->current_state),
@@ -795,12 +796,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "groups", "A list of all host groups this object is in",
         offsets, [mc](const host &hst, const contact *auth_user) {
+            User user{auth_user, mc->serviceAuthorization(),
+                      mc->groupAuthorization()};
             std::vector<std::string> group_names;
             for (objectlist *list = hst.hostgroups_ptr; list != nullptr;
                  list = list->next) {
                 auto *hg = static_cast<hostgroup *>(list->object_ptr);
-                if (is_authorized_for_host_group(mc->groupAuthorization(), hg,
-                                                 auth_user)) {
+                if (user.is_authorized_for_host_group(*hg)) {
                     group_names.emplace_back(hg->group_name);
                 }
             }

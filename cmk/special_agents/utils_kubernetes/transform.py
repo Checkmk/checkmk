@@ -12,7 +12,7 @@ data structures to version independent data structured defined in schemata.api
 from __future__ import annotations
 
 import datetime
-from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
+from typing import Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -551,4 +551,81 @@ def statefulset_from_client(
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
     return api.Namespace(
         metadata=parse_namespace_metadata(namespace.metadata),
+    )
+
+
+def parse_resource_quota_spec(
+    spec: client.V1ResourceQuotaSpec,
+) -> api.ResourceQuotaSpec:
+    # TODO: CMK-10288 add validation logic
+    try:
+        scope_selector = parse_scope_selector(spec.scope_selector)
+        scopes = (
+            [api.QuotaScope(scope) for scope in spec.scopes] if spec.scopes is not None else None
+        )
+    except ValueError:
+        raise NotImplementedError("At least one of the given scopes is not supported")
+
+    return api.ResourceQuotaSpec(
+        hard=api.HardRequirement(
+            memory=parse_resource_requirement("memory", spec.hard),
+            cpu=parse_resource_requirement("cpu", spec.hard),
+        )
+        if spec.hard is not None
+        else None,
+        scope_selector=scope_selector,
+        scopes=scopes,
+    )
+
+
+def parse_resource_requirement(resource: Literal["memory", "cpu"], hard: Mapping[str, str]):
+    # request & limit are only defined once for each requirement. It is possible to double
+    # define them in the yaml file but only one value is taken into account.
+    requirements = {}
+    for requirement, value in hard.items():
+        if resource not in requirement:
+            continue
+        requirement_type = "limit" if "limits" in requirement else "request"
+        requirements[requirement_type] = (
+            parse_frac_prefix(value) if resource == "cpu" else parse_memory(value)
+        )
+
+    if not requirements:
+        return None
+    return api.HardResourceRequirement(**requirements)
+
+
+def parse_scope_selector(
+    scope_selector: Optional[client.V1ScopeSelector],
+) -> Optional[api.ScopeSelector]:
+    if scope_selector is None:
+        return None
+    return api.ScopeSelector(
+        match_expressions=[
+            api.ScopedResourceMatchExpression(
+                operator=match_expression.operator,
+                scope_name=match_expression.scope_name,
+                values=match_expression.values,
+            )
+            for match_expression in scope_selector.match_expressions
+        ]
+    )
+
+
+def resource_quota_from_client(
+    resource_quota: client.V1ResourceQuota,
+) -> Optional[api.ResourceQuota]:
+    """Parse Kubernetes resource quota client object
+
+    * Resource quotas which include the CrossNamespacePodAffinity scope
+    are currently not supported and treated as non existent
+    """
+    try:
+        spec = parse_resource_quota_spec(resource_quota.spec)
+    except NotImplementedError:
+        return None
+
+    return api.ResourceQuota(
+        metadata=parse_metadata(resource_quota.metadata),
+        spec=spec,
     )

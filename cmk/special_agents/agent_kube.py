@@ -1081,7 +1081,7 @@ class Cluster:
         return collector_daemons
 
 
-# Namespace specific
+# Namespace & Resource Quota specific
 
 
 def namespace_info(namespace: api.Namespace, cluster_name: str):
@@ -1091,6 +1091,134 @@ def namespace_info(namespace: api.Namespace, cluster_name: str):
         labels=namespace.metadata.labels,
         cluster=cluster_name,
     )
+
+
+def filter_matching_namespace_resource_quota(
+    namespace: api.NamespaceName, resource_quotas: Sequence[api.ResourceQuota]
+) -> Optional[api.ResourceQuota]:
+    for resource_quota in resource_quotas:
+        if resource_quota.metadata.namespace == namespace:
+            return resource_quota
+    return None
+
+
+def filter_pods_by_resource_quota_criteria(
+    pods: Sequence[api.Pod], resource_quota: api.ResourceQuota
+) -> Sequence[api.Pod]:
+    resource_quota_pods = filter_pods_by_resource_quota_scopes(pods, resource_quota.spec.scopes)
+    return filter_pods_by_resource_quota_scope_selector(
+        resource_quota_pods, resource_quota.spec.scope_selector
+    )
+
+
+def filter_pods_by_resource_quota_scope_selector(
+    pods: Sequence[api.Pod], scope_selector: Optional[api.ScopeSelector]
+) -> Sequence[api.Pod]:
+    if scope_selector is None:
+        return pods
+
+    return [
+        pod
+        for pod in pods
+        if all(
+            _matches_scope_selector_match_expression(pod, match_expression)
+            for match_expression in scope_selector.match_expressions
+        )
+    ]
+
+
+def _matches_scope_selector_match_expression(
+    pod: api.Pod, match_expression: api.ScopedResourceMatchExpression
+) -> bool:
+    # TODO: add support for CrossNamespacePodAffinity
+    if match_expression.scope_name in [
+        api.QuotaScope.BestEffort,
+        api.QuotaScope.NotBestEffort,
+        api.QuotaScope.Terminating,
+        api.QuotaScope.NotTerminating,
+    ]:
+        return _matches_quota_scope(pod, match_expression.scope_name)
+
+    if match_expression.scope_name != api.QuotaScope.PriorityClass:
+        raise NotImplementedError(
+            f"The resource quota scope name {match_expression.scope_name} "
+            "is currently not supported"
+        )
+
+    # XNOR case for priority class
+    # if the pod has a priority class and the operator is Exists then the pod is included
+    # if the pod has no priority class and the operator is DoesNotExist then the pod is included
+    if match_expression.operator in (api.ScopeOperator.Exists, api.ScopeOperator.DoesNotExist):
+        return not (
+            (pod.spec.priority_class_name is not None)
+            ^ (match_expression.operator == api.ScopeOperator.Exists)
+        )
+
+    # XNOR case for priority class value
+    # if operator is In and the priority class value is in the list of values then the pod is
+    # included
+    # if operator is NotIn and the priority class value is not in the list of values then the pod
+    # is included
+    if match_expression.operator in (api.ScopeOperator.In, api.ScopeOperator.NotIn):
+        return not (
+            (pod.spec.priority_class_name in match_expression.values)
+            ^ (match_expression.operator == api.ScopeOperator.In)
+        )
+
+    raise NotImplementedError("Unsupported match expression operator")
+
+
+def filter_pods_by_resource_quota_scopes(
+    api_pods: Sequence[api.Pod], scopes: Optional[Sequence[api.QuotaScope]]
+) -> Sequence[api.Pod]:
+    """Filter pods based on selected scopes"""
+    if scopes is None:
+        return api_pods
+
+    return [pod for pod in api_pods if all(_matches_quota_scope(pod, scope) for scope in scopes)]
+
+
+def _matches_quota_scope(pod: api.Pod, scope: api.QuotaScope) -> bool:
+    """Verifies if the pod scopes matches the scope criteria
+
+    Reminder:
+    * the Quota scope is rather ResourceQuota specific rather than Pod specific
+    * the Quota scope encompasses multiple Pod concepts (see api.Pod model)
+    * a Pod can have all multiple scopes (e.g PrioritClass, Terminating and BestEffort)
+    """
+
+    def pod_terminating_scope(
+        pod: api.Pod,
+    ) -> api.QuotaScope:
+        return (
+            api.QuotaScope.Terminating
+            if (pod.spec.active_deadline_seconds is not None)
+            else api.QuotaScope.NotTerminating
+        )
+
+    def pod_effort_scope(
+        pod: api.Pod,
+    ) -> api.QuotaScope:
+        # TODO: change qos_class from Literal to Enum
+        return (
+            api.QuotaScope.BestEffort
+            if (pod.status.qos_class == "besteffort")
+            else api.QuotaScope.NotBestEffort
+        )
+
+    if scope == api.QuotaScope.PriorityClass:
+        return pod.spec.priority_class_name is not None
+
+    if scope in [api.QuotaScope.Terminating, api.QuotaScope.NotTerminating]:
+        return pod_terminating_scope(pod) == scope
+
+    if scope in [api.QuotaScope.BestEffort, api.QuotaScope.NotBestEffort]:
+        return pod_effort_scope(pod) == scope
+
+    raise NotImplementedError(f"Unsupported quota scope {scope}")
+
+
+# Pod specific helpers
 
 
 def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
@@ -1186,10 +1314,13 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
 def write_namespaces_api_sections(
     cluster_name: str,
     api_namespaces: Sequence[api.Namespace],
+    api_resource_quotas: Sequence[api.ResourceQuota],
     api_pods: Sequence[api.Pod],
     piggyback_formatter: ObjectSpecificPBFormatter,
 ):
-    def output_sections(namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]) -> None:
+    def output_namespace_sections(
+        namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]
+    ) -> None:
         sections = {
             "kube_namespace_info_v1": lambda: namespace_info(namespace, cluster_name),
             "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(namespaced_api_pods),
@@ -1202,11 +1333,29 @@ def write_namespaces_api_sections(
         }
         _write_sections(sections)
 
+    def output_resource_quota_sections(resource_quota: api.ResourceQuota) -> None:
+        sections = {
+            "kube_resource_quota_memory_resources_v1": lambda: resource_quota.spec.hard.memory
+            if resource_quota.spec.hard
+            else None,
+            "kube_resource_quota_cpu_resources_v1": lambda: resource_quota.spec.hard.cpu
+            if resource_quota.spec.hard
+            else None,
+        }
+        _write_sections(sections)
+
     for api_namespace in api_namespaces:
         with ConditionalPiggybackSection(piggyback_formatter(namespace_name(api_namespace))):
-            output_sections(
+            output_namespace_sections(
                 api_namespace, filter_pods_by_namespace(api_pods, namespace_name(api_namespace))
             )
+
+            if (
+                api_resource_quota := filter_matching_namespace_resource_quota(
+                    namespace_name(api_namespace), api_resource_quotas
+                )
+            ) is not None:
+                output_resource_quota_sections(api_resource_quota)
 
 
 def write_nodes_api_sections(
@@ -1482,6 +1631,43 @@ def kube_object_performance_sections(
         ),
         (
             SectionName("kube_performance_cpu_v1"),
+            SectionJson(
+                section.PerformanceUsage(
+                    resource=section.Cpu(
+                        usage=_aggregate_rate_metric(
+                            performance_containers, MetricName("cpu_usage_seconds_total")
+                        ),
+                    ),
+                ).json()
+            ),
+        ),
+    ]
+
+
+def resource_quota_performance_sections(
+    resource_quota_performance_pods: Sequence[PerformancePod],
+) -> List[Tuple[SectionName, SectionJson]]:
+    if not resource_quota_performance_pods:
+        return []
+
+    performance_containers = [
+        container for pod in resource_quota_performance_pods for container in pod.containers
+    ]
+    return [
+        (
+            SectionName("kube_resource_quota_performance_memory_v1"),
+            SectionJson(
+                section.PerformanceUsage(
+                    resource=section.Memory(
+                        usage=_aggregate_metric(
+                            performance_containers, MetricName("memory_working_set_bytes")
+                        )
+                    ),
+                ).json()
+            ),
+        ),
+        (
+            SectionName("kube_resource_quota_performance_cpu_v1"),
             SectionJson(
                 section.PerformanceUsage(
                     resource=section.Cpu(
@@ -2229,12 +2415,14 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
+            resource_quotas = api_server.resource_quotas()
             if "namespaces" in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
                 api_namespaces = api_server.namespaces()
                 write_namespaces_api_sections(
                     arguments.cluster,
                     namespaces_from_monitored_namespacenames(api_namespaces, monitored_namespaces),
+                    resource_quotas,
                     api_pods,
                     piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
                 )
@@ -2402,6 +2590,23 @@ def main(args: Optional[List[str]] = None) -> int:
                                     namespace_api_pods, performance_pods
                                 ),
                             )
+                            if (
+                                resource_quota := filter_matching_namespace_resource_quota(
+                                    namespace_name(api_namespace), resource_quotas
+                                )
+                            ) is not None:
+                                namespace_sections.extend(
+                                    resource_quota_performance_sections(
+                                        resource_quota_performance_pods=filter_associating_performance_pods_from_api_pods(
+                                            filter_pods_by_resource_quota_criteria(
+                                                namespace_api_pods, resource_quota
+                                            ),
+                                            performance_pods,
+                                        )
+                                    )
+                                )
+                            if not namespace_sections:
+                                continue
 
                             with ConditionalPiggybackSection(
                                 piggyback_formatter(

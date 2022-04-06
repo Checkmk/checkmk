@@ -32,6 +32,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     namespace_from_client,
     node_from_client,
     pod_from_client,
+    resource_quota_from_client,
     statefulset_from_client,
 )
 
@@ -61,12 +62,16 @@ class CoreAPI:
         self.raw_pods = self._query_raw_pods()
         self.raw_nodes = self._query_raw_nodes()
         self.raw_namespaces = self._query_raw_namespaces()
+        self.raw_resource_quotas = self._query_raw_resource_quotas()
 
     def _query_raw_nodes(self) -> Sequence[client.V1Node]:
         return self.connection.list_node(_request_timeout=self.timeout).items
 
     def _query_raw_pods(self) -> Sequence[client.V1Pod]:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
+
+    def _query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
+        return self.connection.list_resource_quota_for_all_namespaces().items
 
     def _query_raw_namespaces(self):
         return self.connection.list_namespace(_request_timeout=self.timeout).items
@@ -309,6 +314,13 @@ class APIServer:
 
     def pods(self) -> Sequence[api.Pod]:
         return [pod_from_client(pod) for pod in self._core_api.raw_pods]
+
+    def resource_quotas(self) -> Sequence[api.ResourceQuota]:
+        return [
+            api_resource_quota
+            for resource_quota in self._core_api.raw_resource_quotas
+            if (api_resource_quota := resource_quota_from_client(resource_quota)) is not None
+        ]
 
     def cluster_details(self) -> api.ClusterDetails:
         return api.ClusterDetails(api_health=self.api_health, version=self.version)

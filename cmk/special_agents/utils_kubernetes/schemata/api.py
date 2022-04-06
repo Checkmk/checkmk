@@ -144,6 +144,118 @@ class Namespace(BaseModel):
     metadata: NamespaceMetaData
 
 
+# TODO: PodCrossNamespaceAffinity is currently not supported
+# service is not generated
+class QuotaScope(enum.Enum):
+    """
+    General:
+        * QuotaScope comprises multiple pod related concepts (QoS class, priority class,
+        terminating spec) and can therefore be considered ResourceQuota specific
+
+    Scopes:
+        * BestEffort: pods with BestEffort QoS class
+        * NotBestEffort: pods with either Burstable and Guaranteed QoS class
+        * Terminating: pods that have the active-DeadlineSeconds set (name itself is misleading)
+        * NotTerminating: pods that do not have the active-DeadlineSeconds set
+        * PriorityClass: pods with an assigned PriorityClass
+    """
+
+    BestEffort = "BestEffort"
+    NotBestEffort = "NotBestEffort"
+    Terminating = "Terminating"
+    NotTerminating = "NotTerminating"
+    PriorityClass = "PriorityClass"
+
+
+class ScopeOperator(enum.Enum):
+    In = "In"
+    NotIn = "NotIn"
+    Exists = "Exists"
+    DoesNotExist = "DoesNotExist"
+
+
+class ScopedResourceMatchExpression(BaseModel):
+    """
+    Definitions 1. - 3. are taken from
+    https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes
+
+    1.  if scopeName is one of these [Terminating, NotTerminating, BestEffort, NotBestEffort], the
+    operator MUST be "Exists" (see also 3.)
+
+    2.  if operator is one of ["In", "NotIn"] , the values field must have AT LEAST ONE value
+
+    3.  if operator is one of ["Exists", "DoesNotExist"] , the values field MUST NOT be specified
+
+    4.  Based on 1. and 3.: operator DoesNotExist can only be used for scopeName = PriorityClass
+        with an empty values field -> pod.priority_class_name must be None to be valid
+    """
+
+    operator: ScopeOperator
+    # TODO: CrossNamespacePodAffinity
+    scope_name: QuotaScope
+    values: Sequence[str]
+
+
+class HardResourceRequirement(BaseModel):
+    """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
+
+    limit: Optional[float] = None
+    request: Optional[float] = None
+
+
+class HardRequirement(BaseModel):
+    # the format is different to ResourcesRequirement as resources are not nested within
+    # request & limit for RQ
+    memory: Optional[HardResourceRequirement] = None
+    cpu: Optional[HardResourceRequirement] = None
+
+
+class ScopeSelector(BaseModel):
+    match_expressions: Sequence[ScopedResourceMatchExpression]
+
+
+class ResourceQuotaSpec(BaseModel):
+    """
+    General:
+        * it is possible to set constraints for almost all Kubernetes object types
+        (e.g. deployments) but quota scopes usually pod relevant
+        (see https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes for tracking
+        scopes)
+        * it is possible to specify both scope_selector and scopes fields at the same time
+
+    scopes:
+        * only objects which fulfill the intersection of the specified scopes are considered
+        part of the RQ.
+        * PriorityClass scope verifies if the object has any PriorityClass associated with it
+    """
+
+    hard: Optional[HardRequirement]
+    scope_selector: Optional[ScopeSelector]
+    scopes: Optional[Sequence[QuotaScope]]
+
+
+class ResourceQuota(BaseModel):
+    """
+    A resource quota provides constraints (objects count, workload resources) that limit
+    aggregate resource consumption per namespace:
+        * it can limit the quantity of objects that can be created
+        * total amount of compute resources (memory, cpu)
+
+    ResourceQuota controller behaviour:
+        * Kubernetes enforces RQ at pod creation time. This means that pods created prior to the RQ
+        definition are unaffected
+
+    General:
+        * RQ is enabled by default for many distributions (ResourceQuota must be included in
+            --enable-admission-plugins=)
+        * convention is to create one RQ for each namespace (but Kubernetes does not reject
+        multiple RQs targeting the same namespace)
+    """
+
+    metadata: MetaData
+    spec: ResourceQuotaSpec
+
+
 class NodeConditionStatus(str, enum.Enum):
     TRUE = "True"
     FALSE = "False"

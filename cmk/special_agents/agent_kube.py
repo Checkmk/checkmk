@@ -1927,7 +1927,7 @@ def write_sections_based_on_performance_pods(
             )
     if "daemonsets" in monitored_objects:
         LOGGER.info("Write DaemonSet sections based on performance data")
-        for daemonset in cluster.daemon_sets():
+        for daemonset in daemon_sets_from_namespaces(cluster.daemon_sets(), monitored_namespaces):
             write_kube_object_performance_section(
                 daemonset,
                 performance_pods,
@@ -1937,7 +1937,9 @@ def write_sections_based_on_performance_pods(
             )
     if "statefulsets" in monitored_objects:
         LOGGER.info("Write StatefulSet sections based on performance data")
-        for statefulset in cluster.statefulsets():
+        for statefulset in statefulsets_from_namespaces(
+            cluster.statefulsets(), monitored_namespaces
+        ):
             write_kube_object_performance_section(
                 statefulset,
                 performance_pods,

@@ -53,8 +53,7 @@ div#top_heading {
       }
     }
 
-    div.text_container span {
-      display: table;
+    div.text_container span.has_changes {
       font-size: $font-size-large;
     }
 

@@ -10,11 +10,25 @@
 import collections
 import enum
 import errno
+import os
 import shutil
 from pathlib import Path
 
 import pytest
 from _pytest.doctest import DoctestItem
+
+if os.getenv("_PYTEST_RAISE", "0") != "0":
+    # This allows exceptions to be handled by IDEs (rather than just printing the results)
+    # when pytest based tests are being run from inside the IDE
+    # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
+    @pytest.hookimpl(tryfirst=True)
+    def pytest_exception_interact(call):
+        raise call.excinfo.value
+
+    @pytest.hookimpl(tryfirst=True)
+    def pytest_internalerror(excinfo):
+        raise excinfo.value
+
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(

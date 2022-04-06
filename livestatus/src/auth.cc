@@ -204,6 +204,9 @@ bool User::is_authorized_for_event(const std::string &precedence,
     if (auth_user_ == no_auth_user()) {
         return true;
     }
+    if (auth_user_ == unknown_auth_user()) {
+        return false;
+    }
 
     auto is_member = [this](const auto &group) {
         return is_member_of_contactgroup(group, auth_user_);

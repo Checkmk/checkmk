@@ -12,10 +12,21 @@ With Checkmk 2.1 we officially deprecate the component NSCA which has
 traditionally been a part of Checkmk but was rarely used. In 2.1 it will work
 as before and be removed with Checkmk 2.2.
 
+With werk #6515 (https://checkmk.com/werk/6515) we have already removed the
+libmcrypt dependency of NSCA from the Checkmk package dependencies to make
+installation of Checkmk easier in regular cases. Now we want to clean up the
+inconsistency that users might experience in case they try to use NSCA (missing
+library). We also want to save the effort of maintaining the component and its
+dependencies.
+
 If you are a user of NSCA with Checkmk an alternative solution depends on your
-specific use case. You could try to use local plugins with the Checkmk agent
-(https://docs.checkmk.com/latest/en/agent_linux.html#mrpe) or utilize the spool
-directory mechanism of the agent #16 (https://checkmk.com/werk/16).
+specific use case. You could try to extend the Checkmk agent with local checks
+(https://docs.checkmk.com/latest/en/localchecks.html), or with you own agent
+plus. Or you could utilize the spool directory mechanism of the agent #16
+(https://checkmk.com/werk/16). Executing Nagios compatible plugins with the
+MRPE feature of the agent could also be useful
+(https://docs.checkmk.com/latest/en/agent_linux.html#mrpe). Alternatively you
+could also build NSCA on your own on the Checkmk server.
 
 If you can't find a good replacement for your use case, please contact us via
 your support contact.

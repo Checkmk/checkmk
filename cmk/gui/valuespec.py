@@ -69,7 +69,7 @@ from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
 import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -7671,7 +7671,7 @@ class SetupSiteChoice(DropdownChoice):
         deprecated_choices: Sequence[DropdownChoiceModel] = (),
     ):
         super().__init__(
-            choices=sites.get_activation_site_choices,
+            choices=user_sites.get_activation_site_choices,
             sorted=sorted,
             label=label,
             help_separator=help_separator,
@@ -7702,7 +7702,7 @@ class SetupSiteChoice(DropdownChoice):
             # and a host / folder has no site set.
             return ""
 
-        default_value = sites.site_attribute_default_value()
+        default_value = user_sites.site_attribute_default_value()
         if default_value:
             return default_value
         return self.canonical_value()
@@ -7712,7 +7712,7 @@ def MonitoringSiteChoice():
     """Select a single site that is known as status remote site"""
     return DropdownChoice(
         title=_("Site"),
-        choices=sites.get_configured_site_choices(),
+        choices=user_sites.get_configured_site_choices(),
     )
 
 

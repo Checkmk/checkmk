@@ -20,7 +20,6 @@ from livestatus import (
 )
 
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 from cmk.utils.version import is_managed_edition
 
@@ -29,7 +28,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.logged_in import user as global_user
-from cmk.gui.site_config import get_site_config, site_is_local, sitenames
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -463,73 +461,3 @@ def filter_available_site_choices(choices: List[Tuple[SiteId, str]]) -> List[Tup
             continue
         sites_enabled.append(entry)
     return sites_enabled
-
-
-def configured_sites() -> SiteConfigurations:
-    return SiteConfigurations({site_id: get_site_config(site_id) for site_id in sitenames()})
-
-
-def sorted_sites() -> List[Tuple[SiteId, str]]:
-    return sorted(
-        [(site_id, s["alias"]) for site_id, s in global_user.authorized_sites().items()],
-        key=lambda k: k[1].lower(),
-    )
-
-
-def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(global_user.authorized_sites(unfiltered_sites=configured_sites()))
-
-
-def site_attribute_default_value() -> Optional[SiteId]:
-    site_id = omd_site()
-    authorized_site_ids = global_user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    if site_id in authorized_site_ids:
-        return site_id
-    return None
-
-
-def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
-    """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
-    choices = []
-    for site_id, site_spec in site_configs.items():
-        title = site_id
-        if site_spec.get("alias"):
-            title += " - " + site_spec["alias"]
-
-        choices.append((site_id, title))
-
-    return sorted(choices, key=lambda s: s[1])
-
-
-def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(
-        SiteConfigurations(
-            {
-                site_id: site
-                for site_id, site in global_user.authorized_sites(
-                    unfiltered_sites=configured_sites()
-                ).items()
-                if site_is_local(site_id) or site.get("replicate_ec", False)
-            }
-        )
-    )
-
-
-def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(activation_sites())
-
-
-def activation_sites() -> SiteConfigurations:
-    """Returns sites that are affected by WATO changes
-
-    These sites are shown on activation page and get change entries
-    added during WATO changes."""
-    return SiteConfigurations(
-        {
-            site_id: site
-            for site_id, site in global_user.authorized_sites(
-                unfiltered_sites=configured_sites()
-            ).items()
-            if site_is_local(site_id) or site.get("replication")
-        }
-    )

@@ -6,6 +6,7 @@
 
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
@@ -34,7 +35,7 @@ class Performance(SidebarSnapin):
         return True
 
     def show(self):
-        only_sites = snapin_site_choice("performance", sites.get_configured_site_choices())
+        only_sites = snapin_site_choice("performance", user_sites.get_configured_site_choices())
 
         def write_line(left, right, show_more):
             html.open_tr(class_="show_more_mode" if show_more else "basic")

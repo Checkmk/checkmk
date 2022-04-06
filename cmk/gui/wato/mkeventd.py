@@ -106,9 +106,9 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.site_config import allsites
-from cmk.gui.sites import get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (

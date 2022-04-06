@@ -9,6 +9,7 @@ import pytest
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 from cmk.gui.logged_in import user
 
 
@@ -83,5 +84,5 @@ def test_sorted_sites(with_user_login, mocker):
         ("site5", "Site 5"),
         ("site6", "Site 6"),
     ]
-    assert sites.sorted_sites() == expected
+    assert user_sites.sorted_sites() == expected
     mocker.stopall()

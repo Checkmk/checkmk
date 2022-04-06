@@ -10,6 +10,7 @@ import livestatus
 
 import cmk.gui.availability as availability
 import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
@@ -61,7 +62,7 @@ class APICallGrafanaConnector(APICallCollection):
         }
 
     def _get_user_sites(self, request):
-        return sites.sorted_sites()
+        return user_sites.sorted_sites()
 
     def _get_host_names(self, request):
         return self._query_for_host_names(request.get("site_id"))

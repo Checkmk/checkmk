@@ -46,7 +46,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_domain_registry, DomainSettings
 from cmk.gui.site_config import site_is_local
-from cmk.gui.sites import activation_sites
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice

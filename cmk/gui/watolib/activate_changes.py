@@ -78,11 +78,11 @@ from cmk.gui.plugins.watolib.utils import (
     wato_fileheader,
 )
 from cmk.gui.site_config import allsites, get_site_config, is_single_local_site, site_is_local
-from cmk.gui.sites import activation_sites
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.changes import log_audit, SiteChanges

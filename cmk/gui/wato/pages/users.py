@@ -50,9 +50,9 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.sites import get_configured_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, UserSpec
+from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may

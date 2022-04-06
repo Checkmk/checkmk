@@ -20,6 +20,7 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import register_post_config_load_hook
@@ -917,7 +918,7 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site = request.var("site")
-    site_choices = dict([(SiteId(""), _("All sites"))] + sites.get_configured_site_choices())
+    site_choices = dict([(SiteId(""), _("All sites"))] + user_sites.get_configured_site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

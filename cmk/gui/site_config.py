@@ -35,6 +35,10 @@ def allsites() -> SiteConfigurations:
     )
 
 
+def configured_sites() -> SiteConfigurations:
+    return SiteConfigurations({site_id: get_site_config(site_id) for site_id in sitenames()})
+
+
 def has_wato_slave_sites() -> bool:
     return bool(wato_slave_sites())
 

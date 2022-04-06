@@ -12,6 +12,7 @@ from livestatus import SiteId
 
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
@@ -58,7 +59,7 @@ class MasterControlSnapin(SidebarSnapin):
         finally:
             sites.live().set_prepend_site(False)
 
-        for site_id, site_alias in sites.sorted_sites():
+        for site_id, site_alias in user_sites.sorted_sites():
             container: ContextManager[bool] = (
                 foldable_container(
                     treename="master_control",

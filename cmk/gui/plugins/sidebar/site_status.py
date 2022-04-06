@@ -10,6 +10,7 @@ from livestatus import SiteId
 
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
+import cmk.gui.user_sites as user_sites
 from cmk.gui.globals import html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -45,7 +46,7 @@ class SiteStatus(SidebarSnapin):
 
         sites.update_site_states_from_dead_sites()
 
-        for sitename, _sitealias in sites.sorted_sites():
+        for sitename, _sitealias in user_sites.sorted_sites():
             site = site_config.get_site_config(sitename)
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")

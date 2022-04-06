@@ -20,19 +20,15 @@ from typing import Callable, Dict, Iterator, Sequence, Type
 import pytest
 from pydantic_factories import ModelFactory, Use
 
+# pylint: disable=comparison-with-callable,redefined-outer-name
+from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory
+
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
-
-# pylint: disable=comparison-with-callable,redefined-outer-name
-
 
 ONE_KiB = 1024
 ONE_MiB = 1024 * ONE_KiB
 ONE_GiB = 1024 * ONE_MiB
-
-
-class MetaDataFactory(ModelFactory):
-    __model__ = api.MetaData
 
 
 # Container Factories

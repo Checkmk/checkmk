@@ -37,7 +37,7 @@ import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 
 if is_enterprise_repo():
-    import cmk.cee.dcd.plugins.connectors.connectors_api.v1
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
 
 logger = logging.getLogger(__name__)
 

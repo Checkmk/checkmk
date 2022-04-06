@@ -10,7 +10,7 @@ Needs to be part of the generic code, not packed into NTOP addon.
 
 from typing import Dict, Optional
 
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
@@ -19,7 +19,7 @@ def get_ntop_connection() -> Optional[Dict]:
     # Use this function if you *really* want to try accessing the ntop connection settings
     try:
         # ntop is currently part of CEE and will *only* be defined if we are a CEE
-        return config.ntop_connection  # type: ignore[attr-defined]
+        return active_config.ntop_connection  # type: ignore[attr-defined]
     except AttributeError:
         return None
 

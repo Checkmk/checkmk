@@ -27,7 +27,7 @@ import cmk.gui.sites
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request, user_errors
+from cmk.gui.globals import active_config, html, request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -683,7 +683,7 @@ class ModeDistributedMonitoring(WatoMode):
 
             except Exception as e:
                 logger.exception("error logging in")
-                if config.debug:
+                if active_config.debug:
                     raise
                 error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace(
                     "\n", "\n<br>"

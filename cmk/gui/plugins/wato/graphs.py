@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     config_variable_registry,
@@ -49,5 +49,5 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
             title=_("Custom graph timeranges"),
             movable=True,
             totext=_("%d timeranges"),
-            default_value=config.graph_timeranges,
+            default_value=active_config.graph_timeranges,
         )

@@ -26,7 +26,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.rulesets.ruleset_matcher import get_tag_to_group_map, RulesetToDictTransformer
 
 import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.globals import config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.globals import active_config  # pylint: disable=cmk-module-layer-violation
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
@@ -332,7 +332,7 @@ class BIManagement:
             "DT_AGGR_WARN": "DT_AGGR_WARN-f41e728b-0bce-40dc-82ea-51091d034fc3",
         }
         self._hosttags_transformer = RulesetToDictTransformer(
-            tag_to_group_map=get_tag_to_group_map(config.tags)
+            tag_to_group_map=get_tag_to_group_map(active_config.tags)
         )
 
         try:

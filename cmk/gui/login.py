@@ -34,7 +34,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import config, html, request, response, theme, user_errors
+from cmk.gui.globals import active_config, html, request, response, theme, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -321,13 +321,13 @@ def _check_auth(req: Request) -> Optional[UserId]:
     if req.var("_secret"):
         user_id = _check_auth_automation()
 
-    elif auth_by_http_header := config.auth_by_http_header:
-        if not config.user_login:
+    elif auth_by_http_header := active_config.auth_by_http_header:
+        if not active_config.user_login:
             return None
         user_id = _check_auth_http_header(auth_by_http_header)
 
     if user_id is None:
-        if not config.user_login:
+        if not active_config.user_login:
             return None
         user_id = _check_auth_by_cookie()
 
@@ -466,7 +466,7 @@ class LoginPage(Page):
     def page(self) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(request.var("lang", config.default_language))
+        cmk.gui.i18n.localize(request.var("lang", active_config.default_language))
 
         self._do_login()
 
@@ -485,7 +485,7 @@ class LoginPage(Page):
             return
 
         try:
-            if not config.user_login:
+            if not active_config.user_login:
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
             username_var = request.get_str_input("_username", "")
@@ -604,16 +604,16 @@ class LoginPage(Page):
 
         html.open_div(id_="foot")
 
-        if config.login_screen.get("login_message"):
+        if active_config.login_screen.get("login_message"):
             html.open_div(id_="login_message")
-            html.show_message(config.login_screen["login_message"])
+            html.show_message(active_config.login_screen["login_message"])
             html.close_div()
 
         footer: List[HTML] = []
-        for title, url, target in config.login_screen.get("footer_links", []):
+        for title, url, target in active_config.login_screen.get("footer_links", []):
             footer.append(html.render_a(title, href=url, target=target))
 
-        if "hide_version" not in config.login_screen:
+        if "hide_version" not in active_config.login_screen:
             footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
 
         footer.append(

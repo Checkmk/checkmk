@@ -15,7 +15,7 @@ import livestatus
 import cmk.utils.render
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, html, output_funnel, request, response, theme
+from cmk.gui.globals import active_config, html, output_funnel, request, response, theme
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
@@ -102,11 +102,11 @@ def render_graph_or_error_html(graph_artwork, graph_data_range, graph_render_opt
 
 
 def render_graph_error_html(msg_or_exc, title=None) -> HTML:
-    if isinstance(msg_or_exc, MKGeneralException) and not config.debug:
+    if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
         msg = "%s" % msg_or_exc
 
     elif isinstance(msg_or_exc, Exception):
-        if config.debug:
+        if active_config.debug:
             raise msg_or_exc
         msg = traceback.format_exc()
     else:
@@ -504,7 +504,7 @@ def ajax_graph():
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
-        if config.debug:
+        if active_config.debug:
             raise
         response.set_data("ERROR: %s" % e)
 
@@ -764,7 +764,7 @@ def render_time_range_selection(graph_recipe, graph_render_options) -> HTML:
     now = int(time.time())
     graph_render_options = copy.deepcopy(graph_render_options)
     rows = []
-    for timerange_attrs in config.graph_timeranges:
+    for timerange_attrs in active_config.graph_timeranges:
         duration = timerange_attrs["duration"]
         assert isinstance(duration, int)
         graph_render_options.update(
@@ -835,7 +835,7 @@ def ajax_graph_hover():
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
-        if config.debug:
+        if active_config.debug:
             raise
         response.set_data("ERROR: %s" % e)
 

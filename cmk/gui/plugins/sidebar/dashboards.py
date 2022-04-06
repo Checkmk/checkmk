@@ -7,7 +7,7 @@
 from typing import List
 
 import cmk.gui.dashboard as dashboard
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import (
@@ -39,7 +39,7 @@ class Dashboards(SidebarSnapin):
 
         links = []
         if user.may("general.edit_dashboards"):
-            if config.debug:
+            if active_config.debug:
                 links.append((_("Export"), "export_dashboards.py"))
             links.append((_("Edit"), "edit_dashboards.py"))
             footnotelinks(links)

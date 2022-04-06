@@ -18,7 +18,7 @@ import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.globals import config, html, request, user_errors
+from cmk.gui.globals import active_config, html, request, user_errors
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import (
     Choices,
@@ -1519,7 +1519,7 @@ class FilterHostAuxTags(Filter):
     @staticmethod
     def _options() -> Choices:
         aux_tag_choices: Choices = [("", "")]
-        return aux_tag_choices + list(config.tags.aux_tag_list.get_choices())
+        return aux_tag_choices + list(active_config.tags.aux_tag_list.get_choices())
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -1670,7 +1670,7 @@ class FilterCustomAttribute(Filter):
 
 def _service_attribute_choices() -> Choices:
     choices: Choices = []
-    for ident, attr_spec in config.custom_service_attributes.items():
+    for ident, attr_spec in active_config.custom_service_attributes.items():
         choices.append((ident, attr_spec["title"]))
     return sorted(choices, key=lambda x: x[1])
 
@@ -1687,7 +1687,7 @@ filter_registry.register(
 
 def _host_attribute_choices() -> Choices:
     choices: Choices = []
-    for attr_spec in config.wato_host_attrs:
+    for attr_spec in active_config.wato_host_attrs:
         choices.append((attr_spec["name"], attr_spec["title"]))
     return sorted(choices, key=lambda x: x[1])
 
@@ -1722,7 +1722,7 @@ class FilterECServiceLevelRange(Filter):
 
     @staticmethod
     def _options() -> List[Tuple[str, str]]:
-        choices = sorted(config.mkeventd_service_levels[:])
+        choices = sorted(active_config.mkeventd_service_levels[:])
         return [("", "")] + [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -1762,7 +1762,7 @@ class FilterECServiceLevelRange(Filter):
 
         filterline_values = [
             str(val)
-            for val, _readable in config.mkeventd_service_levels
+            for val, _readable in active_config.mkeventd_service_levels
             if match_lower(val) and match_upper(val)
         ]
 

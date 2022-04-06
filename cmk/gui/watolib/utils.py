@@ -19,7 +19,7 @@ from cmk.utils.version import parse_check_mk_version
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sites import SiteStatus
@@ -104,7 +104,7 @@ def host_attribute_matches(crit: str, value: str) -> bool:
 
 
 def get_value_formatter() -> Callable[[Any], str]:
-    if config.wato_pprint_config:
+    if active_config.wato_pprint_config:
         return pprint.pformat
     return repr
 

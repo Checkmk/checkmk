@@ -63,7 +63,7 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, display_options, html, request, response, theme
+from cmk.gui.globals import active_config, display_options, html, request, response, theme
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
@@ -364,7 +364,9 @@ class PainterOptionRefresh(PainterOption):
 
     @property
     def valuespec(self):
-        choices = [(x, {0: _("off")}.get(x, str(x) + "s")) for x in config.view_option_refreshes]
+        choices = [
+            (x, {0: _("off")}.get(x, str(x) + "s")) for x in active_config.view_option_refreshes
+        ]
         return DropdownChoice(
             title=_("Refresh interval"),
             choices=choices,
@@ -381,7 +383,7 @@ class PainterOptionNumColumns(PainterOption):
     def valuespec(self):
         return DropdownChoice(
             title=_("Number of columns"),
-            choices=[(x, str(x)) for x in config.view_option_columns],
+            choices=[(x, str(x)) for x in active_config.view_option_columns],
         )
 
 
@@ -891,7 +893,7 @@ def query_livestatus(
 
     if all(
         (
-            config.debug_livestatus_queries,
+            active_config.debug_livestatus_queries,
             html.output_format == "html",
             display_options.enabled(display_options.W),
         )
@@ -1219,7 +1221,7 @@ def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Op
 
 def is_stale(row: Row) -> bool:
     staleness = row.get("service_staleness", row.get("host_staleness", 0)) or 0
-    return staleness >= config.staleness_threshold
+    return staleness >= active_config.staleness_threshold
 
 
 def paint_stalified(row: Row, text: CellContent) -> CellSpec:
@@ -1239,7 +1241,7 @@ def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
 
 def format_plugin_output(output: str, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(
-        output, row, shall_escape=config.escape_plugin_output
+        output, row, shall_escape=active_config.escape_plugin_output
     )
 
 
@@ -1825,7 +1827,7 @@ def _transform_old_views(all_views: AllViewSpecs) -> AllViewSpecs:
                     # and the datasource can simply be gathered from the datasource
                     view["single_infos"] = []
             except Exception:  # Exceptions can happen for views saved with certain GIT versions
-                if config.debug:
+                if active_config.debug:
                     raise
 
         # Convert from show_filters, hide_filters, hard_filters and hard_filtervars

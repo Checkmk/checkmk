@@ -12,7 +12,7 @@ import cmk.utils.store as store
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
@@ -41,7 +41,7 @@ class ModeManageReadOnly(WatoMode):
 
     def __init__(self):
         super().__init__()
-        self._settings = config.wato_read_only
+        self._settings = active_config.wato_read_only
 
     def title(self):
         return _("Manage configuration read only mode")
@@ -65,7 +65,7 @@ class ModeManageReadOnly(WatoMode):
             watolib.multisite_dir() + "read_only.mk",
             "wato_read_only",
             self._settings,
-            pprint_value=config.wato_pprint_config,
+            pprint_value=active_config.wato_pprint_config,
         )
 
     def page(self):

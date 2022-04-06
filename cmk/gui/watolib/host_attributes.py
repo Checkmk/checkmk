@@ -22,7 +22,7 @@ from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
 from cmk.gui import watolib
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.site_config import allsites
@@ -584,13 +584,15 @@ def _update_config_based_host_attributes() -> None:
     global _update_config_based_host_attributes_config_hash
 
     def _compute_config_hash() -> str:
-        return str(hash(repr(config.tags.get_dict_format()))) + repr(config.wato_host_attrs)
+        return str(hash(repr(active_config.tags.get_dict_format()))) + repr(
+            active_config.wato_host_attrs
+        )
 
     # The topic conversion needs to take place before the _compute_config_hash runs
     # The actual generated topics may be pre-1.5 converted topics
     # e.g. "Custom attributes" -> "custom_attributes"
     # If we do not convert the topics here, the config_hash comparison will always fail
-    transform_pre_16_host_topics(config.wato_host_attrs)
+    transform_pre_16_host_topics(active_config.wato_host_attrs)
 
     if _update_config_based_host_attributes_config_hash == _compute_config_hash():
         return  # No re-register needed :-)
@@ -617,7 +619,7 @@ def _clear_config_based_host_attributes() -> None:
 
 
 def _declare_host_tag_attributes() -> None:
-    for topic_spec, tag_groups in config.tags.get_tag_groups_by_topic():
+    for topic_spec, tag_groups in active_config.tags.get_tag_groups_by_topic():
         for tag_group in tag_groups:
             # Try to translate the title to a builtin topic ID. In case this is not possible mangle the given
             # custom topic to an internal ID and create the topic on demand.
@@ -673,7 +675,7 @@ def _create_tag_group_attribute(tag_group: TagGroup) -> Type[ABCHostAttributeTag
 
 
 def declare_custom_host_attrs() -> None:
-    for attr in transform_pre_16_host_topics(config.wato_host_attrs):
+    for attr in transform_pre_16_host_topics(active_config.wato_host_attrs):
         if attr["type"] == "TextAscii":
             # Hack: The API does not perform validate_datatype and we can currently not enable
             # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
@@ -1167,7 +1169,7 @@ def EnumAttribute(
 def _validate_host_tags(host_tags):
     """Check if the tag group exists and the tag value is valid"""
     for tag_group_id, tag_id in host_tags.items():
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             if tag_group.id == tag_group_id:
                 for grouped_tag in tag_group.tags:
                     if grouped_tag.id == tag_id:

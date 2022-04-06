@@ -17,7 +17,7 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
@@ -69,7 +69,7 @@ def user_sync_config() -> UserSyncConfig:
 # Take that option into account for compatibility reasons.
 # For remote sites in distributed setups, the default is to do no sync.
 def user_sync_default_config(site_name: SiteId) -> UserSyncConfig:
-    global_user_sync = _transform_userdb_automatic_sync(config.userdb_automatic_sync)
+    global_user_sync = _transform_userdb_automatic_sync(active_config.userdb_automatic_sync)
     if global_user_sync == "master":
         if site_is_local(site_name) and not is_wato_slave_site():
             user_sync_default: UserSyncConfig = "all"
@@ -117,7 +117,7 @@ def new_user_template(connection_id: str) -> UserSpec:
     )
 
     # Apply the default user profile
-    new_user.update(config.default_user_profile)
+    new_user.update(active_config.default_user_profile)
     return new_user
 
 
@@ -200,7 +200,7 @@ def _get_connections_for(configs: List[Dict[str, Any]]) -> "List[Tuple[str, User
 
 def _get_connection_configs() -> List[Dict[str, Any]]:
     # The htpasswd connector is enabled by default and always executed first.
-    return [_HTPASSWD_CONNECTION] + config.user_connections
+    return [_HTPASSWD_CONNECTION] + active_config.user_connections
 
 
 _HTPASSWD_CONNECTION = {
@@ -277,7 +277,7 @@ def load_roles() -> Roles:
     # Otherwise the hooks would work with old data when using helper
     # functions from the config module
     # TODO: load_roles() should not update global structures
-    config.roles.update(roles)
+    active_config.roles.update(roles)
 
     return roles
 

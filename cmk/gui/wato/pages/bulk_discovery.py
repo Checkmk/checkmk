@@ -13,7 +13,7 @@ import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -57,7 +57,7 @@ class ModeBulkDiscovery(WatoMode):
         self._job = BulkDiscoveryBackgroundJob()
 
     def _get_bulk_discovery_params(self):
-        self._bulk_discovery_params = copy.deepcopy(config.bulk_discovery_default_settings)
+        self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
 
         if self._start:
             # Only do this when the start form has been submitted
@@ -116,7 +116,7 @@ class ModeBulkDiscovery(WatoMode):
             )
 
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 raise
             logger.exception("Failed to start bulk discovery")
             raise MKUserError(

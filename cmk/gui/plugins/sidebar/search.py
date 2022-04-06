@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 import cmk.gui.sites as sites
 import cmk.gui.utils
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import config, html, output_funnel, request
+from cmk.gui.globals import active_config, html, output_funnel, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -192,14 +192,14 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
     def row_limit_exceeded(self) -> bool:
         """Whether or not the results exceeded the config.quicksearch_dropdown_limit"""
-        return len(self._results) > config.quicksearch_dropdown_limit
+        return len(self._results) > active_config.quicksearch_dropdown_limit
 
     def get_search_url_params(self) -> HTTPVariables:
         """Returns the HTTP variables to link to to show the results on a content page"""
         raise NotImplementedError()  # TODO: Implement this
 
     def create_results(self) -> List[SearchResult]:
-        return self._results[: config.quicksearch_dropdown_limit]
+        return self._results[: active_config.quicksearch_dropdown_limit]
 
 
 class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
@@ -263,7 +263,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         headers = ["site"] + self._queried_livestatus_columns
         self._rows = [dict(zip(headers, x)) for x in results]
 
-        limit = config.quicksearch_dropdown_limit
+        limit = active_config.quicksearch_dropdown_limit
         if len(self._rows) > limit:
             self._too_much_rows = True
             self._rows.pop()  # Remove limit+1nth element
@@ -301,7 +301,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         )
 
         # Limit number of results
-        limit = config.quicksearch_dropdown_limit
+        limit = active_config.quicksearch_dropdown_limit
         self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
 
     def _get_used_search_plugins(self) -> List["ABCLivestatusMatchPlugin"]:
@@ -567,7 +567,7 @@ class QuicksearchManager:
         else:
             # No explicit filters specified by search expression. Execute the quicksearch plugins in
             # the order they are configured to let them answer the query.
-            for filter_name, filter_behaviour_str in config.quicksearch_search_order:
+            for filter_name, filter_behaviour_str in active_config.quicksearch_search_order:
                 search_objects.append(
                     self._make_conductor(
                         filter_name,
@@ -639,17 +639,19 @@ class QuicksearchManager:
             search_object.do_query()
             total_rows += search_object.num_rows()
 
-            if total_rows > config.quicksearch_dropdown_limit:
-                search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
+            if total_rows > active_config.quicksearch_dropdown_limit:
+                search_object.remove_rows_from_end(
+                    total_rows - active_config.quicksearch_dropdown_limit
+                )
                 if self.raise_too_many_rows_error:
                     raise TooManyRowsError(
-                        _("More than %d results") % config.quicksearch_dropdown_limit
+                        _("More than %d results") % active_config.quicksearch_dropdown_limit
                     )
 
             if search_object.row_limit_exceeded():
                 if self.raise_too_many_rows_error:
                     raise TooManyRowsError(
-                        _("More than %d results") % config.quicksearch_dropdown_limit
+                        _("More than %d results") % active_config.quicksearch_dropdown_limit
                     )
 
             if (
@@ -659,7 +661,9 @@ class QuicksearchManager:
                 if search_object.filter_behaviour is FilterBehaviour.FINISHED_DISTINCT:
                     # Discard all data of previous filters and break
                     for i in range(idx - 1, -1, -1):
-                        search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
+                        search_objects[i].remove_rows_from_end(
+                            active_config.quicksearch_dropdown_limit
+                        )
                 break
 
     def _evaluate_results(
@@ -750,7 +754,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         except Exception:
             logger.exception("error generating quicksearch results")
-            if config.debug:
+            if active_config.debug:
                 raise
             html.show_error(traceback.format_exc())
 
@@ -1136,14 +1140,14 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
     def _get_hosttag_dict(self):
         lookup_dict = {}
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             for grouped_tag in tag_group.tags:
                 lookup_dict[grouped_tag.id] = tag_group.id
         return lookup_dict
 
     def _get_auxtag_dict(self):
         lookup_dict = {}
-        for tag_id in config.tags.aux_tag_list.get_tag_ids():
+        for tag_id in active_config.tags.aux_tag_list.get_tag_ids():
             lookup_dict[tag_id] = tag_id
         return lookup_dict
 

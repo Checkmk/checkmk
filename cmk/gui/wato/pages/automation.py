@@ -22,7 +22,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
-from cmk.gui.globals import config, request, response
+from cmk.gui.globals import active_config, request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user
@@ -228,7 +228,7 @@ class ModeAutomation(AjaxPage):
             response.set_data(str(watolib.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
-            if config.debug:
+            if active_config.debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
@@ -266,7 +266,7 @@ class ModeAutomation(AjaxPage):
             response.set_data(repr(automation.execute(automation.get_request())))
         except Exception as e:
             logger.exception("error executing automation command")
-            if config.debug:
+            if active_config.debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 

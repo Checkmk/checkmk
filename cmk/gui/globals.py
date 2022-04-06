@@ -52,7 +52,7 @@ g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 request: http.Request = request_local_attr("request")
 response: http.Response = request_local_attr("response")
 output_funnel: OutputFunnel = request_local_attr("output_funnel")
-config: Config = request_local_attr("config")
+active_config: Config = request_local_attr("config")
 endpoint: Endpoint = request_local_attr("endpoint")
 user_errors: UserErrors = request_local_attr("user_errors")
 

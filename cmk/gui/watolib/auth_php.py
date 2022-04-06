@@ -43,7 +43,7 @@ import cmk.utils.store as store
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -88,7 +88,7 @@ def _create_php_file(callee, users, role_permissions, groups):
     nagvis_users = copy.deepcopy(users)
 
     for user in nagvis_users.values():
-        user.setdefault("language", config.default_language)  # Set a language for all users
+        user.setdefault("language", active_config.default_language)  # Set a language for all users
         user.pop("session_info", None)  # remove the SessionInfo object
 
     content = """<?php

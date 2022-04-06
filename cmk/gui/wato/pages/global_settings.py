@@ -16,7 +16,7 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -112,7 +112,7 @@ class ABCGlobalSettingsMode(WatoMode):
             config_variable.domain() == watolib.ConfigDomainCore
             and varname not in self._default_values
         ):
-            if config.debug:
+            if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
                     "your local Check_MK installation" % varname
@@ -366,7 +366,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         title = self._valuespec.title()
         assert isinstance(title, str)
         forms.header(title)
-        if not config.wato_hide_varnames:
+        if not active_config.wato_hide_varnames:
             forms.section(_("Configuration variable:"))
             html.tt(self._varname)
 

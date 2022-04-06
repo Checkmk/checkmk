@@ -73,7 +73,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import config, g, html, request
+from cmk.gui.globals import active_config, g, html, request
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -529,7 +529,7 @@ class _RedisHelper:
 
         if (
             user.may("wato.see_all_folders")
-            or not config.wato_hide_folders_without_read_permissions
+            or not active_config.wato_hide_folders_without_read_permissions
         ):
             return sum(map(int, results[0][1::2]))
 
@@ -715,7 +715,7 @@ class _WATOInfoStorageManager:
 
     def _get_write_storages(self) -> List[_ABCWATOInfoStorage]:
         storages: List[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
-        if get_storage_format(config.config_storage_format) == StorageFormat.PICKLE:
+        if get_storage_format(active_config.config_storage_format) == StorageFormat.PICKLE:
             storages.append(_PickleWATOInfoStorage())
         return storages
 
@@ -1481,7 +1481,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         variables = get_hosts_file_variables()
         apply_hosts_file_to_object(
             Path(self.hosts_file_path_without_extension()),
-            get_host_storage_loaders(config.config_storage_format),
+            get_host_storage_loaders(active_config.config_storage_format),
             variables,
         )
         return variables
@@ -1637,7 +1637,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
         if experimental_storage := make_experimental_hosts_storage(
-            get_storage_format(config.config_storage_format)
+            get_storage_format(active_config.config_storage_format)
         ):
             storage_list.append(experimental_storage)
 
@@ -1910,7 +1910,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             visible_subfolders
             or self.may("read")
             or self.is_root()
-            or not config.wato_hide_folders_without_read_permissions
+            or not active_config.wato_hide_folders_without_read_permissions
         ):
             results.append((self.path(), self._prefixed_title(current_depth, pretty)))
             return True
@@ -1934,7 +1934,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self._choices_for_moving_host
 
     def folder_should_be_shown(self, how: str) -> bool:
-        if not config.wato_hide_folders_without_read_permissions:
+        if not active_config.wato_hide_folders_without_read_permissions:
             return True
 
         has_permission = self.may(how)
@@ -3201,7 +3201,7 @@ class CREHost(WithPermissions, WithAttributes):
         # The following code is needed to migrate host/rule matching from <1.5
         # to 1.5 when a user did not modify the "agent type" tag group.  (See
         # migrate_old_sample_config_tag_groups() for more information)
-        aux_tag_ids = [t.id for t in config.tags.aux_tag_list.get_tags()]
+        aux_tag_ids = [t.id for t in active_config.tags.aux_tag_list.get_tags()]
 
         # Be compatible to: Agent type -> SNMP v2 or v3
         if (

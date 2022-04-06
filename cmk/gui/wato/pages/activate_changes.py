@@ -27,7 +27,7 @@ import cmk.gui.watolib.snapshots
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import config, display_options, html, request
+from cmk.gui.globals import active_config, display_options, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -591,8 +591,8 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
 def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary]:
     elements: List[DictionaryEntry] = []
 
-    if config.wato_activate_changes_comment_mode != "disabled":
-        is_optional = config.wato_activate_changes_comment_mode != "enforce"
+    if active_config.wato_activate_changes_comment_mode != "disabled":
+        is_optional = active_config.wato_activate_changes_comment_mode != "enforce"
         elements.append(
             (
                 "comment",

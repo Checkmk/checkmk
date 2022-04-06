@@ -32,7 +32,7 @@ import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import main_modules, watolib
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
@@ -293,7 +293,7 @@ class WebTestAppForCMK(webtest.TestApp):
 
         def _set_config():
             for key, val in kwargs.items():
-                setattr(config, key, val)
+                setattr(active_config, key, val)
 
         try:
             config_module.register_post_config_load_hook(_set_config)

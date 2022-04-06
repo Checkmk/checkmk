@@ -19,7 +19,7 @@ import cmk.gui.inventory as inventory
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, user_errors
+from cmk.gui.globals import active_config, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
@@ -184,7 +184,7 @@ def staleness(obj: Literal["host", "service"]) -> Callable[[bool], FilterHeader]
         return "Filter: %s_staleness %s %0.2f\n" % (
             obj,
             operator,
-            config.staleness_threshold,
+            active_config.staleness_threshold,
         )
 
     return toggler
@@ -716,7 +716,7 @@ class TagsQuery(LabelsQuery):
             num += 1
 
             op = value.get(prefix + "_op")
-            tag_group = config.tags.get_tag_group(value.get(prefix + "_grp", ""))
+            tag_group = active_config.tags.get_tag_group(value.get(prefix + "_grp", ""))
 
             if tag_group and op:
                 tag = value.get(prefix + "_val", "")

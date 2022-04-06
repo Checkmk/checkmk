@@ -52,7 +52,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, theme, user_errors
+from cmk.gui.globals import active_config, theme, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -860,7 +860,7 @@ class html(ABCHTMLGenerator):
     @property
     def screenshotmode(self) -> bool:
         """Enabling the screenshot mode omits the fancy background and makes it white instead."""
-        return bool(self.request.var("screenshotmode", "1" if config.screenshotmode else ""))
+        return bool(self.request.var("screenshotmode", "1" if active_config.screenshotmode else ""))
 
     #
     # output funnel
@@ -1110,9 +1110,10 @@ class html(ABCHTMLGenerator):
         for css in self._plugin_stylesheets():
             self._write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
-        if config.custom_style_sheet:
+        if active_config.custom_style_sheet:
             self._write(
-                '<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet
+                '<link rel="stylesheet" type="text/css" href="%s">\n'
+                % active_config.custom_style_sheet
             )
 
     def _plugin_stylesheets(self) -> Set[str]:
@@ -1134,7 +1135,7 @@ class html(ABCHTMLGenerator):
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None
         rel_path = "share/check_mk/web/htdocs/js"
-        if config.debug:
+        if active_config.debug:
             min_parts = ["", "_min"]
         else:
             min_parts = ["_min", ""]
@@ -1259,7 +1260,7 @@ class html(ABCHTMLGenerator):
         if page_menu:
             PageMenuPopupsRenderer().show(page_menu)
 
-        if config.debug:
+        if active_config.debug:
             self._dump_get_vars()
 
     def _make_default_page_state(self) -> Optional[PageState]:

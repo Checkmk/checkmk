@@ -18,7 +18,7 @@ from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
@@ -878,7 +878,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - contain at least two entries
         choices = []
         by_topic: Dict[str, List[TagGroup]] = {}
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
             by_topic.setdefault(tag_group.topic or _("Tags"), []).append(tag_group)
 
@@ -1455,7 +1455,7 @@ def _custom_service_attributes_validate_unique_entries(value, varprefix):
 
 def _custom_service_attributes_custom_service_attribute_choices():
     choices = []
-    for ident, attr_spec in config.custom_service_attributes.items():
+    for ident, attr_spec in active_config.custom_service_attributes.items():
         if attr_spec["type"] == "TextAscii":
             vs = TextInput()
         else:
@@ -1474,7 +1474,7 @@ def _service_tag_rules_validate_unique_entries(value, varprefix):
 
 def _service_tag_rules_tag_group_choices():
     choices = []
-    for tag_group in config.tags.tag_groups:
+    for tag_group in active_config.tags.tag_groups:
         choices.append(
             (
                 tag_group.id,

@@ -20,7 +20,7 @@ from cmk.utils.type_defs import Timestamp
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import config, html, output_funnel, request, response
+from cmk.gui.globals import active_config, html, output_funnel, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -126,7 +126,7 @@ class PainterOptionTimestampFormat(PainterOption):
     def valuespec(self) -> DropdownChoice:
         return DropdownChoice(
             title=_("Time stamp format"),
-            default_value=config.default_ts_format,
+            default_value=active_config.default_ts_format,
             encode_value=False,
             choices=[
                 ("mixed", _("Mixed")),
@@ -340,7 +340,7 @@ class PainterSiteIcon(Painter):
         return "site"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        if row.get("site") and config.use_siteicons:
+        if row.get("site") and active_config.use_siteicons:
             return None, html.render_img("icons/site-%s-24.png" % row["site"], class_="siteicon")
         return None, ""
 
@@ -1669,7 +1669,7 @@ class PainterSvcServicelevel(Painter):
         return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("service", "EC_SL", row, config.mkeventd_service_levels)
+        return _paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) -> CellSpec:
@@ -1780,7 +1780,7 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
 
     def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
-        for ident, attr_spec in config.custom_service_attributes.items():
+        for ident, attr_spec in active_config.custom_service_attributes.items():
             choices.append((ident, attr_spec["title"]))
         return sorted(choices, key=lambda x: x[1])
 
@@ -1818,7 +1818,7 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
 
     def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
-        for attr_spec in config.wato_host_attrs:
+        for attr_spec in active_config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))
         return sorted(choices, key=lambda x: x[1])
 
@@ -3267,7 +3267,7 @@ class PainterHostServicelevel(Painter):
         return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "EC_SL", row, config.mkeventd_service_levels)
+        return _paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 @painter_registry.register
@@ -4987,14 +4987,14 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
     def _get_entries(self, row):
         entries = []
         for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
-            tag_group = config.tags.get_tag_group(tag_group_id)
+            tag_group = active_config.tags.get_tag_group(tag_group_id)
             if tag_group:
                 entries.append(
                     (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id))
                 )
                 continue
 
-            aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
+            aux_tag_title = dict(active_config.tags.aux_tag_list.get_choices()).get(tag_group_id)
             if aux_tag_title:
                 entries.append((aux_tag_title, aux_tag_title))
                 continue

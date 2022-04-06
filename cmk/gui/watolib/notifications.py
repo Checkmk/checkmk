@@ -11,7 +11,7 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import EventRule, UserId
 
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.watolib.utils import wato_root_dir
 
 
@@ -36,7 +36,7 @@ def save_notification_rules(rules: list[EventRule]) -> None:
         wato_root_dir() + "notifications.mk",
         "notification_rules",
         rules,
-        pprint_value=config.wato_pprint_config,
+        pprint_value=active_config.wato_pprint_config,
     )
 
 

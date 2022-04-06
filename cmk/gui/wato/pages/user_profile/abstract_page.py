@@ -8,7 +8,7 @@ import abc
 
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import config, html, request, user_errors
+from cmk.gui.globals import active_config, html, request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -45,7 +45,7 @@ class ABCUserProfilePage(Page):
         if not user.may(permission):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 
-        if not config.wato_enabled:
+        if not active_config.wato_enabled:
             raise MKAuthException(_("User profiles can not be edited (WATO is disabled)."))
 
     def _page_menu(self, breadcrumb) -> PageMenu:

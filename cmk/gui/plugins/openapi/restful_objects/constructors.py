@@ -15,7 +15,7 @@ from werkzeug.datastructures import ETags
 
 from cmk.utils.site import omd_site
 
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -212,7 +212,7 @@ def require_etag(
     Raises:
         ProblemException: When If-Match missing or ETag doesn't match.
     """
-    etags_required = config.rest_api_etag_locking
+    etags_required = active_config.rest_api_etag_locking
     if not request.if_match:
         if not etags_required:
             return

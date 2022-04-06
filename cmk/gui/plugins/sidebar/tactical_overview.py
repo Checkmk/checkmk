@@ -11,7 +11,7 @@ import livestatus
 import cmk.gui.notifications as notifications
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import CustomizableSidebarSnapin, link, snapin_registry
@@ -193,7 +193,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 stales = 0
 
                 # no events open and disabled in local site: don't show events
-                if amount == 0 and not config.mkeventd_enabled:
+                if amount == 0 and not active_config.mkeventd_enabled:
                     continue
             else:
                 amount, problems, unhandled_problems, stales = row.stats
@@ -382,7 +382,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: host_scheduled_downtime_depth = 0\n"
             "StatsAnd: 2\n"
             "%s"
-        ) % (config.staleness_threshold, context_filters)
+        ) % (active_config.staleness_threshold, context_filters)
 
     def _get_service_stats_query(self, context_filters):
         return (
@@ -408,7 +408,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: service_scheduled_downtime_depth = 0\n"
             "StatsAnd: 3\n"
             "%s"
-        ) % (config.staleness_threshold, context_filters)
+        ) % (active_config.staleness_threshold, context_filters)
 
     def _get_event_stats_query(self, context_filters):
         # In case the user is not allowed to see unrelated events

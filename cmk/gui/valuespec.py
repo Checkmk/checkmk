@@ -72,7 +72,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, output_funnel, request, theme
+from cmk.gui.globals import active_config, html, output_funnel, request, theme
 from cmk.gui.htmllib import HTMLTagAttributes
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
@@ -4790,7 +4790,7 @@ class Timerange(CascadingDropdown):
             return _normalize_choices(
                 [
                     (timerange_attrs["duration"], timerange_attrs["title"])
-                    for timerange_attrs in config.graph_timeranges
+                    for timerange_attrs in active_config.graph_timeranges
                 ]
             )
 
@@ -6830,7 +6830,7 @@ class IconSelector(ValueSpec):
 
     @classmethod
     def categories(cls):
-        return config.wato_icon_categories
+        return active_config.wato_icon_categories
 
     @classmethod
     def category_alias(cls, category_name):

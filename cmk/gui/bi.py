@@ -27,7 +27,7 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui import sites
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import config, html, output_funnel, request, theme
+from cmk.gui.globals import active_config, html, output_funnel, request, theme
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
@@ -662,7 +662,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             html.close_span()
 
         output: HTML = cmk.gui.view_utils.format_plugin_output(
-            effective_state["output"], shall_escape=config.escape_plugin_output
+            effective_state["output"], shall_escape=active_config.escape_plugin_output
         )
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output

@@ -46,7 +46,7 @@ from cmk.utils import store
 
 from cmk.gui import fields
 from cmk.gui import http as cmk_http
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.restful_objects import permissions
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -673,7 +673,7 @@ class Endpoint:
             # make pylint happy
             assert callable(self.func)
 
-            if self.tag_group == "Setup" and not config.wato_enabled:
+            if self.tag_group == "Setup" and not active_config.wato_enabled:
                 return problem(
                     status=403,
                     title="Forbidden: WATO is disabled",
@@ -739,7 +739,7 @@ class Endpoint:
                 # We assume no configuration change on GET and no configuration change on
                 # non-ok responses.
                 activate_changes_update_config_generation()
-                if config.wato_use_git:
+                if active_config.wato_use_git:
                     do_git_commit()
 
             if (
@@ -980,7 +980,7 @@ class Endpoint:
             self.path_params if self.path_params is not None else []
         )
 
-        if config.rest_api_etag_locking and self.etag in ("input", "both"):
+        if active_config.rest_api_etag_locking and self.etag in ("input", "both"):
             header_params.append(ETAG_IF_MATCH_HEADER)
 
         if self.request_schema:

@@ -16,7 +16,7 @@ import cmk.utils.regex
 from cmk.utils.type_defs import TagID
 
 from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -132,8 +132,8 @@ icon_and_action_registry = IconRegistry()
 
 
 def update_icons_from_configuration():
-    _update_builtin_icons(config.builtin_icon_visibility)
-    _register_custom_user_icons_and_actions(config.user_icons_and_actions)
+    _update_builtin_icons(active_config.builtin_icon_visibility)
+    _register_custom_user_icons_and_actions(active_config.user_icons_and_actions)
 
 
 register_post_config_load_hook(update_icons_from_configuration)
@@ -303,7 +303,7 @@ def _process_icon(
     try:
         result = icon.render(what, row, tags, custom_vars)
     except Exception:
-        if config.debug:
+        if active_config.debug:
             raise
         yield IconEntry(
             sort_index=icon.sort_index(),

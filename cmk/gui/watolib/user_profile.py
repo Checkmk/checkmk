@@ -14,7 +14,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars
@@ -93,7 +93,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     for result in results:
         if result.error_text:
             logger.info("  FAILED [%s]: %s" % (result.site_id, result.error_text))
-            if config.wato_enabled:
+            if active_config.wato_enabled:
                 add_change(
                     "edit-users",
                     _("Password changed (sync failed: %s)") % result.error_text,
@@ -143,7 +143,7 @@ def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
 def _handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
     _synchronize_profiles_to_sites(logger, profiles_to_synchronize)
 
-    if changes and config.wato_enabled and not is_wato_slave_site():
+    if changes and active_config.wato_enabled and not is_wato_slave_site():
         add_change("edit-users", "<br>".join(changes), add_user=False)
 
 
@@ -176,7 +176,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
                 ("command", "push-profile"),
                 ("secret", site["secret"]),
                 ("siteid", site["id"]),
-                ("debug", config.debug and "1" or ""),
+                ("debug", active_config.debug and "1" or ""),
             ]
         )
     )

@@ -8,7 +8,7 @@ import time
 
 import cmk.utils.render as render
 
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
@@ -16,33 +16,33 @@ from cmk.gui.logged_in import user
 def message():
     text = _("The configuration is currently in read only mode. ")
 
-    if config.wato_read_only["enabled"] is True:
+    if active_config.wato_read_only["enabled"] is True:
         text += _("The read only mode is enabled until it is turned of manually. ")
 
-    elif isinstance(config.wato_read_only["enabled"], tuple):
-        end_time = config.wato_read_only["enabled"][1]
+    elif isinstance(active_config.wato_read_only["enabled"], tuple):
+        end_time = active_config.wato_read_only["enabled"][1]
         text += _("The read only mode is enabled until %s. ") % render.date_and_time(end_time)
 
     if may_override():
         text += _("But you are allowed to make changes anyway. ")
 
-    text += "<br><br>" + _("Reason: %s") % config.wato_read_only["message"]
+    text += "<br><br>" + _("Reason: %s") % active_config.wato_read_only["message"]
 
     return text
 
 
 def is_enabled():
-    if not config.wato_read_only:
+    if not active_config.wato_read_only:
         return False
-    if config.wato_read_only["enabled"] is True:
+    if active_config.wato_read_only["enabled"] is True:
         return True
-    if isinstance(config.wato_read_only["enabled"], tuple):
-        start_time, end_time = config.wato_read_only["enabled"]
+    if isinstance(active_config.wato_read_only["enabled"], tuple):
+        start_time, end_time = active_config.wato_read_only["enabled"]
         return start_time <= time.time() <= end_time
     return False
 
 
 def may_override():
-    return user.id in config.wato_read_only["rw_users"] or (
+    return user.id in active_config.wato_read_only["rw_users"] or (
         request.var("mode") == "read_only" and user.may("wato.set_read_only")
     )

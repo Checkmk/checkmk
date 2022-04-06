@@ -60,7 +60,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,
@@ -688,7 +688,7 @@ class LDAPUserConnector(UserConnector):
 
         if not success:
             self._logger.info("  FAILED")
-            if config.debug:
+            if active_config.debug:
                 raise MKLDAPException(
                     _(
                         "Unable to successfully perform the LDAP search "
@@ -2336,7 +2336,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # Load default roles from default user profile when the user got no role
         # by the role sync plugin
         if not roles:
-            roles = config.default_user_profile["roles"][:]
+            roles = active_config.default_user_profile["roles"][:]
 
         return {"roles": roles}
 

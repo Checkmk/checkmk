@@ -34,7 +34,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config
@@ -154,7 +154,7 @@ def local_automation_failure(
     err=None,
     exc=None,
 ) -> MKGeneralException:
-    call = subprocess.list2cmdline(cmdline) if config.debug else command
+    call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
         msg += " (exit code %d)" % code
@@ -304,7 +304,7 @@ def _do_remote_automation_serialized(
     post_data.update(
         {
             "secret": secret,
-            "debug": "1" if config.debug else "",
+            "debug": "1" if active_config.debug else "",
         }
     )
 
@@ -444,7 +444,7 @@ def do_site_login(site_id: SiteId, name: UserId, password: str) -> str:
         message = _(
             "Authentication to web service failed.<br>Message:<br>%s"
         ) % escaping.strip_tags(escaping.strip_scripts(response))
-        if config.debug:
+        if active_config.debug:
             message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
     if not response:

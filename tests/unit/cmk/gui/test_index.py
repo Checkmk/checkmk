@@ -11,7 +11,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.logged_in import user
 
 RequestContextFixture = Iterator[None]
@@ -24,14 +24,14 @@ def test_get_start_url_default(request_context: RequestContextFixture) -> None:
 def test_get_start_url_default_config(
     request_context: RequestContextFixture, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(config, "start_url", "bla.py")
+    monkeypatch.setattr(active_config, "start_url", "bla.py")
     assert cmk.gui.main._get_start_url() == "bla.py"
 
 
 def test_get_start_url_user_config(
     monkeypatch: MonkeyPatch, request_context: RequestContextFixture
 ) -> None:
-    monkeypatch.setattr(config, "start_url", "bla.py")
+    monkeypatch.setattr(active_config, "start_url", "bla.py")
 
     class MockUser:
         @property

@@ -25,7 +25,7 @@ import cmk.gui.wato.mkeventd
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 
 
 @pytest.fixture(name="mocked_responses")
@@ -110,7 +110,7 @@ def _create_test_sync_config(monkeypatch):
 
     if cmk_version.is_managed_edition():
         monkeypatch.setattr(
-            config,
+            active_config,
             "customers",
             {
                 "provider": {
@@ -173,7 +173,7 @@ def _get_activation_manager(monkeypatch, remote_site="unit_remote_1"):
     }
 
     monkeypatch.setattr(
-        config,
+        active_config,
         "sites",
         {
             "unit": {
@@ -374,7 +374,7 @@ def test_generate_snapshot(
     expected_paths = _get_expected_paths(
         user_id=with_user_login,
         is_pre_17_site=False,
-        with_local=config.sites[remote_site].get("replicate_mkps", False),
+        with_local=active_config.sites[remote_site].get("replicate_mkps", False),
     )
 
     work_dir = Path(snapshot_settings.work_dir)
@@ -439,7 +439,7 @@ def test_generate_pre_17_site_snapshot(
             "mknotify.tar",
         ]
 
-    if config.sites[remote_site].get("replicate_mkps", False):
+    if active_config.sites[remote_site].get("replicate_mkps", False):
         expected_subtars += [
             "local.tar",
             "mkps.tar",
@@ -483,7 +483,7 @@ def test_generate_pre_17_site_snapshot(
         "omd.tar": [] if is_pre_17_site else ["sitespecific.mk", "global.mk"],
     }
 
-    if config.sites[remote_site].get("replicate_mkps", False):
+    if active_config.sites[remote_site].get("replicate_mkps", False):
         expected_files.update({"local.tar": [], "mkps.tar": []})
 
     if cmk_version.is_managed_edition():
@@ -574,7 +574,7 @@ def test_apply_pre_17_sync_snapshot(
     expected_paths = _get_expected_paths(
         user_id=with_user_login,
         is_pre_17_site=is_pre_17_site,
-        with_local=config.sites[remote_site].get("replicate_mkps", False),
+        with_local=active_config.sites[remote_site].get("replicate_mkps", False),
     )
 
     if cmk_version.is_managed_edition():

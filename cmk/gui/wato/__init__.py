@@ -119,7 +119,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.log import logger

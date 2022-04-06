@@ -18,7 +18,7 @@ import cmk.utils.render
 
 import cmk.gui.pdf as pdf
 from cmk.gui.exceptions import MKGeneralException, MKUnauthenticatedException, MKUserError
-from cmk.gui.globals import config, request, response
+from cmk.gui.globals import active_config, request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext
@@ -63,7 +63,7 @@ def _answer_graph_image_request() -> None:
         try:
             row = get_graph_data_from_livestatus(site, host_name, service_description)
         except livestatus.MKLivestatusNotFoundError:
-            if config.debug:
+            if active_config.debug:
                 raise
             raise Exception(
                 _("Cannot render graph: host %s, service %s not found.")
@@ -107,7 +107,7 @@ def _answer_graph_image_request() -> None:
 
     except Exception as e:
         logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
-        if config.debug:
+        if active_config.debug:
             raise
 
 

@@ -20,7 +20,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.config
 import cmk.gui.permissions as permissions
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.permissions import (
     load_dynamic_permissions,
     Permission,
@@ -205,12 +205,12 @@ def test_load_config():
     config_path.unlink(missing_ok=True)
 
     cmk.gui.config.load_config()
-    assert config.quicksearch_dropdown_limit == 80
+    assert active_config.quicksearch_dropdown_limit == 80
 
     with config_path.open("w") as f:
         f.write("quicksearch_dropdown_limit = 1337\n")
     cmk.gui.config.load_config()
-    assert config.quicksearch_dropdown_limit == 1337
+    assert active_config.quicksearch_dropdown_limit == 1337
 
 
 @pytest.fixture()
@@ -224,7 +224,7 @@ def local_config_plugin():
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_respects_local_plugin():
     cmk.gui.config.load_config()
-    assert config.ding == "dong"  # type: ignore[attr-defined]
+    assert active_config.ding == "dong"  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("local_config_plugin")
@@ -232,7 +232,7 @@ def test_load_config_allows_local_plugin_setting():
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     cmk.gui.config.load_config()
-    assert config.ding == "ding"  # type: ignore[attr-defined]
+    assert active_config.ding == "ding"  # type: ignore[attr-defined]
 
 
 def test_registered_permission_sections():
@@ -1124,9 +1124,9 @@ def test_default_tags():
         ],
     }
 
-    assert sorted(dict(config.tags.get_tag_group_choices()).keys()) == sorted(groups.keys())
+    assert sorted(dict(active_config.tags.get_tag_group_choices()).keys()) == sorted(groups.keys())
 
-    for tag_group in config.tags.tag_groups:
+    for tag_group in active_config.tags.tag_groups:
         assert sorted(tag_group.get_tag_ids(), key=lambda s: s or "") == sorted(
             groups[tag_group.id]
         )
@@ -1134,7 +1134,7 @@ def test_default_tags():
 
 @pytest.mark.usefixtures("load_config")
 def test_default_aux_tags():
-    assert sorted(config.tags.aux_tag_list.get_tag_ids()) == sorted(
+    assert sorted(active_config.tags.aux_tag_list.get_tag_ids()) == sorted(
         [
             "checkmk-agent",
             "ip-v4",

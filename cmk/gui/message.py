@@ -21,7 +21,7 @@ import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -193,7 +193,10 @@ def _vs_message():
             _("A list of specific users"),
             DualListChoice(
                 choices=sorted(
-                    [(uid, u.get("alias", uid)) for uid, u in config.multisite_users.items()],
+                    [
+                        (uid, u.get("alias", uid))
+                        for uid, u in active_config.multisite_users.items()
+                    ],
                     key=lambda x: x[1].lower(),
                 ),
                 allow_empty=False,
@@ -270,7 +273,7 @@ def _validate_msg(msg, varprefix):
 
     # On manually entered list of users validate the names
     if isinstance(msg["dest"], tuple) and msg["dest"][0] == "list":
-        existing = set(config.multisite_users.keys())
+        existing = set(active_config.multisite_users.keys())
         for user_id in msg["dest"][1]:
             if user_id not in existing:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
@@ -286,7 +289,7 @@ def _process_message_message(msg):
         dest_what = msg["dest"][0]
 
     if dest_what == "all_users":
-        recipients = list(config.multisite_users.keys())
+        recipients = list(active_config.multisite_users.keys())
     elif dest_what == "online":
         recipients = userdb.get_online_user_ids()
     elif dest_what == "list":

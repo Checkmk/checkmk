@@ -9,7 +9,7 @@ import time
 from typing import List, Optional, Tuple, TYPE_CHECKING
 
 import cmk.gui.utils as utils
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     cmp_custom_variable,
@@ -457,7 +457,7 @@ class SorterCustomHostVariable(DerivedColumnsSorter):
 
     def get_parameters(self) -> Optional[ValueSpec]:
         choices: List[Tuple[str, str]] = []
-        for attr_spec in config.wato_host_attrs:
+        for attr_spec in active_config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))
         choices.sort(key=lambda x: x[1])
         return Dictionary(

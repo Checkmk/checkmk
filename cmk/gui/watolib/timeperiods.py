@@ -7,7 +7,7 @@
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodSpec, TimeperiodSpecs
 
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
@@ -47,7 +47,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
         wato_root_dir() + "timeperiods.mk",
         "timeperiods",
         _filter_builtin_timeperiods(timeperiods),
-        pprint_value=config.wato_pprint_config,
+        pprint_value=active_config.wato_pprint_config,
     )
     load_timeperiods.cache_clear()
 

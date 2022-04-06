@@ -22,7 +22,7 @@ import cmk.gui.wato.mkeventd
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -642,7 +642,7 @@ class ModeTimeperiodImportICal(WatoMode):
             #           need to `decode()` here.
             data = self._parse_ical(content.decode("utf-8"), ical["horizon"])
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 raise
             raise MKUserError("ical_file", _("Failed to parse file: %s") % e)
 

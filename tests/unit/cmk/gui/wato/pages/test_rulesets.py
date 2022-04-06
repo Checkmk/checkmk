@@ -14,7 +14,7 @@ from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
 
 import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
-from cmk.gui.wato.pages.rulesets import config, RuleConditionRenderer
+from cmk.gui.wato.pages.rulesets import active_config, RuleConditionRenderer
 
 
 @pytest.fixture(name="tag_config")
@@ -88,7 +88,7 @@ def patch_tag_config(
     tag_config: TagConfig,
 ) -> None:
     monkeypatch.setattr(
-        config,
+        active_config,
         "tags",
         tag_config,
     )

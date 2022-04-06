@@ -15,7 +15,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
@@ -427,7 +427,9 @@ class PainterEventSl(Painter):
         return ["event_sl"]
 
     def render(self, row, cell):
-        sl_txt = dict(config.mkeventd_service_levels).get(row["event_sl"], str(row["event_sl"]))
+        sl_txt = dict(active_config.mkeventd_service_levels).get(
+            row["event_sl"], str(row["event_sl"])
+        )
         return "", sl_txt
 
 

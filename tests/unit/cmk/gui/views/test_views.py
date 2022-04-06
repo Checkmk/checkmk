@@ -16,7 +16,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.plugins.views
 import cmk.gui.views
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.plugins.visuals.utils import Filter
@@ -2478,7 +2478,7 @@ def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permiss
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
-    mocker.patch.object(config, "roles", {"nobody": {"permissions": permissions}})
+    mocker.patch.object(active_config, "roles", {"nobody": {"permissions": permissions}})
     mocker.patch.object(user, "role_ids", ["nobody"])
     assert cmk.gui.views.get_limit() == result
 

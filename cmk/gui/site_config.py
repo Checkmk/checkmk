@@ -14,11 +14,11 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 import cmk.utils.paths
 from cmk.utils.site import omd_site
 
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 
 
 def sitenames() -> List[SiteId]:
-    return list(config.sites)
+    return list(active_config.sites)
 
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
@@ -68,12 +68,12 @@ def get_login_slave_sites() -> List[SiteId]:
 
 def wato_slave_sites() -> SiteConfigurations:
     return SiteConfigurations(
-        {site_id: s for site_id, s in config.sites.items() if s.get("replication")}
+        {site_id: s for site_id, s in active_config.sites.items() if s.get("replication")}
     )
 
 
 def get_site_config(site_id: SiteId) -> SiteConfiguration:
-    s: SiteConfiguration = SiteConfiguration(dict(config.sites.get(site_id, {})))
+    s: SiteConfiguration = SiteConfiguration(dict(active_config.sites.get(site_id, {})))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
@@ -100,11 +100,11 @@ def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> boo
 
 
 def is_single_local_site() -> bool:
-    if len(config.sites) > 1:
+    if len(active_config.sites) > 1:
         return False
-    if len(config.sites) == 0:
+    if len(active_config.sites) == 0:
         return True
 
     # Also use Multisite mode if the one and only site is not local
-    sitename = list(config.sites.keys())[0]
+    sitename = list(active_config.sites.keys())[0]
     return site_is_local(sitename)

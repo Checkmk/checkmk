@@ -14,7 +14,7 @@ import cmk.utils.store as store
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, theme
+from cmk.gui.globals import active_config, html, request, theme
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import (
@@ -74,7 +74,7 @@ class ModeIcons(WatoMode):
                     "category",
                     DropdownChoice(
                         title=_("Category"),
-                        choices=config.wato_icon_categories,
+                        choices=active_config.wato_icon_categories,
                         no_preselect_title="",
                     ),
                 ),

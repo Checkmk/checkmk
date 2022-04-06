@@ -46,7 +46,7 @@ import cmk.utils.render
 from cmk.utils.type_defs import TagID
 
 import cmk.gui.bi as bi
-from cmk.gui.globals import config, html, request, response
+from cmk.gui.globals import active_config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -264,7 +264,11 @@ class RuleEditorIcon(Icon):
         if row[what + "_check_type"] == 2:
             return  # shadow services have no parameters
 
-        if config.wato_enabled and user.may("wato.rulesets") and config.multisite_draw_ruleicon:
+        if (
+            active_config.wato_enabled
+            and user.may("wato.rulesets")
+            and active_config.multisite_draw_ruleicon
+        ):
             urlvars = [
                 ("mode", "object_parameters"),
                 ("host", row["host_name"]),
@@ -306,7 +310,7 @@ class ManpageIcon(Icon):
         return ["check_command"]
 
     def render(self, what, row, tags, custom_vars):
-        if what == "service" and config.wato_enabled and user.may("wato.use"):
+        if what == "service" and active_config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
             if command.startswith("check_mk-mgmt_"):
                 check_type = command[14:]
@@ -847,7 +851,7 @@ class StalenessIcon(Icon):
                 title = _("This service is stale")
                 title += (
                     _(", no data has been received within the last %.1f check periods")
-                    % config.staleness_threshold
+                    % active_config.staleness_threshold
                 )
             return "stale", title
 

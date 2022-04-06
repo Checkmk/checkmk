@@ -21,7 +21,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -507,7 +507,7 @@ class ModeBulkImport(WatoMode):
         ]
 
         # Add tag groups
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
 
         # Add custom attributes

@@ -10,7 +10,7 @@ from typing import Any, ContextManager, Dict, List
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, response
+from cmk.gui.globals import active_config, html, request, response
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -31,7 +31,8 @@ class VirtualHostTree(SidebarSnapin):
 
     def _load_trees(self):
         self._trees = {
-            tree["id"]: tree for tree in transform_virtual_host_trees(config.virtual_host_trees)  #
+            tree["id"]: tree
+            for tree in transform_virtual_host_trees(active_config.virtual_host_trees)  #
         }
 
     def _load_user_settings(self):
@@ -66,7 +67,7 @@ class VirtualHostTree(SidebarSnapin):
 
     def show(self):
         self._load()
-        if not config.virtual_host_trees:
+        if not active_config.virtual_host_trees:
             url = "wato.py?varname=virtual_host_trees&mode=edit_configvar"
             html.p(
                 _(
@@ -221,7 +222,7 @@ class VirtualHostTree(SidebarSnapin):
 
         for nr, (level_spec, tag) in enumerate(zip(tag_tree_spec, tag_node_values)):
             if level_spec.startswith("topic:"):
-                for tag_group in config.tags.tag_groups:
+                for tag_group in active_config.tags.tag_groups:
                     for grouped_tag in tag_group.tags:
                         if grouped_tag.id == tag:
                             urlvars.append(("host_tag_%d_grp" % nr, tag_group.id))
@@ -437,7 +438,7 @@ function virtual_host_tree_enter(path)
     def _get_tag_config(self):
         tag_groups = {}
         topics: Dict[str, List[Any]] = {}
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             if tag_group.topic:
                 topics.setdefault(tag_group.topic, []).append(tag_group)
             tag_groups[tag_group.id] = tag_group

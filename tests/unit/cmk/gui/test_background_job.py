@@ -29,7 +29,7 @@ def debug_logging():
         {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
     )
     yield
-    cmk.gui.log.set_log_levels(gui_globals.config.log_levels)
+    cmk.gui.log.set_log_levels(gui_globals.active_config.log_levels)
 
 
 def test_registered_background_jobs():

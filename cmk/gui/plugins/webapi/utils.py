@@ -18,7 +18,7 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import allsites
@@ -147,7 +147,7 @@ def _validate_general_host_attributes(host_attributes, new):
 # Check if the tag group exists and the tag value is valid
 def _validate_host_tags(host_tags):
     for tag_group_id, tag_id in host_tags.items():
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             if tag_group.id == tag_group_id:
                 for grouped_tag in tag_group.tags:
                     if grouped_tag.id == tag_id:

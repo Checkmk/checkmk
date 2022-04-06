@@ -25,7 +25,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, g
+from cmk.gui.globals import active_config, g
 from cmk.gui.watolib.search import MatchItem
 from cmk.gui.watolib.utils import has_agent_bakery
 
@@ -413,7 +413,10 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
     "Hide folders without read permissions" will currently always be set during setup.
     """
     mocker.patch.object(
-        hosts_and_folders.config, "wato_hide_folders_without_read_permissions", True, create=True
+        hosts_and_folders.active_config,
+        "wato_hide_folders_without_read_permissions",
+        True,
+        create=True,
     )
 
     def prefixed_title(self_, current_depth: int, pretty) -> str:
@@ -776,12 +779,12 @@ class _UserTest:
 
 @contextmanager
 def hide_folders_without_permission(do_hide) -> Iterator[None]:
-    old_value = config.wato_hide_folders_without_read_permissions
+    old_value = active_config.wato_hide_folders_without_read_permissions
     try:
-        config.wato_hide_folders_without_read_permissions = do_hide
+        active_config.wato_hide_folders_without_read_permissions = do_hide
         yield
     finally:
-        config.wato_hide_folders_without_read_permissions = old_value
+        active_config.wato_hide_folders_without_read_permissions = old_value
 
 
 def _default_groups(configured_groups: List[ContactgroupName]):

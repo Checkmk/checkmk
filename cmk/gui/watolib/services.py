@@ -21,7 +21,7 @@ from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
@@ -264,7 +264,7 @@ class Discovery:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
             ruleset = watolib.Ruleset(
-                "ignored_services", ruleset_matcher.get_tag_to_group_map(config.tags)
+                "ignored_services", ruleset_matcher.get_tag_to_group_map(active_config.tags)
             )
 
         modified_folders = []

@@ -16,7 +16,7 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
@@ -475,7 +475,7 @@ class ModeObjectParameters(WatoMode):
             try:
                 html.write_text(valuespec.value_to_html(known_settings))
             except Exception as e:
-                if config.debug:
+                if active_config.debug:
                     raise
                 html.write_text(_("Invalid parameter %r: %s") % (known_settings, e))
 

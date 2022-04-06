@@ -11,7 +11,7 @@ from typing import List, NamedTuple, Optional, Union
 
 import cmk.gui.message as message
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, html, output_funnel, request, response
+from cmk.gui.globals import active_config, html, output_funnel, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -112,7 +112,7 @@ def ajax_message_read():
         message.delete_gui_message(request.var("id"))
         html.write_text("OK")
     except Exception:
-        if config.debug:
+        if active_config.debug:
             raise
         html.write_text("ERROR")
 

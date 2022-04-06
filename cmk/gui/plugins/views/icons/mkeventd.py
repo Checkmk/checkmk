@@ -7,7 +7,7 @@
 import re
 import shlex
 
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.sites import get_alias_of_host, get_site_config
@@ -37,7 +37,7 @@ class MkeventdIcon(Icon):
         return ["address", "name"]
 
     def render(self, what, row, tags, custom_vars):
-        if not config.mkeventd_enabled:
+        if not active_config.mkeventd_enabled:
             return
 
         # show for services based on the mkevents active check
@@ -81,7 +81,7 @@ class MkeventdIcon(Icon):
         # a distributed environment. For the later case the base url need to be
         # constructed here
         url_prefix = ""
-        if getattr(config, "mkeventd_distributed", False):
+        if getattr(active_config, "mkeventd_distributed", False):
             site = get_site_config(row["site"])
             url_prefix = site["url_prefix"] + "check_mk/"
 

@@ -23,7 +23,7 @@ import cmk.gui.site_config as site_config
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, endpoint, request
+from cmk.gui.globals import active_config, endpoint, request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
@@ -79,7 +79,7 @@ class LoggedInUser:
             return {"roles": role_ids}
         attributes = self.load_file("cached_profile", None)
         if attributes is None:
-            attributes = config.multisite_users.get(
+            attributes = active_config.multisite_users.get(
                 user_id,
                 {
                     "roles": role_ids,
@@ -101,7 +101,7 @@ class LoggedInUser:
 
     @property
     def language(self) -> Optional[str]:
-        return self.get_attribute("language", config.default_language)
+        return self.get_attribute("language", active_config.default_language)
 
     @language.setter
     def language(self, value: Optional[str]) -> None:
@@ -112,7 +112,7 @@ class LoggedInUser:
 
     @property
     def show_mode(self) -> str:
-        return self.get_attribute("show_mode") or config.show_mode
+        return self.get_attribute("show_mode") or active_config.show_mode
 
     @property
     def show_more_mode(self) -> bool:
@@ -301,7 +301,7 @@ class LoggedInUser:
             for f in os.listdir(path):
                 if f[1] != "." and f.endswith(".mk"):
                     p = path + "/" + f
-                    if time.time() - os.stat(p).st_mtime > config.selection_livetime:
+                    if time.time() - os.stat(p).st_mtime > active_config.selection_livetime:
                         os.unlink(p)
         except OSError:
             pass  # no directory -> no cleanup
@@ -520,7 +520,7 @@ def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
         if r in builtin_role_ids:
             base_roles.add(r)
         else:
-            base_roles.add(config.roles[r]["basedon"])
+            base_roles.add(active_config.roles[r]["basedon"])
     return list(base_roles)
 
 
@@ -538,7 +538,7 @@ def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
 
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
-    if user_id in config.admin_users:
+    if user_id in active_config.admin_users:
         return {
             "general.use": True,  # use Multisite
             "wato.use": True,  # enter WATO

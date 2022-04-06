@@ -22,7 +22,7 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -282,7 +282,7 @@ def list_logs(site, host_name, logfile_names):
                 table.cell(_("Entries"), len(log_chunks), css="number")
 
             except Exception:
-                if config.debug:
+                if active_config.debug:
                     raise
                 table.cell(_("Level"), "")
                 table.cell(_("Logfile"), logfile_link)
@@ -306,7 +306,7 @@ def show_file(site, host_name, file_name):
             site, host_name, int_filename, hidecontext=request.var("_hidecontext", "no") == "yes"
         )
     except Exception as e:
-        if config.debug:
+        if active_config.debug:
             raise
         html.show_error(_("Unable to show logfile: <b>%s</b>") % e)
         html.footer()
@@ -670,7 +670,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
 
                 log_lines.append({"level": line_level, "class": line_class, "line": line_display})
     except Exception as e:
-        if config.debug:
+        if active_config.debug:
             raise
         raise MKGeneralException(escape_to_html(_("Cannot parse log file %s: %s") % (file_name, e)))
 

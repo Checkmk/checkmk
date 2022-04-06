@@ -22,7 +22,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages
 from cmk.gui.log import logger
@@ -324,7 +324,7 @@ class ModeUsers(WatoMode):
         contact_groups = load_contact_group_information()
 
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
-            online_threshold = time.time() - config.user_online_maxage
+            online_threshold = time.time() - active_config.user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
@@ -1309,7 +1309,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user_spec: UserSpec) -> None:
-    languages: Choices = [l for l in get_languages() if l[0] not in config.hide_languages]
+    languages: Choices = [l for l in get_languages() if l[0] not in active_config.hide_languages]
     if not languages:
         return
 
@@ -1321,7 +1321,7 @@ def select_language(user_spec: UserSpec) -> None:
         0,
         (
             "_default_",
-            _("Use the default language (%s)") % get_language_alias(config.default_language),
+            _("Use the default language (%s)") % get_language_alias(active_config.default_language),
         ),
     )
 

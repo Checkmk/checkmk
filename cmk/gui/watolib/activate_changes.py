@@ -62,7 +62,7 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.globals import request as _request
 from cmk.gui.globals import timeout_manager
 from cmk.gui.i18n import _
@@ -264,7 +264,7 @@ def get_replication_paths() -> List[ReplicationPath]:
 
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
-    if config.mkeventd_enabled:
+    if active_config.mkeventd_enabled:
         _rule_pack_dir = str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
         paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
 
@@ -346,7 +346,10 @@ def _site_replication_status_path(site_id):
 
 
 def _load_replication_status(lock=False):
-    return {site_id: _load_site_replication_status(site_id, lock=lock) for site_id in config.sites}
+    return {
+        site_id: _load_site_replication_status(site_id, lock=lock)
+        for site_id in active_config.sites
+    }
 
 
 class ActivateChanges:
@@ -778,7 +781,7 @@ class ActivateChangesManager(ActivateChanges):
                 hooks.call("pre-distribute-changes", cmk.gui.watolib.collect_all_hosts())
         except Exception as e:
             logger.exception("error calling pre-distribute-changes hook")
-            if config.debug:
+            if active_config.debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
@@ -841,7 +844,7 @@ class ActivateChangesManager(ActivateChanges):
         for site_id in sites:
             self._check_snapshot_creation_permissions(site_id)
 
-            site_config = config.sites[site_id]
+            site_config = active_config.sites[site_id]
             work_dir = cmk.utils.paths.site_config_dir / activation_id / site_id
 
             site_status = self._get_site_status(site_id, site_config)[0]
@@ -1399,10 +1402,10 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("Activate changes finished"))
 
     def _get_maximum_concurrent_jobs(self):
-        if config.wato_activate_changes_concurrency == "auto":
+        if active_config.wato_activate_changes_concurrency == "auto":
             processes = self._max_processes_based_on_ram()
         else:  # (maximum, 23)
-            processes = config.wato_activate_changes_concurrency[1]
+            processes = active_config.wato_activate_changes_concurrency[1]
         return max(5, processes)
 
     def _max_processes_based_on_ram(self):
@@ -1812,7 +1815,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 ("command", "push-snapshot"),
                 ("secret", site["secret"]),
                 ("siteid", site["id"]),
-                ("debug", config.debug and "1" or ""),
+                ("debug", active_config.debug and "1" or ""),
             ],
         )
 

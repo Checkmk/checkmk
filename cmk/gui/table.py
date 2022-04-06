@@ -26,7 +26,7 @@ from typing import (
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
-from cmk.gui.globals import config, html, output_funnel, request, response
+from cmk.gui.globals import active_config, html, output_funnel, request, response
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -170,7 +170,7 @@ class Table:
 
         # determine row limit
         if limit is None:
-            limit = config.table_row_limit
+            limit = active_config.table_row_limit
         if request.get_ascii_input("limit") == "none" or output_format != "html":
             limit = None
 

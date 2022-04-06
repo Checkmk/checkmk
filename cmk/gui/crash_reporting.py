@@ -33,7 +33,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request, response, user_errors
+from cmk.gui.globals import active_config, html, request, response, user_errors
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -272,7 +272,7 @@ class PageCrash(ABCCrashReportPage):
             html.close_div()
             html.javascript(
                 "cmk.transfer.submit_crash_report(%s, %s);"
-                % (json.dumps(config.crash_report_url), json.dumps(url_encoded_params))
+                % (json.dumps(active_config.crash_report_url), json.dumps(url_encoded_params))
             )
         except MKUserError as e:
             user_errors.add(e)
@@ -283,7 +283,7 @@ class PageCrash(ABCCrashReportPage):
         return cmk_version.__version__
 
     def _get_crash_report_target(self) -> str:
-        return config.crash_report_target
+        return active_config.crash_report_target
 
     def _vs_crash_report(self):
         return Dictionary(

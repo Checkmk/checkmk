@@ -24,7 +24,7 @@ import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.valuespec import Dictionary
 
@@ -44,8 +44,8 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 # the config needs to be done after loading the config
 @pytest.fixture()
 def single_user_session_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr(config, "single_user_session", 10)
-    assert config.single_user_session == 10
+    monkeypatch.setattr(active_config, "single_user_session", 10)
+    assert active_config.single_user_session == 10
 
 
 def _load_users_uncached(*, lock: bool) -> userdb.Users:
@@ -60,16 +60,16 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
 # the config needs to be done after loading the config
 @pytest.fixture()
 def lock_on_logon_failures_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr(config, "lock_on_logon_failures", 3)
-    assert config.lock_on_logon_failures == 3
+    monkeypatch.setattr(active_config, "lock_on_logon_failures", 3)
+    assert active_config.lock_on_logon_failures == 3
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
 def user_idle_timeout_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr(config, "user_idle_timeout", 8)
-    assert config.user_idle_timeout == 8
+    monkeypatch.setattr(active_config, "user_idle_timeout", 8)
+    assert active_config.user_idle_timeout == 8
 
 
 @pytest.fixture(name="session_timed_out")
@@ -123,7 +123,7 @@ def test_load_pre_20_session(user_id: UserId, session_pre_20: str) -> None:
 
 
 def test_on_succeeded_login(user_id: UserId) -> None:
-    assert config.single_user_session is None
+    assert active_config.single_user_session is None
 
     # Never logged in before
     assert not userdb._load_session_infos(user_id)
@@ -149,7 +149,7 @@ def test_on_succeeded_login(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_no_locking(user_id: UserId) -> None:
-    assert config.lock_on_logon_failures is False
+    assert active_config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
 
@@ -168,7 +168,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
-    assert config.lock_on_logon_failures is False
+    assert active_config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
 
@@ -183,7 +183,7 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
 
 @pytest.mark.usefixtures("lock_on_logon_failures_enabled", "request_context")
 def test_on_failed_login_with_locking(user_id: UserId) -> None:
-    assert config.lock_on_logon_failures == 3
+    assert active_config.lock_on_logon_failures == 3
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
 
@@ -286,7 +286,7 @@ def test_on_succeeded_login_already_existing_session(user_id: UserId, session_va
 
 
 def test_is_valid_user_session_single_user_session_disabled(user_id: UserId) -> None:
-    assert config.single_user_session is None
+    assert active_config.single_user_session is None
     assert (
         userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id), "session1")
         is False
@@ -324,7 +324,7 @@ def test_is_valid_user_session_valid(user_id: UserId, session_valid: str) -> Non
 
 
 def test_ensure_user_can_init_no_single_user_session(user_id: UserId) -> None:
-    assert config.single_user_session is None
+    assert active_config.single_user_session is None
     assert userdb._ensure_user_can_init_session(user_id) is True
 
 
@@ -469,7 +469,7 @@ def test_get_last_activity(with_user: tuple[UserId, str], session_valid: str) ->
 
 def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        config,
+        active_config,
         "wato_user_attrs",
         [
             {
@@ -522,7 +522,7 @@ def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyP
     assert isinstance(ldap_plugin.parameters(connection), Dictionary)
 
     # Test removing previously registered ones
-    monkeypatch.setattr(config, "wato_user_attrs", [])
+    monkeypatch.setattr(active_config, "wato_user_attrs", [])
     userdb.update_config_based_user_attributes()
 
     assert "vip" not in utils.user_attribute_registry
@@ -580,9 +580,9 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
     monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
     assert cmk.utils.version.is_managed_edition()
 
-    monkeypatch.setattr(config, "current_customer", "test-customer")
+    monkeypatch.setattr(active_config, "current_customer", "test-customer")
     # Fix CRE mypy tests that do not have this attribute defined
-    assert config.current_customer == "test-customer"  # type: ignore[attr-defined]
+    assert active_config.current_customer == "test-customer"  # type: ignore[attr-defined]
 
 
 @pytest.fixture()

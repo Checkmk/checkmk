@@ -16,7 +16,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.metrics.utils import (
@@ -237,7 +237,7 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("tag_groups")
 def tag_group_autocompleter(value: str, params: Dict) -> Choices:
     return sorted(
-        (v for v in config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
+        (v for v in active_config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
         key=lambda a: a[1].lower(),
     )
 
@@ -246,7 +246,7 @@ def tag_group_autocompleter(value: str, params: Dict) -> Choices:
 def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
     grouped: Choices = []
 
-    for tag_group in config.tags.tag_groups:
+    for tag_group in active_config.tags.tag_groups:
         if tag_group.id == params["group_id"]:
             grouped.append(("", ""))
             for grouped_tag in tag_group.tags:

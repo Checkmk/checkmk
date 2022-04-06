@@ -15,7 +15,7 @@ from cmk.utils.exceptions import MKException
 
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import config, g, html, request, response
+from cmk.gui.globals import active_config, g, html, request, response
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
@@ -82,7 +82,7 @@ class AjaxPage(Page, abc.ABC):
             html.write_text(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
-            if config.debug:
+            if active_config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
             handle_exception_as_gui_crash_report(
@@ -103,7 +103,7 @@ class AjaxPage(Page, abc.ABC):
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
             handle_exception_as_gui_crash_report(

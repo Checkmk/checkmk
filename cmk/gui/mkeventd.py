@@ -22,7 +22,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import permission_section_registry, PermissionSection
@@ -128,7 +128,7 @@ class PermissionSectionEventConsole(PermissionSection):
 
 
 def service_levels():
-    return config.mkeventd_service_levels
+    return active_config.mkeventd_service_levels
 
 
 def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
@@ -194,7 +194,7 @@ def replication_mode():
 def query_ec_directly(query):
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.settimeout(config.mkeventd_connect_timeout)
+        sock.settimeout(active_config.mkeventd_connect_timeout)
         sock.connect(str(_socket_path()))
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
@@ -381,7 +381,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         else:
             rule_customer_id = rule.get("customer", managed.SCOPE_GLOBAL)
 
-        site_customer_id = managed.get_customer_id(config.sites[event["site"]])
+        site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
 
         if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
             return _("Wrong customer")
@@ -403,7 +403,7 @@ def check_timeperiod(tpname):
         if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
     except Exception as e:
-        if config.debug:
+        if active_config.debug:
             raise
         return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
 

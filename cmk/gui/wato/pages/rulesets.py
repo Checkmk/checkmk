@@ -40,7 +40,7 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.globals import config, g, html, output_funnel, request
+from cmk.gui.globals import active_config, g, html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -229,7 +229,7 @@ class ABCRulesetMode(WatoMode):
 
                 for ruleset in group_rulesets:
                     float_cls = None
-                    if not config.wato_hide_help_in_lists:
+                    if not active_config.wato_hide_help_in_lists:
                         float_cls = "nofloat" if user.show_help else "float"
                     html.open_div(
                         class_=["ruleset", float_cls], title=strip_tags(ruleset.help() or "")
@@ -261,7 +261,7 @@ class ABCRulesetMode(WatoMode):
                         num_rules_txt,
                         class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"],
                     )
-                    if not config.wato_hide_help_in_lists and ruleset.help():
+                    if not active_config.wato_hide_help_in_lists and ruleset.help():
                         html.help(ruleset.help())
 
                     html.close_div()
@@ -945,7 +945,7 @@ class ModeEditRuleset(WatoMode):
         return redirect(back_url)
 
     def page(self) -> None:
-        if not config.wato_hide_varnames:
+        if not active_config.wato_hide_varnames:
             display_varname = (
                 '%s["%s"]' % tuple(self._name.split(":")) if ":" in self._name else self._name
             )
@@ -1820,7 +1820,7 @@ class ABCEditRuleMode(WatoMode):
             valuespec.validate_datatype(self._rule.value, "ve")
             valuespec.render_input("ve", self._rule.value)
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 raise
             html.show_warning(
                 _(
@@ -2352,7 +2352,7 @@ class RuleConditionRenderer:
         else:
             tag_id = tag_spec
 
-        tag = config.tags.get_tag_or_aux_tag(taggroup_id, tag_id)
+        tag = active_config.tags.get_tag_or_aux_tag(taggroup_id, tag_id)
         if tag and tag.title:
             if isinstance(tag, GroupedTag):
                 if negate:

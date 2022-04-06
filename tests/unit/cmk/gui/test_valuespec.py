@@ -18,7 +18,7 @@ from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 
 
 @pytest.mark.parametrize(
@@ -204,7 +204,7 @@ def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is
 )
 def test_timerange_value_to_html_conversion(request_context, monkeypatch, value, result_title):
     monkeypatch.setattr(
-        config,
+        active_config,
         "graph_timeranges",
         [
             {"title": "The last 4 fun hours", "duration": 4 * 60 * 60},

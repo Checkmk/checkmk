@@ -45,7 +45,7 @@ from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, g, html
+from cmk.gui.globals import active_config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.visuals.utils import livestatus_query_bare
@@ -370,7 +370,7 @@ def parse_perf_data(
             )
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
-            if config.debug:
+            if active_config.debug:
                 raise exc
 
     return perf_data, check_command

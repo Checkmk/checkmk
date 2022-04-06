@@ -21,7 +21,7 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -821,7 +821,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(
                     _("Plugin output"),
                     cmk.gui.view_utils.format_plugin_output(
-                        output, shall_escape=config.escape_plugin_output
+                        output, shall_escape=active_config.escape_plugin_output
                     ),
                 )
 

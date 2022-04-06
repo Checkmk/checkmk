@@ -16,7 +16,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.sites
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry
@@ -47,7 +47,7 @@ def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str
     html.open_div(id_="profile_repl")
     num_replsites = 0
     for site_id in sites:
-        site = config.sites[site_id]
+        site = active_config.sites[site_id]
         if "secret" not in site:
             status_txt = _("Not logged in.")
             start_sync = False

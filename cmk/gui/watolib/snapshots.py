@@ -22,7 +22,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -176,7 +176,7 @@ def _do_snapshot_maintenance():
                 snapshots.append(f)
 
     snapshots.sort(reverse=True)
-    while len(snapshots) > config.wato_max_snapshots:
+    while len(snapshots) > active_config.wato_max_snapshots:
         # log_audit("snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
@@ -375,7 +375,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
             check_checksums()
 
     except Exception as e:
-        if config.debug:
+        if active_config.debug:
             status["broken_text"] = traceback.format_exc()
             status["broken"] = True
         else:

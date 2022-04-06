@@ -16,7 +16,7 @@ import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -324,7 +324,7 @@ class ModeParentScan(WatoMode):
             self._job.set_function(self._job.do_execute, self._settings, self._get_tasks())
             self._job.start()
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 raise
             logger.exception("Failed to start parent scan")
             raise MKUserError(

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import config, display_options, request, response
+from cmk.gui.globals import active_config, display_options, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
@@ -43,7 +43,7 @@ class WatoIcon(Icon):
             return self._wato_link(wato_folder, row["site"], row["host_name"], "inventory")
 
     def _wato_link(self, folder, site, hostname, where):
-        if not config.wato_enabled:
+        if not active_config.wato_enabled:
             return None
 
         if display_options.enabled(display_options.X):

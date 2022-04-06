@@ -8,7 +8,7 @@ import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
@@ -473,14 +473,14 @@ def notification_script_choices():
 
 
 def verify_password_policy(password):
-    min_len = config.password_policy.get("min_length")
+    min_len = active_config.password_policy.get("min_length")
     if min_len and len(password) < min_len:
         raise MKUserError(
             "password",
             _("The given password is too short. It must have at least %d characters.") % min_len,
         )
 
-    num_groups = config.password_policy.get("num_groups")
+    num_groups = active_config.password_policy.get("num_groups")
     if num_groups:
         groups = {}
         for c in password:

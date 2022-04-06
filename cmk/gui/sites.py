@@ -24,7 +24,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 from cmk.utils.version import is_managed_edition
 
-from cmk.gui.globals import config, g, request
+from cmk.gui.globals import active_config, g, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
@@ -132,7 +132,7 @@ def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> SiteId:
                 site_id,
                 e,
             )
-            if config.debug:
+            if active_config.debug:
                 raise
             return SiteId(host_name)
 

@@ -32,7 +32,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.groups import (
     GroupSpecs,
     load_contact_group_information,
@@ -303,7 +303,7 @@ def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disabl
 
 def _list_user_icons_and_actions():
     choices = []
-    for key, action in config.user_icons_and_actions.items():
+    for key, action in active_config.user_icons_and_actions.items():
         label = key
         if "title" in action:
             label += " - " + action["title"]
@@ -2035,7 +2035,7 @@ def configure_attributes(
             | set(dependency_mapping_roles.keys())
             | set(hide_attributes)
         ),
-        "aux_tags_by_tag": config.tags.get_aux_tags_by_tag(),
+        "aux_tags_by_tag": active_config.tags.get_aux_tags_by_tag(),
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
         "volatile_topics": volatile_topics,
@@ -2168,9 +2168,9 @@ class DictHostTagCondition(Transform):
 
     def _get_tag_group_choices(self):
         choices = []
-        all_topics = config.tags.get_topic_choices()
-        tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())
-        aux_tags_by_topic = dict(config.tags.get_aux_tags_by_topic())
+        all_topics = active_config.tags.get_topic_choices()
+        tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
+        aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
         for topic_id, _topic_title in all_topics:
             for tag_group in tag_groups_by_topic.get(topic_id, []):
                 choices.append(self._get_tag_group_choice(tag_group))
@@ -2346,7 +2346,7 @@ class HostTagCondition(ValueSpec):
 
         # Main tags
         tag_list = []
-        for tag_group in config.tags.tag_groups:
+        for tag_group in active_config.tags.tag_groups:
             if tag_group.is_checkbox_tag_group:
                 tagvalue = tag_group.default_value
             else:
@@ -2360,7 +2360,7 @@ class HostTagCondition(ValueSpec):
                 tag_list.append("!" + tagvalue)
 
         # Auxiliary tags
-        for aux_tag in config.tags.aux_tag_list.get_tags():
+        for aux_tag in active_config.tags.aux_tag_list.get_tags():
             mode = request.var(varprefix + "auxtag_" + aux_tag.id)
             if mode == "is":
                 tag_list.append(aux_tag.id)
@@ -2393,14 +2393,14 @@ class HostTagCondition(ValueSpec):
         if varprefix:
             varprefix += "_"
 
-        if not config.tags.get_tag_ids():
+        if not active_config.tags.get_tag_ids():
             html.write_text(_('You have not configured any <a href="wato.py?mode=tags">tags</a>.'))
             return
 
-        tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())
-        aux_tags_by_topic = dict(config.tags.get_aux_tags_by_topic())
+        tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
+        aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
 
-        all_topics = config.tags.get_topic_choices()
+        all_topics = active_config.tags.get_topic_choices()
         make_foldable = len(all_topics) > 1
 
         for topic_id, topic_title in all_topics:

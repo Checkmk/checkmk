@@ -19,7 +19,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, output_funnel, request
+from cmk.gui.globals import active_config, html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -695,7 +695,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder_title(self, subfolder):
         title = subfolder.title()
-        if not config.wato_hide_filenames:
+        if not active_config.wato_hide_filenames:
             title += " (%s)" % subfolder.name()
 
         html.open_div(class_="title", title=title)
@@ -725,7 +725,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder_delete_button(self, subfolder):
         msg = _("Do you really want to delete the folder %s?") % subfolder.title()
-        if not config.wato_hide_filenames:
+        if not active_config.wato_hide_filenames:
             msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts:
@@ -947,7 +947,7 @@ class ModeFolder(WatoMode):
             ),
         )
 
-        if not config.wato_hide_hosttags and user.wato_folders_show_tags:
+        if not active_config.wato_hide_hosttags and user.wato_folders_show_tags:
             table.cell(_("Tags"), css="tag-ellipsis")
             tag_groups, show_all_code = self._limit_labels(host.tag_groups())
             html.write_html(
@@ -1222,7 +1222,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
         # folder name (omit this for root folder)
         if new or not watolib.Folder.current().is_root():
-            if not config.wato_hide_filenames:
+            if not active_config.wato_hide_filenames:
                 basic_attributes += [
                     (
                         "name",
@@ -1296,7 +1296,7 @@ class ModeCreateFolder(ABCFolderMode):
         return _("Add folder")
 
     def _save(self, title, attributes):
-        if not config.wato_hide_filenames:
+        if not active_config.wato_hide_filenames:
             name = request.get_ascii_input_mandatory("name", "").strip()
             watolib.check_wato_foldername("name", name)
         else:

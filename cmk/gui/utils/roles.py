@@ -10,7 +10,7 @@ import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 
 
 def user_may(user_id: Optional[UserId], pname: str) -> bool:
@@ -20,7 +20,7 @@ def user_may(user_id: Optional[UserId], pname: str) -> bool:
 def get_role_permissions() -> Dict[str, List[str]]:
     """Returns the set of permissions for all roles"""
     role_permissions: Dict[str, List[str]] = {}
-    roleids = set(config.roles.keys())
+    roleids = set(active_config.roles.keys())
     for perm in permissions.permission_registry.values():
         for role_id in roleids:
             if role_id not in role_permissions:
@@ -34,7 +34,7 @@ def get_role_permissions() -> Dict[str, List[str]]:
 def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
-        role = config.roles[role_id]
+        role = active_config.roles[role_id]
 
         they_may = role.get("permissions", {}).get(pname)
         # Handle compatibility with permissions without "general." that
@@ -86,23 +86,23 @@ def is_user_with_publish_permissions(
 
 def roles_of_user(user_id: Optional[UserId]) -> List[str]:
     def existing_role_ids(role_ids):
-        return [role_id for role_id in role_ids if role_id in config.roles]
+        return [role_id for role_id in role_ids if role_id in active_config.roles]
 
-    if user_id in config.multisite_users:
-        return existing_role_ids(config.multisite_users[user_id]["roles"])
-    if user_id in config.admin_users:
+    if user_id in active_config.multisite_users:
+        return existing_role_ids(active_config.multisite_users[user_id]["roles"])
+    if user_id in active_config.admin_users:
         return ["admin"]
-    if user_id in config.guest_users:
+    if user_id in active_config.guest_users:
         return ["guest"]
-    if config.users is not None and user_id in config.users:
+    if active_config.users is not None and user_id in active_config.users:
         return ["user"]
     if (
         user_id is not None
         and cmk.utils.paths.profile_dir.joinpath(user_id, "automation.secret").exists()
     ):
         return ["guest"]  # unknown user with automation account
-    if "roles" in config.default_user_profile:
-        return existing_role_ids(config.default_user_profile["roles"])
-    if config.default_user_role:
-        return existing_role_ids([config.default_user_role])
+    if "roles" in active_config.default_user_profile:
+        return existing_role_ids(active_config.default_user_profile["roles"])
+    if active_config.default_user_role:
+        return existing_role_ids([active_config.default_user_role])
     return []

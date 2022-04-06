@@ -14,7 +14,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -632,7 +632,7 @@ class LDAPConnectionValuespec(Transform):
         return other_elements
 
     def _validate_ldap_connection_id(self, value, varprefix):
-        if value in [c["id"] for c in config.user_connections]:
+        if value in [c["id"] for c in active_config.user_connections]:
             raise MKUserError(
                 varprefix,
                 _("This ID is already used by another connection. Please choose another one."),
@@ -675,7 +675,7 @@ class LDAPConnectionValuespec(Transform):
                     )
 
     def _validate_ldap_connection_suffix(self, value, varprefix):
-        for connection in config.user_connections:
+        for connection in active_config.user_connections:
             suffix = connection.get("suffix")
             if suffix is None:
                 continue
@@ -933,7 +933,9 @@ class ModeEditLDAPConnection(LDAPMode):
         self._add_change(log_what, log_text)
 
         save_connection_config(self._connections)
-        config.user_connections = self._connections  # make directly available on current page
+        active_config.user_connections = (
+            self._connections
+        )  # make directly available on current page
         if request.var("_save"):
             return redirect(mode_url("ldap_config"))
         # Handle the case where a user hit "Save & Test" during creation

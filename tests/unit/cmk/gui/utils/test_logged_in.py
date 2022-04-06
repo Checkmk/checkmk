@@ -15,7 +15,7 @@ import cmk.utils.paths
 import cmk.gui.permissions as permissions
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.logged_in import UserContext
@@ -113,7 +113,7 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
 @pytest.mark.usefixtures("request_context")
 def test_unauthenticated_users_language(mocker, user):
-    mocker.patch.object(config, "default_language", "esperanto")
+    mocker.patch.object(active_config, "default_language", "esperanto")
     assert user.language == "esperanto"
 
     user.language = "sindarin"
@@ -150,7 +150,7 @@ def test_unauthenticated_users_authorized_login_sites(monkeypatch, user):
 def test_logged_in_nobody_permissions(mocker):
     user = LoggedInNobody()
 
-    mocker.patch.object(config, "roles", {})
+    mocker.patch.object(active_config, "roles", {})
     mocker.patch.object(permissions, "permission_registry")
 
     assert user.may("any_permission") is False
@@ -163,7 +163,7 @@ def test_logged_in_super_user_permissions(mocker):
     user = LoggedInSuperUser()
 
     mocker.patch.object(
-        config,
+        active_config,
         "roles",
         {
             "admin": {"permissions": {"eat_other_peoples_cake": True}},
@@ -221,7 +221,7 @@ def fixture_monitoring_user(request_context):
     user_dir.joinpath("favorites.mk").write_text(str(MONITORING_USER_FAVORITES))
 
     assert builtin_role_ids == ["user", "admin", "guest"]
-    assert "test" not in config.admin_users
+    assert "test" not in active_config.admin_users
 
     with create_and_destroy_user(username="test") as user:
         yield LoggedInUser(user[0])
@@ -280,7 +280,7 @@ def test_monitoring_user_read_broken_file(monitoring_user):
 
 def test_monitoring_user_permissions(mocker, monitoring_user):
     mocker.patch.object(
-        config,
+        active_config,
         "roles",
         {
             "user": {

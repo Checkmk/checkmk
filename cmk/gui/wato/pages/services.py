@@ -36,7 +36,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, output_funnel, request
+from cmk.gui.globals import active_config, html, output_funnel, request
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -945,7 +945,11 @@ class DiscoveryPageRenderer:
             output, *_details = entry.output.split("\n", 1)
             if output:
                 html.write_html(
-                    HTML(format_plugin_output(output, shall_escape=config.escape_plugin_output))
+                    HTML(
+                        format_plugin_output(
+                            output, shall_escape=active_config.escape_plugin_output
+                        )
+                    )
                 )
             return
 
@@ -983,7 +987,7 @@ class DiscoveryPageRenderer:
             paramtext = rulespec.valuespec.value_to_html(params)
             html.write_html(HTML(paramtext))
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 err = traceback.format_exc()
             else:
                 err = "%s" % e

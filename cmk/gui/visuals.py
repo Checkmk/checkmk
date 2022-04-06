@@ -49,7 +49,7 @@ import cmk.gui.utils as utils
 from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, g, html, output_funnel, request
+from cmk.gui.globals import active_config, g, html, output_funnel, request
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
@@ -570,7 +570,7 @@ def declare_custom_permissions(what):
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
         except Exception:
-            if config.debug:
+            if active_config.debug:
                 raise
 
 
@@ -2208,7 +2208,7 @@ def _add_context_title(context: VisualContext, single_infos: List[str], title: s
 
     for fn in get_ubiquitary_filters():
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or "host" in single_infos):
+        if fn == "wato_folder" and (not active_config.wato_enabled or "host" in single_infos):
             continue
 
         if heading := filter_heading(fn, context.get(fn, {})):

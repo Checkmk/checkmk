@@ -22,7 +22,7 @@ import cmk.gui.watolib
 import cmk.gui.watolib.read_only
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
-from cmk.gui.globals import config, request, response
+from cmk.gui.globals import active_config, request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -116,7 +116,7 @@ def page_api() -> None:
             "result": _("Checkmk exception: %s\n%s") % (e, "".join(traceback.format_exc())),
         }
     except Exception:
-        if config.debug:
+        if active_config.debug:
             raise
         logger.exception("error handling web API call")
         resp = {
@@ -144,7 +144,7 @@ def _check_permissions(api_call: APICallDefinitionDict) -> None:
     if not user.get_attribute("automation_secret"):
         raise MKAuthException("The API is only available for automation users")
 
-    if not config.wato_enabled:
+    if not active_config.wato_enabled:
         raise MKUserError(None, _("Setup is disabled on this site."))
 
     for permission in ["wato.use", "wato.api_allowed"] + api_call.get("required_permissions", []):

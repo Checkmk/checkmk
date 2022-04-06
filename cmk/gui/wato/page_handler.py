@@ -13,7 +13,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.pages
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import config, display_options, html, request, user_errors
+from cmk.gui.globals import active_config, display_options, html, request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import mode_registry
@@ -65,7 +65,7 @@ else:
 def page_handler() -> None:
     initialize_wato_html_head()
 
-    if not config.wato_enabled:
+    if not active_config.wato_enabled:
         raise MKGeneralException(
             _(
                 "Setup is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -75,7 +75,7 @@ def page_handler() -> None:
 
     # config.current_customer can not be checked with CRE repos
     if cmk_version.is_managed_edition() and not managed.is_provider(
-        config.current_customer
+        active_config.current_customer
     ):  # type: ignore[attr-defined]
         raise MKGeneralException(
             _("Check_MK can only be configured on " "the managers central site.")
@@ -132,7 +132,7 @@ def _wato_page_handler(
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()
 
-            if config.wato_use_git:
+            if active_config.wato_use_git:
                 do_git_commit()
 
             # Handle two cases:

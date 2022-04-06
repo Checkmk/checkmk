@@ -8,7 +8,7 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.utils.ntop import (
     get_ntop_misconfiguration_reason,
@@ -73,7 +73,7 @@ def test_is_ntop_configured_and_reason(
         assert get_ntop_misconfiguration_reason() == "ntopng integration is only available in CEE"
     if not cmk_version.is_raw_edition():
         mocker.patch.object(
-            config,
+            active_config,
             "ntop_connection",
             ntop_connection,
         )

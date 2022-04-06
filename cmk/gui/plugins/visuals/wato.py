@@ -12,7 +12,7 @@ from cmk.utils.prediction import lq_logic
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
@@ -43,7 +43,7 @@ class FilterWatoFolder(Filter):
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
-        return config.wato_enabled or site_config.is_wato_slave_site()
+        return active_config.wato_enabled or site_config.is_wato_slave_site()
 
     def load_wato_data(self):
         self.tree = watolib.Folder.root_folder()

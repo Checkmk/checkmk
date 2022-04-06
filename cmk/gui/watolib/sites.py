@@ -23,7 +23,7 @@ import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.config import default_single_site_configuration, load_config, prepare_raw_site_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
@@ -588,7 +588,7 @@ class CEESiteManagement(SiteManagement):
     def save_sites(cls, sites, activate=True):
         super().save_sites(sites, activate)
 
-        if activate and config.liveproxyd_enabled:
+        if activate and active_config.liveproxyd_enabled:
             cls._save_liveproxyd_config(sites)
 
     @classmethod
@@ -618,7 +618,7 @@ class CEESiteManagement(SiteManagement):
     @classmethod
     def _affected_config_domains(cls):
         domains = super()._affected_config_domains()
-        if config.liveproxyd_enabled:
+        if active_config.liveproxyd_enabled:
             domains.append(ConfigDomainLiveproxy)
         return domains
 

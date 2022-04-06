@@ -50,7 +50,7 @@ import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -1317,11 +1317,11 @@ def _get_rule_stats_from_ec() -> Dict[str, int]:
 
 
 def save_mkeventd_rules(rule_packs):
-    ec.save_rule_packs(rule_packs, config.mkeventd_pprint_rules)
+    ec.save_rule_packs(rule_packs, active_config.mkeventd_pprint_rules)
 
 
 def export_mkp_rule_pack(rule_pack):
-    ec.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
+    ec.export_rule_pack(rule_pack, active_config.mkeventd_pprint_rules)
 
 
 @sample_config_generator_registry.register
@@ -1358,7 +1358,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         super().__init__()
 
     def _verify_ec_enabled(self):
-        if not config.mkeventd_enabled:
+        if not active_config.mkeventd_enabled:
             raise MKUserError(None, _('The Event Console is disabled ("omd config").'))
 
     def _search_expression(self):
@@ -3188,7 +3188,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 flash(self._upload_mib(filename, mimetype, content))
                 return None
             except Exception as e:
-                if config.debug:
+                if active_config.debug:
                     raise
                 raise MKUserError("_upload_mib", "%s" % e)
         return None
@@ -3322,7 +3322,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             return msg
 
         except PySmiError as e:
-            if config.debug:
+            if active_config.debug:
                 raise e
             raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
 
@@ -3522,7 +3522,7 @@ class MainModuleEventConsole(ABCMainModule):
 
     @property
     def enabled(self):
-        return config.mkeventd_enabled
+        return active_config.mkeventd_enabled
 
     @property
     def is_show_more(self):
@@ -4998,8 +4998,8 @@ rulespec_registry.register(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notification_configuration(hosts):
-    contactgroup = config.mkeventd_notify_contactgroup
-    remote_console = config.mkeventd_notify_remotehost
+    contactgroup = active_config.mkeventd_notify_contactgroup
+    remote_console = active_config.mkeventd_notify_remotehost
 
     if not remote_console:
         remote_console = ""
@@ -5039,7 +5039,7 @@ define command {
 """
             % {
                 "group": contactgroup,
-                "facility": config.mkeventd_notify_facility,
+                "facility": active_config.mkeventd_notify_facility,
                 "remote": remote_console,
             },
         )

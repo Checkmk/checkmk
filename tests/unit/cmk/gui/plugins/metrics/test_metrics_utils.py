@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.version
 
 import cmk.gui.metrics as metrics
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.type_defs import Perfdata
 
@@ -79,7 +79,7 @@ def test_parse_perf_data(request_context, perf_str, check_command, result):
 
 def test_parse_perf_data2(request_context, monkeypatch):
     with pytest.raises(ValueError):
-        monkeypatch.setattr(config, "debug", True)
+        monkeypatch.setattr(active_config, "debug", True)
         utils.parse_perf_data("hi ho", None)
 
 

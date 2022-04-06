@@ -9,7 +9,7 @@ from typing import List, Tuple
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.views as views
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -44,7 +44,7 @@ class Views(SidebarSnapin):
 
         links = []
         if user.may("general.edit_views"):
-            if config.debug:
+            if active_config.debug:
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
             footnotelinks(links)
@@ -71,8 +71,8 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
     views_to_show = [
         (name, view)
         for name, view in views.get_permitted_views().items()
-        if (not config.visible_views or name in config.visible_views)
-        and (not config.hidden_views or name not in config.hidden_views)
+        if (not active_config.visible_views or name in active_config.visible_views)
+        and (not active_config.hidden_views or name not in active_config.hidden_views)
     ]
 
     network_topology_visual_spec = ParentChildTopologyPage.visual_spec()

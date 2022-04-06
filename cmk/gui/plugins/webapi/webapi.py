@@ -27,7 +27,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.users
 from cmk.gui.config import prepare_raw_site_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.groups import load_host_group_information, load_service_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.htpasswd import hash_password
@@ -734,7 +734,7 @@ class APICallRules(APICallCollection):
                 rule_folder = watolib.Folder.folder(folder_path)
                 rule_folder.need_permission("write")
 
-        tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
+        tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
 
         # Verify all rules
         rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec

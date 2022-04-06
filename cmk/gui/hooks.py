@@ -8,7 +8,7 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Union
 
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.i18n import _
 
 
@@ -66,7 +66,7 @@ def call(name: str, *args: Any) -> None:
         try:
             hook.handler(*args)
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 t, v, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, v, tb, None))
                 html.show_error(

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, html, theme
+from cmk.gui.globals import active_config, html, theme
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
@@ -300,7 +300,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
 #
 # This is confusing and needs to be cleaned up!
 def calculate_view_grouping_of_services(rows, row_group_cells):
-    if not config.service_view_grouping:
+    if not active_config.service_view_grouping:
         return {}, rows
 
     # First create dictionaries for each found group containing the
@@ -355,7 +355,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
 
 
 def try_to_match_group(row):
-    for group_spec in config.service_view_grouping:
+    for group_spec in active_config.service_view_grouping:
         if row.get("service_description") and re.match(
             group_spec["pattern"], row["service_description"]
         ):

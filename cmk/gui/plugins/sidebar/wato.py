@@ -11,7 +11,7 @@ import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.views as views
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -35,7 +35,7 @@ from cmk.gui.watolib.search import (
 
 
 def render_wato(mini):
-    if not config.wato_enabled:
+    if not active_config.wato_enabled:
         html.write_text(_("Setup is disabled."))
         return False
     if not user.may("wato.use"):
@@ -307,7 +307,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
     def show(self):
         if not site_config.is_wato_slave_site():
-            if not config.wato_enabled:
+            if not active_config.wato_enabled:
                 html.write_text(_("Setup is disabled."))
                 return False
 
@@ -321,8 +321,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
         for name, view in views.get_permitted_views().items():
-            if (not config.visible_views or name in config.visible_views) and (
-                not config.hidden_views or name not in config.hidden_views
+            if (not active_config.visible_views or name in active_config.visible_views) and (
+                not active_config.hidden_views or name not in active_config.hidden_views
             ):
                 views_to_show.append((name, view))
                 if name == dflt_target_name:

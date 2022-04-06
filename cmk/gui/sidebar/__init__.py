@@ -24,7 +24,7 @@ import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, html, output_funnel, request, response, theme
+from cmk.gui.globals import active_config, html, output_funnel, request, response, theme
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
@@ -342,14 +342,16 @@ class SidebarRenderer:
         html.body_end()
 
     def _show_body_start(self) -> None:
-        body_classes = ["side", "screenshotmode" if config.screenshotmode else None]
+        body_classes = ["side", "screenshotmode" if active_config.screenshotmode else None]
 
         if not user.may("general.see_sidebar"):
             html.open_body(class_=body_classes, data_theme=theme.get())
             return
 
         interval = (
-            config.sidebar_notify_interval if config.sidebar_notify_interval is not None else "null"
+            active_config.sidebar_notify_interval
+            if active_config.sidebar_notify_interval is not None
+            else "null"
         )
         html.open_body(
             class_=body_classes,
@@ -363,7 +365,7 @@ class SidebarRenderer:
             html.div("", id_="check_mk_navigation")
             return
 
-        user_config = UserSidebarConfig(user, config.sidebar)
+        user_config = UserSidebarConfig(user, active_config.sidebar)
 
         html.open_div(
             id_="check_mk_navigation",
@@ -387,7 +389,7 @@ class SidebarRenderer:
 
     def _show_snapin_bar(self, user_config: UserSidebarConfig) -> None:
         html.open_div(
-            class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content"
+            class_="scroll" if active_config.sidebar_show_scrollbar else None, id_="side_content"
         )
 
         refresh_snapins, restart_snapins, static_snapins = self._show_snapins(user_config)
@@ -398,7 +400,7 @@ class SidebarRenderer:
         html.javascript(
             "cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n"
             % (
-                config.sidebar_update_interval,
+                active_config.sidebar_update_interval,
                 json.dumps(refresh_snapins),
                 json.dumps(restart_snapins),
                 json.dumps(static_snapins),
@@ -558,7 +560,7 @@ class SidebarRenderer:
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(
-            href=user.start_url or config.start_url,
+            href=user.start_url or active_config.start_url,
             target="main",
             title=_("Go to main page"),
         )
@@ -600,7 +602,7 @@ def page_side():
 def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
-    user_config = UserSidebarConfig(user, config.sidebar)
+    user_config = UserSidebarConfig(user, active_config.sidebar)
 
     snapin_id = request.var("name")
     snapin_ids = (
@@ -651,7 +653,7 @@ def ajax_snapin():
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
     response.set_content_type("application/json")
-    user_config = UserSidebarConfig(user, config.sidebar)
+    user_config = UserSidebarConfig(user, active_config.sidebar)
     user_config.folded = request.var("fold") == "yes"
     user_config.save()
 
@@ -670,7 +672,7 @@ def ajax_openclose() -> None:
     if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
         raise MKUserError("state", "Invalid state: %s" % state)
 
-    user_config = UserSidebarConfig(user, config.sidebar)
+    user_config = UserSidebarConfig(user, active_config.sidebar)
 
     try:
         snapin = user_config.get_snapin(snapin_id)
@@ -695,7 +697,7 @@ def move_snapin() -> None:
     if snapin_id is None:
         return None
 
-    user_config = UserSidebarConfig(user, config.sidebar)
+    user_config = UserSidebarConfig(user, active_config.sidebar)
 
     try:
         snapin = user_config.get_snapin(snapin_id)
@@ -868,7 +870,7 @@ def _add_snapins_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 
 def _used_snapins() -> List[Any]:
-    user_config = UserSidebarConfig(user, config.sidebar)
+    user_config = UserSidebarConfig(user, active_config.sidebar)
     return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 
 
@@ -886,7 +888,7 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
         if addname in _used_snapins():
             raise MKUserError(None, _("Element %s is already enabled") % addname)
 
-        user_config = UserSidebarConfig(user, config.sidebar)
+        user_config = UserSidebarConfig(user, active_config.sidebar)
         snapin = UserSidebarSnapin.from_snapin_type_id(addname)
         user_config.add_snapin(snapin)
         user_config.save()

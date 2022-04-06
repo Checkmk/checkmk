@@ -29,7 +29,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.config import get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.watolib.utils import (
@@ -72,7 +72,7 @@ class ConfigDomainCore(ABCConfigDomain):
         from cmk.gui.watolib.check_mk_automations import reload, restart
 
         return {"restart": restart, "reload": reload,}[
-            config.wato_activation_method
+            active_config.wato_activation_method
         ](self._parse_settings(settings).hosts_to_update).config_warnings
 
     def _parse_settings(
@@ -144,7 +144,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return not cmk_version.is_raw_edition() and config.liveproxyd_enabled
+        return not cmk_version.is_raw_edition() and active_config.liveproxyd_enabled
 
     def config_dir(self):
         return liveproxyd_config_dir()
@@ -220,13 +220,13 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return config.mkeventd_enabled
+        return active_config.mkeventd_enabled
 
     def config_dir(self):
         return str(ec.rule_pack_dir())
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
-        if getattr(config, "mkeventd_enabled", False):
+        if getattr(active_config, "mkeventd_enabled", False):
             mkeventd.execute_command("RELOAD", site=omd_site())
             log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
             if hooks.registered("mkeventd-activate-changes"):
@@ -288,7 +288,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
-            warnings = self._update_trusted_cas(config.trusted_certificate_authorities)
+            warnings = self._update_trusted_cas(active_config.trusted_certificate_authorities)
             stunnel_pid = pid_from_file(
                 cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
             )

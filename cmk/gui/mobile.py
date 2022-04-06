@@ -13,7 +13,7 @@ import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, display_options, html, request
+from cmk.gui.globals import active_config, display_options, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -295,7 +295,7 @@ def page_view() -> None:
         views.process_view(MobileViewRenderer(view))
     except Exception as e:
         logger.exception("error showing mobile view")
-        if config.debug:
+        if active_config.debug:
             raise
         html.write_text("ERROR showing view: %s" % e)
 

@@ -26,7 +26,7 @@ import cmk.gui.log as log
 import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 
 # Kept for compatibility with pre 1.6 GUI plugins
@@ -98,8 +98,8 @@ class Config(CREConfig, CEEConfig, CMEConfig):
 
 def initialize() -> None:
     load_config()
-    log.set_log_levels(config.log_levels)
-    cmk.gui.i18n.set_user_localizations(config.user_localizations)
+    log.set_log_levels(active_config.log_levels)
+    cmk.gui.i18n.set_user_localizations(active_config.user_localizations)
 
 
 def _load_config_file_to(path: str, raw_config: Dict[str, Any]) -> None:

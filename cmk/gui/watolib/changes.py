@@ -40,7 +40,7 @@ import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, request
+from cmk.gui.globals import active_config, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -272,7 +272,7 @@ def log_audit(
     diff_text: Optional[str] = None,
 ) -> None:
 
-    if config.wato_use_git:
+    if active_config.wato_use_git:
         if isinstance(message, HTML):
             message = escaping.strip_tags(message.value)
         cmk.gui.watolib.git.add_message(message)

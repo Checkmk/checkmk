@@ -17,7 +17,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
@@ -696,20 +696,24 @@ class CommandAcknowledge(Command):
         html.close_div()
 
         html.open_div(class_="group")
-        html.checkbox("_ack_sticky", config.view_action_defaults["ack_sticky"], label=_("sticky"))
         html.checkbox(
-            "_ack_notify", config.view_action_defaults["ack_notify"], label=_("send notification")
+            "_ack_sticky", active_config.view_action_defaults["ack_sticky"], label=_("sticky")
+        )
+        html.checkbox(
+            "_ack_notify",
+            active_config.view_action_defaults["ack_notify"],
+            label=_("send notification"),
         )
         html.checkbox(
             "_ack_persistent",
-            config.view_action_defaults["ack_persistent"],
+            active_config.view_action_defaults["ack_persistent"],
             label=_("persistent comment"),
         )
         html.close_div()
 
         html.open_div(class_="group")
         self._vs_expire().render_input(
-            "_ack_expire", config.view_action_defaults.get("ack_expire", 0)
+            "_ack_expire", active_config.view_action_defaults.get("ack_expire", 0)
         )
         html.help(
             _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core.")
@@ -997,7 +1001,7 @@ class CommandScheduleDowntimes(Command):
         html.close_div()
 
         html.open_div(class_="group")
-        for time_range in config.user_downtime_timeranges:
+        for time_range in active_config.user_downtime_timeranges:
             html.button("_downrange__%s" % time_range["end"], _u(time_range["title"]))
         if what != "aggr" and user.may("action.remove_all_downtimes"):
             html.write_text(" &nbsp; - &nbsp;")
@@ -1005,8 +1009,8 @@ class CommandScheduleDowntimes(Command):
         html.close_div()
 
         if self._adhoc_downtime_configured():
-            adhoc_duration = config.adhoc_downtime.get("duration")
-            adhoc_comment = config.adhoc_downtime.get("comment", "")
+            adhoc_duration = active_config.adhoc_downtime.get("duration")
+            adhoc_comment = active_config.adhoc_downtime.get("comment", "")
             html.open_div(class_="group")
             html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
             html.nbsp()
@@ -1071,7 +1075,7 @@ class CommandScheduleDowntimes(Command):
         elif request.var("_down_adhoc"):
             varprefix = "_down_adhoc"
             start_time = self._current_local_time()
-            duration_minutes = config.adhoc_downtime.get("duration", 0)
+            duration_minutes = active_config.adhoc_downtime.get("duration", 0)
             end_time = self._time_after_minutes(start_time, duration_minutes)
             title = self._title_for_next_minutes(duration_minutes, title_prefix)
         elif request.var("_down_custom"):
@@ -1161,7 +1165,7 @@ class CommandScheduleDowntimes(Command):
 
     def _comment(self):
         comment = (
-            config.adhoc_downtime.get("comment", "")
+            active_config.adhoc_downtime.get("comment", "")
             if request.var("_down_adhoc")
             else request.get_str_input("_down_comment")
         )
@@ -1313,7 +1317,7 @@ class CommandScheduleDowntimes(Command):
             return False
 
     def _adhoc_downtime_configured(self) -> bool:
-        return bool(config.adhoc_downtime and config.adhoc_downtime.get("duration"))
+        return bool(active_config.adhoc_downtime and active_config.adhoc_downtime.get("duration"))
 
 
 def bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:

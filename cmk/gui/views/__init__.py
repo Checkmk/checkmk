@@ -55,7 +55,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import (
-    config,
+    active_config,
     display_options,
     g,
     html,
@@ -903,7 +903,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.
         # In case of the web service we show errors only on single site installations.
-        if config.show_livestatus_errors and display_options.enabled(display_options.W):
+        if active_config.show_livestatus_errors and display_options.enabled(display_options.W):
             for info in sites.live().dead_sites().values():
                 if isinstance(info["site"], dict):
                     html.show_error(
@@ -1429,7 +1429,7 @@ def _register_tag_plugins():
 
 
 def _calc_config_hash() -> int:
-    return hash(repr(config.tags.get_dict_format()))
+    return hash(repr(active_config.tags.get_dict_format()))
 
 
 register_post_config_load_hook(_register_tag_plugins)
@@ -1441,7 +1441,7 @@ def _register_host_tag_painters():
         if key.startswith("host_tag_"):
             painter_registry.unregister(key)
 
-    for tag_group in config.tags.tag_groups:
+    for tag_group in active_config.tags.tag_groups:
         if tag_group.topic:
             long_title = tag_group.topic + " / " + tag_group.title
         else:
@@ -1478,7 +1478,7 @@ def _paint_host_tag(row, tgid):
 
 
 def _register_host_tag_sorters():
-    for tag_group in config.tags.tag_groups:
+    for tag_group in active_config.tags.tag_groups:
         register_sorter(
             "host_tag_" + str(tag_group.id),
             {
@@ -1499,7 +1499,7 @@ def _cmp_host_tag(r1, r2, tgid):
 def _get_tag_group_value(row, what, tag_group_id) -> str:
     tag_id = get_tag_groups(row, "host").get(tag_group_id)
 
-    tag_group = config.tags.get_tag_group(tag_group_id)
+    tag_group = active_config.tags.get_tag_group(tag_group_id)
     if tag_group:
         label = dict(tag_group.get_tag_choices()).get(tag_id, _("N/A"))
     else:
@@ -2175,7 +2175,7 @@ def page_view():
 
 
 def _may_create_slow_view_log_entry(page_view_tracker: CPUTracker, view: View) -> None:
-    duration_threshold = config.slow_views_duration_threshold
+    duration_threshold = active_config.slow_views_duration_threshold
     if page_view_tracker.duration.process.elapsed < duration_threshold:
         return
 
@@ -2435,7 +2435,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
     if browser_reload and display_options.enabled(display_options.R):
         html.set_browser_reload(browser_reload)
 
-    if config.enable_sounds and config.sounds:
+    if active_config.enable_sounds and active_config.sounds:
         for row in rows:
             save_state_for_playing_alarm_sounds(row)
 
@@ -2693,7 +2693,7 @@ def _do_table_join(
 
 
 def save_state_for_playing_alarm_sounds(row: "Row") -> None:
-    if not config.enable_sounds or not config.sounds:
+    if not active_config.enable_sounds or not active_config.sounds:
         return
 
     # TODO: Move this to a generic place. What about -1?
@@ -2716,17 +2716,17 @@ def save_state_for_playing_alarm_sounds(row: "Row") -> None:
 
 
 def play_alarm_sounds() -> None:
-    if not config.enable_sounds or not config.sounds:
+    if not active_config.enable_sounds or not active_config.sounds:
         return
 
     if "alarm_sound_states" not in g:
         return
 
-    url = config.sound_url
+    url = active_config.sound_url
     if not url.endswith("/"):
         url += "/"
 
-    for state_name, wav in config.sounds:
+    for state_name, wav in active_config.sounds:
         if not state_name or state_name in g.alarm_sound_states:
             html.play_sound(url + wav)
             break  # only one sound at one time
@@ -2746,10 +2746,10 @@ def get_limit() -> Optional[int]:
     """How many data rows may the user query?"""
     limitvar = request.var("limit", "soft")
     if limitvar == "hard" and user.may("general.ignore_soft_limit"):
-        return config.hard_query_limit
+        return active_config.hard_query_limit
     if limitvar == "none" and user.may("general.ignore_hard_limit"):
         return None
-    return config.soft_query_limit
+    return active_config.soft_query_limit
 
 
 def _link_to_folder_by_path(path: str) -> str:
@@ -3218,7 +3218,7 @@ def _page_menu_host_setup_topic(view: View) -> List[PageMenuTopic]:
     if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
         return []
 
-    if not config.wato_enabled:
+    if not active_config.wato_enabled:
         return []
 
     if not user.may("wato.use"):
@@ -3621,7 +3621,7 @@ def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) 
     message = None
     if command:
         message = _("Successfully sent %d commands.") % count
-        if config.debug:
+        if active_config.debug:
             message += _("The last one was: <pre>%s</pre>") % command
     elif count == 0:
         message = _("No matching data row. No command sent.")
@@ -3827,7 +3827,7 @@ class PageRescheduleCheck(AjaxPage):
                 what,
                 livestatus.lqencode(wait_spec),
                 now,
-                config.reschedule_timeout * 1000,
+                active_config.reschedule_timeout * 1000,
                 livestatus.lqencode(host),
                 add_filter,
             )
@@ -3839,7 +3839,8 @@ class PageRescheduleCheck(AjaxPage):
         if last_check < now:
             return {
                 "state": "TIMEOUT",
-                "message": _("Check not executed within %d seconds") % (config.reschedule_timeout),
+                "message": _("Check not executed within %d seconds")
+                % (active_config.reschedule_timeout),
             }
 
         if service == "Check_MK":

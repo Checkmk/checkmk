@@ -8,7 +8,7 @@ import copy
 from typing import Any, Dict, List, Tuple
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
@@ -88,7 +88,7 @@ class APICallBulkDiscovery(APICallCollection):
         because the API call currently only operates on a list of given hostnames where
         a lot of the GUI options are not relevant for. For a consistent parameter handling
         we use the valuespec here."""
-        params: Dict[str, Any] = copy.deepcopy(config.bulk_discovery_default_settings)
+        params: Dict[str, Any] = copy.deepcopy(active_config.bulk_discovery_default_settings)
 
         params["mode"] = request.get("mode", params["mode"])
 

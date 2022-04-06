@@ -43,7 +43,7 @@ import cmk.gui.inventory as inventory
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, output_funnel, request, user_errors
+from cmk.gui.globals import active_config, html, output_funnel, request, user_errors
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
@@ -395,7 +395,7 @@ class ABCRowTable(RowTable):
         query += "".join(get_livestatus_filter_headers(view.context, all_active_filters))
 
         if (
-            config.debug_livestatus_queries
+            active_config.debug_livestatus_queries
             and html.output_format == "html"
             and display_options.enabled(display_options.W)
         ):

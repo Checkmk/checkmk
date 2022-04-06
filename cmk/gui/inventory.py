@@ -39,7 +39,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import config, html, request, response
+from cmk.gui.globals import active_config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -476,7 +476,7 @@ def _load_structured_data_tree(
     try:
         return tree_store.load(host_name=hostname)
     except Exception as e:
-        if config.debug:
+        if active_config.debug:
             html.show_warning("%s" % e)
         raise LoadStructuredDataError()
 
@@ -530,7 +530,9 @@ def _get_permitted_inventory_paths():
     forbid_whole_tree = False
     permitted_paths = []
     for user_group in user_groups:
-        inventory_paths = config.multisite_contactgroups.get(user_group, {}).get("inventory_paths")
+        inventory_paths = active_config.multisite_contactgroups.get(user_group, {}).get(
+            "inventory_paths"
+        )
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
             return None
@@ -614,7 +616,7 @@ def page_host_inv_api() -> None:
         resp = {"result_code": 1, "result": "%s" % e}
 
     except Exception as e:
-        if config.debug:
+        if active_config.debug:
             raise
         resp = {"result_code": 1, "result": "%s" % e}
 

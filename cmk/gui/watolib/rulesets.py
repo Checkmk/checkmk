@@ -37,7 +37,7 @@ import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 from cmk.gui import utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
@@ -238,7 +238,7 @@ class RulesetCollection:
         super().__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
-        self._tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
+        self._tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
         self._rulesets: Dict[RulesetName, Ruleset] = {}
 
     # Has to be implemented by the subclasses to load the right rulesets
@@ -333,7 +333,7 @@ class RulesetCollection:
             # loading the file in cmk.base.config
             content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
-            store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+            store.save_mk_file(rules_file_path, content, add_header=not active_config.wato_use_git)
         finally:
             if may_use_redis():
                 get_wato_redis_client().folder_updated(folder.filesystem_path())
@@ -630,7 +630,7 @@ class Ruleset:
         for rule in self._rules[folder.path()]:
             # When using pprint we get a deterministic representation of the
             # data structures because it cares about sorting of the dict keys
-            if config.wato_use_git:
+            if active_config.wato_use_git:
                 text = pprint.pformat(rule.to_config())
             else:
                 text = repr(rule.to_config())

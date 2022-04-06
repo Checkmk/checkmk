@@ -32,7 +32,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.globals import config, html, PrependURLFilter, request, response
+from cmk.gui.globals import active_config, html, PrependURLFilter, request, response
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -73,7 +73,7 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
             func()
         except Exception as e:
             html.write_text(str(e))
-            if config.debug:
+            if active_config.debug:
                 html.write_text(traceback.format_exc())
 
         return response
@@ -225,7 +225,7 @@ class CheckmkApp:
             url_filter=PrependURLFilter(),
         ), patch_json(json):
             config_module.initialize()
-            theme.from_config(config.ui_theme)
+            theme.from_config(active_config.ui_theme)
             return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:

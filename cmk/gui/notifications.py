@@ -16,7 +16,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, g, html, request
+from cmk.gui.globals import active_config, g, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -170,7 +170,7 @@ def _failed_notification_query(
         query.append("Filter: time >= %d" % after)
 
     if user.may("general.see_failed_notifications"):
-        horizon = config.failed_notification_horizon
+        horizon = active_config.failed_notification_horizon
     else:
         horizon = 86400
     query.append("Filter: time > %d" % (int(time.time()) - horizon))

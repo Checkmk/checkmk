@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import config, html
+from cmk.gui.globals import active_config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -241,7 +241,7 @@ class PainterPerfometer(Painter):
                 return "", ""
         except Exception as e:
             logger.exception("error rendering performeter")
-            if config.debug:
+            if active_config.debug:
                 raise
             return " ".join(classes), _("Exception: %s") % e
 
@@ -295,6 +295,6 @@ class SorterPerfometer(Sorter):
             return (v1 > v2) - (v1 < v2)
         except Exception:
             logger.exception("error sorting perfometer values")
-            if config.debug:
+            if active_config.debug:
                 raise
             return 0

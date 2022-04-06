@@ -32,7 +32,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, html, request
+from cmk.gui.globals import active_config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -74,14 +74,14 @@ class RoleManagement:
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper
         # functions from the config module
-        config.roles.update(self._roles)
+        active_config.roles.update(self._roles)
 
         store.mkdir(watolib.multisite_dir())
         store.save_to_mk_file(
             watolib.multisite_dir() + "roles.mk",
             "roles",
             self._roles,
-            pprint_value=config.wato_pprint_config,
+            pprint_value=active_config.wato_pprint_config,
         )
 
         hooks.call("roles-saved", self._roles)

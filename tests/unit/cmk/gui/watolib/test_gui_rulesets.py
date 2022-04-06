@@ -18,13 +18,13 @@ import cmk.gui.wato
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config
+from cmk.gui.globals import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 
 
 def _ruleset(ruleset_name) -> rulesets.Ruleset:
-    return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
+    return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags))
 
 
 GEN_ID_COUNT = {"c": 0}
@@ -203,7 +203,9 @@ def test_rule_from_config_tuple(
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
 
-    ruleset = rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
+    ruleset = rulesets.Ruleset(
+        ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags)
+    )
     ruleset.from_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
     rule = ruleset.get_folder_rules(hosts_and_folders.Folder.root_folder())[0]
 
@@ -524,10 +526,10 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result):
-    monkeypatch.setattr(config, "wato_use_git", wato_use_git)
+    monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
-        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(config.tags)
+        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
     )
     ruleset.from_config(
         hosts_and_folders.Folder.root_folder(),
@@ -579,10 +581,10 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_git, expected_result):
-    monkeypatch.setattr(config, "wato_use_git", wato_use_git)
+    monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
-        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(config.tags)
+        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
     )
 
     hosts_and_folders.Folder.create_missing_folders("abc")

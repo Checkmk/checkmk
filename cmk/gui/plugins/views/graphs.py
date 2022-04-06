@@ -7,7 +7,7 @@
 import copy
 import time
 
-from cmk.gui.globals import config, request, response
+from cmk.gui.globals import active_config, request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
@@ -176,7 +176,9 @@ def cmk_time_graph_params():
             "set_default_time_range",
             DropdownChoice(
                 title=_("Set default time range"),
-                choices=[(entry["duration"], entry["title"]) for entry in config.graph_timeranges],
+                choices=[
+                    (entry["duration"], entry["title"]) for entry in active_config.graph_timeranges
+                ],
             ),
         ),
         ("graph_render_options", vs_graph_render_options()),

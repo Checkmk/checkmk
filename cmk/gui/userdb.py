@@ -45,7 +45,7 @@ import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, html, request, response
+from cmk.gui.globals import active_config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -94,7 +94,7 @@ def load_plugins() -> None:
 # The saved configuration for user connections is a bit inconsistent, let's fix
 # this here once and for all.
 def _fix_user_connections() -> None:
-    for cfg in config.user_connections:
+    for cfg in active_config.user_connections:
         # Although our current configuration always seems to have a 'disabled'
         # entry, this might not have always been the case.
         cfg.setdefault("disabled", False)
@@ -159,7 +159,7 @@ def create_non_existing_user(connection_id: str, username: UserId) -> None:
             save_users_func=save_users,
         )
     except MKLDAPException as e:
-        show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
+        show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)
     except Exception as e:
         show_exception(connection_id, _("Error during sync"), e)
 
@@ -201,7 +201,7 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
 def _login_timed_out(username: UserId, last_activity: int) -> bool:
     idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
     if idle_timeout is None:
-        idle_timeout = config.user_idle_timeout
+        idle_timeout = active_config.user_idle_timeout
 
     if idle_timeout in [None, False]:
         return False  # no timeout activated at all
@@ -235,7 +235,7 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
         return "enforced"
 
     last_pw_change = load_custom_attr(username, "last_pw_change", utils.saveint)
-    max_pw_age = config.password_policy.get("max_age")
+    max_pw_age = active_config.password_policy.get("max_age")
     if max_pw_age:
         if not last_pw_change:
             # The age of the password is unknown. Assume the user has just set
@@ -416,17 +416,17 @@ def on_failed_login(username: UserId) -> None:
         else:
             users[username]["num_failed_logins"] = 1
 
-        if config.lock_on_logon_failures:
-            if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
+        if active_config.lock_on_logon_failures:
+            if users[username]["num_failed_logins"] >= active_config.lock_on_logon_failures:
                 users[username]["locked"] = True
 
         save_users(users)
 
-    if config.log_logon_failures:
+    if active_config.log_logon_failures:
         log_details: List[str] = []
         if users.get(username):
             log_msg_until_locked: int = (
-                config.lock_on_logon_failures - users[username]["num_failed_logins"]
+                active_config.lock_on_logon_failures - users[username]["num_failed_logins"]
             )
             log_msg_locked: str = "No"
             if users[username].get("locked"):
@@ -468,7 +468,8 @@ def on_access(username: UserId, session_id: str) -> None:
     timed_out = _login_timed_out(username, session_info.last_activity)
     if timed_out:
         raise MKAuthException(
-            "%s login timed out (Inactivity exceeded %r)" % (username, config.user_idle_timeout)
+            "%s login timed out (Inactivity exceeded %r)"
+            % (username, active_config.user_idle_timeout)
         )
 
     _set_session(username, session_info)
@@ -540,10 +541,10 @@ def _is_valid_user_session(
 
 def _ensure_user_can_init_session(username: UserId) -> bool:
     """When single user session mode is enabled, check that there is not another active session"""
-    if config.single_user_session is None:
+    if active_config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
-    session_timeout = config.single_user_session
+    session_timeout = active_config.single_user_session
 
     for session_info in _load_session_infos(username).values():
         if (time.time() - session_info.last_activity) > session_timeout:
@@ -593,7 +594,7 @@ def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, Se
     In single user session mode all sessions are removed. In regular mode, the sessions are limited
     to 20 per user. Sessions with an inactivity > 7 days are also removed.
     """
-    if config.single_user_session:
+    if active_config.single_user_session:
         # In single user session mode there is only one session allowed at a time. Once we
         # reach this place, we can be sure that we are allowed to remove all existing ones.
         return {}
@@ -950,7 +951,7 @@ def remove_custom_attr(userid: UserId, key: str) -> None:
 
 
 def get_online_user_ids() -> List[UserId]:
-    online_threshold = time.time() - config.user_online_maxage
+    online_threshold = time.time() - active_config.user_online_maxage
     users = []
     for user_id, user in load_users(lock=False).items():
         if get_last_activity(user) >= online_threshold:
@@ -1144,7 +1145,7 @@ def write_contacts_and_users_file(
         "%s/%s" % (check_mk_config_dir, "contacts.mk"),
         "contacts",
         contacts,
-        pprint_value=config.wato_pprint_config,
+        pprint_value=active_config.wato_pprint_config,
     )
 
     # GUI specific user configuration
@@ -1152,7 +1153,7 @@ def write_contacts_and_users_file(
         "%s/%s" % (multisite_config_dir, "users.mk"),
         "multisite_users",
         users,
-        pprint_value=config.wato_pprint_config,
+        pprint_value=active_config.wato_pprint_config,
     )
 
 
@@ -1277,7 +1278,7 @@ def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
 def update_config_based_user_attributes() -> None:
     _clear_config_based_user_attributes()
 
-    for attr in config.wato_user_attrs:
+    for attr in active_config.wato_user_attrs:
         if attr["type"] == "TextAscii":
             vs = TextInput(title=attr["title"], help=attr["help"])
         else:
@@ -1380,7 +1381,7 @@ def hook_save(users: Users) -> None:
         try:
             connection.save_users(users)
         except Exception as e:
-            if config.debug:
+            if active_config.debug:
                 raise
             show_exception(connection_id, _("Error during saving"), e)
 
@@ -1449,7 +1450,7 @@ def ajax_sync() -> None:
         response.set_data("OK Started synchronization\n")
     except Exception as e:
         logger.exception("error synchronizing user DB")
-        if config.debug:
+        if active_config.debug:
             raise
         response.set_data("ERROR %s\n" % e)
 

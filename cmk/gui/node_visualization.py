@@ -29,7 +29,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, html, request, theme
+from cmk.gui.globals import active_config, html, request, theme
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -342,9 +342,9 @@ class AjaxFetchAggregationData(AjaxPage):
         return aggregation_info
 
     def _get_line_style_config(self, aggr_settings: Dict[str, Any]) -> Dict[str, Any]:
-        line_style = aggr_settings.get("line_style", config.default_bi_layout["line_style"])
+        line_style = aggr_settings.get("line_style", active_config.default_bi_layout["line_style"])
         if line_style == "default":
-            line_style = config.default_bi_layout["line_style"]
+            line_style = active_config.default_bi_layout["line_style"]
         return {"style": line_style}
 
     def _get_template_based_layout_settings(self, aggr_settings: Dict[str, Any]) -> Dict[str, Any]:
@@ -374,16 +374,16 @@ class AjaxFetchAggregationData(AjaxPage):
             )
 
             if template_layout_id == "builtin_default":
-                template_layout_id = config.default_bi_layout["node_style"]
+                template_layout_id = active_config.default_bi_layout["node_style"]
             layout_settings["default_id"] = template_layout_id[8:]
         else:
             # Any Unknown/Removed layout id gets the default template
             layout_settings["origin_type"] = "default_template"
             layout_settings["origin_info"] = _("Fallback template (%s): Unknown ID %s") % (
-                config.default_bi_layout["node_style"][8:].title(),
+                active_config.default_bi_layout["node_style"][8:].title(),
                 template_layout_id,
             )
-            layout_settings["default_id"] = config.default_bi_layout["node_style"][8:]
+            layout_settings["default_id"] = active_config.default_bi_layout["node_style"][8:]
 
         return layout_settings
 
@@ -460,7 +460,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
-        config.bi_layouts["aggregations"].update(layout_config)
+        active_config.bi_layouts["aggregations"].update(layout_config)
         BILayoutManagement.save_layouts()
         return {}
 
@@ -469,7 +469,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
         for_aggregation = request.var("aggregation_name")
-        config.bi_layouts["aggregations"].pop(for_aggregation)
+        active_config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts()
         return {}
 
@@ -487,7 +487,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
-        config.bi_layouts["templates"].update(layout_config)
+        active_config.bi_layouts["templates"].update(layout_config)
         BILayoutManagement.save_layouts()
         return {}
 
@@ -496,7 +496,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
 class AjaxDeleteBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
         layout_id = request.var("layout_id")
-        config.bi_layouts["templates"].pop(layout_id)
+        active_config.bi_layouts["templates"].pop(layout_id)
         BILayoutManagement.save_layouts()
         return {}
 

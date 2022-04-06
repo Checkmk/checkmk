@@ -14,7 +14,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 from cmk.special_agents.agent_kube import (
     _collect_cpu_resources,
-    deployments_from_namespaces,
+    kube_objects_from_namespaces,
     Pod,
     pods_from_namespaces,
 )
@@ -105,7 +105,7 @@ def test_filter_deployments_from_monitored_namespaces():
     ]
 
     # Act
-    filtered_deployments = deployments_from_namespaces(deployments, {api.NamespaceName("default")})
+    filtered_deployments = kube_objects_from_namespaces(deployments, {api.NamespaceName("default")})
 
     # Assert
     assert [deployment.namespace for deployment in filtered_deployments] == ["default"]

@@ -40,6 +40,7 @@ from typing import (
     Protocol,
     Sequence,
     Set,
+    TypeVar,
     Union,
 )
 from urllib.parse import urlparse
@@ -1736,25 +1737,13 @@ def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.NamespaceName]
     return [pod for pod in pods if pod.metadata.namespace in namespaces]
 
 
-# TODO: mypy does not seem to allow a more generic definition
+KubeNamespacedObj = TypeVar("KubeNamespacedObj", bound=Union[DaemonSet, Deployment, StatefulSet])
 
 
-def daemon_sets_from_namespaces(
-    daemonsets: Sequence[DaemonSet], namespaces: Set[api.NamespaceName]
-) -> Sequence[DaemonSet]:
-    return [daemonset for daemonset in daemonsets if daemonset.namespace in namespaces]
-
-
-def deployments_from_namespaces(
-    deployments: Sequence[Deployment], namespaces: Set[api.NamespaceName]
-) -> Sequence[Deployment]:
-    return [deployment for deployment in deployments if deployment.namespace in namespaces]
-
-
-def statefulsets_from_namespaces(
-    statefulsets: Sequence[StatefulSet], namespaces: Set[api.NamespaceName]
-) -> Sequence[StatefulSet]:
-    return [statefulset for statefulset in statefulsets if statefulset.namespace in namespaces]
+def kube_objects_from_namespaces(
+    kube_objects: Sequence[KubeNamespacedObj], namespaces: Set[api.NamespaceName]
+) -> Sequence[KubeNamespacedObj]:
+    return [kube_obj for kube_obj in kube_objects if kube_obj.namespace in namespaces]
 
 
 def namespaces_from_monitored_namespacenames(
@@ -1916,7 +1905,7 @@ def write_sections_based_on_performance_pods(
             )
     if "deployments" in monitored_objects:
         LOGGER.info("Write deployment sections based on performance data")
-        for deployment in deployments_from_namespaces(cluster.deployments(), monitored_namespaces):
+        for deployment in kube_objects_from_namespaces(cluster.deployments(), monitored_namespaces):
             write_kube_object_performance_section(
                 deployment,
                 performance_pods,
@@ -1927,7 +1916,7 @@ def write_sections_based_on_performance_pods(
             )
     if "daemonsets" in monitored_objects:
         LOGGER.info("Write DaemonSet sections based on performance data")
-        for daemonset in daemon_sets_from_namespaces(cluster.daemon_sets(), monitored_namespaces):
+        for daemonset in kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespaces):
             write_kube_object_performance_section(
                 daemonset,
                 performance_pods,
@@ -1937,7 +1926,7 @@ def write_sections_based_on_performance_pods(
             )
     if "statefulsets" in monitored_objects:
         LOGGER.info("Write StatefulSet sections based on performance data")
-        for statefulset in statefulsets_from_namespaces(
+        for statefulset in kube_objects_from_namespaces(
             cluster.statefulsets(), monitored_namespaces
         ):
             write_kube_object_performance_section(
@@ -2141,7 +2130,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 LOGGER.info("Write deployments sections based on API data")
                 write_deployments_api_sections(
                     arguments.cluster,
-                    deployments_from_namespaces(cluster.deployments(), monitored_namespaces),
+                    kube_objects_from_namespaces(cluster.deployments(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
@@ -2159,7 +2148,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 LOGGER.info("Write daemon sets sections based on API data")
                 write_daemon_sets_api_sections(
                     arguments.cluster,
-                    daemon_sets_from_namespaces(cluster.daemon_sets(), monitored_namespaces),
+                    kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 
@@ -2167,7 +2156,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 LOGGER.info("Write StatefulSets sections based on API data")
                 write_statefulsets_api_sections(
                     arguments.cluster,
-                    statefulsets_from_namespaces(cluster.statefulsets(), monitored_namespaces),
+                    kube_objects_from_namespaces(cluster.statefulsets(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 

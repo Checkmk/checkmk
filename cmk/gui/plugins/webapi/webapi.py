@@ -1083,9 +1083,7 @@ class APICallSites(APICallCollection):
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
-        response = watolib.do_site_login(
-            request["site_id"], request["username"], request["password"]
-        )
+        response = watolib.do_site_login(site, request["username"], request["password"])
 
         if isinstance(response, dict):
             if cmk_version.is_managed_edition() and response["edition_short"] != "cme":

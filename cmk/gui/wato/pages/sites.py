@@ -663,7 +663,7 @@ class ModeDistributedMonitoring(WatoMode):
                         ),
                     )
 
-                secret = do_site_login(login_id, name, passwd)
+                secret = do_site_login(site, name, passwd)
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)

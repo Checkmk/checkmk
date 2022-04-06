@@ -40,7 +40,6 @@ from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -417,9 +416,7 @@ def get_url_json(url, insecure, auth=None, data=None, files=None, timeout=None):
     return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
-def do_site_login(site_id: SiteId, name: UserId, password: str) -> str:
-    sites = SiteManagementFactory().factory().load_sites()
-    site = sites[site_id]
+def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
     if not name:
         raise MKUserError("_name", _("Please specify your administrator login on the remote site."))
     if not password:

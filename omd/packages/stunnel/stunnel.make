@@ -14,7 +14,8 @@ STUNNEL_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(STUNNEL_DIR)
 $(STUNNEL_BUILD): $(STUNNEL_UNPACK)
 	cd $(STUNNEL_BUILD_DIR) && \
 	    ./configure \
-		--prefix=$(OMD_ROOT)
+		--prefix=$(OMD_ROOT) \
+		--with-bashcompdir=$(OMD_ROOT)/skel/etc/bash_completion.d
 	$(MAKE) -C $(STUNNEL_BUILD_DIR) -j4
 	$(TOUCH) $@
 

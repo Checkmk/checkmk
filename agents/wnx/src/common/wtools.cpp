@@ -1559,8 +1559,8 @@ void WmiWrapper::close() noexcept {
 // connect to the WMI namespace, root\\Something
 // returns true when connect succeed or connect exists
 // thread safe
-bool WmiWrapper::connect(const std::wstring &NameSpace) noexcept {
-    if (NameSpace.empty()) {
+bool WmiWrapper::connect(std::wstring_view name_space) noexcept {
+    if (name_space.empty()) {
         XLOG::l.crit(XLOG_FUNC + " nullptr!");
         return false;
     }
@@ -1580,7 +1580,7 @@ bool WmiWrapper::connect(const std::wstring &NameSpace) noexcept {
     // to make IWbemServices calls.
     // #TODO no user name and no password looks not good
     auto hres =
-        locator_->ConnectServer(_bstr_t(NameSpace.c_str()),  // WMI namespace
+        locator_->ConnectServer(_bstr_t(name_space.data()),  // WMI namespace
                                 nullptr,                     // User name
                                 nullptr,                     // User password
                                 nullptr,                     // Locale
@@ -1592,7 +1592,7 @@ bool WmiWrapper::connect(const std::wstring &NameSpace) noexcept {
 
     if (SUCCEEDED(hres)) return true;
 
-    XLOG::l.e("Can't connect to the namespace {} {:#X}", ToUtf8(NameSpace),
+    XLOG::l.e("Can't connect to the namespace {} {:#X}", ToUtf8(name_space),
               static_cast<unsigned long>(hres));
     return false;  // Program has failed.
 }

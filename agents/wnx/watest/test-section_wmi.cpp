@@ -213,13 +213,13 @@ TEST(WmiProviderTest, WmiConfiguration) {
     }
 }
 
-const char *exch_names[] = {kMsExchActiveSync,     //
-                            kMsExchAvailability,   //
-                            kMsExchOwa,            //
-                            kMsExchAutoDiscovery,  //
-                            kMsExchIsClientType,   //
-                            kMsExchIsStore,        //
-                            kMsExchRpcClientAccess};
+const std::string_view exch_names[] = {kMsExchActiveSync,     //
+                                       kMsExchAvailability,   //
+                                       kMsExchOwa,            //
+                                       kMsExchAutoDiscovery,  //
+                                       kMsExchIsClientType,   //
+                                       kMsExchIsStore,        //
+                                       kMsExchRpcClientAccess};
 TEST(WmiProviderTest, WmiSubSection_Integration) {
     for (auto n : exch_names) {
         SubSection ss(n, SubSection::Type::full);
@@ -249,7 +249,8 @@ TEST(WmiProviderTest, WmiSubSection_Integration) {
         ASSERT_TRUE(headers.size() > 10);
         EXPECT_EQ(headers.size(), values.size());
     }
-    EXPECT_EQ(table[0], std::string("[") + kSubSectionSystemPerf + "]");
+    EXPECT_EQ(table[0],
+              std::string{"["} + std::string{kSubSectionSystemPerf} + "]");
 }
 
 TEST(WmiProviderTest, SubSectionSimulateExchange_Integration) {
@@ -461,7 +462,7 @@ TEST(WmiProviderTest, WmiDotnet_Integration) {
     EXPECT_FALSE(damned_windows)
         << "please, run start_wmi.cmd\n dot net clr not found\n";
 
-    auto cmd_line = std::to_string(12345) + " " + wmi_name + " ";
+    auto cmd_line = std::to_string(12345) + " " + std::string{wmi_name} + " ";
     e2.startExecution("file:" FNAME_USE, cmd_line);
 
     std::error_code ec;
@@ -536,7 +537,7 @@ public:
     }
 
 protected:
-    std::vector<std::string> execWmiProvider(const std::string &wmi_name,
+    std::vector<std::string> execWmiProvider(std::string_view wmi_name,
                                              const std::string &test_name) {
         auto f = tst::GetTempDir() / test_name;
 
@@ -547,7 +548,7 @@ protected:
         EXPECT_TRUE(e2.isAllowedByCurrentConfig());
         EXPECT_TRUE(e2.isAllowedByTime());
 
-        auto cmd_line = std::to_string(12345) + " " + wmi_name + " ";
+        auto cmd_line = std::to_string(12345) + " " + wmi_name.data() + " ";
         e2.startExecution(fmt::format("file:{}", f.u8string()), cmd_line);
 
         std::error_code ec;

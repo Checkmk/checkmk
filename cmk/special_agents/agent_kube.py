@@ -2045,21 +2045,26 @@ def collector_exception_handler(logs: List[section.CollectorHandlerLog], debug: 
         )
 
 
-def custom_error_message_for_cmk(e: client.kubernetes.ApiException) -> str:
-    """
+class CustomKubernetesApiException(Exception):
+    def __init__(self, api_exception: client.ApiException):
+        self.e = api_exception
+        super().__init__()
 
-    This is a modified version of __str__ method of client.kubernetes.ApiException.
-    It strips the first \n in order make the output of plugin check-mk more verbose.
-    """
+    def __str__(self):
+        """
 
-    error_message = "({0}, Reason: {1})\n".format(e.status, e.reason)
-    if e.headers:
-        error_message += "HTTP response headers: {0}\n".format(e.headers)
+        This is a modified version of __str__ method of client.kubernetes.ApiException.
+        It strips the first \n in order make the output of plugin check-mk more verbose.
+        """
 
-    if e.body:
-        error_message += "HTTP response body: {0}\n".format(e.body)
+        error_message = "({self.e.status}, Reason: {self.e.reason})\n"
+        if self.e.headers:
+            error_message += f"HTTP response headers: {self.e.headers}\n"
 
-    return error_message
+        if self.e.body:
+            error_message += f"HTTP response body: {self.e.body}\n"
+
+        return error_message
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -2088,6 +2093,8 @@ def main(args: Optional[List[str]] = None) -> int:
                     f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
                     f"at URL {e.url}"
                 )
+            except client.ApiException as e:
+                raise CustomKubernetesApiException(e) from e
 
             api_pods = api_server.pods()
 
@@ -2373,11 +2380,6 @@ def main(args: Optional[List[str]] = None) -> int:
                         machine=collector_machine_logs[-1],
                     ).json()
                 )
-    except client.exceptions.ApiException as e:
-        if arguments.debug:
-            raise
-        sys.stderr.write(custom_error_message_for_cmk(e))
-        return 1
     except Exception as e:
         if arguments.debug:
             raise

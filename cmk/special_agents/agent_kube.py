@@ -2375,7 +2375,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     )
                 )
 
-            with SectionWriter("kube_processing_logs_v1") as writer:
+            with SectionWriter("kube_collector_processing_logs_v1") as writer:
                 writer.append(
                     section.CollectorProcessingLogs(
                         container=collector_container_logs[-1],

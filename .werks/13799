@@ -1,0 +1,14 @@
+Title: KUBE: add data processing information to Cluster Collector
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649679560
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+On a Kubernetes Cluster host, the Cluster Collector service would not report the data processing,
+even if it was readily available. This werk fixes this. The issue was caused by an incorrect section
+header.

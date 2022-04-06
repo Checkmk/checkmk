@@ -1454,7 +1454,7 @@ def check_notification_type(
     notification_type = context["NOTIFICATIONTYPE"]
     if context["WHAT"] == "HOST":
         allowed_events = host_events
-        state = context["HOSTSTATE"]
+        state: str = context["HOSTSTATE"]
         event_map = {"UP": "r", "DOWN": "d", "UNREACHABLE": "u"}
     else:
         allowed_events = service_events
@@ -1611,8 +1611,8 @@ def _ensure_utf8() -> None:
 def create_plugin_context(
     raw_context: EventContext, params: Union[List, NotifyPluginParams]
 ) -> PluginContext:
-    plugin_context = {}
-    plugin_context.update(raw_context)  # Make a real copy
+    plugin_context: dict[str, str] = {}
+    plugin_context.update(cast(Mapping[str, str], raw_context))  # Make a real copy
     events.add_to_event_context(plugin_context, "PARAMETER", params)
     return plugin_context
 
@@ -2287,11 +2287,14 @@ def raw_context_from_backlog(nr: int) -> EventContext:
 
 
 def raw_context_from_env(environ: Mapping[str, str]) -> EventContext:
-    context = {
-        var[7:]: value
-        for (var, value) in environ.items()
-        if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
-    }
+    context = cast(
+        EventContext,
+        {
+            var[7:]: value
+            for (var, value) in environ.items()
+            if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
+        },
+    )
     events.pipe_decode_raw_context(context)
     return context
 

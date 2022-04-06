@@ -13,7 +13,7 @@ import select
 import socket
 import sys
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, TypedDict, Union
 from urllib.parse import quote
 
 import livestatus
@@ -28,7 +28,95 @@ import cmk.base.config as config
 import cmk.base.core
 
 ContactList = List  # TODO Improve this
-EventContext = Dict[str, Any]  # TODO Improve this
+
+
+class EventContext(TypedDict, total=False):
+    """Used to be Dict[str, Any]"""
+
+    NOTIFICATIONTYPE: Literal[
+        "RECOVERY",
+        "FLAPPINGSTART",
+        "FLAPPINGSTOP",
+        "FLAPPINGDISABLED",
+        "DOWNTIMESTART",
+        "DOWNTIMEEND",
+        "DOWNTIMECANCELLED",
+        "ACKNOWLEDGEMENT",
+    ]
+
+    CONTACTNAME: str
+    CONTACTS: str
+    DATE: str
+    EC_COMMENT: str
+    EC_FACILITY: str
+    EC_PRIORITY: str
+    EC_RULE_ID: str
+    HOSTATTEMPT: str
+    HOSTCONTACTGROUPNAMES: str
+    HOSTFORURL: str
+    HOSTGROUPNAMES: str
+    HOSTNAME: str
+    HOSTNOTIFICATIONNUMBER: str
+    HOSTOUTPUT: str
+    HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
+    HOSTTAGS: str
+    HOSTURL: str
+    HOST_SL: str
+    LASTHOSTSTATE: str
+    LASTHOSTSTATECHANGE: str
+    LASTHOSTSTATECHANGE_REL: str
+    LASTHOSTUP: str
+    LASTHOSTUP_REL: str
+    LASTSERVICEOK: str
+    LASTSERVICEOK_REL: str
+    LASTSERVICESTATE: str
+    LASTSERVICESTATECHANGE: str
+    LASTSERVICESTATECHANGE_REL: str
+    LONGDATETIME: str
+    LONGSERVICEOUTPUT: str
+    MICROTIME: str
+    MONITORING_HOST: str
+    NOTIFICATIONCOMMENT: str
+    OMD_ROOT: str
+    OMD_SITE: str
+    PREVIOUSHOSTHARDSTATE: str
+    PREVIOUSSERVICEHARDSTATE: str
+    SERVICEATTEMPT: str
+    SERVICECHECKCOMMAND: str
+    SERVICECONTACTGROUPNAMES: str
+    SERVICEDESC: str
+    SERVICEFORURL: str
+    SERVICEGROUPNAMES: str
+    SERVICENOTIFICATIONNUMBER: str
+    SERVICEOUTPUT: str
+    SERVICESTATE: Literal["OK", "WARNING", "CRITICAL", "UNKNOWN"]
+    SERVICEURL: str
+    SHORTDATETIME: str
+    SVC_SL: str
+    WHAT: Literal["SERVICE", "HOST"]
+
+    # Dynamically added:
+    # HOSTLABEL_*: str
+    # SERVICELABEL_*: str
+
+    # Dynamically added:
+    # # Add short variants for state names (at most 4 characters)
+    # for key, value in list(raw_context.items()):
+    #     if key.endswith("STATE"):
+    #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
+    # We know of:
+    HOSTSHORTSTATE: str
+    LASTHOSTSHORTSTATE: str
+    LASTSERVICESHORTSTATE: str
+    PREVIOUSHOSTHARDSHORTSTATE: str
+    PREVIOUSSERVICEHARDSHORTSTATE: str
+    SERVICESHORTSTATE: str
+
+    # Todo(Delete them with a Werk)
+    LOGDIR: str
+    MAIL_COMMAND: str
+
+
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
 Matcher = Callable[[EventRule, EventContext], Optional[str]]
@@ -183,7 +271,8 @@ def raw_context_from_string(data: str) -> EventContext:
     try:
         for line in data.split("\n"):
             varname, value = line.strip().split("=", 1)
-            context[varname] = expand_backslashes(value)
+            # Dynamically adding to TypedDict...
+            context[varname] = expand_backslashes(value)  # type: ignore[misc]
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
             raise
@@ -318,14 +407,14 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
             raw_context["SERVICEURL"] = "/check_mk/index.py?start_url=%s" % quote(url_service_view)
 
         # Relative Timestamps for several macros
-        for macro in [
-            "LASTHOSTSTATECHANGE",
-            "LASTSERVICESTATECHANGE",
-            "LASTHOSTUP",
-            "LASTSERVICEOK",
-        ]:
-            if macro in raw_context:
-                raw_context[macro + "_REL"] = get_readable_rel_date(raw_context[macro])
+        if (value := raw_context.get("LASTHOSTSTATECHANGE")) is not None:
+            raw_context["LASTHOSTSTATECHANGE_REL"] = get_readable_rel_date(value)
+        if (value := raw_context.get("LASTSERVICESTATECHANGE")) is not None:
+            raw_context["LASTSERVICESTATECHANGE_REL"] = get_readable_rel_date(value)
+        if (value := raw_context.get("LASTHOSTUP")) is not None:
+            raw_context["LASTHOSTUP_REL"] = get_readable_rel_date(value)
+        if (value := raw_context.get("LASTSERVICEOK")) is not None:
+            raw_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
         # Rule based notifications enabled? We might need to complete a few macros
         contact = raw_context.get("CONTACTNAME")
@@ -334,11 +423,14 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
-        for key in ["HOSTNOTIFICATIONNUMBER", "SERVICENOTIFICATIONNUMBER"]:
-            if key in raw_context and raw_context[key] == "0":
-                if with_dump:
-                    logger.info("Setting %s for notification from '0' to '1'", key)
-                raw_context[key] = "1"
+        if raw_context.get("HOSTNOTIFICATIONNUMBER") == "0":
+            if with_dump:
+                logger.info("Setting HOSTNOTIFICATIONNUMBER for notification from '0' to '1'")
+            raw_context["HOSTNOTIFICATIONNUMBER"] = "1"
+        if raw_context.get("SERVICENOTIFICATIONNUMBER") == "0":
+            if with_dump:
+                logger.info("Setting SERVICENOTIFICATIONNUMBER for notification from '0' to '1'")
+            raw_context["SERVICENOTIFICATIONNUMBER"] = "1"
 
         # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
         # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.
@@ -378,9 +470,11 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
             raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
-        for key, value in list(raw_context.items()):
-            if key.endswith("STATE"):
-                raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
+        for ctx_key, ctx_value in list(raw_context.items()):
+            assert isinstance(ctx_value, str)
+            if ctx_key.endswith("STATE"):
+                # dynamical keys are bad...
+                raw_context[ctx_key[:-5] + "SHORTSTATE"] = ctx_value[:4]  # type: ignore[misc]
 
         if raw_context["WHAT"] == "SERVICE":
             raw_context["SERVICEFORURL"] = quote(raw_context["SERVICEDESC"])
@@ -389,12 +483,14 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         config_cache = config.get_config_cache()
         ruleset_matcher = config_cache.ruleset_matcher
         for k, v in ruleset_matcher.labels_of_host(raw_context["HOSTNAME"]).items():
-            raw_context["HOSTLABEL_" + k] = v
+            # Dynamically added keys...
+            raw_context["HOSTLABEL_" + k] = v  # type: ignore[misc]
         if raw_context["WHAT"] == "SERVICE":
             for k, v in ruleset_matcher.labels_of_service(
                 raw_context["HOSTNAME"], raw_context["SERVICEDESC"]
             ).items():
-                raw_context["SERVICELABEL_" + k] = v
+                # Dynamically added keys...
+                raw_context["SERVICELABEL_" + k] = v  # type: ignore[misc]
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -403,9 +499,9 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         log_context = "\n".join(
             sorted(
                 [
-                    "                    %s=%s" % (k, raw_context[k])
-                    for k in raw_context
-                    if k not in raw_keys
+                    "                    %s=%s" % (key, value)
+                    for key, value in raw_context.items()
+                    if key not in raw_keys
                 ]
             )
         )
@@ -822,9 +918,12 @@ def event_match_servicelevel(rule: EventRule, context: EventContext) -> Optional
     return None
 
 
-def add_context_to_environment(plugin_context: EventContext, prefix: str) -> None:
-    for key in plugin_context:
-        os.putenv(prefix + key, plugin_context[key].encode("utf-8"))
+def add_context_to_environment(
+    plugin_context: Union[Mapping[str, str], EventContext], prefix: str
+) -> None:
+    for key, value in plugin_context.items():
+        assert isinstance(value, str)
+        os.putenv(prefix + key, value.encode("utf-8"))
 
 
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters
@@ -834,7 +933,9 @@ def add_context_to_environment(plugin_context: EventContext, prefix: str) -> Non
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
-def add_to_event_context(context: EventContext, prefix: str, param: object) -> None:
+def add_to_event_context(
+    context: Union[EventContext, dict[str, str]], prefix: str, param: object
+) -> None:
     if isinstance(param, (list, tuple)):
         if all(isinstance(p, str) for p in param):
             # TODO: Why on earth do we have these arbitrary differences? Can we unify this?
@@ -852,11 +953,15 @@ def add_to_event_context(context: EventContext, prefix: str, param: object) -> N
                 value = config.get_http_proxy(value).serialize()
             add_to_event_context(context, varname, value)
     elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
-        context[prefix] = str(param)
+        # Dynamically added keys...
+        context[prefix] = str(param)  # type: ignore[misc]
     elif param is None:
-        context[prefix] = ""
+        # Dynamically added keys...
+        context[prefix] = ""  # type: ignore[misc]
     else:
-        context[prefix] = repr(param)  # Should never happen
+        # Should never happen
+        # Dynamically added keys...
+        context[prefix] = repr(param)  # type: ignore[misc]
 
 
 # int() function that return 0 for strings the

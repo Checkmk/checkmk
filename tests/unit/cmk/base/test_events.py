@@ -33,7 +33,7 @@ def test_raw_context_from_string(context: str, expected: EventContext) -> None:
 
 
 def test_add_to_event_context_param_overrides_context() -> None:
-    context: EventContext = {"FOO": "bar", "BAZ": "old"}
+    context = {"FOO": "bar", "BAZ": "old"}
     add_to_event_context(context, "BAZ", "new")
     assert context == {"FOO": "bar", "BAZ": "new"}
 

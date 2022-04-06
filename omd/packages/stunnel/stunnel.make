@@ -26,4 +26,6 @@ $(STUNNEL_INSTALL): $(STUNNEL_BUILD)
 	rmdir $(DESTDIR)$(OMD_ROOT)/var/lib/stunnel
 	rmdir $(DESTDIR)$(OMD_ROOT)/var/lib || true
 	rmdir $(DESTDIR)$(OMD_ROOT)/var || true
+	rm -f $(DESTDIR)/usr/share/bash-completion/completions/stunnel.bash
+	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)/usr/share/bash-completion/completions
 	$(TOUCH) $@

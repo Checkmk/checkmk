@@ -6,7 +6,6 @@
 
 import io
 import json
-import os
 import stat
 from pathlib import Path
 from typing import Mapping
@@ -31,6 +30,16 @@ def deactivate_certificate_validation(mocker: MockerFixture) -> None:
         "agent_receiver.certificates._invalid_certificate_response",
         lambda _h: None,
     )
+
+
+@pytest.fixture(name="symlink_push_host")
+def fixture_symlink_push_host(
+    tmp_path: Path,
+    uuid: UUID,
+) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    (target_dir := tmp_path / "hostname").mkdir()
+    source.symlink_to(target_dir)
 
 
 def test_register_register_with_hostname_host_missing(
@@ -268,16 +277,12 @@ def test_agent_data_pull_host(
     assert response.json() == {"detail": "Host is not a push host"}
 
 
+@pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_invalid_compression(
-    tmp_path: Path,
     client: TestClient,
     uuid: UUID,
     agent_data_headers: Mapping[str, str],
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
-    target_dir = tmp_path / "hostname"
-    os.mkdir(target_dir)
-    source.symlink_to(target_dir)
     response = client.post(
         f"/agent_data/{uuid}",
         headers={
@@ -290,16 +295,12 @@ def test_agent_data_invalid_compression(
     assert response.json() == {"detail": "Unsupported compression algorithm: gzip"}
 
 
+@pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_invalid_data(
-    tmp_path: Path,
     client: TestClient,
     uuid: UUID,
     agent_data_headers: Mapping[str, str],
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
-    target_dir = tmp_path / "hostname"
-    os.mkdir(target_dir)
-    source.symlink_to(target_dir)
     response = client.post(
         f"/agent_data/{uuid}",
         headers=agent_data_headers,
@@ -309,6 +310,7 @@ def test_agent_data_invalid_data(
     assert response.json() == {"detail": "Decompression of agent data failed"}
 
 
+@pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,
@@ -316,11 +318,6 @@ def test_agent_data_success(
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
-    target_dir = tmp_path / "hostname"
-    os.mkdir(target_dir)
-    source.symlink_to(target_dir)
-
     response = client.post(
         f"/agent_data/{uuid}",
         headers=agent_data_headers,
@@ -333,19 +330,14 @@ def test_agent_data_success(
     assert response.status_code == 204
 
 
+@pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_move_error(
-    tmp_path: Path,
     caplog,
     client: TestClient,
     uuid: UUID,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
-    target_dir = tmp_path / "hostname"
-    os.mkdir(target_dir)
-    source.symlink_to(target_dir)
-
     with mock.patch("agent_receiver.server.Path.rename") as move_mock:
         move_mock.side_effect = FileNotFoundError()
         response = client.post(
@@ -358,20 +350,15 @@ def test_agent_data_move_error(
     assert caplog.records[0].message == f"uuid={uuid} Agent data saved"
 
 
+@pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_move_ready(
-    tmp_path: Path,
     client: TestClient,
     uuid: UUID,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
-    Path(constants.REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").touch()
-
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
-    target_dir = tmp_path / "hostname"
-    os.mkdir(target_dir)
-    source.symlink_to(target_dir)
+    (path_ready := constants.REGISTRATION_REQUESTS / "READY").mkdir()
+    (path_ready / f"{uuid}.json").touch()
 
     client.post(
         f"/agent_data/{uuid}",
@@ -379,18 +366,17 @@ def test_agent_data_move_ready(
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
-    registration_request = constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json"
-    assert registration_request.exists()
+    assert (constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json").exists()
 
 
 def test_registration_status_declined(
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    os.mkdir(constants.REGISTRATION_REQUESTS / "DECLINED")
-    with open(constants.REGISTRATION_REQUESTS / "DECLINED" / f"{uuid}.json", "w") as file:
-        registration_request = {"message": "Registration request declined"}
-        json.dump(registration_request, file)
+    (path_declined := constants.REGISTRATION_REQUESTS / "DECLINED").mkdir()
+    (path_declined / f"{uuid}.json").write_text(
+        json.dumps({"message": "Registration request declined"})
+    )
 
     response = client.get(
         f"/registration_status/{uuid}",
@@ -419,18 +405,13 @@ def test_registration_status_host_not_registered(
     assert response.json() == {"detail": "Host is not registered"}
 
 
+@pytest.mark.usefixtures("symlink_push_host")
 def test_registration_status_push_host(
-    tmp_path: Path,
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
-    target_dir = tmp_path / "hostname"
-    os.mkdir(target_dir)
-    source.symlink_to(target_dir)
-
-    os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
-    Path(constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json").touch()
+    (path_discoverable := constants.REGISTRATION_REQUESTS / "DISCOVERABLE").mkdir()
+    (path_discoverable / f"{uuid}.json").touch()
 
     response = client.get(
         f"/registration_status/{uuid}",

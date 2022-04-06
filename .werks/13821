@@ -1,0 +1,12 @@
+Title: Splunk System Message correctly reports service state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649252956
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Splunk System Message service used the last message severity to set the service state.
+Now the state is set according to the highest severity message.

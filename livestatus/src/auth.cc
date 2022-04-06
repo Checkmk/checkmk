@@ -51,7 +51,6 @@ const host *host_for_service(const service *svc) {
     return svc->host_ptr;
 #endif
 }
-}  // namespace
 
 bool is_authorized_for_hst(const contact *ctc, const host *hst) {
     if (ctc == no_auth_user()) {
@@ -144,7 +143,6 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
 #endif
 }
 
-namespace {
 bool is_member_of_contactgroup(const std::string &group,
                                const contact *contact) {
 #ifdef CMC

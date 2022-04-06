@@ -50,19 +50,6 @@ bool is_none(const std::string &str);
 std::vector<std::string> split_list(const std::string &str);
 }  // namespace mk::ec
 
-// NOTE: Although technically not necessary (C functions in Nagios vs. C++
-// functions with mangled names), we avoid name clashes with the Nagios API
-// here to avoid confusion.
-bool is_authorized_for_hst(const contact *ctc, const host *hst);
-bool is_authorized_for_svc(ServiceAuthorization service_auth,
-                           const contact *ctc, const service *svc);
-bool is_authorized_for_host_group(GroupAuthorization group_auth,
-                                  const hostgroup *hg, const contact *ctc);
-bool is_authorized_for_service_group(GroupAuthorization group_auth,
-                                     ServiceAuthorization service_auth,
-                                     const servicegroup *sg,
-                                     const contact *ctc);
-
 class User {
     const contact *auth_user_;
     ServiceAuthorization service_auth_;

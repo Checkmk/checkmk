@@ -51,10 +51,6 @@ std::vector<std::string> split_list(const std::string &str);
 }  // namespace mk::ec
 
 class User {
-    const contact *auth_user_;
-    ServiceAuthorization service_auth_;
-    GroupAuthorization group_auth_;
-
 public:
     User(const contact *auth_user, ServiceAuthorization service_auth,
          GroupAuthorization group_auth);
@@ -71,6 +67,16 @@ public:
 
     // TODO(sp) Nuke this!
     [[nodiscard]] const contact *authUser() const { return auth_user_; }
+
+private:
+    const contact *auth_user_;
+    ServiceAuthorization service_auth_;
+    GroupAuthorization group_auth_;
+
+    [[nodiscard]] bool host_has_contact(const host &hst) const;
+    [[nodiscard]] bool service_has_contact(const service &svc) const;
+    [[nodiscard]] bool is_member_of_contactgroup(
+        const std::string &group) const;
 };
 
 #endif  // auth_h

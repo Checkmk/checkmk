@@ -186,7 +186,7 @@ bool User::is_authorized_for_service_group(const servicegroup &sg) const {
                                              auth_user_);
 }
 
-namespace {
+namespace mk::ec {
 // The funny encoding of an Optional[Iterable[str]] is done in
 // cmk.ec.history.quote_tab().
 
@@ -196,7 +196,7 @@ std::vector<std::string> split_list(const std::string &str) {
     return str.empty() || is_none(str) ? std::vector<std::string>()
                                        : mk::split(str.substr(1), '\001');
 }
-}  // namespace
+}  // namespace mk::ec
 
 bool User::is_authorized_for_event(const std::string &precedence,
                                    const std::string &contact_groups,
@@ -212,12 +212,12 @@ bool User::is_authorized_for_event(const std::string &precedence,
         return is_member_of_contactgroup(group, auth_user_);
     };
     auto is_authorized_via_contactgroups = [is_member, &contact_groups]() {
-        auto groups{split_list(contact_groups)};
+        auto groups{mk::ec::split_list(contact_groups)};
         return std::any_of(groups.begin(), groups.end(), is_member);
     };
 
     if (precedence == "rule") {
-        if (!is_none(contact_groups)) {
+        if (!mk::ec::is_none(contact_groups)) {
             return is_authorized_via_contactgroups();
         }
         if (hst != nullptr) {
@@ -229,7 +229,7 @@ bool User::is_authorized_for_event(const std::string &precedence,
         if (hst != nullptr) {
             return is_authorized_for_host(*hst);
         }
-        if (!is_none(contact_groups)) {
+        if (!mk::ec::is_none(contact_groups)) {
             return is_authorized_via_contactgroups();
         }
         return true;

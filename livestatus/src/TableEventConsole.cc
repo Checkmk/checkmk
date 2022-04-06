@@ -205,25 +205,14 @@ std::unique_ptr<TimeColumn<ECRow>> ECRow::makeTimeColumn(
         });
 }
 
-namespace {
-// The funny encoding of an Optional[Iterable[str]] is done in
-// cmk.ec.history.quote_tab().
-
-bool is_none(const std::string &str) { return str == "\002"; }
-
-std::vector<std::string> split_list(const std::string &str) {
-    return str.empty() || is_none(str) ? std::vector<std::string>()
-                                       : mk::split(str.substr(1), '\001');
-}
-}  // namespace
-
 // static
 std::unique_ptr<ListColumn<ECRow>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
     return std::make_unique<ListColumn<ECRow>>(
-        name, description, offsets,
-        [name](const ECRow &r) { return split_list(r.getString(name)); });
+        name, description, offsets, [name](const ECRow &r) {
+            return mk::ec::split_list(r.getString(name));
+        });
 }
 
 std::string ECRow::getString(const std::string &column_name) const {

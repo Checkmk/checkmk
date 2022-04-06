@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <string>
+#include <vector>
 
 #ifdef CMC
 #include "contact_fwd.h"
@@ -41,6 +42,13 @@ inline contact *no_auth_user() { return nullptr; }
 inline contact *unknown_auth_user() {
     return reinterpret_cast<contact *>(0xdeadbeaf);
 }
+
+namespace mk::ec {
+// The funny encoding of an Optional[Iterable[str]] is done in
+// cmk.ec.history.quote_tab().
+bool is_none(const std::string &str);
+std::vector<std::string> split_list(const std::string &str);
+}  // namespace mk::ec
 
 // NOTE: Although technically not necessary (C functions in Nagios vs. C++
 // functions with mangled names), we avoid name clashes with the Nagios API

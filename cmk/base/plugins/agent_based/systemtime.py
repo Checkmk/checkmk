@@ -18,13 +18,10 @@ def parse_systemtime(string_table: type_defs.StringTable) -> Dict[str, float]:
     >>> parse_systemtime([[]])
     {}
     """
-    parsed = {}
-    for idx, key in enumerate(["foreign_systemtime", "our_systemtime"]):
-        try:
-            parsed[key] = float(string_table[0][idx])
-        except IndexError:
-            return parsed
-    return parsed
+    return {
+        key: float(value)
+        for key, value in zip(["foreign_systemtime", "our_systemtime"], string_table[0])
+    }
 
 
 register.agent_section(

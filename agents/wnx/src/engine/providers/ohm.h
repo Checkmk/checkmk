@@ -34,9 +34,7 @@ constexpr std::wstring_view kResetCommand =
 // openhardwaremonitor:
 class OhmProvider : public Wmi {
 public:
-    OhmProvider(const std::string &Name, char Separator)
-        : Wmi(Name, Separator) {}
-
+    OhmProvider(std::string_view name, char separator) : Wmi(name, separator) {}
     virtual void loadConfig();
 
     virtual void updateSectionStatus();

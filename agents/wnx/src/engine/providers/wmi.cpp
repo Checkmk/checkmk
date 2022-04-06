@@ -16,6 +16,8 @@
 #include "common/cfg_info.h"
 #include "tools/_raii.h"
 
+using namespace std::string_literals;
+
 // controls behavior, we may want in the future,  works with older servers
 // normally always true
 constexpr bool g_add_wmi_status_column = true;
@@ -68,53 +70,55 @@ NamedWmiSources g_section_objects = {
     // start
 
     //
-    {kDotNetClrMemory,  //
-     {kWmiPathStd, L"Win32_PerfRawData_NETFramework_NETCLRMemory"}},
+    {std::string{kDotNetClrMemory},  //
+     {kWmiPathStd.data(), L"Win32_PerfRawData_NETFramework_NETCLRMemory"}},
 
     //
-    {kWmiWebservices,  //
-     {kWmiPathStd, L"Win32_PerfRawData_W3SVC_WebService"}},
+    {std::string{kWmiWebservices},  //
+     {kWmiPathStd.data(), L"Win32_PerfRawData_W3SVC_WebService"}},
 
     //
-    {kOhm,  //
-     {kWmiPathOhm, L"Sensor"}},
+    {std::string{kOhm},  //
+     {kWmiPathOhm.data(), L"Sensor"}},
 
-    {kBadWmi,  // used for a testing or may be used as a template for other WMI
-               // calls
+    {std::string{kBadWmi},  // used for a testing or may be used as a
+                            // template for other WMI
+                            // calls
      {L"Root\\BadWmiPath", L"BadSensor"}},
 
     // WMI CPULOAD group
-    {"system_perf",  //
-     {kWmiPathStd, L"Win32_PerfRawData_PerfOS_System"}},
+    {"system_perf"s,  //
+     {kWmiPathStd.data(), L"Win32_PerfRawData_PerfOS_System"}},
 
-    {"computer_system",  //
-     {kWmiPathStd, L"Win32_ComputerSystem"}},
+    {"computer_system"s,  //
+     {kWmiPathStd.data(), L"Win32_ComputerSystem"}},
 
-    {"msexch_activesync",
-     {kWmiPathStd,
+    {"msexch_activesync"s,
+     {kWmiPathStd.data(),
       L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"}},
 
     // MSEXCHANGE group
-    {"msexch_availability",
-     {kWmiPathStd,
+    {"msexch_availability"s,
+     {kWmiPathStd.data(),
       L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"}},
 
-    {"msexch_owa",  //
-     {kWmiPathStd, L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"}},
+    {"msexch_owa"s,  //
+     {kWmiPathStd.data(), L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"}},
 
-    {"msexch_autodiscovery",
-     {kWmiPathStd,
+    {"msexch_autodiscovery"s,
+     {kWmiPathStd.data(),
       L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"}},
 
-    {"msexch_isclienttype",
-     {kWmiPathStd,
+    {"msexch_isclienttype"s,
+     {kWmiPathStd.data(),
       L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"}},
 
-    {"msexch_isstore",
-     {kWmiPathStd, L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"}},
+    {"msexch_isstore"s,
+     {kWmiPathStd.data(),
+      L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"}},
 
-    {"msexch_rpcclientaccess",
-     {kWmiPathStd,
+    {"msexch_rpcclientaccess"s,
+     {kWmiPathStd.data(),
       L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"}}
 
     // end
@@ -123,23 +127,23 @@ NamedWmiSources g_section_objects = {
 // Columns
 NamedWideStringVector g_section_columns = {
     // start
-    {kOhm,  //
+    {kOhm.data(),  //
      {L"Index", L"Name", L"Parent", L"SensorType", L"Value"}}
     // end
 };
 
 NamedStringVector g_section_subs = {
     // start
-    {kWmiCpuLoad,  //
-     {kSubSectionSystemPerf, kSubSectionComputerSystem}},
-    {kMsExch,                //
-     {kMsExchActiveSync,     //
-      kMsExchAvailability,   //
-      kMsExchOwa,            //
-      kMsExchAutoDiscovery,  //
-      kMsExchIsClientType,   //
-      kMsExchIsStore,        //
-      kMsExchRpcClientAccess}}
+    {std::string{kWmiCpuLoad},  //
+     {kSubSectionSystemPerf.data(), kSubSectionComputerSystem.data()}},
+    {std::string{kMsExch},          //
+     {kMsExchActiveSync.data(),     //
+      kMsExchAvailability.data(),   //
+      kMsExchOwa.data(),            //
+      kMsExchAutoDiscovery.data(),  //
+      kMsExchIsClientType.data(),   //
+      kMsExchIsStore.data(),        //
+      kMsExchRpcClientAccess.data()}}
     // end
 };
 
@@ -197,7 +201,7 @@ void Wmi::setupByName() {
 // #TODO Estimate optimization: do we really need to reconnect to wrapper every
 // time?
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
-    const std::wstring &wmi_namespace, const std::wstring &wmi_object,
+    std::wstring_view wmi_namespace, const std::wstring &wmi_object,
     const std::vector<std::wstring> &columns_table,
     std::wstring_view separator) {
     using wtools::WmiStatus;

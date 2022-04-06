@@ -15,16 +15,12 @@
 #ifndef section_header_h__
 #define section_header_h__
 
-#include <string>       // we are using strings her
-#include <string_view>  // we are using strings her
+#include <string>
+#include <string_view>
 
-#include "logger.h"  // we have logging here
+#include "logger.h"
 
-namespace cma {
-
-namespace section {
-
-// bracketing
+namespace cma::section {
 
 // Usual Section
 constexpr std::string_view kLeftBracket{"<<<"};
@@ -58,12 +54,12 @@ constexpr std::string_view kAgentPlugins{"checkmk_agent_plugins_win:sep(0)"};
 
 constexpr std::string_view kPlugins{"plugins"};  // NOT used in makeHeader
 constexpr std::string_view kLocal{"local"};      // NOT used in makeHeader
-constexpr std::string_view kLocalHeader{"local:sep(0)"};  // Used in makeHeader
+constexpr std::string_view kLocalHeader{"local:sep(0)"};
 
-constexpr std::string_view kMrpe{"mrpe"};                // used in makeHeader
-constexpr std::string_view kOhm{"openhardwaremonitor"};  // used in makeHeader
-constexpr std::string_view kSkype{"skype"};              // used in makeHeader
-constexpr std::string_view kSpool{"spool"};              // used in makeHeader
+constexpr std::string_view kMrpe{"mrpe"};
+constexpr std::string_view kOhm{"openhardwaremonitor"};
+constexpr std::string_view kSkype{"skype"};
+constexpr std::string_view kSpool{"spool"};
 
 constexpr std::string_view kLogWatchEventName{"logwatch"};
 
@@ -79,121 +75,49 @@ constexpr std::wstring_view kPipeSeparatorString = L"|";
 constexpr char kCommaSeparator = ',';
 constexpr std::wstring_view kCommaSeparatorString = L",";
 
-// gtest[+]
 // Build standard header with optional Separator
-// <<<sectionname>>>\n or
-// <<<sectionname:sep(9)>>>\n
-inline std::string MakeHeader(std::string_view name, char separator) noexcept {
-    using namespace cma::section;
-    std::string s;
-    s.reserve(32);  // reasonable
+// <<<section_name>>>\n or
+// <<<section_name:sep(9)>>>\n
+std::string MakeHeader(std::string_view name, char separator) noexcept;
+std::string MakeHeader(std::string_view name) noexcept;
 
-    s = kLeftBracket;
-    if (name.empty()) {
-        XLOG::l.crit(XLOG_FUNC + " supplied empty string to header");
-        s += "nothing";
-    } else
-        s += name;
+// [sub_section_name]
+std::string MakeSubSectionHeader(std::string_view name) noexcept;
+std::string MakeEmptyHeader();
 
-    // separator part
-    if (separator) {
-        s += kLeftSeparator;
-        s += std::to_string(separator);
-        s += kRightSeparator;
-    }
+std::string MakeLocalHeader();
 
-    s += kRightBracket;
-    s += '\n';
+}  // namespace cma::section
 
-    return s;
-}
-
-inline std::string MakeHeader(std::string_view name) noexcept {
-    return MakeHeader(name, '\0');
-}
-
-// gtest[+]
-// [subsectionname]
-inline std::string MakeSubSectionHeader(std::string_view name) noexcept {
-    using namespace cma::section;
-    std::string s;
-    s.reserve(32);  // reasonable
-
-    s = kLeftSubSectionBracket;
-    if (name.empty()) {
-        XLOG::l.crit(XLOG_FUNC + " supplied empty string to subheader");
-        s += "nothing";
-    } else
-        s += name;
-
-    s += kRightSubSectionBracket;
-    s += '\n';
-
-    return s;
-}
-
-inline std::string MakeEmptyHeader() {
-    using namespace cma::section;
-    std::string s;
-    s.reserve(32);  // reasonable
-
-    s = kLeftBracket;
-    s += kRightBracket;
-    s += '\n';
-
-    return s;
-}
-
-inline std::string MakeLocalHeader() {
-    using namespace cma::section;
-    std::string s;
-    s.reserve(32);  // reasonable
-
-    s = kLeftBracket;
-    s += kLocalHeader;
-    s += kRightBracket;
-    s += '\n';
-
-    return s;
-}
-
-}  // namespace section
-
-// # TODO move to section namespace
-namespace provider {  // WMI Sections
-
-// #TODO replace raw ACIIZ with string_view or string
-// const char*  used to have compatibilitz with low level WMI API
-// and weak design. This is to be fixed in the future.
+namespace cma::provider {
 
 // Special Section
-constexpr const char *kOhm = "openhardwaremonitor";
+constexpr std::string_view kOhm = "openhardwaremonitor";
 
 // Sections
-constexpr const char *kDotNetClrMemory = "dotnet_clrmemory";
-constexpr const char *kWmiWebservices = "wmi_webservices";
-constexpr const char *kWmiCpuLoad = "wmi_cpuload";
+constexpr std::string_view kDotNetClrMemory = "dotnet_clrmemory";
+constexpr std::string_view kWmiWebservices = "wmi_webservices";
+constexpr std::string_view kWmiCpuLoad = "wmi_cpuload";
 
-constexpr const char *kMsExch = "msexch";
+constexpr std::string_view kMsExch = "msexch";
 
-constexpr const char *kMsExchActiveSync = "msexch_activesync";
-constexpr const char *kMsExchAvailability = "msexch_availability";
-constexpr const char *kMsExchOwa = "msexch_owa";
-constexpr const char *kMsExchAutoDiscovery = "msexch_autodiscovery";
-constexpr const char *kMsExchIsClientType = "msexch_isclienttype";
-constexpr const char *kMsExchIsStore = "msexch_isstore";
-constexpr const char *kMsExchRpcClientAccess = "msexch_rpcclientaccess";
+constexpr std::string_view kMsExchActiveSync = "msexch_activesync";
+constexpr std::string_view kMsExchAvailability = "msexch_availability";
+constexpr std::string_view kMsExchOwa = "msexch_owa";
+constexpr std::string_view kMsExchAutoDiscovery = "msexch_autodiscovery";
+constexpr std::string_view kMsExchIsClientType = "msexch_isclienttype";
+constexpr std::string_view kMsExchIsStore = "msexch_isstore";
+constexpr std::string_view kMsExchRpcClientAccess = "msexch_rpcclientaccess";
 
-constexpr const char *kBadWmi = "bad_wmi";
+constexpr std::string_view kBadWmi = "bad_wmi";
 
-constexpr const char *kSubSectionSystemPerf = "system_perf";
-constexpr const char *kSubSectionComputerSystem = "computer_system";
-constexpr const char *kAgentPlugins = "agent_plugins";
+constexpr std::string_view kSubSectionSystemPerf = "system_perf";
+constexpr std::string_view kSubSectionComputerSystem = "computer_system";
+constexpr std::string_view kAgentPlugins = "agent_plugins";
 
 // Path
-constexpr const wchar_t *kWmiPathOhm = L"Root\\OpenHardwareMonitor";
-constexpr const wchar_t *kWmiPathStd = L"Root\\Cimv2";
+constexpr const std::wstring_view kWmiPathOhm = L"Root\\OpenHardwareMonitor";
+constexpr const std::wstring_view kWmiPathStd = L"Root\\Cimv2";
 
-}  // namespace provider
-}  // namespace cma
+}  // namespace cma::provider
 #endif  // section_header_h__

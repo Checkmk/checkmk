@@ -98,7 +98,7 @@ public:
     SectionProvider() { provider_uniq_name_ = engine_.getUniqName(); }
 
     // with engine init
-    SectionProvider(const std::string &uniq_name,  // id for the provider
+    SectionProvider(std::string_view uniq_name,  // id for the provider
                     char separator)
         : engine_(uniq_name, separator) {
         provider_uniq_name_ = engine_.getUniqName();

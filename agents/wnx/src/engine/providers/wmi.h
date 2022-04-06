@@ -88,8 +88,7 @@ bool IsHeaderless(std::string_view name) noexcept;
 
 class Wmi : public Asynchronous {
 public:
-    Wmi(const std::string &name, char separator)
-        : Asynchronous(name, separator) {
+    Wmi(std::string_view name, char separator) : Asynchronous(name, separator) {
         setupByName();
     }
 
@@ -127,8 +126,9 @@ private:
 
 // this is proposed API
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
-    const std::wstring &NameSpace, const std::wstring &Object,
-    const std::vector<std::wstring> &Columns, std::wstring_view separator);
+    std::wstring_view wmi_namespace, const std::wstring &wmi_object,
+    const std::vector<std::wstring> &columns_table,
+    std::wstring_view separator);
 
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator);

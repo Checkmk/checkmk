@@ -933,7 +933,7 @@ public:
 
     virtual ~WmiWrapper() { close(); }
     bool open() noexcept;
-    bool connect(const std::wstring &NameSpace) noexcept;
+    bool connect(std::wstring_view name_space) noexcept;
     // This is OPTIONAL feature, LWA doesn't use it
     bool impersonate() noexcept;
     // on error returns empty string and timeout status

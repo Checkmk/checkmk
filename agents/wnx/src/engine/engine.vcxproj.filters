@@ -497,6 +497,9 @@
     <ClCompile Include="providers\agent_plugins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="section_header.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="unpack_packs.cmd">

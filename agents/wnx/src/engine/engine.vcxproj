@@ -557,6 +557,7 @@ cd $(ProjectDir)</Command>
     <ClCompile Include="providers\system_time.cpp" />
     <ClCompile Include="providers\wmi.cpp" />
     <ClCompile Include="realtime.cpp" />
+    <ClCompile Include="section_header.cpp" />
     <ClCompile Include="service_processor.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

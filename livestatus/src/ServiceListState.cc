@@ -5,6 +5,9 @@
 
 #include "ServiceListState.h"
 
+#include "MonitoringCore.h"
+#include "auth.h"
+
 #ifdef CMC
 #include "Service.h"
 #include "State.h"
@@ -12,18 +15,18 @@
 
 int32_t ServiceListState::operator()(const value_type &svcs,
                                      const contact *auth_user) const {
-    return getValueFromServices(_get_service_auth(), _logictype, svcs,
-                                auth_user);
+    User user{auth_user, mc_->serviceAuthorization(),
+              mc_->groupAuthorization()};
+    return getValueFromServices(user, _logictype, svcs);
 }
 
 // static
-int32_t ServiceListState::getValueFromServices(
-    ServiceAuthorization service_auth, Type logictype, const value_type &svcs,
-    const contact *auth_user) {
+int32_t ServiceListState::getValueFromServices(const User &user, Type logictype,
+                                               const value_type &svcs) {
     int32_t result = 0;
 #ifdef CMC
     for (const auto &svc : svcs) {
-        if (is_authorized_for_svc(service_auth, auth_user, svc)) {
+        if (user.is_authorized_for_service(*svc)) {
             const auto *state = svc->state();
             update(logictype, static_cast<ServiceState>(state->current_state_),
                    static_cast<ServiceState>(state->hard_state_.last_),
@@ -33,7 +36,7 @@ int32_t ServiceListState::getValueFromServices(
 #else
     for (servicesmember *mem = svcs; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
-        if (is_authorized_for_svc(service_auth, auth_user, svc)) {
+        if (user.is_authorized_for_service(*svc)) {
             update(logictype, static_cast<ServiceState>(svc->current_state),
                    static_cast<ServiceState>(svc->last_hard_state),
                    svc->has_been_checked != 0,

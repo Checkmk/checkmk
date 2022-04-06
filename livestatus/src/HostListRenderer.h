@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "ListColumn.h"
+#include "MonitoringCore.h"
 #include "auth.h"
 #include "contact_fwd.h"
 
@@ -44,11 +45,15 @@ class HostListGetter {
     using relatives_t = std::function<std::unordered_set<Host *>(const T &)>;
 
 public:
-    explicit HostListGetter(relatives_t f) : relatives_{std::move(f)} {}
+    HostListGetter(MonitoringCore *mc, relatives_t f)
+        : mc_{mc}, relatives_{std::move(f)} {}
+
     std::vector<Entry> operator()(const T &t, const contact *auth_user) const {
+        User user{auth_user, mc_->serviceAuthorization(),
+                  mc_->groupAuthorization()};
         std::vector<Entry> entries{};
         for (const auto &hst : relatives_(t)) {
-            if (is_authorized_for_hst(auth_user, hst)) {
+            if (user.is_authorized_for_host(*hst)) {
                 entries.emplace_back(
                     hst->name(),
                     static_cast<HostState>(hst->state()->current_state_),
@@ -62,13 +67,17 @@ public:
     using relatives_t = std::function<hostsmember *(const T &)>;
 
 public:
-    explicit HostListGetter(relatives_t f) : relatives_{std::move(f)} {}
+    HostListGetter(MonitoringCore *mc, relatives_t f)
+        : mc_{mc}, relatives_{std::move(f)} {}
+
     std::vector<Entry> operator()(const T &t, const contact *auth_user) const {
+        User user{auth_user, mc_->serviceAuthorization(),
+                  mc_->groupAuthorization()};
         std::vector<Entry> entries{};
         for (const hostsmember *mem = relatives_(t); mem != nullptr;
              mem = mem->next) {
             host *hst = mem->host_ptr;
-            if (is_authorized_for_hst(auth_user, hst)) {
+            if (user.is_authorized_for_host(*hst)) {
                 entries.emplace_back(hst->name,
                                      static_cast<HostState>(hst->current_state),
                                      hst->has_been_checked != 0);
@@ -79,6 +88,7 @@ public:
 
 #endif
 private:
+    MonitoringCore *mc_;
     relatives_t relatives_;
 };
 }  // namespace column::host_list

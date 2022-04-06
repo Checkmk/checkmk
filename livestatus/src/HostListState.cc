@@ -5,6 +5,9 @@
 
 #include "HostListState.h"
 
+#include "MonitoringCore.h"
+#include "auth.h"
+
 #ifdef CMC
 #include <memory>
 
@@ -14,10 +17,12 @@
 
 int32_t HostListState::operator()(const value_type &hsts,
                                   const contact *auth_user) const {
+    User user{auth_user, mc_->serviceAuthorization(),
+              mc_->groupAuthorization()};
     int32_t result = 0;
 #ifdef CMC
     for (const auto *hst : hsts) {
-        if (is_authorized_for_hst(auth_user, hst)) {
+        if (user.is_authorized_for_host(*hst)) {
             const auto *state = hst->state();
             auto svcs = ServiceListState::value_type(hst->_services.size());
             for (const auto &s : hst->_services) {
@@ -30,7 +35,7 @@ int32_t HostListState::operator()(const value_type &hsts,
 #else
     for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
-        if (is_authorized_for_hst(auth_user, hst)) {
+        if (user.is_authorized_for_host(*hst)) {
             update(auth_user, static_cast<HostState>(hst->current_state),
                    hst->has_been_checked != 0, hst->services,
                    hst->problem_has_been_acknowledged != 0 ||
@@ -46,6 +51,8 @@ void HostListState::update(const contact *auth_user, HostState current_state,
                            bool has_been_checked,
                            const ServiceListState::value_type &services,
                            bool handled, int32_t &result) const {
+    User user{auth_user, mc_->serviceAuthorization(),
+              mc_->groupAuthorization()};
     switch (_logictype) {
         case Type::num_hst:
             result++;
@@ -88,50 +95,39 @@ void HostListState::update(const contact *auth_user, HostState current_state,
             break;
         case Type::num_svc:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num, services,
-                auth_user);
+                user, ServiceListState::Type::num, services);
             break;
         case Type::num_svc_pending:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_pending,
-                services, auth_user);
+                user, ServiceListState::Type::num_pending, services);
             break;
         case Type::num_svc_handled_problems:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(),
-                ServiceListState::Type::num_handled_problems, services,
-                auth_user);
+                user, ServiceListState::Type::num_handled_problems, services);
             break;
         case Type::num_svc_unhandled_problems:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(),
-                ServiceListState::Type::num_unhandled_problems, services,
-                auth_user);
+                user, ServiceListState::Type::num_unhandled_problems, services);
             break;
         case Type::num_svc_ok:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_ok, services,
-                auth_user);
+                user, ServiceListState::Type::num_ok, services);
             break;
         case Type::num_svc_warn:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_warn, services,
-                auth_user);
+                user, ServiceListState::Type::num_warn, services);
             break;
         case Type::num_svc_crit:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_crit, services,
-                auth_user);
+                user, ServiceListState::Type::num_crit, services);
             break;
         case Type::num_svc_unknown:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_unknown,
-                services, auth_user);
+                user, ServiceListState::Type::num_unknown, services);
             break;
         case Type::worst_svc_state: {
             auto state = ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::worst_state,
-                services, auth_user);
+                user, ServiceListState::Type::worst_state, services);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {
                 result = state;
@@ -140,28 +136,23 @@ void HostListState::update(const contact *auth_user, HostState current_state,
         }
         case Type::num_svc_hard_ok:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_hard_ok,
-                services, auth_user);
+                user, ServiceListState::Type::num_hard_ok, services);
             break;
         case Type::num_svc_hard_warn:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_hard_warn,
-                services, auth_user);
+                user, ServiceListState::Type::num_hard_warn, services);
             break;
         case Type::num_svc_hard_crit:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_hard_crit,
-                services, auth_user);
+                user, ServiceListState::Type::num_hard_crit, services);
             break;
         case Type::num_svc_hard_unknown:
             result += ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::num_hard_unknown,
-                services, auth_user);
+                user, ServiceListState::Type::num_hard_unknown, services);
             break;
         case Type::worst_svc_hard_state: {
             auto state = ServiceListState::getValueFromServices(
-                _get_service_auth(), ServiceListState::Type::worst_hard_state,
-                services, auth_user);
+                user, ServiceListState::Type::worst_hard_state, services);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {
                 result = state;

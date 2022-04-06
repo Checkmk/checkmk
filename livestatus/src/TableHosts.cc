@@ -630,7 +630,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             std::make_unique<HostListRenderer>(
                 HostListRenderer::verbosity::none),
             column::host_list::HostListGetter<host>{
-                [](const host &r) { return r.parent_hosts; }}));
+                mc, [](const host &r) { return r.parent_hosts; }}));
     table->addColumn(
         std::make_unique<ListColumn<host, column::host_list::Entry>>(
             prefix + "childs", "A list of all direct children of the host",
@@ -638,87 +638,72 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             std::make_unique<HostListRenderer>(
                 HostListRenderer::verbosity::none),
             column::host_list::HostListGetter<host>{
-                [](const host &r) { return r.child_hosts; }}));
+                mc, [](const host &r) { return r.child_hosts; }}));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<
                                 ListColumn<host, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         mc, offsets));
 
-    auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services", "The total number of services of the host",
-        offsets,
-        ServiceListState{get_service_auth, ServiceListState::Type::num}));
+        offsets, ServiceListState{mc, ServiceListState::Type::num}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
-        offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::worst_state}));
+        offsets, ServiceListState{mc, ServiceListState::Type::worst_state}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK", offsets,
-        ServiceListState{get_service_auth, ServiceListState::Type::num_ok}));
+        ServiceListState{mc, ServiceListState::Type::num_ok}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN", offsets,
-        ServiceListState{get_service_auth, ServiceListState::Type::num_warn}));
+        ServiceListState{mc, ServiceListState::Type::num_warn}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT", offsets,
-        ServiceListState{get_service_auth, ServiceListState::Type::num_crit}));
+        ServiceListState{mc, ServiceListState::Type::num_crit}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
-        offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_unknown}));
+        offsets, ServiceListState{mc, ServiceListState::Type::num_unknown}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet (pending)",
-        offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_pending}));
+        offsets, ServiceListState{mc, ServiceListState::Type::num_pending}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_handled_problems",
         "The number of the host's services which have handled problems",
         offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_handled_problems}));
+        ServiceListState{mc, ServiceListState::Type::num_handled_problems}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_unhandled_problems",
         "The number of the host's services which have unhandled problems",
         offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_unhandled_problems}));
+        ServiceListState{mc, ServiceListState::Type::num_unhandled_problems}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::worst_hard_state}));
+        ServiceListState{mc, ServiceListState::Type::worst_hard_state}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK", offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_hard_ok}));
+        ServiceListState{mc, ServiceListState::Type::num_hard_ok}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN", offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_hard_warn}));
+        ServiceListState{mc, ServiceListState::Type::num_hard_warn}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT", offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_hard_crit}));
+        ServiceListState{mc, ServiceListState::Type::num_hard_crit}));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
         offsets,
-        ServiceListState{get_service_auth,
-                         ServiceListState::Type::num_hard_unknown}));
+        ServiceListState{mc, ServiceListState::Type::num_hard_unknown}));
 
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "hard_state", "The effective hard state of this object",

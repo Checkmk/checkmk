@@ -1,0 +1,14 @@
+Title: KUBE agent_kube: fix namespace filtering options for DaemonSets & StatefulSets
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649246186
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Previously, the namespace filtering option in the Kubernetes Datasource
+Programs rule failed to filter out DaemonSets and StatefulSets with
+matching namespaces. This werk fixes this issue.

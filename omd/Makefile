@@ -45,7 +45,6 @@ PACKAGES := \
     monitoring-plugins \
     nagvis \
     nrpe \
-    nsca \
     omd \
     openhardwaremonitor \
     navicli \

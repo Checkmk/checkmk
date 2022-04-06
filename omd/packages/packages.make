@@ -136,7 +136,6 @@ include \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
     packages/nrpe/nrpe.make \
-    packages/nsca/nsca.make \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \

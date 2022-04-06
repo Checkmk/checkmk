@@ -30,7 +30,6 @@ packages round about Nagios:
   * monitoring-plugins
   * Checkmk
   * Livestatus
-  * NSCA
   * check_nrpe
   * others...
 

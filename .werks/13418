@@ -1,0 +1,12 @@
+Title: KUBE: add cmk/kubernetes:yes label
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649245577
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b5
+
+From now on we assign the label <tt>cmk/kubernetes:yes</tt> to all Kubernetes
+related hosts representing Kubernetes objects.

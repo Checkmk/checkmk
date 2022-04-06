@@ -21,6 +21,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/docker_object:node",
     "cmk/kubernetes_object:endpoint",
     "cmk/kubernetes:yes",
+    "cmk/kubernetes",
     "cmk/kubernetes/deployment",
     "cmk/kubernetes/daemonset",
     "cmk/kubernetes/namespace",

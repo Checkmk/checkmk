@@ -7962,7 +7962,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings<a>."
+"the <a href=\"%s\">subscription settings</a>."
 msgstr ""
 "<br>Bitte die Details zu der Subskription in den <a href=\"%s"
 "\">Subskriptionseinstellungen<a> hinzufügen."
@@ -8123,7 +8123,7 @@ msgstr "Historische Daten vom Nagios Core können nicht abgerufen werden"
 msgid ""
 "Cannot submit license usage report to the Checkmk license server '%s'."
 "<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
+"<a href=\"%s\">subscription settings</a>."
 msgstr ""
 "<br>Bitte die Anmeldedaten im 'Customer Portal' und Details zu der "
 "Subskription in den <a href=\"%s\">Subskriptionseinstellungen<a> hinzufügen."
@@ -8860,6 +8860,10 @@ msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmk Agent Netzwerk-Service (Linux)"
 
 #, fuzzy
+msgid "Checkmk agent network service (Solaris)"
+msgstr "Checkmk Agent Netzwerk-Service (Linux)"
+
+#, fuzzy
 msgid "Checkmk agent plugins"
 msgstr "Checkmk Agent"
 
@@ -9560,6 +9564,10 @@ msgstr "Diesen Planeintrag duplizieren"
 
 msgid "Clone topic"
 msgstr "Thema klonen"
+
+#, fuzzy
+msgid "Clone view"
+msgstr "Neue Ansicht"
 
 #, python-format
 msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
@@ -12435,6 +12443,10 @@ msgstr ""
 msgid "DaemonSets"
 msgstr "DaemonSets"
 
+#, fuzzy
+msgid "Daemonset"
+msgstr "DaemonSets"
+
 msgid "Daily"
 msgstr "Täglich"
 
@@ -13754,6 +13766,10 @@ msgstr "Die plesk Plugins ausrollen"
 #, fuzzy
 msgid "Deploy without authentication."
 msgstr "Passwortauthentifizierung erlauben"
+
+#, fuzzy
+msgid "Deployment"
+msgstr "Deployments"
 
 #, python-format
 msgid ""
@@ -18201,7 +18217,7 @@ msgstr "Fehler beim Starten des Jobs: %s"
 msgid ""
 "Failed to submit the license usage report to the Checkmk license server "
 "'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal<a>. If this also does not work, "
+"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
 "please open a support ticket or send an email to sales@tribe29.com."
 msgstr ""
 "Fehler, der Lizenzbericht konnte nicht an den Checkmk Lizenzserver "
@@ -19640,6 +19656,12 @@ msgstr "Objekte"
 #, fuzzy
 msgid "GCP/GCS Requests"
 msgstr "POST-Anfragen"
+
+msgid "GCP/Memorystore redis CPU"
+msgstr ""
+
+msgid "GCP/Memorystore redis memory"
+msgstr ""
 
 msgid "GET/POST variables of this page"
 msgstr "GET/POST-Variablen auf dieser Seite"
@@ -22029,6 +22051,10 @@ msgstr "Host-Alias"
 msgid "Hostname"
 msgstr "Hostname"
 
+#, fuzzy
+msgid "Hostname / IP address"
+msgstr "Hostname/IP Adresse"
+
 msgid "Hostname / IP address of Graphite server"
 msgstr "Hostname / IP-Adresse des Graphite-Servers"
 
@@ -22177,9 +22203,6 @@ msgstr "Hosts in Verzeichnis: %s"
 
 msgid "Hosts in this folder"
 msgstr "Hosts in diesem Ordner"
-
-msgid "Hosts name / IP address"
-msgstr "Hostname/IP Adresse"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hosts, die kein inline-SNMP verwenden"
@@ -25056,6 +25079,10 @@ msgstr ""
 msgid "Install Python runtime environment"
 msgstr "Python-Laufzeitumgebung installieren"
 
+#, fuzzy
+msgid "Install and activate inetd service"
+msgstr "Installieren und aktivieren des xinetd-Service"
+
 msgid "Install and activate systemd service"
 msgstr "Systemd-Service installieren und aktivieren"
 
@@ -25660,6 +25687,10 @@ msgstr "Ungültiger Wert in Spalte %d (%s) der Zeile %d: %s"
 msgid "Invalid value, must be '%r' but is '%r'"
 msgstr "Ungültiger Wert: muss '%r' sein, ist aber '%r'"
 
+#, fuzzy, python-format
+msgid "Invalid value: %s"
+msgstr "Ungültiger Schlüssel: %s"
+
 msgid "Invalid vertical range: from must be lower than to"
 msgstr ""
 "Ungültiger vertikaler Bereich: die untere Schwelle muss unter der oberen "
@@ -25707,6 +25738,9 @@ msgstr "Inventur-Geschichte von Host"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventur der Linux-Kernel-Konfiguration (sysctl)"
+
+msgid "Inventory of all deployed agent plugins and their versions"
+msgstr ""
 
 msgid "Inventory of host"
 msgstr "Hostinventar"
@@ -26201,6 +26235,22 @@ msgstr "Kubernetes Resourcen"
 msgid "Kubernetes CPU resource utilization"
 msgstr "Kubernetes Resourcen"
 
+#, fuzzy
+msgid "Kubernetes Cluster"
+msgstr "Kubernetes Rollen"
+
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Kubernetes Port"
+
+#, fuzzy
+msgid "Kubernetes Deployment"
+msgstr "Bedingungen anwenden"
+
+#, fuzzy
+msgid "Kubernetes Namespace"
+msgstr "Kubernetes Resourcen"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr "Kubernetes Namespaced Pods Dateisystemnutzung"
 
@@ -26213,8 +26263,28 @@ msgstr "Kubernetes Namespaced Pods Speichernutzung"
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Netzwerkschnittstellen"
 
+#, fuzzy
+msgid "Kubernetes Node"
+msgstr "Kubernetes-Knoten"
+
 msgid "Kubernetes Port"
 msgstr "Kubernetes Port"
+
+#, fuzzy
+msgid "Kubernetes Statefulset"
+msgstr "Kubernetes Port"
+
+#, fuzzy
+msgid "Kubernetes cluster"
+msgstr "Kubernetes Rollen"
+
+#, fuzzy
+msgid "Kubernetes daemonset"
+msgstr "Anzahl der Kubernetes-Knoten"
+
+#, fuzzy
+msgid "Kubernetes deployment"
+msgstr "Bedingungen anwenden"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -26223,6 +26293,14 @@ msgstr "Bedingungen anwenden"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetes Resourcen"
+
+#, fuzzy
+msgid "Kubernetes namespace"
+msgstr "Kubernetes-Knoten"
+
+#, fuzzy
+msgid "Kubernetes node"
+msgstr "Kubernetes-Knoten"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -26263,6 +26341,10 @@ msgstr "Kubernetes Resourcen"
 
 msgid "Kubernetes roles"
 msgstr "Kubernetes Rollen"
+
+#, fuzzy
+msgid "Kubernetes statefulset"
+msgstr "Kubernetes Port"
 
 msgid "L2 cache hit ratio"
 msgstr "L2-Cache-Hitrate"
@@ -26492,6 +26574,10 @@ msgstr "Letztes Back-Ergebnis"
 msgid "Last day of last month"
 msgstr "Letzter Tag im Monat"
 
+#, fuzzy
+msgid "Last error log"
+msgstr "Letzter Fehler"
+
 msgid "Last exception"
 msgstr "Letzte Ausnahme"
 
@@ -26509,6 +26595,10 @@ msgstr "Letzten bekannten Details"
 
 msgid "Last known summary"
 msgstr "Letzte bekannte Zusammenfassung"
+
+#, fuzzy
+msgid "Last log"
+msgstr "Letzter Download"
 
 msgid "Last month"
 msgstr "Letzter Monat"
@@ -29753,6 +29843,10 @@ msgstr "Speicherauslastung"
 msgid "Memory warning at"
 msgstr "speicherwarnung ab"
 
+#, fuzzy
+msgid "Memorystore Redis"
+msgstr "Speicherresourcen"
+
 msgid "Merge even if there is an acknowledged event"
 msgstr "Verbinde selbst wenn es ein quittiertes Ereignis gibt"
 
@@ -30078,6 +30172,13 @@ msgstr "Monitoringstatus, falls VM-Status OffCritical ist"
 
 msgid "Miscellaneous"
 msgstr "Sonstiges"
+
+msgid "Misscheduled duration (DaemonSet only)"
+msgstr ""
+
+#, fuzzy
+msgid "Misscheduled replicas"
+msgstr "Geplante Berichte"
 
 msgid "Missing Prerequisite"
 msgstr "Fehlende Voraussetzung"
@@ -31184,6 +31285,9 @@ msgstr ""
 "Namen der IPMI-Sensoren, die bei der Zusammenfassung ignoriert werden "
 "sollen. Das hier angegebene Muster muss exakt mit dem Anfang des "
 "Sensornamens übereinstimmen (Groß-/Kleinschreibung beachten)."
+
+msgid "Namespace"
+msgstr "Namensraum"
 
 msgid "Namespace prefix for hosts"
 msgstr "Namespace-Präfix für Hosts"
@@ -34032,6 +34136,10 @@ msgstr "Andere Schlüsselwörter für diese Regel: %s"
 
 msgid "Other latency"
 msgstr "Andere Latenz"
+
+#, fuzzy
+msgid "Other logs for this service"
+msgstr "Parameter für diesen Service"
 
 msgid "Other operating systems"
 msgstr "Andere Betriebssysteme"
@@ -38781,21 +38889,19 @@ msgstr "Rittal CMC-III Units: Strom"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III Units: Temperaturen"
 
-#, fuzzy
-msgid "RobotMK report"
-msgstr "Bericht abschicken"
-
-#, fuzzy
-msgid "RobotMK reports"
+#, fuzzy, python-format
+msgid "Robot Framework: %s"
 msgstr "Globale Berichte"
 
-#, fuzzy
-msgid "Robotmk report"
-msgstr "Bericht abschicken"
+msgid "Robot Framework: Last error log"
+msgstr ""
+
+msgid "Robot Framework: Last log"
+msgstr ""
 
 #, fuzzy
-msgid "Robotmk report of this service"
-msgstr "Bericht als dieser Benutzer erzeugen"
+msgid "RobotMK logs"
+msgstr "Globale Berichte"
 
 msgid "Role"
 msgstr "Rolle"
@@ -40075,9 +40181,6 @@ msgstr "Gerätetyp auswählen"
 msgid "Select file"
 msgstr "Datei auswählen"
 
-msgid "Select graph"
-msgstr "Graph auswählen"
-
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrance and reset this counter as "
@@ -40096,9 +40199,6 @@ msgstr "Wähle individuelle Dateien aus Liste"
 
 msgid "Select interface port type"
 msgstr "Schnittstellentypen auswählen"
-
-msgid "Select metric"
-msgstr "Wähle Metrik"
 
 #, fuzzy
 msgid "Select metrics to send to InfluxDB"
@@ -44080,6 +44180,10 @@ msgstr "StatefulSets"
 msgid "StatefulSets"
 msgstr "StatefulSets"
 
+#, fuzzy
+msgid "Statefulset"
+msgstr "StatefulSets"
+
 msgid "Statement"
 msgstr "Statement"
 
@@ -44369,7 +44473,8 @@ msgstr "Lokal speichern"
 msgid "Store notifications for rule analysis"
 msgstr "Alarme für Regelanalyse speichern"
 
-msgid "Store output value into RRD database"
+#, fuzzy
+msgid "Store output value into RRD database in a metric with this name."
 msgstr "Ausgabe in RRD-Datenbank speichern"
 
 msgid "Store size"
@@ -44880,6 +44985,10 @@ msgstr "Systeminformationen für Inventur via dmidecode (Windows)"
 
 msgid "System MIBs"
 msgstr "System-MIBs"
+
+#, fuzzy
+msgid "System Memory utilitzation"
+msgstr "Speicherauslastung"
 
 msgid "System Number"
 msgstr "Systemnummer"
@@ -45681,6 +45790,29 @@ msgid ""
 "Please note: The configured/determined service configuration will only get "
 "activated if the super server is compatible to a possibly configured IP "
 "restriction ruleset. See ruleset \"%s\"."
+msgstr ""
+"Der Checkmk-Agent lauscht auf Linux-Systemen nicht selbstständig auf "
+"eingehende Netzwerkverbindungen. Standardmäßig greift er auf sogenannte "
+"Superserver zurück, die im Netzwerk lauschen und eingehende Anfragen an "
+"Anwendungen wie den Checkmk-Agenten weiterleiten. Gebackene Agentenpakete "
+"kommen mit Service-Konfigurationen für systemd und xinetd, wobei systemd "
+"bevorzugt wird. Wenn Sie einen bestimmten Superserver auswählen möchten, "
+"können Sie diese Regel konfigurieren. Optional können Sie die Service-"
+"Installation komplett deaktivieren, z. B. wenn Sie sich über SSH mit dem "
+"Agenten verbinden.\n"
+"Bitte beachten Sie: Die konfigurierte/bestimmte Service-Konfiguration wird "
+"nur aktiviert, wenn der Superserver mit einem eventuell konfigurierten IP-"
+"Beschränkungsregelsatz kompatibel ist. Siehe Regelsatz \"%s\"."
+
+#, fuzzy
+msgid ""
+"The Checkmk agent does not listen on its own for incoming network "
+"connections. By default it makes use of so called super servers, which are "
+"listening on the network and dispatch incoming requests to applications like "
+"the Checkmk agent. Baked agent packages for Solaris come with an "
+"installation script for an inetd service. With this rule, you can optionally "
+"disable the service installation , e.g., if you connect to the agent via "
+"SSH.\n"
 msgstr ""
 "Der Checkmk-Agent lauscht auf Linux-Systemen nicht selbstständig auf "
 "eingehende Netzwerkverbindungen. Standardmäßig greift er auf sogenannte "
@@ -49169,11 +49301,12 @@ msgstr ""
 "des Zeitraums. Die Anmeldedaten für das Kundenportal finden Sie in Ihrem "
 "Subkriptionsvertrag."
 
+#, fuzzy
 msgid ""
 "The subscription details include period start date, end date and sizing. The "
 "customer portal credentials can be found in your subscription contract. "
 "These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk<a>."
+"checkmk.de/download\">Checkmk</a>."
 msgstr ""
 "Die Subkriptionsdetails umfassen das Startdatum, das Enddatum und die Größe "
 "des Zeitraums. Die Anmeldedaten für das Kundenportal finden Sie in Ihrem "
@@ -50118,10 +50251,6 @@ msgstr ""
 "Diese ID wird als eindeutige Kennung verwendet. Sie kann später nicht mehr "
 "geändert werden."
 
-#, fuzzy
-msgid "This RobotMK report"
-msgstr "Dieser Crashbericht"
-
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "Dieser Regelsatz definiert Schwellwerte für Feuchtigkeitssensoren"
 
@@ -50958,6 +51087,10 @@ msgstr ""
 "sie momentan parst. Falls Zeilen nicht korrekt getrennt werden oder die "
 "Titelzeile nicht als Titelzeile der Tabelle gezeigt wird, können Sie die "
 "Importeinstellungen anpassen und es erneut versuchen."
+
+#, fuzzy
+msgid "This log"
+msgstr "Diese Logdatei"
 
 msgid "This log file"
 msgstr "Diese Logdatei"
@@ -60399,6 +60532,10 @@ msgstr "Sie dürfen %s nicht bearbeiten."
 msgid "You are not allowed to edit dashboards."
 msgstr "Sie dürfen Übersichten nicht bearbeiten."
 
+#, fuzzy, python-format
+msgid "You are not allowed to edit foreign %s."
+msgstr "Sie dürfen %s nicht bearbeiten."
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr "Sie dürfen diese %s nicht bearbeiten."
@@ -64155,6 +64292,46 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, fuzzy
+#~| msgid "Add new group"
+#~ msgid "Add new role"
+#~ msgstr "Neue Gruppe hinzufügen"
+
+#, fuzzy
+#~ msgid "Exclude Nodes based on their role"
+#~ msgstr "Zieladresse hinzufügen"
+
+#, fuzzy
+#~| msgid "Include all subfolders"
+#~ msgid "Include all Nodes"
+#~ msgstr "Schließe alle Unterordner ein"
+
+#~ msgid "Select graph"
+#~ msgstr "Graph auswählen"
+
+#~ msgid "Select metric"
+#~ msgstr "Wähle Metrik"
+
+#, fuzzy
+#~| msgid "Submit report"
+#~ msgid "RobotMK report"
+#~ msgstr "Bericht abschicken"
+
+#, fuzzy
+#~| msgid "Submit report"
+#~ msgid "Robotmk report"
+#~ msgstr "Bericht abschicken"
+
+#, fuzzy
+#~| msgid "Run report as this user"
+#~ msgid "Robotmk report of this service"
+#~ msgstr "Bericht als dieser Benutzer erzeugen"
+
+#, fuzzy
+#~| msgid "This crash report"
+#~ msgid "This RobotMK report"
+#~ msgstr "Dieser Crashbericht"
+
 #~ msgid "Critical if at least this number of important updates are pending"
 #~ msgstr "Kritisch wenn mindestens soviele wichtige Updates ausstehen"
 
@@ -66393,9 +66570,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "NagVis: Sidebar element"
 #~ msgstr "NagVis: Seitenleistenelement"
-
-#~ msgid "Namespace"
-#~ msgstr "Namensraum"
 
 #~ msgid "Network Adapter %d"
 #~ msgstr "Netzwerkadapter %d"

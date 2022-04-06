@@ -7647,7 +7647,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings<a>."
+"the <a href=\"%s\">subscription settings</a>."
 msgstr ""
 "<br>サブスクリプションの詳細を追加してください<ahref= \"%s\">サブスクリプショ"
 "ン設定<a>"
@@ -7799,7 +7799,7 @@ msgstr "Nagiosコアで履歴データを取得できません"
 msgid ""
 "Cannot submit license usage report to the Checkmk license server '%s'."
 "<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
+"<a href=\"%s\">subscription settings</a>."
 msgstr ""
 "<br> <a href=\"%s\">サブスクリプション設定<a>にカスタマーポータルの資格情報と"
 "サブスクリプションの詳細を追加してください。"
@@ -8529,6 +8529,10 @@ msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmkエージェントネットワークサービス(Linux)"
 
 #, fuzzy
+msgid "Checkmk agent network service (Solaris)"
+msgstr "Checkmkエージェントネットワークサービス(Linux)"
+
+#, fuzzy
 msgid "Checkmk agent plugins"
 msgstr "Checkmkエージェント"
 
@@ -9192,6 +9196,10 @@ msgstr "このスケジュールエントリのクローンを作成します"
 
 msgid "Clone topic"
 msgstr "クローントピック"
+
+#, fuzzy
+msgid "Clone view"
+msgstr "クローン %s"
 
 #, python-format
 msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
@@ -11976,6 +11984,10 @@ msgstr "デーモンの状態とコンテナーの要約数とその状態"
 msgid "DaemonSets"
 msgstr "デーモンセット"
 
+#, fuzzy
+msgid "Daemonset"
+msgstr "デーモンセット"
+
 msgid "Daily"
 msgstr "毎日"
 
@@ -13258,6 +13270,10 @@ msgstr "pleskプラグインをデプロイする"
 #, fuzzy
 msgid "Deploy without authentication."
 msgstr "パスワード認証を許可する"
+
+#, fuzzy
+msgid "Deployment"
+msgstr "展開"
 
 #, python-format
 msgid ""
@@ -17603,7 +17619,7 @@ msgstr "ジョブの開始に失敗しました: %s"
 msgid ""
 "Failed to submit the license usage report to the Checkmk license server "
 "'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal<a>. If this also does not work, "
+"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
 "please open a support ticket or send an email to sales@tribe29.com."
 msgstr ""
 "ライセンス使用状況レポートをCheckmkライセンスサーバー '%s'に送信できませんで"
@@ -18990,6 +19006,12 @@ msgstr "オブジェクト"
 #, fuzzy
 msgid "GCP/GCS Requests"
 msgstr "IPv6リクエスト"
+
+msgid "GCP/Memorystore redis CPU"
+msgstr ""
+
+msgid "GCP/Memorystore redis memory"
+msgstr ""
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -21243,6 +21265,10 @@ msgstr "Hostalias"
 msgid "Hostname"
 msgstr "ホスト名"
 
+#, fuzzy
+msgid "Hostname / IP address"
+msgstr "ホスト名/IPアドレス"
+
 msgid "Hostname / IP address of Graphite server"
 msgstr ""
 
@@ -21389,9 +21415,6 @@ msgstr "フォルダ内のホスト:%s"
 
 msgid "Hosts in this folder"
 msgstr "このフォルダ内のホスト"
-
-msgid "Hosts name / IP address"
-msgstr "ホスト名/IPアドレス"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Inline-SNMPを使用しないホスト"
@@ -24076,6 +24099,10 @@ msgstr "構成されたプラグインが必要なときにPythonを自動的に
 msgid "Install Python runtime environment"
 msgstr "Pythonランタイム環境をインストールする"
 
+#, fuzzy
+msgid "Install and activate inetd service"
+msgstr "xinetdサービスをインストールしてアクティブ化する"
+
 msgid "Install and activate systemd service"
 msgstr "systemdサービスをインストールしてアクティブ化する"
 
@@ -24658,6 +24685,10 @@ msgstr "列 %d (%s) 行 %dの値が無効です: %s"
 msgid "Invalid value, must be '%r' but is '%r'"
 msgstr "値が無効です '%r' である必要がありますが、 '%r'です"
 
+#, fuzzy, python-format
+msgid "Invalid value: %s"
+msgstr "無効なID: %s"
+
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "無効な垂直範囲: from は to よりも低くする必要があります"
 
@@ -24703,6 +24734,9 @@ msgstr "ホストのインベントリ履歴"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Linuxカーネル構成のインベントリ (sysctl)"
+
+msgid "Inventory of all deployed agent plugins and their versions"
+msgstr ""
 
 msgid "Inventory of host"
 msgstr "ホストのインベントリ"
@@ -25179,6 +25213,22 @@ msgstr "Kubernetesリソース"
 msgid "Kubernetes CPU resource utilization"
 msgstr "Kubernetesリソース"
 
+#, fuzzy
+msgid "Kubernetes Cluster"
+msgstr "Kubernetesの役割"
+
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes Deployment"
+msgstr "条件を適用する"
+
+#, fuzzy
+msgid "Kubernetes Namespace"
+msgstr "Kubernetesリソース"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr "KubernetesネームスペースPodファイルシステムの使用法"
 
@@ -25191,8 +25241,28 @@ msgstr "Kubernetes名前空間Podのメモリ使用量"
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetesネットワークインターフェース"
 
+#, fuzzy
+msgid "Kubernetes Node"
+msgstr "Kubernetesノード"
+
 msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes Statefulset"
+msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes cluster"
+msgstr "Kubernetesの役割"
+
+#, fuzzy
+msgid "Kubernetes daemonset"
+msgstr "Kubernetesノード"
+
+#, fuzzy
+msgid "Kubernetes deployment"
+msgstr "条件を適用する"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -25201,6 +25271,14 @@ msgstr "条件を適用する"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetesリソース"
+
+#, fuzzy
+msgid "Kubernetes namespace"
+msgstr "Kubernetesノード"
+
+#, fuzzy
+msgid "Kubernetes node"
+msgstr "Kubernetesノード"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -25242,6 +25320,10 @@ msgstr "Kubernetesリソース"
 
 msgid "Kubernetes roles"
 msgstr "Kubernetesの役割"
+
+#, fuzzy
+msgid "Kubernetes statefulset"
+msgstr "Kubernetesポート"
 
 msgid "L2 cache hit ratio"
 msgstr "L2キャッシュヒット率"
@@ -25468,6 +25550,10 @@ msgstr ""
 msgid "Last day of last month"
 msgstr "先月の最終日"
 
+#, fuzzy
+msgid "Last error log"
+msgstr "最後のエラー"
+
 msgid "Last exception"
 msgstr "最後の例外"
 
@@ -25485,6 +25571,10 @@ msgstr "最後にわかった詳細"
 
 msgid "Last known summary"
 msgstr "最後に知られている要約"
+
+#, fuzzy
+msgid "Last log"
+msgstr "最終ダウンロード"
 
 msgid "Last month"
 msgstr "先月"
@@ -28660,6 +28750,10 @@ msgstr "メモリ使用率"
 msgid "Memory warning at"
 msgstr "でのメモリ警告"
 
+#, fuzzy
+msgid "Memorystore Redis"
+msgstr "メモリリソース"
+
 msgid "Merge even if there is an acknowledged event"
 msgstr "確認済みのイベントがある場合でもマージ"
 
@@ -28980,6 +29074,13 @@ msgstr "垂直軸をミラーリングします"
 
 msgid "Miscellaneous"
 msgstr "その他"
+
+msgid "Misscheduled duration (DaemonSet only)"
+msgstr ""
+
+#, fuzzy
+msgid "Misscheduled replicas"
+msgstr "スケジュールされたレポート"
 
 msgid "Missing Prerequisite"
 msgstr "前提条件がありません"
@@ -30078,6 +30179,9 @@ msgstr ""
 "要約するときに無視する必要があるIPMIセンサーの名前。ここで指定するパターン"
 "は、実際のセンサー名の先頭と正確に一致する必要があります(大文字と小文字が区別"
 "されます)。"
+
+msgid "Namespace"
+msgstr "ネームスペース"
 
 msgid "Namespace prefix for hosts"
 msgstr "ホストの名前空間プレフィックス"
@@ -32843,6 +32947,10 @@ msgstr "このルールの他のキーワード:%s"
 
 msgid "Other latency"
 msgstr "その他の待ち時間"
+
+#, fuzzy
+msgid "Other logs for this service"
+msgstr "このサービスのパラメーター"
 
 msgid "Other operating systems"
 msgstr "その他のオペレーティングシステム"
@@ -37445,21 +37553,19 @@ msgstr "Rittal CMC-IIIユニット: 現在"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-IIIユニット:温度"
 
-#, fuzzy
-msgid "RobotMK report"
+#, fuzzy, python-format
+msgid "Robot Framework: %s"
 msgstr "レポートを送信する"
 
-#, fuzzy
-msgid "RobotMK reports"
-msgstr "レポートを送信する"
+msgid "Robot Framework: Last error log"
+msgstr ""
+
+msgid "Robot Framework: Last log"
+msgstr ""
 
 #, fuzzy
-msgid "Robotmk report"
+msgid "RobotMK logs"
 msgstr "レポートを送信する"
-
-#, fuzzy
-msgid "Robotmk report of this service"
-msgstr "サービスの名前"
 
 msgid "Role"
 msgstr "役割"
@@ -38716,9 +38822,6 @@ msgstr "デバイスタイプを選択します"
 msgid "Select file"
 msgstr "ファイルを選択"
 
-msgid "Select graph"
-msgstr "グラフを選択"
-
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrance and reset this counter as "
@@ -38733,9 +38836,6 @@ msgstr "リストから個々のファイルを選択します"
 
 msgid "Select interface port type"
 msgstr "インターフェイスポートタイプを選択します"
-
-msgid "Select metric"
-msgstr "メトリックを選択"
 
 msgid "Select metrics to send to InfluxDB"
 msgstr ""
@@ -42530,6 +42630,10 @@ msgstr "ステートフルセット"
 msgid "StatefulSets"
 msgstr "ステートフルセット"
 
+#, fuzzy
+msgid "Statefulset"
+msgstr "ステートフルセット"
+
 msgid "Statement"
 msgstr "ステートメント"
 
@@ -42819,7 +42923,8 @@ msgstr "ローカルに保存"
 msgid "Store notifications for rule analysis"
 msgstr "ルール分析のために通知を保存する"
 
-msgid "Store output value into RRD database"
+#, fuzzy
+msgid "Store output value into RRD database in a metric with this name."
 msgstr "出力値をRRDデータベースに保存します"
 
 msgid "Store size"
@@ -43323,6 +43428,10 @@ msgstr "dmidecodeを介したインベントリのシステム情報(Windows)"
 
 msgid "System MIBs"
 msgstr "システムMIB"
+
+#, fuzzy
+msgid "System Memory utilitzation"
+msgstr "メモリ使用率"
 
 msgid "System Number"
 msgstr "システム番号"
@@ -44086,6 +44195,27 @@ msgid ""
 "Please note: The configured/determined service configuration will only get "
 "activated if the super server is compatible to a possibly configured IP "
 "restriction ruleset. See ruleset \"%s\"."
+msgstr ""
+"Checkmkエージェントは、Linuxシステムの着信ネットワーク接続を単独でリッスンし"
+"ません。デフォルトでは、ネットワーク上でリッスンし、Checkmkエージェントなどの"
+"アプリケーションに着信要求をディスパッチするいわゆるスーパーサーバーを利用し"
+"ます。ベイク処理されたエージェントパッケージには、systemdとxinetdのサービス構"
+"成が付属しており、systemdを優先します。特定のスーパーサーバーを選択する場合"
+"は、このルールを構成できます。オプションで、サービスのインストールを完全に無"
+"効にします。たとえば、SSH経由でエージェントに接続する場合などです。\n"
+"Please note: The configured/determined service configuration will only get "
+"activated if the super server is compatible to a possibly configured IP "
+"restriction ruleset. See ruleset \"%s\"."
+
+#, fuzzy
+msgid ""
+"The Checkmk agent does not listen on its own for incoming network "
+"connections. By default it makes use of so called super servers, which are "
+"listening on the network and dispatch incoming requests to applications like "
+"the Checkmk agent. Baked agent packages for Solaris come with an "
+"installation script for an inetd service. With this rule, you can optionally "
+"disable the service installation , e.g., if you connect to the agent via "
+"SSH.\n"
 msgstr ""
 "Checkmkエージェントは、Linuxシステムの着信ネットワーク接続を単独でリッスンし"
 "ません。デフォルトでは、ネットワーク上でリッスンし、Checkmkエージェントなどの"
@@ -47253,7 +47383,7 @@ msgid ""
 "The subscription details include period start date, end date and sizing. The "
 "customer portal credentials can be found in your subscription contract. "
 "These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk<a>."
+"checkmk.de/download\">Checkmk</a>."
 msgstr ""
 
 msgid ""
@@ -48122,10 +48252,6 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
 
-#, fuzzy
-msgid "This RobotMK report"
-msgstr "このクラッシュレポート"
-
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "このルールセットは、湿度センサーのしきい値制限を設定します"
 
@@ -48859,6 +48985,10 @@ msgstr ""
 "表示されます。行が正しく分割されていない場合、またはタイトル行がテーブルのタ"
 "イトルとして表示されていない場合は、上記のインポート設定を変更して再試行でき"
 "ます。"
+
+#, fuzzy
+msgid "This log"
+msgstr "このログファイル"
 
 msgid "This log file"
 msgstr "このログファイル"
@@ -57675,6 +57805,10 @@ msgstr "%s を編集することは許可されていません。"
 msgid "You are not allowed to edit dashboards."
 msgstr "ダッシュボードを編集することは許可されていません"
 
+#, fuzzy, python-format
+msgid "You are not allowed to edit foreign %s."
+msgstr "%s を編集することは許可されていません。"
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr "この%sを編集することは許可されていません。"
@@ -61227,6 +61361,47 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Add new group"
+#~ msgid "Add new role"
+#~ msgstr "新しいグループを追加する"
+
+#, fuzzy
+#~| msgid "Exclude destination vserver"
+#~ msgid "Exclude Nodes based on their role"
+#~ msgstr "宛先vserverを除外する"
+
+#, fuzzy
+#~| msgid "Include all subfolders"
+#~ msgid "Include all Nodes"
+#~ msgstr "すべてのサブフォルダーを含める"
+
+#~ msgid "Select graph"
+#~ msgstr "グラフを選択"
+
+#~ msgid "Select metric"
+#~ msgstr "メトリックを選択"
+
+#, fuzzy
+#~| msgid "Submit report"
+#~ msgid "RobotMK report"
+#~ msgstr "レポートを送信する"
+
+#, fuzzy
+#~| msgid "Submit report"
+#~ msgid "Robotmk report"
+#~ msgstr "レポートを送信する"
+
+#, fuzzy
+#~| msgid "Name of the service"
+#~ msgid "Robotmk report of this service"
+#~ msgstr "サービスの名前"
+
+#, fuzzy
+#~| msgid "This crash report"
+#~ msgid "This RobotMK report"
+#~ msgstr "このクラッシュレポート"
+
 #~ msgid "Critical if at least this number of important updates are pending"
 #~ msgstr "少なくともこの数の重要な更新が保留中の場合は重要です"
 
@@ -63300,9 +63475,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "NagVis: Sidebar element"
 #~ msgstr "NagVis:サイドバー要素"
-
-#~ msgid "Namespace"
-#~ msgstr "ネームスペース"
 
 #~ msgid "Network Adapter %d"
 #~ msgstr "ネットワークアダプタ%d"

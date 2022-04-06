@@ -7458,7 +7458,7 @@ msgstr ""
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings<a>."
+"the <a href=\"%s\">subscription settings</a>."
 msgstr ""
 
 #, python-format
@@ -7595,7 +7595,7 @@ msgstr ""
 msgid ""
 "Cannot submit license usage report to the Checkmk license server '%s'."
 "<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings<a>."
+"<a href=\"%s\">subscription settings</a>."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -8320,6 +8320,10 @@ msgid "Checkmk agent network service (Linux)"
 msgstr ""
 
 #, fuzzy
+msgid "Checkmk agent network service (Solaris)"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Checkmk agent plugins"
 msgstr "Acces la Agenți"
 
@@ -8950,6 +8954,10 @@ msgstr ""
 #, fuzzy
 msgid "Clone topic"
 msgstr "Adaungă un nou element"
+
+#, fuzzy
+msgid "Clone view"
+msgstr "Conexiune Noua"
 
 #, python-format
 msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
@@ -11834,6 +11842,10 @@ msgstr ""
 msgid "DaemonSets"
 msgstr "fire"
 
+#, fuzzy
+msgid "Daemonset"
+msgstr "fire"
+
 msgid "Daily"
 msgstr ""
 
@@ -13126,6 +13138,10 @@ msgstr ""
 #, fuzzy
 msgid "Deploy without authentication."
 msgstr "Confirma Parola"
+
+#, fuzzy
+msgid "Deployment"
+msgstr "cu context"
 
 #, python-format
 msgid ""
@@ -17573,7 +17589,7 @@ msgstr ""
 msgid ""
 "Failed to submit the license usage report to the Checkmk license server "
 "'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal<a>. If this also does not work, "
+"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
 "please open a support ticket or send an email to sales@tribe29.com."
 msgstr ""
 
@@ -18936,6 +18952,12 @@ msgstr ""
 #, fuzzy
 msgid "GCP/GCS Requests"
 msgstr "cereri"
+
+msgid "GCP/Memorystore redis CPU"
+msgstr ""
+
+msgid "GCP/Memorystore redis memory"
+msgstr ""
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -21084,6 +21106,10 @@ msgstr ""
 msgid "Hostname"
 msgstr ""
 
+#, fuzzy
+msgid "Hostname / IP address"
+msgstr "Adresă"
+
 msgid "Hostname / IP address of Graphite server"
 msgstr ""
 
@@ -21216,9 +21242,6 @@ msgid "Hosts in folder: %s"
 msgstr "(altul: %s)"
 
 msgid "Hosts in this folder"
-msgstr ""
-
-msgid "Hosts name / IP address"
 msgstr ""
 
 msgid "Hosts not using Inline-SNMP"
@@ -23450,6 +23473,10 @@ msgstr ""
 msgid "Install Python runtime environment"
 msgstr ""
 
+#, fuzzy
+msgid "Install and activate inetd service"
+msgstr "Vizibilitatea Elementelor/Serviciilor"
+
 msgid "Install and activate systemd service"
 msgstr ""
 
@@ -24045,6 +24072,10 @@ msgstr ""
 msgid "Invalid value, must be '%r' but is '%r'"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Invalid value: %s"
+msgstr " Parametrul este: %r"
+
 msgid "Invalid vertical range: from must be lower than to"
 msgstr ""
 
@@ -24093,6 +24124,9 @@ msgstr ""
 #, fuzzy
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "foloseste configuratia locala"
+
+msgid "Inventory of all deployed agent plugins and their versions"
+msgstr ""
 
 msgid "Inventory of host"
 msgstr ""
@@ -24568,6 +24602,22 @@ msgstr "Adresă"
 msgid "Kubernetes CPU resource utilization"
 msgstr "Dezactiveaza Notificarile"
 
+#, fuzzy
+msgid "Kubernetes Cluster"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes Deployment"
+msgstr "(fără condiții)"
+
+#, fuzzy
+msgid "Kubernetes Namespace"
+msgstr "Adresă"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr ""
 
@@ -24580,8 +24630,28 @@ msgstr ""
 msgid "Kubernetes Network interfaces"
 msgstr ""
 
+#, fuzzy
+msgid "Kubernetes Node"
+msgstr "Adresă"
+
 msgid "Kubernetes Port"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes Statefulset"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes cluster"
+msgstr "Cluster nou"
+
+#, fuzzy
+msgid "Kubernetes daemonset"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes deployment"
+msgstr "(fără condiții)"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -24590,6 +24660,14 @@ msgstr "(fără condiții)"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Kubernetes namespace"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes node"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -24631,6 +24709,10 @@ msgstr ""
 
 msgid "Kubernetes roles"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes statefulset"
+msgstr "Adresă"
 
 msgid "L2 cache hit ratio"
 msgstr ""
@@ -24868,6 +24950,10 @@ msgid "Last day of last month"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Last error log"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Last exception"
 msgstr "Adaugă Excepție"
 
@@ -24886,6 +24972,10 @@ msgstr ""
 
 msgid "Last known summary"
 msgstr ""
+
+#, fuzzy
+msgid "Last log"
+msgstr "Descarca"
 
 msgid "Last month"
 msgstr ""
@@ -28293,6 +28383,10 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Memory warning at"
 msgstr ""
 
+#, fuzzy
+msgid "Memorystore Redis"
+msgstr "cereri"
+
 msgid "Merge even if there is an acknowledged event"
 msgstr ""
 
@@ -28628,6 +28722,13 @@ msgstr ""
 
 msgid "Miscellaneous"
 msgstr ""
+
+msgid "Misscheduled duration (DaemonSet only)"
+msgstr ""
+
+#, fuzzy
+msgid "Misscheduled replicas"
+msgstr "sesiuni"
 
 msgid "Missing Prerequisite"
 msgstr ""
@@ -29774,6 +29875,10 @@ msgid ""
 "specified here must match exactly the beginning of the actual sensor name "
 "(case sensitive)."
 msgstr ""
+
+#, fuzzy
+msgid "Namespace"
+msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Namespace prefix for hosts"
@@ -32631,6 +32736,10 @@ msgstr ""
 #, fuzzy
 msgid "Other latency"
 msgstr "Statusul Serverului"
+
+#, fuzzy
+msgid "Other logs for this service"
+msgstr "Un titlu pentru view"
 
 #, fuzzy
 msgid "Other operating systems"
@@ -37298,21 +37407,19 @@ msgstr ""
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr ""
 
-#, fuzzy
-msgid "RobotMK report"
-msgstr "Adaugă element"
-
-#, fuzzy
-msgid "RobotMK reports"
+#, fuzzy, python-format
+msgid "Robot Framework: %s"
 msgstr "rapoarte"
 
-#, fuzzy
-msgid "Robotmk report"
-msgstr "Adaugă element"
+msgid "Robot Framework: Last error log"
+msgstr ""
+
+msgid "Robot Framework: Last log"
+msgstr ""
 
 #, fuzzy
-msgid "Robotmk report of this service"
-msgstr "<b>reprogramează o verificare imediată"
+msgid "RobotMK logs"
+msgstr "rapoarte"
 
 msgid "Role"
 msgstr ""
@@ -38606,10 +38713,6 @@ msgstr "(selectează directorul)"
 msgid "Select file"
 msgstr "(selectează directorul)"
 
-#, fuzzy
-msgid "Select graph"
-msgstr "Grup nou"
-
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrance and reset this counter as "
@@ -38624,10 +38727,6 @@ msgstr ""
 
 msgid "Select interface port type"
 msgstr ""
-
-#, fuzzy
-msgid "Select metric"
-msgstr "Afectat de serviciu"
 
 msgid "Select metrics to send to InfluxDB"
 msgstr ""
@@ -42360,6 +42459,10 @@ msgstr "Adaugă comentarii"
 msgid "StatefulSets"
 msgstr "Adaugă comentarii"
 
+#, fuzzy
+msgid "Statefulset"
+msgstr "Adaugă comentarii"
+
 msgid "Statement"
 msgstr ""
 
@@ -42671,7 +42774,7 @@ msgstr ""
 msgid "Store notifications for rule analysis"
 msgstr ""
 
-msgid "Store output value into RRD database"
+msgid "Store output value into RRD database in a metric with this name."
 msgstr ""
 
 #, fuzzy
@@ -43209,6 +43312,10 @@ msgstr ""
 
 msgid "System MIBs"
 msgstr ""
+
+#, fuzzy
+msgid "System Memory utilitzation"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "System Number"
 msgstr ""
@@ -43948,6 +44055,16 @@ msgid ""
 "Please note: The configured/determined service configuration will only get "
 "activated if the super server is compatible to a possibly configured IP "
 "restriction ruleset. See ruleset \"%s\"."
+msgstr ""
+
+msgid ""
+"The Checkmk agent does not listen on its own for incoming network "
+"connections. By default it makes use of so called super servers, which are "
+"listening on the network and dispatch incoming requests to applications like "
+"the Checkmk agent. Baked agent packages for Solaris come with an "
+"installation script for an inetd service. With this rule, you can optionally "
+"disable the service installation , e.g., if you connect to the agent via "
+"SSH.\n"
 msgstr ""
 
 msgid "The Checkmk agent is queried via the ESX datasource program"
@@ -46627,7 +46744,7 @@ msgid ""
 "The subscription details include period start date, end date and sizing. The "
 "customer portal credentials can be found in your subscription contract. "
 "These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk<a>."
+"checkmk.de/download\">Checkmk</a>."
 msgstr ""
 
 msgid ""
@@ -47356,10 +47473,6 @@ msgstr ""
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 
-#, fuzzy
-msgid "This RobotMK report"
-msgstr "Sterge Elementul"
-
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
 
@@ -47959,6 +48072,10 @@ msgid ""
 "the title line is not shown as title of the table, you may change the import "
 "settings above and try again."
 msgstr ""
+
+#, fuzzy
+msgid "This log"
+msgstr "Editeaza regulile de loguri"
 
 #, fuzzy
 msgid "This log file"
@@ -55978,6 +56095,10 @@ msgstr ""
 msgid "You are not allowed to edit dashboards."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "You are not allowed to edit foreign %s."
+msgstr "Dezactiveaza Notificarile"
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr ""
@@ -59340,6 +59461,38 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Add new role"
+#~ msgstr "Adaugă group de model"
+
+#, fuzzy
+#~ msgid "Exclude Nodes based on their role"
+#~ msgstr "Linii de header adiționale"
+
+#, fuzzy
+#~ msgid "Select graph"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Select metric"
+#~ msgstr "Afectat de serviciu"
+
+#, fuzzy
+#~ msgid "RobotMK report"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~ msgid "Robotmk report"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~ msgid "Robotmk report of this service"
+#~ msgstr "<b>reprogramează o verificare imediată"
+
+#, fuzzy
+#~ msgid "This RobotMK report"
+#~ msgstr "Sterge Elementul"
+
+#, fuzzy
 #~ msgid "Maximum concurrent Checkmk checks (deprecated)"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -60169,10 +60322,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Multiple WATO Folders"
 #~ msgstr "Folder nou"
-
-#, fuzzy
-#~ msgid "Namespace"
-#~ msgstr "spatiu utilizat"
 
 #, fuzzy
 #~ msgid "Network Adapters"
@@ -63109,10 +63258,6 @@ msgstr ""
 #~ "configurari se vor potrivi pentru un fisier log atunci doar prima va fi "
 #~ "aplicata. Deci nu are sens crearea a mai mult de o regula pentru "
 #~ "<i>ToateEventlog-urile</i>."
-
-#, fuzzy
-#~ msgid "Host IP address"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Host Name:"

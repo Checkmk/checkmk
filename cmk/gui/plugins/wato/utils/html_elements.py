@@ -64,14 +64,13 @@ def _make_wato_page_state() -> PageState:
     span_id = "pending_changes"
     if changes_info:
         return PageState(
-            text=html.render_span(changes_info, id_=span_id),
+            text=html.render_span(changes_info, id_=span_id, class_="has_changes"),
             icon_name="pending_changes",
             url=changelog_url,
             tooltip_text=tooltip,
         )
     return PageState(
         text=html.render_span(_("No pending changes"), id_=span_id),
-        icon_name="no_pending_changes",
         url=changelog_url,
         tooltip_text=tooltip,
     )

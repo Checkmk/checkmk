@@ -68,6 +68,7 @@ from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
@@ -7696,7 +7697,7 @@ class SetupSiteChoice(DropdownChoice):
         )
 
     def _site_default_value(self):
-        if sites.is_wato_slave_site():
+        if site_config.is_wato_slave_site():
             # Placeholder for "central site". This is only relevant when using WATO on a remote site
             # and a host / folder has no site set.
             return ""

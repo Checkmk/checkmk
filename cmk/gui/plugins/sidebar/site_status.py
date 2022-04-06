@@ -46,7 +46,7 @@ class SiteStatus(SidebarSnapin):
         sites.update_site_states_from_dead_sites()
 
         for sitename, _sitealias in sites.sorted_sites():
-            site = sites.get_site_config(sitename)
+            site = site_config.get_site_config(sitename)
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 

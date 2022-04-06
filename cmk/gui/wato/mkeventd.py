@@ -105,7 +105,8 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
     WatoMode,
 )
-from cmk.gui.sites import allsites, get_event_console_site_choices
+from cmk.gui.site_config import allsites
+from cmk.gui.sites import get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_to_html

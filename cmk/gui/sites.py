@@ -29,19 +29,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.logged_in import user as global_user
-
-# This keeps the API compatible with previous versions where
-# both modules were merged.
-from cmk.gui.site_config import (  # pylint: disable=unused-import
-    allsites,
-    get_site_config,
-    has_wato_slave_sites,
-    is_single_local_site,
-    is_wato_slave_site,
-    site_is_local,
-    sitenames,
-    wato_slave_sites,
-)
+from cmk.gui.site_config import get_site_config, site_is_local, sitenames
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

@@ -16,6 +16,7 @@ import livestatus
 import cmk.utils.version as cmk_version
 
 import cmk.gui.inventory as inventory
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
@@ -958,7 +959,7 @@ def cre_sites_options() -> Options:
 
     return sorted(
         [
-            (sitename, sites.get_site_config(sitename)["alias"])
+            (sitename, site_config.get_site_config(sitename)["alias"])
             for sitename, state in sites.states().items()
             if state["state"] == "online"
         ],

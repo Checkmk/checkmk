@@ -10,6 +10,7 @@ from typing import ContextManager, Dict, List, Tuple
 
 from livestatus import SiteId
 
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import foldable_container
@@ -66,7 +67,7 @@ class MasterControlSnapin(SidebarSnapin):
                     title=site_alias,
                     icon="foldable_sidebar",
                 )
-                if not sites.is_single_local_site()
+                if not site_config.is_single_local_site()
                 else nullcontext(False)
             )
             with container:

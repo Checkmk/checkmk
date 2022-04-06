@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -64,7 +65,7 @@ class Performance(SidebarSnapin):
         ]:
             write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 
-        if only_sites is None and len(sites.allsites()) == 1:
+        if only_sites is None and len(site_config.allsites()) == 1:
             try:
                 data = sites.live().query(
                     "GET status\nColumns: external_command_buffer_slots "

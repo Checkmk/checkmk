@@ -86,8 +86,8 @@ from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unus
     sample_config_generator_registry,
     SampleConfigGenerator,
 )
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.sites import get_activation_site_choices, get_site_config
+from cmk.gui.site_config import get_site_config, is_wato_slave_site
+from cmk.gui.sites import get_activation_site_choices
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import

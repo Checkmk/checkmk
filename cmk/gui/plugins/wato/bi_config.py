@@ -77,7 +77,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.sites import wato_slave_sites
+from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.transaction_manager import transactions

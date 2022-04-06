@@ -6,7 +6,18 @@
 
 from typing import Any, Mapping, Optional
 
-from cmk.special_agents.agent_kube import _collect_cpu_resources, Pod, pods_from_namespaces
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    api_to_agent_deployment,
+    APIDeploymentFactory,
+    MetaDataFactory,
+)
+
+from cmk.special_agents.agent_kube import (
+    _collect_cpu_resources,
+    deployments_from_namespaces,
+    Pod,
+    pods_from_namespaces,
+)
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
@@ -76,3 +87,25 @@ def test_filter_pods_from_namespaces():
         "two", metadata=api.PodMetaData(name="two", namespace=api.NamespaceName("standard"))
     )
     assert pods_from_namespaces([pod_one, pod_two], {api.NamespaceName("default")}) == [pod_one]
+
+
+def test_filter_deployments_from_monitored_namespaces():
+    # Arrange
+    deployments = [
+        api_to_agent_deployment(
+            APIDeploymentFactory.build(
+                metadata=MetaDataFactory.build(namespace=api.NamespaceName("default"))
+            ),
+        ),
+        api_to_agent_deployment(
+            APIDeploymentFactory.build(
+                metadata=MetaDataFactory.build(namespace=api.NamespaceName("standard"))
+            ),
+        ),
+    ]
+
+    # Act
+    filtered_deployments = deployments_from_namespaces(deployments, {api.NamespaceName("default")})
+
+    # Assert
+    assert [deployment.namespace for deployment in filtered_deployments] == ["default"]

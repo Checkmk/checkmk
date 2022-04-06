@@ -293,6 +293,13 @@ class PodOwner(abc.ABC):
         self._pods.append(pod)
 
 
+class PodNamespacedOwner(PodOwner, abc.ABC):
+    @property
+    @abc.abstractmethod
+    def namespace(self) -> Optional[api.NamespaceName]:
+        raise NotImplementedError()
+
+
 class Pod:
     def __init__(
         self,
@@ -445,11 +452,15 @@ def aggregate_resources(
     )
 
 
-class CronJob(PodOwner):
+class CronJob(PodNamespacedOwner):
     def __init__(self, metadata: api.MetaData, spec: api.CronJobSpec):
         super().__init__()
         self.metadata = metadata
         self.spec = spec
+
+    @property
+    def namespace(self) -> Optional[api.NamespaceName]:
+        return self.metadata.namespace
 
     def name(self, prepend_namespace: bool = True) -> str:
         if not prepend_namespace:
@@ -461,7 +472,7 @@ class CronJob(PodOwner):
 
 
 # TODO: addition of test framework for output sections
-class Deployment(PodOwner):
+class Deployment(PodNamespacedOwner):
     def __init__(
         self,
         metadata: api.MetaData,
@@ -473,6 +484,10 @@ class Deployment(PodOwner):
         self.spec = spec
         self.status = status
         self.type_: str = "deployment"
+
+    @property
+    def namespace(self) -> Optional[api.NamespaceName]:
+        return self.metadata.namespace
 
     def add_pod(self, pod: Pod) -> None:
         super().add_pod(pod)
@@ -537,7 +552,7 @@ def _thin_containers(pods: Collection[Pod]) -> section.ThinContainers:
     return section.ThinContainers(images=container_images, names=container_names)
 
 
-class DaemonSet(PodOwner):
+class DaemonSet(PodNamespacedOwner):
     def __init__(
         self, metadata: api.MetaData, spec: api.DaemonSetSpec, status: api.DaemonSetStatus
     ) -> None:
@@ -546,6 +561,10 @@ class DaemonSet(PodOwner):
         self.spec = spec
         self._status = status
         self.type_: str = "daemonset"
+
+    @property
+    def namespace(self) -> Optional[api.NamespaceName]:
+        return self.metadata.namespace
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -595,7 +614,7 @@ def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSet
     )
 
 
-class StatefulSet(PodOwner):
+class StatefulSet(PodNamespacedOwner):
     def __init__(
         self, metadata: api.MetaData, spec: api.StatefulSetSpec, status: api.StatefulSetStatus
     ) -> None:
@@ -604,6 +623,10 @@ class StatefulSet(PodOwner):
         self.spec = spec
         self._status = status
         self.type_: str = "statefulset"
+
+    @property
+    def namespace(self) -> Optional[api.NamespaceName]:
+        return self.metadata.namespace
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -1713,18 +1736,25 @@ def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.NamespaceName]
     return [pod for pod in pods if pod.metadata.namespace in namespaces]
 
 
+# TODO: mypy does not seem to allow a more generic definition
+
+
+def daemon_sets_from_namespaces(
+    daemonsets: Sequence[DaemonSet], namespaces: Set[api.NamespaceName]
+) -> Sequence[DaemonSet]:
+    return [daemonset for daemonset in daemonsets if daemonset.namespace in namespaces]
+
+
 def deployments_from_namespaces(
     deployments: Sequence[Deployment], namespaces: Set[api.NamespaceName]
 ) -> Sequence[Deployment]:
-    return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
+    return [deployment for deployment in deployments if deployment.namespace in namespaces]
 
 
 def statefulsets_from_namespaces(
     statefulsets: Sequence[StatefulSet], namespaces: Set[api.NamespaceName]
 ) -> Sequence[StatefulSet]:
-    return [
-        statefulset for statefulset in statefulsets if statefulset.metadata.namespace in namespaces
-    ]
+    return [statefulset for statefulset in statefulsets if statefulset.namespace in namespaces]
 
 
 def namespaces_from_monitored_namespacenames(
@@ -2127,11 +2157,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 LOGGER.info("Write daemon sets sections based on API data")
                 write_daemon_sets_api_sections(
                     arguments.cluster,
-                    [
-                        daemonset
-                        for daemonset in cluster.daemon_sets()
-                        if daemonset.metadata.namespace in monitored_namespaces
-                    ],
+                    daemon_sets_from_namespaces(cluster.daemon_sets(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 

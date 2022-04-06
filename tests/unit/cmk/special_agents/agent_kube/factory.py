@@ -8,7 +8,15 @@ from typing import Iterator
 
 from pydantic_factories import ModelFactory
 
+from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
+
+# General Factories
+
+
+class MetaDataFactory(ModelFactory):
+    __model__ = api.MetaData
+
 
 # Pod related Factories
 
@@ -31,3 +39,18 @@ class APIPodFactory(ModelFactory):
 
 def pod_phase_generator() -> Iterator[api.Phase]:
     yield from itertools.cycle(api.Phase)
+
+
+# Deployment related Factories
+
+
+class APIDeploymentFactory(ModelFactory):
+    __model__ = api.Deployment
+
+
+def api_to_agent_deployment(api_deployment: api.Deployment) -> agent.Deployment:
+    return agent.Deployment(
+        metadata=api_deployment.metadata,
+        spec=api_deployment.spec,
+        status=api_deployment.status,
+    )

@@ -40,6 +40,9 @@ def host_labels(section: NamespaceInfo) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/kubernetes:
+            This label is set to "yes" for all kubernetes objects.
+
         cmk/kubernetes/object:
             This label is set to the Kubernetes object type.
 
@@ -56,6 +59,7 @@ def host_labels(section: NamespaceInfo) -> HostLabelGenerator:
             'Kubernetes'.
 
     """
+    yield HostLabel("cmk/kubernetes", "yes")
     yield HostLabel("cmk/kubernetes/object", "namespace")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.name)

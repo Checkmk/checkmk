@@ -27,9 +27,8 @@ def host_labels(section: Sequence[k8s.Subset]) -> HostLabelGenerator:
             This label indicates that this host is a endpoint object of
             kubernetes.
 
-        cmk/kubernetes:yes :
-            This label is set if the corresponsing host is a kubernetes
-            object.
+        cmk/kubernetes :
+            This label is set to "yes" for all Kubernetes objects.
 
     """
     # always return host labels, even if section is empty.

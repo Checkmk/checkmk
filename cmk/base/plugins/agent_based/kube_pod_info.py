@@ -50,6 +50,9 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/kubernetes:
+            This label is set to "yes" for all kubernetes objects.
+
         cmk/kubernetes/object:
             This label is set to the Kubernetes object type.
 
@@ -70,6 +73,7 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
             host is associated with. Checkmk hosts of the type Pod and Node
             will be assigned this label.
     """
+    yield HostLabel("cmk/kubernetes", "yes")
     yield HostLabel("cmk/kubernetes/object", "pod")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     if section.node is not None:

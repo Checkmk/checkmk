@@ -1583,7 +1583,7 @@ def filter_kubernetes_register(
     filter_registry.register(
         AjaxDropdownFilter(
             title=title,
-            sort_index=-1,  # TODO!
+            sort_index=550,
             info="host",
             autocompleter=GroupAutocompleterConfig(
                 ident="kubernetes_labels",

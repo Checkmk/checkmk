@@ -210,7 +210,7 @@ class WebTestAppForCMK(webtest.TestApp):
     def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
         self.username: Optional[str] = None
-        self.password: Optional[str]= None
+        self.password: Optional[str] = None
 
     def set_credentials(self, username, password) -> None:
         self.username = username

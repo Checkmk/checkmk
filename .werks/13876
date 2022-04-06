@@ -1,0 +1,11 @@
+Title: Fix encoding of $SERVICEURL$ in notifications
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p29
+Date: 1649236427
+Class: fix
+
+Wrong encoding of the macro "$SERVICEURL$" could lead to disfunctional links in
+notifications.

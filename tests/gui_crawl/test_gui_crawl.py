@@ -324,6 +324,7 @@ class Crawler:
             "application/json",
             "application/pdf",
             "image/png",
+            "image/svg+xml",
             "image/gif",
             "text/x-chdr",
             "text/x-c++src",

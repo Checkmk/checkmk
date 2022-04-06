@@ -5,7 +5,6 @@
 
 #include "TableEventConsoleEvents.h"
 
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -17,7 +16,6 @@
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
-class User;
 
 #ifdef CMC
 class Host;
@@ -26,9 +24,7 @@ struct host_struct;
 #endif
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
-    : TableEventConsole{mc, [](const User &user, const ECRow &row) {
-                            return isAuthorizedForEvent(user, row);
-                        }} {
+    : TableEventConsole{mc} {
     addColumns(this);
 }
 

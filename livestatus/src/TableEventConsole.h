@@ -9,7 +9,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -71,18 +70,9 @@ private:
 
 class TableEventConsole : public Table {
 public:
-    TableEventConsole(
-        MonitoringCore *mc,
-        std::function<bool(const User &, const ECRow &)> is_authorized);
+    explicit TableEventConsole(MonitoringCore *mc);
 
     void answerQuery(Query &query, const User &user) override;
-
-protected:
-    [[nodiscard]] static bool isAuthorizedForEvent(const User &user,
-                                                   const ECRow &row);
-
-private:
-    std::function<bool(const User &, const ECRow &)> is_authorized_;
 };
 
 #endif  // TableEventConsole_h

@@ -5,18 +5,14 @@
 
 #include "TableEventConsoleRules.h"
 
-#include <functional>
 #include <memory>
 
 #include "Column.h"
 #include "IntColumn.h"
 #include "StringColumn.h"
-class User;
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
-    : TableEventConsole{mc, [](const User & /*user*/, const ECRow & /*row*/) {
-                            return true;
-                        }} {
+    : TableEventConsole{mc} {
     ColumnOffsets offsets{};
     addColumn(
         ECRow::makeStringColumn("rule_id", "The ID of the rule", offsets));

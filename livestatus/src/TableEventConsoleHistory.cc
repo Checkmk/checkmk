@@ -5,7 +5,6 @@
 
 #include "TableEventConsoleHistory.h"
 
-#include <functional>
 #include <memory>
 
 #include "Column.h"
@@ -13,12 +12,9 @@
 #include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
 #include "TimeColumn.h"
-class User;
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
-    : TableEventConsole{mc, [](const User &user, const ECRow &row) {
-                            return isAuthorizedForEvent(user, row);
-                        }} {
+    : TableEventConsole{mc} {
     ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "history_line", "The line number of the event in the history file",

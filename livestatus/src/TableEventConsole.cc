@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <iosfwd>
 #include <iostream>
 #include <optional>
@@ -39,15 +40,13 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(
-        MonitoringCore *mc, const Table &table, Query &query, const User &user,
-        std::function<bool(const User &, const ECRow &)> is_authorized)
+    ECTableConnection(MonitoringCore *mc, const Table &table, Query &query,
+                      std::function<bool(const ECRow &)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , mc_{mc}
         , table_{table}
         , query_{query}
-        , user_{user}
         , is_authorized_{std::move(is_authorized)} {}
 
 private:
@@ -139,8 +138,7 @@ private:
                 is_header = false;
             } else {
                 ECRow row{mc_, headers, columns};
-                if (is_authorized_(user_, row) &&
-                    !query_.processDataset(Row{&row})) {
+                if (is_authorized_(row) && !query_.processDataset(Row{&row})) {
                     return;
                 }
             }
@@ -150,8 +148,7 @@ private:
     MonitoringCore *mc_;
     const Table &table_;
     Query &query_;
-    const User &user_;
-    const std::function<bool(const User &, const ECRow &)> is_authorized_;
+    const std::function<bool(const ECRow &)> is_authorized_;
 };
 }  // namespace
 
@@ -235,26 +232,31 @@ std::string ECRow::get(const std::string &column_name,
 
 const ::host *ECRow::host() const { return host_; }
 
-TableEventConsole::TableEventConsole(
-    MonitoringCore *mc,
-    std::function<bool(const User &, const ECRow &)> is_authorized)
-    : Table{mc}, is_authorized_{std::move(is_authorized)} {}
+TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table{mc} {}
+
+namespace {
+std::function<bool(const ECRow &)> get_authorizer(const Table &table,
+                                                  const User &user) {
+    if (table.any_column([](const auto &c) {
+            return c->name() == "event_contact_groups_precedence";
+        })) {
+        return [&user](const ECRow &row) {
+            return user.is_authorized_for_event(
+                row.getString("event_contact_groups_precedence"),
+                row.getString("event_contact_groups"), row.host());
+        };
+    }
+    return [](const ECRow & /*row*/) { return true; };
+}
+}  // namespace
 
 void TableEventConsole::answerQuery(Query &query, const User &user) {
     if (core()->mkeventdEnabled()) {
         try {
-            ECTableConnection{core(), *this, query, user, is_authorized_}.run();
+            ECTableConnection{core(), *this, query, get_authorizer(*this, user)}
+                .run();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());
         }
     }
-}
-
-// NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
-// static
-bool TableEventConsole::isAuthorizedForEvent(const User &user,
-                                             const ECRow &row) {
-    return user.is_authorized_for_event(
-        row.getString("event_contact_groups_precedence"),
-        row.getString("event_contact_groups"), row.host());
 }

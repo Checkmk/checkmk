@@ -1,0 +1,22 @@
+Title: Deprecating NSCA as part of Checkmk
+Class: feature
+Compatible: incomp
+Component: packages
+Date: 1649232254
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.2.0i1
+
+With Checkmk 2.1 we officially deprecate the component NSCA which has
+traditionally been a part of Checkmk but was rarely used. In 2.1 it will work
+as before and be removed with Checkmk 2.2.
+
+If you are a user of NSCA with Checkmk an alternative solution depends on your
+specific use case. You could try to use local plugins with the Checkmk agent
+(https://docs.checkmk.com/latest/en/agent_linux.html#mrpe) or utilize the spool
+directory mechanism of the agent #16 (https://checkmk.com/werk/16).
+
+If you can't find a good replacement for your use case, please contact us via
+your support contact.

@@ -28,6 +28,7 @@ from agent_receiver.models import (
     PairingBody,
     PairingResponse,
     RegistrationStatus,
+    RegistrationStatusEnum,
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
 )
@@ -196,10 +197,12 @@ def _store_agent_data(
 
 
 def _move_ready_file(uuid: UUID) -> None:
+    (dir_discoverable := REGISTRATION_REQUESTS / RegistrationStatusEnum.DISCOVERABLE.name).mkdir(
+        exist_ok=True
+    )
     with suppress(FileNotFoundError):
-        # TODO: use RegistrationState.READY.name
-        (REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").rename(
-            REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json"
+        (REGISTRATION_REQUESTS / RegistrationStatusEnum.READY.name / f"{uuid}.json").rename(
+            dir_discoverable / f"{uuid}.json"
         )
 
 

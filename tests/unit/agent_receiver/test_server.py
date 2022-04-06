@@ -341,10 +341,6 @@ def test_agent_data_move_error(
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
-    Path(constants.REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").touch()
-    os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
-
     source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
@@ -371,7 +367,6 @@ def test_agent_data_move_ready(
 ) -> None:
     os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
     Path(constants.REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").touch()
-    os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
 
     source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"

@@ -8,7 +8,7 @@ SETLOCAL EnableDelayedExpansion
 
 set VCPKG_ROOT=c:\dev\tools\vcpkg
 mkdir %VCPKG_ROOT%
-cd %VCPKG_ROOT%\..
+cd /d %VCPKG_ROOT%\..
 git clone https://github.com/microsoft/vcpkg
 call .\vcpkg\bootstrap-vcpkg.bat
 call .\vcpkg\vcpkg install protobuf:x64-windows

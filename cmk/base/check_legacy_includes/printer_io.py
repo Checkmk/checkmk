@@ -8,10 +8,13 @@
 # pylint: disable=consider-using-in
 
 import enum
-from typing import NamedTuple, Literal, Mapping
+from typing import Literal, Mapping, NamedTuple
+
 from cmk.base.check_api import check_levels, get_percent_human_readable
+
 printer_io_units = {
     '-1': 'unknown',
+    "1": "other",
     '0': 'unknown',
     '2': 'unknown',  # defined by PrtCapacityUnitTC used in newer revs.
     '3': '1/10000 in',

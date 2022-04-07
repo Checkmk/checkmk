@@ -27,7 +27,6 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupSiteManagement,
     LivestatusViaTCP,
     ReplicationPath,
-    site_neutral_path,
     wato_fileheader,
 )
 from cmk.gui.plugins.watolib.utils import SerializedSettings

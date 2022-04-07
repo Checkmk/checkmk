@@ -9,7 +9,7 @@
 
 #include "IntColumn.h"
 #include "Row.h"
-#include "auth.h"
+#include "User.h"
 #include "gtest/gtest.h"
 
 using namespace std::string_literals;

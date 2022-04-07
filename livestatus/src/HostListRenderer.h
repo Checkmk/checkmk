@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "ListColumn.h"
-#include "auth.h"
+#include "User.h"
 
 #ifdef CMC
 #include <unordered_set>

@@ -10,7 +10,7 @@
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
-#include "auth.h"
+#include "User.h"
 #include "data_encoding.h"
 
 std::string mk::test::query(Table &table, const std::list<std::string> &q) {

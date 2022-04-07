@@ -22,7 +22,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "auth.h"
+#include "User.h"
 #include "nagios.h"  // IWYU pragma: keep
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex

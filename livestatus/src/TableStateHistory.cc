@@ -28,7 +28,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "auth.h"
+#include "User.h"
 
 #ifdef CMC
 #include "Host.h"     // IWYU pragma: keep

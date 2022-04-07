@@ -31,7 +31,7 @@
 #include "Row.h"
 #include "StatsColumn.h"
 #include "Triggers.h"
-#include "auth.h"
+#include "User.h"
 #include "contact_fwd.h"
 class Column;
 class Logger;

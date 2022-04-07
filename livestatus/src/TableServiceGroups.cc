@@ -15,7 +15,7 @@
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListState.h"
 #include "StringColumn.h"
-#include "auth.h"
+#include "User.h"
 #include "nagios.h"
 
 namespace {

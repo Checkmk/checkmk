@@ -27,7 +27,7 @@
 #include "OutputBuffer.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "auth.h"
+#include "User.h"
 #include "opids.h"
 #include "strutil.h"
 

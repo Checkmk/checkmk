@@ -15,7 +15,7 @@
 #include "ListColumn.h"
 #include "Query.h"
 #include "StringColumn.h"
-#include "auth.h"
+#include "User.h"
 #include "nagios.h"
 
 TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {

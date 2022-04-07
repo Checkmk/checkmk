@@ -23,7 +23,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "auth.h"
+#include "User.h"
 #include "contact_fwd.h"
 
 #ifdef CMC

@@ -15,7 +15,7 @@
 
 #include "Aggregator.h"
 #include "Column.h"
-#include "auth.h"
+#include "User.h"
 class Row;
 class RowRenderer;
 class User;

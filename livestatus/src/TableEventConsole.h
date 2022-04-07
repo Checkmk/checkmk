@@ -17,7 +17,7 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "Table.h"
-#include "auth.h"  // IWYU pragma: keep
+#include "User.h"  // IWYU pragma: keep
 
 class ColumnOffsets;
 template <class T>

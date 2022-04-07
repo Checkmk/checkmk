@@ -10,7 +10,7 @@
 
 #include "ListColumn.h"
 #include "Row.h"
-#include "auth.h"
+#include "User.h"
 #include "gtest/gtest.h"
 
 using namespace std::chrono_literals;

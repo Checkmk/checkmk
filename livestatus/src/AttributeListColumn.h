@@ -16,7 +16,7 @@
 #include "Filter.h"
 #include "ListColumn.h"
 #include "Row.h"
-#include "auth.h"
+#include "User.h"
 #include "opids.h"
 class IntFilter;
 class Logger;

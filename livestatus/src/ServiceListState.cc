@@ -5,7 +5,7 @@
 
 #include "ServiceListState.h"
 
-#include "auth.h"
+#include "User.h"
 
 #ifdef CMC
 #include "Service.h"

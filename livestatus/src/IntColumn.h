@@ -19,7 +19,7 @@
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"
-#include "auth.h"
+#include "User.h"
 #include "opids.h"
 class Row;
 

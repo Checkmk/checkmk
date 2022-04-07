@@ -179,7 +179,7 @@ liblivestatus_a_SOURCES = \
         TimeFilter.cc \
         TimeperiodsCache.cc \
         Triggers.cc \
-        auth.cc \
+        User.cc \
         global_counters.cc \
         mk_inventory.cc \
         mk_logwatch.cc \

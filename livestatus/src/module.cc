@@ -47,7 +47,7 @@
 #include "RegExp.h"
 #include "TimeperiodsCache.h"
 #include "Triggers.h"
-#include "auth.h"
+#include "User.h"
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "nagios.h"

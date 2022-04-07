@@ -23,7 +23,7 @@
 #include "MonitoringCore.h"
 #include "Store.h"
 #include "Triggers.h"
-#include "auth.h"
+#include "User.h"
 #include "contact_fwd.h"
 #include "nagios.h"
 class InputBuffer;

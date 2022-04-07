@@ -43,7 +43,7 @@
 #include "TableHosts.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
-#include "auth.h"
+#include "User.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 

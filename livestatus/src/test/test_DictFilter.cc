@@ -17,7 +17,7 @@
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "Row.h"
-#include "auth.h"
+#include "User.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "nagios.h"

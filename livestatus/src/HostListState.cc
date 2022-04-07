@@ -5,7 +5,7 @@
 
 #include "HostListState.h"
 
-#include "auth.h"
+#include "User.h"
 
 #ifdef CMC
 #include <memory>

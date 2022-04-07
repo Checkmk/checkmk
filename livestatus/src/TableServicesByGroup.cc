@@ -13,7 +13,7 @@
 #include "Row.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
-#include "auth.h"
+#include "User.h"
 #include "nagios.h"
 
 namespace {

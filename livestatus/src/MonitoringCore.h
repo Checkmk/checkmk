@@ -18,7 +18,7 @@
 #include "Metric.h"
 #include "StringUtils.h"
 #include "Triggers.h"
-#include "auth.h"
+#include "User.h"
 enum class Encoding;
 class Logger;
 

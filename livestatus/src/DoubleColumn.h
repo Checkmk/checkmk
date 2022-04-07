@@ -21,8 +21,8 @@
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
-#include "contact_fwd.h"
 #include "opids.h"
+class User;
 
 // NOTE: The C++ spec explicitly disallows doubles as non-type template
 // parameters. We could add an int or perhaps even some std::ratio if we want.
@@ -43,7 +43,7 @@ public:
         return ColumnType::double_;
     }
 
-    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+    void output(Row row, RowRenderer &r, const User & /*user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         r.output(getValue(row));
     }

@@ -10,8 +10,7 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void NullColumn::output(Row /* row */, RowRenderer &r,
-                        const contact * /* auth_user */,
+void NullColumn::output(Row /*row*/, RowRenderer &r, const User & /*user*/,
                         std::chrono::seconds /*timezone_offset*/) const {
     r.output(Null());
 }

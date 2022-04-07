@@ -19,8 +19,8 @@
 #include "Row.h"
 #include "TimeAggregator.h"
 #include "TimeFilter.h"
-#include "contact_fwd.h"
 #include "opids.h"
+class User;
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the start of the epoch.
@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::time; }
 
-    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+    void output(Row row, RowRenderer &r, const User & /*user*/,
                 std::chrono::seconds timezone_offset) const override {
         r.output(getValue(row, timezone_offset));
     }

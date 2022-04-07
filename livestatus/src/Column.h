@@ -18,11 +18,11 @@
 #include "Filter.h"
 #include "Logger.h"
 #include "Row.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class Aggregation;
 class Aggregator;
 class RowRenderer;
+class User;
 
 template <typename T>
 const T *offset_cast(const void *ptr, size_t offset) {
@@ -59,7 +59,7 @@ public:
 
     [[nodiscard]] virtual ColumnType type() const = 0;
 
-    virtual void output(Row row, RowRenderer &r, const contact *auth_user,
+    virtual void output(Row row, RowRenderer &r, const User &user,
                         std::chrono::seconds timezone_offset) const = 0;
 
     [[nodiscard]] virtual std::unique_ptr<Filter> createFilter(

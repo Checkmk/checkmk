@@ -655,6 +655,8 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
+    // TODO(sp) We already construct this in process, reuse this somehow?
+    User user{_auth_user, service_auth_, group_auth_};
     if (doStats()) {
         // Things get a bit tricky here: For stats queries, we have to combine
         // rows with the same values in the non-stats columns. But when we
@@ -670,7 +672,7 @@ bool Query::processDataset(Row row) {
             QueryRenderer q(*renderer, EmitBeginEnd::off);
             RowRenderer r(q);
             for (const auto &column : _columns) {
-                column->output(row, r, _auth_user, _timezone_offset);
+                column->output(row, r, user, _timezone_offset);
             }
         }
         for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
@@ -680,7 +682,7 @@ bool Query::processDataset(Row row) {
         assert(_renderer_query);  // Missing call to `process()`.
         RowRenderer r(*_renderer_query);
         for (const auto &column : _columns) {
-            column->output(row, r, _auth_user, _timezone_offset);
+            column->output(row, r, user, _timezone_offset);
         }
     }
     return true;

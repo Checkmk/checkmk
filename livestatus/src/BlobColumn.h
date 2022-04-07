@@ -26,9 +26,9 @@
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
-
 class Aggregator;
 class RowRenderer;
+class User;
 
 template <class T>
 class BlobColumn : public Column {
@@ -40,7 +40,7 @@ public:
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::blob; }
 
-    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+    void output(Row row, RowRenderer &r, const User & /*user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         if (std::unique_ptr<std::vector<char>> blob = getValue(row)) {
             r.output(*blob);

@@ -19,6 +19,7 @@
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"
+#include "auth.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Row;
@@ -37,9 +38,9 @@ public:
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::int_; }
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
+    void output(Row row, RowRenderer &r, const User &user,
                 std::chrono::seconds /*timezone_offset*/) const override {
-        r.output(getValue(row, auth_user));
+        r.output(getValue(row, user.authUser()));
     }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(

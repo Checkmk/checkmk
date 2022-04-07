@@ -22,6 +22,7 @@
 #include "ListFilter.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "auth.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregator;
@@ -77,10 +78,11 @@ public:
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::list; }
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
+    void output(Row row, RowRenderer &r, const User &user,
                 std::chrono::seconds timezone_offset) const override {
         ListRenderer l{r};
-        for (const auto &val : getRawValue(row, auth_user, timezone_offset)) {
+        for (const auto &val :
+             getRawValue(row, user.authUser(), timezone_offset)) {
             renderer_->output(l, val);
         }
     }

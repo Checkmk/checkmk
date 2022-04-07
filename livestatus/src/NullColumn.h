@@ -14,11 +14,11 @@
 
 #include "Column.h"
 #include "Filter.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class Aggregator;
 class Row;
 class RowRenderer;
+class User;
 
 class NullColumn : public Column {
 public:
@@ -26,7 +26,7 @@ public:
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::null; }
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
+    void output(Row row, RowRenderer &r, const User &user,
                 std::chrono::seconds timezone_offset) const override;
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(

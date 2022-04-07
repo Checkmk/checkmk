@@ -22,17 +22,10 @@
 #include "Renderer.h"
 #include "Row.h"
 #include "opids.h"
-
 enum class AttributeKind;
 class Aggregator;
 class RowRenderer;
-
-#ifdef CMC
-#include "contact_fwd.h"
-#else
-// TODO(sp) Why on earth is "contact_fwd.h" not enough???
-#include "nagios.h"
-#endif
+class User;
 
 template <class T>
 class DictColumn : public Column {
@@ -46,7 +39,7 @@ public:
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::dict; }
 
-    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+    void output(Row row, RowRenderer &r, const User & /*user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         DictRenderer d(r);
         for (const auto &it : getValue(row)) {

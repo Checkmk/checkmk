@@ -175,37 +175,6 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
         )
 
 
-@config_variable_registry.register
-class ConfigVariableSiteNSCA(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self):
-        return ConfigDomainOMD
-
-    def ident(self):
-        return "site_nsca"
-
-    def valuespec(self):
-        return Optional(
-            valuespec=Integer(
-                title=_("Port number"),
-                minvalue=1,
-                maxvalue=65535,
-                default_value=5667,
-            ),
-            title=_("Listen for passive checks via NSCA"),
-            help=_(
-                "Enable listening for passible checks via NSCA. With the default configuration "
-                "the TCP port 5667 will be opened. You may also want to update the NSCA "
-                "configuration file %s to fit your needs."
-            )
-            % site_neutral_path("etc/nsca/nsca.cfg"),
-            label=_("Enable listening for passive checks using NSCA"),
-            none_label=_("NSCA is disabled"),
-        )
-
-
 # .
 #   .--Diskspace-----------------------------------------------------------.
 #   |              ____  _     _                                           |

@@ -67,8 +67,6 @@ def fake_omd_default_globals(monkeypatch: MonkeyPatch) -> None:
             "site_multisite_authorisation": True,
             "site_multisite_cookie_auth": True,
             "site_nagios_theme": "classicui",
-            "site_nsca": None,
-            "site_nsca_tcp_port": "5667",
             "site_pnp4nagios": True,
             "site_tmpfs": True,
         },

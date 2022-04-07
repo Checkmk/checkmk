@@ -17,7 +17,6 @@ def test_init_scripts(site: Site):
         "mkeventd",
         "nagios",
         "npcd",
-        "nsca",
         "pnp_gearman_worker",
         "rrdcached",
         "xinetd",

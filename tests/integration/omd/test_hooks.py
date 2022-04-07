@@ -30,8 +30,6 @@ def test_hooks(site: Site):
         "MULTISITE_AUTHORISATION",
         "MULTISITE_COOKIE_AUTH",
         "NAGIOS_THEME",
-        "NSCA",
-        "NSCA_TCP_PORT",
         "PNP4NAGIOS",
         "TMPFS",
     ]

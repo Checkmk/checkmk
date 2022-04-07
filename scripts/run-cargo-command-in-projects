@@ -5,7 +5,7 @@ REPO_DIR=$(git rev-parse --show-toplevel)
 
 # find all cargo project files, not located in ".cargo" folders
 # We use ".cargo" instead of $CARGO_HOME in order to skip even multiple .cargo directories
-CARGO_PROJECTS=$(find "${REPO_DIR}" -path ".cargo" -prune -o -name Cargo.toml -print0 | xargs --null dirname)
+CARGO_PROJECTS=$(find "${REPO_DIR}" -path "*/.cargo" -prune -o -name Cargo.toml -print0 | xargs --null dirname)
 
 result=0
 

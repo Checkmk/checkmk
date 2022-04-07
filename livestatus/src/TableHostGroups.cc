@@ -62,7 +62,7 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
             std::make_unique<HostListRenderer>(
                 HostListRenderer::verbosity::none),
             column::host_list::HostListGetter<hostgroup>{
-                mc, [](const hostgroup &r) { return r.members; }}));
+                [](const hostgroup &r) { return r.members; }}));
     table->addColumn(std::make_unique<
                      ListColumn<hostgroup, column::host_list::Entry>>(
         prefix + "members_with_state",
@@ -70,7 +70,7 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<HostListRenderer>(HostListRenderer::verbosity::full),
         column::host_list::HostListGetter<hostgroup>{
-            mc, [](const hostgroup &r) { return r.members; }}));
+            [](const hostgroup &r) { return r.members; }}));
 
     table->addColumn(std::make_unique<IntColumn<hostgroup>>(
         prefix + "worst_host_state",

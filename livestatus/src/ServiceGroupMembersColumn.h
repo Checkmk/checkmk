@@ -17,11 +17,11 @@
 #include "ListColumn.h"
 #include "ListFilter.h"  // IWYU pragma: keep
 #include "Row.h"
-#include "auth.h"
 #include "opids.h"
 enum class ServiceState;
 class Logger;
 class ListRenderer;
+class User;
 
 namespace column::service_group_members {
 
@@ -85,7 +85,7 @@ std::unique_ptr<Filter> ServiceGroupMembersColumn<T, U>::createFilter(
         // `timezone_offset` is unused
         [this](Row row, const User &user,
                std::chrono::seconds timezone_offset) {
-            return this->getValue(row, user.authUser(), timezone_offset);
+            return this->getValue(row, user, timezone_offset);
         },
         relOp,
         column::service_group_members::detail::checkValue(this->logger(), relOp,

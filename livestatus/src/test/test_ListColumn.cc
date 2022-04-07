@@ -10,6 +10,7 @@
 
 #include "ListColumn.h"
 #include "Row.h"
+#include "auth.h"
 #include "gtest/gtest.h"
 
 using namespace std::chrono_literals;
@@ -31,8 +32,10 @@ TEST(ListColumn, GetValueLambda) {
         "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
+    User dummy_user{nullptr, ServiceAuthorization::loose,
+                    GroupAuthorization::loose};
 
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
+    EXPECT_EQ(v, col.getValue(row, dummy_user, 0s));
 }
 
 TEST(ListColumn, GetValueDefault) {
@@ -44,7 +47,9 @@ TEST(ListColumn, GetValueDefault) {
         "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
+    User dummy_user{nullptr, ServiceAuthorization::loose,
+                    GroupAuthorization::loose};
 
-    EXPECT_NE(v, col.getValue(row, nullptr, 0s));
-    EXPECT_EQ(value_type{}, col.getValue(row, nullptr, 0s));
+    EXPECT_NE(v, col.getValue(row, dummy_user, 0s));
+    EXPECT_EQ(value_type{}, col.getValue(row, dummy_user, 0s));
 }

@@ -14,9 +14,7 @@
 #include <vector>
 
 #include "ListColumn.h"
-#include "MonitoringCore.h"
 #include "auth.h"
-#include "contact_fwd.h"
 
 #ifdef CMC
 #include <unordered_set>
@@ -45,12 +43,9 @@ class HostListGetter {
     using relatives_t = std::function<std::unordered_set<Host *>(const T &)>;
 
 public:
-    HostListGetter(MonitoringCore *mc, relatives_t f)
-        : mc_{mc}, relatives_{std::move(f)} {}
+    explicit HostListGetter(relatives_t f) : relatives_{std::move(f)} {}
 
-    std::vector<Entry> operator()(const T &t, const contact *auth_user) const {
-        User user{auth_user, mc_->serviceAuthorization(),
-                  mc_->groupAuthorization()};
+    std::vector<Entry> operator()(const T &t, const User &user) const {
         std::vector<Entry> entries{};
         for (const auto &hst : relatives_(t)) {
             if (user.is_authorized_for_host(*hst)) {
@@ -67,12 +62,9 @@ public:
     using relatives_t = std::function<hostsmember *(const T &)>;
 
 public:
-    HostListGetter(MonitoringCore *mc, relatives_t f)
-        : mc_{mc}, relatives_{std::move(f)} {}
+    explicit HostListGetter(relatives_t f) : relatives_{std::move(f)} {}
 
-    std::vector<Entry> operator()(const T &t, const contact *auth_user) const {
-        User user{auth_user, mc_->serviceAuthorization(),
-                  mc_->groupAuthorization()};
+    std::vector<Entry> operator()(const T &t, const User &user) const {
         std::vector<Entry> entries{};
         for (const hostsmember *mem = relatives_(t); mem != nullptr;
              mem = mem->next) {
@@ -88,7 +80,6 @@ public:
 
 #endif
 private:
-    MonitoringCore *mc_;
     relatives_t relatives_;
 };
 }  // namespace column::host_list

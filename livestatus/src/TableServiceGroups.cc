@@ -11,23 +11,18 @@
 #include "Column.h"
 #include "IntColumn.h"
 #include "LogEntry.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListState.h"
 #include "StringColumn.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "nagios.h"
 
 namespace {
 class ServiceGroupMembersGetter {
 public:
-    explicit ServiceGroupMembersGetter(MonitoringCore *mc) : mc_{mc} {};
     std::vector<::column::service_group_members::Entry> operator()(
-        const servicegroup &sm, const contact *auth_user) const {
-        User user{auth_user, mc_->serviceAuthorization(),
-                  mc_->groupAuthorization()};
+        const servicegroup &sm, const User &user) const {
         std::vector<::column::service_group_members::Entry> entries;
         for (servicesmember *mem = sm.members; mem != nullptr;
              mem = mem->next) {
@@ -41,9 +36,6 @@ public:
         }
         return entries;
     }
-
-private:
-    MonitoringCore *mc_;
 };
 }  // namespace
 
@@ -93,7 +85,7 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceGroupMembersRenderer>(
             ServiceGroupMembersRenderer::verbosity::none),
-        ServiceGroupMembersGetter{table->core()}));
+        ServiceGroupMembersGetter{}));
     table->addColumn(std::make_unique<ServiceGroupMembersColumn<
                          servicegroup, ::column::service_group_members::Entry>>(
         prefix + "members_with_state",
@@ -101,7 +93,7 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceGroupMembersRenderer>(
             ServiceGroupMembersRenderer::verbosity::full),
-        ServiceGroupMembersGetter{table->core()}));
+        ServiceGroupMembersGetter{}));
 
     table->addColumn(std::make_unique<IntColumn<servicegroup>>(
         prefix + "worst_service_state",

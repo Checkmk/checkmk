@@ -44,7 +44,6 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -632,9 +631,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "groups", "A list of all service groups this object is in",
-        offsets, [mc](const service &svc, const contact *auth_user) {
-            User user{auth_user, mc->serviceAuthorization(),
-                      mc->groupAuthorization()};
+        offsets, [](const service &svc, const User &user) {
             std::vector<std::string> group_names;
             for (objectlist *list = svc.servicegroups_ptr; list != nullptr;
                  list = list->next) {

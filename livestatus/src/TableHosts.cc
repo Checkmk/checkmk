@@ -48,7 +48,6 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
@@ -72,10 +71,9 @@ bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
 class ServiceListGetter {
 public:
     explicit ServiceListGetter(MonitoringCore *mc) : mc_{mc} {}
+
     std::vector<::column::service_list::Entry> operator()(
-        const host &hst, const contact *auth_user) const {
-        User user{auth_user, mc_->serviceAuthorization(),
-                  mc_->groupAuthorization()};
+        const host &hst, const User &user) const {
         std::vector<::column::service_list::Entry> entries{};
         for (servicesmember *mem = hst.services; mem != nullptr;
              mem = mem->next) {
@@ -630,7 +628,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             std::make_unique<HostListRenderer>(
                 HostListRenderer::verbosity::none),
             column::host_list::HostListGetter<host>{
-                mc, [](const host &r) { return r.parent_hosts; }}));
+                [](const host &r) { return r.parent_hosts; }}));
     table->addColumn(
         std::make_unique<ListColumn<host, column::host_list::Entry>>(
             prefix + "childs", "A list of all direct children of the host",
@@ -638,7 +636,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             std::make_unique<HostListRenderer>(
                 HostListRenderer::verbosity::none),
             column::host_list::HostListGetter<host>{
-                mc, [](const host &r) { return r.child_hosts; }}));
+                [](const host &r) { return r.child_hosts; }}));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<
                                 ListColumn<host, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
@@ -780,9 +778,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "groups", "A list of all host groups this object is in",
-        offsets, [mc](const host &hst, const contact *auth_user) {
-            User user{auth_user, mc->serviceAuthorization(),
-                      mc->groupAuthorization()};
+        offsets, [](const host &hst, const User &user) {
             std::vector<std::string> group_names;
             for (objectlist *list = hst.hostgroups_ptr; list != nullptr;
                  list = list->next) {

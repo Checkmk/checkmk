@@ -16,6 +16,7 @@
 #include "Filter.h"
 #include "ListColumn.h"
 #include "Row.h"
+#include "auth.h"
 #include "opids.h"
 class IntFilter;
 class Logger;
@@ -51,8 +52,11 @@ public:
             kind, this->name(),
             [this](Row row) {
                 return column::attribute_list::decode(
-                    column::attribute_list::encode(
-                        this->getValue(row, nullptr, {})));
+                    column::attribute_list::encode(this->getValue(
+                        row,
+                        User{nullptr, ServiceAuthorization::loose,
+                             GroupAuthorization::loose},
+                        {})));
             },
             relOp, column::attribute_list::refValueFor(value, this->logger()));
     }

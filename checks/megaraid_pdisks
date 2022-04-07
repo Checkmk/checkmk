@@ -16,6 +16,14 @@
 # Firmware state: Unconfigured(good)
 # Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BSC
 
+from typing import Iterable, Mapping, NamedTuple, Optional
+
+StringTable = list[list[str]]
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+CheckResult = Iterable[tuple[int, str]]
+
 # The agent provides some new information since 1.1.9.
 # The dev2enc infos are sent from the agent to have the
 # real enclosure numbers instead of the device ids which
@@ -33,7 +41,16 @@ megaraid_pdisks_legacy_mode = False
 megaraid_pdisks_adapterstr = ["e", "f", "g", "h", "i", "j", "k", "l"]
 
 
-def parse_megaraid_pdisks(string_table):
+class Disk(NamedTuple):
+    name: str
+    state: str
+    failures: Optional[int]
+
+
+Section = Mapping[str, Disk]
+
+
+def parse_megaraid_pdisks(string_table: StringTable) -> Section:
     parsed = {}
     adapters = {0: {}}
     current_adapter = adapters[0]
@@ -76,14 +93,8 @@ def parse_megaraid_pdisks(string_table):
             # Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
             adapter_name = megaraid_pdisks_adapterstr[adapter]
             enclosure = adapters[adapter][enclosure_devid]
-            parsed[f"{adapter_name}{enclosure}/{slot}"] = (
-                adapter_name,
-                enclosure,
-                enclosure_devid,
-                slot,
-                state,
-                name,
-                predictive_failure_count,
+            parsed[f"{adapter_name}{enclosure}/{slot}"] = Disk(
+                name, state, predictive_failure_count
             )
 
             predictive_failure_count = None
@@ -91,8 +102,8 @@ def parse_megaraid_pdisks(string_table):
     return parsed
 
 
-def discover_megaraid_pdisks(parsed):
-    yield from ((item, {}) for item in parsed)
+def discover_megaraid_pdisks(section: Section) -> DiscoveryResult:
+    yield from ((item, {}) for item in section)
 
 
 megaraid_pdisks_states = {
@@ -107,18 +118,16 @@ megaraid_pdisks_states = {
 }
 
 
-def check_megaraid_pdisks(item, _no_params, parsed):
-    try:
-        adapter, enclosure, _enc_dev_id, slot, state, name, failure_count = parsed[item]
-    except KeyError:
+def check_megaraid_pdisks(item, _no_params, section: Section) -> CheckResult:
+    if (disk := section.get(item)) is None:
         return
 
-    yield megaraid_pdisks_states.get(state, 3), f"{state} ({name})"
+    yield megaraid_pdisks_states.get(disk.state, 3), f"{disk.state} ({disk.name})"
 
-    if failure_count is None:
+    if disk.failures is None:
         return
 
-    yield 1 if failure_count > 0 else 0, f"Predictive fail count: {failure_count}"
+    yield 1 if disk.failures > 0 else 0, f"Predictive fail count: {disk.failures}"
 
 
 check_info["megaraid_pdisks"] = {

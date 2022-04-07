@@ -29,7 +29,7 @@ info = [
     ['Inquiry', 'Data:', 'FUJITSU', 'MBB2147RC', '5204BS04P9104BSC']
 ]
 
-discovery = {'': [('e10/0', None), ('e11/1', None), ('e12/2', None)]}
+discovery = {'': [('e10/0', {}), ('e11/1', {}), ('e12/2', {})]}
 
 checks = {
     '': [

@@ -33,14 +33,14 @@ megaraid_pdisks_legacy_mode = False
 megaraid_pdisks_adapterstr = ["e", "f", "g", "h", "i", "j", "k", "l"]
 
 
-def megaraid_pdisks_parse(info):
+def parse_megaraid_pdisks(string_table):
     adapters = {0: {}}
     current_adapter = adapters[0]
     return_var = []
     adapter = 0
     enclosure_devid = -181
     predictive_failure_count = None
-    for line in info:
+    for line in string_table:
         if line[0] == "adapter":
             current_adapter = {}
             adapters[int(line[1])] = current_adapter
@@ -91,12 +91,9 @@ def megaraid_pdisks_parse(info):
     return return_var
 
 
-def inventory_megaraid_pdisks(info):
-    info = megaraid_pdisks_parse(info)
-    inventory = []
-    for adapter, enclosure, _enc_dev_id, slot, _state, _name, _predictive_failure_count in info:
-        inventory.append(("%s%s/%s" % (adapter, enclosure, slot), None))
-    return inventory
+def discover_megaraid_pdisks(parsed):
+    for adapter, enclosure, _enc_dev_id, slot, _state, _name, _predictive_failure_count in parsed:
+        yield "%s%s/%s" % (adapter, enclosure, slot), {}
 
 
 megaraid_pdisks_states = {
@@ -111,9 +108,8 @@ megaraid_pdisks_states = {
 }
 
 
-def check_megaraid_pdisks(item, _no_params, info):
-    info = megaraid_pdisks_parse(info)
-    for adapter, enclosure, _enc_dev_id, slot, state, name, predictive_failure_count in info:
+def check_megaraid_pdisks(item, _no_params, parsed):
+    for adapter, enclosure, _enc_dev_id, slot, state, name, predictive_failure_count in parsed:
         if "%s%s/%s" % (adapter, enclosure, slot) == item:
             infotext = "%s (%s)" % (state, name)
 
@@ -130,8 +126,9 @@ def check_megaraid_pdisks(item, _no_params, info):
 
 
 check_info["megaraid_pdisks"] = {
+    "parse_function": parse_megaraid_pdisks,
     "check_function": check_megaraid_pdisks,
-    "inventory_function": inventory_megaraid_pdisks,
+    "inventory_function": discover_megaraid_pdisks,
     "service_description": "RAID PDisk Adapt/Enc/Sl %s",
     "has_perfdata": False,
 }

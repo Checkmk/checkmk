@@ -92,9 +92,9 @@ public:
         const std::string &value) const override {
         return std::make_unique<ListFilter>(
             kind, name(),
-            [this](Row row, const contact *auth_user,
+            [this](Row row, const User &user,
                    std::chrono::seconds timezone_offset) {
-                return getValue(row, auth_user, timezone_offset);
+                return getValue(row, user.authUser(), timezone_offset);
             },
             relOp, value, logger());
     }

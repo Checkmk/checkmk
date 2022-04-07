@@ -717,9 +717,18 @@ class IPMIParameters(BaseSchema):
 class MetaData(BaseSchema):
     cast_to_dict = True
 
-    created_at = fields.Timestamp(description="When has this object been created.",)
-    updated_at = fields.Timestamp(description="When this object was last changed.",)
-    created_by = fields.String(description="The user id under which this object has been created.",)
+    created_at = fields.Timestamp(
+        description="When has this object been created.",
+        allow_none=True,
+    )
+    updated_at = fields.Timestamp(
+        description="When this object was last changed.",
+        allow_none=True,
+    )
+    created_by = fields.String(
+        description="The user id under which this object has been created.",
+        allow_none=True,
+    )
 
 
 class HostAttributeManagementBoardField(_fields.String):

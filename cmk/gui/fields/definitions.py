@@ -1009,7 +1009,10 @@ def attributes_field(object_type: ObjectType,
                 attr_openapi_schema(object_type, object_context),
                 custom_schema[object_type],
             ],
-            context={'object_context': object_context},
+            metadata={"context": {
+                "object_context": object_context
+            }},
+            merged=True,  # to unify both models
             description=description,
             example=example,
             many=many,
@@ -1315,6 +1318,8 @@ class Timestamp(_fields.DateTime):
 __all__ = [
     'attributes_field',
     'customer_field',
+    'CustomHostAttributes',
+    'CustomFolderAttributes',
     'column_field',
     'ExprSchema',
     'FolderField',

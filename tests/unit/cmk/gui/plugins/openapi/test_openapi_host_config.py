@@ -9,6 +9,9 @@ import pytest
 
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+from cmk.utils import version
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automation_calls, with_host):
@@ -454,13 +457,26 @@ def test_openapi_host_custom_attributes(
         status=200,
     )
 
-    wsgi_app.call_method(
+    update1 = wsgi_app.call_method(
         'put',
         base + "/objects/host_config/example.com",
         status=200,
         params='{"attributes": {"foo": "bar"}}',
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
+    )
+
+    # Internal, non-editable attributes shall not be settable.
+    wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=400,
+        params='{"attributes": {"meta_data": "bar"}}',
+        headers={
+            "If-Match": update1.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
     )
 
     # Unknown custom attribute
@@ -821,12 +837,15 @@ def test_openapi_create_host_with_contact_group(
     )
 
 
-def test_openapi_create_host_with_custom_attributes(wsgi_app, with_automation_user, monkeypatch):
-    # TODO: remove mock verification once custom attributes can be set via the REST API
-    monkeypatch.setattr("cmk.gui.watolib.host_attributes._retrieve_host_attributes",
-                        lambda: ["ipaddress", "custom"])
+@managedtest
+def test_openapi_create_host_with_custom_attributes(
+    wsgi_app,
+    with_automation_user,
+    custom_host_attribute,
+):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     json_data = {
@@ -834,10 +853,10 @@ def test_openapi_create_host_with_custom_attributes(wsgi_app, with_automation_us
         "host_name": "example.com",
         "attributes": {
             "ipaddress": "192.168.0.123",
-            "custom": "abc",
+            "foo": "abc",
         },
     }
-    wsgi_app.call_method(
+    resp = wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params=json.dumps(json_data),
@@ -845,3 +864,5 @@ def test_openapi_create_host_with_custom_attributes(wsgi_app, with_automation_us
         content_type="application/json",
         headers={"Accept": "application/json"},
     )
+    assert "ipaddress" in resp.json["extensions"]["attributes"]
+    assert "foo" in resp.json["extensions"]["attributes"]

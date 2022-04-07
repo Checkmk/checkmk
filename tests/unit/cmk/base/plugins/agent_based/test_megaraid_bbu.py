@@ -96,6 +96,6 @@ def test_check_low_cap(check_megaraid_bbu, section) -> None:
     assert list(check_megaraid_bbu("0", section)) == [
         Result(
             state=State.WARN,
-            summary="Remaining Capacity Low is Yes (!) (Expected: No), No charge information reported for this controller",
+            summary="Remaining capacity low: Yes (expected: No), No charge information reported for this controller",
         )
     ]

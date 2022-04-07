@@ -8,14 +8,13 @@
 # type: ignore
 
 
-
-checkname = u'megaraid_ldisks'
+checkname = 'megaraid_ldisks'
 
 
 parsed = {'0/0': {}, '0/1': {}}
 
 
-discovery = {'': [('0/0', None), ('0/1', None)]}
+discovery = {'': [('0/0', {}), ('0/1', {})]}
 
 
 checks = {'': [('0/0', {}, []), ('0/1', {}, [])]}

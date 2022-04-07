@@ -110,7 +110,7 @@ impl PullFixture {
 async fn test_pull_tls_main() -> AnyhowResult<()> {
     let mut fixture: PullFixture = PullFixture::setup("9999", "test_pull_tls_main", false)?;
     // Give it some time to provide the TCP socket
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
     let mut id_buf: [u8; 2] = [0; 2];
 
@@ -144,7 +144,7 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
     let mut fixture: PullFixture = PullFixture::setup("9997", "test_pull_tls_check_guards", false)?;
 
     // Give it some time to provide the TCP socket
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
     let mut id_buf: [u8; 2] = [0; 2];
 
@@ -169,7 +169,7 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
 async fn test_pull_legacy() -> AnyhowResult<()> {
     let mut fixture: PullFixture = PullFixture::setup("9998", "test_pull_legacy", true)?;
     // Give it some time to provide the TCP socket.
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
     // Try to read plain data from TLS controller.
     // Connection will timeout after 1 sec, only sending the 16.

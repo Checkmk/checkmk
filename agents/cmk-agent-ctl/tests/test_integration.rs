@@ -83,11 +83,11 @@ impl PullFixture {
         Ok(PullFixture {
             test_port: String::from(port),
             test_agent_output: test_agent_output.to_string(),
-            uuid: uuid,
-            certs: certs,
-            agent_stream_thread: agent_stream_thread,
-            pull_thread: pull_thread,
-            test_dir: test_dir,
+            uuid,
+            certs,
+            agent_stream_thread,
+            pull_thread,
+            test_dir,
         })
     }
 
@@ -201,7 +201,7 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"");
-    assert!(std::net::TcpStream::connect(connect_point.clone()).is_err());
+    assert!(std::net::TcpStream::connect(connect_point).is_err());
 
     fixture.teardown();
     Ok(())

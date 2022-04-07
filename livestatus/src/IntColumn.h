@@ -67,8 +67,7 @@ public:
     // aggregate values for hosts/services, but they should do this only for
     // "allowed" hosts/services. Find a better design than this parameter
     // passing hell..
-    [[nodiscard]] virtual value_type getValue(Row row,
-                                              const contact *auth_user) const {
+    [[nodiscard]] value_type getValue(Row row, const contact *auth_user) const {
         const T *data = IntColumn<T, Default>::template columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);

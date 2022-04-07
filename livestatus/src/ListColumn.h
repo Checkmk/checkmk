@@ -107,8 +107,8 @@ public:
 
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
-    virtual value_type getValue(Row row, const contact *auth_user,
-                                std::chrono::seconds timezone_offset) const {
+    value_type getValue(Row row, const contact *auth_user,
+                        std::chrono::seconds timezone_offset) const {
         auto raw_value = getRawValue(row, auth_user, timezone_offset);
         std::vector<std::string> values;
         std::transform(raw_value.begin(), raw_value.end(),

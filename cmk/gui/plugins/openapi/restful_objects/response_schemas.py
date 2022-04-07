@@ -288,7 +288,7 @@ class HostExtensions(BaseSchema):
     folder = fields.FolderField(description="The folder, in which this host resides.",)
     attributes = fields.attributes_field(
         "host",
-        "update",
+        "view",
         description="Attributes of this host.",
         example={'ipaddress': '192.168.0.123'},
     )
@@ -323,7 +323,7 @@ class FolderExtensions(BaseSchema):
     path = fields.String(description="The full path of this folder, slash delimited.",)
     attributes = fields.attributes_field(
         "folder",
-        "update",
+        "view",
         description=("The folder's attributes. Hosts placed in this folder will inherit "
                      "these attributes."),
     )

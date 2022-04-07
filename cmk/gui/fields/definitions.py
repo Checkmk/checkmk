@@ -9,7 +9,7 @@ import json
 import re
 import typing
 from datetime import datetime
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import pytz
 from marshmallow import fields as _fields, post_load
@@ -22,7 +22,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.groups import load_group_information
-from cmk.gui.watolib.host_attributes import validate_host_attributes
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.utils.exceptions import MKException
 from cmk.utils.livestatus_helpers.expressions import (
@@ -934,16 +933,30 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
+def validate_custom_host_attributes(data: Dict[str, str]) -> Dict[str, str]:
+    for name, value in data.items():
+        try:
+            attribute = watolib.host_attribute(name)
+        except KeyError:
+            raise ValidationError(f"No such attribute, {name!r}", field_name=name)
+
+        if attribute.topic() != watolib.host_attributes.HostAttributeTopicCustomAttributes:
+            raise ValidationError(f"{name} is not a custom host attribute.")
+
+        try:
+            attribute.validate_input(value, "")
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+    return data
+
+
 class CustomHostAttributes(ValueTypedDictSchema):
     value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
 
     @post_load
     def _valid(self, data, **kwargs):
-        try:
-            validate_host_attributes(data, new=self.context['object_context'])
-            return data
-        except MKUserError as exc:
-            raise ValidationError(str(exc))
+        return validate_custom_host_attributes(data)
 
 
 class CustomFolderAttributes(ValueTypedDictSchema):
@@ -951,11 +964,7 @@ class CustomFolderAttributes(ValueTypedDictSchema):
 
     @post_load
     def _valid(self, data, **kwargs):
-        try:
-            validate_host_attributes(data, new=self.context['object_context'])
-            return data
-        except MKUserError as exc:
-            raise ValidationError(str(exc))
+        return validate_custom_host_attributes(data)
 
 
 def attributes_field(object_type: ObjectType,

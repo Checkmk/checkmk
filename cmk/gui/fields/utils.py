@@ -26,8 +26,8 @@ class Attr(NamedTuple):
     field: Optional[fields.Field] = None
 
 
-ObjectType = Literal['host', 'folder', 'cluster']
-ObjectContext = Literal['create', 'update']
+ObjectType = Literal["host", "folder", "cluster"]
+ObjectContext = Literal["create", "update", "view"]
 
 
 def collect_attributes(
@@ -88,12 +88,18 @@ def collect_attributes(
             return None
         return func()
 
+    # NOTE:
+    #   We want to get all the topics, so we don't miss any attributes. We filter them later.
+    #   new=True may also be new=False, it doesn't matter in this context.
     result = []
-    new = context == 'create'
-    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(object_type, new):
+    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics("always", new=True):
         for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
-            if not attr.is_visible(object_type, new):
+            if object_type == "folder" and not attr.show_in_folder():
                 continue
+
+            if context in ["create", "update"] and not attr.openapi_editable():
+                continue
+
             help_text: str = attr.help() or ""
             # TODO: what to do with attr.depends_on_tags()?
             attr_entry = Attr(
@@ -200,7 +206,7 @@ def _field_from_attr(attr):
         'required': attr.mandatory,
         'description': attr.description,
     }
-    # If we would assign None to enum, this would lead to a broken OpenApi specification!
+    # If we assigned None to enum, this would lead to a broken OpenApi specification!
     if attr.enum is not None:
         kwargs['enum'] = attr.enum
         if None in attr.enum:

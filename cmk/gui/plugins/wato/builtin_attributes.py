@@ -635,6 +635,9 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def editable(self):
         return False
 
+    def openapi_editable(self):
+        return False
+
     def openapi_field(self) -> fields.Field:
         return fields.Nested(fields.NetworkScanResult,
                              description="Read only access to the network scan result")
@@ -1044,6 +1047,9 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
         return False
 
     def editable(self):
+        return False
+
+    def openapi_editable(self) -> bool:
         return False
 
     def valuespec(self):

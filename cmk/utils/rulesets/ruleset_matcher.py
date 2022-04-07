@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple, TYPE_CHECKING
+from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -23,6 +24,7 @@ from cmk.utils.type_defs import (
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
     Labels,
+    LabelSources,
     RuleConditionsSpec,
     Ruleset,
     RuleSpec,
@@ -38,9 +40,6 @@ from cmk.utils.type_defs import (
     TagIDToTaggroupID,
     TagsOfHosts,
 )
-
-if TYPE_CHECKING:
-    from cmk.utils.labels import LabelManager
 
 LabelConditions = Dict  # TODO: Optimize this
 PreprocessedHostRuleset = Dict[HostName, List[RuleValue]]
@@ -98,7 +97,7 @@ class RulesetMatcher:
         tag_to_group_map: TagIDToTaggroupID,
         host_tags: TagsOfHosts,
         host_paths: Dict[HostName, str],
-        labels: "LabelManager",
+        labels: LabelManager,
         all_configured_hosts: Set[HostName],
         clusters_of: Dict[HostName, List[HostName]],
         nodes_of: Dict[HostName, List[HostName]],
@@ -116,6 +115,10 @@ class RulesetMatcher:
             clusters_of,
             nodes_of,
         )
+        self.labels_of_host = self.ruleset_optimizer.labels_of_host
+        self.labels_of_service = self.ruleset_optimizer.labels_of_service
+        self.label_sources_of_host = self.ruleset_optimizer.label_sources_of_host
+        self.label_sources_of_service = self.ruleset_optimizer.label_sources_of_service
 
         self._service_match_cache: Dict = {}
 
@@ -310,7 +313,7 @@ class RulesetOptimizer:
         ruleset_matcher: RulesetMatcher,
         host_tags: TagsOfHosts,
         host_paths: Dict[HostName, str],
-        labels: "LabelManager",
+        labels: LabelManager,
         all_configured_hosts: Set[HostName],
         clusters_of: Dict[HostName, List[HostName]],
         nodes_of: Dict[HostName, List[HostName]],
@@ -574,7 +577,7 @@ class RulesetOptimizer:
                     continue
 
                 if labels:
-                    host_labels = self._labels.labels_of_host(self._ruleset_matcher, hostname)
+                    host_labels = self.labels_of_host(hostname)
                     if not matches_labels(host_labels, labels):
                         continue
 
@@ -744,6 +747,94 @@ class RulesetOptimizer:
             group_ref = tuple(sorted(self._host_tags[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
+
+    def labels_of_host(self, hostname: HostName) -> Labels:
+        """Returns the effective set of host labels from all available sources
+
+        1. Discovered labels
+        2. Ruleset "Host labels"
+        3. Explicit labels (via host/folder config)
+        4. Builtin labels
+
+        Last one wins.
+        """
+        labels: Dict[str, str] = {}
+        labels.update(self._discovered_labels_of_host(hostname))
+        labels.update(self._ruleset_labels_of_host(hostname))
+        labels.update(self._labels.explicit_host_labels.get(hostname, {}))
+        labels.update(self._builtin_labels_of_host(hostname))
+        return labels
+
+    def label_sources_of_host(self, hostname: HostName) -> LabelSources:
+        """Returns the effective set of host label keys with their source
+        identifier instead of the value Order and merging logic is equal to
+        _get_host_labels()"""
+        labels: LabelSources = {}
+        labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
+        labels.update({k: "discovered" for k in self._builtin_labels_of_host(hostname)})
+        labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
+        labels.update(
+            {k: "explicit" for k in self._labels.explicit_host_labels.get(hostname, {}).keys()}
+        )
+        return labels
+
+    def _ruleset_labels_of_host(self, hostname: HostName) -> Labels:
+        match_object = RulesetMatchObject(hostname, service_description=None)
+        return self._ruleset_matcher.get_host_ruleset_merged_dict(
+            match_object, self._labels.host_label_rules
+        )
+
+    @staticmethod
+    def _discovered_labels_of_host(hostname: HostName) -> Labels:
+        return {
+            label_id: label["value"]
+            for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
+        }
+
+    @staticmethod
+    def _builtin_labels_of_host(hostname: HostName) -> Labels:
+        return {
+            label_id: label["value"] for label_id, label in BuiltinHostLabelsStore().load().items()
+        }
+
+    def labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
+        """Returns the effective set of service labels from all available sources
+
+        1. Discovered labels
+        2. Ruleset "Host labels"
+
+        Last one wins.
+        """
+        labels: Dict[str, str] = {}
+        labels.update(self._labels.discovered_labels_of_service(hostname, service_desc))
+        labels.update(self._ruleset_labels_of_service(hostname, service_desc))
+
+        return labels
+
+    def label_sources_of_service(
+        self, hostname: HostName, service_desc: ServiceName
+    ) -> LabelSources:
+        """Returns the effective set of host label keys with their source
+        identifier instead of the value Order and merging logic is equal to
+        _get_host_labels()"""
+        labels: LabelSources = {}
+        labels.update(
+            {
+                k: "discovered"
+                for k in self._labels.discovered_labels_of_service(hostname, service_desc)
+            }
+        )
+        labels.update(
+            {k: "ruleset" for k in self._ruleset_labels_of_service(hostname, service_desc)}
+        )
+
+        return labels
+
+    def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
+        match_object = RulesetMatchObject(hostname, service_description=service_desc)
+        return self._ruleset_matcher.get_service_ruleset_merged_dict(
+            match_object, self._labels.service_label_rules
+        )
 
 
 def _tags_or_labels_cache_id(tag_or_label_spec):

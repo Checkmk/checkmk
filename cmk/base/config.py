@@ -2426,12 +2426,8 @@ class HostConfig:
         self.tags = self._config_cache.tag_list_of_host(hostname)
         self.tag_groups = self._config_cache.tags_of_host(hostname)
 
-        self.labels = self._config_cache.labels.labels_of_host(
-            self._config_cache.ruleset_matcher, hostname
-        )
-        self.label_sources = self._config_cache.labels.label_sources_of_host(
-            self._config_cache.ruleset_matcher, hostname
-        )
+        self.labels = self._config_cache.ruleset_matcher.labels_of_host(hostname)
+        self.label_sources = self._config_cache.ruleset_matcher.label_sources_of_host(hostname)
 
         self.computed_datasources = cmk.utils.tags.compute_datasources(self.tag_groups)
 
@@ -3636,12 +3632,12 @@ class ConfigCache:
 
         Last one wins.
         """
-        return self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
+        return self.ruleset_matcher.labels_of_service(hostname, svc_desc)
 
     def label_sources_of_service(self, hostname: HostName, svc_desc: ServiceName) -> LabelSources:
         """Returns the effective set of service label keys with their source identifier instead of the value
         Order and merging logic is equal to labels_of_service()"""
-        return self.labels.label_sources_of_service(self.ruleset_matcher, hostname, svc_desc)
+        return self.ruleset_matcher.label_sources_of_service(hostname, svc_desc)
 
     def extra_attributes_of_service(
         self, hostname: HostName, description: ServiceName
@@ -3789,7 +3785,7 @@ class ConfigCache:
         result = RulesetMatchObject(
             host_name=hostname,
             service_description=svc_desc,
-            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+            service_labels=self.ruleset_matcher.labels_of_service(hostname, svc_desc),
         )
         self._cache_match_object_service[cache_id] = result
         return result
@@ -3812,7 +3808,7 @@ class ConfigCache:
         result = RulesetMatchObject(
             host_name=hostname,
             service_description=item,
-            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+            service_labels=self.ruleset_matcher.labels_of_service(hostname, svc_desc),
         )
         self._cache_match_object_service_checkgroup[cache_id] = result
         return result

@@ -5,126 +5,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Checkmk labels of all kind"""
 
+from __future__ import annotations
+
 import os
 from ast import literal_eval
-from typing import Callable, Dict, Final, List, Mapping, Tuple
+from typing import Callable, Dict, Final, List, Mapping, NamedTuple, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, LabelSources, ServiceName
+from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, ServiceName
 
 UpdatedHostLabelsEntry = Tuple[str, float, str]
 
 
-class LabelManager:
+class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
-    def __init__(
-        self,
-        explicit_host_labels: Dict,
-        host_label_rules: List,
-        service_label_rules: List,
-        discovered_labels_of_service: Callable[[HostName, ServiceName], Labels],
-    ) -> None:
-        super().__init__()
-        self._explicit_host_labels = explicit_host_labels
-        self._host_label_rules = host_label_rules
-        self._service_label_rules = service_label_rules
-        self._discovered_labels_of_service = discovered_labels_of_service
-
-    def labels_of_host(self, ruleset_matcher: RulesetMatcher, hostname: HostName) -> Labels:
-        """Returns the effective set of host labels from all available sources
-
-        1. Discovered labels
-        2. Ruleset "Host labels"
-        3. Explicit labels (via host/folder config)
-        4. Builtin labels
-
-        Last one wins.
-        """
-        labels: Dict[str, str] = {}
-        labels.update(self._discovered_labels_of_host(hostname))
-        labels.update(self._ruleset_labels_of_host(ruleset_matcher, hostname))
-        labels.update(self._explicit_host_labels.get(hostname, {}))
-        labels.update(self._builtin_labels_of_host(hostname))
-        return labels
-
-    def label_sources_of_host(
-        self, ruleset_matcher: RulesetMatcher, hostname: HostName
-    ) -> LabelSources:
-        """Returns the effective set of host label keys with their source
-        identifier instead of the value Order and merging logic is equal to
-        _get_host_labels()"""
-        labels: LabelSources = {}
-        labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
-        labels.update({k: "discovered" for k in self._builtin_labels_of_host(hostname)})
-        labels.update(
-            {k: "ruleset" for k in self._ruleset_labels_of_host(ruleset_matcher, hostname)}
-        )
-        labels.update({k: "explicit" for k in self._explicit_host_labels.get(hostname, {}).keys()})
-        return labels
-
-    def _ruleset_labels_of_host(
-        self, ruleset_matcher: RulesetMatcher, hostname: HostName
-    ) -> Labels:
-        match_object = RulesetMatchObject(hostname, service_description=None)
-        return ruleset_matcher.get_host_ruleset_merged_dict(match_object, self._host_label_rules)
-
-    def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
-        return {
-            label_id: label["value"]
-            for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
-        }
-
-    def _builtin_labels_of_host(self, hostname: HostName) -> Labels:
-        return {
-            label_id: label["value"] for label_id, label in BuiltinHostLabelsStore().load().items()
-        }
-
-    def labels_of_service(
-        self, ruleset_matcher: RulesetMatcher, hostname: HostName, service_desc: ServiceName
-    ) -> Labels:
-        """Returns the effective set of service labels from all available sources
-
-        1. Discovered labels
-        2. Ruleset "Host labels"
-
-        Last one wins.
-        """
-        labels: Dict[str, str] = {}
-        labels.update(self._discovered_labels_of_service(hostname, service_desc))
-        labels.update(self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc))
-
-        return labels
-
-    def label_sources_of_service(
-        self, ruleset_matcher: RulesetMatcher, hostname: HostName, service_desc: ServiceName
-    ) -> LabelSources:
-        """Returns the effective set of host label keys with their source
-        identifier instead of the value Order and merging logic is equal to
-        _get_host_labels()"""
-        labels: LabelSources = {}
-        labels.update(
-            {k: "discovered" for k in self._discovered_labels_of_service(hostname, service_desc)}
-        )
-        labels.update(
-            {
-                k: "ruleset"
-                for k in self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc)
-            }
-        )
-
-        return labels
-
-    def _ruleset_labels_of_service(
-        self, ruleset_matcher: RulesetMatcher, hostname: HostName, service_desc: ServiceName
-    ) -> Labels:
-        match_object = RulesetMatchObject(hostname, service_description=service_desc)
-        return ruleset_matcher.get_service_ruleset_merged_dict(
-            match_object, self._service_label_rules
-        )
+    explicit_host_labels: Dict
+    host_label_rules: List
+    service_label_rules: List
+    discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
 class LabelsSerializer:

@@ -47,3 +47,6 @@ wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }
 [dev-dependencies]
 assert_cmd = { version = "*" }
 predicates = { version = "*" }
+
+[profile.release]
+opt-level = "z"  # Optimize for size.

@@ -45,6 +45,7 @@ from cmk.gui.fields.definitions import (
 )
 from cmk.gui.fields.attributes import (
     IPMIParameters,
+    LockedBy,
     SNMPCredentials,
     NetworkScan,
     NetworkScanResult,
@@ -86,6 +87,7 @@ __all__ = [
     'IPv6',
     'IPv6Interface',
     'List',
+    'LockedBy',
     'MetaData',
     'Nested',
     'query_field',

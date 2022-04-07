@@ -9,6 +9,7 @@ import pytest
 
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.utils import version
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
@@ -866,3 +867,128 @@ def test_openapi_create_host_with_custom_attributes(
     )
     assert "ipaddress" in resp.json["extensions"]["attributes"]
     assert "foo" in resp.json["extensions"]["attributes"]
+
+
+def test_openapi_add_host_with_attributes(
+    wsgi_app,
+    with_automation_user,
+) -> None:
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    response = wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps({
+            "host_name": "foobar",
+            "folder": "/",
+            "attributes": {
+                "alias": "ALIAS",
+                "locked_by": {
+                    "site_id": "site_id",
+                    "program_id": "dcd",
+                    "instance_id": "connection_id",
+                },
+                "locked_attributes": ["alias"],
+            },
+        }),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    api_attributes = response.json["extensions"]["attributes"]
+    assert api_attributes["alias"] == "ALIAS"
+    assert api_attributes["locked_by"] == {
+        "instance_id": "connection_id",
+        "program_id": "dcd",
+        "site_id": "site_id",
+    }
+    assert api_attributes["locked_attributes"] == ["alias"]
+
+    # Ensure that the attributes were stored as expected
+    hosts_config = Folder.root_folder()._load_hosts_file()
+    assert hosts_config is not None
+    assert hosts_config["host_attributes"]["foobar"]["locked_attributes"] == ["alias"]
+    assert hosts_config["host_attributes"]["foobar"]["locked_by"] == (
+        "site_id",
+        "dcd",
+        "connection_id",
+    )
+
+
+def test_openapi_bulk_add_hosts_with_attributes(
+    wsgi_app,
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    response = wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/actions/bulk-create/invoke",
+        params=json.dumps({
+            "entries": [
+                {
+                    "host_name": "ding",
+                    "folder": "/",
+                    "attributes": {
+                        "ipaddress": "127.0.0.2"
+                    },
+                },
+                {
+                    "host_name": "dong",
+                    "folder": "/",
+                    "attributes": {
+                        "ipaddress": "127.0.0.2",
+                        "site": "NO_SITE",
+                    },
+                },
+            ]
+        }),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+    assert len(response.json["value"]) == 2
+
+    response = wsgi_app.call_method(
+        "put",
+        base + "/domain-types/host_config/actions/bulk-update/invoke",
+        params=json.dumps({
+            "entries": [{
+                "host_name": "ding",
+                "update_attributes": {
+                    "locked_by": {
+                        "site_id": "site_id",
+                        "program_id": "dcd",
+                        "instance_id": "connection_id",
+                    },
+                    "locked_attributes": ["alias"],
+                },
+            }],
+        }),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    # verify attribute ipaddress is set corretly
+    response = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/ding",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    api_attributes = response.json["extensions"]["attributes"]
+    assert api_attributes["locked_by"] == {
+        "instance_id": "connection_id",
+        "program_id": "dcd",
+        "site_id": "site_id",
+    }
+    assert api_attributes["locked_attributes"] == ["alias"]

@@ -61,16 +61,17 @@ def check_megaraid_bbu(item, _no_params, section):
     if (controller := section.get(item)) is None:
         return
 
-    broken = []
-    state = 0
     # get current charge level
-    if "Relative State of Charge" not in controller:
-        charge = ", No charge information reported for this controller"
-    else:
-        charge = ", Charge is %s" % controller["Relative State of Charge"]
-        if "Full Charge Capacity" in controller:
-            charge += ", Capacity is %s" % controller["Full Charge Capacity"]
+    charge_level = controller.get("Relative State of Charge", "not reported for this controller")
+    yield 0, f"Charge: {charge_level}"
+    if (capacity := controller.get("Full Charge Capacity")) is not None:
+        yield 0, f"Capacity: {capacity}"
 
+    if controller.get("Learn Cycle Active") == "Yes":
+        yield 0, "No states to check (controller is in learn cycle)"
+        return
+
+    yielded = False
     # verify defined important parameters to current level
     for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():
         if (value := controller.get(varname)) is None:
@@ -89,17 +90,11 @@ def check_megaraid_bbu(item, _no_params, section):
 
         r = check_state(State(refstate), varname, value, refvalue)
         if r.state is not State.OK:
-            broken.append(r.summary)
-            state = max(state, int(r.state))
+            yielded = True
+            yield int(r.state), r.summary
 
-    if controller.get("Learn Cycle Active") == "Yes":
-        return 0, "No states to check (controller is in learn cycle)" + charge
-
-    # return assembled info
-    if broken:
-        return state, ", ".join(broken) + charge
-
-    return 0, "All states as expected" + charge
+    if not yielded:
+        yield 0, "All states as expected"
 
 
 check_info["megaraid_bbu"] = {

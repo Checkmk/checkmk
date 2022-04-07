@@ -86,8 +86,12 @@ def test_check_ok(check_megaraid_bbu, section) -> None:
     assert list(check_megaraid_bbu("0", section)) == [
         Result(
             state=State.OK,
-            summary="All states as expected, No charge information reported for this controller",
-        )
+            summary="Charge: not reported for this controller",
+        ),
+        Result(
+            state=State.OK,
+            summary="All states as expected",
+        ),
     ]
 
 
@@ -95,7 +99,11 @@ def test_check_low_cap(check_megaraid_bbu, section) -> None:
     section["0"]["Remaining Capacity Low"] = "Yes"
     assert list(check_megaraid_bbu("0", section)) == [
         Result(
+            state=State.OK,
+            summary="Charge: not reported for this controller",
+        ),
+        Result(
             state=State.WARN,
-            summary="Remaining capacity low: Yes (expected: No), No charge information reported for this controller",
-        )
+            summary="Remaining capacity low: Yes (expected: No)",
+        ),
     ]

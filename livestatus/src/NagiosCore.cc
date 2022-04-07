@@ -6,11 +6,13 @@
 #include "NagiosCore.h"
 
 #include <cstdlib>
+#include <memory>
 #include <sstream>
 #include <utility>
 
 #include "Logger.h"
 #include "StringUtils.h"
+#include "User.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -78,6 +80,15 @@ NagiosCore::ContactGroup *NagiosCore::find_contactgroup(
 const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
+}
+
+std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
+    // Older Nagios headers are not const-correct... :-P
+    if (const auto *ctc = ::find_contact(const_cast<char *>(name.c_str()))) {
+        return std::make_unique<AuthUser>(*ctc, _authorization._service,
+                                          _authorization._group);
+    }
+    return std::make_unique<UnknownUser>();
 }
 
 std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation() {
@@ -178,14 +189,6 @@ std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
 size_t NagiosCore::maxCachedMessages() { return _limits._max_cached_messages; }
-
-ServiceAuthorization NagiosCore::serviceAuthorization() const {
-    return _authorization._service;
-}
-
-GroupAuthorization NagiosCore::groupAuthorization() const {
-    return _authorization._group;
-}
 
 Logger *NagiosCore::loggerLivestatus() { return _logger_livestatus; }
 

@@ -41,7 +41,6 @@ class Query {
 public:
     Query(const std::list<std::string> &lines, Table &table,
           Encoding data_encoding, size_t max_response_size,
-          ServiceAuthorization service_auth, GroupAuthorization group_auth,
           OutputBuffer &output, Logger *logger);
 
     bool process();
@@ -103,8 +102,6 @@ private:
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
     std::unordered_set<std::shared_ptr<Column>> _all_columns;
-    ServiceAuthorization service_auth_;
-    GroupAuthorization group_auth_;
 
     bool doStats() const;
     void doWait();

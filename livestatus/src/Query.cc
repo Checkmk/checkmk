@@ -31,12 +31,6 @@
 #include "opids.h"
 #include "strutil.h"
 
-#ifdef CMC
-#include "contact_fwd.h"
-#else
-#include "nagios.h"
-#endif
-
 using namespace std::chrono_literals;
 
 namespace {
@@ -65,7 +59,6 @@ void checkNoArguments(const char *line) {
 
 Query::Query(const std::list<std::string> &lines, Table &table,
              Encoding data_encoding, size_t max_response_size,
-             ServiceAuthorization service_auth, GroupAuthorization group_auth,
              OutputBuffer &output, Logger *logger)
     : _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
@@ -83,9 +76,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _limit(-1)
     , _current_line(0)
     , _timezone_offset(0)
-    , _logger(logger)
-    , service_auth_{service_auth}
-    , group_auth_{group_auth} {
+    , _logger(logger) {
     FilterStack filters;
     FilterStack wait_conditions;
     for (const auto &line : lines) {
@@ -404,16 +395,7 @@ void Query::parseFilterLine(char *line, FilterStack &filters) {
 }
 
 void Query::parseAuthUserHeader(const char *line) {
-    // TODO(sp): Remove ugly cast.
-    if (const contact *auth_user = reinterpret_cast<const contact *>(
-            _table.core()->find_contact(line))) {
-        user_ =
-            std::make_unique<AuthUser>(*auth_user, service_auth_, group_auth_);
-    } else {
-        // Do not handle this as error any more. In a multi site setup
-        // not all users might be present on all sites by design.
-        user_ = std::make_unique<UnknownUser>();
-    }
+    user_ = _table.core()->find_user(line);
 }
 
 void Query::parseStatsGroupLine(char *line) {

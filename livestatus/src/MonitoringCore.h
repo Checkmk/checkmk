@@ -86,6 +86,7 @@ public:
                                   const std::string &service_description) = 0;
     virtual ContactGroup *find_contactgroup(const std::string &name) = 0;
     virtual const Contact *find_contact(const std::string &name) = 0;
+    virtual std::unique_ptr<User> find_user(const std::string &name) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
     virtual std::chrono::system_clock::time_point last_config_change() = 0;
@@ -119,9 +120,6 @@ public:
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
-
-    [[nodiscard]] virtual ServiceAuthorization serviceAuthorization() const = 0;
-    [[nodiscard]] virtual GroupAuthorization groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
     virtual Logger *loggerRRD() = 0;

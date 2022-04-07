@@ -70,6 +70,7 @@ public:
                           const std::string &service_description) override;
     ContactGroup *find_contactgroup(const std::string &name) override;
     const Contact *find_contact(const std::string &name) override;
+    std::unique_ptr<User> find_user(const std::string &name) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
     std::chrono::system_clock::time_point last_config_change() override;
@@ -100,9 +101,6 @@ public:
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;
     size_t maxCachedMessages() override;
-
-    ServiceAuthorization serviceAuthorization() const override;
-    GroupAuthorization groupAuthorization() const override;
 
     Logger *loggerLivestatus() override;
     Logger *loggerRRD() override;

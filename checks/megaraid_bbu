@@ -50,16 +50,14 @@ def megaraid_bbu_parse(info):
     return controllers
 
 
-def inventory_megaraid_bbu(info):
-    return [(name, None) for name in megaraid_bbu_parse(info)]
+def discover_megaraid_bbu(section):
+    yield from ((name, {}) for name in section)
 
 
-def check_megaraid_bbu(item, _no_params, info):
-    controllers = megaraid_bbu_parse(info)
-    if item not in controllers:
-        return (3, "Controller data not found in agent output")
+def check_megaraid_bbu(item, _no_params, section):
+    if (controller := section.get(item)) is None:
+        return
 
-    controller = controllers[item]
     broken = []
     state = 0
     # get current charge level
@@ -94,15 +92,18 @@ def check_megaraid_bbu(item, _no_params, info):
             pass
 
     if controller.get("Learn Cycle Active") == "Yes":
-        return (0, "no states to check (controller is in learn cycle)" + charge)
+        return 0, "No states to check (controller is in learn cycle)" + charge
+
     # return assembled info
-    elif broken:
-        return (state, ", ".join(broken) + charge)
-    return (0, "all states as expected" + charge)
+    if broken:
+        return state, ", ".join(broken) + charge
+
+    return 0, "All states as expected" + charge
 
 
 check_info["megaraid_bbu"] = {
+    "parse_function": megaraid_bbu_parse,
     "check_function": check_megaraid_bbu,
-    "inventory_function": inventory_megaraid_bbu,
+    "inventory_function": discover_megaraid_bbu,
     "service_description": "RAID Adapter/BBU %s",
 }

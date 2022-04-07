@@ -31,33 +31,19 @@ std::vector<std::string> split_list(const std::string &str) {
 }
 }  // namespace mk::ec
 
-User::User(const contact *auth_user, ServiceAuthorization service_auth,
-           GroupAuthorization group_auth)
+AuthUser::AuthUser(const contact &auth_user, ServiceAuthorization service_auth,
+                   GroupAuthorization group_auth)
     : auth_user_{auth_user}
     , service_auth_{service_auth}
     , group_auth_{group_auth} {}
 
-bool User::is_authorized_for_everything() const {
-    return auth_user_ == no_auth_user();
-}
+bool AuthUser::is_authorized_for_everything() const { return false; }
 
-bool User::is_authorized_for_host(const host &hst) const {
-    if (auth_user_ == no_auth_user()) {
-        return true;
-    }
-    if (auth_user_ == unknown_auth_user()) {
-        return false;
-    }
+bool AuthUser::is_authorized_for_host(const host &hst) const {
     return host_has_contact(hst);
 }
 
-bool User::is_authorized_for_service(const service &svc) const {
-    if (auth_user_ == no_auth_user()) {
-        return true;
-    }
-    if (auth_user_ == unknown_auth_user()) {
-        return false;
-    }
+bool AuthUser::is_authorized_for_service(const service &svc) const {
 #ifdef CMC
     const auto *hst = svc.host();
 #else
@@ -68,13 +54,7 @@ bool User::is_authorized_for_service(const service &svc) const {
             host_has_contact(*hst));
 }
 
-bool User::is_authorized_for_host_group(const hostgroup &hg) const {
-    if (auth_user_ == no_auth_user()) {
-        return true;
-    }
-    if (auth_user_ == unknown_auth_user()) {
-        return false;
-    }
+bool AuthUser::is_authorized_for_host_group(const hostgroup &hg) const {
     auto is_authorized_for = [this](const host *hst) {
         return is_authorized_for_host(*hst);
     };
@@ -100,13 +80,7 @@ bool User::is_authorized_for_host_group(const hostgroup &hg) const {
 #endif
 }
 
-bool User::is_authorized_for_service_group(const servicegroup &sg) const {
-    if (auth_user_ == no_auth_user()) {
-        return true;
-    }
-    if (auth_user_ == unknown_auth_user()) {
-        return false;
-    }
+bool AuthUser::is_authorized_for_service_group(const servicegroup &sg) const {
     auto is_authorized_for = [this](const service *svc) {
         return is_authorized_for_service(*svc);
     };
@@ -132,16 +106,9 @@ bool User::is_authorized_for_service_group(const servicegroup &sg) const {
 #endif
 }
 
-bool User::is_authorized_for_event(const std::string &precedence,
-                                   const std::string &contact_groups,
-                                   const host *hst) const {
-    if (auth_user_ == no_auth_user()) {
-        return true;
-    }
-    if (auth_user_ == unknown_auth_user()) {
-        return false;
-    }
-
+bool AuthUser::is_authorized_for_event(const std::string &precedence,
+                                       const std::string &contact_groups,
+                                       const host *hst) const {
     auto is_authorized_via_contactgroups = [this, &contact_groups]() {
         auto groups{mk::ec::split_list(contact_groups)};
         return std::any_of(groups.begin(), groups.end(),
@@ -149,7 +116,6 @@ bool User::is_authorized_for_event(const std::string &precedence,
                                return is_member_of_contactgroup(group);
                            });
     };
-
     if (precedence == "rule") {
         if (!mk::ec::is_none(contact_groups)) {
             return is_authorized_via_contactgroups();
@@ -171,40 +137,40 @@ bool User::is_authorized_for_event(const std::string &precedence,
     return false;
 }
 
-bool User::host_has_contact(const host &hst) const {
+bool AuthUser::host_has_contact(const host &hst) const {
 #ifdef CMC
-    return hst.hasContact(auth_user_);
+    return hst.hasContact(&auth_user_);
 #else
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_host(const_cast<host *>(&hst),
-                               const_cast<contact *>(auth_user_)) != 0 ||
+                               const_cast<contact *>(&auth_user_)) != 0 ||
            is_escalated_contact_for_host(const_cast<host *>(&hst),
-                                         const_cast<contact *>(auth_user_)) !=
+                                         const_cast<contact *>(&auth_user_)) !=
                0;
 #endif
 }
 
-bool User::service_has_contact(const service &svc) const {
+bool AuthUser::service_has_contact(const service &svc) const {
 #ifdef CMC
-    return svc.hasContact(auth_user_);
+    return svc.hasContact(&auth_user_);
 #else
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_service(const_cast<service *>(&svc),
-                                  const_cast<contact *>(auth_user_)) != 0 ||
+                                  const_cast<contact *>(&auth_user_)) != 0 ||
            is_escalated_contact_for_service(
                const_cast<service *>(&svc),
-               const_cast<contact *>(auth_user_)) != 0;
+               const_cast<contact *>(&auth_user_)) != 0;
 #endif
 }
 
-bool User::is_member_of_contactgroup(const std::string &group) const {
+bool AuthUser::is_member_of_contactgroup(const std::string &group) const {
 #ifdef CMC
     const auto *cg = g_live_world->getContactGroup(group);
-    return cg != nullptr && cg->isMember(auth_user_);
+    return cg != nullptr && cg->isMember(&auth_user_);
 #else
     // Older Nagios headers are not const-correct... :-P
     return ::is_contact_member_of_contactgroup(
                ::find_contactgroup(const_cast<char *>(group.c_str())),
-               const_cast< ::contact *>(auth_user_)) != 0;
+               const_cast< ::contact *>(&auth_user_)) != 0;
 #endif
 }

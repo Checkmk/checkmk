@@ -31,6 +31,12 @@
 #include "opids.h"
 #include "strutil.h"
 
+#ifdef CMC
+#include "contact_fwd.h"
+#else
+#include "nagios.h"
+#endif
+
 using namespace std::chrono_literals;
 
 namespace {
@@ -67,7 +73,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _renderer_query(nullptr)
     , _table(table)
     , _keepalive(false)
-    , _auth_user(no_auth_user())
+    , user_{std::make_unique<NoAuthUser>()}
     , _wait_timeout(0)
     , _wait_trigger(Triggers::Kind::all)
     , _wait_object(nullptr)
@@ -399,12 +405,14 @@ void Query::parseFilterLine(char *line, FilterStack &filters) {
 
 void Query::parseAuthUserHeader(const char *line) {
     // TODO(sp): Remove ugly cast.
-    _auth_user =
-        reinterpret_cast<const contact *>(_table.core()->find_contact(line));
-    if (_auth_user == nullptr) {
+    if (const contact *auth_user = reinterpret_cast<const contact *>(
+            _table.core()->find_contact(line))) {
+        user_ =
+            std::make_unique<AuthUser>(*auth_user, service_auth_, group_auth_);
+    } else {
         // Do not handle this as error any more. In a multi site setup
         // not all users might be present on all sites by design.
-        _auth_user = unknown_auth_user();
+        user_ = std::make_unique<UnknownUser>();
     }
 }
 
@@ -576,13 +584,12 @@ bool Query::process() {
     auto renderer =
         Renderer::make(_output_format, _output.os(), _output.getLogger(),
                        _separators, _data_encoding);
-    User user{_auth_user, service_auth_, group_auth_};
-    doWait(user);
+    doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(*this, user);
+    _table.answerQuery(*this, *user_);
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
@@ -641,9 +648,7 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    // TODO(sp) We already construct this in process, reuse this somehow?
-    User user{_auth_user, service_auth_, group_auth_};
-    if (!_filter->accepts(row, user, _timezone_offset)) {
+    if (!_filter->accepts(row, *user_, _timezone_offset)) {
         return true;
     }
 
@@ -673,17 +678,17 @@ bool Query::processDataset(Row row) {
             QueryRenderer q(*renderer, EmitBeginEnd::off);
             RowRenderer r(q);
             for (const auto &column : _columns) {
-                column->output(row, r, user, _timezone_offset);
+                column->output(row, r, *user_, _timezone_offset);
             }
         }
         for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
-            aggr->consume(row, user, timezoneOffset());
+            aggr->consume(row, *user_, timezoneOffset());
         }
     } else {
         assert(_renderer_query);  // Missing call to `process()`.
         RowRenderer r(*_renderer_query);
         for (const auto &column : _columns) {
-            column->output(row, r, user, _timezone_offset);
+            column->output(row, r, *user_, _timezone_offset);
         }
     }
     return true;
@@ -783,7 +788,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     return it->second;
 }
 
-void Query::doWait(const User &user) {
+void Query::doWait() {
     if (_wait_condition->is_contradiction() && _wait_timeout == 0ms) {
         invalidRequest("waiting for WaitCondition would hang forever");
         return;
@@ -795,9 +800,7 @@ void Query::doWait(const User &user) {
             return;
         }
     }
-    _table.core()->triggers().wait_for(
-        _wait_trigger, _wait_timeout, [this, &user] {
-            return _wait_condition->accepts(_wait_object, user,
-                                            timezoneOffset());
-        });
+    _table.core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
+        return _wait_condition->accepts(_wait_object, *user_, timezoneOffset());
+    });
 }

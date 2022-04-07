@@ -52,11 +52,8 @@ public:
             kind, this->name(),
             [this](Row row) {
                 return column::attribute_list::decode(
-                    column::attribute_list::encode(this->getValue(
-                        row,
-                        User{nullptr, ServiceAuthorization::loose,
-                             GroupAuthorization::loose},
-                        {})));
+                    column::attribute_list::encode(
+                        this->getValue(row, NoAuthUser{}, {})));
             },
             relOp, column::attribute_list::refValueFor(value, this->logger()));
     }

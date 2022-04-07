@@ -32,10 +32,8 @@ TEST(ListColumn, GetValueLambda) {
         "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
-    User dummy_user{nullptr, ServiceAuthorization::loose,
-                    GroupAuthorization::loose};
 
-    EXPECT_EQ(v, col.getValue(row, dummy_user, 0s));
+    EXPECT_EQ(v, col.getValue(row, NoAuthUser{}, 0s));
 }
 
 TEST(ListColumn, GetValueDefault) {
@@ -47,9 +45,7 @@ TEST(ListColumn, GetValueDefault) {
         "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
-    User dummy_user{nullptr, ServiceAuthorization::loose,
-                    GroupAuthorization::loose};
 
-    EXPECT_NE(v, col.getValue(row, dummy_user, 0s));
-    EXPECT_EQ(value_type{}, col.getValue(row, dummy_user, 0s));
+    EXPECT_NE(v, col.getValue(row, NoAuthUser{}, 0s));
+    EXPECT_EQ(value_type{}, col.getValue(row, NoAuthUser{}, 0s));
 }

@@ -37,12 +37,6 @@ enum class GroupAuthorization {
 
 };
 
-inline contact *no_auth_user() { return nullptr; }
-
-inline contact *unknown_auth_user() {
-    return reinterpret_cast<contact *>(0xdeadbeaf);
-}
-
 namespace mk::ec {
 // The funny encoding of an Optional[Iterable[str]] is done in
 // cmk.ec.history.quote_tab().
@@ -52,21 +46,41 @@ std::vector<std::string> split_list(const std::string &str);
 
 class User {
 public:
-    User(const contact *auth_user, ServiceAuthorization service_auth,
-         GroupAuthorization group_auth);
+    virtual ~User() = default;
 
-    [[nodiscard]] bool is_authorized_for_everything() const;
-    [[nodiscard]] bool is_authorized_for_host(const host &hst) const;
-    [[nodiscard]] bool is_authorized_for_service(const service &svc) const;
-    [[nodiscard]] bool is_authorized_for_host_group(const hostgroup &hg) const;
+    [[nodiscard]] virtual bool is_authorized_for_everything() const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_host(
+        const host &hst) const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_service(
+        const service &svc) const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_host_group(
+        const hostgroup &hg) const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_service_group(
+        const servicegroup &sg) const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_event(
+        const std::string &precedence, const std::string &contact_groups,
+        const host *hst) const = 0;
+};
+
+class AuthUser : public User {
+public:
+    AuthUser(const contact &auth_user, ServiceAuthorization service_auth,
+             GroupAuthorization group_auth);
+
+    [[nodiscard]] bool is_authorized_for_everything() const override;
+    [[nodiscard]] bool is_authorized_for_host(const host &hst) const override;
+    [[nodiscard]] bool is_authorized_for_service(
+        const service &svc) const override;
+    [[nodiscard]] bool is_authorized_for_host_group(
+        const hostgroup &hg) const override;
     [[nodiscard]] bool is_authorized_for_service_group(
-        const servicegroup &sg) const;
+        const servicegroup &sg) const override;
     [[nodiscard]] bool is_authorized_for_event(
         const std::string &precedence, const std::string &contact_groups,
-        const host *hst) const;
+        const host *hst) const override;
 
 private:
-    const contact *auth_user_;
+    const contact &auth_user_;
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
 
@@ -74,6 +88,64 @@ private:
     [[nodiscard]] bool service_has_contact(const service &svc) const;
     [[nodiscard]] bool is_member_of_contactgroup(
         const std::string &group) const;
+};
+
+class NoAuthUser : public User {
+public:
+    [[nodiscard]] bool is_authorized_for_everything() const override {
+        return true;
+    }
+    [[nodiscard]] bool is_authorized_for_host(
+        const host & /*hst*/) const override {
+        return true;
+    }
+    [[nodiscard]] bool is_authorized_for_service(
+        const service & /*svc*/) const override {
+        return true;
+    }
+    [[nodiscard]] bool is_authorized_for_host_group(
+        const hostgroup & /*hg*/) const override {
+        return true;
+    }
+    [[nodiscard]] bool is_authorized_for_service_group(
+        const servicegroup & /*sg*/) const override {
+        return true;
+    }
+    [[nodiscard]] bool is_authorized_for_event(
+        const std::string & /*precedence*/,
+        const std::string & /*contact_groups*/,
+        const host * /*hst*/) const override {
+        return true;
+    }
+};
+
+class UnknownUser : public User {
+public:
+    [[nodiscard]] bool is_authorized_for_everything() const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_host(
+        const host & /*hst*/) const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_service(
+        const service & /*svc*/) const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_host_group(
+        const hostgroup & /*hg*/) const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_service_group(
+        const servicegroup & /*sg*/) const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_event(
+        const std::string & /*precedence*/,
+        const std::string & /*contact_groups*/,
+        const host * /*hst*/) const override {
+        return false;
+    }
 };
 
 #endif  // auth_h

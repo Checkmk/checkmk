@@ -32,7 +32,6 @@
 #include "StatsColumn.h"
 #include "Triggers.h"
 #include "User.h"
-#include "contact_fwd.h"
 class Column;
 class Logger;
 class OutputBuffer;
@@ -84,7 +83,7 @@ private:
     bool _keepalive;
     using FilterStack = Filters;
     std::unique_ptr<Filter> _filter;
-    const contact *_auth_user;
+    std::unique_ptr<User> user_;
     std::unique_ptr<Filter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
     Triggers::Kind _wait_trigger;
@@ -108,7 +107,7 @@ private:
     GroupAuthorization group_auth_;
 
     bool doStats() const;
-    void doWait(const User &user);
+    void doWait();
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);

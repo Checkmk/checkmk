@@ -24,28 +24,24 @@ struct DummyRow : Row {
 TEST(BoolColumn, GetValueLambda) {
     const DummyValue val{};
     const DummyRow row{&val};
-    User dummy_user{nullptr, ServiceAuthorization::loose,
-                    GroupAuthorization::loose};
     for (const auto v : {false, true}) {
         const BoolColumn<DummyRow> col{
             "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 
-        EXPECT_EQ(v ? 1 : 0, col.getValue(row, dummy_user));
+        EXPECT_EQ(v ? 1 : 0, col.getValue(row, NoAuthUser{}));
     }
 }
 
 TEST(BoolColumn, GetValueDefault) {
     const DummyRow row{nullptr};
-    User dummy_user{nullptr, ServiceAuthorization::loose,
-                    GroupAuthorization::loose};
     for (const auto v : {false, true}) {
         const BoolColumn<DummyRow, true> col{
             "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 
-        EXPECT_EQ(1, col.getValue(row, dummy_user));
+        EXPECT_EQ(1, col.getValue(row, NoAuthUser{}));
     }
 }

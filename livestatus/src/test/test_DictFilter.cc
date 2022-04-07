@@ -44,10 +44,7 @@ struct DictFilterTest : public ::testing::Test {
         DictFilter filter{Filter::Kind::row, "name",
                           [&cvdc](Row row) { return cvdc.getValue(row); },
                           RelationalOperator::equal, value};
-        return filter.accepts(Row{&test_host},
-                              User{nullptr, ServiceAuthorization::loose,
-                                   GroupAuthorization::loose},
-                              {});
+        return filter.accepts(Row{&test_host}, NoAuthUser{}, {});
     }
 
     std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;

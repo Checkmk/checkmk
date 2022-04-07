@@ -1,0 +1,16 @@
+Title: postgres_stat_database: crash on empty values in database query
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649336194
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+This is a regression that got introduced with werk #13676.
+
+Empty values for the "datname" entry are converted to a useful name according to the
+postgres documentation. Empty values for other data columns are
+accepted/handled again now.

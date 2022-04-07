@@ -16,31 +16,41 @@
 # Firmware state: Unconfigured(good)
 # Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BSC
 
-# The agent provides some new information since 1.1.9.
-# The dev2enc infos are sent from the agent to have the
-# real enclosure numbers instead of the device ids which
-# seem to be generated somehow.
-#
-# dev2enc Enclosure 0 Device ID  6
-# dev2enc Enclosure 1 Device ID  252
-#
-# On new inventory runs the enclosure number is used as
-# index and item part.
-megaraid_pdisks_legacy_mode = False
+from typing import Final, Mapping
+
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import megaraid
+
 # This makes service descriptions backward compatible to match
 # inventory made by older versions that didn't support multiple
 # controllers
 megaraid_pdisks_adapterstr = ["e", "f", "g", "h", "i", "j", "k", "l"]
 
 
-def megaraid_pdisks_parse(info):
-    adapters = {0: {}}
+_NORMALIZE_STATE: Final = {
+    "Unconfigured(good)": "Unconfigured Good",
+    "Unconfigured(bad)": "Unconfigured Bad",
+}
+
+
+_FIXED_STATES = {
+    "Hotspare": 0,
+    "JBOD": 0,
+    "Failed": 2,
+    "Copyback": 1,
+    "Rebuild": 1,
+}
+
+
+def parse_megaraid_pdisks(string_table: StringTable) -> megaraid.SectionPDisks:
+    parsed = {}
+    adapters: dict[int, dict[int, int]] = {0: {}}
     current_adapter = adapters[0]
-    return_var = []
     adapter = 0
     enclosure_devid = -181
     predictive_failure_count = None
-    for line in info:
+    for line in string_table:
         if line[0] == "adapter":
             current_adapter = {}
             adapters[int(line[1])] = current_adapter
@@ -74,64 +84,67 @@ def megaraid_pdisks_parse(info):
         elif line[0] == "Inquiry" and line[1] == "Data:":
             name = " ".join(line[2:])
             # Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
-            return_var.append(
-                (
-                    megaraid_pdisks_adapterstr[adapter],
-                    adapters[adapter][enclosure_devid],
-                    enclosure_devid,
-                    slot,
-                    state,
-                    name,
-                    predictive_failure_count,
-                )
+            enclosure = adapters[adapter][enclosure_devid]
+            item = f"/c{adapter}/e{enclosure}/s{slot}"
+
+            disk = megaraid.PDisk(
+                name, _NORMALIZE_STATE.get(state, state), predictive_failure_count
             )
 
+            parsed[item] = disk
             predictive_failure_count = None
 
-    return return_var
+            # Add it under the old item name. Not discovered, but can be used when checking
+            legacy_item = f"{megaraid_pdisks_adapterstr[adapter]}{enclosure}/{slot}"
+            parsed[legacy_item] = disk
+
+    return parsed
 
 
-def inventory_megaraid_pdisks(info):
-    info = megaraid_pdisks_parse(info)
-    inventory = []
-    for adapter, enclosure, _enc_dev_id, slot, _state, _name, _predictive_failure_count in info:
-        inventory.append(("%s%s/%s" % (adapter, enclosure, slot), None))
-    return inventory
+register.agent_section(
+    name="megaraid_pdisks",
+    parse_function=parse_megaraid_pdisks,
+)
 
 
-megaraid_pdisks_states = {
-    "Online": 0,
-    "Hotspare": 0,
-    "Unconfigured(good)": 0,
-    "JBOD": 0,
-    "Failed": 2,
-    "Unconfigured(bad)": 1,
-    "Copyback": 1,
-    "Rebuild": 1,
-}
+def discover_megaraid_pdisks(section: megaraid.SectionPDisks) -> DiscoveryResult:
+    # Items changed from e.g. 'f3/2' to '/c1/e3/s2' for consistency.
+    # Only discover the new-style items.
+    # The old items are kept in section, so that old services using them will still produce results
+    yield from (Service(item=item) for item in section if item.startswith("/c"))
 
 
-def check_megaraid_pdisks(item, _no_params, info):
-    info = megaraid_pdisks_parse(info)
-    for adapter, enclosure, _enc_dev_id, slot, state, name, predictive_failure_count in info:
-        if "%s%s/%s" % (adapter, enclosure, slot) == item:
-            infotext = "%s (%s)" % (state, name)
+def check_megaraid_pdisks(
+    item: str,
+    params: Mapping[str, int],
+    section: megaraid.SectionPDisks,
+) -> CheckResult:
+    if (disk := section.get(item)) is None:
+        return
 
-            retval = megaraid_pdisks_states.get(state, 3)
+    state_map = {**_FIXED_STATES, **params}
+    yield Result(
+        state=State(state_map.get(disk.state, 3)),
+        summary=f"{disk.state.capitalize()}",
+    )
 
-            if predictive_failure_count is not None:
-                infotext += " (predictive fail count: %s)" % predictive_failure_count
-                # force warning if predictive failure
-                if retval == 0 and predictive_failure_count > 0:
-                    retval = 1
+    if disk.name != item:
+        yield Result(state=State.OK, summary=f"Name: {disk.name}")
 
-            return retval, infotext
-    return 3, "No disk in encl/slot %s found" % item
+    if disk.failures is None:
+        return
+
+    yield Result(
+        state=State.WARN if disk.failures > 0 else State.OK,
+        summary=f"Predictive fail count: {disk.failures}",
+    )
 
 
-check_info["megaraid_pdisks"] = {
-    "check_function": check_megaraid_pdisks,
-    "inventory_function": inventory_megaraid_pdisks,
-    "service_description": "RAID PDisk Adapt/Enc/Sl %s",
-    "has_perfdata": False,
-}
+register.check_plugin(
+    name="megaraid_pdisks",
+    check_function=check_megaraid_pdisks,
+    discovery_function=discover_megaraid_pdisks,
+    service_name="RAID pysical disk %s",
+    check_default_parameters=megaraid.PDISKS_DEFAULTS,
+    check_ruleset_name="storcli_pdisks",
+)

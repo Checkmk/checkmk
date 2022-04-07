@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State
+from cmk.base.plugins.agent_based.utils.megaraid import check_state
+
 # Agent output not included since it has almost 100 lines
 # it's available in our archive or fh's bitbucket
 
@@ -40,8 +43,12 @@ def megaraid_bbu_parse(info):
 
         # Scan each controller into its own dictionary
         if name in ["BBU status for Adapter", "BBU status for Adpater"]:
+            item = f"/c{data}"
             current_hba = {}
-            controllers[data] = current_hba
+            controllers[item] = current_hba
+            # Add it under the old item name. Not discovered, but can be used when checking
+            legacy_item = data
+            controllers[legacy_item] = current_hba
         elif current_hba is not None:
             # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
@@ -50,59 +57,56 @@ def megaraid_bbu_parse(info):
     return controllers
 
 
-def inventory_megaraid_bbu(info):
-    return [(name, None) for name in megaraid_bbu_parse(info)]
+def discover_megaraid_bbu(section):
+    # Items changed from e.g. '2' to '/c2' for consistency.
+    # Only discover the new-style items.
+    # The old items are kept in section, so that old services using them will still produce results
+    yield from ((name, {}) for name in section if name.startswith("/c"))
 
 
-def check_megaraid_bbu(item, _no_params, info):
-    controllers = megaraid_bbu_parse(info)
-    if item not in controllers:
-        return (3, "Controller data not found in agent output")
+def check_megaraid_bbu(item, _no_params, section):
+    if (controller := section.get(item)) is None:
+        return
 
-    controller = controllers[item]
-    broken = []
-    state = 0
     # get current charge level
-    if "Relative State of Charge" not in controller:
-        charge = ", No charge information reported for this controller"
-    else:
-        charge = ", Charge is %s" % controller["Relative State of Charge"]
-        if "Full Charge Capacity" in controller:
-            charge += ", Capacity is %s" % controller["Full Charge Capacity"]
-
-    # verify defined important parameters to current level
-    for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():
-        # the try/except should handle controller types that don't have certain values
-        # if your bbu chipset fails and you still get a partial response this will lead
-        # to a false result. but people asked for it :>
-        try:
-            value = controller[varname]
-            # Some controllers report "Optimal" instead of "Operational"
-            if value == "Optimal":
-                pass
-            # Some controllers do not output Temperature: OK and Voltage: OK.
-            elif varname in ["Temperature", "Voltage"] and value[0].isdigit():
-                pass
-            elif value != refvalue:
-                text = "%s is %s" % (varname, value)
-                if refstate:
-                    text += " (%s)" % ("!" * refstate)
-                text += " (Expected: %s)" % refvalue
-                broken.append(text)
-                state = max(state, refstate)
-        except KeyError:
-            pass
+    charge_level = controller.get("Relative State of Charge", "not reported for this controller")
+    yield 0, f"Charge: {charge_level}"
+    if (capacity := controller.get("Full Charge Capacity")) is not None:
+        yield 0, f"Capacity: {capacity}"
 
     if controller.get("Learn Cycle Active") == "Yes":
-        return (0, "no states to check (controller is in learn cycle)" + charge)
-    # return assembled info
-    elif broken:
-        return (state, ", ".join(broken) + charge)
-    return (0, "all states as expected" + charge)
+        yield 0, "No states to check (controller is in learn cycle)"
+        return
+
+    yielded = False
+    # verify defined important parameters to current level
+    for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():
+        if (value := controller.get(varname)) is None:
+            # handle controller types that don't have certain values
+            # if your bbu chipset fails and you still get a partial response this will lead
+            # to a false result. but people asked for it :>
+            continue
+
+        # Some controllers report "Optimal" instead of "Operational"
+        if value == "Optimal":
+            continue
+
+        # Some controllers do not output Temperature: OK and Voltage: OK.
+        if varname in ["Temperature", "Voltage"] and value[0].isdigit():
+            continue
+
+        r = check_state(State(refstate), varname, value, refvalue)
+        if r.state is not State.OK:
+            yielded = True
+            yield int(r.state), r.summary
+
+    if not yielded:
+        yield 0, "All states as expected"
 
 
 check_info["megaraid_bbu"] = {
+    "parse_function": megaraid_bbu_parse,
     "check_function": check_megaraid_bbu,
-    "inventory_function": inventory_megaraid_bbu,
-    "service_description": "RAID Adapter/BBU %s",
+    "inventory_function": discover_megaraid_bbu,
+    "service_description": "RAID BBU %s",
 }

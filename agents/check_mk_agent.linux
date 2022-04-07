@@ -791,17 +791,34 @@ section_cfggen() {
     fi
 }
 
+section_storcli() {
+    if inpath storcli; then
+        _storcli() { storcli "$@"; }
+    elif inpath storcli64; then
+        _storcli() { storcli64 "$@"; }
+    else
+        return 1
+    fi
+
+    echo '<<<storcli_physical_disks>>>'
+    _storcli /call/eall/sall show all
+
+    echo '<<<storcli_virtual_disks>>>'
+    _storcli /call/vall show all
+
+    # exit successfully, because storcli was in the path.
+    return 0
+}
+
 section_megaraid() {
+    section_storcli && return
+
     if inpath MegaCli; then
         MegaCli_bin="MegaCli"
     elif inpath MegaCli64; then
         MegaCli_bin="MegaCli64"
     elif inpath megacli; then
         MegaCli_bin="megacli"
-    elif inpath storcli; then
-        MegaCli_bin="storcli"
-    elif inpath storcli64; then
-        MegaCli_bin="storcli64"
     else
         MegaCli_bin="unknown"
     fi
@@ -1825,7 +1842,7 @@ run_purely_synchronous_sections() {
     # RAID status of LSI controllers via cfggen
     [ -z "${MK_SKIP_CFGGEN}" ] && _log_section_time section_cfggen
 
-    # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
+    # RAID status of LSI MegaRAID controller via StorCLI or MegaCli. You can download that tool from:
     # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
     [ -z "${MK_SKIP_MEGARAID}" ] && _log_section_time section_megaraid
 

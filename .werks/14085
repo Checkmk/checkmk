@@ -1,0 +1,13 @@
+Title: Bring back support of StorCLI on Linux to monitor megaraid controllers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651495650
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+Newer versions of the StorCLI tool no longer supported the commands used by MegaCLI to monitor physical and virtual disks.
+The agent now uses the successor commands to generate dedicated sections, bringing back the check plugins <tt>megaraid_pdisks</tt> and <tt>megaraid_ldisks</tt>.

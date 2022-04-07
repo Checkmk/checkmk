@@ -1,4 +1,4 @@
-title: LSI MegaRAID: State of Battery Backup Unit (BBU)
+title: LSI MegaRAID: Battery Backup Unit
 agents: linux
 catalog: os/storage
 license: GPLv2

@@ -1,0 +1,13 @@
+Title: megaraid_ldisks: configurable via "LSI RAID logical disks"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651181333
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b9
+
+In an effort to make the RAID monitoring more consistent, the
+plugin megaraid_ldisks now is configurable using the ruleset
+<i>LSI RAID logical disks</i>.

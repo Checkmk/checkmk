@@ -1,0 +1,13 @@
+Title: megaraid_pdisks: configurable via "LSI RAID physical disks"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651097600
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b9
+
+In an effort to make the RAID monitoring more consistent, the
+plugin megaraid_pdisks now is configurable using the ruleset
+<i>LSI RAID physical disks</i>.

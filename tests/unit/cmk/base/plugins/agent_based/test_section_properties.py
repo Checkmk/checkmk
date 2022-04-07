@@ -171,8 +171,6 @@ def test_section_parse_function_does_something(fix_register):
         "logins",
         "lvm_vgs",
         "mailman_lists",
-        "megaraid_bbu",
-        "megaraid_pdisks",
         "mongodb_asserts",
         "mongodb_connections",
         "mongodb_flushing",

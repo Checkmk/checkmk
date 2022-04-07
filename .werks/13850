@@ -1,0 +1,35 @@
+Title: megaraid: new service names
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1650952686
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b9
+
+This werk changes the items and service names of the megaraid plugins.
+Existing services will continue to produce correct results, but we encourage users to switch to the new services as soon as possible (see below for details).
+
+Every service discovered by the megaraid plugins will now use the objects identifier as item.
+In addition, the service names have been cleaned up.
+
+For instance:
+
+<ul>
+<li><i>RAID Adapter/BBU 0</i> becomes <i>RAID BBU /c0</i></li>
+<li><i>RAID Adapter/LDisk 0/1</i> becomes <i>RAID logical disk /c0/v1</i></li>
+</ul>
+
+Generally, physical disks connected via RAID controllers are identified by their controller, enclosure and slot.
+The <tt>storcli</tt> command uses the abbreviations 'c', 'e' and 's', respectively.
+However, in the previos version of the plugin, the controller index had been encoded in the first letter of the item:
+The 'e' in the physical disks services referred to "the first controller", not to "enclosure".
+The second controller has been marked 'f':
+
+<ul>
+<li><i>RAID Adapt/Enc/Sl e01/2</i> becomes <i>RAID physical disk /c0/e01/s02</i></li>
+<li><i>RAID Adapt/Enc/Sl f03/4</i> becomes <i>RAID physical disk /c1/e03/s04</i></li>
+</ul>
+
+While the new item name (e.g. <i>/c0/e0/s1</i> instead of <i>e0/1</i>) will be used for all newly discovered servces, users that upgraded from an older Checkmk version need to enable the new service description using the global sestting "<i>Use new service descriptions</i>".

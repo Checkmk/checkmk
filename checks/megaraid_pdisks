@@ -109,21 +109,16 @@ megaraid_pdisks_states = {
 
 def check_megaraid_pdisks(item, _no_params, parsed):
     try:
-        adapter, enclosure, _enc_dev_id, slot, state, name, predictive_failure_count = parsed[item]
+        adapter, enclosure, _enc_dev_id, slot, state, name, failure_count = parsed[item]
     except KeyError:
         return
 
-    infotext = "%s (%s)" % (state, name)
+    yield megaraid_pdisks_states.get(state, 3), f"{state} ({name})"
 
-    retval = megaraid_pdisks_states.get(state, 3)
+    if failure_count is None:
+        return
 
-    if predictive_failure_count is not None:
-        infotext += " (predictive fail count: %s)" % predictive_failure_count
-        # force warning if predictive failure
-        if retval == 0 and predictive_failure_count > 0:
-            retval = 1
-
-    yield retval, infotext
+    yield 1 if failure_count > 0 else 0, f"Predictive fail count: {failure_count}"
 
 
 check_info["megaraid_pdisks"] = {

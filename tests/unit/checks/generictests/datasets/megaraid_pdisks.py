@@ -36,8 +36,13 @@ checks = {
         (
             'e10/0', {}, [
                 (
+                    0,
+                    'Unconfigured(good) (FUJITSU MBB2147RC 5204BS04P9104BV5)',
+                    []
+                ),
+                (
                     1,
-                    'Unconfigured(good) (FUJITSU MBB2147RC 5204BS04P9104BV5) (predictive fail count: 10)',
+                    'Predictive fail count: 10',
                     []
                 )
             ]
@@ -55,7 +60,12 @@ checks = {
             'e12/2', {}, [
                 (
                     2,
-                    'Failed (FUJITSU MBB2147RC 5204BS04P9104BSC) (predictive fail count: 19)',
+                    'Failed (FUJITSU MBB2147RC 5204BS04P9104BSC)',
+                    []
+                ),
+                (
+                    1,
+                    'Predictive fail count: 19',
                     []
                 )
             ]

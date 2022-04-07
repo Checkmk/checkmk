@@ -2173,7 +2173,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "openhardwaremonitor.fan",
         "openhardwaremonitor.smart",
         "openvpn_clients",
-        "oracle_crs_res",
         "oracle_crs_version",
         "oracle_crs_voting",
         "oracle_dataguard_stats",

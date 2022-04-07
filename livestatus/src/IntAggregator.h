@@ -16,13 +16,13 @@
 #include "Aggregator.h"
 #include "Column.h"
 #include "auth.h"
-#include "contact_fwd.h"
 class Row;
 class RowRenderer;
+class User;
 
 class IntAggregator : public Aggregator {
     using f0_t = std::function<int(Row)>;
-    using f1_t = std::function<int(Row, const contact *)>;
+    using f1_t = std::function<int(Row, const User &)>;
     using function_type = std::variant<f0_t, f1_t>;
 
 public:
@@ -34,7 +34,7 @@ public:
         if (std::holds_alternative<f0_t>(f_)) {
             _aggregation->update(std::get<f0_t>(f_)(row));
         } else if (std::holds_alternative<f1_t>(f_)) {
-            _aggregation->update(std::get<f1_t>(f_)(row, user.authUser()));
+            _aggregation->update(std::get<f1_t>(f_)(row, user));
         } else {
             throw std::runtime_error("unreachable");
         }

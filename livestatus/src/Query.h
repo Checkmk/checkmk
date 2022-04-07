@@ -55,7 +55,6 @@ public:
     void invalidRequest(const std::string &message) const;
     void badGateway(const std::string &message) const;
 
-    const contact *authUser() const { return _auth_user; }
     std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
 
     std::unique_ptr<Filter> partialFilter(const std::string &message,

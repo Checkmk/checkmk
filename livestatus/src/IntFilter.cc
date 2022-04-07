@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "Row.h"
-#include "auth.h"
 
 IntFilter::IntFilter(Kind kind, std::string columnName, function_type f,
                      RelationalOperator relOp, const std::string &value)
@@ -56,8 +55,7 @@ bool IntFilter::accepts(Row row, const User &user,
         return eval(std::get<f0_t>(f_)(row), oper(), _ref_value);
     }
     if (std::holds_alternative<f1_t>(f_)) {
-        return eval(std::get<f1_t>(f_)(row, user.authUser()), oper(),
-                    _ref_value);
+        return eval(std::get<f1_t>(f_)(row, user), oper(), _ref_value);
     }
     throw std::runtime_error("unreachable");
 }

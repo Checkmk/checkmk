@@ -5,7 +5,6 @@
 
 #include "ServiceListState.h"
 
-#include "MonitoringCore.h"
 #include "auth.h"
 
 #ifdef CMC
@@ -14,9 +13,7 @@
 #endif
 
 int32_t ServiceListState::operator()(const value_type &svcs,
-                                     const contact *auth_user) const {
-    User user{auth_user, mc_->serviceAuthorization(),
-              mc_->groupAuthorization()};
+                                     const User &user) const {
     return getValueFromServices(user, _logictype, svcs);
 }
 

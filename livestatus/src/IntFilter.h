@@ -19,14 +19,13 @@
 
 #include "ColumnFilter.h"
 #include "Filter.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class Row;
 class User;
 
 class IntFilter : public ColumnFilter {
     using f0_t = std::function<int(Row)>;
-    using f1_t = std::function<int(Row, const contact *)>;
+    using f1_t = std::function<int(Row, const User &)>;
     using function_type = std::variant<f0_t, f1_t>;
 
 public:

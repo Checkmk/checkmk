@@ -11,7 +11,6 @@
 #include <cstdint>
 
 #include "LogEntry.h"
-class MonitoringCore;
 class User;
 
 #ifdef CMC
@@ -20,7 +19,6 @@ class User;
 
 #include "Host.h"
 #include "ObjectGroup.h"
-#include "contact_fwd.h"
 class Service;
 #else
 #include "nagios.h"
@@ -55,33 +53,30 @@ public:
         worst_hard_state,
     };
 
-    ServiceListState(MonitoringCore *mc, Type logictype)
-        : mc_{mc}, _logictype{logictype} {}
+    explicit ServiceListState(Type logictype) : _logictype{logictype} {}
 
 #ifdef CMC
-    int32_t operator()(const Host &hst, const contact *auth_user) const {
+    int32_t operator()(const Host &hst, const User &user) const {
         auto v = value_type(hst._services.size());
         for (const auto &e : hst._services) {
             v.emplace(e.get());
         }
-        return (*this)(v, auth_user);
+        return (*this)(v, user);
     }
-    int32_t operator()(const ObjectGroup<Service> &g,
-                       const contact *auth_user) const {
-        return (*this)(value_type{g.begin(), g.end()}, auth_user);
+    int32_t operator()(const ObjectGroup<Service> &g, const User &user) const {
+        return (*this)(value_type{g.begin(), g.end()}, user);
     }
 #else
-    int32_t operator()(const host &hst, const contact *auth_user) const {
-        return hst.services == nullptr ? 0 : (*this)(hst.services, auth_user);
+    int32_t operator()(const host &hst, const User &user) const {
+        return hst.services == nullptr ? 0 : (*this)(hst.services, user);
     }
-    int32_t operator()(const servicegroup &g, const contact *auth_user) const {
-        return g.members == nullptr ? 0 : (*this)(g.members, auth_user);
+    int32_t operator()(const servicegroup &g, const User &user) const {
+        return g.members == nullptr ? 0 : (*this)(g.members, user);
     }
 #endif
-    int32_t operator()(const value_type &svcs, const contact *auth_user) const;
+    int32_t operator()(const value_type &svcs, const User &user) const;
 
 private:
-    MonitoringCore *mc_;
     const Type _logictype;
     static int32_t getValueFromServices(const User &user, Type logictype,
                                         const value_type &svcs);

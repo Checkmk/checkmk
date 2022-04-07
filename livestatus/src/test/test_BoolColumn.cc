@@ -10,6 +10,7 @@
 
 #include "IntColumn.h"
 #include "Row.h"
+#include "auth.h"
 #include "gtest/gtest.h"
 
 using namespace std::string_literals;
@@ -23,24 +24,28 @@ struct DummyRow : Row {
 TEST(BoolColumn, GetValueLambda) {
     const DummyValue val{};
     const DummyRow row{&val};
+    User dummy_user{nullptr, ServiceAuthorization::loose,
+                    GroupAuthorization::loose};
     for (const auto v : {false, true}) {
         const BoolColumn<DummyRow> col{
             "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 
-        EXPECT_EQ(v ? 1 : 0, col.getValue(row, nullptr));
+        EXPECT_EQ(v ? 1 : 0, col.getValue(row, dummy_user));
     }
 }
 
 TEST(BoolColumn, GetValueDefault) {
     const DummyRow row{nullptr};
+    User dummy_user{nullptr, ServiceAuthorization::loose,
+                    GroupAuthorization::loose};
     for (const auto v : {false, true}) {
         const BoolColumn<DummyRow, true> col{
             "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 
-        EXPECT_EQ(1, col.getValue(row, nullptr));
+        EXPECT_EQ(1, col.getValue(row, dummy_user));
     }
 }

@@ -65,9 +65,6 @@ public:
         const std::string &precedence, const std::string &contact_groups,
         const host *hst) const;
 
-    // TODO(sp) Nuke this!
-    [[nodiscard]] const contact *authUser() const { return auth_user_; }
-
 private:
     const contact *auth_user_;
     ServiceAuthorization service_auth_;

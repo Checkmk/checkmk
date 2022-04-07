@@ -12,13 +12,12 @@
 
 #include "LogEntry.h"
 #include "ServiceListState.h"
-class MonitoringCore;
+class User;
 
 #ifdef CMC
 #include <unordered_set>
 
 #include "ObjectGroup.h"
-#include "contact_fwd.h"
 class Host;
 #else
 #include "nagios.h"
@@ -65,25 +64,22 @@ public:
     // NOTE: Due to an ugly technical reason, we have to delay getting the
     // service authorization, for details see the test
     // Store.TheCoreIsNotAccessedDuringConstructionOfTheStore.
-    HostListState(MonitoringCore *mc, Type logictype)
-        : mc_{mc}, _logictype(logictype) {}
+    explicit HostListState(Type logictype) : _logictype(logictype) {}
 #ifdef CMC
-    int32_t operator()(const ObjectGroup<Host> &g,
-                       const contact *auth_user) const {
-        return (*this)(value_type{g.begin(), g.end()}, auth_user);
+    int32_t operator()(const ObjectGroup<Host> &g, const User &user) const {
+        return (*this)(value_type{g.begin(), g.end()}, user);
     }
 #else
-    int32_t operator()(const hostgroup &g, const contact *auth_user) const {
-        return g.members == nullptr ? 0 : (*this)(g.members, auth_user);
+    int32_t operator()(const hostgroup &g, const User &user) const {
+        return g.members == nullptr ? 0 : (*this)(g.members, user);
     }
 #endif
-    int32_t operator()(const value_type &hsts, const contact *auth_user) const;
+    int32_t operator()(const value_type &hsts, const User &user) const;
 
 private:
-    MonitoringCore *mc_;
     const Type _logictype;
 
-    void update(const contact *auth_user, HostState current_state,
+    void update(const User &user, HostState current_state,
                 bool has_been_checked,
                 const ServiceListState::value_type &services, bool handled,
                 int32_t &result) const;

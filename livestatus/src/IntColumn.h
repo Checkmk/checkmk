@@ -20,7 +20,6 @@
 #include "IntFilter.h"
 #include "Renderer.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class Row;
 
@@ -29,7 +28,7 @@ class IntColumn : public Column {
 public:
     using value_type = int32_t;
     using f0_t = std::function<value_type(const T &)>;
-    using f1_t = std::function<value_type(const T &, const contact *)>;
+    using f1_t = std::function<value_type(const T &, const User &)>;
     using function_type = std::variant<f0_t, f1_t>;
 
     IntColumn(const std::string &name, const std::string &description,
@@ -40,7 +39,7 @@ public:
 
     void output(Row row, RowRenderer &r, const User &user,
                 std::chrono::seconds /*timezone_offset*/) const override {
-        r.output(getValue(row, user.authUser()));
+        r.output(getValue(row, user));
     }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
@@ -48,8 +47,8 @@ public:
         const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, name(),
-            [this](Row row, const contact *auth_user) {
-                return this->getValue(row, auth_user);
+            [this](Row row, const User &user) {
+                return this->getValue(row, user);
             },
             relOp, value);
     }
@@ -57,9 +56,8 @@ public:
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<IntAggregator>(
-            factory, [this](Row row, const contact *auth_user) {
-                return getValue(row, auth_user);
-            });
+            factory,
+            [this](Row row, const User &user) { return getValue(row, user); });
     }
 
     // TODO(sp): The only 2 places where auth_user is actually used are
@@ -67,14 +65,13 @@ public:
     // aggregate values for hosts/services, but they should do this only for
     // "allowed" hosts/services. Find a better design than this parameter
     // passing hell..
-    [[nodiscard]] value_type getValue(Row row, const contact *auth_user) const {
+    [[nodiscard]] value_type getValue(Row row, const User &user) const {
         const T *data = IntColumn<T, Default>::template columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
         }
         if (std::holds_alternative<f1_t>(f_)) {
-            return data == nullptr ? Default
-                                   : std::get<f1_t>(f_)(*data, auth_user);
+            return data == nullptr ? Default : std::get<f1_t>(f_)(*data, user);
         }
         throw std::runtime_error("unreachable");
     }

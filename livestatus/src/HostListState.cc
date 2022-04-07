@@ -5,7 +5,6 @@
 
 #include "HostListState.h"
 
-#include "MonitoringCore.h"
 #include "auth.h"
 
 #ifdef CMC
@@ -16,9 +15,7 @@
 #endif
 
 int32_t HostListState::operator()(const value_type &hsts,
-                                  const contact *auth_user) const {
-    User user{auth_user, mc_->serviceAuthorization(),
-              mc_->groupAuthorization()};
+                                  const User &user) const {
     int32_t result = 0;
 #ifdef CMC
     for (const auto *hst : hsts) {
@@ -28,7 +25,7 @@ int32_t HostListState::operator()(const value_type &hsts,
             for (const auto &s : hst->_services) {
                 svcs.emplace(s.get());
             }
-            update(auth_user, static_cast<HostState>(state->current_state_),
+            update(user, static_cast<HostState>(state->current_state_),
                    state->has_been_checked_, svcs, hst->handled(), result);
         }
     }
@@ -36,7 +33,7 @@ int32_t HostListState::operator()(const value_type &hsts,
     for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         if (user.is_authorized_for_host(*hst)) {
-            update(auth_user, static_cast<HostState>(hst->current_state),
+            update(user, static_cast<HostState>(hst->current_state),
                    hst->has_been_checked != 0, hst->services,
                    hst->problem_has_been_acknowledged != 0 ||
                        hst->scheduled_downtime_depth > 0,
@@ -47,12 +44,10 @@ int32_t HostListState::operator()(const value_type &hsts,
     return result;
 }
 
-void HostListState::update(const contact *auth_user, HostState current_state,
+void HostListState::update(const User &user, HostState current_state,
                            bool has_been_checked,
                            const ServiceListState::value_type &services,
                            bool handled, int32_t &result) const {
-    User user{auth_user, mc_->serviceAuthorization(),
-              mc_->groupAuthorization()};
     switch (_logictype) {
         case Type::num_hst:
             result++;

@@ -32,8 +32,8 @@ struct AttributeBitmaskColumn : IntColumn<T, Default> {
         const std::string &value) const override {
         return std::make_unique<IntFilter>(
             kind, this->name(),
-            [this](Row row, const contact *auth_user) {
-                return this->getValue(row, auth_user);
+            [this](Row row, const User &user) {
+                return this->getValue(row, user);
             },
             relOp, column::attribute_list::refValueFor(value, this->logger()));
     }

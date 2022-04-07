@@ -6,26 +6,26 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import SectionName, CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
     _explicit_conversions,
     create_detect_spec,
 )
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.base.api.agent_based.section_classes import SNMPTree
-
-from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
-from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc  # type: ignore[attr-defined]
-from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined]
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined]
     _has_table_2, _is_cisco, _is_cisco_nexus,
 )
+from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.fsc import (  # type: ignore[attr-defined]
+    _is_fsc_or_windows, is_fsc,
+)
+from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined]
 
 pytestmark = pytest.mark.checks
 
@@ -2584,7 +2584,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'splunk_jobs',
         'splunk_license_state',
         'splunk_license_usage',
-        'splunk_system_msg',
         'sshd_config',
         'statgrab_cpu',
         'statgrab_load',

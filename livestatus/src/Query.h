@@ -109,7 +109,7 @@ private:
     GroupAuthorization group_auth_;
 
     bool doStats() const;
-    void doWait();
+    void doWait(const User &user);
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);

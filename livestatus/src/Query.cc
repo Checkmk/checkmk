@@ -576,12 +576,13 @@ bool Query::process() {
     auto renderer =
         Renderer::make(_output_format, _output.os(), _output.getLogger(),
                        _separators, _data_encoding);
-    doWait();
+    User user{_auth_user, service_auth_, group_auth_};
+    doWait(user);
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(*this, User{_auth_user, service_auth_, group_auth_});
+    _table.answerQuery(*this, user);
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
@@ -640,7 +641,9 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    if (!_filter->accepts(row, _auth_user, _timezone_offset)) {
+    // TODO(sp) We already construct this in process, reuse this somehow?
+    User user{_auth_user, service_auth_, group_auth_};
+    if (!_filter->accepts(row, user, _timezone_offset)) {
         return true;
     }
 
@@ -655,8 +658,6 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    // TODO(sp) We already construct this in process, reuse this somehow?
-    User user{_auth_user, service_auth_, group_auth_};
     if (doStats()) {
         // Things get a bit tricky here: For stats queries, we have to combine
         // rows with the same values in the non-stats columns. But when we
@@ -676,7 +677,7 @@ bool Query::processDataset(Row row) {
             }
         }
         for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
-            aggr->consume(row, _auth_user, timezoneOffset());
+            aggr->consume(row, user, timezoneOffset());
         }
     } else {
         assert(_renderer_query);  // Missing call to `process()`.
@@ -782,7 +783,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     return it->second;
 }
 
-void Query::doWait() {
+void Query::doWait(const User &user) {
     if (_wait_condition->is_contradiction() && _wait_timeout == 0ms) {
         invalidRequest("waiting for WaitCondition would hang forever");
         return;
@@ -794,8 +795,9 @@ void Query::doWait() {
             return;
         }
     }
-    _table.core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
-        return _wait_condition->accepts(_wait_object, _auth_user,
-                                        timezoneOffset());
-    });
+    _table.core()->triggers().wait_for(
+        _wait_trigger, _wait_timeout, [this, &user] {
+            return _wait_condition->accepts(_wait_object, user,
+                                            timezoneOffset());
+        });
 }

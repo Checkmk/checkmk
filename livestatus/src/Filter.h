@@ -17,10 +17,9 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "contact_fwd.h"
 class Filter;
 class Row;
+class User;
 
 using Filters = std::vector<std::unique_ptr<Filter>>;
 using columnNamePredicate = std::function<bool(const std::string &)>;
@@ -34,8 +33,9 @@ public:
     explicit Filter(Kind kind) : _kind(kind) {}
     virtual ~Filter() = default;
     [[nodiscard]] Kind kind() const { return _kind; }
-    virtual bool accepts(Row row, const contact *auth_user,
-                         std::chrono::seconds timezone_offset) const = 0;
+    [[nodiscard]] virtual bool accepts(
+        Row row, const User &user,
+        std::chrono::seconds timezone_offset) const = 0;
     [[nodiscard]] virtual std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const = 0;
 

@@ -25,6 +25,7 @@
 #include "opids.h"
 class RegExp;
 class Logger;
+class User;
 
 class ListFilter : public ColumnFilter {
     using value_type = std::vector<std::string>;
@@ -38,8 +39,9 @@ class ListFilter : public ColumnFilter {
 public:
     ListFilter(Kind kind, std::string columnName, function_type,
                RelationalOperator relOp, const std::string &value, Logger *);
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(
+        Row row, const User &user,
+        std::chrono::seconds timezone_offset) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     [[nodiscard]] std::unique_ptr<Filter> copy() const override;

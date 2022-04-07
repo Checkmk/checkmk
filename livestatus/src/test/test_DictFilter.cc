@@ -17,6 +17,7 @@
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "Row.h"
+#include "auth.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "nagios.h"
@@ -43,7 +44,10 @@ struct DictFilterTest : public ::testing::Test {
         DictFilter filter{Filter::Kind::row, "name",
                           [&cvdc](Row row) { return cvdc.getValue(row); },
                           RelationalOperator::equal, value};
-        return filter.accepts(Row{&test_host}, {}, {});
+        return filter.accepts(Row{&test_host},
+                              User{nullptr, ServiceAuthorization::loose,
+                                   GroupAuthorization::loose},
+                              {});
     }
 
     std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;

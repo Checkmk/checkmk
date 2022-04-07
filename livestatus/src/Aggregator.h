@@ -13,8 +13,8 @@
 
 #include "Renderer.h"
 #include "Row.h"
-#include "contact_fwd.h"
 class Query;
+class User;
 
 class Aggregation {
 public:
@@ -26,7 +26,7 @@ public:
 class Aggregator {
 public:
     virtual ~Aggregator() = default;
-    virtual void consume(Row row, const contact *auth_user,
+    virtual void consume(Row row, const User &user,
                          std::chrono::seconds timezone_offset) = 0;
     virtual void output(RowRenderer &r) const = 0;
 };

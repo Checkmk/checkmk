@@ -472,8 +472,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     // filtered out.  Note: we currently do not filter out hosts
                     // since they might be needed for service states
                     if (!entry->service_description().empty()) {
-                        if (!object_filter->accepts(Row(state),
-                                                    query.authUser(),
+                        if (!object_filter->accepts(Row{state}, user,
                                                     query.timezoneOffset())) {
                             object_blacklist.insert(key);
                             delete state;

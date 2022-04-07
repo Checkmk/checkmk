@@ -18,9 +18,9 @@
 
 #include "ColumnFilter.h"
 #include "Filter.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class Row;
+class User;
 
 class TimeFilter : public ColumnFilter {
 public:
@@ -29,8 +29,9 @@ public:
                    Row, std::chrono::seconds)>,
                RelationalOperator relOp, const std::string &value);
 
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(
+        Row row, const User &user,
+        std::chrono::seconds timezone_offset) const override;
 
     [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,

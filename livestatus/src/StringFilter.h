@@ -16,17 +16,17 @@
 
 #include "ColumnFilter.h"
 #include "Filter.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class RegExp;
 class Row;
+class User;
 
 class StringFilter : public ColumnFilter {
 public:
     StringFilter(Kind kind, std::string columnName,
                  std::function<std::string(Row)>, RelationalOperator relOp,
                  const std::string &value);
-    bool accepts(Row row, const contact *auth_user,
+    bool accepts(Row row, const User &user,
                  std::chrono::seconds timezone_offset) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;

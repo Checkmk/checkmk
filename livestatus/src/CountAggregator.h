@@ -12,16 +12,16 @@
 #include <cstdint>
 
 #include "Aggregator.h"
-#include "contact_fwd.h"
 class Filter;
 class Row;
 class RowRenderer;
+class User;
 
 class CountAggregator : public Aggregator {
 public:
     explicit CountAggregator(const Filter *filter)
         : _filter(filter), _count(0) {}
-    void consume(Row row, const contact *auth_user,
+    void consume(Row row, const User &user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 

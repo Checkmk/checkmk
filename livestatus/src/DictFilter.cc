@@ -72,8 +72,8 @@ DictFilter::DictFilter(Kind kind, std::string columnName, function_type f,
     regExp_ = makeRegExpFor(oper(), ref_string_);
 }
 
-bool DictFilter::accepts(Row row, const contact * /* auth_user */,
-                         std::chrono::seconds /* timezone_offset */) const {
+bool DictFilter::accepts(Row row, const User & /*user*/,
+                         std::chrono::seconds /*timezone_offset*/) const {
     auto cvm = f_(row);
     auto it = cvm.find(ref_varname_);
     auto act_string = it == cvm.end() ? "" : it->second;

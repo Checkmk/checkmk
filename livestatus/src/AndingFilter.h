@@ -18,16 +18,17 @@
 #include <utility>
 
 #include "Filter.h"
-#include "contact_fwd.h"
 class Row;
+class User;
 
 class AndingFilter : public Filter {
     struct Secret {};
 
 public:
     static std::unique_ptr<Filter> make(Kind kind, const Filters &subfilters);
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(
+        Row row, const User &user,
+        std::chrono::seconds timezone_offset) const override;
     [[nodiscard]] std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(

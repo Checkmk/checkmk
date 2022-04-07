@@ -22,6 +22,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Row;
+class User;
 
 class IntFilter : public ColumnFilter {
     using f0_t = std::function<int(Row)>;
@@ -32,8 +33,9 @@ public:
     IntFilter(Kind kind, std::string columnName, function_type,
               RelationalOperator relOp, const std::string &value);
 
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(
+        Row row, const User &user,
+        std::chrono::seconds timezone_offset) const override;
 
     [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,

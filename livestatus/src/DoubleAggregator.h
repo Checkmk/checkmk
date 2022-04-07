@@ -13,9 +13,9 @@
 
 #include "Aggregator.h"
 #include "Column.h"
-#include "contact_fwd.h"
 class Row;
 class RowRenderer;
+class User;
 
 class DoubleAggregator : public Aggregator {
 public:
@@ -23,7 +23,7 @@ public:
                      std::function<double(Row)> getValue)
         : _aggregation(factory()), _getValue(std::move(getValue)) {}
 
-    void consume(Row row, const contact * /*contact*/,
+    void consume(Row row, const User & /*user*/,
                  std::chrono::seconds /*timezone_offset*/) override {
         _aggregation->update(_getValue(row));
     }

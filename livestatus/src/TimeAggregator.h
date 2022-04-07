@@ -12,9 +12,9 @@
 
 #include "Aggregator.h"
 #include "Column.h"
-#include "contact_fwd.h"
 class Row;
 class RowRenderer;
+class User;
 
 class TimeAggregator : public Aggregator {
 public:
@@ -24,7 +24,7 @@ public:
                        getValue)
         : _aggregation(factory()), _getValue{std::move(getValue)} {}
 
-    void consume(Row row, const contact * /*auth_user*/,
+    void consume(Row row, const User & /*user*/,
                  std::chrono::seconds timezone_offset) override {
         _aggregation->update(std::chrono::system_clock::to_time_t(
             _getValue(row, timezone_offset)));

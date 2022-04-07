@@ -9,6 +9,7 @@
 
 #include "Logger.h"
 #include "RegExp.h"
+#include "auth.h"
 
 namespace {
 RelationalOperator relOpForElement(RelationalOperator relOp) {
@@ -43,7 +44,7 @@ ListFilter::ListFilter(Kind kind, std::string columnName,
     , _logger{logger}
     , _regExp{makeRegExpFor(relOpForElement(relOp), value)} {}
 
-bool ListFilter::accepts(Row row, const contact *auth_user,
+bool ListFilter::accepts(Row row, const User &user,
                          std::chrono::seconds timezone_offset) const {
     switch (oper()) {
         case RelationalOperator::equal:
@@ -52,7 +53,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                     << "Sorry, equality for lists implemented only for emptiness";
                 return false;
             }
-            return !any(row, auth_user, timezone_offset,
+            return !any(row, user.authUser(), timezone_offset,
                         [](const std::string & /*unused*/) { return true; });
         case RelationalOperator::not_equal:
             if (!value().empty()) {
@@ -60,27 +61,27 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                     << "Sorry, inequality for lists implemented only for emptiness";
                 return false;
             }
-            return any(row, auth_user, timezone_offset,
+            return any(row, user.authUser(), timezone_offset,
                        [](const std::string & /*unused*/) { return true; });
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
             return any(
-                row, auth_user, timezone_offset,
+                row, user.authUser(), timezone_offset,
                 [&](const std::string &elem) { return _regExp->search(elem); });
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
             return !any(
-                row, auth_user, timezone_offset,
+                row, user.authUser(), timezone_offset,
                 [&](const std::string &elem) { return _regExp->search(elem); });
         case RelationalOperator::greater_or_equal:
         case RelationalOperator::less_or_equal:
             return any(
-                row, auth_user, timezone_offset,
+                row, user.authUser(), timezone_offset,
                 [&](const std::string &elem) { return _regExp->match(elem); });
         case RelationalOperator::less:
         case RelationalOperator::greater:
             return !any(
-                row, auth_user, timezone_offset,
+                row, user.authUser(), timezone_offset,
                 [&](const std::string &elem) { return _regExp->match(elem); });
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:

@@ -20,8 +20,8 @@ DoubleFilter::DoubleFilter(Kind kind, std::string columnName,
     , _ref_value(atof(value.c_str()))
     , _logger(logger) {}
 
-bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
-                           std::chrono::seconds /* timezone_offset */) const {
+bool DoubleFilter::accepts(Row row, const User & /*user*/,
+                           std::chrono::seconds /*timezone_offset*/) const {
     double act_value = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:

@@ -16,10 +16,10 @@
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "MonitoringCore.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class RegExp;
 class Row;
+class User;
 
 class DictFilter : public ColumnFilter {
     // Elsewhere, `function_type` is a std::variant of functions but we
@@ -29,8 +29,9 @@ class DictFilter : public ColumnFilter {
 public:
     DictFilter(Kind kind, std::string columnName, function_type f,
                RelationalOperator relOp, const std::string &value);
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] bool accepts(
+        Row row, const User &user,
+        std::chrono::seconds timezone_offset) const override;
     [[nodiscard]] std::unique_ptr<Filter> copy() const override;
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 

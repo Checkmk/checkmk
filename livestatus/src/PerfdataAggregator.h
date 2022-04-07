@@ -17,16 +17,16 @@
 
 #include "Aggregator.h"
 #include "Column.h"
-#include "contact_fwd.h"
 class Row;
 class RowRenderer;
+class User;
 
 class PerfdataAggregator : public Aggregator {
 public:
     PerfdataAggregator(AggregationFactory factory,
                        std::function<std::string(Row)> getValue)
         : _factory(std::move(factory)), _getValue{std::move(getValue)} {}
-    void consume(Row row, const contact *auth_user,
+    void consume(Row row, const User &user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 

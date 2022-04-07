@@ -15,6 +15,7 @@
 
 #include "Aggregator.h"
 #include "Column.h"
+#include "auth.h"
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;
@@ -28,12 +29,12 @@ public:
     IntAggregator(const AggregationFactory &factory, function_type f)
         : _aggregation{factory()}, f_{std::move(f)} {}
 
-    void consume(Row row, const contact *auth_user,
-                 std::chrono::seconds /* timezone_offset*/) override {
+    void consume(Row row, const User &user,
+                 std::chrono::seconds /*timezone_offset*/) override {
         if (std::holds_alternative<f0_t>(f_)) {
             _aggregation->update(std::get<f0_t>(f_)(row));
         } else if (std::holds_alternative<f1_t>(f_)) {
-            _aggregation->update(std::get<f1_t>(f_)(row, auth_user));
+            _aggregation->update(std::get<f1_t>(f_)(row, user.authUser()));
         } else {
             throw std::runtime_error("unreachable");
         }

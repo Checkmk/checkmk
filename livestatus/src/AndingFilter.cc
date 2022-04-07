@@ -32,12 +32,12 @@ std::unique_ptr<Filter> AndingFilter::make(Kind kind,
                                      kind, std::move(filters), Secret());
 }
 
-bool AndingFilter::accepts(Row row, const contact *auth_user,
+bool AndingFilter::accepts(Row row, const User &user,
                            std::chrono::seconds timezone_offset) const {
-    return std::all_of(
-        _subfilters.cbegin(), _subfilters.cend(), [&](const auto &filter) {
-            return filter->accepts(row, auth_user, timezone_offset);
-        });
+    return std::all_of(_subfilters.cbegin(), _subfilters.cend(),
+                       [&](const auto &filter) {
+                           return filter->accepts(row, user, timezone_offset);
+                       });
 }
 
 std::unique_ptr<Filter> AndingFilter::partialFilter(

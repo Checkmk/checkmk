@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b5"
+CMK_VERSION="2.1.0b6"
 
 # Monitor DB/2 databases on AIX
 # $HOME/sqllib/db2profile

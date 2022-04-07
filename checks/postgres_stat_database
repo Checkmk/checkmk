@@ -15,26 +15,27 @@
 def parse_postgres_stat_database(info):
     if len(info) == 0:
         return {}
-
     parsed = {}
     instance_name = ""
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-
         if line[0] == "datid" and line[1] == "datname":
             headers = line
             continue
-
         # All values other than datid and datname must be int
-        row = {k: int(v) for k, v in zip(headers, line) if k not in ("datid", "datname")}
+        row = {int(v) if v else v for k, v in zip(headers, line) if k not in ("datid", "datname")}
         # datid should be an oid, which should be an int, but that may not be guaranteed
+        # when the data entry is empty, we keep it as empty. Might have to change this to a default value (0) if issues come up.
         row["datid"] = line[0]
+        datname = (
+            line[1] if line[1] else "access_to_shared_objects"
+        )  # https://www.postgresql.org/message-id/CABUevEzMHzdAQjvpWO6eGSZeg8FKmLLPhdwVoqaOXR8VWnyd8w%40mail.gmail.com
         if instance_name:
-            db_name = "%s/%s" % (instance_name, line[1])
+            db_name = "%s/%s" % (instance_name, datname)
         else:
-            db_name = line[1]
+            db_name = datname
 
         parsed[db_name] = row
 

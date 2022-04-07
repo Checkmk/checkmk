@@ -14,7 +14,7 @@ import socket
 import sys
 import time
 from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, TypedDict, Union
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 import livestatus
 
@@ -392,19 +392,26 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
             # from that one, but we try to keep this simple here.
             raw_context["MICROTIME"] = "%d" % (time.time() * 1000000)
 
-        url_host_view = "view.py?view_name=hoststatus&host=%s&site=%s" % (
-            raw_context["HOSTNAME"],
-            raw_context["OMD_SITE"],
-        )
-        raw_context["HOSTURL"] = "/check_mk/index.py?start_url=%s" % quote(url_host_view)
-
-        if raw_context["WHAT"] == "SERVICE":
-            url_service_view = "view.py?view_name=service&host=%s&service=%s&site=%s" % (
-                raw_context["HOSTNAME"],
-                raw_context["SERVICEDESC"],
-                raw_context["OMD_SITE"],
+        raw_context["HOSTURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
+            urlencode(
+                [
+                    ("view_name", "hoststatus"),
+                    ("host", raw_context["HOSTNAME"]),
+                    ("site", raw_context["OMD_SITE"]),
+                ]
             )
-            raw_context["SERVICEURL"] = "/check_mk/index.py?start_url=%s" % quote(url_service_view)
+        )
+        if raw_context["WHAT"] == "SERVICE":
+            raw_context["SERVICEURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
+                urlencode(
+                    [
+                        ("view_name", "service"),
+                        ("host", raw_context["HOSTNAME"]),
+                        ("service", raw_context["SERVICEDESC"]),
+                        ("site", raw_context["OMD_SITE"]),
+                    ]
+                )
+            )
 
         # Relative Timestamps for several macros
         if (value := raw_context.get("LASTHOSTSTATECHANGE")) is not None:

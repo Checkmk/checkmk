@@ -4,10 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .agent_based_api.v1 import register
-from .utils.mobileiron import parse_mobileiron
+from .utils.mobileiron import parse_mobileiron, parse_mobileiron_source_host
 
 register.agent_section(
     name="mobileiron_section",
     parse_function=parse_mobileiron,
-    parsed_section_name="mobileiron_section",
+)
+
+register.agent_section(
+    name="mobileiron_source_host",
+    parse_function=parse_mobileiron_source_host,
 )

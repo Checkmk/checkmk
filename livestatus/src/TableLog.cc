@@ -161,14 +161,11 @@ void TableLog::answerQuery(Query &query, const User &user) {
         return;
     }
 
-    auto is_authorized = [&](const LogRow &lr) {
+    auto is_authorized = [&user](const LogRow &lr) {
         // If we have an AuthUser, suppress entries for messages with hosts that
         // do not exist anymore, otherwise use the common authorization logic.
-        return lr.hst == nullptr  //
-                   ? user.is_authorized_for_everything() || rowWithoutHost(lr)
-                   : lr.svc == nullptr
-                         ? user.is_authorized_for_host(*lr.hst)
-                         : user.is_authorized_for_service(*lr.svc);
+        return user.is_authorized_for_object(lr.hst, lr.svc,
+                                             rowWithoutHost(lr));
     };
 
     auto process = [is_authorized, core = core(),

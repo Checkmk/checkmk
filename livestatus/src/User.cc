@@ -37,7 +37,12 @@ AuthUser::AuthUser(const contact &auth_user, ServiceAuthorization service_auth,
     , service_auth_{service_auth}
     , group_auth_{group_auth} {}
 
-bool AuthUser::is_authorized_for_everything() const { return false; }
+bool AuthUser::is_authorized_for_object(const host *hst, const service *svc,
+                                        bool authorized_if_no_host) const {
+    return hst == nullptr   ? authorized_if_no_host
+           : svc == nullptr ? is_authorized_for_host(*hst)
+                            : is_authorized_for_service(*svc);
+}
 
 bool AuthUser::is_authorized_for_host(const host &hst) const {
     return host_has_contact(hst);

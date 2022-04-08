@@ -925,14 +925,9 @@ void TableStateHistory::process(
     }
 
     // if (hs_state->_duration > 0)
-    HostServiceState *r = hs_state;
-    auto is_authorized =
-        r->_host == nullptr  // TODO(sp): Can this ever happen???
-            ? user.is_authorized_for_everything()
-            : r->_service == nullptr
-                  ? user.is_authorized_for_host(*r->_host)
-                  : user.is_authorized_for_service(*r->_service);
-    _abort_query = is_authorized && !query.processDataset(Row{r});
+    _abort_query = user.is_authorized_for_object(hs_state->_host,
+                                                 hs_state->_service, false) &&
+                   !query.processDataset(Row{hs_state});
 
     hs_state->_from = hs_state->_until;
 }

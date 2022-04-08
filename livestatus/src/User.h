@@ -48,7 +48,9 @@ class User {
 public:
     virtual ~User() = default;
 
-    [[nodiscard]] virtual bool is_authorized_for_everything() const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_object(
+        const host *hst, const service *svc,
+        bool authorized_if_no_host) const = 0;
     [[nodiscard]] virtual bool is_authorized_for_host(
         const host &hst) const = 0;
     [[nodiscard]] virtual bool is_authorized_for_service(
@@ -67,7 +69,9 @@ public:
     AuthUser(const contact &auth_user, ServiceAuthorization service_auth,
              GroupAuthorization group_auth);
 
-    [[nodiscard]] bool is_authorized_for_everything() const override;
+    [[nodiscard]] bool is_authorized_for_object(
+        const host *hst, const service *svc,
+        bool authorized_if_no_host) const override;
     [[nodiscard]] bool is_authorized_for_host(const host &hst) const override;
     [[nodiscard]] bool is_authorized_for_service(
         const service &svc) const override;
@@ -92,7 +96,9 @@ private:
 
 class NoAuthUser : public User {
 public:
-    [[nodiscard]] bool is_authorized_for_everything() const override {
+    [[nodiscard]] bool is_authorized_for_object(
+        const host * /*hst*/, const service * /*svc*/,
+        bool /*authorized_if_no_host*/) const override {
         return true;
     }
     [[nodiscard]] bool is_authorized_for_host(
@@ -121,8 +127,10 @@ public:
 
 class UnknownUser : public User {
 public:
-    [[nodiscard]] bool is_authorized_for_everything() const override {
-        return false;
+    [[nodiscard]] bool is_authorized_for_object(
+        const host *hst, const service * /*svc*/,
+        bool authorized_if_no_host) const override {
+        return hst == nullptr && authorized_if_no_host;
     }
     [[nodiscard]] bool is_authorized_for_host(
         const host & /*hst*/) const override {

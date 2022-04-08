@@ -165,6 +165,7 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
     Ok(())
 }
 
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_legacy() -> AnyhowResult<()> {
     let mut fixture: PullFixture = PullFixture::setup("9998", "test_pull_legacy", true)?;

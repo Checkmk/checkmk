@@ -59,6 +59,12 @@ class PythonString(base.String):
             >>> expr.deserialize("...")  # doctest: +ELLIPSIS
             Ellipsis
 
+            >>> expr.deserialize("''")
+            ''
+
+            >>> expr.serialize("foo", {"foo": ""})
+            "''"
+
         Borked syntax leads to an ValidationError
 
             >>> expr.deserialize("{'a': (5.5,")  # doctest: +ELLIPSIS
@@ -77,6 +83,9 @@ class PythonString(base.String):
             marshmallow.exceptions.ValidationError: ...
 
     """
+
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        return repr(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
         if not isinstance(value, str):

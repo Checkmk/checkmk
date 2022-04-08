@@ -173,7 +173,10 @@ disable=
     #---------------------------------------------------------------------------
     # Tons of findings, we fix this incrementally, f-strings are much more
     # performant than old-skool string splicing/formatting.
-    consider-using-f-string
+    consider-using-f-string,
+    #---------------------------------------------------------------------------
+    # TODO: Remove this as soon as possible! Added for updating pylint only...
+    arguments-differ
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 import time
 from typing import Any, Dict, List, Tuple
@@ -13,6 +12,7 @@ from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.notify import ensure_utf8
 
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -412,23 +412,7 @@ def message_mail(user_id, msg):
         ensure_str(user_spec["email"]),  # pylint: disable= six-ensure-str-bin-call
     ]
 
-    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send messages
-    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
-    # available. If e.g. nail detects a non-Ascii character in the mail body and
-    # the specified encoding is not available, it will silently not send the mail!
-    # Our resultion in future: use /usr/sbin/sendmail directly.
-    # Our resultion in the present: look with locale -a for an existing UTF encoding
-    # and use that.
-    for encoding in os.popen("locale -a 2>/dev/null"):
-        l = encoding.lower()
-        if "utf8" in l or "utf-8" in l or "utf.8" in l:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            break
-    else:
-        raise MKInternalError(
-            _("No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.")
-        )
+    ensure_utf8()
 
     try:
         completed_process = subprocess.run(

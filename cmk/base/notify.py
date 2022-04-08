@@ -52,6 +52,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
+    ensure_utf8,
     find_wato_folder,
     notification_message,
     notification_result_message,
@@ -1516,7 +1517,7 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     command_utf8 = command.encode("utf-8")
 
     old_lang = os.getenv("LANG", "")
-    _ensure_utf8()
+    ensure_utf8(logger)
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
@@ -1546,47 +1547,6 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     return 0
 
 
-def _ensure_utf8() -> None:
-    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
-    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
-    # available. If e.g. mail detects a non-Ascii character in the mail body and
-    # the specified encoding is not available, it will silently not send the mail!
-    # Our resultion in future: use /usr/sbin/sendmail directly.
-    # Our resultion in the present: look with locale -a for an existing UTF encoding
-    # and use that.
-    completed_process = subprocess.run(
-        ["locale", "-a"],
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-
-    not_found_msg = "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
-
-    if completed_process.returncode:
-        logger.info(
-            "Command 'locale -a' could not be executed. Exit code of command was: %r",
-            completed_process.returncode,
-        )
-        logger.info(not_found_msg)
-        return
-
-    locales_list = completed_process.stdout.decode("utf-8", "ignore").split("\n")
-    for encoding in locales_list:
-        el = encoding.lower()
-        if "utf8" in el or "utf-8" in el or "utf.8" in el:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            logger.debug("Setting locale for mail to %s.", encoding)
-            break
-    else:
-        logger.info(not_found_msg)
-
-    return
-
-
-# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

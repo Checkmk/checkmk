@@ -88,6 +88,7 @@ pub struct RegistrationConfig {
 
 impl RegistrationConfig {
     pub fn new(
+        runtime_config: RuntimeConfig,
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
@@ -128,19 +129,23 @@ impl RegistrationConfig {
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,
             client_config: ClientConfig {
-                use_proxy: reg_args.client_opts.detect_proxy,
+                use_proxy: reg_args.client_opts.detect_proxy
+                    || runtime_config.detect_proxy.unwrap_or(false),
             },
         })
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct RuntimeConfig {
     #[serde(default)]
     allowed_ip: Option<Vec<String>>,
 
     #[serde(default)]
     pull_port: Option<types::Port>,
+
+    #[serde(default)]
+    detect_proxy: Option<bool>,
 }
 
 impl TOMLLoader for RuntimeConfig {}
@@ -173,9 +178,9 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    pub fn new(client_opts: cli::ClientOpts) -> ClientConfig {
+    pub fn new(runtime_config: RuntimeConfig, client_opts: cli::ClientOpts) -> ClientConfig {
         ClientConfig {
-            use_proxy: client_opts.detect_proxy,
+            use_proxy: client_opts.detect_proxy || runtime_config.detect_proxy.unwrap_or(false),
         }
     }
 }

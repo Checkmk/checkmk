@@ -36,7 +36,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
     match args {
         cli::Args::Register(reg_args) => {
             register(
-                config::RegistrationConfig::new(registration_preset, reg_args)?,
+                config::RegistrationConfig::new(runtime_config, registration_preset, reg_args)?,
                 &mut registry,
             )?;
             legacy_pull_marker.remove().context(
@@ -50,11 +50,12 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                 .context("Import successful, but could not delete marker for legacy pull mode")
         }
         cli::Args::ProxyRegister(proxy_reg_args) => proxy_register(
-            config::RegistrationConfig::new(registration_preset, proxy_reg_args)?,
+            config::RegistrationConfig::new(runtime_config, registration_preset, proxy_reg_args)?,
         ),
-        cli::Args::Push(push_args) => {
-            push(&registry, &config::ClientConfig::new(push_args.client_opts))
-        }
+        cli::Args::Push(push_args) => push(
+            &registry,
+            &config::ClientConfig::new(runtime_config, push_args.client_opts),
+        ),
         cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
             runtime_config,
             pull_args.pull_opts,
@@ -64,18 +65,18 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         cli::Args::Daemon(daemon_args) => daemon(
             registry.clone(),
             config::PullConfig::new(
-                runtime_config,
+                runtime_config.clone(),
                 daemon_args.pull_opts,
                 legacy_pull_marker,
                 registry,
             )?,
-            config::ClientConfig::new(daemon_args.client_opts),
+            config::ClientConfig::new(runtime_config, daemon_args.client_opts),
         ),
         cli::Args::Dump { .. } => dump(),
         cli::Args::Status(status_args) => status(
             &registry,
             config::PullConfig::new(
-                runtime_config,
+                runtime_config.clone(),
                 // this will vanish once the Windows agent also uses the toml config
                 cli::PullOpts {
                     port: None,
@@ -86,7 +87,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                 legacy_pull_marker,
                 registry.clone(),
             )?,
-            config::ClientConfig::new(status_args.client_opts),
+            config::ClientConfig::new(runtime_config, status_args.client_opts),
             status_args.json,
         ),
         cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),

@@ -4605,7 +4605,6 @@ def process_stores_info(args_dict, opt_demo, opt_cert):
             tbody = element.find("table").find("tbody")
             store_id = tbody[0][1].text
             output_lines.append("[%s/%s]" % (serviceset_id, store_id))
-            serviceset_ids.add(serviceset_id)
             for child in tbody:
                 name = child[0].text
                 value = child[1].text

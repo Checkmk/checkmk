@@ -7,7 +7,7 @@
 import os
 import subprocess
 from logging import Logger
-from typing import Dict, List, NewType, Optional
+from typing import List, NewType, Optional
 
 import cmk.utils.defines
 from cmk.utils.exceptions import MKGeneralException

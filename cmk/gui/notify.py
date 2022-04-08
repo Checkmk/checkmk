@@ -48,6 +48,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.utils.urls import makeuri
+from cmk.utils.notify import ensure_utf8
 
 
 def get_gui_messages(user_id=None):
@@ -364,22 +365,7 @@ def notify_mail(user_id, msg):
     #       addresses. handle this correctly.
     command = ["mail", "-s", ensure_str(subject), ensure_str(user['email'])]
 
-    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
-    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
-    # available. If e.g. nail detects a non-Ascii character in the mail body and
-    # the specified encoding is not available, it will silently not send the mail!
-    # Our resultion in future: use /usr/sbin/sendmail directly.
-    # Our resultion in the present: look with locale -a for an existing UTF encoding
-    # and use that.
-    for encoding in os.popen("locale -a 2>/dev/null"):
-        l = encoding.lower()
-        if "utf8" in l or "utf-8" in l or "utf.8" in l:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            break
-    else:
-        raise MKInternalError(
-            _('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
+    ensure_utf8()
 
     try:
         p = subprocess.Popen(

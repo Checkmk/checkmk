@@ -83,6 +83,7 @@ pub struct RegistrationConfig {
     pub root_certificate: Option<String>,
     pub host_reg_data: HostRegistrationData,
     pub trust_server_cert: bool,
+    pub client_config: ClientConfig,
 }
 
 impl RegistrationConfig {
@@ -126,6 +127,9 @@ impl RegistrationConfig {
             root_certificate,
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,
+            client_config: ClientConfig {
+                use_proxy: reg_args.client_opts.detect_proxy,
+            },
         })
     }
 }
@@ -161,6 +165,18 @@ impl LegacyPullMarker {
         }
 
         std::fs::remove_file(&self.0)
+    }
+}
+
+pub struct ClientConfig {
+    pub use_proxy: bool,
+}
+
+impl ClientConfig {
+    pub fn new(client_opts: cli::ClientOpts) -> ClientConfig {
+        ClientConfig {
+            use_proxy: client_opts.detect_proxy,
+        }
     }
 }
 

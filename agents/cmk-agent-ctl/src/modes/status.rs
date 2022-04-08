@@ -377,7 +377,7 @@ fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> Str
 
 fn _status(
     registry: &config::Registry,
-    pull_config: &config::PullConfig,
+    pull_config: config::PullConfig,
     json: bool,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<String> {
@@ -392,7 +392,8 @@ fn _status(
 
 pub fn status(
     registry: &config::Registry,
-    pull_config: &config::PullConfig,
+    pull_config: config::PullConfig,
+    _client_config: config::ClientConfig,
     json: bool,
 ) -> AnyhowResult<()> {
     println!(
@@ -850,7 +851,7 @@ mod test_status {
         assert_eq!(
             _status(
                 &registry,
-                &config::PullConfig::new(
+                config::PullConfig::new(
                     config::RuntimeConfig::new().unwrap(),
                     cli::PullOpts {
                         port: None,

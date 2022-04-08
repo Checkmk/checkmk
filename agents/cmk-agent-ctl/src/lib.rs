@@ -52,7 +52,9 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         cli::Args::ProxyRegister(proxy_reg_args) => proxy_register(
             config::RegistrationConfig::new(registration_preset, proxy_reg_args)?,
         ),
-        cli::Args::Push { .. } => push(&registry),
+        cli::Args::Push(push_args) => {
+            push(&registry, &config::ClientConfig::new(push_args.client_opts))
+        }
         cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
             runtime_config,
             pull_args.pull_opts,
@@ -67,11 +69,12 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                 legacy_pull_marker,
                 registry,
             )?,
+            config::ClientConfig::new(daemon_args.client_opts),
         ),
         cli::Args::Dump { .. } => dump(),
         cli::Args::Status(status_args) => status(
             &registry,
-            &config::PullConfig::new(
+            config::PullConfig::new(
                 runtime_config,
                 // this will vanish once the Windows agent also uses the toml config
                 cli::PullOpts {
@@ -83,6 +86,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                 legacy_pull_marker,
                 registry.clone(),
             )?,
+            config::ClientConfig::new(status_args.client_opts),
             status_args.json,
         ),
         cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),

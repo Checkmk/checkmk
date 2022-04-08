@@ -8,11 +8,15 @@ use anyhow::Result as AnyhowResult;
 use std::sync::mpsc;
 use std::thread;
 
-pub fn daemon(registry: config::Registry, pull_config: config::PullConfig) -> AnyhowResult<()> {
+pub fn daemon(
+    registry: config::Registry,
+    pull_config: config::PullConfig,
+    client_config: config::ClientConfig,
+) -> AnyhowResult<()> {
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
     thread::spawn(move || {
-        tx_push.send(push::push(registry)).unwrap();
+        tx_push.send(push::push(registry, client_config)).unwrap();
     });
     thread::spawn(move || {
         tx_pull.send(pull::pull(pull_config)).unwrap();

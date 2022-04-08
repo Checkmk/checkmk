@@ -7,11 +7,8 @@
 # pylint: disable=redefined-outer-name
 from __future__ import annotations
 
-import ast
-import contextlib
 import json
 import threading
-import urllib.parse
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, Callable, ContextManager, Dict, Iterator, Literal, NamedTuple, Optional
@@ -249,39 +246,6 @@ class WebTestAppForCMK(webtest.TestApp):
             resp = self.call_method(link["method"], link["href"], **params)
         return resp
 
-    def api_request(self, action, request, output_format="json", **kw):
-        if self.username is None or self.password is None:
-            raise RuntimeError("Not logged in.")
-        qs = urllib.parse.urlencode(
-            [
-                ("_username", self.username),
-                ("_secret", self.password),
-                ("request_format", output_format),
-                ("action", action),
-            ]
-        )
-        if output_format == "python":
-            request = repr(request)
-        elif output_format == "json":
-            request = json.dumps(request)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
-
-        _resp = self.call_method(
-            "post",
-            "/NO_SITE/check_mk/webapi.py?" + qs,
-            params={"request": request, "_username": self.username, "_secret": self.password},
-            **kw,
-        )
-        assert "Invalid automation secret for user" not in _resp.body
-        assert "API is only available for automation users" not in _resp.body
-
-        if output_format == "python":
-            return ast.literal_eval(_resp.body)
-        if output_format == "json":
-            return json.loads(_resp.body)
-        raise NotImplementedError("Format %s not implemented" % output_format)
-
     @contextmanager
     def set_config(self, **kwargs: Any) -> Iterator[None]:
         """Patch the GUI config for the current test
@@ -393,7 +357,7 @@ def run_as_user() -> Callable[[UserId], ContextManager[None]]:
 
     """
 
-    @contextlib.contextmanager
+    @contextmanager
     def _run_as_user(user_id: UserId) -> Iterator[None]:
         cmk.gui.config.load_config()
         with UserContext(user_id):
@@ -416,7 +380,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
     """
 
-    @contextlib.contextmanager
+    @contextmanager
     def _run_as_superuser() -> Iterator[None]:
         cmk.gui.config.load_config()
         with SuperUserContext():

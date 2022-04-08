@@ -272,7 +272,7 @@ def raw_context_from_string(data: str) -> EventContext:
         for line in data.split("\n"):
             varname, value = line.strip().split("=", 1)
             # Dynamically adding to TypedDict...
-            context[varname] = expand_backslashes(value)  # type: ignore[misc]
+            context[varname] = expand_backslashes(value)  # type: ignore[literal-required]
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
             raise
@@ -474,7 +474,7 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
             assert isinstance(ctx_value, str)
             if ctx_key.endswith("STATE"):
                 # dynamical keys are bad...
-                raw_context[ctx_key[:-5] + "SHORTSTATE"] = ctx_value[:4]  # type: ignore[misc]
+                raw_context[ctx_key[:-5] + "SHORTSTATE"] = ctx_value[:4]  # type: ignore[literal-required]
 
         if raw_context["WHAT"] == "SERVICE":
             raw_context["SERVICEFORURL"] = quote(raw_context["SERVICEDESC"])
@@ -484,13 +484,13 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         ruleset_matcher = config_cache.ruleset_matcher
         for k, v in ruleset_matcher.labels_of_host(raw_context["HOSTNAME"]).items():
             # Dynamically added keys...
-            raw_context["HOSTLABEL_" + k] = v  # type: ignore[misc]
+            raw_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
         if raw_context["WHAT"] == "SERVICE":
             for k, v in ruleset_matcher.labels_of_service(
                 raw_context["HOSTNAME"], raw_context["SERVICEDESC"]
             ).items():
                 # Dynamically added keys...
-                raw_context["SERVICELABEL_" + k] = v  # type: ignore[misc]
+                raw_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -954,14 +954,14 @@ def add_to_event_context(
             add_to_event_context(context, varname, value)
     elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
         # Dynamically added keys...
-        context[prefix] = str(param)  # type: ignore[misc]
+        context[prefix] = str(param)  # type: ignore[literal-required]
     elif param is None:
         # Dynamically added keys...
-        context[prefix] = ""  # type: ignore[misc]
+        context[prefix] = ""  # type: ignore[literal-required]
     else:
         # Should never happen
         # Dynamically added keys...
-        context[prefix] = repr(param)  # type: ignore[misc]
+        context[prefix] = repr(param)  # type: ignore[literal-required]
 
 
 # int() function that return 0 for strings the

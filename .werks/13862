@@ -1,0 +1,11 @@
+Title: InfluxDB Connections: Add option to use password store
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1649426923
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b6
+
+InfluxDB connections can now use passwords stored in the password store.

@@ -1,0 +1,20 @@
+Title: Make appliance snapin compatible with Checkmk Appliance firmware 1.6+
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1667546222
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p16
+
+When Checkmk is used on on the Checkmk Appliance 1.6 or newer, it is necessary
+to update the appliance sidebar snapin.
+
+Previous Checkmk versions displayed the error message 'Failed to render navigation:
+Traceback (most recent call last): File: "[stdin]", line 2, in <module>
+IOError: [Errno 2] No such file or directory' in the sidebar snapin.
+
+Background: The Checkmk Appliance firmware 1.6 migrates the internal software
+stack to Python 3.7 which makes it incompatible with the previous snapin. This
+change makes it possible to use Checkmk on older and newer appliance firmware.

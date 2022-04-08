@@ -32,8 +32,6 @@
   )Else Setlocal EnableDelayedExpansion ^& Set Args=
 
 
-set shared_fldr=c:\dev\shared_public
-
 if "%1" == "" (
   %Print%{255;0;0}Dir is absent \n 
   exit /b 33
@@ -61,16 +59,10 @@ xcopy ..\windows\plugins\*.*         	%root%\plugins /D /Y > nul || powershell W
 xcopy .\test_files\ohm\cli\*.*       	%user_dir%\bin /D /Y > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Yellow
 xcopy .\install\resources\check_mk.yml  	%root% /D /Y> nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&&  exit /b 5
 
-%Print%{128;255;0}1. Test machine preparation: Shared Folder\n
-if not exist "%shared_fldr%" powershell Write-Host Making folder %shared_fldr% -Foreground Yellow && mkdir %shared_fldr%
-xcopy .\test_files\shared_public     	%shared_fldr% /D /Y > nul   || powershell Write-Host "Failed shared_public copy" -Foreground Red &&  exit /b 6
-echo You must have in  Shared Folder at least one file with UNICODE name. This file must be created Manually.
-if not exist "%LOGONSERVER%\shared_public" powershell Write-Host Sharing %shared_fldr% -Foreground Yellow && net share shared_public=%shared_fldr% /grant:everyone,FULL 1> nul && Icacls %shared_fldr% /grant Everyone:F /inheritance:e /T 1> nul
-
-%Print%{128;255;0}2. Test machine preparation: Root Folder\n
+%Print%{128;255;0}1. Test machine preparation: Root Folder\n
 xcopy .\test_files\config\*.yml 		    %root% /D /Y> nul         || powershell Write-Host "Failed test ymls copy" -Foreground Red	&&  exit /b 7
 
-%Print%{128;255;0}3. Test machine preparation: User Folder\n
+%Print%{128;255;0}2. Test machine preparation: User Folder\n
 xcopy .\test_files\config\*.cfg      	%user_dir% /D /Y> nul      || powershell Write-Host "Failed test cfgs copy" -Foreground Red	&&  exit /b 8 
 xcopy .\test_files\config\*.test.ini 	%user_dir% /D /Y> nul	  || powershell Write-Host "Failed test inis copy" -Foreground Red	&&  exit /b 9
 xcopy .\test_files\config\*.test.out 	%user_dir% /D /Y> nul	  || powershell Write-Host "Failed test outs copy" -Foreground Red	&&  exit /b 10

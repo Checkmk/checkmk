@@ -1212,8 +1212,8 @@ class ModeEditRuleset(WatoMode):
             try:
                 reason = str(e)
                 self._valuespec.validate_datatype(value, "")
-            except Exception as e:
-                reason = str(e)
+            except Exception as e2:
+                reason = str(e2)
 
             value_html = (
                 html.render_icon("alert")

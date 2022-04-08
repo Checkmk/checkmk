@@ -22,7 +22,7 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils import password_store, store
+from cmk.utils import password_store, store, version
 from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
 from cmk.utils.type_defs.pluginname import CheckPluginName
 from cmk.utils.version import is_raw_edition
@@ -908,3 +908,39 @@ def test_rewrite_password_store_skip_when_empty(uc: update_config.UpdateConfig) 
     assert os.path.getsize(password_store.password_store_path()) == 0
     uc._rewrite_password_store()
     assert os.path.getsize(password_store.password_store_path()) == 0
+
+
+@pytest.mark.usefixtures("request_context")
+def test_transform_influxdb_connnections(uc: update_config.UpdateConfig) -> None:
+    if version.is_raw_edition():
+        return
+
+    # fmt: off
+    from cmk.gui.cee.plugins.wato import influxdb  # type: ignore[import] # isort:skip # pylint: disable=no-name-in-module
+    # fmt: on
+
+    influx_db_connection_config = influxdb.InfluxDBConnectionConfig()
+    influx_db_connection_config.save(
+        {
+            "InfluxDB_Connection_1": {
+                "title": "influxdb",
+                "comment": "",
+                "docu_url": "",
+                "disabled": False,
+                "site": ["-all-sites"],
+                "instance": {
+                    "protocol": ("https", {"port": 8086, "no-cert-check": True}),
+                    "instance_host": "influx.somwhere.com",
+                    "instance_token": "to_be_transformed",
+                },
+            }
+        }
+    )
+
+    uc._transform_influxdb_connnections()
+    assert influx_db_connection_config.load_for_reading()["InfluxDB_Connection_1"]["instance"][
+        "instance_token"
+    ] == (
+        "password",
+        "to_be_transformed",
+    )

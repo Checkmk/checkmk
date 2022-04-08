@@ -177,22 +177,22 @@ pub struct PullConfig {
 impl PullConfig {
     pub fn new(
         runtime_config: RuntimeConfig,
-        pull_args: cli::PullArgs,
+        pull_opts: cli::PullOpts,
         legacy_pull_marker: LegacyPullMarker,
         registry: Registry,
     ) -> AnyhowResult<PullConfig> {
-        let allowed_ip = pull_args
+        let allowed_ip = pull_opts
             .allowed_ip
             .or(runtime_config.allowed_ip)
             .unwrap_or_default();
-        let port = pull_args
+        let port = pull_opts
             .port
             .or(runtime_config.pull_port)
             .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
         #[cfg(unix)]
         let agent_channel = setup::agent_channel();
         #[cfg(windows)]
-        let agent_channel = pull_args.agent_channel.unwrap_or_else(setup::agent_channel);
+        let agent_channel = pull_opts.agent_channel.unwrap_or_else(setup::agent_channel);
         Ok(PullConfig {
             allowed_ip,
             port,

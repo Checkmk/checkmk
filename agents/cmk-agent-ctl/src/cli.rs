@@ -27,6 +27,14 @@ impl LoggingOpts {
 }
 
 #[derive(StructOpt)]
+pub struct ClientOpts {
+    /// Detect and use proxy settings configured on this system for outgoing HTTPS connections.
+    /// The default is to ignore configured proxies and to connect directly.
+    #[structopt(long, short = "d")]
+    pub detect_proxy: bool,
+}
+
+#[derive(StructOpt)]
 pub struct RegistrationArgs {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
     #[structopt(long, short = "s", requires = "site", parse(try_from_str))]
@@ -55,6 +63,9 @@ pub struct RegistrationArgs {
     pub trust_server_cert: bool,
 
     #[structopt(flatten)]
+    pub client_opts: ClientOpts,
+
+    #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
@@ -63,6 +74,9 @@ pub struct StatusArgs {
     /// Write output in JSON format
     #[structopt(long)]
     pub json: bool,
+
+    #[structopt(flatten)]
+    pub client_opts: ClientOpts,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
@@ -78,10 +92,19 @@ pub struct DeleteArgs {
     pub logging_opts: LoggingOpts,
 }
 
+#[derive(StructOpt)]
+pub struct PushArgs {
+    #[structopt(flatten)]
+    pub client_opts: ClientOpts,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
 // TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
 #[cfg(windows)]
 #[derive(StructOpt)]
-pub struct PullArgs {
+pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
     #[structopt(long, short = "P", parse(try_from_str))]
     pub port: Option<types::Port>,
@@ -94,14 +117,11 @@ pub struct PullArgs {
     /// None means default behavior
     #[structopt(long, parse(from_str))]
     pub agent_channel: Option<types::AgentChannel>,
-
-    #[structopt(flatten)]
-    pub logging_opts: LoggingOpts,
 }
 
 #[cfg(unix)]
 #[derive(StructOpt)]
-pub struct PullArgs {
+pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
     #[structopt(long, short = "P", parse(try_from_str))]
     pub port: Option<types::Port>,
@@ -109,6 +129,24 @@ pub struct PullArgs {
     /// List of IP addresses & templates separated with ' '
     #[structopt(long, short = "A", parse(from_str))]
     pub allowed_ip: Option<Vec<String>>,
+}
+
+#[derive(StructOpt)]
+pub struct PullArgs {
+    #[structopt(flatten)]
+    pub pull_opts: PullOpts,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
+#[derive(StructOpt)]
+pub struct DaemonArgs {
+    #[structopt(flatten)]
+    pub pull_opts: PullOpts,
+
+    #[structopt(flatten)]
+    pub client_opts: ClientOpts,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
@@ -152,7 +190,7 @@ pub enum Args {
     /// This command will collect monitoring data, send them to all
     /// Checkmk site configured for 'push' and exit.
     #[structopt()]
-    Push(SharedArgsOnly),
+    Push(PushArgs),
 
     /// Handle incoming connections from Checkmk sites collecting monitoring data
     ///
@@ -166,7 +204,7 @@ pub enum Args {
     /// and send data to all Checkmk sites configured for 'push'
     /// (as the 'push' command does) once a minute.
     #[structopt()]
-    Daemon(PullArgs),
+    Daemon(DaemonArgs),
     /// Collect monitoring data and write it to standard output
     #[structopt()]
     Dump(SharedArgsOnly),

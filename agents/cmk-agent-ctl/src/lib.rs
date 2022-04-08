@@ -55,13 +55,18 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         cli::Args::Push { .. } => push(&registry),
         cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
             runtime_config,
-            pull_args,
+            pull_args.pull_opts,
             legacy_pull_marker,
             registry,
         )?),
         cli::Args::Daemon(daemon_args) => daemon(
             registry.clone(),
-            config::PullConfig::new(runtime_config, daemon_args, legacy_pull_marker, registry)?,
+            config::PullConfig::new(
+                runtime_config,
+                daemon_args.pull_opts,
+                legacy_pull_marker,
+                registry,
+            )?,
         ),
         cli::Args::Dump { .. } => dump(),
         cli::Args::Status(status_args) => status(
@@ -69,12 +74,11 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             &config::PullConfig::new(
                 runtime_config,
                 // this will vanish once the Windows agent also uses the toml config
-                cli::PullArgs {
+                cli::PullOpts {
                     port: None,
                     #[cfg(windows)]
                     agent_channel: None,
                     allowed_ip: None,
-                    logging_opts: status_args.logging_opts,
                 },
                 legacy_pull_marker,
                 registry.clone(),

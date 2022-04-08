@@ -50,7 +50,6 @@ class Base(t.Generic[T], abc.ABC):
         """
         return name by which Wato and Plugin lists are merged
         """
-        ...
 
     def get_name(self) -> str:
         """
@@ -66,7 +65,6 @@ class Base(t.Generic[T], abc.ABC):
         """
         return human readable uniqe identifier for this element
         """
-        ...
 
     def __lt__(self, other: object) -> bool:
         if other is None or not isinstance(other, Base):

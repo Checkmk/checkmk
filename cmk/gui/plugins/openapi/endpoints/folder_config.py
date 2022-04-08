@@ -50,7 +50,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib import CREFolder
 
 from cmk import fields
@@ -236,7 +236,7 @@ def bulk_update(params):
             detail=f"The following folders were not updated since some of the provided remove attributes did not exist: {', '.join(faulty_folders)}",
         )
 
-    return constructors.serve_json(_folders_collection(folders, False))
+    return serve_json(_folders_collection(folders, False))
 
 
 @Endpoint(
@@ -325,7 +325,7 @@ def list_folders(params):
     else:
         parent.need_permission("read")
         folders = parent.subfolders()
-    return constructors.serve_json(_folders_collection(folders, params["show_hosts"]))
+    return serve_json(_folders_collection(folders, params["show_hosts"]))
 
 
 def _folders_collection(
@@ -402,7 +402,7 @@ def _serve_folder(
     show_hosts=False,
 ):
     folder_json = _serialize_folder(folder, show_hosts)
-    response = constructors.serve_json(folder_json, profile=profile)
+    response = serve_json(folder_json, profile=profile)
     if not folder.is_root():
         response.headers.add("ETag", etag_of_folder(folder).to_header())
     return response

@@ -10,7 +10,6 @@ password store. You can use in a rule a password stored in the password store wi
 entering the password.
 """
 
-import json
 from typing import cast
 
 from cmk.utils import version
@@ -26,7 +25,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.passwords import (
     load_password,
     load_password_to_modify,
@@ -185,13 +184,11 @@ def list_passwords(params):
         ],
         "links": [constructors.link_rel("self", constructors.collection_href("password"))],
     }
-    return constructors.serve_json(password_collection)
+    return serve_json(password_collection)
 
 
 def _serve_password(ident, password_details):
-    response = Response()
-    response.set_data(json.dumps(serialize_password(ident, complement_customer(password_details))))
-    response.set_content_type("application/json")
+    response = serve_json(serialize_password(ident, complement_customer(password_details)))
     response.headers.add("ETag", constructors.etag_of_dict(password_details).to_header())
     return response
 

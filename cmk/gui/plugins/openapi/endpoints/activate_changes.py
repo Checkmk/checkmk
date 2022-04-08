@@ -29,7 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 from cmk import fields
 
@@ -123,7 +123,7 @@ def _serve_activation_run(activation_id: str, is_running: bool = False) -> Respo
     if is_running:
         action = "was started"
         links.append(_completion_link(activation_id))
-    return constructors.serve_json(
+    return serve_json(
         constructors.domain_object(
             domain_type="activation_run",
             identifier=activation_id,
@@ -220,6 +220,6 @@ def list_activations(params):
             )
         )
 
-    return constructors.serve_json(
+    return serve_json(
         constructors.collection_object(domain_type="activation_run", value=activations)
     )

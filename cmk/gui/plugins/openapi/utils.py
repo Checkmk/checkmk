@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Iterable, Literal, Optional
+from typing import Any, cast, Dict, Iterable, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -12,9 +12,11 @@ from werkzeug.exceptions import HTTPException
 
 from livestatus import SiteId
 
+from cmk.utils.encoding import json_encode
 from cmk.utils.livestatus_helpers.queries import Query
 
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects.type_defs import Serializable
 
 
 def problem(
@@ -40,11 +42,11 @@ def problem(
     if ext is not None:
         problem_dict["ext"] = ext
 
-    response = Response()
-    response.status_code = status
-    response.set_content_type("application/problem+json")
-    response.set_data(json.dumps(problem_dict))
-    return response
+    return serve_json(
+        problem_dict,
+        status=status,
+        content_type="application/problem+json",
+    )
 
 
 class ProblemException(HTTPException):
@@ -185,3 +187,18 @@ def create_url(site: SiteId, query: Query) -> str:
         url += f"?query={query_string_value}"
 
     return url
+
+
+def serve_json(
+    data: Serializable,
+    content_type: str = "application/json",
+    status: int = 200,
+    profile: Optional[Dict[str, str]] = None,
+) -> Response:
+    if profile is not None:
+        content_type += ';profile="%s"' % (profile,)
+    response = Response()
+    response.status_code = status
+    response.set_content_type(content_type)
+    response.set_data(json_encode(data))
+    return response

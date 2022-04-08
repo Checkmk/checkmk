@@ -14,7 +14,6 @@ You can find an introduction to hosts including host tags and host tag groups in
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 
-import json
 from typing import Any, Dict
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
@@ -29,7 +28,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.tags import (
     change_host_tags_in_folders,
     edit_tag_group,
@@ -146,7 +145,7 @@ def list_host_tag_groups(params):
         ],
         "links": [constructors.link_rel("self", constructors.collection_href("host_tag_group"))],
     }
-    return constructors.serve_json(tag_groups_collection)
+    return serve_json(tag_groups_collection)
 
 
 @Endpoint(
@@ -251,9 +250,7 @@ def _retrieve_group(ident: str) -> TagGroup:
 
 
 def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
-    response = Response()
-    response.set_data(json.dumps(serialize_host_tag_group(dict(tag_details))))
-    response.set_content_type("application/json")
+    response = serve_json(serialize_host_tag_group(dict(tag_details)))
     response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
     return response
 

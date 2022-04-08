@@ -25,6 +25,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.utils import serve_json
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 
 
@@ -115,7 +116,7 @@ def show_host(params) -> Response:
         params["host_name"],
         access_type="read",
     )
-    return constructors.serve_json(
+    return serve_json(
         {
             "site": host.site_id(),
             "is_cluster": host.is_cluster(),

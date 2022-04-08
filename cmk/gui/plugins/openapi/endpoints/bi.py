@@ -33,7 +33,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     permissions,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 from cmk import fields
 
@@ -130,7 +130,7 @@ def get_bi_rule(params):
 
     data = {"pack_id": bi_rule.pack_id}
     data.update(BIRuleSchema().dump(bi_rule))
-    return constructors.serve_json(data)
+    return serve_json(data)
 
 
 @Endpoint(
@@ -188,7 +188,7 @@ def _update_bi_rule(params, must_exist: bool):
 
     data = {"pack_id": bi_rule.pack_id}
     data.update(bi_rule.schema()().dump(bi_rule))
-    return constructors.serve_json(data)
+    return serve_json(data)
 
 
 @Endpoint(
@@ -269,7 +269,7 @@ def get_bi_aggregation_state(params):
     filter_config = params.get("body", {})
     filter_names = filter_config.get("filter_names")
     filter_groups = filter_config.get("filter_groups")
-    return constructors.serve_json(
+    return serve_json(
         api_get_aggregation_state(filter_names=filter_names, filter_groups=filter_groups)
     )
 
@@ -295,7 +295,7 @@ def get_bi_aggregation(params):
 
     data = {"pack_id": bi_aggregation.pack_id}
     data.update(BIAggregationSchema().dump(bi_aggregation))
-    return constructors.serve_json(data)
+    return serve_json(data)
 
 
 @Endpoint(
@@ -353,7 +353,7 @@ def _update_bi_aggregation(params, must_exist: bool):
 
     data = {"pack_id": bi_aggregation.pack_id}
     data.update(bi_aggregation.schema()().dump(bi_aggregation))
-    return constructors.serve_json(data)
+    return serve_json(data)
 
 
 @Endpoint(
@@ -416,7 +416,7 @@ def get_bi_packs(params):
         value=packs,
         links=[constructors.link_rel("self", constructors.collection_href("bi_pack"))],
     )
-    return constructors.serve_json(collection_object)
+    return serve_json(collection_object)
 
 
 @Endpoint(
@@ -474,7 +474,7 @@ def get_bi_pack(params):
         members=domain_members,
     )
 
-    return constructors.serve_json(domain_object)
+    return serve_json(domain_object)
 
 
 @Endpoint(
@@ -585,4 +585,4 @@ def _update_bi_pack(params, must_exist: bool):
     new_pack = BIAggregationPack(pack_config)
     bi_packs.add_pack(new_pack)
     bi_packs.save_config()
-    return constructors.serve_json(BIPackEndpointSchema().dump(new_pack.serialize()))
+    return serve_json(BIPackEndpointSchema().dump(new_pack.serialize()))

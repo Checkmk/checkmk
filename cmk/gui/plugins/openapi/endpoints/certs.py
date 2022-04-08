@@ -24,13 +24,12 @@ from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
     Endpoint,
     permissions,
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
@@ -83,7 +82,7 @@ def root_cert(param: Mapping[str, Any]) -> Response:
             status=403,
             title=_403_STATUS_DESCRIPTION,
         )
-    return constructors.serve_json(
+    return serve_json(
         {
             "cert": _serialized_root_cert(),
         }
@@ -110,7 +109,7 @@ def make_certificate(param: Mapping[str, Any]) -> Response:
             status=403,
             title=_403_STATUS_DESCRIPTION,
         )
-    return constructors.serve_json(
+    return serve_json(
         {
             "cert": _serialized_signed_cert(param["body"]["csr"]),
         }

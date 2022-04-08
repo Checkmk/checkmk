@@ -14,7 +14,6 @@ You can find an introduction to time periods in the
 
 import datetime as dt
 import http.client
-import json
 from typing import Any, Dict, List, Tuple, Union
 
 from marshmallow.utils import from_iso_time
@@ -32,7 +31,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import (
     load_timeperiod,
     load_timeperiods,
@@ -185,13 +184,11 @@ def list_time_periods(params):
         "value": time_periods,
         "links": [constructors.link_rel("self", constructors.collection_href("time_period"))],
     }
-    return constructors.serve_json(time_period_collection)
+    return serve_json(time_period_collection)
 
 
 def _serve_time_period(time_period):
-    response = Response()
-    response.set_data(json.dumps(time_period))
-    response.set_content_type("application/json")
+    response = serve_json(time_period)
     response.headers.add("ETag", constructors.etag_of_dict(time_period).to_header())
     return response
 

@@ -10,14 +10,10 @@ import contextlib
 import dataclasses
 import typing
 
-from cmk.gui.globals import user
-
-if typing.TYPE_CHECKING:
-    from typing import Tuple
-
 from cmk.utils.type_defs import RuleOptions
 
 from cmk.gui import exceptions, http, watolib
+from cmk.gui.globals import user
 from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     InputRuleObject,
@@ -28,10 +24,9 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     RuleSearchOptions,
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib import add_change, make_diff_text

@@ -11,7 +11,6 @@ a host.
 You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
-import json
 from typing import List, Optional, Sequence
 
 from cmk.automations.results import CheckPreviewEntry
@@ -34,7 +33,7 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects.request_schemas import EXISTING_HOST_NAME
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.bulk_discovery import (
     bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
@@ -281,13 +280,7 @@ def _serve_services(
     discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
-    response = Response()
-    response.set_data(
-        json.dumps(serialize_service_discovery(host, discovered_services, discovery_phases))
-    )
-
-    response.set_content_type("application/json")
-    return response
+    return serve_json(serialize_service_discovery(host, discovered_services, discovery_phases))
 
 
 def _in_phase(phase_to_check: str, discovery_phases: List[str]) -> bool:
@@ -486,7 +479,7 @@ def show_bulk_discovery_status(params):
 def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
     job_id = job.get_job_id()
     status_details = bulk_discovery_job_status(job)
-    return constructors.serve_json(
+    return serve_json(
         constructors.domain_object(
             domain_type="discovery_run",
             identifier=job_id,

@@ -31,7 +31,6 @@ Downtime object can have the following relations:
 """
 
 import datetime as dt
-import json
 from typing import Literal
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
@@ -53,7 +52,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
 
@@ -298,7 +297,7 @@ def show_downtimes(param):
         q = q.filter(Downtimes.service_description.contains(service_description))
 
     gen_downtimes = q.iterate(live)
-    return _serve_downtimes(gen_downtimes)
+    return serve_json(_serialize_downtimes(gen_downtimes))
 
 
 @Endpoint(
@@ -343,14 +342,7 @@ def show_downtime(params):
             title="The requested downtime was not found",
             detail=f"The downtime id {downtime_id} did not match any downtime",
         )
-    return _serve_downtime(downtime)
-
-
-def _serve_downtime(downtime_details):
-    response = Response()
-    response.set_data(json.dumps(_serialize_single_downtime(downtime_details)))
-    response.set_content_type("application/json")
-    return response
+    return serve_json(_serialize_single_downtime(downtime))
 
 
 @Endpoint(
@@ -396,13 +388,6 @@ def delete_downtime(params):
             detail=f"The downtime-type {delete_type!r} is not supported.",
         )
     return Response(status=204)
-
-
-def _serve_downtimes(downtimes):
-    response = Response()
-    response.set_data(json.dumps(_serialize_downtimes(downtimes)))
-    response.set_content_type("application/json")
-    return response
 
 
 def _serialize_downtimes(downtimes):

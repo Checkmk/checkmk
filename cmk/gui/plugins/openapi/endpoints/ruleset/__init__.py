@@ -17,8 +17,8 @@ from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
     RulesetSearchOptions,
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.plugins.openapi.utils import serve_json
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 

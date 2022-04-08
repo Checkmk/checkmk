@@ -37,13 +37,17 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     ))
 }
 
-pub fn client(root_cert: Option<&str>) -> AnyhowResult<Client> {
+pub fn client(root_cert: Option<&str>, use_proxy: bool) -> AnyhowResult<Client> {
     let client_builder = ClientBuilder::new();
 
-    let client_builder = if let Some(cert) = root_cert {
+    let mut client_builder = if let Some(cert) = root_cert {
         client_builder.add_root_certificate(Certificate::from_pem(cert.as_bytes())?)
     } else {
         client_builder.danger_accept_invalid_certs(true)
+    };
+
+    if !use_proxy {
+        client_builder = client_builder.no_proxy()
     };
 
     Ok(client_builder

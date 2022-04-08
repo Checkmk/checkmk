@@ -204,10 +204,11 @@ pub fn register(
     config: config::RegistrationConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
+    let use_proxy = config.client_config.use_proxy;
     _register(
         config,
         registry,
-        &agent_receiver_api::Api {},
+        &agent_receiver_api::Api { use_proxy },
         &InteractiveTrust {},
     )
 }
@@ -263,7 +264,12 @@ fn _proxy_register(
 }
 
 pub fn proxy_register(config: config::RegistrationConfig) -> AnyhowResult<()> {
-    _proxy_register(config, &agent_receiver_api::Api {}, &InteractiveTrust {})
+    let use_proxy = config.client_config.use_proxy;
+    _proxy_register(
+        config,
+        &agent_receiver_api::Api { use_proxy },
+        &InteractiveTrust {},
+    )
 }
 
 #[cfg(test)]

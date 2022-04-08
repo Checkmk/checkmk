@@ -138,7 +138,9 @@ pub trait Status {
     ) -> Result<StatusResponse, StatusError>;
 }
 
-pub struct Api {}
+pub struct Api {
+    pub use_proxy: bool,
+}
 
 impl Api {
     fn endpoint_url(
@@ -195,7 +197,7 @@ impl Pairing for Api {
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
-        let response = certs::client(root_cert)?
+        let response = certs::client(root_cert, self.use_proxy)?
             .post(Self::endpoint_url(base_url, &["pairing"])?)
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
@@ -225,7 +227,7 @@ impl Registration for Api {
         host_name: &str,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert))?
+            certs::client(Some(root_cert), self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
@@ -245,7 +247,7 @@ impl Registration for Api {
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert))?
+            certs::client(Some(root_cert), self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
@@ -268,7 +270,7 @@ impl AgentData for Api {
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert))?
+            certs::client(Some(root_cert), self.use_proxy)?
                 .post(Self::endpoint_url(
                     base_url,
                     &["agent_data", &uuid.to_string()],
@@ -297,7 +299,7 @@ impl Status for Api {
         uuid: &uuid::Uuid,
         certificate: &str,
     ) -> Result<StatusResponse, StatusError> {
-        let response = certs::client(Some(root_cert))?
+        let response = certs::client(Some(root_cert), self.use_proxy)?
             .get(Self::endpoint_url(
                 base_url,
                 &["registration_status", &uuid.to_string()],

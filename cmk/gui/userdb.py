@@ -1005,7 +1005,7 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
             if macro in updated_profiles[user]:
                 # UserSpec is now a TypedDict, unfortunately not complete yet,
                 # thanks to such constructs.
-                updated_profiles[user]["_" + macro] = updated_profiles[user][macro]  # type: ignore[misc]
+                updated_profiles[user]["_" + macro] = updated_profiles[user][macro]  # type: ignore[literal-required]
 
     return updated_profiles
 
@@ -1243,7 +1243,7 @@ def _save_cached_profile(
     for key in user.keys():
         if key in multisite_keys or key not in non_contact_keys:
             # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
-            cache[key] = user[key]  # type: ignore[misc]
+            cache[key] = user[key]  # type: ignore[literal-required]
 
     save_cached_profile(user_id, cache)
 

@@ -35,13 +35,13 @@ class Globals:
 
 def generate_logs():
     if platform.system() == "Windows":
-        with winreg.OpenKey(
-            winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Eventlog"
+        with winreg.OpenKey(  # type: ignore[attr-defined]
+            winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Eventlog"  # type: ignore[attr-defined]
         ) as key:
             index = 0
             while True:
                 try:
-                    yield winreg.EnumKey(key, index)
+                    yield winreg.EnumKey(key, index)  # type: ignore[attr-defined]
                     index += 1
 
                 except OSError:

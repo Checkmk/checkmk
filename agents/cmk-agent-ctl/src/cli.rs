@@ -79,6 +79,7 @@ pub struct DeleteArgs {
 }
 
 // TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
+#[cfg(windows)]
 #[derive(StructOpt)]
 pub struct PullArgs {
     /// TCP port to listen on for incoming pull connections
@@ -91,9 +92,23 @@ pub struct PullArgs {
 
     /// TCP connection "ip:port"
     /// None means default behavior
-    #[cfg(windows)]
     #[structopt(long, parse(from_str))]
     pub agent_channel: Option<types::AgentChannel>,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
+#[cfg(unix)]
+#[derive(StructOpt)]
+pub struct PullArgs {
+    /// TCP port to listen on for incoming pull connections
+    #[structopt(long, short = "P", parse(try_from_str))]
+    pub port: Option<types::Port>,
+
+    /// List of IP addresses & templates separated with ' '
+    #[structopt(long, short = "A", parse(from_str))]
+    pub allowed_ip: Option<Vec<String>>,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,

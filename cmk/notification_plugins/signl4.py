@@ -18,14 +18,14 @@ RESULT_MAP = {
 }
 
 
-def signl4_url():
-    password = passwords(environ.get("NOTIFY_PARAMETER_PASSWORD"))
+def signl4_url() -> str:
+    password = passwords(environ["NOTIFY_PARAMETER_PASSWORD"])
     return f"https://connect.signl4.com/webhook/{password}"
 
 
-def signl4_msg(context):
-    host_name = context.get("HOSTNAME")
-    notification_type = context.get("NOTIFICATIONTYPE")
+def signl4_msg(context: dict[str, str]) -> dict[str, str]:
+    host_name = context["HOSTNAME"]
+    notification_type = context["NOTIFICATIONTYPE"]
     host_problem_id = context.get("HOSTPROBLEMID", "")
     service_problem_id = context.get("SERVICEPROBLEMID", "")
 

@@ -6,6 +6,7 @@
 
 import subprocess
 import sys
+from typing import NoReturn, Union
 
 from cmk.notification_plugins import utils
 
@@ -13,7 +14,7 @@ from cmk.notification_plugins import utils
 # You will probably have to modify the sent information
 
 
-def send_trap(oids, target, community):
+def send_trap(oids: dict[str, Union[str, int, None]], target: str, community: str) -> int:
     cmd = [
         "/usr/bin/snmptrap",
         "-v",
@@ -40,7 +41,7 @@ def send_trap(oids, target, community):
     return subprocess.run(cmd, stdin=subprocess.PIPE, check=False).returncode
 
 
-def main():
+def main() -> NoReturn:
     # gather all options from env
     context = utils.collect_context()
 

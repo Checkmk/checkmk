@@ -8,8 +8,8 @@
 
 from os import environ
 
-from cmk.notification_plugins.utils import StateInfo
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
+from cmk.notification_plugins.utils import StateInfo
 
 PLUGIN_VERSION = "1.0"
 
@@ -29,6 +29,6 @@ RESULT_MAP = {
 }
 
 
-def ilert_url():
-    password = passwords(environ.get("NOTIFY_PARAMETER_ILERT_API_KEY"))
+def ilert_url() -> str:
+    password = passwords(environ["NOTIFY_PARAMETER_ILERT_API_KEY"])
     return f"https://api.ilert.com/api/v1/events/checkmk-ext/{password}"

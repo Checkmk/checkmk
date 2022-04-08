@@ -9,12 +9,11 @@ Send notification messages to Splunk On-Call
 
 Create a JSON message to be sent to Splunk On-Call REST API
 """
-from typing import Dict
 
 from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context
 
 
-def translate_states(state):
+def translate_states(state: str) -> str:
     if state in ["OK", "UP"]:
         return "RECOVERY"
     if state in ["CRITICAL", "DOWN"]:
@@ -24,10 +23,10 @@ def translate_states(state):
     return state  # This is WARNING
 
 
-def victorops_msg(context: Dict) -> Dict:
+def victorops_msg(context: dict[str, str]) -> dict[str, str]:
     """Build the message for VictorOps"""
 
-    if context.get("WHAT", None) == "SERVICE":
+    if context.get("WHAT") == "SERVICE":
         state = translate_states(context["SERVICESTATE"])
         entity_id = "{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}".format(**context).replace(" ", "")
         title = "{SERVICEDESC} on {HOSTNAME}".format(**context)
@@ -41,7 +40,7 @@ def victorops_msg(context: Dict) -> Dict:
         text = "{HOSTOUTPUT}\n\n{host_url}".format(
             host_url=host_url_from_context(context), **context
         )
-    hostname = context.get("HOSTNAME")
+    hostname = context["HOSTNAME"]
 
     return {
         "message_type": state,

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, NewType
+from typing import NewType
 
 import cmk.utils.defines
 
@@ -17,7 +17,7 @@ MAX_PLUGIN_OUTPUT_LENGTH = 1000
 # 2 -> permanent issue
 NotificationResultCode = NewType("NotificationResultCode", int)
 NotificationPluginName = NewType("NotificationPluginName", str)
-NotificationContext = NewType("NotificationContext", Dict)
+NotificationContext = NewType("NotificationContext", dict[str, str])
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
@@ -86,7 +86,7 @@ def notification_result_message(
     plugin: NotificationPluginName,
     context: NotificationContext,
     exit_code: NotificationResultCode,
-    output: List[str],
+    output: list[str],
 ) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]

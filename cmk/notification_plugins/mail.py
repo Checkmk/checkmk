@@ -16,11 +16,12 @@ import json
 import os
 import socket
 import sys
+from email.message import Message
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List
+from typing import Callable, List, Literal, NamedTuple, NoReturn, Optional, Union
 from urllib.parse import quote
 from urllib.request import urlopen
 
@@ -30,7 +31,7 @@ from cmk.utils.exceptions import MKException
 from cmk.notification_plugins import utils
 
 
-def tmpl_head_html(html_section):
+def tmpl_head_html(html_section: str) -> str:
     return (
         """
 <html>
@@ -474,8 +475,29 @@ class GraphException(MKException):
     pass
 
 
+class AttachmentNamedTuple(NamedTuple):
+    what: Literal["img"]
+    name: str
+    contents: Union[bytes, str]
+    how: str
+
+
+# Keeping this for compatibility reasons
+AttachmentUnNamedTuple = tuple[str, str, Union[bytes, str], str]
+AttachmentTuple = Union[AttachmentNamedTuple, AttachmentUnNamedTuple]
+AttachmentList = list[AttachmentTuple]
+
+
 # TODO: Just use a single EmailContent parameter.
-def multipart_mail(target, subject, from_address, reply_to, content_txt, content_html, attach=None):
+def multipart_mail(
+    target: str,
+    subject: str,
+    from_address: str,
+    reply_to: str,
+    content_txt: str,
+    content_html: str,
+    attach: Optional[AttachmentList] = None,
+) -> MIMEMultipart:
     if attach is None:
         attach = []
 
@@ -508,7 +530,9 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
     return utils.set_mail_headers(target, subject, from_address, reply_to, m)
 
 
-def send_mail_smtp(message, target, from_address, context):
+def send_mail_smtp(
+    message: Message, target: str, from_address: str, context: dict[str, str]
+) -> int:
     import smtplib  # pylint: disable=import-outside-toplevel
 
     host_index = 1
@@ -533,7 +557,7 @@ def send_mail_smtp(message, target, from_address, context):
         except smtplib.SMTPRecipientsRefused as e:
             # the exception contains a dict of failed recipients to the respective error. since we
             # only have one recipient there has to be exactly one element
-            errorcode, message = list(e.recipients.values())[0]
+            errorcode, err_message = list(e.recipients.values())[0]
 
             # default is to retry, these errorcodes are known to
             if errorcode not in [
@@ -542,7 +566,7 @@ def send_mail_smtp(message, target, from_address, context):
             ]:
                 retry_possible = True
 
-            sys.stderr.write('mail to "%s" refused: %d, %s\n' % (target, errorcode, message))
+            sys.stderr.write('mail to "%s" refused: %d, %r\n' % (target, errorcode, err_message))
         except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
             sys.stderr.write('protocol error from "%s": %s\n' % (smarthost, str(e)))
@@ -566,13 +590,16 @@ def send_mail_smtp(message, target, from_address, context):
     return 2
 
 
-def send_mail_smtp_impl(message, target, smarthost, from_address, context):
+def send_mail_smtp_impl(
+    message: Message, target: str, smarthost: str, from_address: str, context: dict[str, str]
+) -> None:
     import smtplib  # pylint: disable=import-outside-toplevel
     import types  # pylint: disable=import-outside-toplevel
 
-    def getreply_wrapper(self):
-        self.last_code, self.last_repl = smtplib.SMTP.getreply(self)
-        return self.last_code, self.last_repl
+    def getreply_wrapper(self: smtplib.SMTP) -> tuple[int, bytes]:
+        # We introduce those attributes...
+        self.last_code, self.last_repl = smtplib.SMTP.getreply(self)  # type: ignore[attr-defined]
+        return self.last_code, self.last_repl  # type: ignore[attr-defined]
 
     port = int(context["PARAMETER_SMTP_PORT"])
 
@@ -612,13 +639,13 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
 
 
 # TODO: Use EmailContent parameter.
-def send_mail(message, target, from_address, context):
+def send_mail(message: Message, target: str, from_address: str, context: dict[str, str]) -> int:
     if "PARAMETER_SMTP_PORT" in context:
         return send_mail_smtp(message, target, from_address, context)
     return utils.send_mail_sendmail(message, target, from_address)
 
 
-def render_cmk_graphs(context, is_bulk):
+def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     if context["WHAT"] == "HOST":
         svc_desc = "_HOST_"
     else:
@@ -657,10 +684,11 @@ def render_cmk_graphs(context, is_bulk):
     return [base64.b64decode(s) for s in base64_strings]
 
 
-def render_performance_graphs(context, is_bulk):
+def render_performance_graphs(context: dict[str, str], is_bulk: bool) -> tuple[AttachmentList, str]:
     graphs = render_cmk_graphs(context, is_bulk)
 
-    attachments, graph_code = [], ""
+    attachments: AttachmentList = []
+    graph_code = ""
     for source, graph_png in enumerate(graphs):
         if context["WHAT"] == "HOST":
             svc_desc = "_HOST_"
@@ -672,7 +700,7 @@ def render_performance_graphs(context, is_bulk):
 
         filename = "%s-%s-%d.png" % (context["HOSTNAME"], svc_desc, source)
 
-        attachments.append(("img", filename, graph_png, "inline"))
+        attachments.append(AttachmentNamedTuple("img", filename, graph_png, "inline"))
 
         cls = ""
         if context.get("PARAMETER_NO_FLOATING_GRAPHS"):
@@ -688,7 +716,9 @@ def render_performance_graphs(context, is_bulk):
     return attachments, graph_code
 
 
-def construct_content(context, is_bulk=False, notification_number=1):
+def construct_content(
+    context: dict[str, str], is_bulk: bool = False, notification_number: int = 1
+) -> tuple[str, str, AttachmentList]:
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -713,7 +743,7 @@ def construct_content(context, is_bulk=False, notification_number=1):
     content_txt = utils.substitute_context(template_txt, context)
     content_html = utils.substitute_context(template_html, context)
 
-    attachments = []
+    attachments: AttachmentList = []
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
@@ -735,7 +765,7 @@ def construct_content(context, is_bulk=False, notification_number=1):
     return content_txt, content_html, attachments
 
 
-def extend_context(context):
+def extend_context(context: dict[str, str]) -> None:
     if context.get("PARAMETER_2"):
         context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
 
@@ -776,7 +806,7 @@ def extend_context(context):
         context["SUBJECT"] = utils.substitute_context(tmpl, context)
 
 
-def event_templates(notification_type):
+def event_templates(notification_type: str) -> tuple[str, str]:
     # Returns an event summary
     if notification_type in ["PROBLEM", "RECOVERY"]:
         return (
@@ -826,7 +856,12 @@ def event_templates(notification_type):
     return notification_type, notification_type
 
 
-def body_templates(what, is_alert_handler, elements, body_elements):
+def body_templates(
+    what: str,
+    is_alert_handler: bool,
+    elements: list[str],
+    body_elements: list[tuple[str, str, bool, str, str, str, str]],
+) -> tuple[str, str]:
     even = "even"
     tmpl_txt: List[str] = []
     tmpl_html: List[str] = []
@@ -853,15 +888,15 @@ def body_templates(what, is_alert_handler, elements, body_elements):
 class EmailContent:
     def __init__(
         self,
-        context,
-        mailto,
-        subject,
-        from_address,
-        reply_to,
-        content_txt,
-        content_html,
-        attachments,
-    ):
+        context: dict[str, str],
+        mailto: str,
+        subject: str,
+        from_address: str,
+        reply_to: str,
+        content_txt: str,
+        content_html: str,
+        attachments: AttachmentList,
+    ) -> None:
         self.context = context
         self.mailto = mailto
         self.subject = subject
@@ -873,7 +908,9 @@ class EmailContent:
 
 
 class BulkEmailContent(EmailContent):
-    def __init__(self, context_function):
+    def __init__(
+        self, context_function: Callable[[], tuple[dict[str, str], list[dict[str, str]]]]
+    ) -> None:
         attachments = []
         content_txt = ""
         content_html = ""
@@ -919,7 +956,7 @@ class BulkEmailContent(EmailContent):
 
 
 class SingleEmailContent(EmailContent):
-    def __init__(self, context_function):
+    def __init__(self, context_function: Callable[[], dict[str, str]]) -> None:
         # gather all options from env
         context = context_function()
         escaped_context = utils.html_escape_context(context)
@@ -946,7 +983,7 @@ class SingleEmailContent(EmailContent):
         )
 
 
-def main():
+def main() -> NoReturn:
     content = (
         BulkEmailContent(utils.read_bulk_contexts)
         if bulk_mode

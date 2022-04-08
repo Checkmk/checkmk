@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import Union
 
 import requests
 
@@ -13,7 +14,7 @@ from cmk.notification_plugins import utils
 api_url = "https://api.pushover.net/1/messages.json"
 
 
-def main():
+def main() -> int:
     context = utils.collect_context()
     subject = get_subject(context)
     text = get_text(context)
@@ -24,7 +25,7 @@ def main():
     return send_push_notification(api_key, recipient_key, subject, text, context)
 
 
-def get_subject(context):
+def get_subject(context: dict[str, str]) -> str:
     s = context["HOSTNAME"]
 
     if context["WHAT"] != "HOST":
@@ -57,7 +58,7 @@ def get_subject(context):
     return utils.substitute_context(s.replace("@", context["WHAT"]), context)
 
 
-def get_text(context):
+def get_text(context: dict[str, str]) -> str:
     s = ""
 
     s += "$@OUTPUT$"
@@ -77,8 +78,10 @@ def get_text(context):
     return utils.substitute_context(s.replace("@", context["WHAT"]), context)
 
 
-def send_push_notification(api_key, recipient_key, subject, text, context):
-    params = [
+def send_push_notification(
+    api_key: str, recipient_key: str, subject: str, text: str, context: dict[str, str]
+) -> int:
+    params: list[tuple[str, Union[str, int, bytes]]] = [
         ("token", api_key),
         ("user", recipient_key),
         ("title", subject.encode("utf-8")),

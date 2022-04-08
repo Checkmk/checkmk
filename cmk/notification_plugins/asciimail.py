@@ -9,6 +9,7 @@
 
 import sys
 from email.mime.text import MIMEText
+from typing import NoReturn
 
 from cmk.notification_plugins import utils
 
@@ -41,7 +42,7 @@ Handler output: $ALERTHANDLEROUTPUT$
 tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler_host_body
 
 
-def construct_content(context):
+def construct_content(context: dict[str, str]) -> str:
 
     # Create a notification summary in a new context variable
     # Note: This code could maybe move to cmk --notify in order to
@@ -123,7 +124,7 @@ def construct_content(context):
     return body
 
 
-def main():
+def main() -> NoReturn:
     if bulk_mode:
         content_txt = ""
         parameters, contexts = utils.read_bulk_contexts()

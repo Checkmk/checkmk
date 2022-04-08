@@ -9,11 +9,12 @@ import re
 import socket
 import subprocess
 import sys
+from email.message import Message
 from email.utils import formataddr, formatdate, parseaddr
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Callable, Iterable, Literal, NamedTuple, NoReturn, Optional, Tuple, TypeVar
 
 import requests
 
@@ -21,12 +22,12 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.notify import find_wato_folder
+from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.store import load_text_from_file
 
 
-def collect_context() -> Dict[str, str]:
-    return {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}  #
+def collect_context() -> dict[str, str]:
+    return {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}
 
 
 def format_link(template: str, url: str, text: str) -> str:
@@ -54,7 +55,7 @@ def format_address(display_name: str, email_address: str) -> str:
     return formataddr((display_name, email_address))
 
 
-def default_from_address():
+def default_from_address() -> str:
     environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
     if cmk_version.is_cma():
         return load_text_from_file("/etc/nullmailer/default-from", environ_default).replace(
@@ -64,7 +65,7 @@ def default_from_address():
     return environ_default
 
 
-def _base_url(context: Dict[str, str]) -> str:
+def _base_url(context: dict[str, str]) -> str:
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -79,12 +80,12 @@ def _base_url(context: Dict[str, str]) -> str:
     return re.sub("/check_mk/?", "", url_prefix, count=1)
 
 
-def host_url_from_context(context: Dict[str, str]) -> str:
+def host_url_from_context(context: dict[str, str]) -> str:
     base = _base_url(context)
     return base + context["HOSTURL"] if base else ""
 
 
-def service_url_from_context(context: Dict[str, str]) -> str:
+def service_url_from_context(context: dict[str, str]) -> str:
     base = _base_url(context)
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
@@ -92,7 +93,7 @@ def service_url_from_context(context: Dict[str, str]) -> str:
 # There is common code with cmk/gui/view_utils:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(output):
+def format_plugin_output(output: str) -> str:
     ok_marker = '<b class="stmarkOK">OK</b>'
     warn_marker = '<b class="stmarkWARNING">WARN</b>'
     crit_marker = '<b class="stmarkCRITICAL">CRIT</b>'
@@ -108,7 +109,7 @@ def format_plugin_output(output):
     return output
 
 
-def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
+def html_escape_context(context: dict[str, str]) -> dict[str, str]:
     unescaped_variables = {
         "CONTACTALIAS",
         "CONTACTNAME",
@@ -135,7 +136,7 @@ def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
     }
 
 
-def add_debug_output(template, context):
+def add_debug_output(template: str, context: dict[str, str]) -> str:
     ascii_output = ""
     html_output = "<table class=context>\n"
     elements = sorted(context.items())
@@ -149,7 +150,7 @@ def add_debug_output(template, context):
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
 
 
-def substitute_context(template, context):
+def substitute_context(template: str, context: dict[str, str]) -> str:
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace("$" + varname + "$", value)
@@ -171,8 +172,12 @@ def substitute_context(template, context):
 ###############################################################################
 # Mail
 
+EmailType = TypeVar("EmailType", bound=Message)
 
-def set_mail_headers(target, subject, from_address, reply_to, mail):
+
+def set_mail_headers(
+    target: str, subject: str, from_address: str, reply_to: str, mail: EmailType
+) -> EmailType:
     mail["Date"] = formatdate(localtime=True)
     mail["Subject"] = subject
     mail["To"] = target
@@ -189,7 +194,7 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
     return mail
 
 
-def send_mail_sendmail(m, target, from_address):
+def send_mail_sendmail(m: Message, target: str, from_address: Optional[str]) -> Literal[0]:
     cmd = [_sendmail_path()]
     if from_address:
         # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
@@ -233,7 +238,7 @@ def _sendmail_path() -> str:
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
-def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
+def read_bulk_contexts() -> tuple[dict[str, str], list[dict[str, str]]]:
     parameters = {}
     contexts = []
     in_params = True
@@ -243,7 +248,7 @@ def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
         line = line.strip()
         if not line:
             in_params = False
-            context: Dict[str, str] = {}
+            context: dict[str, str] = {}
             contexts.append(context)
         else:
             try:
@@ -261,7 +266,7 @@ def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
     return parameters, contexts
 
 
-def get_bulk_notification_subject(contexts, hosts):
+def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterable) -> str:
     hosts = list(hosts)
     bulk_subject = None
     folder = None
@@ -270,7 +275,7 @@ def get_bulk_notification_subject(contexts, hosts):
         if context.get("PARAMETER_BULK_SUBJECT"):
             bulk_context = context
             bulk_subject = context["PARAMETER_BULK_SUBJECT"]
-            folder = find_wato_folder(context)
+            folder = find_wato_folder(NotificationContext(context))
             break
 
     if bulk_subject:
@@ -293,25 +298,35 @@ def get_bulk_notification_subject(contexts, hosts):
 
 #################################################################################################
 # REST
-def retrieve_from_passwordstore(parameter):
-    value = parameter.split()
+def retrieve_from_passwordstore(parameter: str) -> str:
+    values = parameter.split()
 
-    if len(value) == 2:
-        if value[0] == "store":
-            value = cmk.utils.password_store.extract(value[1])
+    if len(values) == 2:
+        if values[0] == "store":
+            value = cmk.utils.password_store.extract(values[1])
+            if value is None:
+                sys.stderr.write("Unable to retrieve password from passwordstore")
+                sys.exit(2)
         else:
-            value = value[1]
+            value = values[1]
     else:
-        value = value[0]
+        value = values[0]
 
     return value
 
 
-def post_request(message_constructor, url=None, headers=None):
+def post_request(
+    message_constructor: Callable[[dict[str, str]], dict[str, str]],
+    url: Optional[str] = None,
+    headers: Optional[dict[str, str]] = None,
+) -> requests.Response:
     context = collect_context()
 
     if not url:
-        url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
+        url = retrieve_from_passwordstore(context["PARAMETER_WEBHOOK_URL"])
+        if url is None:
+            sys.stderr.write("No URL was retrieved from passwordstore")
+            sys.exit(2)
 
     serialized_proxy_config = context.get("PARAMETER_PROXY_URL")
 
@@ -334,7 +349,7 @@ def post_request(message_constructor, url=None, headers=None):
     return response
 
 
-def process_by_status_code(response: requests.models.Response, success_code: int = 200):
+def process_by_status_code(response: requests.Response, success_code: int = 200) -> NoReturn:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
 
@@ -359,12 +374,13 @@ StatusCodeRange = Tuple[int, int]
 
 
 def process_by_result_map(
-    response: requests.models.Response, result_map: Dict[StatusCodeRange, StateInfo]
-):
-    def get_details_from_json(json_response, what):
-        for key, value in json_response.items():
-            if key == what:
-                return value
+    response: requests.Response, result_map: dict[StatusCodeRange, StateInfo]
+) -> NoReturn:
+    def get_details_from_json(json_response: dict[str, Any], what: str) -> Any:
+        if what in json_response:
+            return json_response[what]
+
+        for value in json_response.values():
             if isinstance(value, dict):
                 result = get_details_from_json(value, what)
                 if result:
@@ -377,8 +393,7 @@ def process_by_result_map(
     for status_code_range, state_info in result_map.items():
         if status_code_range[0] <= status_code <= status_code_range[1]:
             if state_info.type == "json":
-                details = response.json()
-                details = get_details_from_json(details, state_info.title)
+                details = get_details_from_json(response.json(), state_info.title)
             elif state_info.type == "str":
                 details = response.text
 
@@ -390,7 +405,7 @@ def process_by_result_map(
 
 
 # TODO this will be used by the smstools and the sms via IP scripts later
-def get_sms_message_from_context(raw_context: Dict[str, str]) -> str:
+def get_sms_message_from_context(raw_context: dict[str, str]) -> str:
     notification_type = raw_context["NOTIFICATIONTYPE"]
     max_len = 160
     message = raw_context["HOSTNAME"] + " "
@@ -429,7 +444,7 @@ def get_sms_message_from_context(raw_context: Dict[str, str]) -> str:
     return message
 
 
-def quote_message(message: str, max_length: Optional[int] = None):
+def quote_message(message: str, max_length: Optional[int] = None) -> str:
     if max_length:
         return "'" + message.replace("'", "'\"'\"'")[: max_length - 2] + "'"
     return "'" + message.replace("'", "'\"'\"'") + "'"

@@ -6,7 +6,7 @@
 
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import NoReturn, Optional, Union
 
 import requests
 
@@ -29,12 +29,12 @@ from cmk.notification_plugins.utils import (  # pylint: disable=cmk-module-layer
 #   '----------------------------------------------------------------------'
 
 
-class Errors(List[str]):
+class Errors(list[str]):
     """Class for collected errors."""
 
 
 Message = str
-RawContext = Dict[str, str]
+RawContext = dict[str, str]
 
 
 @dataclass
@@ -44,7 +44,7 @@ class RequestParameter:
     recipient: str
     url: str
     verify: bool
-    proxies: Optional[Dict[str, str]]
+    proxies: Optional[dict[str, str]]
     user: str
     pwd: str
     timeout: float
@@ -55,7 +55,7 @@ class Context:
     url: str
     request_parameter: RequestParameter
     message: Message
-    data: Dict[str, str]
+    data: dict[str, str]
 
 
 # .
@@ -80,7 +80,7 @@ def _get_context_parameter(raw_context: RawContext) -> Union[Errors, Context]:
     the sms message and get the endpoint specific parameters to return the
     context for notification processing.
     """
-    missing_params: List[str] = []
+    missing_params: list[str] = []
     for mandatory in [
         "PARAMETER_MODEM_TYPE",
         "PARAMETER_URL",
@@ -175,7 +175,7 @@ def process_notifications(context: Context) -> int:
     return 0
 
 
-def main():
+def main() -> NoReturn:
     """Construct needed context and call the related class."""
     raw_context: RawContext = collect_context()
 

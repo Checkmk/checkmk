@@ -8,7 +8,7 @@ Send notification messages to PagerDuty
 =======================================
 
 """
-from typing import Dict
+from typing import Any
 
 from cmk.notification_plugins.utils import (
     host_url_from_context,
@@ -17,7 +17,7 @@ from cmk.notification_plugins.utils import (
 )
 
 
-def pagerduty_event_type(event):
+def pagerduty_event_type(event: str) -> str:
     return {
         "PROBLEM": "trigger",
         "ACKNOWLEDGEMENT": "acknowledge",
@@ -27,7 +27,7 @@ def pagerduty_event_type(event):
     }[event]
 
 
-def pagerduty_severity(state):
+def pagerduty_severity(state: str) -> str:
     return {
         "CRITICAL": "critical",
         "DOWN": "critical",
@@ -39,7 +39,7 @@ def pagerduty_severity(state):
     }[state]
 
 
-def _notification_source_from_context(context: Dict) -> str:
+def _notification_source_from_context(context: dict[str, str]) -> str:
     """
     payload.source must not be empty, otherwise:
     HTTP 400 (Bad Request), "'payload.source' is missing or blank"
@@ -47,10 +47,10 @@ def _notification_source_from_context(context: Dict) -> str:
     return context.get("HOSTADDRESS") or context.get("HOSTNAME") or "Undeclared Host identifier"
 
 
-def pagerduty_msg(context: Dict) -> Dict:
+def pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
     """Build the PagerDuty incident payload"""
 
-    if context.get("WHAT", None) == "SERVICE":
+    if context.get("WHAT") == "SERVICE":
         state = context["SERVICESTATE"]
         incident_key = "{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}".format(**context).replace(" ", "")
         incident = "{SERVICESTATE}: {SERVICEDESC} on {HOSTNAME}".format(**context)
@@ -64,8 +64,8 @@ def pagerduty_msg(context: Dict) -> Dict:
         incident_url = host_url_from_context(context)
 
     msg_payload = {
-        "routing_key": retrieve_from_passwordstore(context.get("PARAMETER_ROUTING_KEY")),
-        "event_action": pagerduty_event_type(context.get("NOTIFICATIONTYPE")),
+        "routing_key": retrieve_from_passwordstore(context["PARAMETER_ROUTING_KEY"]),
+        "event_action": pagerduty_event_type(context["NOTIFICATIONTYPE"]),
         "dedup_key": incident_key,
         "payload": {
             "summary": incident,

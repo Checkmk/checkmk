@@ -852,12 +852,11 @@ mod test_status {
                 &registry,
                 &config::PullConfig::new(
                     config::RuntimeConfig::new().unwrap(),
-                    cli::PullArgs {
+                    cli::PullOpts {
                         port: None,
                         #[cfg(windows)]
                         agent_channel: None,
                         allowed_ip: None,
-                        logging_opts: cli::LoggingOpts { verbose: 0 },
                     },
                     config::LegacyPullMarker::new(&std::path::PathBuf::from(
                         &tempfile::NamedTempFile::new().unwrap().into_temp_path()

@@ -393,12 +393,19 @@ fn _status(
 pub fn status(
     registry: &config::Registry,
     pull_config: config::PullConfig,
-    _client_config: config::ClientConfig,
+    client_config: config::ClientConfig,
     json: bool,
 ) -> AnyhowResult<()> {
     println!(
         "{}",
-        _status(registry, pull_config, json, &agent_receiver_api::Api {})?
+        _status(
+            registry,
+            pull_config,
+            json,
+            &agent_receiver_api::Api {
+                use_proxy: client_config.use_proxy
+            }
+        )?
     );
     Ok(())
 }

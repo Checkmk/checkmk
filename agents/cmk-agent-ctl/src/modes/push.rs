@@ -50,7 +50,7 @@ pub fn push(
 
 pub fn handle_push_cycle(
     registry: &config::Registry,
-    _client_config: &config::ClientConfig,
+    client_config: &config::ClientConfig,
 ) -> AnyhowResult<()> {
     if registry.push_is_empty() {
         return Ok(());
@@ -67,7 +67,10 @@ pub fn handle_push_cycle(
         info!("{}: Pushing agent output", coordinates);
         match coordinates.to_url() {
             Ok(url) => {
-                if let Err(error) = (agent_receiver_api::Api {}).agent_data(
+                if let Err(error) = (agent_receiver_api::Api {
+                    use_proxy: client_config.use_proxy,
+                })
+                .agent_data(
                     &url,
                     &connection.root_cert,
                     &connection.uuid,

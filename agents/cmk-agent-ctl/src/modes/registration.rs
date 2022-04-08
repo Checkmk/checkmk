@@ -395,6 +395,7 @@ mod tests {
             root_certificate,
             host_reg_data,
             trust_server_cert,
+            client_config: config::ClientConfig { use_proxy: false },
         }
     }
 
@@ -544,7 +545,7 @@ mod tests {
                 None,
                 config::HostRegistrationData::Labels(agent_labels()),
                 true,
-            ))
+            ),)
             .is_err());
         }
     }

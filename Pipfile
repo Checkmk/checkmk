@@ -20,7 +20,7 @@ isort = "*"  # used as a plugin for editors
 lxml-stubs = "*"  # used for type checking
 mock = "*"  # used in checktestlib in unit tests
 mocket = "*"    # used for mocking kubernetes python client
-pylint = "==2.12.2"  # used by test/Makefile's test-pylint target FIX ME: unpin and fix pylint issues in CMK-10260
+pylint = "*"  # used by test/Makefile's test-pylint target FIX ME: unpin and fix pylint issues in CMK-10260
 hypothesis = "*"    # used by unit tests
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 twine = "*" # used to upload packages to internal PyPi mirror

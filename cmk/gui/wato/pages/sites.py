@@ -985,6 +985,7 @@ class ReplicationStatusFetcher:
         """Executes the tests on the site. This method is executed in a dedicated
         subprocess (One per site)"""
         self._logger.debug("[%s] Starting" % site_id)
+        result = None
         try:
             # TODO: Would be better to clean all open fds that are not needed, but we don't
             # know the FDs of the result_queue pipe. Can we find it out somehow?

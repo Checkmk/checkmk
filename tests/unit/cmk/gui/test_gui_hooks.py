@@ -14,8 +14,8 @@ from cmk.gui.pages import Page, page_registry
 
 @pytest.fixture(autouse=True)
 def reset_hooks():
+    old_hooks = hooks.hooks
     try:
-        old_hooks = hooks.hooks
         hooks.hooks = {}
         yield
     finally:

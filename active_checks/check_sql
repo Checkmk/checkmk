@@ -418,8 +418,8 @@ def process_result(result, warn, crit, metrics, debug):
 def main(argv: Optional[List[str]] = None) -> None:
     args = parse_args(argv or sys.argv)
 
+    msg = "connecting to database"
     try:
-        msg = "connecting to database"
         conn = connect(args.dbms, args.hostname, args.port, args.name, args.user, args.password)
 
         msg = "executing SQL command"

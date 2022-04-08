@@ -6,6 +6,7 @@
 
 import io
 import tarfile
+from pathlib import Path
 
 import cmk.utils.crash_reporting
 
@@ -20,6 +21,7 @@ def test_gui_crash_report_registry():
 def test_gui_crash_report_get_packed(request_context):
     store = crash_handler.CrashReportStore()
     try:
+        crash_dir = Path()
         raise ValueError("DINGELING")
     except Exception:
         crash = crash_handler.GUICrashReport.from_exception()

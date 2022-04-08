@@ -279,9 +279,8 @@ def test_sitename_must_be_valid_already_exists(tmp_path):
 
 
 def test_get_orig_working_directory(tmp_path):
+    orig_wd = os.getcwd()
     try:
-        orig_wd = os.getcwd()
-
         base_path = tmp_path.joinpath("lala")
         base_path.mkdir(parents=True)
         os.chdir(str(base_path))
@@ -291,9 +290,8 @@ def test_get_orig_working_directory(tmp_path):
 
 
 def test_get_orig_working_directory_not_existing(tmp_path):
+    orig_wd = os.getcwd()
     try:
-        orig_wd = os.getcwd()
-
         test_dir = tmp_path.joinpath("lala")
         test_dir.mkdir()
 

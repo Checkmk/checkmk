@@ -44,6 +44,7 @@ def _check_generic_crash_info(crash):
 
 
 def test_base_crash_report_from_exception():
+    crash = None
     try:
         raise ValueError("DING")
     except Exception:
@@ -74,6 +75,7 @@ def test_base_crash_report_save():
 
 def test_check_crash_report_from_exception(monkeypatch):
     Scenario().apply(monkeypatch)
+    crash = None
     try:
         raise Exception("DING")
     except Exception:
@@ -142,6 +144,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
     with cache_path.open("w", encoding="utf-8") as f:
         f.write("<<<abc>>>\nblablub\n")
 
+    crash = None
     try:
         raise Exception("DING")
     except Exception:
@@ -166,6 +169,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
     with cache_path.open("w", encoding="utf-8") as f:
         f.write("[]\n")
 
+    crash = None
     try:
         raise Exception("DING")
     except Exception:

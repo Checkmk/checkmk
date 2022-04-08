@@ -398,6 +398,7 @@ class ModeAnalyzeConfig(WatoMode):
         self, site_id: SiteId, result_queue: "multiprocessing.Queue[Tuple[SiteId, str]]"
     ) -> None:
         self._logger.debug("[%s] Starting" % site_id)
+        result = None
         try:
             # Would be better to clean all open fds that are not needed, but we don't
             # know the FDs of the result_queue pipe. Can we find it out somehow?

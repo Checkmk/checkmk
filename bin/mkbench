@@ -449,9 +449,8 @@ class TestRunner(threading.Thread):
         self._num_helpers = num_helpers
 
     def run(self):
+        result, result_msg = None, None
         try:
-            result, result_msg = None, None
-
             self.wait_for_load_cooldown(max_wait=900, expected_load=5)
             self._prepare_site()
             self._set_test_state(Test.STATE_RUNNING)

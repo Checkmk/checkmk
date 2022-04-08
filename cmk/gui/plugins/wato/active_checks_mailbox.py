@@ -654,12 +654,14 @@ def transform_check_mailbox_params(params):
     ...       'server': 'srv', 'ssl': (True, None), 'auth': ('usr', ('password', 'pw'))}),
     ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
     ...     'mailboxes': ['abc', 'def'],
+    ...     'connect_timeout': 12,
     ... })
     >>> assert transform_check_mailbox_params(transformed) == transformed
     >>> for k, v in sorted(transformed.items()):
     ...   print(f"{k}: {v}")
     age: (1, 2)
     age_newest: (3, 4)
+    connect_timeout: 12
     count: (5, 6)
     fetch: ('IMAP', {'server': 'srv', 'connection': {'disable_tls': False}, 'auth': ('usr', ('password', 'pw'))})
     mailboxes: ['abc', 'def']
@@ -683,17 +685,15 @@ def transform_check_mailbox_params(params):
     mailboxes: ['abc', 'def']
     service_description: SD
     """
-    allowed_keys = {"service_description", "age", "age_newest", "count", "mailboxes"}
-    allowed_old_keys = {
-        "imap_parameters",
-        "fetch",
+    allowed_keys = {
         "service_description",
         "age",
         "age_newest",
         "count",
         "mailboxes",
+        "connect_timeout",
     }
-    if not params.keys() <= allowed_old_keys:
+    if not params.keys() <= allowed_keys | {"imap_parameters", "fetch"}:
         raise ValueError(f"{params.keys()}")
 
     if "fetch" in params:

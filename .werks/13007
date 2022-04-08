@@ -1,0 +1,19 @@
+Title: Mobileiron Source Host
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649668038
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+This new check creates a service for a Mobileiron source host.
+The Special Agent for Mobileiron now also queries data of the Mobileiron host itself.
+The following data is then used to create a service for the Mobileiron host:
+
+<ul>
+<li>The query time, which was needed to get data about the devices</li>
+<li>The total number of returned devices</li>
+</ul>

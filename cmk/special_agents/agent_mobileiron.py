@@ -86,6 +86,7 @@ class MobileironAPI:
         verify: bool,
         proxies: Optional[str] = None,
     ) -> None:
+        self.api_host = api_host
         self._api_url = urljoin(f"https://{api_host}:{port}", "/api/v1/device")
         self._session = requests.Session()
         self._session.auth = auth
@@ -157,6 +158,14 @@ class MobileironAPI:
 
             self._get_devices(response_json["result"]["searchResults"])
             total_count = response_json["result"]["totalCount"]
+            self._all_devices.update(
+                {
+                    self.api_host: {
+                        "total_count": total_count,
+                        "queryTime": response_json["result"]["queryTime"],
+                    }
+                }
+            )
 
             # if the first get() was enough, continue, else get all devices in a cycle
             # until total_count is exhausted
@@ -203,6 +212,9 @@ def agent_mobileiron_main(args: Args) -> None:
     <<<<entityName>>>>
     <<<mobileiron_section>>>
     {"...": ...}
+    <<<<entityName>>>>
+    <<<mobileiron_source_host>>>
+    {"...": ...}
     <<<<>>>>
     """
 
@@ -233,8 +245,14 @@ def agent_mobileiron_main(args: Args) -> None:
 
     LOGGER.info("Write agent output..")
     for device in all_devices:
-        with ConditionalPiggybackSection(device), SectionWriter("mobileiron_section") as writer:
-            writer.append_json(all_devices[device])
+        if "total_count" in all_devices[device]:
+            with ConditionalPiggybackSection(device), SectionWriter(
+                "mobileiron_source_host"
+            ) as writer:
+                writer.append_json(all_devices[device])
+        else:
+            with ConditionalPiggybackSection(device), SectionWriter("mobileiron_section") as writer:
+                writer.append_json(all_devices[device])
 
 
 def main() -> None:

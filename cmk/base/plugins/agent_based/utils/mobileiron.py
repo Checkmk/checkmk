@@ -20,6 +20,11 @@ class Section(NamedTuple):
     ipAddress: Optional[str]
 
 
+class SourceHostSection(NamedTuple):
+    queryTime: Optional[int]
+    total_count: Optional[int]
+
+
 def parse_mobileiron(string_table: StringTable) -> Section:
     json_raw = json.loads(string_table[0][0])
     return Section(
@@ -32,4 +37,12 @@ def parse_mobileiron(string_table: StringTable) -> Section:
         availableCapacity=json_raw.get("availableCapacity"),
         uptime=json_raw.get("uptime"),
         ipAddress=json_raw.get("ipAddress"),
+    )
+
+
+def parse_mobileiron_source_host(string_table: StringTable) -> SourceHostSection:
+    json_raw = json.loads(string_table[0][0])
+    return SourceHostSection(
+        queryTime=json_raw.get("queryTime"),
+        total_count=json_raw.get("total_count"),
     )

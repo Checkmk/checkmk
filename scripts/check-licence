@@ -9,8 +9,23 @@ set -e -o pipefail
 
 declare -a fails
 
+known_other_licened_files=(
+    "cmk/notification_plugins/ilert.py"
+    "cmk/notification_plugins/signl4.py"
+)
+
+is_known_exception() {
+    local element
+    local path="$1"
+    for element in "${known_other_licened_files[@]}"; do [[ "${element}" == "$path" ]] && return 0; done
+    return 1
+}
+
 for param in "$@"; do
     if [[ "$param" == tests* ]]; then
+        continue
+    fi
+    if is_known_exception "${param}"; then
         continue
     fi
     if [[ "$param" == enterprise* || "$param" == managed* ]]; then

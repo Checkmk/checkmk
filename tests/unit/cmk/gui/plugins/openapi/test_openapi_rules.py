@@ -134,6 +134,30 @@ def test_openapi_create_rule(logged_in_admin_wsgi_app, new_rule):
     assert stored_condition == expected_condition
 
 
+def test_create_rule_with_string_value(logged_in_admin_wsgi_app) -> None:
+    wsgi_app = logged_in_admin_wsgi_app
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    resp = wsgi_app.post(
+        base + "/domain-types/rule/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        params=json.dumps(
+            {
+                "ruleset": "extra_host_conf:notification_options",
+                "folder": "/",
+                "properties": {
+                    "description": "Test",
+                    "disabled": False,
+                },
+                "value_raw": "'d,u,r,f,s'",
+                "conditions": {},
+            }
+        ),
+    )
+
+    assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
+
+
 def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"

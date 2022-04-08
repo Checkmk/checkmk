@@ -70,9 +70,9 @@ def check_mailboxes(args: Args) -> CheckResult:
     args.fetch_password = args.fetch_password or getpass()
     if args.fetch_protocol == "POP3":
         raise RuntimeError("check_mailboxes does not operate on POP servers, sorry.")
-    if (args.crit_age_newest is None) is not args.warn_age_newest is None:
+    if type(args.crit_age_newest) is not type(args.warn_age_newest):
         raise RuntimeError("--warn-age-newest and --crit-age-newest must be provided together")
-    if (args.crit_age_oldest is None) is not args.warn_age_oldest is None:
+    if type(args.crit_age_oldest) is not type(args.warn_age_oldest):
         raise RuntimeError("--warn-age-oldest and --crit-age-oldest must be provided together")
 
     socket.setdefaulttimeout(args.connect_timeout)

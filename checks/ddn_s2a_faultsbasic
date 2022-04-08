@@ -21,8 +21,6 @@ from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard
 
 
 def parse_ddn_s2a_faultsbasic(info):
-    parsed = parse_ddn_s2a_api_response(info)
-
     non_unique_keys = [
         "failed_avr_fan_ctrl_item",
         "failed_avr_pwr_sup_item",
@@ -30,12 +28,10 @@ def parse_ddn_s2a_faultsbasic(info):
         "failed_avr_temp_C_item",
         "failed_disk_item",
     ]
-
-    for key in parsed:
-        if key not in non_unique_keys:
-            parsed[key] = parsed[key][0]
-
-    return parsed
+    return {
+        key: value if key in non_unique_keys else value[0]
+        for key, value in parse_ddn_s2a_api_response(info).items()
+    }
 
 
 # .

@@ -82,19 +82,17 @@ def parse_cbl_airlaser(info):
 
     # update values from one dict into the other by picking the "offsetted" values
     # (optimize at will, if we can make it one-dict-for-all then we 100% sanitized their MIB)
-    for hwclass, sensors in airlaser_sensors.items():
-        for sensor in sensors:
-            # we could remove the offset hack by parsing our OID
-            sub_oid = sensors[sensor][1]
-            offset = sensors[sensor][2]
-
-            if "Status" in sensor:
-                value = airlaser_status_names[int(data[hwclass][offset][0])]
-            else:
-                value = saveint(data[hwclass][offset][0])
-            sensors[sensor] = (value, sub_oid, offset)
-
-    return airlaser_sensors
+    return {
+        hwclass: {
+            sensor: (
+                airlaser_status_names[int(data[hwclass][offset][0])]
+                if "Status" in sensor
+                else saveint(data[hwclass][offset][0])
+            )
+            for sensor, (_dummy, sub_oid, offset) in sensors.items()
+        }
+        for hwclass, sensors in airlaser_sensors.items()
+    }
 
 
 def check_cbl_airlaser_hw(item, params, info):

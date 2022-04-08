@@ -12,13 +12,10 @@ from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard
 
 
 def parse_ddn_s2a_stats(info):
-    parsed = parse_ddn_s2a_api_response(info)
-
-    for key in parsed:
-        if key.startswith("All_ports"):
-            parsed[key] = parsed[key][0]
-
-    return parsed
+    return {
+        key: value[0] if key.startswith("All_ports") else value
+        for key, value in parse_ddn_s2a_api_response(info).items()
+    }
 
 
 #   .--Read hits-----------------------------------------------------------.

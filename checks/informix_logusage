@@ -88,5 +88,6 @@ check_info['informix_logusage'] = {
     'check_function': check_informix_logusage,
     'has_perfdata': True,
     'service_description': 'Informix Log Usage %s',
+    "group": "informix_logusage",
     'default_levels_variable': 'informix_logusage_default_levels',
 }

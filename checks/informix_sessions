@@ -47,5 +47,6 @@ check_info['informix_sessions'] = {
     'check_function': check_informix_sessions,
     'has_perfdata': True,
     'service_description': 'Informix Sessions %s',
+    "group": "informix_sessions",
     'default_levels_variable': 'informix_sessions_default_levels',
 }

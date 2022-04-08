@@ -79,5 +79,6 @@ check_info['informix_dbspaces'] = {
     'check_function': check_informix_dbspaces,
     'service_description': 'Informix Tablespace %s',
     'has_perfdata': True,
+    "group": "informix_dbspaces",
     'default_levels_variable': 'informix_dbspaces_default_levels',
 }

@@ -45,6 +45,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.utils import serve_json
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -101,7 +102,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
         host_group_names.append(group_name)
 
     host_groups = fetch_specific_groups(host_group_names, "host")
-    return constructors.serve_json(serialize_group_list("host_group_config", host_groups))
+    return serve_json(serialize_group_list("host_group_config", host_groups))
 
 
 @Endpoint(
@@ -115,7 +116,7 @@ def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all host groups"""
     user.need_permission("wato.groups")
     collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
-    return constructors.serve_json(serialize_group_list("host_group_config", collection))
+    return serve_json(serialize_group_list("host_group_config", collection))
 
 
 @Endpoint(
@@ -205,7 +206,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     entries = body["entries"]
     updated_host_groups = update_groups("host", entries)
-    return constructors.serve_json(serialize_group_list("host_group_config", updated_host_groups))
+    return serve_json(serialize_group_list("host_group_config", updated_host_groups))
 
 
 @Endpoint(

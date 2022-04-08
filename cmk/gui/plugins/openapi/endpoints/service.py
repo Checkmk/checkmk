@@ -38,7 +38,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
 
@@ -119,7 +119,7 @@ def show_service(params: Mapping[str, Any]) -> Response:
             title="The requested service was not found",
             detail=f"The service description {service_description} did not match any service",
         )
-    return constructors.serve_json(
+    return serve_json(
         constructors.domain_object(
             domain_type="service",
             identifier=f"{host_name}-{service_description}",
@@ -181,7 +181,7 @@ def _list_services(params: Mapping[str, Any]) -> Response:
 
     result = q.iterate(live)
 
-    return constructors.serve_json(
+    return serve_json(
         constructors.collection_object(
             domain_type="service",
             value=[

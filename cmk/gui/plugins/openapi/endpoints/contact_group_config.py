@@ -46,6 +46,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.utils import serve_json
 from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,
@@ -109,7 +110,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
         contact_group_names.append(group_name)
 
     contact_groups = fetch_specific_groups(contact_group_names, "contact")
-    return constructors.serve_json(serialize_group_list("contact_group_config", contact_groups))
+    return serve_json(serialize_group_list("contact_group_config", contact_groups))
 
 
 @Endpoint(
@@ -125,7 +126,7 @@ def list_group(params: Mapping[str, Any]) -> Response:
     collection = [
         {"id": k, "alias": v["alias"]} for k, v in load_contact_group_information().items()
     ]
-    return constructors.serve_json(
+    return serve_json(
         serialize_group_list("contact_group_config", collection),
     )
 
@@ -238,6 +239,4 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     entries = body["entries"]
     updated_contact_groups = update_groups("contact", entries)
-    return constructors.serve_json(
-        serialize_group_list("contact_group_config", updated_contact_groups)
-    )
+    return serve_json(serialize_group_list("contact_group_config", updated_contact_groups))

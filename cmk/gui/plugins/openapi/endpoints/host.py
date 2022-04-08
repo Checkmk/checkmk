@@ -54,6 +54,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     permissions,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.utils import serve_json
 
 from cmk import fields
 
@@ -117,7 +118,7 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
 
     result = q.iterate(live)
 
-    return constructors.serve_json(
+    return serve_json(
         constructors.collection_object(
             domain_type="host",
             value=[

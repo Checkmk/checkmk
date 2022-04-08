@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Users"""
 import datetime as dt
-import json
 import time
 from typing import Any, Dict, Literal, Mapping, Optional, Sequence, Tuple, TypedDict, Union
 
@@ -25,7 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.watolib.users import delete_users, edit_users
 
@@ -96,9 +95,7 @@ def list_users(params: Mapping[str, Any]) -> Response:
         user_attributes = _internal_to_api_format(attrs)
         users.append(serialize_user(user_id, complement_customer(user_attributes)))
 
-    return constructors.serve_json(
-        constructors.collection_object(domain_type="user_config", value=users)
-    )
+    return serve_json(constructors.collection_object(domain_type="user_config", value=users))
 
 
 @Endpoint(
@@ -194,11 +191,9 @@ def edit_user(params: Mapping[str, Any]) -> Response:
 
 
 def serve_user(user_id):
-    response = Response()
     user_attributes_internal = _load_user(user_id)
     user_attributes = _internal_to_api_format(user_attributes_internal)
-    response.set_data(json.dumps(serialize_user(user_id, complement_customer(user_attributes))))
-    response.set_content_type("application/json")
+    response = serve_json(serialize_user(user_id, complement_customer(user_attributes)))
     response.headers.add("ETag", constructors.etag_of_dict(user_attributes).to_header())
     return response
 

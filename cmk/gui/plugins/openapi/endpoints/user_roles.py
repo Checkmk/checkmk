@@ -46,7 +46,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.type_defs import UserRole
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib import userroles
@@ -103,7 +103,7 @@ def show_user_role(params: Mapping[str, Any]) -> Response:
     """Show a user role"""
     user.need_permission("wato.users")
     user_role = userroles.get_role(RoleID(params["role_id"]))
-    return constructors.serve_json(data=serialize_user_role(user_role))
+    return serve_json(data=serialize_user_role(user_role))
 
 
 @Endpoint(
@@ -118,7 +118,7 @@ def list_user_roles(params: Mapping[str, Any]) -> Response:
     """Show all user roles"""
     user.need_permission("wato.users")
 
-    return constructors.serve_json(
+    return serve_json(
         constructors.collection_object(
             domain_type="user_role",
             value=[
@@ -147,7 +147,7 @@ def create_userrole(params: Mapping[str, Any]) -> Response:
         new_role_id=body.get("new_role_id"),
         new_alias=body.get("new_alias"),
     )
-    return constructors.serve_json(serialize_user_role(cloned_user_role))
+    return serve_json(serialize_user_role(cloned_user_role))
 
 
 @Endpoint(
@@ -232,4 +232,4 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
         userroles.update_permissions(userrole_to_edit, new_permissions.items())
 
     userroles.save_updated_role(userrole_to_edit, existing_roleid)
-    return constructors.serve_json(data=serialize_user_role(userrole_to_edit))
+    return serve_json(data=serialize_user_role(userrole_to_edit))

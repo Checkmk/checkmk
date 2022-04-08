@@ -39,7 +39,6 @@ A host_config object can have the following relations present in `links`:
 
 """
 import itertools
-import json
 import operator
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 from urllib.parse import urlencode
@@ -63,7 +62,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.plugins.webapi.utils import check_hostname
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
@@ -280,7 +279,7 @@ def list_hosts(param) -> Response:
 
 
 def serve_host_collection(hosts: Iterable[CREHost], effective_attributes: bool = False) -> Response:
-    return constructors.serve_json(
+    return serve_json(
         _host_collection(
             hosts,
             effective_attributes=effective_attributes,
@@ -329,7 +328,7 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     _require_host_etag(host)
     host.edit(host.attributes(), nodes)
 
-    return constructors.serve_json(
+    return serve_json(
         constructors.object_sub_property(
             domain_type="host_config",
             ident=host_name,
@@ -585,9 +584,7 @@ def show_host(params: Mapping[str, Any]) -> Response:
 
 
 def _serve_host(host: CREHost, effective_attributes: bool = False) -> Response:
-    response = Response()
-    response.set_data(json.dumps(serialize_host(host, effective_attributes)))
-    response.set_content_type("application/json")
+    response = serve_json(serialize_host(host, effective_attributes))
     etag = constructors.etag_of_dict(_host_etag_values(host))
     response.headers.add("ETag", etag.to_header())
     return response

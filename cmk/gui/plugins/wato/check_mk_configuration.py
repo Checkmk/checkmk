@@ -1061,37 +1061,40 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
         return "auth_by_http_header"
 
     def valuespec(self):
-        return Optional(
-            valuespec=TextInput(
-                label=_("HTTP request header variable"),
-                help=_(
-                    "Configure the name of the HTTP request header variable to read "
-                    "from the incoming HTTP requests"
+        return Transform(
+            Optional(
+                valuespec=TextInput(
+                    label=_("HTTP request header variable"),
+                    help=_(
+                        "Configure the name of the HTTP request header variable to read "
+                        "from the incoming HTTP requests"
+                    ),
+                    default_value="X-Remote-User",
+                    regex=re.compile("^[A-Za-z0-9-]+$"),
+                    regex_error=_("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
                 ),
-                default_value="X-Remote-User",
-                regex=re.compile("^[A-Za-z0-9-]+$"),
-                regex_error=_("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
+                title=_("Authenticate users by incoming HTTP requests"),
+                label=_(
+                    "Activate HTTP header authentication (Warning: Only activate "
+                    "in trusted environments, see help for details)"
+                ),
+                help=_(
+                    "If this option is enabled, the GUI reads the configured HTTP header "
+                    "variable from the incoming HTTP request and simply takes the string "
+                    "in this variable as name of the authenticated user. "
+                    "Be warned: Only allow access from trusted ip addresses "
+                    "(Apache <tt>Allow from</tt>), like proxy "
+                    "servers, to this webpage. A user with access to this page could simply fake "
+                    "the authentication information. This option can be useful to "
+                    "realize authentication in reverse proxy environments. As of version 1.6 and "
+                    "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
+                    "to be used for the variable name."
+                ),
+                none_label=_("Don't use HTTP header authentication"),
+                indent=False,
             ),
-            title=_("Authenticate users by incoming HTTP requests"),
-            label=_(
-                "Activate HTTP header authentication (Warning: Only activate "
-                "in trusted environments, see help for details)"
-            ),
-            help=_(
-                "If this option is enabled, the GUI reads the configured HTTP header "
-                "variable from the incoming HTTP request and simply takes the string "
-                "in this variable as name of the authenticated user. "
-                "Be warned: Only allow access from trusted ip addresses "
-                "(Apache <tt>Allow from</tt>), like proxy "
-                "servers, to this webpage. A user with access to this page could simply fake "
-                "the authentication information. This option can be useful to "
-                "realize authentication in reverse proxy environments. As of version 1.6 and "
-                "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
-                "to be used for the variable name."
-            ),
-            none_value=False,
-            none_label=_("Don't use HTTP header authentication"),
-            indent=False,
+            # We accidentally used False instead of None in the past.
+            forth=lambda x: None if x is False else x,
         )
 
 

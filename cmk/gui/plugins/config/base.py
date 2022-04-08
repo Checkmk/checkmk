@@ -281,7 +281,7 @@ class CREConfig:
     selection_livetime: int = 3600
 
     # Configure HTTP header to read usernames from
-    auth_by_http_header: Union[Literal[False], str] = False
+    auth_by_http_header: Optional[str] = None
 
     # Number of rows to display by default in tables rendered with
     # the table.py module

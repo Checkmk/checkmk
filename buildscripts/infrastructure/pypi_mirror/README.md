@@ -4,4 +4,4 @@ By default our internal Python mirror is used. To use the official Python mirror
 
 # Update internal Mirror
 
-To update the internal mirror, call `make pip-mirror-update` at the toplevel.
+To update the internal mirror, trigger the pip-mirror-update Job in Jenkins.

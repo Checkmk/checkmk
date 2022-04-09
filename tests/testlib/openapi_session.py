@@ -211,3 +211,40 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+    def create_rule(
+        self,
+        ruleset_name: str,
+        value: object,
+        folder: str = "/",
+        conditions: Optional[dict[str, Any]] = None,
+    ) -> str:
+        response = self.post(
+            "/domain-types/rule/collections/all",
+            json={
+                "ruleset": ruleset_name,
+                "folder": folder,
+                "properties": {
+                    "disabled": False,
+                },
+                "value_raw": repr(value),
+                "conditions": conditions or {},
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()["id"]
+
+    def delete_rule(self, rule_id: str) -> None:
+        response = self.delete(f"/objects/rule/{rule_id}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_rules(self, ruleset_name: str) -> list[dict[str, Any]]:
+        response = self.get(
+            "/domain-types/rule/collections/all",
+            params={"ruleset_name": ruleset_name},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()["value"]

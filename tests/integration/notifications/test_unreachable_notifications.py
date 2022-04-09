@@ -31,6 +31,7 @@ def get_test_id(unreachable_enabled):
 def unreachable_enabled_fixture(request, web, site: Site):
     unreachable_enabled = request.param
 
+    rule_id = None
     try:
         print("Applying test config")
 
@@ -54,13 +55,12 @@ def unreachable_enabled_fixture(request, web, site: Site):
         else:
             notification_options = "d,r,f,s"
 
-        # Replace with RestAPI, see CMK-9251
-        rule_result = web.get_ruleset("extra_host_conf:notification_options")
-        rule_result["ruleset"] = {
-            "": [{"condition": {}, "options": {}, "value": notification_options}]
-        }
-        # Replace with RestAPI, see CMK-9251
-        web.set_ruleset("extra_host_conf:notification_options", rule_result)
+        for rule_spec in site.openapi.get_rules("extra_host_conf:notification_options"):
+            site.openapi.delete_rule(rule_spec["id"])
+        rule_id = site.openapi.create_rule(
+            ruleset_name="extra_host_conf:notification_options",
+            value=notification_options,
+        )
 
         site.activate_changes_and_wait_for_core_reload()
 
@@ -88,6 +88,9 @@ def unreachable_enabled_fixture(request, web, site: Site):
         site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
+
+        if rule_id is not None:
+            site.openapi.delete_rule(rule_id)
 
         site.openapi.delete_host("notify-test-child")
         site.openapi.delete_host("notify-test-parent")

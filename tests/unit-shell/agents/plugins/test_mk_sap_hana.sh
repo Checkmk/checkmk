@@ -254,7 +254,7 @@ test_mk_sap_hana_1_connect_standby_not_worker() {
     landscape=$(sim_landscape_1_0_not_worker)
     status=$'Version;;1.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
 
-    actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
+    actual=$(SAP_HANA_VERSION="1" sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected="retcode: 1"
     assertEquals "$expected" "$actual"
 }
@@ -289,7 +289,7 @@ test_mk_sap_hana_2_connect_standby_not_worker() {
     landscape=$(sim_landscape_2_0_not_worker)
     status=$'Version;;2.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
 
-    actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
+    actual=$(SAP_HANA_VERSION="2" sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected="retcode: 1"
 
     assertEquals "$expected" "$actual"

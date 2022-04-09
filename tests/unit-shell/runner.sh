@@ -9,25 +9,29 @@ export UNIT_SH_SHUNIT2="${_REPO}/tests/unit-shell/shunit2"
 export UNIT_SH_AGENTS_DIR="${_REPO}/agents"
 export UNIT_SH_PLUGINS_DIR="$UNIT_SH_AGENTS_DIR/plugins"
 
-_failed_tests=""
-
 run_file() {
     bname="${1##.*tests/unit-shell/}"
     printf "%s" "${bname}"
     if ! OUTPUT=$("${1}"); then
         _failed_tests="$_failed_tests ${bname}"
-        printf "\n%s" "${OUTPUT}"
-    else
-        printf "%s" "${OUTPUT##*Ran}" | tr '\n.' ' '
-        printf "\n"
+        printf "\n%s\n" "${OUTPUT}"
+        return 1
     fi
+
+    printf "%s" "${OUTPUT##*Ran}" | tr '\n.' ' '
+    printf "\n"
+    return 0
 }
 
-find "${_REPO}/tests/unit-shell" -name "test*.sh" | while read -r test_file; do
-    run_file "${test_file}"
-done
+run_files() {
+    RETCODE=0
+    while read -r test_file; do
+        run_file "${test_file}" || RETCODE="$?"
+    done
 
-if [ -n "$_failed_tests" ]; then
-    echo "Failed shell unit tests: $_failed_tests" >&2
-    exit 1
-fi
+    [ -n "$_failed_tests" ] && echo "Failed shell unit tests: $_failed_tests" >&2
+    return "${RETCODE}"
+}
+
+# watch out! make sure a failure is reflected in the exit code
+find "${_REPO}/tests/unit-shell" -name "test*.sh" | run_files

@@ -26,7 +26,7 @@ test_get_plugin_interpreter_non_python_plugin() {
 test_plugin_execution() {
     PLUGINSDIR="${SHUNIT_TMPDIR}/execute" set_up_profiling
 
-    assertEquals "<<<foobar>>>" "$(run_plugins)"
+    assertEquals "<<<foobar>>>" "$(PLUGINSDIR="${SHUNIT_TMPDIR}/execute" run_plugins)"
 }
 
 test_get_plugin_interpreter_no_py_present() {

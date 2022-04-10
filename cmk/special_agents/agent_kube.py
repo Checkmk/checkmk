@@ -2092,7 +2092,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 raise ClusterConnectionError(
                     f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
                     f"at URL {e.url}"
-                )
+                ) from e
             except client.ApiException as e:
                 raise CustomKubernetesApiException(e) from e
 

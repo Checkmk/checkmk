@@ -90,10 +90,15 @@ from cmk.base.plugins.agent_based.utils.kube import (
             ),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "pod"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
                         "name": "name",
                         "namespace": "default",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "pod"],
+                    inventory_attributes={
                         "dns_policy": "ClusterFirst",
                         "host_ip": "192.168.49.2",
                         "host_network": None,

@@ -737,8 +737,6 @@ inventory_displayhints.update({
     ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
 
     ".software.applications.kube.pod.": {"title": _l("Pod")},
-    ".software.applications.kube.pod.name": {"title": _l("Name")},
-    ".software.applications.kube.pod.namespace": {"title": _l("Namespace")},
     ".software.applications.kube.pod.dns_policy": {"title": _l("DNS policy")},
     ".software.applications.kube.pod.host_ip": {"title": _l("Host IP")},
     ".software.applications.kube.pod.host_network": {"title": _l("Host network")},

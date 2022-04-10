@@ -361,8 +361,6 @@ def test_registered_painters():
         "inv_software_applications_kube_pod_dns_policy",
         "inv_software_applications_kube_pod_host_ip",
         "inv_software_applications_kube_pod_host_network",
-        "inv_software_applications_kube_pod_name",
-        "inv_software_applications_kube_pod_namespace",
         "inv_software_applications_kube_pod_node",
         "inv_software_applications_kube_pod_pod_ip",
         "inv_software_applications_kube_pod_qos_class",

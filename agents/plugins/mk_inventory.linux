@@ -42,6 +42,25 @@ _insert_persist_option() {
     sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
 }
 
+run_persisted() {
+    INTERVAL="${1}"
+    shift
+
+    FLAGFILE="${MK_VARDIR}/persisted/${1}.${REMOTE}"
+    NOW="$(_get_epoch)"
+    UNTIL=$((NOW + INTERVAL + 600))
+    LAST_RUN="$(cat "${FLAGFILE}" 2>/dev/null)" || LAST_RUN=0
+
+    if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
+        return
+    fi
+
+    mkdir "${FLAGFILE%/*}"
+    echo "${NOW}" >"${FLAGFILE}"
+
+    "$@" | _insert_persist_option "${UNTIL}"
+}
+
 #
 # END COMMON INVENTORY CODE
 #
@@ -85,24 +104,6 @@ _distro_files() {
     /etc/os-release
     /usr/share/cma/version
 HERE
-}
-
-run_unsorted_stuff() {
-    INTERVAL="${1}"
-
-    FLAGFILE="$MK_VARDIR/mk_inventory.last.$REMOTE"
-    LAST_RUN="$(stat -c %Y "${FLAGFILE}")"
-    NOW="$(_get_epoch)"
-    UNTIL=$((NOW + INTERVAL + 600))
-
-    if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
-        return
-    fi
-
-    touch "${FLAGFILE}"
-
-    sections_mk_inventory | _insert_persist_option "${UNTIL}"
-
 }
 
 sections_mk_inventory() {
@@ -201,7 +202,7 @@ sections_mk_inventory() {
 main() {
     _load_config "${MK_CONFDIR}/mk_inventory.cfg"
 
-    run_unsorted_stuff "${INVENTORY_INTERVAL:?}"
+    run_persisted "${INVENTORY_INTERVAL:?}" sections_mk_inventory
 }
 
 [ -z "${MK_SOURCE_AGENT}" ] && main

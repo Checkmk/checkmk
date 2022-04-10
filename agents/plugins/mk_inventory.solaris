@@ -42,33 +42,28 @@ _insert_persist_option() {
     sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
 }
 
-#
-# END COMMON INVENTORY CODE
-#
-
-run_unsorted_stuff() {
+run_persisted() {
     INTERVAL="${1}"
+    shift
 
-    FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
+    FLAGFILE="${MK_VARDIR}/persisted/${1}.${REMOTE}"
     NOW="$(_get_epoch)"
     UNTIL=$((NOW + INTERVAL + 600))
-
-    #check if flagfile exits
-    if [ -e "$FLAGFILE" ]; then
-        LAST_RUN="$(cat "${FLAGFILE}")"
-    else
-        #First run of the script
-        LAST_RUN=0
-    fi
+    LAST_RUN="$(cat "${FLAGFILE}" 2>/dev/null)" || LAST_RUN=0
 
     if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
         return
     fi
 
+    mkdir "${FLAGFILE%/*}"
     echo "${NOW}" >"${FLAGFILE}"
 
-    sections_mk_inventory | _insert_persist_option "${UNTIL}"
+    "$@" | _insert_persist_option "${UNTIL}"
 }
+
+#
+# END COMMON INVENTORY CODE
+#
 
 sections_mk_inventory() {
     echo "<<<solaris_uname:sep(61)>>>"
@@ -128,7 +123,7 @@ sections_mk_inventory() {
 main() {
     _load_config "${MK_CONFDIR}/mk_inventory.cfg"
 
-    run_unsorted_stuff "${INVENTORY_INTERVAL:?}"
+    run_persisted "${INVENTORY_INTERVAL:?}" sections_mk_inventory
 }
 
 [ -z "${MK_SOURCE_AGENT}" ] && main

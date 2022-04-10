@@ -680,7 +680,14 @@ inventory_displayhints.update({
         ],
     },
 
-    ".software.applications.kube.metadata.": {"title": _l("General")},
+    ".software.applications.kube.metadata.": {
+        "title": _l("General"),
+        "keyorder": [
+            "object",
+            "name",
+            "namespace",
+        ],
+    },
     ".software.applications.kube.metadata.object": {"title": _l("Object")},
     ".software.applications.kube.metadata.name": {"title": _l("Name")},
     ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},

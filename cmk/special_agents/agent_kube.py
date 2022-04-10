@@ -2057,14 +2057,16 @@ class CustomKubernetesApiException(Exception):
         It strips the first \n in order make the output of plugin check-mk more verbose.
         """
 
-        error_message = "({self.e.status}, Reason: {self.e.reason})\n"
-        if self.e.headers:
-            error_message += f"HTTP response headers: {self.e.headers}\n"
+        error_message_visible_in_check_mk_service_summary = (
+            f"{self.e.status}, Reason: {self.e.reason}"
+        )
 
         if self.e.body:
-            error_message += f"HTTP response body: {self.e.body}\n"
+            error_message_visible_in_check_mk_service_summary += (
+                f", Message: {json.loads(self.e.body).get('message')}"
+            )
 
-        return error_message
+        return error_message_visible_in_check_mk_service_summary
 
 
 def main(args: Optional[List[str]] = None) -> int:

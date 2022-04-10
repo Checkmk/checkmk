@@ -24,6 +24,11 @@ _load_config() {
     . "${1}"
 }
 
+_insert_persist_option() {
+    # insert the persist(...) option, if it is not already present.
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+}
+
 #
 # END COMMON INVENTORY CODE
 #
@@ -83,33 +88,32 @@ run_unsorted_stuff() {
 
     touch "${FLAGFILE}"
 
-    sections_mk_inventory "${UNTIL}"
+    sections_mk_inventory | _insert_persist_option "${UNTIL}"
 
 }
 
 sections_mk_inventory() {
-    UNTIL="${1}"
 
     # List of DEB packages
     if type dpkg-query >/dev/null; then
-        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+        echo "<<<lnx_packages:sep(124)>>>"
         dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|-|${Summary}|${Status}\n'
     fi
 
     # List of RPM packages in same format
     if type rpm >/dev/null; then
-        echo "<<<lnx_packages:sep(9):persist($UNTIL)>>>"
+        echo "<<<lnx_packages:sep(9)>>>"
         rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{RELEASE}\t%{SUMMARY}\t-\n'
     fi
 
     # List Gentoo packages
     if type equery >/dev/null; then
-        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+        echo "<<<lnx_packages:sep(124)>>>"
         equery -C list --format "\$category/\$name|\$fullversion|\$mask2|ebuild|Repository \$repo|installed" \* | head -n -1
     fi
 
     # Information about distribution
-    echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
+    echo "<<<lnx_distro:sep(124)>>>"
     _distro_files | while read -r f; do
         [ -e "$f" ] || continue
         echo "[[[$f]]]"
@@ -119,19 +123,19 @@ sections_mk_inventory() {
 
     # CPU Information. We need just the first one
     if [ -e /proc/cpuinfo ]; then
-        echo "<<<lnx_cpuinfo:sep(58):persist($UNTIL)>>>"
+        echo "<<<lnx_cpuinfo:sep(58)>>>"
         sed 's/[[:space:]]*:[[:space:]]*/:/' </proc/cpuinfo
     fi
 
     # Information about main board, memory, etc.
     if type dmidecode >/dev/null; then
-        echo "<<<dmidecode:sep(58):persist($UNTIL)>>>"
+        echo "<<<dmidecode:sep(58)>>>"
         dmidecode -q | sed 's/\t/:/g'
     fi
 
     # Information about kernel architecture
     if type uname >/dev/null; then
-        echo "<<<lnx_uname:persist($UNTIL)>>>"
+        echo "<<<lnx_uname>>>"
         uname -m
         uname -r
     fi
@@ -139,27 +143,27 @@ sections_mk_inventory() {
     # Collect VGAs if they are present
     vgas="$(lspci | grep VGA | cut -d" " -f 1)"
     if [ -n "$vgas" ]; then
-        echo "<<<lnx_video:sep(58):persist($UNTIL)>>>"
+        echo "<<<lnx_video:sep(58)>>>"
         lspci -v -s "$vgas"
     fi
 
     # Some networking information
     if type ip >/dev/null; then
-        echo "<<<lnx_ip_r:persist($UNTIL)>>>"
+        echo "<<<lnx_ip_r>>>"
         ip r
         ip -6 r
     fi
 
     # Kernel configuration
     if type sysctl >/dev/null; then
-        echo "<<<lnx_sysctl:persist($UNTIL)>>>"
+        echo "<<<lnx_sysctl>>>"
         sysctl -ae
     fi
 
     # Block devices
     (# This subshell is for scoping UEVENT_FILE and DEVICE_DIR
         # use sep=0 rather than 124 in order to be more flexible in the parse function
-        echo "<<<lnx_block_devices:sep(0):persist($UNTIL)>>>"
+        echo "<<<lnx_block_devices:sep(0)>>>"
         find "/sys/block/" -maxdepth 1 -type f -o -type l | while read -r DEVICE; do
             UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
             DEVICE_DIR="$(dirname "${UEVENT_FILE}")"

@@ -24,6 +24,11 @@ _load_config() {
     . "${1}"
 }
 
+_insert_persist_option() {
+    # insert the persist(...) option, if it is not already present.
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+}
+
 #
 # END COMMON INVENTORY CODE
 #
@@ -49,28 +54,28 @@ run_unsorted_stuff() {
 
     echo "$NOW" >"$FLAGFILE"
 
-    sections_mk_inventory
+    sections_mk_inventory | _insert_persist_option "${UNTIL}"
 }
 
 sections_mk_inventory() {
     # List of installed AIX packages
     if type lslpp >/dev/null; then
-        echo "<<<aix_packages:sep(58):persist($UNTIL)>>>"
+        echo "<<<aix_packages:sep(58)>>>"
         lslpp -c -L
     fi
 
     if type oslevel >/dev/null; then
         # base level of the system
-        echo "<<<aix_baselevel:persist($UNTIL)>>>"
+        echo "<<<aix_baselevel>>>"
         oslevel
 
         # list the known service packs on a system
-        echo "<<<aix_service_packs:persist($UNTIL)>>>"
+        echo "<<<aix_service_packs>>>"
         oslevel -sq
     fi
 
     if type lparstat >/dev/null; then
-        echo "<<<aix_lparstat_inventory:sep(0):persist($UNTIL)>>>"
+        echo "<<<aix_lparstat_inventory:sep(0)>>>"
         lparstat -i
     fi
 
@@ -78,7 +83,7 @@ sections_mk_inventory() {
     # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
     # information, paging space information, and devices information.
     if type prtconf >/dev/null; then
-        echo "<<<prtconf:sep(58):persist($UNTIL)>>>"
+        echo "<<<prtconf:sep(58)>>>"
         prtconf
     fi
 }

@@ -24,6 +24,11 @@ _load_config() {
     . "${1}"
 }
 
+_insert_persist_option() {
+    # insert the persist(...) option, if it is not already present.
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+}
+
 #
 # END COMMON INVENTORY CODE
 #
@@ -53,16 +58,16 @@ run_unsorted_stuff() {
 
     echo "${NOW}" >"${FLAGFILE}"
 
-    sections_mk_inventory
+    sections_mk_inventory | _insert_persist_option "${UNTIL}"
 }
 
 sections_mk_inventory() {
-    echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
+    echo "<<<solaris_uname:sep(61)>>>"
     uname -X
 
     if zoneadm list | grep global >/dev/null 2>&1; then
         if type prtdiag >/dev/null; then
-            echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
+            echo "<<<solaris_prtdiag:sep(10)>>>"
             if type sneep >/dev/null 2>&1; then
                 SN=$(sneep -t serial)
             else
@@ -76,34 +81,34 @@ sections_mk_inventory() {
     if type psrinfo >/dev/null; then
         # Previously, we only had this single psrinfo section
         # Keep the name to avoid incompatibilities.
-        echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
+        echo "<<<solaris_psrinfo>>>"
         psrinfo -p -v
 
         # Name the section containing the plain "psrinfo" output
         # _virtual instead, as this is what it basically contains
-        echo "<<<solaris_psrinfo_virtual:persist($UNTIL)>>>"
+        echo "<<<solaris_psrinfo_virtual>>>"
         psrinfo
 
-        echo "<<<solaris_psrinfo_physical:persist($UNTIL)>>>"
+        echo "<<<solaris_psrinfo_physical>>>"
         psrinfo -p
 
         # -t option is not available on older systems
         PSRINFO_T=$(psrinfo -t 2>/dev/null)
         if [ -n "$PSRINFO_T" ]; then
-            echo "<<<solaris_psrinfo_table:persist($UNTIL)>>>"
+            echo "<<<solaris_psrinfo_table>>>"
             psrinfo -t
         fi
     fi
 
     if type pkginfo >/dev/null; then
-        echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"
+        echo "<<<solaris_pkginfo:sep(58)>>>"
         pkginfo -l
     fi
 
-    echo "<<<solaris_addresses:persist($UNTIL)>>>"
+    echo "<<<solaris_addresses>>>"
     ifconfig -a
 
-    echo "<<<solaris_routes:persist($UNTIL)>>>"
+    echo "<<<solaris_routes>>>"
     netstat -nr
 }
 

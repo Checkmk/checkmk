@@ -27,37 +27,43 @@ run_unsorted_stuff() {
         LAST_RUN=0
     fi
 
-    if [ $((NOW - LAST_RUN)) -ge $INTERVAL ]; then
-        echo "$NOW" >"$FLAGFILE"
+    if [ $((NOW - LAST_RUN)) -lt $INTERVAL ]; then
+        return
+    fi
 
-        # List of installed AIX packages
-        if type lslpp >/dev/null; then
-            echo "<<<aix_packages:sep(58):persist($UNTIL)>>>"
-            lslpp -c -L
-        fi
+    echo "$NOW" >"$FLAGFILE"
 
-        if type oslevel >/dev/null; then
-            # base level of the system
-            echo "<<<aix_baselevel:persist($UNTIL)>>>"
-            oslevel
+    sections_mk_inventory
+}
 
-            # list the known service packs on a system
-            echo "<<<aix_service_packs:persist($UNTIL)>>>"
-            oslevel -sq
-        fi
+sections_mk_inventory() {
+    # List of installed AIX packages
+    if type lslpp >/dev/null; then
+        echo "<<<aix_packages:sep(58):persist($UNTIL)>>>"
+        lslpp -c -L
+    fi
 
-        if type lparstat >/dev/null; then
-            echo "<<<aix_lparstat_inventory:sep(0):persist($UNTIL)>>>"
-            lparstat -i
-        fi
+    if type oslevel >/dev/null; then
+        # base level of the system
+        echo "<<<aix_baselevel:persist($UNTIL)>>>"
+        oslevel
 
-        # If you run the prtconf command without any flags, it displays the system model, machine serial,
-        # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
-        # information, paging space information, and devices information.
-        if type prtconf >/dev/null; then
-            echo "<<<prtconf:sep(58):persist($UNTIL)>>>"
-            prtconf
-        fi
+        # list the known service packs on a system
+        echo "<<<aix_service_packs:persist($UNTIL)>>>"
+        oslevel -sq
+    fi
+
+    if type lparstat >/dev/null; then
+        echo "<<<aix_lparstat_inventory:sep(0):persist($UNTIL)>>>"
+        lparstat -i
+    fi
+
+    # If you run the prtconf command without any flags, it displays the system model, machine serial,
+    # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
+    # information, paging space information, and devices information.
+    if type prtconf >/dev/null; then
+        echo "<<<prtconf:sep(58):persist($UNTIL)>>>"
+        prtconf
     fi
 }
 

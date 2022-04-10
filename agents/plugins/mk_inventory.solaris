@@ -35,59 +35,64 @@ run_unsorted_stuff() {
         LAST_RUN=0
     fi
 
-    if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
-        echo "${NOW}" >"${FLAGFILE}"
-
-        echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
-        uname -X
-
-        if zoneadm list | grep global >/dev/null 2>&1; then
-            if type prtdiag >/dev/null; then
-                echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
-                if type sneep >/dev/null 2>&1; then
-                    SN=$(sneep -t serial)
-                else
-                    SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
-                fi
-                echo "SerialNumber: $SN"
-                prtdiag -v
-            fi
-        fi
-
-        if type psrinfo >/dev/null; then
-            # Previously, we only had this single psrinfo section
-            # Keep the name to avoid incompatibilities.
-            echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
-            psrinfo -p -v
-
-            # Name the section containing the plain "psrinfo" output
-            # _virtual instead, as this is what it basically contains
-            echo "<<<solaris_psrinfo_virtual:persist($UNTIL)>>>"
-            psrinfo
-
-            echo "<<<solaris_psrinfo_physical:persist($UNTIL)>>>"
-            psrinfo -p
-
-            # -t option is not available on older systems
-            PSRINFO_T=$(psrinfo -t 2>/dev/null)
-            if [ -n "$PSRINFO_T" ]; then
-                echo "<<<solaris_psrinfo_table:persist($UNTIL)>>>"
-                psrinfo -t
-            fi
-        fi
-
-        if type pkginfo >/dev/null; then
-            echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"
-            pkginfo -l
-        fi
-
-        echo "<<<solaris_addresses:persist($UNTIL)>>>"
-        ifconfig -a
-
-        echo "<<<solaris_routes:persist($UNTIL)>>>"
-        netstat -nr
-
+    if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
+        return
     fi
+
+    echo "${NOW}" >"${FLAGFILE}"
+
+    sections_mk_inventory
+}
+
+sections_mk_inventory() {
+    echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
+    uname -X
+
+    if zoneadm list | grep global >/dev/null 2>&1; then
+        if type prtdiag >/dev/null; then
+            echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
+            if type sneep >/dev/null 2>&1; then
+                SN=$(sneep -t serial)
+            else
+                SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
+            fi
+            echo "SerialNumber: $SN"
+            prtdiag -v
+        fi
+    fi
+
+    if type psrinfo >/dev/null; then
+        # Previously, we only had this single psrinfo section
+        # Keep the name to avoid incompatibilities.
+        echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
+        psrinfo -p -v
+
+        # Name the section containing the plain "psrinfo" output
+        # _virtual instead, as this is what it basically contains
+        echo "<<<solaris_psrinfo_virtual:persist($UNTIL)>>>"
+        psrinfo
+
+        echo "<<<solaris_psrinfo_physical:persist($UNTIL)>>>"
+        psrinfo -p
+
+        # -t option is not available on older systems
+        PSRINFO_T=$(psrinfo -t 2>/dev/null)
+        if [ -n "$PSRINFO_T" ]; then
+            echo "<<<solaris_psrinfo_table:persist($UNTIL)>>>"
+            psrinfo -t
+        fi
+    fi
+
+    if type pkginfo >/dev/null; then
+        echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"
+        pkginfo -l
+    fi
+
+    echo "<<<solaris_addresses:persist($UNTIL)>>>"
+    ifconfig -a
+
+    echo "<<<solaris_routes:persist($UNTIL)>>>"
+    netstat -nr
 }
 
 #

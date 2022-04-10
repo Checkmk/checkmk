@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
 # Reason for this no-op: shellcheck disable=... before the first command disables the error for the
 # entire script.
 :
@@ -11,9 +15,21 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.2.0i1"
 
+_load_config() {
+    # defaults:
+    INVENTORY_INTERVAL=$((3600 * 4))
+
+    [ -r "${1}" ] || return
+    # shellcheck source=../cfg_examples/mk_inventory.cfg
+    . "${1}"
+}
+
+#
+# END COMMON INVENTORY CODE
+#
+
 run_unsorted_stuff() {
-    # Run and *send* only once every 4 hours
-    INTERVAL=14400
+    INTERVAL="${1}"
 
     FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
     NOW=$(date +%s)
@@ -27,7 +43,7 @@ run_unsorted_stuff() {
         LAST_RUN=0
     fi
 
-    if [ $((NOW - LAST_RUN)) -lt $INTERVAL ]; then
+    if [ $((NOW - LAST_RUN)) -lt "$INTERVAL" ]; then
         return
     fi
 
@@ -72,7 +88,9 @@ sections_mk_inventory() {
 #
 
 main() {
-    run_unsorted_stuff
+    _load_config "${MK_CONFDIR}/mk_inventory.cfg"
+
+    run_unsorted_stuff "${INVENTORY_INTERVAL:?}"
 }
 
 [ -z "${MK_SOURCE_AGENT}" ] && main

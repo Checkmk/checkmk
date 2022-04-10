@@ -13,9 +13,15 @@ def inventory_kube_cluster(
     section: ClusterInfo,
 ) -> InventoryResult:
     yield Attributes(
-        path=["software", "applications", "kube", "cluster"],
+        path=["software", "applications", "kube", "metadata"],
         inventory_attributes={
             "name": section.name,
+        },
+    )
+
+    yield Attributes(
+        path=["software", "applications", "kube", "cluster"],
+        inventory_attributes={
             "version": section.version,
         },
     )

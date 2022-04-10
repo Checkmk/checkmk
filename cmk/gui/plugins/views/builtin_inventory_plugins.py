@@ -710,7 +710,6 @@ inventory_displayhints.update({
     ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
 
     ".software.applications.kube.cluster.": {"title": _l("Cluster")},
-    ".software.applications.kube.cluster.name": {"title": _l("Name")},
     ".software.applications.kube.cluster.version": {"title": _l("Version")},
 
     ".software.applications.kube.deployment.": {"title": _l("Deployment")},
@@ -729,7 +728,6 @@ inventory_displayhints.update({
     ".software.applications.kube.statefulset.match_expressions": {"title": _l("matchExpressions")},
 
     ".software.applications.kube.node.": { "title": _l("Node") },
-    ".software.applications.kube.node.name": {"title": _l("Name")},
     ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
     ".software.applications.kube.node.os_image": {"title": _l("OS image")},
     ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},

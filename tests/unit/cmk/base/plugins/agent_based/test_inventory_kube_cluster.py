@@ -25,9 +25,14 @@ from .utils_inventory import sort_inventory_result
             ),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "cluster"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
                         "name": "Liam",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "cluster"],
+                    inventory_attributes={
                         "version": "v1.22.2",
                     },
                     status_attributes={},

@@ -2877,8 +2877,6 @@ def test_registered_display_hints():
     '.software.applications.kube.pod.dns_policy',
     '.software.applications.kube.pod.host_ip',
     '.software.applications.kube.pod.host_network',
-    '.software.applications.kube.pod.name',
-    '.software.applications.kube.pod.namespace',
     '.software.applications.kube.pod.node',
     '.software.applications.kube.pod.pod_ip',
     '.software.applications.kube.pod.qos_class',

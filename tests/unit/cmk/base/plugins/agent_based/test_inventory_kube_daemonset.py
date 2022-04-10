@@ -44,10 +44,16 @@ from .utils_inventory import sort_inventory_result
             ),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "daemonset"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "DaemonSet",
                         "name": "oh-lord",
                         "namespace": "have-mercy",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "daemonset"],
+                    inventory_attributes={
                         "strategy": "RollingUpdate (max surge: 0, max unavailable: 1)",
                         "match_labels": "",
                         "match_expressions": "",

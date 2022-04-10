@@ -39,10 +39,16 @@ from .utils_inventory import sort_inventory_result
             UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0)),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "statefulset"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "StatefulSet",
                         "name": "oh-lord",
                         "namespace": "have-mercy",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "statefulset"],
+                    inventory_attributes={
                         "strategy": "RollingUpdate (partitioned at: 0)",
                         "match_labels": "",
                         "match_expressions": "",

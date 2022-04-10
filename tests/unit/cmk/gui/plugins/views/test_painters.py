@@ -331,6 +331,7 @@ def test_registered_painters():
         "inv_software_applications_kube_daemonset_name",
         "inv_software_applications_kube_daemonset_namespace",
         "inv_software_applications_kube_statefulset",
+        "inv_software_applications_kube_statefulset_strategy",
         "inv_software_applications_kube_statefulset_match_expressions",
         "inv_software_applications_kube_statefulset_match_labels",
         "inv_software_applications_kube_statefulset_name",

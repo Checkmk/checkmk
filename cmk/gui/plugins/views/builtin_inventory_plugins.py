@@ -708,6 +708,7 @@ inventory_displayhints.update({
     ".software.applications.kube.statefulset.": {"title": _l("StatefulSet")},
     ".software.applications.kube.statefulset.name": {"title": _l("Name")},
     ".software.applications.kube.statefulset.namespace": {"title": _l("Namespace")},
+    ".software.applications.kube.statefulset.strategy": {"title": _l("StrategyType")},
     ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.statefulset.match_expressions": {"title": _l("matchExpressions")},
 

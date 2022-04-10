@@ -2855,6 +2855,7 @@ def test_registered_display_hints():
     '.software.applications.kube.statefulset.match_labels',
     '.software.applications.kube.statefulset.name',
     '.software.applications.kube.statefulset.namespace',
+    '.software.applications.kube.statefulset.strategy',
     '.software.applications.kube.deployment.',
     '.software.applications.kube.deployment.name',
     '.software.applications.kube.deployment.namespace',

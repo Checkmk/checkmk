@@ -10,12 +10,21 @@ import * as async_progress from "async_progress";
 //#   | Handling of the asynchronous service discovery dialog              |
 //#   '--------------------------------------------------------------------'
 
+interface Check {
+    site: string;
+    folder_path;
+    hostname: string;
+    checktype: string;
+    item;
+    divid: string;
+}
+
 // Stores the latest discovery_result object which was used by the python
 // code to render the current page. It will be sent back to the python
 // code for further actions. It contains the check_table which actions of
 // the user are based on.
 var g_service_discovery_result = null;
-var g_show_updating_timer = null;
+var g_show_updating_timer: number | null = null;
 
 export function start(
     host_name,
@@ -25,7 +34,7 @@ export function start(
     request_vars
 ) {
     // When we receive no response for 2 seconds, then show the updating message
-    g_show_updating_timer = setTimeout(function () {
+    g_show_updating_timer = window.setTimeout(function () {
         async_progress.show_info("Updating...");
     }, 2000);
 
@@ -72,7 +81,7 @@ function get_post_data(
     }
 
     if (["bulk_update", "update_services"].includes(discovery_options.action)) {
-        var checked_checkboxes = [];
+        var checked_checkboxes: string[] = [];
         var checkboxes = document.getElementsByClassName(
             "service_checkbox"
         ) as HTMLCollectionOf<HTMLInputElement>;
@@ -134,18 +143,18 @@ function update(handler_data, response) {
     );
 
     // Update the page menu
-    var page_menu_bar = document.getElementById("page_menu_bar");
+    var page_menu_bar = document.getElementById("page_menu_bar")!;
     page_menu_bar.outerHTML = response.page_menu;
     utils.execute_javascript_by_object(page_menu_bar);
 
     // Update fix all button
-    var fixall_container = document.getElementById("fixall_container");
+    var fixall_container = document.getElementById("fixall_container")!;
     fixall_container.style.display = "block";
     fixall_container.innerHTML = response.fixall;
     utils.execute_javascript_by_object(fixall_container);
 
     // Update the content table
-    var container = document.getElementById("service_container");
+    var container = document.getElementById("service_container")!;
     container.style.display = "block";
     container.innerHTML = response.body;
     utils.execute_javascript_by_object(container);
@@ -159,7 +168,7 @@ function update(handler_data, response) {
 }
 
 function get_state_independent_controls() {
-    var elements = [];
+    var elements: HTMLElement[] = [];
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("service_checkbox"),
@@ -198,7 +207,7 @@ function lock_controls(lock, elements) {
     }
 }
 
-var g_delayed_active_checks = [];
+var g_delayed_active_checks: Check[] = [];
 
 export function register_delayed_active_check(
     site,

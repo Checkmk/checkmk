@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 from freezegun import freeze_time
 
@@ -7,6 +9,20 @@ from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
 from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
 
 pytestmark = pytest.mark.checks
+
+INFO = [
+    ["1563288717"],
+    ["[[[header]]]"],
+    ["name", "status", "size", "time"],
+    ["[[[content]]]"],
+    ["/var/log/syslog", "ok", "1307632", "1563288713"],
+    ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
+    ["/var/log/aptitude", "ok", "0", "1543826115"],
+    ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
+    ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
+]
+INFO_MISSING_TIME_SYSLOG = deepcopy(INFO)
+INFO_MISSING_TIME_SYSLOG[4][3] = ""
 
 
 def test_fileinfo_min_max_age_levels():
@@ -412,17 +428,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
             ],
         ),
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             {
                 "group_patterns": [
                     ("log", ("*syslog*", "")),
@@ -563,17 +569,7 @@ def test_fileinfo_discovery(info, params, expected_result):
             [Result(state=State.WARN, summary="File stat failed")],
         ),
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             "/var/log/aptitude",
             {},
             [
@@ -584,17 +580,7 @@ def test_fileinfo_discovery(info, params, expected_result):
             ],
         ),
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             "/var/log/aptitude.2.gz",
             {
                 "minsize": (5120, 10),
@@ -741,17 +727,7 @@ def test_fileinfo_check(info, item, params, expected_result):
     "info, params, expected_result",
     [
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             {
                 "group_patterns": [
                     ("log", ("*syslog*", "")),
@@ -779,17 +755,7 @@ def test_fileinfo_group_discovery(info, params, expected_result):
     "info, item, params, expected_result",
     [
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             "log",
             {
                 "group_patterns": [("*syslog*", "")],
@@ -829,17 +795,7 @@ def test_fileinfo_group_discovery(info, params, expected_result):
             ],
         ),
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             "today",
             {"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},
             [
@@ -864,17 +820,7 @@ def test_fileinfo_group_discovery(info, params, expected_result):
             ],
         ),
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", "1563288713"],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO,
             "log",
             {
                 "group_patterns": [("*syslog*", "")],
@@ -908,17 +854,7 @@ def test_fileinfo_group_discovery(info, params, expected_result):
             ],
         ),
         (
-            [
-                ["1563288717"],
-                ["[[[header]]]"],
-                ["name", "status", "size", "time"],
-                ["[[[content]]]"],
-                ["/var/log/syslog", "ok", "1307632", ""],
-                ["/var/log/syslog.1", "ok", "1235157", "1563259976"],
-                ["/var/log/aptitude", "ok", "0", "1543826115"],
-                ["/var/log/aptitude.2.gz", "ok", "3234", "1539086721"],
-                ["/tmp/20190716.txt", "ok", "1235157", "1563259976"],
-            ],
+            INFO_MISSING_TIME_SYSLOG,
             "log",
             {"group_patterns": [("*syslog*", "")], "timeofday": [((8, 0), (9, 0))]},
             [

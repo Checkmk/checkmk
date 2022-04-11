@@ -209,16 +209,16 @@ TEST(RealtimeTest, Base_Long) {
         std::thread first(StartTestServer, &context, 555);
         auto ret = dev.start();
 
-        EXPECT_TRUE(dev.started_);
+        EXPECT_TRUE(dev.started());
         dev.connectFrom("127.0.0.1", 555, {"mem", "df", "winperf_processor"},
                         "");
 
         EXPECT_TRUE(ret);
         WaitFor([]() { return TestTable.size() >= 6; }, 20s);
 
-        EXPECT_TRUE(dev.started_);
+        EXPECT_TRUE(dev.started());
         dev.stop();
-        EXPECT_FALSE(dev.started_);
+        EXPECT_FALSE(dev.started());
 
         context.stop();
         if (first.joinable()) first.join();
@@ -240,15 +240,15 @@ TEST(RealtimeTest, Base_Long) {
         std::thread first(StartTestServer, &context, 555);
         auto ret = dev.start();
 
-        EXPECT_TRUE(dev.started_);
+        EXPECT_TRUE(dev.started());
         dev.connectFrom("127.0.0.1", 555, {"mem", "df", "winperf_processor"},
                         "encrypt");
 
         EXPECT_TRUE(ret);
         WaitFor([]() { return TestTable.size() >= 6; }, 20s);
-        EXPECT_TRUE(dev.started_);
+        EXPECT_TRUE(dev.started());
         dev.stop();
-        EXPECT_FALSE(dev.started_);
+        EXPECT_FALSE(dev.started());
 
         context.stop();
         if (first.joinable()) first.join();

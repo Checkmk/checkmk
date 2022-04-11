@@ -20,23 +20,25 @@
 #include "service_processor.h"
 #include "tools/_misc.h"
 
+using namespace std::string_literals;
+using namespace std::chrono_literals;
+
 namespace cma::rt {
 
 // gathers all data in one packet, optionally encrypt
 // on error returns empty block
 // also empty block on no data
-RtBlock PackData(std::string_view Output,
-                 const cma::encrypt::Commander* Crypt) {
-    if (Output.empty()) {
+RtBlock PackData(std::string_view output, const encrypt::Commander *crypt) {
+    if (output.empty()) {
         XLOG::d("No data to pack");
         return {};
     }
 
-    auto encrypted = Crypt != nullptr;
+    auto encrypted = crypt != nullptr;
     auto hdr = encrypted ? kEncryptedHeader : kPlainHeader;
 
     RtBlock block;
-    block.resize(kHeaderSize + kTimeStampSize + Output.size());
+    block.resize(kHeaderSize + kTimeStampSize + output.size());
     auto p = block.data();
 
     // header
@@ -54,21 +56,26 @@ RtBlock PackData(std::string_view Output,
 
     p += kTimeStampSize;
 
-    memcpy(p, Output.data(), Output.size());
+    memcpy(p, output.data(), output.size());
 
-    if (!encrypted) return block;
+    if (!encrypted) {
+        return block;
+    }
 
     // encryption block
     // check for size increase
-    auto nc_size = Crypt->CalcBufferOverhead(Output.size());
-    if (!nc_size) return {};
+    auto nc_size = crypt->CalcBufferOverhead(output.size());
+    if (!nc_size) {
+        XLOG::l("Failed to calc buffer overhead");
+        return {};
+    }
 
-    block.resize(kHeaderSize + kTimeStampSize + Output.size() + *nc_size);
+    block.resize(kHeaderSize + kTimeStampSize + output.size() + *nc_size);
     p = block.data();
 
     auto [success, sz] =
-        Crypt->encode(p + kTimeStampSize + kHeaderSize, Output.size(),
-                      Output.size() + *nc_size, true);
+        crypt->encode(p + kTimeStampSize + kHeaderSize, output.size(),
+                      output.size() + *nc_size, true);
 
     if (success) {
         block.resize(sz + kTimeStampSize + kHeaderSize);
@@ -100,39 +107,39 @@ bool Device::start() {
     return true;
 }
 
-void Device::connectFrom(std::string_view Address, int Port,
-                         const RtTable& Sections, std::string_view Passphrase,
-                         int Timeout) {
+void Device::connectFrom(std::string_view address, int port,
+                         const RtTable &sections, std::string_view passphrase,
+                         int timeout) {
     std::lock_guard lk(lock_);
     if (!started_) {
-        XLOG::l(XLOG_FLINE + " Out  of Order call");
+        XLOG::l("Out  of Order call");
         return;
     }
 
     kick_time_ = std::chrono::steady_clock::now();
-    ip_address_ = Address;
-    port_ = Port;
-    timeout_ = Timeout;
+    ip_address_ = address;
+    port_ = port;
+    timeout_ = timeout;
     kick_count_++;
     working_period_ = true;
-    passphrase_ = Passphrase;
+    passphrase_ = passphrase;
     resetSections();
 
-    for (const auto& section : Sections) {
-        if (cma::tools::IsEqual(section, "df")) {
+    for (const auto &section : sections) {
+        if (tools::IsEqual(section, "df")) {
             use_df_ = true;
-        } else if (cma::tools::IsEqual(section, "mem")) {
+        } else if (tools::IsEqual(section, "mem")) {
             use_mem_ = true;
-        } else if (cma::tools::IsEqual(section, "winperf_processor")) {
+        } else if (tools::IsEqual(section, "winperf_processor")) {
             use_winperf_processor_ = true;
-        } else if (cma::tools::IsEqual(section, "test")) {
+        } else if (tools::IsEqual(section, "test")) {
             use_test_ = true;
         } else {
             XLOG::d("Invalid real time section name '{}'", section);
         }
     }
 
-    XLOG::d.i("Realtime kick from '{}' mem:{} df:{} winperf:{}", Address,
+    XLOG::d.i("Realtime kick from '{}' mem:{} df:{} winperf:{}", address,
               use_mem_, use_df_, use_winperf_processor_);
 
     cv_.notify_one();
@@ -146,70 +153,65 @@ void Device::stop() {
     }
     lk.unlock();
 
-    if (thread_.joinable()) thread_.join();
+    if (thread_.joinable()) {
+        thread_.join();
+    }
 }
 
-// to decrease noise in source code
-static void mainThreadReporter(std::string_view Text, const std::error_code& Ec,
-                               std::string_view Address, int Port) {
-    XLOG::l("{} - '{}':{}. Eror [{}], '{}'", Text, Address, Port, Ec.value(),
-            Ec.message());
+namespace {
+void logError(std::string_view text, const std::error_code &ec,
+              std::string_view address, int port) {
+    XLOG::l("{} - '{}':{}. Eror [{}], '{}'", text, address, port, ec.value(),
+            ec.message());
 }
 
-static bool connectSocket(asio::io_context& IoContext,
-                          asio::ip::udp::socket& Socket,
-                          std::string_view Address, int Port) {
-    using namespace asio::ip;
-
+bool connectSocket(asio::io_context &io_context, asio::ip::udp::socket &socket,
+                   std::string_view address, int port) {
     std::error_code ec;
-    udp::resolver resolver(IoContext);
-    auto res = resolver.resolve(Address, std::to_string(Port), ec);
+    asio::ip::udp::resolver resolver(io_context);
+    auto res = resolver.resolve(address, std::to_string(port), ec);
     if (ec.value()) {
-        mainThreadReporter("Can't Resolve", ec, Address, Port);
+        logError("Can't Resolve", ec, address, port);
         return false;
     }
-    asio::connect(Socket, res, ec);
+    asio::connect(socket, res, ec);
     if (ec.value()) {
-        mainThreadReporter("Can't Connect", ec, Address, Port);
+        logError("Can't Connect", ec, address, port);
         return false;
     }
 
     return true;
 }
 
+}  // namespace
+
 std::string Device::generateData() {
     std::string result;
 
     if (use_df_) {
-        cma::provider::Df df;
-        result += df.generateContent(cma::section::kUseEmbeddedName, true);
+        provider::Df df;
+        result += df.generateContent(section::kUseEmbeddedName, true);
     }
 
     if (use_mem_) {
-        cma::provider::Mem mem;
-        result += mem.generateContent(cma::section::kUseEmbeddedName, true);
+        provider::Mem mem;
+        result += mem.generateContent(section::kUseEmbeddedName, true);
     }
 
     if (use_winperf_processor_) {
-        result += cma::provider::BuildWinPerfSection(L"winperf", L"processor",
-                                                     L"238");
+        result +=
+            provider::BuildWinPerfSection(L"winperf", L"processor", L"238");
     }
 
-    if (use_test_) result += "<<<test>>>\n";
+    if (use_test_) {
+        result += "<<<test>>>\n";
+    }
 
     return result;
 }
 
-static void UpdateCounterByEc(size_t& counter, std::error_code& ec) {
-    if (ec.value())
-        counter++;  // error, this is not good
-    else
-        counter = 0;
-}
-
 // #TODO overcomplicated function, to be re-factored
 void Device::mainThread() noexcept {
-    using namespace std::literals;
     std::unique_lock lk(lock_);
     auto port = port_;
     auto ip_address = ""s;  // set to invalid value, prevents race
@@ -225,34 +227,34 @@ void Device::mainThread() noexcept {
         port_ = 0;
     });
 
-    using namespace std::chrono;
-    using namespace asio::ip;
     try {
         asio::io_context io_context;
-        udp::socket sock(io_context);
+        asio::ip::udp::socket sock(io_context);
         bool connected = false;
         bool connect_required =
             false;  // true on first connect or on change connect address
         size_t counter = 0;
 
-        auto crypt = std::make_unique<cma::encrypt::Commander>(passphrase);
-        if (passphrase.empty()) crypt.reset(nullptr);
+        auto crypt = std::make_unique<encrypt::Commander>(passphrase);
+        if (passphrase.empty()) {
+            crypt.reset(nullptr);
+        }
 
-        while (1) {
+        while (true) {
             std::unique_lock lk(lock_);
             connect_required = port != port_ || ip_address != ip_address_;
             port = port_;
-            if (port == 0) connected = false;
+            if (port == 0) {
+                connected = false;
+            }
             ip_address = ip_address_;
             auto last_moment = kick_time_ + std::chrono::seconds(timeout_);
             working_period_ = std::chrono::steady_clock::now() <= last_moment;
             if (passphrase != passphrase_) {
-                // reallocate crypt engine
                 passphrase = passphrase_;
-                if (passphrase.empty())
-                    crypt.reset(nullptr);
-                else
-                    crypt.reset(new cma::encrypt::Commander(passphrase));
+                crypt.reset(passphrase.empty()
+                                ? nullptr
+                                : new encrypt::Commander(passphrase));
             }
 
             lk.unlock();
@@ -260,7 +262,9 @@ void Device::mainThread() noexcept {
             if (port && connect_required) {
                 connected = connectSocket(io_context, sock, ip_address, port);
                 counter = 0;
-                if (connected) connect_required = false;
+                if (connected) {
+                    connect_required = false;
+                }
             }
 
             if (working_period_) {
@@ -275,10 +279,13 @@ void Device::mainThread() noexcept {
                         ec);
 
                     // errors reporting
-                    UpdateCounterByEc(counter, ec);
-
-                    if (counter > 3)
-                        mainThreadReporter("Can't Send", ec, ip_address, port);
+                    if (ec.value()) {
+                        counter++;  // error, this is not good
+                        if (counter > 3) {
+                            logError("Can't Send", ec, ip_address, port);
+                        }
+                    } else
+                        counter = 0;
                 }
             }
 
@@ -286,12 +293,14 @@ void Device::mainThread() noexcept {
             // check for 1000 ms timeout
             lk.lock();
             auto delay = 1000ms;
-            cv_.wait_until(lk, steady_clock::now() + delay,
+            cv_.wait_until(lk, std::chrono::steady_clock::now() + delay,
                            [this]() -> bool { return !started_; });
 
-            if (!started_) break;
+            if (!started_) {
+                break;
+            }
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         XLOG::l("Exception in RT thread: '{}'", e.what());
     }
 }

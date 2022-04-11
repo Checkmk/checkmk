@@ -420,7 +420,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
                 ["not_readable.txt", "not readable", "1536421281"],
                 ["stat_failes.txt", "", "", "0000"],
             ],
-            {},
+            [{}],
             [
                 Service(item="regular.txt"),
                 Service(item="not_readable.txt"),
@@ -429,12 +429,14 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
         ),
         (
             INFO,
-            {
-                "group_patterns": [
-                    ("log", ("*syslog*", "")),
-                    ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
-                ]
-            },
+            [
+                {
+                    "group_patterns": [
+                        ("log", ("*syslog*", "")),
+                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
+                    ]
+                }
+            ],
             [
                 Service(item="/var/log/aptitude"),
                 Service(item="/var/log/aptitude.2.gz"),
@@ -447,7 +449,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
                 ["name", "status", "size", "time"],
                 ["[[[content]]]"],
             ],
-            {},
+            [{}],
             [],
         ),
         (
@@ -461,7 +463,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
                 ["not_readable.txt", "ok", "2323", "1536421281"],
                 ["stat_failes.txt", "stat failed: Permission denied"],
             ],
-            {},
+            [{}],
             [
                 Service(item="regular.txt"),
                 Service(item="not_readable.txt"),
@@ -470,7 +472,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
         ),
         (
             [["1536557964"]],
-            {},
+            [{}],
             [],
         ),
         (
@@ -494,7 +496,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
                 ],
                 ["/SAP HANA PHT 00/stderr2", "793", "1611064087"],
             ],
-            {},
+            [{}],
             [
                 Service(item="/root/anaconda-ks.cfg"),
                 Service(item="/SAP HANA PHT 00/daemon_wwfcsunil286s.dc.ege.ds.30000.336.trc"),
@@ -728,12 +730,36 @@ def test_fileinfo_check(info, item, params, expected_result):
     [
         (
             INFO,
-            {
-                "group_patterns": [
-                    ("log", ("*syslog*", "")),
-                    ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
-                ]
-            },
+            [
+                {
+                    "group_patterns": [
+                        ("log", ("*syslog*", "")),
+                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
+                    ]
+                }
+            ],
+            [
+                Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
+                Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
+                Service(
+                    item="today", parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]}
+                ),
+            ],
+        ),
+        (
+            INFO,
+            [
+                {
+                    "group_patterns": [
+                        ("log", ("*syslog*", "")),
+                    ]
+                },
+                {
+                    "group_patterns": [
+                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),
+                    ]
+                },
+            ],
             [
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),

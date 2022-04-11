@@ -521,10 +521,13 @@ def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.St
             replicas=statefulset_spec.replicas,
         )
     if statefulset_spec.update_strategy.type == "RollingUpdate":
+        partition = (
+            rolling_update.partition
+            if (rolling_update := statefulset_spec.update_strategy.rolling_update)
+            else 0
+        )
         return api.StatefulSetSpec(
-            strategy=api.StatefulSetRollingUpdate(
-                partition=statefulset_spec.update_strategy.rolling_update.partition,
-            ),
+            strategy=api.StatefulSetRollingUpdate(partition=partition),
             selector=parse_selector(statefulset_spec.selector),
             replicas=statefulset_spec.replicas,
         )

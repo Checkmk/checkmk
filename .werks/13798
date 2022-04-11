@@ -1,0 +1,18 @@
+Title: KUBE: Handle missing partition attribute
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649676590
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Before, the Kubernetes special agent would crash with the message
+
+[special_kube] Agent exited with code 1: 'NoneType' object has no attribute 'partition'
+
+The bug affected Kubernetes users who deployed StatefulSets and specified the UpdateStrategy
+RollingUpdate, but no value for partition.  With this werk, the agent no longer crashes and the
+partition value is set to 0.

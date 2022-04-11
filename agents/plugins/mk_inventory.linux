@@ -138,7 +138,7 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
     fi
 
     # Block devices
-    (
+    (# This subshell is for scoping UEVENT_FILE and DEVICE_DIR
         # use sep=0 rather than 124 in order to be more flexible in the parse function
         echo "<<<lnx_block_devices:sep(0):persist($UNTIL)>>>"
         find "/sys/block/" -maxdepth 1 -type f -o -type l | while read -r DEVICE; do

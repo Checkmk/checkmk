@@ -471,6 +471,13 @@ class DomainObjectCollection(Linkable):
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
 
 
+class LinkedValueDomainObjectCollection(DomainObject):
+    value: fields.Field = fields.Nested(
+        LinkSchema,
+        description="The collection itself, as links. Each entry in here is part of the collection.",
+        many=True)
+
+
 class HostTagGroupCollection(DomainObjectCollection):
     domainType = fields.Constant(
         "host_tag_group",

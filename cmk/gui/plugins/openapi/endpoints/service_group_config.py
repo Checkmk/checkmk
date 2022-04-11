@@ -85,7 +85,7 @@ def bulk_create(params):
 @Endpoint(constructors.collection_href('service_group_config'),
           '.../collection',
           method='get',
-          response_schema=response_schemas.DomainObjectCollection)
+          response_schema=response_schemas.LinkedValueDomainObjectCollection)
 def list_groups(params):
     """Show all service groups"""
     collection = [{

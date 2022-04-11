@@ -219,5 +219,31 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     assert resp.json_body["extensions"]["customer"] == "provider"
 
 
+@pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
+def test_openapi_group_values_are_links(group_type, wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+    postfix = f'/domain-types/{group_type}_group_config/collections/all'
+    url = f"{base}{postfix}"
+
+    group = {'name': "foo_bar", 'alias': 'foo bar', 'customer': 'global'}
+    _response = wsgi_app.call_method(
+        'post',
+        base + f"/domain-types/{group_type}_group_config/collections/all",
+        params=json.dumps(group),
+        status=200,
+        content_type='application/json',
+    )
+
+    response = wsgi_app.call_method(url=url, method="GET")
+    assert response.status_code == 200
+
+    json_data = response.json
+    assert len(json_data["value"]) == 1
+    assert json_data["value"][0]["domainType"] == "link"
+
+
 def _random_string(size):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))

@@ -75,68 +75,62 @@ def _vs_add_common_mail_elements(elements):
     header = [
         (
             "from",
-            Transform(
-                valuespec=Dictionary(
-                    title="From",
-                    elements=[
-                        (
-                            "address",
-                            EmailAddress(
-                                title=_("Email address"),
-                                size=40,
-                                allow_empty=False,
-                            ),
+            Dictionary(
+                title="From",
+                elements=[
+                    (
+                        "address",
+                        EmailAddress(
+                            title=_("Email address"),
+                            size=40,
+                            allow_empty=False,
                         ),
-                        (
-                            "display_name",
-                            TextInput(
-                                title=_("Display name"),
-                                size=40,
-                                allow_empty=False,
-                            ),
-                        ),
-                    ],
-                    help=_(
-                        "The email address and visible name used in the From header "
-                        "of notifications messages. If no email address is specified "
-                        "the default address is <tt>OMD_SITE@FQDN</tt> is used. If the "
-                        "environment variable <tt>OMD_SITE</tt> is not set it defaults "
-                        "to <tt>checkmk</tt>."
                     ),
+                    (
+                        "display_name",
+                        TextInput(
+                            title=_("Display name"),
+                            size=40,
+                            allow_empty=False,
+                        ),
+                    ),
+                ],
+                help=_(
+                    "The email address and visible name used in the From header "
+                    "of notifications messages. If no email address is specified "
+                    "the default address is <tt>OMD_SITE@FQDN</tt> is used. If the "
+                    "environment variable <tt>OMD_SITE</tt> is not set it defaults "
+                    "to <tt>checkmk</tt>."
                 ),
-                forth=lambda x: x if isinstance(x, dict) else {"address": x},
             ),
         ),
         (
             "reply_to",
-            Transform(
-                valuespec=Dictionary(
-                    title="Reply to",
-                    elements=[
-                        (
-                            "address",
-                            EmailAddress(
-                                title=_("Email address"),
-                                size=40,
-                                allow_empty=False,
-                            ),
+            Dictionary(
+                title="Reply to",
+                elements=[
+                    (
+                        "address",
+                        EmailAddress(
+                            title=_("Email address"),
+                            size=40,
+                            allow_empty=False,
                         ),
-                        (
-                            "display_name",
-                            TextInput(
-                                title=_("Display name"),
-                                size=40,
-                                allow_empty=False,
-                            ),
-                        ),
-                    ],
-                    required_keys=["address"],
-                    help=_(
-                        "The email address and visible name used in the Reply-To header "
-                        "of notifications messages."
                     ),
+                    (
+                        "display_name",
+                        TextInput(
+                            title=_("Display name"),
+                            size=40,
+                            allow_empty=False,
+                        ),
+                    ),
+                ],
+                required_keys=["address"],
+                help=_(
+                    "The email address and visible name used in the Reply-To header "
+                    "of notifications messages."
                 ),
-                forth=lambda x: x if isinstance(x, dict) else {"address": x},
             ),
         ),
         (

@@ -11,6 +11,34 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.2.0i1"
 
+_data_items() {
+    #  size                 must be multiplied with block size (512byte)
+    #  uuid
+    #  device/address       can be bus address, e.g. 0000:21:00.0
+    #  device/firmware_rev
+    #  device/model         can be "SAMSUNG MZVLB512HAJQ-00000", "LOGICAL VOLUME"
+    #  device/serial
+    #  device/type          can be "0", "MMC", "SD"
+    #  device/vendor        can be "ATA  ", "HP  ", "QEMU "
+    # Excluded data_items
+    #  dev
+    #  wwid                 world wide ID
+    #  nguid
+    #  device/dev           what is second `dev` for?
+    #  device/name          found at some mmc devices
+    #  device/wwid          world wide ID?
+    cat <<HERE
+    size
+    uuid
+    device/address
+    device/firmware_rev
+    device/model
+    device/serial
+    device/type
+    device/vendor
+HERE
+}
+
 _load_config() {
     [ -r "{$1}" ] || return
     # shellcheck source=../cfg_examples/mk_inventory.cfg
@@ -102,22 +130,6 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
         # use sep=0 rather than 124 in order to be more flexible in the parse function
         echo "<<<lnx_block_devices:sep(0):persist($UNTIL)>>>"
         DEVTYPE_CHECK="DEVTYPE=disk"
-        DATA_ITEMS=(
-            size # must be multiplied with block size (512byte)
-            uuid #
-            # dev                 #
-            # wwid                # world wide ID
-            # nguid
-            device/address      # can be bus address, e.g. 0000:21:00.0
-            device/firmware_rev #
-            device/model        # can be "SAMSUNG MZVLB512HAJQ-00000", "LOGICAL VOLUME"
-            device/serial       #
-            device/type         # can be "0", "MMC", "SD"
-            device/vendor       # can be "ATA  ", "HP  ", "QEMU "
-            # device/dev          # what is second `dev` for?
-            # device/name         # found at some mmc devices
-            # device/wwid         # world wide ID?
-        )
         find "/sys/block/" -maxdepth 1 -type f -o -type l -print0 | while IFS= read -r -d '' DEVICE; do
             UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
             DEVICE_DIR="$(dirname "${UEVENT_FILE}")"
@@ -130,7 +142,7 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
             # use pipe as delimiter - also to mark begin of lines for consitency check
             echo "|device|${DEVICE_DIR}|"
 
-            for item in "${DATA_ITEMS[@]}"; do
+            _data_items | while read -r item; do
                 item_file="$DEVICE_DIR/${item}"
                 if [ ! -f "${item_file}" ]; then
                     continue

@@ -357,7 +357,7 @@ class CREConfig:
 
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
-    lock_on_logon_failures: Union[Literal[False], int] = False
+    lock_on_logon_failures: Optional[int] = None
     user_idle_timeout: int = 5400
     single_user_session: Optional[int] = None
     password_policy: Dict = field(default_factory=dict)

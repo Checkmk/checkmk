@@ -150,7 +150,7 @@ def test_on_succeeded_login(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_no_locking(user_id: UserId) -> None:
-    assert active_config.lock_on_logon_failures is False
+    assert active_config.lock_on_logon_failures is None
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
 
@@ -169,7 +169,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
-    assert active_config.lock_on_logon_failures is False
+    assert active_config.lock_on_logon_failures is None
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
 

@@ -40,17 +40,17 @@ def parse_collector_metadata(string_table: StringTable) -> CollectorComponentsMe
 
 
 register.agent_section(
-    name="kube_collectors_metadata_v1",
-    parsed_section_name="kube_collectors_metadata",
+    name="kube_collector_metadata_v1",
+    parsed_section_name="kube_collector_metadata",
     parse_function=parse_collector_metadata,
 )
 
 
 def discover(
-    section_kube_collectors_metadata: Optional[CollectorComponentsMetadata],
+    section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
     section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
 ) -> DiscoveryResult:
-    if section_kube_collectors_metadata is not None:
+    if section_kube_collector_metadata is not None:
         yield Service()
 
 
@@ -90,36 +90,36 @@ def _collector_component_versions(components: Sequence[NodeComponent]) -> str:
 
 
 def check(
-    section_kube_collectors_metadata: Optional[CollectorComponentsMetadata],
+    section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
     section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
 ) -> CheckResult:
-    if section_kube_collectors_metadata is None:
+    if section_kube_collector_metadata is None:
         return
 
-    if section_kube_collectors_metadata.processing_log.status == CollectorState.ERROR:
+    if section_kube_collector_metadata.processing_log.status == CollectorState.ERROR:
         # metadata is the connection foundation, if the metadata is not available then we should
         # not expect any metrics from the collector
         # adding a whitespace, because for an URL the icon swallows the ')'
         yield Result(
             state=State.CRIT,
-            summary=f"Status: {section_kube_collectors_metadata.processing_log.title} "
-            f"({section_kube_collectors_metadata.processing_log.detail} )",
+            summary=f"Status: {section_kube_collector_metadata.processing_log.title} "
+            f"({section_kube_collector_metadata.processing_log.detail} )",
         )
         return
 
     # TODO: improve metadata model to remove assert CMK-9793
     # The combination where the metadata processing_log.status is OK but the cluster collector
     # metadata is None is not possible and is verified on the Special Agent side
-    assert section_kube_collectors_metadata.cluster_collector is not None
+    assert section_kube_collector_metadata.cluster_collector is not None
 
     yield Result(
         state=State.OK,
-        summary=f"Cluster collector version: {section_kube_collectors_metadata.cluster_collector.checkmk_kube_agent.project_version}",
+        summary=f"Cluster collector version: {section_kube_collector_metadata.cluster_collector.checkmk_kube_agent.project_version}",
     )
 
     yield Result(
         state=State.OK,
-        summary=f"Nodes with collectors: {len(section_kube_collectors_metadata.nodes) if section_kube_collectors_metadata.nodes else 0}",
+        summary=f"Nodes with collectors: {len(section_kube_collector_metadata.nodes) if section_kube_collector_metadata.nodes else 0}",
     )
 
     if section_kube_collector_processing_logs is not None:
@@ -130,13 +130,13 @@ def check(
             "Machine Metrics", section_kube_collector_processing_logs.machine
         )
 
-    if section_kube_collectors_metadata.nodes:
+    if section_kube_collector_metadata.nodes:
         yield Result(
             state=State.OK,
             notice="\n".join(
                 [
                     f"Node: {node.name} ({_collector_component_versions(list(node.components.values()))})"
-                    for node in section_kube_collectors_metadata.nodes
+                    for node in section_kube_collector_metadata.nodes
                 ]
             ),
         )
@@ -145,7 +145,7 @@ def check(
 register.check_plugin(
     name="kube_collector_info",
     service_name="Cluster Collector",
-    sections=["kube_collectors_metadata", "kube_collector_processing_logs"],
+    sections=["kube_collector_metadata", "kube_collector_processing_logs"],
     discovery_function=discover,
     check_function=check,
 )

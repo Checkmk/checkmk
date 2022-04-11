@@ -2052,7 +2052,7 @@ def write_cluster_collector_info_section(
     cluster_collector: Optional[section.ClusterCollectorMetadata] = None,
     node_collectors_metadata: Optional[Sequence[section.NodeMetadata]] = None,
 ):
-    with SectionWriter("kube_collectors_metadata_v1") as writer:
+    with SectionWriter("kube_collector_metadata_v1") as writer:
         writer.append(
             section.CollectorComponentsMetadata(
                 processing_log=processing_log,

@@ -1,0 +1,15 @@
+Title: KUBE: update section name kube_collectors_metadata_v1
+Class: fix
+Compatible: incompat
+Component: checks
+Date: 1649683863
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+This change affects users whom used the Check API to write their own Kubernetes check. The name of
+the section kube_collectors_metadata_v1, resp. parsed section name kube_collectors_metadata, has
+been changed to kube_collector_metadata_v1, resp. kube_collector_metatdata. They are now in line
+with the documentation.

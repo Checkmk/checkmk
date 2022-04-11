@@ -261,7 +261,7 @@ def fileinfo_groups_get_group_name(
 
 
 def discovery_fileinfo_common(
-    params: Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]],
+    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
     section: Fileinfo,
     check_type: CheckType,
 ) -> DiscoveryResult:
@@ -271,8 +271,10 @@ def discovery_fileinfo_common(
         return
 
     for item in section.files.values():
-        group_patterns = params.get("group_patterns", [])
-        found_groups = fileinfo_groups_get_group_name(group_patterns, item.name, reftime)
+        found_groups = {}
+        for param in params:
+            group_patterns = param.get("group_patterns", [])
+            found_groups.update(fileinfo_groups_get_group_name(group_patterns, item.name, reftime))
 
         if not found_groups and check_type == CheckType.SINGLE and not item.missing:
             yield Service(item=item.name)
@@ -283,14 +285,14 @@ def discovery_fileinfo_common(
 
 
 def discovery_fileinfo(
-    params: Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]],
+    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
     section: Fileinfo,
 ) -> DiscoveryResult:
     yield from discovery_fileinfo_common(params, section, CheckType.SINGLE)
 
 
 def discovery_fileinfo_groups(
-    params: Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]],
+    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
     section: Fileinfo,
 ) -> DiscoveryResult:
     yield from discovery_fileinfo_common(params, section, CheckType.GROUP)

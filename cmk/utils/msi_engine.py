@@ -148,7 +148,7 @@ def patch_msi_properties(dir_name, product_code, version_build):
         for line in lines_property_idt[3:]:
             tokens = line.split("\t")
             if tokens[0] == "ProductName":
-                tokens[1] = "Check MK Agent 2.0\r\n"
+                tokens[1] = "Check MK Agent 2.1\r\n"
             # The upgrade code defines the product family. Do not change it!
             #    elif tokens[0] == "UpgradeCode":
             #        tokens[1] = upgrade_code

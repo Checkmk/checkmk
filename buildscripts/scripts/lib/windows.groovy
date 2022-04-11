@@ -30,6 +30,8 @@ def build(Map args) {
                     bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
                 } else if (args.TARGET == "test_integration") {
                     bat 'cd agents\\wnx && call call_integration_tests.cmd'
+                } else if (args.TARGET == "test_build") {
+                    bat 'cd agents\\wnx && call call_test_build.cmd'
                 } else {
                     throw new Exception(args.TARGET + " is not known!")
                 }

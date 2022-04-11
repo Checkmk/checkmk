@@ -8,7 +8,7 @@ properties([
     ])
 ])
 
-node ('windows') {
+node ('win1') {
     stage('git checkout') {
         checkout_git(scm, VERSION)
         windows = load 'buildscripts/scripts/lib/windows.groovy'

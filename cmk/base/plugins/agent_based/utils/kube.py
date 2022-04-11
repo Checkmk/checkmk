@@ -755,3 +755,34 @@ class NamespaceInfo(BaseModel):
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels
     cluster: str
+
+
+class IdentificationError(BaseModel):
+    """Errors due to incorrect labels set by the user."""
+
+    duplicate_machine_collector: bool
+    duplicate_container_collector: bool
+    unknown_collector: bool
+
+
+class NodeCollectorReplica(BaseModel):
+    # This model reports api data of a node collector DaemonSet.
+    # We identify this DaemonSet via certain labels and provide the counts to the
+    # Cluster object via the CollectorDaemons section. The data is also available in
+    # a more generic way as part of the Replicas service on a DaemonSet, but we want
+    # to show this information on the cluster object.
+    available: int
+    desired: int
+
+
+class CollectorDaemons(BaseModel):
+    """section: kube_collector_daemons_v1
+
+    Model containing information about the DaemonSets of the node-collectors.
+    The section is intended for the cluster host. `None` indicates, that the
+    corresponding DaemonSet is not among the API data.
+    """
+
+    machine: Optional[NodeCollectorReplica]
+    container: Optional[NodeCollectorReplica]
+    errors: IdentificationError

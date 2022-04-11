@@ -627,6 +627,7 @@ def cluster_api_sections() -> Sequence[str]:
         "kube_allocatable_memory_resource_v1",
         "kube_allocatable_cpu_resource_v1",
         "kube_cluster_info_v1",
+        "kube_collector_daemons_v1",
     ]
 
 

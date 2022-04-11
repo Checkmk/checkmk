@@ -40,16 +40,24 @@ def get_cmk_version(BRANCH, VERSION){
 timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def PACKAGE_DIR = WORKSPACE + '/download'
+        def DOCKER_GROUP_ID = ''
+
         stage('checkout sources') {
             checkout(scm)
         }
         notify = load 'buildscripts/scripts/lib/notify.groovy'
         versioning = load 'buildscripts/scripts/lib/versioning.groovy'
         upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
+        docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
+
+        // Get the ID of the docker group from the node(!). This must not be
+        // executed inside the container (as long as the IDs are different)
+        DOCKER_GROUP_ID = docker_util.get_docker_group_id()
+
         try {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
-                BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock") {
+                BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024 --group-add=${DOCKER_GROUP_ID} -v /var/run/docker.sock:/var/run/docker.sock") {
                     stage('Prepare package directory') {
                         sh("rm -rf \"${PACKAGE_DIR}\"")
                         sh("mkdir -p \"${PACKAGE_DIR}\"")

@@ -91,7 +91,7 @@ def bulk_create(params):
     constructors.collection_href("contact_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.LinkedValueDomainObjectCollection,
 )
 def list_group(params):
     """Show all contact groups"""

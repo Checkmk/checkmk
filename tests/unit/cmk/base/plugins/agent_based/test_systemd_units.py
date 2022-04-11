@@ -3,26 +3,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import Iterable, List, Mapping, NamedTuple
-
 import pytest
 
-from tests.testlib import Check
-
-from .checktestlib import MockHostExtraConf
-
-pytestmark = pytest.mark.checks
-
-
-class UnitEntry(NamedTuple):
-    name: str
-    unit_type: str
-    loaded_status: str
-    active_status: str
-    current_state: str
-    description: str
-    enabled_status: str
+from cmk.base.api.agent_based.checking_classes import Result, Service, State
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.systemd_units import (
+    _services_split,
+    check_systemd_units_services,
+    check_systemd_units_services_summary,
+    discovery_systemd_units_services,
+    discovery_systemd_units_services_summary,
+    parse,
+    Section,
+    UnitEntry,
+)
 
 
 @pytest.mark.parametrize(
@@ -172,9 +166,7 @@ class UnitEntry(NamedTuple):
     ],
 )
 def test_services_split(services, blacklist, expected):
-    check = Check("systemd_units")
-    services_split = check.context["_services_split"]
-    actual = services_split(services, blacklist)
+    actual = _services_split(services, blacklist)
     assert actual == expected
 
 
@@ -2146,12 +2138,8 @@ def test_services_split(services, blacklist, expected):
         ),
     ],
 )
-def test_parse_systemd_units(
-    string_table: Iterable[List[str]],
-    section: Mapping[str, UnitEntry],
-) -> None:
-    check = Check("systemd_units")
-    assert check.run_parse(string_table) == section
+def test_parse_systemd_units(string_table: StringTable, section: Section) -> None:
+    assert parse(string_table) == section
 
 
 SECTION = {
@@ -2301,7 +2289,7 @@ SECTION = {
             [
                 {"names": ["~virtualbox.*"]},
             ],
-            [("virtualbox", {})],
+            [Service(item="virtualbox")],
         ),
         (
             SECTION,
@@ -2328,24 +2316,19 @@ SECTION = {
                 {"names": ["~.*"]},
             ],
             [
-                ("virtualbox", {}),
-                ("bar", {}),
-                ("foo", {}),
-                ("check-mk-enterprise-2021.09.07", {}),
+                Service(item="virtualbox"),
+                Service(item="bar"),
+                Service(item="foo"),
+                Service(item="check-mk-enterprise-2021.09.07"),
             ],
         ),
     ],
 )
 def test_discover_systemd_units_services(section, discovery_params, discovered_services):
-    check = Check("systemd_units.services")
-
-    def mocked_host_conf(_hostname, ruleset):
-        if ruleset is check.context.get("discovery_systemd_units_services_rules"):
-            return discovery_params
-        raise AssertionError("Unknown ruleset in mock host_extra_conf")
-
-    with MockHostExtraConf(check, mocked_host_conf, "host_extra_conf"):
-        assert list(check.run_discovery(section)) == discovered_services
+    assert (
+        list(discovery_systemd_units_services(params=discovery_params, section=section))
+        == discovered_services
+    )
 
 
 @pytest.mark.parametrize(
@@ -2353,17 +2336,12 @@ def test_discover_systemd_units_services(section, discovery_params, discovered_s
     [
         (
             SECTION,
-            [("Summary", {})],
-        ),
-        (
-            {},
-            [],
+            [Service()],
         ),
     ],
 )
 def test_discover_systemd_units_services_summary(section, discovered_services):
-    check = Check("systemd_units.services_summary")
-    assert list(check.run_discovery(section)) == discovered_services
+    assert list(discovery_systemd_units_services_summary(section)) == discovered_services
 
 
 @pytest.mark.parametrize(
@@ -2378,8 +2356,8 @@ def test_discover_systemd_units_services_summary(section, discovered_services):
             },
             SECTION,
             [
-                (0, "Status: active"),
-                (0, "LSB: VirtualBox Linux kernel module"),
+                Result(state=State.OK, summary="Status: active"),
+                Result(state=State.OK, summary="LSB: VirtualBox Linux kernel module"),
             ],
         ),
         (
@@ -2391,8 +2369,11 @@ def test_discover_systemd_units_services_summary(section, discovered_services):
             },
             SECTION,
             [
-                (2, "Status: failed"),
-                (0, "Arbitrary Executable File Formats File System Automount Point"),
+                Result(state=State.CRIT, summary="Status: failed"),
+                Result(
+                    state=State.OK,
+                    summary="Arbitrary Executable File Formats File System Automount Point",
+                ),
             ],
         ),
         (
@@ -2403,7 +2384,7 @@ def test_discover_systemd_units_services_summary(section, discovered_services):
                 "states_default": 2,
             },
             SECTION,
-            [(2, "Service not found")],
+            [Result(state=State.CRIT, summary="Service not found")],
         ),
         (
             "something",
@@ -2413,13 +2394,12 @@ def test_discover_systemd_units_services_summary(section, discovered_services):
                 "states_default": 2,
             },
             {},
-            [(2, "Service not found")],
+            [Result(state=State.CRIT, summary="Service not found")],
         ),
     ],
 )
 def test_check_systemd_units_services(item, params, section, check_results):
-    check = Check("systemd_units.services")
-    assert list(check.run_check(item, params, section)) == check_results
+    assert list(check_systemd_units_services(item, params, section)) == check_results
 
 
 @pytest.mark.parametrize(
@@ -2434,10 +2414,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
             },
             SECTION,
             [
-                (0, "Total: 5"),
-                (0, "Disabled: 0"),
-                (0, "Failed: 2"),
-                (2, "2 services failed (bar, foo)", []),
+                Result(state=State.OK, summary="Total: 5"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 2"),
+                Result(state=State.CRIT, summary="2 services failed (bar, foo)"),
             ],
         ),
         # Ignored (see 'blacklist')
@@ -2459,10 +2439,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 },
             },
             [
-                (0, "Total: 1"),
-                (0, "Disabled: 0"),
-                (0, "Failed: 0"),
-                (0, "\nIgnored: 1"),
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.OK, notice="Ignored: 1"),
             ],
         ),
         # (de)activating
@@ -2491,11 +2471,11 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 },
             },
             [
-                (0, "Total: 2"),
-                (0, "Disabled: 0"),
-                (0, "Failed: 0"),
-                (0, "\nService 'virtualbox' activating for: 0.00 s", []),
-                (0, "\nService 'actualbox' deactivating for: 0.00 s", []),
+                Result(state=State.OK, summary="Total: 2"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.OK, notice="Service 'virtualbox' activating for: 0 seconds"),
+                Result(state=State.OK, notice="Service 'actualbox' deactivating for: 0 seconds"),
             ],
         ),
         # Activating + reloading
@@ -2515,10 +2495,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 },
             },
             [
-                (0, "Total: 1"),
-                (0, "Disabled: 0"),
-                (0, "Failed: 0"),
-                (0, "\nService 'virtualbox' activating for: 0.00 s", []),
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.OK, notice="Service 'virtualbox' activating for: 0 seconds"),
             ],
         ),
         # Reloading
@@ -2538,10 +2518,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 },
             },
             [
-                (0, "Total: 1"),
-                (0, "Disabled: 0"),
-                (0, "Failed: 0"),
-                (0, "\nService 'virtualbox' reloading for: 0.00 s", []),
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.OK, notice="Service 'virtualbox' reloading for: 0 seconds"),
             ],
         ),
         # Indirect
@@ -2561,9 +2541,9 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 },
             },
             [
-                (0, "Total: 1"),
-                (0, "Disabled: 1"),
-                (0, "Failed: 0"),
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 1"),
+                Result(state=State.OK, summary="Failed: 0"),
             ],
         ),
         # Custom systemd state
@@ -2587,14 +2567,15 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 },
             },
             [
-                (0, "Total: 1"),
-                (0, "Disabled: 0"),
-                (0, "Failed: 0"),
-                (2, "1 service somesystemdstate (virtualbox)", []),
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.CRIT, summary="1 service somesystemdstate (virtualbox)"),
             ],
         ),
     ],
 )
 def test_check_systemd_units_services_summary(params, section, check_results):
-    check = Check("systemd_units.services_summary")
-    assert list(check.run_check("", params, section)) == check_results
+    assert (
+        list(check_systemd_units_services_summary(params=params, section=section)) == check_results
+    )

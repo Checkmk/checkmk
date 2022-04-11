@@ -6,6 +6,37 @@
 # shellcheck source=agents/plugins/mk_inventory.linux
 MK_SOURCE_AGENT="yes" . "${UNIT_SH_AGENTS_DIR}/plugins/mk_inventory.linux"
 
+_is_timestamp() {
+    echo "${*}" | grep -qE '^[1-9][0-9]{9}$' # update this in 2286
+}
+
+test__get_epoch_with_date() {
+    # make sure our `date` is ok
+    assertTrue "_is_timestamp \"$(date +%s)\""
+    TS="$(_get_epoch)"
+    assertTrue "_is_timestamp ${TS}"
+}
+
+test__get_epoch_with_failing_date() {
+    # this will fail if the testing system does not provide perl; which is ok
+    command -v perl || return
+
+    date() { false; }
+    TS="$(_get_epoch)"
+    unset date
+    assertTrue "_is_timestamp ${TS}"
+}
+
+test__get_epoch_with_dim_date() {
+    # this will fail if the testing system does not provide perl; which is ok
+    command -v perl || return
+
+    date() { echo "%s"; }
+    TS="$(_get_epoch)"
+    unset date
+    assertTrue "_is_timestamp ${TS}"
+}
+
 test_persist_intertion() {
 
     _sections() {

@@ -24,6 +24,19 @@ _load_config() {
     . "${1}"
 }
 
+_get_epoch() {
+    # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
+
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        date +%s
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        perl -e 'print($^T."\n");'
+    fi
+}
+
 _insert_persist_option() {
     # insert the persist(...) option, if it is not already present.
     sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
@@ -37,11 +50,7 @@ run_unsorted_stuff() {
     INTERVAL="${1}"
 
     FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-    if [ "$(uname -r)" = "5.10" ]; then
-        NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
-    else
-        NOW="$(date +%s)"
-    fi
+    NOW="$(_get_epoch)"
     UNTIL=$((NOW + INTERVAL + 600))
 
     #check if flagfile exits

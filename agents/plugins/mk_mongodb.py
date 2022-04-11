@@ -241,11 +241,11 @@ def _get_replication_info(client, databases):
     # Returns a timestamp for the first and last (i.e. earliest/latest) operation in the oplog.
     # Compare this value to the last write operation issued against the server.
     # Timestamp is time in seconds since epoch UTC
-    firstc = client.local.oplog.rs.find().sort("{$natural: 1}").limit(1)
-    lastc = client.local.oplog.rs.find().sort("{$natural: -1}").limit(1)
+    firstc = client.local.oplog.rs.find_one(sort=[("$natural", 1)])
+    lastc = client.local.oplog.rs.find_one(sort=[("$natural", -1)])
     if firstc and lastc:
-        timestamp_first_operation = firstc.next().get("ts", None)
-        timestamp_last_operation = lastc.next().get("ts", None)
+        timestamp_first_operation = firstc.get("ts", None)
+        timestamp_last_operation = lastc.get("ts", None)
         if timestamp_first_operation and timestamp_last_operation:
             result["tFirst"] = timestamp_first_operation.time
             result["tLast"] = timestamp_last_operation.time

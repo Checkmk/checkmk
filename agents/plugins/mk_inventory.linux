@@ -11,8 +11,13 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0b7"
 
-# shellcheck source=../cfg_examples/mk_inventory.cfg
-. "${MK_CONFDIR}/mk_inventory.cfg" 2>/dev/null || true
+_load_config() {
+    [ -r "{$1}" ] || return
+    # shellcheck source=../cfg_examples/mk_inventory.cfg
+    . "{$1}"
+}
+
+_load_config "${MK_CONFDIR}/mk_inventory.cfg"
 
 # Default to four hours
 INTERVAL=${INVENTORY_INTERVAL:-14400}

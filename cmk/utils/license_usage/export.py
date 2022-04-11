@@ -172,7 +172,7 @@ class SubscriptionDetailsLimit(NamedTuple):
 
     @classmethod
     def parse(cls, raw_limit: object) -> SubscriptionDetailsLimit:
-        if isinstance(raw_limit, tuple) and len(raw_limit) == 2:
+        if isinstance(raw_limit, (list, tuple)) and len(raw_limit) == 2:
             return cls._parse(raw_limit[0], raw_limit[1])
 
         if isinstance(raw_limit, (str, int, float)):

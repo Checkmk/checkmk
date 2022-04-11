@@ -438,7 +438,7 @@ def test_subscription_details_source(
     "raw_subscription_details_limit, subscription_details_limit",
     [
         (
-            ("fixed", 3000),
+            ["fixed", 3000],
             SubscriptionDetailsLimit(
                 limit_type=SubscriptionDetailsLimitType.fixed,
                 limit_value=3000,

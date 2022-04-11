@@ -8,11 +8,21 @@ description:
  Checkmk service. This service has a similar function in terms of the
  connection to the Cluster Collector deployed to the Kubernetes cluster.
 
- The service has two tasks. It reports on the metadata of the
+ The service has three tasks. It reports on the metadata of the
  collectors that are deployed to the Kubernetes cluster and also provides reports
  on the data processing of the collected data. It displays additional information
  in case a problem occurs during the data handling process within the agent.
- The service reports an OK state regardless of the data process outcome.
+ Moreover, the service uses the Kubernetes API to report on the status of
+ DaemonSets belonging to node collectors. For each node collector the following
+ are reported
+
+ - the number of Nodes with a Pod, which is available and desired
+
+ - the number of Nodes, on which a Pod is desired
+
+ The DaemonSets are identified by the labels "node-collector=machine-sections"
+ and "node-collector=container-metrics". The service reports an OK state regardless of
+ the data process outcome and the API data.
 
 discovery:
  One service is created if the cluster collector option is configured.

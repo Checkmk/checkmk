@@ -16,10 +16,13 @@ from cmk.base.plugins.agent_based.utils.kube import (
     CheckmkKubeAgentMetadata,
     ClusterCollectorMetadata,
     CollectorComponentsMetadata,
+    CollectorDaemons,
     CollectorHandlerLog,
     CollectorProcessingLogs,
     CollectorState,
     CollectorType,
+    IdentificationError,
+    NodeCollectorReplica,
     NodeComponent,
     NodeMetadata,
     PlatformMetadata,
@@ -32,6 +35,18 @@ class ClusterCollectorMetadataFactory(ModelFactory):
 
 class NodeMetadataFactory(ModelFactory):
     __model__ = NodeMetadata
+
+
+class CollectorDaemonsFactory(ModelFactory):
+    __model__ = CollectorDaemons
+
+    # Allows better reasoning about the test cases, where this Model is of no
+    # importance. Sadly, this field cannot be set in the build method.
+    __allow_none_optionals__ = False
+
+
+class CollectorComponentsMetadataFactory(ModelFactory):
+    __model__ = CollectorComponentsMetadata
 
 
 @pytest.fixture
@@ -151,31 +166,90 @@ def test_parse_collector_components():
     )
 
 
+def test_parse_collector_daemons():
+    string_table_element = json.dumps(
+        {
+            "container": {"available": 3, "desired": 3},
+            "machine": {"available": 2, "desired": 3},
+            "errors": {
+                "duplicate_machine_collector": False,
+                "duplicate_container_collector": False,
+                "unknown_collector": False,
+            },
+        }
+    )
+    assert kube_collector_info.parse_collector_daemons(
+        [[string_table_element]]
+    ) == CollectorDaemons(
+        container=NodeCollectorReplica(available=3, desired=3),
+        machine=NodeCollectorReplica(available=2, desired=3),
+        errors=IdentificationError(
+            duplicate_machine_collector=False,
+            duplicate_container_collector=False,
+            unknown_collector=False,
+        ),
+    )
+
+
 def test_check_all_ok_sections(collectors_metadata, collector_handling_logs):
+    collector_daemons = CollectorDaemonsFactory.build(
+        errors=IdentificationError(
+            duplicate_machine_collector=False,
+            duplicate_container_collector=False,
+            unknown_collector=False,
+        )
+    )
     check_result = list(
         kube_collector_info.check(
             collectors_metadata,
             collector_handling_logs,
+            collector_daemons,
         )
     )
-    assert len(check_result) == 4
+    assert len(check_result) == 5
     assert all(isinstance(result, Result) for result in check_result)
     assert all(result.state == State.OK for result in check_result if isinstance(result, Result))
 
 
 def test_check_with_no_collector_components_section(collectors_metadata):
-    check_result = list(kube_collector_info.check(collectors_metadata, None))
+    collector_daemons = CollectorDaemonsFactory.build(
+        errors=IdentificationError(
+            duplicate_machine_collector=False,
+            duplicate_container_collector=False,
+            unknown_collector=False,
+        )
+    )
+    check_result = list(
+        kube_collector_info.check(
+            collectors_metadata,
+            None,
+            collector_daemons,
+        )
+    )
     assert all(isinstance(result, Result) for result in check_result)
     assert isinstance(check_result[0], Result) and check_result[0].summary.startswith(
         "Cluster collector version:"
     )
-    assert len(check_result) == 2
+    assert len(check_result) == 3
 
 
 @pytest.mark.parametrize("collector_metadata_handling_state", [CollectorState.ERROR])
-def test_check_with_errored_handled_metadata_section(collectors_metadata, collector_handling_logs):
-    check_result = list(kube_collector_info.check(collectors_metadata, collector_handling_logs))
-    assert len(check_result) == 1
+def test_check_with_errored_handled_metadata_section(collectors_metadata):
+    collector_daemons = CollectorDaemonsFactory.build(
+        errors=IdentificationError(
+            duplicate_machine_collector=False,
+            duplicate_container_collector=False,
+            unknown_collector=False,
+        ),
+    )
+    check_result = list(
+        kube_collector_info.check(
+            collectors_metadata,
+            None,
+            collector_daemons,
+        )
+    )
+    assert len(check_result) == 3
     assert isinstance(check_result[0], Result) and check_result[0].state == State.CRIT
 
 
@@ -187,3 +261,97 @@ def test_check_with_errored_handled_component_section(collector_handling_logs):
     assert len(result) == 1
     assert result[0].state == State.OK
     assert result[0].summary.startswith("Container Metrics: ")
+
+
+def test_check_api_daemonsets_not_found() -> None:
+    # Arrange
+    collector_metadata = CollectorComponentsMetadataFactory.build(
+        processing_log=CollectorHandlerLog(
+            status=CollectorState.OK,
+            title="title",
+            detail="detail",
+        ),
+        cluster_collector=ClusterCollectorMetadataFactory.build(),
+        nodes=None,
+    )
+    collector_daemons = CollectorDaemonsFactory.build(
+        machine=None,
+        container=None,
+        errors=IdentificationError(
+            duplicate_machine_collector=False,
+            duplicate_container_collector=False,
+            unknown_collector=False,
+        ),
+    )
+    collector_processing_logs = None
+
+    # Act
+    check_result = list(
+        kube_collector_info.check(
+            collector_metadata,
+            collector_processing_logs,
+            collector_daemons,
+        )
+    )
+
+    # Assert
+    assert len(check_result) == 4
+    container_result = check_result[1]
+    machine_result = check_result[2]
+    additional_info_result = check_result[3]
+    assert isinstance(container_result, Result) and container_result.state == State.OK
+    assert container_result.summary == "No DaemonSet with label node-collector=container-metrics"
+    assert isinstance(machine_result, Result) and machine_result.state == State.OK
+    assert machine_result.summary == "No DaemonSet with label node-collector=machine-sections"
+    assert isinstance(additional_info_result, Result) and additional_info_result.state == State.OK
+    assert additional_info_result.details.startswith("Collector DaemonSets")
+
+
+def test_check_api_daemonsets_multiple_with_same_label() -> None:
+    # Arrange
+    collector_metadata = CollectorComponentsMetadataFactory.build(
+        processing_log=CollectorHandlerLog(
+            status=CollectorState.OK,
+            title="title",
+            detail="detail",
+        ),
+        cluster_collector=ClusterCollectorMetadataFactory.build(),
+        nodes=None,
+    )
+    collector_daemons = CollectorDaemonsFactory.build(
+        errors=IdentificationError(
+            duplicate_machine_collector=True,
+            duplicate_container_collector=True,
+            unknown_collector=False,
+        ),
+    )
+    collector_processing_logs = None
+
+    # Act
+    check_result = list(
+        kube_collector_info.check(
+            collector_metadata,
+            collector_processing_logs,
+            collector_daemons,
+        )
+    )
+
+    # Assert
+    assert len(check_result) == 4
+    container_result = check_result[1]
+    machine_result = check_result[2]
+    additional_info_result = check_result[3]
+    assert isinstance(container_result, Result) and container_result.state == State.OK
+    assert (
+        container_result.summary
+        == "Multiple DaemonSets with label node-collector=container-metrics"
+    )
+    assert isinstance(machine_result, Result) and machine_result.state == State.OK
+    assert (
+        machine_result.summary == "Multiple DaemonSets with label node-collector=machine-sections"
+    )
+    assert isinstance(additional_info_result, Result) and additional_info_result.state == State.OK
+    assert (
+        additional_info_result.details
+        == "Cannot identify node collector, if label is found on multiple DaemonSets"
+    )

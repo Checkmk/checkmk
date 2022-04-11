@@ -4,31 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# This check performs HTTP requests with some advanced features like
-# a) Detecting, populating and submitting HTML forms
-# b) Accepts and uses cookies
-# c) Follos HTTP redirects
-# d) Extends HTTP headers
+"""
+This check performs HTTP requests with some advanced features like
+a) Detecting, populating and submitting HTML forms
+b) Accepts and uses cookies
+c) Follos HTTP redirects
+d) Extends HTTP headers
+"""
 
-# Example calls:
-#
-# Call the page test.php, find the single form on that page and
-# submit it with default values:
-#
-#  ./check_form_submit -I localhost -u /test.php
-#
-# Same as above, but expect the string "Hello" in the response
-# of the form:
-#
-# ./check_form_submit -I localhost -u /test.php -e "Hello"
-#
-# Login as omdadmin with password omd, in the OMD site named /event,
-# let the login redirect to the wato.py and expect the string WATO
-# in this response:
-#
-# ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
-
-import getopt
+import argparse
 import html.parser
 import http.cookiejar
 import re
@@ -37,62 +21,109 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import cast, Dict, Tuple
+from typing import Mapping, Optional, Sequence
 
 
-def usage():
-    sys.stderr.write(
-        """
-USAGE: check_form_submit -I <HOSTADDRESS> [-u <URI>] [-p <PORT>] [-s]
-            [-f <FORMNAME>] [-q <QUERYPARAMS>] [-e <REGEX>] [-t <TIMEOUT> ]
-            [-n <WARN>,<CRIT>]
-
-OPTIONS:
-  -I HOSTADDRESS                The IP address or hostname of the host to contact.
-                                This option can be given multiple times to contact
-                                several hosts with the same query.
-  -u URI                        The URL string to query, "/" by default
-  -p PORT                       TCP Port to communicate with
-  -s                            Encrypt the connection using SSL
-  -f FORMNAME                   Name of the form to fill, must match with the
-                                contents of the "name" attribute
-  -q QUERYPARAMS                Keys/Values of form fields to be popuplated
-  -e REGEX                      Expected regular expression in the HTML response
-                                after form submission
-  -t TIMEOUT                    HTTP connect timeout in seconds
-  -n WARN,CRIT                  Is only used in "multiple" mode. Number of successful
-                                responses to result in a WARN and/or CRIT state
-  -d                            Enable debug mode
-  -h, --help                    Show this help message and exit
-
-"""
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "hosts",
+        type=str,
+        nargs="+",
+        metavar="HOSTS",
+        help="The IP addresses or hostnames of the hosts to contact",
     )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=80,
+        metavar="PORT",
+        help="TCP port, 80 by default",
+    )
+    parser.add_argument(
+        "--uri",
+        type=str,
+        metavar="URI",
+        default="/",
+        help="URL string to query, '/' by default",
+    )
+    parser.add_argument(
+        "--tls",
+        action="store_true",
+        help="Use TLS",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        metavar="TIMEOUT",
+        default=10,
+        help="HTTP connect timeout in seconds, 10 s by default",
+    )
+    parser.add_argument(
+        "--expected_regex",
+        type=str,
+        metavar="REGEX",
+        help="Expected regular expression in the HTML response after form submission",
+    )
+    parser.add_argument(
+        "--form_name",
+        type=str,
+        metavar="NAME",
+        help="Name of the form to fill, must match with the contents of the 'name' attribute",
+    )
+    parser.add_argument(
+        "--query_params",
+        type=str,
+        metavar="QUERYPARAMS",
+        help="Keys/Values of form fields to be popuplated",
+    )
+    parser.add_argument(
+        "--levels",
+        type=int,
+        nargs=2,
+        metavar="THRESOLDS",
+        help="Multiple Hosts: Lower warning and critical threshold for number of successful resulsts",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Debug mode: let Python exceptions come through",
+    )
+    return parser.parse_args(argv)
 
 
-def debug(msg):
-    if opt_debug:
+def debug(
+    msg: str,
+    debug_enabled: bool,
+) -> None:
+    if debug_enabled:
         sys.stderr.write("%s\n" % msg)
 
 
 class HostResult(Exception):
-    def __init__(self, result):
+    def __init__(self, result: tuple[int, str]) -> None:
         super().__init__()
         self.result = result
 
 
-def new_state(rc, s):
+def new_state(rc: int, s: str) -> None:
     raise HostResult((rc, s))
 
 
-def output_check_result(s):
+def output_check_result(s: str) -> None:
     sys.stdout.write("%s\n" % s)
 
 
-def get_base_url(ssl, host, port):
-    if not ssl and port == 443:
-        ssl = True
+def get_base_url(
+    *,
+    tls: bool,
+    host: str,
+    port: int,
+) -> str:
+    if not tls and port == 443:
+        tls = True
 
-    proto = "https" if ssl else "http"
+    proto = "https" if tls else "http"
     if (proto == "http" and port == 80) or (proto == "https" and port == 443):
         portspec = ""
     else:
@@ -102,7 +133,7 @@ def get_base_url(ssl, host, port):
 
 
 # TODO: Refactor to requests
-def init_http():
+def init_http() -> urllib.request.OpenerDirector:
     return urllib.request.build_opener(
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPHandler(debuglevel=0),
@@ -111,7 +142,15 @@ def init_http():
     )
 
 
-def open_url(client, url, method="GET", data=None, timeout=None):
+def open_url(
+    *,
+    client: urllib.request.OpenerDirector,
+    url: str,
+    timeout: Optional[int],
+    debug_enabled: bool,
+    method: str = "GET",
+    data=None,
+):
     if method == "GET" and data is not None:
         # Add the query string to the url in this case
         start = "&" if "?" in url else "?"
@@ -120,17 +159,17 @@ def open_url(client, url, method="GET", data=None, timeout=None):
 
     try:
         if data:
-            debug("POST %s" % url)
+            debug("POST %s" % url, debug_enabled)
             # Py3:
             # Encode a dict or sequence of two-element tuples into a URL query string.
             data = urllib.parse.urlencode(data, encoding="utf8")
-            debug("  => %s" % data)
+            debug("  => %s" % data, debug_enabled)
             # Py3:
             # POST data should be bytes, an iterable of bytes, or a file object.
             # It cannot be of type str.
             fd = client.open(url, data.encode("utf8"), timeout)  # will be a POST
         else:
-            debug("GET %s" % url)
+            debug("GET %s" % url, debug_enabled)
             fd = client.open(url, timeout=timeout)  # GET
     except urllib.error.HTTPError as e:
         new_state(2, "Unable to open %s: [%d] %s" % (url, e.code, e))
@@ -149,19 +188,21 @@ def open_url(client, url, method="GET", data=None, timeout=None):
     if encoding:
         content = content.decode(encoding)
 
-    debug("CODE: %s RESPONSE:" % code)
+    debug("CODE: %s RESPONSE:" % code, debug_enabled)
     debug(
         "\n".join(
             ["    %02d %s" % (index + 1, line) for index, line in enumerate(content.split("\n"))]
-        )
+        ),
+        debug_enabled,
     )
     return real_url, content
 
 
 class FormParser(html.parser.HTMLParser):
-    def __init__(self):
-        self.forms = {}
+    def __init__(self, debug_enabled: bool = False) -> None:
+        self.forms: dict = {}
         self.current_form = None
+        self.debug_enabled = debug_enabled
         super().__init__()
 
     # CPython screwed up the removal of the error() method from ParserBase,
@@ -181,12 +222,12 @@ class FormParser(html.parser.HTMLParser):
             self.current_form = self.forms[name]
         elif tag == "input":
             if self.current_form is None:
-                debug("Ignoring form field out of form tag")
+                debug("Ignoring form field out of form tag", self.debug_enabled)
             else:
                 if "name" in attrs:
                     self.current_form["elements"][attrs["name"]] = attrs.get("value", "")
                 else:
-                    debug("Ignoring form field without name %r" % attrs)
+                    debug("Ignoring form field without name %r" % attrs, self.debug_enabled)
 
     def handle_endtag(self, tag):
         if tag == "form":
@@ -197,7 +238,7 @@ class FormParser(html.parser.HTMLParser):
 # One form found and no form_name given, use that one
 # Loop all forms for the given form_name, use the matching one
 # otherwise raise an exception
-def parse_form(content, form_name):
+def parse_form(content: str, form_name: str):
     parser = FormParser()
     parser.feed(content)
     forms = parser.forms
@@ -234,17 +275,28 @@ def parse_form(content, form_name):
     return form
 
 
-def update_form_vars(form_elem, params):
+def update_form_vars(form_elem, params: Mapping[str, str]):
     v = form_elem["elements"].copy()
     v.update(params)
     return v
 
 
-def raise_host_state(client, base_url, uri, timeout, form_name, params, expect_regex):
+def raise_host_state(
+    *,
+    client: urllib.request.OpenerDirector,
+    base_url: str,
+    args: argparse.Namespace,
+    params: Mapping[str, str],
+) -> None:
     # Perform first HTTP request to fetch the page containing the form(s)
-    real_url, body = open_url(client, base_url + uri, timeout=timeout)
+    real_url, body = open_url(
+        client=client,
+        url=base_url + args.uri,
+        timeout=args.timeout,
+        debug_enabled=args.debug,
+    )
 
-    form = parse_form(body, form_name)
+    form = parse_form(body, args.form_name)
 
     # Get all fields and prefilled values from that form
     # Put the values of the given query params in these forms
@@ -261,20 +313,30 @@ def raise_host_state(client, base_url, uri, timeout, form_name, params, expect_r
         # relative URL
         target = "%s/%s" % ("/".join(real_url.rstrip("/").split("/")[:-1]), target)
 
-    real_url, content = open_url(client, target, method, form_vars, timeout=timeout)
+    real_url, content = open_url(
+        client=client,
+        url=target,
+        method=method,
+        data=form_vars,
+        timeout=args.timeout,
+        debug_enabled=args.debug,
+    )
 
     # If a expect_regex is given, check wether or not it is present in the response
-    if expect_regex is not None:
-        matches = re.search(expect_regex, content)
+    if (expected_regex := args.expected_regex) is not None:
+        matches = re.search(expected_regex, content)
         if matches is not None:
-            new_state(0, 'Found expected regex "%s" in form response' % expect_regex)
+            new_state(0, 'Found expected regex "%s" in form response' % expected_regex)
         else:
-            new_state(2, 'Expected regex "%s" could not be found in form response' % expect_regex)
+            new_state(2, 'Expected regex "%s" could not be found in form response' % expected_regex)
     else:
         new_state(0, "Form has been submitted")
 
 
-def check_host_states(states, num_warn, num_crit):
+def check_host_states(
+    states,
+    levels: Optional[tuple[int, int]],
+) -> tuple[int, str]:
     failed = []
     success = []
     for pair in sorted(states.items()):
@@ -290,14 +352,16 @@ def check_host_states(states, num_warn, num_crit):
     else:
         max_state = 0
 
-    if num_warn is None and num_crit is None:
-        sum_state = max_state
-    elif num_crit is not None and num_success <= num_crit:
-        sum_state = 2
-    elif num_warn is not None and num_success <= num_warn:
-        sum_state = 1
+    if levels:
+        warn, crit = levels
+        if num_success <= crit:
+            sum_state = 2
+        elif num_success <= warn:
+            sum_state = 1
+        else:
+            sum_state = 0
     else:
-        sum_state = 0
+        sum_state = max_state
 
     txt = "%d succeeded, %d failed" % (num_success, num_failed)
     if failed:
@@ -305,90 +369,43 @@ def check_host_states(states, num_warn, num_crit):
     return sum_state, txt
 
 
-opt_debug = False
+def _decode_query_params(encoded_params: str) -> Mapping[str, str]:
+    return dict(parts.split("=", 1) for parts in encoded_params.split("&"))
 
 
-def main(args=None):
-    global opt_debug
-    if args is None:
-        args = sys.argv[1:]
-
-    short_options = "I:u:p:H:f:q:e:t:n:sd"
-    long_options = ["help"]
-
-    try:
-        opts = getopt.getopt(args, short_options, long_options)[0]
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        sys.exit(1)
-
-    hosts = []
-    multiple = False
-    uri = "/"
-    port = 80
-    ssl = False
-    form_name = None
-    params: Dict[str, str] = {}
-    expect_regex = None
-    timeout = 10  # seconds
-    num_warn = None
-    num_crit = None
-
-    for o, a in opts:
-        if o in ["-h", "--help"]:
-            usage()
-            sys.exit(0)
-        elif o == "-I":
-            hosts.append(a)
-        elif o == "-u":
-            uri = a
-        elif o == "-p":
-            port = int(a)
-        elif o == "-s":
-            ssl = True
-        elif o == "-f":
-            form_name = a
-        elif o == "-q":
-            params = dict(cast(Tuple[str, str], parts.split("=", 1)) for parts in a.split("&"))
-        elif o == "-e":
-            expect_regex = a
-        elif o == "-t":
-            timeout = int(a)
-        elif o == "-n":
-            if "," in a:
-                num_warn, num_crit = [int(level) for level in a.split(",", 1)]
-            else:
-                num_warn = int(a)
-        elif o == "-d":
-            opt_debug = True
-
-    if not hosts:
-        sys.stderr.write("Please provide the host to query via -I <HOSTADDRESS>.\n")
-        usage()
-        sys.exit(1)
-
-    if len(hosts) > 1:
-        multiple = True
+def main(argv: Optional[Sequence[str]] = None) -> tuple[int, str]:
+    args = parse_arguments(sys.argv[1:] if argv is None else argv)
+    multiple = len(args.hosts) > 1
 
     try:
         client = init_http()
 
-        states = {}
-        for host in hosts:
-            base_url = get_base_url(ssl, host, port)
+        states: dict[str, tuple[int, str]] = {}
+        for host in args.hosts:
+            base_url = get_base_url(
+                tls=args.tls,
+                host=host,
+                port=args.port,
+            )
             try:
-                raise_host_state(client, base_url, uri, timeout, form_name, params, expect_regex)
+                raise_host_state(
+                    client=client,
+                    base_url=base_url,
+                    args=args,
+                    params=_decode_query_params(args.query_params) if args.query_params else {},
+                )
             except HostResult as e:
-                if not multiple:
-                    return e.result
                 states[host] = e.result
 
         if multiple:
-            sum_state, txt = check_host_states(states, num_warn, num_crit)
-            return sum_state, txt
+            return check_host_states(
+                states,
+                (args.levels[0], args.levels[1]) if args.levels else None,
+            )
+        return next(iter(states.values()))
 
     except Exception as e:
-        if opt_debug:
+        if args.debug:
             raise
         return 3, "Exception occured: %s\n" % e
 

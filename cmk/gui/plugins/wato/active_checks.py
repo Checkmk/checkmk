@@ -2319,19 +2319,6 @@ def _valuespec_active_checks_form_submit():
                         ),
                     ),
                     (
-                        "virthost",
-                        TextInput(
-                            title=_("Virtual host"),
-                            help=_(
-                                "Set this in order to specify the name of the "
-                                "virtual host for the query (using HTTP/1.1). When you "
-                                "leave this empty, then the IP address of the host "
-                                "will be used instead."
-                            ),
-                            allow_empty=False,
-                        ),
-                    ),
-                    (
                         "uri",
                         TextInput(
                             title=_("URI to fetch (default is <tt>/</tt>)"),

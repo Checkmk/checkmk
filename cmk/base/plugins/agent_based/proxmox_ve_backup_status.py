@@ -113,11 +113,23 @@ def check_proxmox_ve_vm_backup_status(
     Metric('age', 82800.0, levels=(93600.0, 180000.0), boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Server local start time: 2020-12-06 21:28:02+00:00')
     Result(state=<State.OK: 0>, summary='Duration: 2 minutes 20 seconds')
+    Metric('backup_duration', 140.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Name: /tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst')
     Result(state=<State.OK: 0>, summary='Dedup rate: 100.00')
     Result(state=<State.OK: 0>, summary='Bandwidth: 91.6 MB/s')
+    Metric('backup_avgspeed', 91625968.975, boundaries=(0.0, None))
     """
     age_levels_upper = params.get("age_levels_upper")
+    duration_levels_upper = params.get("duration_levels_upper")
+    bandwidth_levels_lower_bytes = params.get("bandwidth_levels_lower")
+    bandwidth_levels_lower = (
+        (
+            bandwidth_levels_lower_bytes[0] * 1000 * 1000,
+            bandwidth_levels_lower_bytes[1] * 1000 * 1000,
+        )
+        if bandwidth_levels_lower_bytes
+        else None
+    )
     last_backup = section.get("last_backup")
     if not last_backup:
         yield (
@@ -149,9 +161,14 @@ def check_proxmox_ve_vm_backup_status(
         state=State.OK,
         summary=f"Server local start time: {started_time}",
     )
-    yield Result(
-        state=State.OK,
-        summary=f"Duration: {render.timespan(last_backup['total_duration'])}",
+
+    yield from check_levels(
+        value=last_backup["total_duration"],
+        levels_upper=duration_levels_upper,
+        metric_name="backup_duration",
+        render_func=render.timespan,
+        label="Duration",
+        boundaries=(0, None),
     )
 
     if "archive_name" in last_backup:
@@ -182,7 +199,14 @@ def check_proxmox_ve_vm_backup_status(
     else:
         return
 
-    yield Result(state=State.OK, summary=f"Bandwidth: {render.iobandwidth(bandwidth)}")
+    yield from check_levels(
+        value=bandwidth,
+        levels_lower=bandwidth_levels_lower,
+        metric_name="backup_avgspeed",
+        render_func=render.iobandwidth,
+        label="Bandwidth",
+        boundaries=(0, None),
+    )
 
 
 register.agent_section(
@@ -210,6 +234,8 @@ register.check_plugin(
         "age_levels_upper": (
             60 * 60 * 26,
             60 * 60 * 50,
-        )
+        ),
+        "duration_levels_upper": None,
+        "bandwidth_levels_lower": None,
     },
 )

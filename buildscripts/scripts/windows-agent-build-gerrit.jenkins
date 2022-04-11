@@ -4,7 +4,7 @@ properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
 ])
 
-node ('win1') {
+node ('windows') {
     stage('git checkout') {
         checkout(scm)
         windows = load 'buildscripts/scripts/lib/windows.groovy'

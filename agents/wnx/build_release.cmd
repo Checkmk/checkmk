@@ -21,6 +21,8 @@
 
 SETLOCAL EnableDelayedExpansion
 
+@echo logonserver: "%LOGONSERVER%" user: "%USERNAME%"
+
 :: CHECK FOR CHOCO
 :: if choco is absent then build is not possible(we can't dynamically control environment)
 powershell Write-Host "Looking for choco..." -Foreground White

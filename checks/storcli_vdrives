@@ -4,24 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings["storcli_vdrives_default_levels"] = {
-    "Optimal": 0,
-    "Partially Degraded": 1,
-    "Degraded": 2,
-    "Offline": 1,
-    "Recovery": 1,
-}
+from cmk.base.plugins.agent_based.utils import megaraid
+
+factory_settings["storcli_vdrives_default_levels"] = megaraid.LDISKS_DEFAULTS
 
 
 def parse_storcli_vdrives(info):
-
-    raid_statenames = {
-        "optl": "Optimal",
-        "pdgd": "Partially Degraded",
-        "dgrd": "Degraded",
-        "ofln": "Offline",
-        "rec": "Recovery",
-    }
 
     parsed = {}
 
@@ -34,7 +22,7 @@ def parse_storcli_vdrives(info):
             dg_vd, raid_type, rawstate, access, consistent = line[:5]
             parsed["C%i.%s" % (controller_num, dg_vd)] = {
                 "raid_type": raid_type,
-                "state": raid_statenames.get(rawstate.lower(), rawstate),
+                "state": megaraid.expand_abbreviation(rawstate),
                 "access": access,
                 "consistent": consistent,
             }

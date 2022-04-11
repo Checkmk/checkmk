@@ -43,8 +43,12 @@ def megaraid_bbu_parse(info):
 
         # Scan each controller into its own dictionary
         if name in ["BBU status for Adapter", "BBU status for Adpater"]:
+            item = f"/c{data}"
             current_hba = {}
-            controllers[data] = current_hba
+            controllers[item] = current_hba
+            # Add it under the old item name. Not discovered, but can be used when checking
+            legacy_item = data
+            controllers[legacy_item] = current_hba
         elif current_hba is not None:
             # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
@@ -54,7 +58,10 @@ def megaraid_bbu_parse(info):
 
 
 def discover_megaraid_bbu(section):
-    yield from ((name, {}) for name in section)
+    # Items changed from e.g. '2' to '/c2' for consistency.
+    # Only discover the new-style items.
+    # The old items are kept in section, so that old services using them will still produce results
+    yield from ((name, {}) for name in section if name.startswith("/c"))
 
 
 def check_megaraid_bbu(item, _no_params, section):
@@ -101,5 +108,5 @@ check_info["megaraid_bbu"] = {
     "parse_function": megaraid_bbu_parse,
     "check_function": check_megaraid_bbu,
     "inventory_function": discover_megaraid_bbu,
-    "service_description": "RAID Adapter/BBU %s",
+    "service_description": "RAID BBU %s",
 }

@@ -87,7 +87,9 @@ def parse_cbl_airlaser(info):
             sensor: (
                 airlaser_status_names[int(data[hwclass][offset][0])]
                 if "Status" in sensor
-                else saveint(data[hwclass][offset][0])
+                else saveint(data[hwclass][offset][0]),
+                sub_oid,
+                offset,
             )
             for sensor, (_dummy, sub_oid, offset) in sensors.items()
         }

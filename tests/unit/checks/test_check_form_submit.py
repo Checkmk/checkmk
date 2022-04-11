@@ -42,7 +42,7 @@ from tests.testlib import ActiveCheck
                 {
                     "hosts": ["12.3.4.51", "some-other-host"],
                     "uri": "/some/where",
-                    "ssl": True,
+                    "tls_configuration": "tls_standard",
                     "timeout": 5,
                     "expect_regex": ".*abc",
                     "form_name": "cool form",
@@ -55,7 +55,8 @@ from tests.testlib import ActiveCheck
                 "some-other-host",
                 "--uri",
                 "/some/where",
-                "--tls",
+                "--tls_configuration",
+                "tls_standard",
                 "--timeout",
                 5,
                 "--expected_regex",
@@ -69,6 +70,36 @@ from tests.testlib import ActiveCheck
                 0,
             ],
             id="extensive configuration",
+        ),
+        pytest.param(
+            (
+                "foo",
+                {
+                    "hosts": ["some-other-host"],
+                    "tls_configuration": "no_tls",
+                },
+            ),
+            [
+                "some-other-host",
+                "--tls_configuration",
+                "no_tls",
+            ],
+            id="tls disabled",
+        ),
+        pytest.param(
+            (
+                "foo",
+                {
+                    "hosts": ["some-other-host"],
+                    "tls_configuration": "tls_no_cert_valid",
+                },
+            ),
+            [
+                "some-other-host",
+                "--tls_configuration",
+                "tls_no_cert_valid",
+            ],
+            id="server certificate validation disabled",
         ),
     ],
 )

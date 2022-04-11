@@ -13,10 +13,12 @@ d) Extends HTTP headers
 """
 
 import argparse
+import enum
 import html.parser
 import http.cookiejar
 import re
 import socket
+import ssl
 import sys
 import urllib.error
 import urllib.parse
@@ -36,9 +38,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--port",
         type=int,
-        default=80,
         metavar="PORT",
-        help="TCP port, 80 by default",
+        help="TCP port, default: 80 without TLS, 443 with TLS",
     )
     parser.add_argument(
         "--uri",
@@ -48,9 +49,10 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="URL string to query, '/' by default",
     )
     parser.add_argument(
-        "--tls",
-        action="store_true",
-        help="Use TLS",
+        "--tls_configuration",
+        type=TLSConfig,
+        default="no_tls",
+        help="Configure TLS usage",
     )
     parser.add_argument(
         "--timeout",
@@ -90,6 +92,24 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Debug mode: let Python exceptions come through",
     )
     return parser.parse_args(argv)
+
+
+class TLSConfig(enum.Enum):
+    OFF = "no_tls"
+    ON = "tls_standard"
+    NO_CERT_VALID = "tls_no_cert_valid"
+
+    @property
+    def use_tls(self) -> bool:
+        return self is not TLSConfig.OFF
+
+    @property
+    def validate_server_cert(self):
+        return self is not TLSConfig.NO_CERT_VALID
+
+    @property
+    def port(self) -> int:
+        return 80 if self is TLSConfig.OFF else 443
 
 
 def debug(
@@ -133,11 +153,14 @@ def get_base_url(
 
 
 # TODO: Refactor to requests
-def init_http() -> urllib.request.OpenerDirector:
+def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
     return urllib.request.build_opener(
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPHandler(debuglevel=0),
-        urllib.request.HTTPSHandler(debuglevel=0),
+        urllib.request.HTTPSHandler(
+            debuglevel=0,
+            context=None if validate_server_cert else ssl._create_unverified_context(),
+        ),
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
     )
 
@@ -378,14 +401,14 @@ def main(argv: Optional[Sequence[str]] = None) -> tuple[int, str]:
     multiple = len(args.hosts) > 1
 
     try:
-        client = init_http()
+        client = init_http(args.tls_configuration.validate_server_cert)
 
         states: dict[str, tuple[int, str]] = {}
         for host in args.hosts:
             base_url = get_base_url(
-                tls=args.tls,
+                tls=args.tls_configuration.use_tls,
                 host=host,
-                port=args.port,
+                port=args.port if args.port is not None else args.tls_configuration.port,
             )
             try:
                 raise_host_state(

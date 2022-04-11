@@ -39,6 +39,19 @@ _data_items() {
 HERE
 }
 
+_distro_files() {
+    cat <<HERE
+    /etc/oracle-release
+    /etc/debian_version
+    /etc/gentoo-release
+    /etc/lsb-release
+    /etc/redhat-release
+    /etc/SuSE-release
+    /etc/os-release
+    /usr/share/cma/version
+HERE
+}
+
 _load_config() {
     [ -r "{$1}" ] || return
     # shellcheck source=../cfg_examples/mk_inventory.cfg
@@ -78,10 +91,10 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
 
     # Information about distribution
     echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
-    for f in {/etc/{oracle-release,debian_version,gentoo-release,lsb-release,redhat-release,SuSE-release,os-release},/usr/share/cma/version}; do
-        if [ -e $f ]; then
+    _distro_files | while read -r f; do
+        if [ -e "$f" ]; then
             echo "[[[$f]]]"
-            tr \\n \| <$f | sed 's/|$//'
+            tr \\n \| <"$f" | sed 's/|$//'
             echo
         fi
     done

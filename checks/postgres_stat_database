@@ -25,7 +25,9 @@ def parse_postgres_stat_database(info):
             headers = line
             continue
         # All values other than datid and datname must be int
-        row = {int(v) if v else v for k, v in zip(headers, line) if k not in ("datid", "datname")}
+        row = {
+            k: int(v) if v else v for k, v in zip(headers, line) if k not in ("datid", "datname")
+        }
         # datid should be an oid, which should be an int, but that may not be guaranteed
         # when the data entry is empty, we keep it as empty. Might have to change this to a default value (0) if issues come up.
         row["datid"] = line[0]

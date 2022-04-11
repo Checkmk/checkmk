@@ -145,10 +145,8 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
             UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
             DEVICE_DIR="$(dirname "${UEVENT_FILE}")"
 
-            # busybox compatible way to say
-            #   if "DEVTYPE=disk" not in <device>/uevent or "devices/virtual/" in DEVICE_DIR: continue`
-            case "$(cat "${UEVENT_FILE}")" in *"DEVTYPE=disk"*) ;; *) continue ;; esac
-            case "${UEVENT_FILE}" in *"devices/virtual/"*) continue ;; esac
+            grep "DEVTYPE=disk" -q "${UEVENT_FILE}" || continue
+            [ "${UEVENT_FILE#*"devices/virtual/"}" = "${UEVENT_FILE}" ] || continue
 
             # use pipe as delimiter - also to mark begin of lines for consitency check
             echo "|device|${DEVICE_DIR}|"

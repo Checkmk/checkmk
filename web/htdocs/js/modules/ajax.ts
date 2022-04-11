@@ -4,9 +4,29 @@
 
 import {merge_args} from "utils";
 
+declare global {
+    var global_csrf_token: string;
+}
+
+interface Args {
+    method: "GET" | "POST";
+    post_data?;
+    response_handler?: (a?, b?) => void;
+    handler_data?;
+    error_handler?: (a?, b?, c?) => void;
+    add_ajax_id?: boolean;
+}
+
 // NOTE: This function is deprecated; use call_ajax instead.
-export function get_url(url, handler, data, errorHandler, addAjaxId) {
-    var args = {
+export function get_url(
+    url: string,
+    handler?: (a?, b?) => void,
+    data: any = undefined,
+    errorHandler?: (a?, b?, c?) => void,
+    addAjaxId?: boolean
+) {
+    var args: Args = {
+        method: "GET",
         response_handler: handler,
     };
 
@@ -20,8 +40,14 @@ export function get_url(url, handler, data, errorHandler, addAjaxId) {
 }
 
 // NOTE: This function is deprecated; use call_ajax instead.
-export function post_url(url, post_params, responseHandler, handler_data, errorHandler) {
-    var args = {
+export function post_url(
+    url: string,
+    post_params: string,
+    responseHandler?: (a?, b?) => void,
+    handler_data: any = undefined,
+    errorHandler?: (a?, b?, c?) => void
+) {
+    var args: Args = {
         method: "POST",
         post_data: post_params,
     };
@@ -62,7 +88,7 @@ export function call_ajax(url, optional_args) {
     // Dynamic part to prevent caching
     if (args.add_ajax_id) {
         url += url.indexOf("?") !== -1 ? "&" : "?";
-        url += "_ajaxid=" + Math.floor(Date.parse(new Date()) / 1000);
+        url += "_ajaxid=" + Math.floor(new Date().getDate() / 1000);
     }
 
     if (args.plain_error) {
@@ -90,7 +116,10 @@ export function call_ajax(url, optional_args) {
         if (args.for_license_usage) {
             AJAX.setRequestHeader("Content-type", "application/json");
         } else {
-            AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            AJAX.setRequestHeader(
+                "Content-type",
+                "application/x-www-form-urlencoded"
+            );
         }
     }
 
@@ -99,7 +128,10 @@ export function call_ajax(url, optional_args) {
             if (AJAX && AJAX.readyState == 4) {
                 if (AJAX.status == 200) {
                     if (args.response_handler)
-                        args.response_handler(args.handler_data, AJAX.responseText);
+                        args.response_handler(
+                            args.handler_data,
+                            AJAX.responseText
+                        );
                 } else if (AJAX.status == 401) {
                     // This is reached when someone is not authenticated anymore
                     // but has some webservices running which are still fetching
@@ -130,7 +162,8 @@ export function call_ajax(url, optional_args) {
         !args.post_data.startsWith("csrf_token=") &&
         !args.for_license_usage
     ) {
-        args.post_data += "&csrf_token=" + encodeURIComponent(global_csrf_token);
+        args.post_data +=
+            "&csrf_token=" + encodeURIComponent(global_csrf_token);
     }
 
     AJAX.send(args.post_data);

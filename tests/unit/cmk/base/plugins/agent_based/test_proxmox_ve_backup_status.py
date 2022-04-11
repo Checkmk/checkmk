@@ -103,9 +103,11 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 0 seconds"),
+                Metric("backup_duration", 120.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Size: 1.00 TiB"),
                 Result(state=State.OK, summary="Bandwidth: 2.20 GB/s"),
+                Metric("backup_avgspeed", 2199023255.552, boundaries=(0.0, None)),
             ),
         ),
         (
@@ -121,9 +123,11 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 0 seconds"),
+                Metric("backup_duration", 120.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Size: 1.00 TiB"),
                 Result(state=State.OK, summary="Bandwidth: 2.20 GB/s"),
+                Metric("backup_avgspeed", 2199023255.552, boundaries=(0.0, None)),
             ),
         ),
         (
@@ -136,9 +140,11 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
+                Metric("backup_duration", 140.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Dedup rate: 100.00"),
                 Result(state=State.OK, summary="Bandwidth: 91.6 MB/s"),
+                Metric("backup_avgspeed", 91625968.975, boundaries=(0.0, None)),
             ),
         ),
         (
@@ -151,8 +157,10 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
+                Metric("backup_duration", 140.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Bandwidth: 10.0 kB/s"),
+                Metric("backup_avgspeed", 10000.0, boundaries=(0.0, None)),
             ),
         ),
         (
@@ -165,9 +173,11 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
+                Metric("backup_duration", 140.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Dedup rate: 100.00"),
                 Result(state=State.OK, summary="Bandwidth: 91.6 MB/s"),
+                Metric("backup_avgspeed", 91625968.975, boundaries=(0.0, None)),
             ),
         ),
         (
@@ -180,6 +190,7 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 0 seconds"),
+                Metric("backup_duration", 120.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Size: 1.00 TiB"),
             ),
@@ -194,6 +205,7 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
+                Metric("backup_duration", 140.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
             ),
         ),
@@ -207,8 +219,10 @@ def set_null_values(backup_data):
                     state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
+                Metric("backup_duration", 140.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Name: /some/file.name.vma.lzo"),
                 Result(state=State.OK, summary="Bandwidth: 10.0 kB/s"),
+                Metric("backup_avgspeed", 10000.0, boundaries=(0.0, None)),
             ),
         ),
     ),

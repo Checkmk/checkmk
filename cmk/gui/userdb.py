@@ -410,44 +410,35 @@ def on_succeeded_login(username: UserId) -> str:
 
 def on_failed_login(username: UserId) -> None:
     users = load_users(lock=True)
-    if username in users:
-        if "num_failed_logins" in users[username]:
-            users[username]["num_failed_logins"] += 1
-        else:
-            users[username]["num_failed_logins"] = 1
-
+    if user := users.get(username):
+        user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
         if active_config.lock_on_logon_failures:
-            if users[username]["num_failed_logins"] >= active_config.lock_on_logon_failures:
-                users[username]["locked"] = True
-
+            if user["num_failed_logins"] >= active_config.lock_on_logon_failures:
+                user["locked"] = True
         save_users(users)
 
     if active_config.log_logon_failures:
-        log_details: List[str] = []
-        if users.get(username):
-            log_msg_until_locked: int = (
-                active_config.lock_on_logon_failures - users[username]["num_failed_logins"]
+        if user:
+            existing = "Yes"
+            log_msg_until_locked = str(
+                bool(active_config.lock_on_logon_failures) - user["num_failed_logins"]
             )
-            log_msg_locked: str = "No"
-            if users[username].get("locked"):
+            if not user.get("locked"):
+                log_msg_locked = "No"
+            elif log_msg_until_locked == "0":
+                log_msg_locked = "Yes (now)"
+            else:
                 log_msg_locked = "Yes"
-                if log_msg_until_locked == 0:
-                    log_msg_locked += " (now)"
-
-            log_details.extend(
-                [
-                    "existing: Yes",
-                    "locked: %s" % log_msg_locked,
-                    "failed logins until locked: %d" % log_msg_until_locked,
-                ]
-            )
         else:
-            log_details.extend(["existing: No", "locked: N/A", "failed logins until locked: N/A"])
-
+            existing = "No"
+            log_msg_until_locked = "N/A"
+            log_msg_locked = "N/A"
         auth_logger.warning(
-            "Login failed for username: %s (%s), client: %s",
+            "Login failed for username: %s (existing: %s, locked: %s, failed logins until locked: %s), client: %s",
             username,
-            ", ".join(log_details),
+            existing,
+            log_msg_locked,
+            log_msg_until_locked,
             request.remote_ip,
         )
 

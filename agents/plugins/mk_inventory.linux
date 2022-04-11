@@ -61,9 +61,9 @@ _load_config() {
 _load_config "${MK_CONFDIR}/mk_inventory.cfg"
 
 # Default to four hours
-INTERVAL=${INVENTORY_INTERVAL:-14400}
+INTERVAL="${INVENTORY_INTERVAL:-14400}"
 
-FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
+FLAGFILE="$MK_VARDIR/mk_inventory.last.$REMOTE"
 LAST_RUN="$(stat -c %Y "${FLAGFILE}")"
 NOW="$(date +%s)"
 UNTIL=$((NOW + INTERVAL + 600))

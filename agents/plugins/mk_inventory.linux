@@ -92,11 +92,10 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
     # Information about distribution
     echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
     _distro_files | while read -r f; do
-        if [ -e "$f" ]; then
-            echo "[[[$f]]]"
-            tr \\n \| <"$f" | sed 's/|$//'
-            echo
-        fi
+        [ -e "$f" ] || continue
+        echo "[[[$f]]]"
+        tr \\n \| <"$f" | sed 's/|$//'
+        echo
     done
 
     # CPU Information. We need just the first one
@@ -156,11 +155,7 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
             echo "|device|${DEVICE_DIR}|"
 
             _data_items | while read -r item; do
-                item_file="$DEVICE_DIR/${item}"
-                if [ ! -f "${item_file}" ]; then
-                    continue
-                fi
-                echo "|${item}|$(cat "${item_file}")|"
+                [ -f "$DEVICE_DIR/${item}" ] && echo "|${item}|$(cat "$DEVICE_DIR/${item}")|"
             done
         done 2>/dev/null
     )

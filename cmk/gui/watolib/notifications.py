@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for managing the new rule based notifications"""
 
-from typing import Dict, List
+from typing import Mapping
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import EventRule, UserId
@@ -15,7 +15,7 @@ from cmk.gui.globals import active_config
 from cmk.gui.watolib.utils import wato_root_dir
 
 
-def load_notification_rules(lock: bool = False) -> List[EventRule]:
+def load_notification_rules(lock: bool = False) -> list[EventRule]:
     filename = wato_root_dir() + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
 
@@ -40,7 +40,7 @@ def save_notification_rules(rules: list[EventRule]) -> None:
     )
 
 
-def load_user_notification_rules() -> Dict[UserId, List[EventRule]]:
+def load_user_notification_rules() -> Mapping[UserId, list[EventRule]]:
     rules = {}
     for user_id, user in userdb.load_users().items():
         user_rules = user.get("notification_rules")

@@ -50,10 +50,11 @@ def single_user_session_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> No
 
 def _load_users_uncached(*, lock: bool) -> userdb.Users:
     try:
-        userdb.load_users.cache_clear()
+        # The magic attribute has been added by the lru_cache decorator.
+        userdb.load_users.cache_clear()  # type: ignore[attr-defined]
         return userdb.load_users(lock=lock)
     finally:
-        userdb.load_users.cache_clear()
+        userdb.load_users.cache_clear()  # type: ignore[attr-defined]
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of

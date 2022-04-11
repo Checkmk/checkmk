@@ -70,7 +70,8 @@ class UserProfile(ABCUserProfilePage):
                 vs = attr.valuespec()
                 value = vs.from_html_vars("ua_" + name)
                 vs.validate_value(value, "ua_" + name)
-                user_spec[name] = value
+                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                user_spec[name] = value  # type: ignore[literal-required]
 
         userdb.save_users(users)
 

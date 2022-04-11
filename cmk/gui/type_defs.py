@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import typing
+
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from typing import (
@@ -23,7 +23,7 @@ from typing import (
 )
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import ContactgroupName, UserId
+from cmk.utils.type_defs import ContactgroupName, EventRule, UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
@@ -81,10 +81,6 @@ class SessionInfo:
         return asdict(self)
 
 
-class _TypingError:
-    """Provoke typing error to find call-sites with mypy"""
-
-
 class UserSpec(TypedDict, total=False):
     """This is not complete, but they don't yet...  Also we have a
     user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
@@ -93,27 +89,40 @@ class UserSpec(TypedDict, total=False):
     """
 
     alias: str
+    authorized_sites: Any  # TODO: Improve this
     automation_secret: str
-    connector: str
+    connector: Optional[str]
     contactgroups: list[ContactgroupName]
     customer: Optional[str]
-    enforce_pw_change: bool  # gets serialized to int
+    disable_notifications: Any  # TODO: Improve this
+    email: str  # TODO: Why do we have "email" *and* "mail"?
+    enforce_pw_change: Optional[bool]
+    fallback_contact: Optional[bool]
     force_authuser: bool
-    idle_timeout: dict[Literal["duration"], _TypingError]
+    host_notification_options: str
+    idle_timeout: Any  # TODO: Improve this
     language: str
-    locked: bool
+    last_pw_change: int
+    locked: Optional[bool]
+    mail: str  # TODO: Why do we have "email" *and* "mail"?
+    notification_method: Any  # TODO: Improve this
+    notification_period: str
+    notification_rules: list[EventRule]  # yes, we actually modify this! :-/
+    notifications_enabled: Optional[bool]
+    num_failed_logins: int
+    pager: str
     password: str
     roles: list[str]
     serial: int
+    service_notification_options: str
     session_info: dict[SessionId, SessionInfo]
     show_mode: str
     start_url: str
     two_factor_credentials: TwoFactorCredentials
-    ui_sidebar_position: _TypingError
-    ui_theme: _TypingError
+    ui_sidebar_position: Any  # TODO: Improve this
+    ui_theme: Any  # TODO: Improve this
     user_id: UserId
     user_scheme_serial: int
-    pager: _TypingError
 
 
 # Visual specific
@@ -355,7 +364,7 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-CustomAttr = typing.TypedDict(
+CustomAttr = TypedDict(
     "CustomAttr",
     {
         "title": str,

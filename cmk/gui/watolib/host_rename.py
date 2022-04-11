@@ -211,26 +211,21 @@ def _rename_host_in_event_rules(oldname, newname):
     users = userdb.load_users(lock=True)
     some_user_changed = False
     for user in users.values():
-        if user.get("notification_rules"):
-            rules = user["notification_rules"]
-            num_changed = rename_in_event_rules(rules)
-            if num_changed:
+        if unrules := user.get("notification_rules"):
+            if num_changed := rename_in_event_rules(unrules):
                 actions += ["notify_user"] * num_changed
                 some_user_changed = True
 
-    rules = load_notification_rules()
-    num_changed = rename_in_event_rules(rules)
-    if num_changed:
+    nrules = load_notification_rules()
+    if num_changed := rename_in_event_rules(nrules):
         actions += ["notify_global"] * num_changed
-        save_notification_rules(rules)
+        save_notification_rules(nrules)
 
     if alert_handling:
-        rules = alert_handling.load_alert_handler_rules()
-        if rules:
-            num_changed = rename_in_event_rules(rules)
-            if num_changed:
+        if arules := alert_handling.load_alert_handler_rules():
+            if num_changed := rename_in_event_rules(arules):
                 actions += ["alert_rules"] * num_changed
-                alert_handling.save_alert_handler_rules(rules)
+                alert_handling.save_alert_handler_rules(arules)
 
     # Notification channels of flexible notifications also can have host conditions
     for user in users.values():

@@ -638,7 +638,8 @@ class APICallUsers(APICallCollection):
             for entry in unset_attributes:
                 if entry not in user_attrs:
                     continue
-                del user_attrs[entry]
+                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                del user_attrs[entry]  # type: ignore[misc]
 
             new_password = set_attributes.get("password")
             if new_password:

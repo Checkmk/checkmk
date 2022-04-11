@@ -342,7 +342,7 @@ def _is_local_user(user_id: UserId) -> bool:
 
 
 def user_locked(user_id: UserId) -> bool:
-    return load_user(user_id).get("locked", False)
+    return bool(load_user(user_id).get("locked"))
 
 
 def _root_dir() -> str:
@@ -985,7 +985,8 @@ def save_users(profiles: Users) -> None:
     release_users_lock()
 
     # Invalidate the users memoized data
-    load_users.cache_clear()
+    # The magic attribute has been added by the lru_cache decorator.
+    load_users.cache_clear()  # type: ignore[attr-defined]
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)
@@ -1032,7 +1033,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         save_custom_attr(user_id, "serial", str(user.get("serial", 0)))
         save_custom_attr(user_id, "num_failed_logins", str(user.get("num_failed_logins", 0)))
         save_custom_attr(
-            user_id, "enforce_pw_change", str(int(user.get("enforce_pw_change", False)))
+            user_id, "enforce_pw_change", str(int(bool(user.get("enforce_pw_change"))))
         )
         save_custom_attr(
             user_id, "last_pw_change", str(user.get("last_pw_change", int(time.time())))

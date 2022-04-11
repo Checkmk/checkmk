@@ -697,7 +697,7 @@ class ModeEditUser(WatoMode):
 
         if self._user_id is None:  # same as self._is_new_user
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
-            user_attrs = {}
+            user_attrs: UserSpec = {}
         else:
             self._user_id = request.get_str_input_mandatory("edit").strip()
             user_attrs = self._users[UserId(self._user_id)].copy()
@@ -799,7 +799,8 @@ class ModeEditUser(WatoMode):
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
-                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(
+                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
                     ntop_username_attribute
                 )
 
@@ -829,14 +830,16 @@ class ModeEditUser(WatoMode):
             user_attrs["notifications_enabled"] = html.get_checkbox("notifications_enabled")
 
             ntp = request.var("notification_period")
-            if ntp not in self._timeperiods:
-                ntp = "24X7"
-            user_attrs["notification_period"] = ntp
+            user_attrs["notification_period"] = (
+                ntp if ntp is not None and ntp in self._timeperiods else "24X7"
+            )
 
-            for what, opts in [("host", "durfs"), ("service", "wucrfs")]:
-                user_attrs[what + "_notification_options"] = "".join(
-                    [opt for opt in opts if html.get_checkbox(what + "_" + opt)]
-                )
+            user_attrs["host_notification_options"] = "".join(
+                [opt for opt in "durfs" if html.get_checkbox("host_" + opt)]
+            )
+            user_attrs["service_notification_options"] = "".join(
+                [opt for opt in "wucrfs" if html.get_checkbox("service_" + opt)]
+            )
 
             value = watolib.get_vs_flexible_notifications().from_html_vars("notification_method")
             user_attrs["notification_method"] = value
@@ -846,7 +849,8 @@ class ModeEditUser(WatoMode):
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
             value = attr.valuespec().from_html_vars("ua_" + name)
-            user_attrs[name] = value
+            # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+            user_attrs[name] = value  # type: ignore[literal-required]
 
         # Generate user "object" to update
         user_object = {self._user_id: {"attributes": user_attrs, "is_new_user": self._is_new_user}}
@@ -872,12 +876,15 @@ class ModeEditUser(WatoMode):
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
 
-        def lockable_input(name, dflt):
-            if not self._is_locked(name):
-                html.text_input(name, self._user.get(name, dflt), size=50)
+        def lockable_input(name: str, dflt: Optional[str]) -> None:
+            # TODO: Move this to call sites, removing the need for assert
+            value = self._user.get(name, dflt)
+            assert isinstance(value, str)
+            if self._is_locked(name):
+                html.write_text(value)
+                html.hidden_field(name, value)
             else:
-                html.write_text(self._user.get(name, dflt))
-                html.hidden_field(name, self._user.get(name, dflt))
+                html.text_input(name, value, size=50)
 
         # Full name
         forms.section(_("Full name"), is_required=True)
@@ -977,7 +984,7 @@ class ModeEditUser(WatoMode):
             ):
                 html.checkbox(
                     "enforce_pw_change",
-                    self._user.get("enforce_pw_change", False),
+                    bool(self._user.get("enforce_pw_change")),
                     label=_("Change password at next login or access"),
                 )
             else:
@@ -1036,7 +1043,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("locked"):
             html.checkbox(
                 "locked",
-                self._user.get("locked", False),
+                bool(self._user.get("locked")),
                 label=_("disable the login to this account"),
             )
         else:
@@ -1147,7 +1154,7 @@ class ModeEditUser(WatoMode):
             forms.section(_("Enabling"), simple=True)
             html.checkbox(
                 "notifications_enabled",
-                self._user.get("notifications_enabled", False),
+                bool(self._user.get("notifications_enabled")),
                 label=_("enable notifications"),
             )
             html.help(
@@ -1190,6 +1197,7 @@ class ModeEditUser(WatoMode):
             }
 
             forms.section(_("Notification Options"))
+            # TODO: Remove this "what" nonsense
             for title, what, opts in [
                 (_("Host events"), "host", "durfs"),
                 (_("Service events"), "service", "wucrfs"),
@@ -1197,7 +1205,11 @@ class ModeEditUser(WatoMode):
                 html.write_text("%s:" % title)
                 html.open_ul()
 
-                user_opts = self._user.get(what + "_notification_options", opts)
+                user_opts = (
+                    self._user.get("host_notification_options", opts)
+                    if what == "host"
+                    else self._user.get("service_notification_options", opts)
+                )
                 for opt in opts:
                     opt_name = notification_option_names[what].get(
                         opt, notification_option_names["both"].get(opt)
@@ -1224,7 +1236,7 @@ class ModeEditUser(WatoMode):
 
             html.checkbox(
                 "fallback_contact",
-                self._user.get("fallback_contact", False),
+                bool(self._user.get("fallback_contact")),
                 label=_("Receive fallback notifications"),
             )
 

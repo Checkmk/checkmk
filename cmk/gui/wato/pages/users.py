@@ -8,7 +8,7 @@
 import base64
 import time
 import traceback
-from typing import Iterator, List, Optional, overload, Tuple, Type, Union
+from typing import cast, Iterator, List, Optional, overload, Tuple, Type, Union
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
@@ -877,9 +877,8 @@ class ModeEditUser(WatoMode):
         vs_user_id.render_input("user_id", self._user_id)
 
         def lockable_input(name: str, dflt: Optional[str]) -> None:
-            # TODO: Move this to call sites, removing the need for assert
-            value = self._user.get(name, dflt)
-            assert isinstance(value, str)
+            # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/
+            value = cast(str, self._user.get(name, dflt))
             if self._is_locked(name):
                 html.write_text(value)
                 html.hidden_field(name, value)

@@ -15,8 +15,8 @@ def check_form_submit_arguments(params):
     if "uri" in settings:
         args += ["--uri", settings["uri"]]
 
-    if settings.get("ssl"):
-        args.append("--tls")
+    if "tls_configuration" in settings:
+        args += ["--tls_configuration", settings["tls_configuration"]]
 
     if "timeout" in settings:
         args += ["--timeout", settings["timeout"]]

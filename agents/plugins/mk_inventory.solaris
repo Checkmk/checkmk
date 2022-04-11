@@ -24,6 +24,12 @@ _load_config() {
     . "${1}"
 }
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 _get_epoch() {
     # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
 
@@ -66,52 +72,74 @@ run_persisted() {
 #
 
 sections_mk_inventory() {
+    section_solaris_uname
+
+    section_solaris_prtdiag
+
+    section_solaris_psrinfo
+
+    section_solaris_pkginfo
+
+    section_solaris_addresses
+
+    section_solaris_routes
+}
+
+section_solaris_uname() {
     echo "<<<solaris_uname:sep(61)>>>"
     uname -X
+}
 
-    if zoneadm list | grep global >/dev/null 2>&1; then
-        if type prtdiag >/dev/null; then
-            echo "<<<solaris_prtdiag:sep(10)>>>"
-            if type sneep >/dev/null 2>&1; then
-                SN=$(sneep -t serial)
-            else
-                SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
-            fi
-            echo "SerialNumber: $SN"
-            prtdiag -v
-        fi
+section_solaris_prtdiag() {
+    inpath prtdiag && zoneadm list | grep -q global || return
+
+    echo "<<<solaris_prtdiag:sep(10)>>>"
+    if inpath sneep; then
+        SN=$(sneep -t serial)
+    else
+        SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
+    fi
+    echo "SerialNumber: $SN"
+    prtdiag -v
+}
+
+section_solaris_psrinfo() {
+    inpath psrinfo || return
+
+    # Previously, we only had this single psrinfo section
+    # Keep the name to avoid incompatibilities.
+    echo "<<<solaris_psrinfo>>>"
+    psrinfo -p -v
+
+    # Name the section containing the plain "psrinfo" output
+    # _virtual instead, as this is what it basically contains
+    echo "<<<solaris_psrinfo_virtual>>>"
+    psrinfo
+
+    echo "<<<solaris_psrinfo_physical>>>"
+    psrinfo -p
+
+    # -t option is not available on older systems
+    PSRINFO_T=$(psrinfo -t 2>/dev/null)
+    if [ -n "$PSRINFO_T" ]; then
+        echo "<<<solaris_psrinfo_table>>>"
+        psrinfo -t
     fi
 
-    if type psrinfo >/dev/null; then
-        # Previously, we only had this single psrinfo section
-        # Keep the name to avoid incompatibilities.
-        echo "<<<solaris_psrinfo>>>"
-        psrinfo -p -v
+}
 
-        # Name the section containing the plain "psrinfo" output
-        # _virtual instead, as this is what it basically contains
-        echo "<<<solaris_psrinfo_virtual>>>"
-        psrinfo
+section_solaris_pkginfo() {
+    inpath pkginfo || return
+    echo "<<<solaris_pkginfo:sep(58)>>>"
+    pkginfo -l
+}
 
-        echo "<<<solaris_psrinfo_physical>>>"
-        psrinfo -p
-
-        # -t option is not available on older systems
-        PSRINFO_T=$(psrinfo -t 2>/dev/null)
-        if [ -n "$PSRINFO_T" ]; then
-            echo "<<<solaris_psrinfo_table>>>"
-            psrinfo -t
-        fi
-    fi
-
-    if type pkginfo >/dev/null; then
-        echo "<<<solaris_pkginfo:sep(58)>>>"
-        pkginfo -l
-    fi
-
+section_solaris_addresses() {
     echo "<<<solaris_addresses>>>"
     ifconfig -a
+}
 
+section_solaris_routes() {
     echo "<<<solaris_routes>>>"
     netstat -nr
 }

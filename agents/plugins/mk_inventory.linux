@@ -24,6 +24,12 @@ _load_config() {
     . "${1}"
 }
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 _get_epoch() {
     # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
 
@@ -108,32 +114,9 @@ HERE
 
 sections_mk_inventory() {
 
-    # List of DEB packages
-    if type dpkg-query >/dev/null; then
-        echo "<<<lnx_packages:sep(124)>>>"
-        dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|-|${Summary}|${Status}\n'
-    fi
+    section_lnx_packages
 
-    # List of RPM packages in same format
-    if type rpm >/dev/null; then
-        echo "<<<lnx_packages:sep(9)>>>"
-        rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{RELEASE}\t%{SUMMARY}\t-\n'
-    fi
-
-    # List Gentoo packages
-    if type equery >/dev/null; then
-        echo "<<<lnx_packages:sep(124)>>>"
-        equery -C list --format "\$category/\$name|\$fullversion|\$mask2|ebuild|Repository \$repo|installed" \* | head -n -1
-    fi
-
-    # Information about distribution
-    echo "<<<lnx_distro:sep(124)>>>"
-    _distro_files | while read -r f; do
-        [ -e "$f" ] || continue
-        echo "[[[$f]]]"
-        tr \\n \| <"$f" | sed 's/|$//'
-        echo
-    done
+    section_lnx_distro
 
     # CPU Information. We need just the first one
     if [ -e /proc/cpuinfo ]; then
@@ -142,13 +125,13 @@ sections_mk_inventory() {
     fi
 
     # Information about main board, memory, etc.
-    if type dmidecode >/dev/null; then
+    if inpath dmidecode; then
         echo "<<<dmidecode:sep(58)>>>"
         dmidecode -q | sed 's/\t/:/g'
     fi
 
     # Information about kernel architecture
-    if type uname >/dev/null; then
+    if inpath uname; then
         echo "<<<lnx_uname>>>"
         uname -m
         uname -r
@@ -162,14 +145,14 @@ sections_mk_inventory() {
     fi
 
     # Some networking information
-    if type ip >/dev/null; then
+    if inpath ip; then
         echo "<<<lnx_ip_r>>>"
         ip r
         ip -6 r
     fi
 
     # Kernel configuration
-    if type sysctl >/dev/null; then
+    if inpath sysctl; then
         echo "<<<lnx_sysctl>>>"
         sysctl -ae
     fi
@@ -193,6 +176,37 @@ sections_mk_inventory() {
             done
         done 2>/dev/null
     )
+}
+
+section_lnx_packages() {
+    if inpath dpkg-query; then
+        # List of DEB packages
+        echo "<<<lnx_packages:sep(124)>>>"
+        dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|-|${Summary}|${Status}\n'
+    fi
+
+    # List of RPM packages in same format
+    if inpath rpm; then
+        echo "<<<lnx_packages:sep(9)>>>"
+        rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{RELEASE}\t%{SUMMARY}\t-\n'
+    fi
+
+    # List Gentoo packages
+    if inpath equery; then
+        echo "<<<lnx_packages:sep(124)>>>"
+        equery -C list --format "\$category/\$name|\$fullversion|\$mask2|ebuild|Repository \$repo|installed" \* | head -n -1
+    fi
+}
+
+section_lnx_distro() {
+    # Information about distribution
+    echo "<<<lnx_distro:sep(124)>>>"
+    _distro_files | while read -r f; do
+        [ -e "$f" ] || continue
+        echo "[[[$f]]]"
+        tr \\n \| <"$f" | sed 's/|$//'
+        echo
+    done
 }
 
 #

@@ -24,6 +24,12 @@ _load_config() {
     . "${1}"
 }
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 _get_epoch() {
     # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
 
@@ -66,34 +72,47 @@ run_persisted() {
 #
 
 sections_mk_inventory() {
+    section_lslpp
+
+    section_oslevel
+
+    section_lparstat
+
+    section_prtconf
+}
+
+section_lslpp() {
+    inpath lslpp || return
     # List of installed AIX packages
-    if type lslpp >/dev/null; then
-        echo "<<<aix_packages:sep(58)>>>"
-        lslpp -c -L
-    fi
+    echo "<<<aix_packages:sep(58)>>>"
+    lslpp -c -L
+}
 
-    if type oslevel >/dev/null; then
-        # base level of the system
-        echo "<<<aix_baselevel>>>"
-        oslevel
+section_oslevel() {
+    inpath oslevel || return
 
-        # list the known service packs on a system
-        echo "<<<aix_service_packs>>>"
-        oslevel -sq
-    fi
+    # base level of the system
+    echo "<<<aix_baselevel>>>"
+    oslevel
 
-    if type lparstat >/dev/null; then
-        echo "<<<aix_lparstat_inventory:sep(0)>>>"
-        lparstat -i
-    fi
+    # list the known service packs on a system
+    echo "<<<aix_service_packs>>>"
+    oslevel -sq
+}
 
+section_lparstat() {
+    inpath lparstat || return
+    echo "<<<aix_lparstat_inventory:sep(0)>>>"
+    lparstat -i
+}
+
+section_prtconf() {
+    inpath prtconf || return
     # If you run the prtconf command without any flags, it displays the system model, machine serial,
     # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
     # information, paging space information, and devices information.
-    if type prtconf >/dev/null; then
-        echo "<<<prtconf:sep(58)>>>"
-        prtconf
-    fi
+    echo "<<<prtconf:sep(58)>>>"
+    prtconf
 }
 
 #

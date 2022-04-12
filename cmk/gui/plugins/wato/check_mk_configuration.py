@@ -3712,25 +3712,28 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_host_conf_notification_interval():
-    return Optional(
-        valuespec=Transform(
-            valuespec=Float(
-                minvalue=0.05,
-                default_value=120.0,
-                label=_("Interval:"),
-                unit=_("minutes"),
+    return Transform(
+        Optional(
+            valuespec=Transform(
+                valuespec=Float(
+                    minvalue=0.05,
+                    default_value=120.0,
+                    label=_("Interval:"),
+                    unit=_("minutes"),
+                ),
+                forth=float,
             ),
-            forth=float,
+            title=_("Periodic notifications during host problems"),
+            help=_(
+                "If you enable periodic notifications, then during a problem state "
+                "of the host notifications will be sent out in regular intervals "
+                "until the problem is acknowledged."
+            ),
+            label=_("Enable periodic notifications"),
+            none_label=_("disabled"),
         ),
-        title=_("Periodic notifications during host problems"),
-        help=_(
-            "If you enable periodic notifications, then during a problem state "
-            "of the host notifications will be sent out in regular intervals "
-            "until the problem is acknowledged."
-        ),
-        label=_("Enable periodic notifications"),
-        none_label=_("disabled"),
-        none_value=0.0,
+        # We used 0.0 instead of None in the past to signal "no periodic host notifications".
+        forth=lambda x: x if x else None,
     )
 
 
@@ -3744,22 +3747,25 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_service_conf_notification_interval():
-    return Optional(
-        valuespec=Transform(
-            valuespec=Float(
-                minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+    return Transform(
+        Optional(
+            valuespec=Transform(
+                valuespec=Float(
+                    minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+                ),
+                forth=float,
             ),
-            forth=float,
+            title=_("Periodic notifications during service problems"),
+            help=_(
+                "If you enable periodic notifications, then during a problem state "
+                "of the service notifications will be sent out in regular intervals "
+                "until the problem is acknowledged."
+            ),
+            label=_("Enable periodic notifications"),
+            none_label=_("disabled"),
         ),
-        title=_("Periodic notifications during service problems"),
-        help=_(
-            "If you enable periodic notifications, then during a problem state "
-            "of the service notifications will be sent out in regular intervals "
-            "until the problem is acknowledged."
-        ),
-        label=_("Enable periodic notifications"),
-        none_label=_("disabled"),
-        none_value=0.0,
+        # We used 0.0 instead of None in the past to signal "no periodic service notifications".
+        forth=lambda x: x if x else None,
     )
 
 

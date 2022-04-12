@@ -379,6 +379,7 @@ class PodSpec(BaseModel):
     containers: Sequence[ContainerSpec]
     init_containers: Sequence[ContainerSpec]
     priority_class_name: Optional[str] = None
+    active_deadline_seconds: Optional[int] = None
 
 
 class ContainerRunningState(BaseModel):

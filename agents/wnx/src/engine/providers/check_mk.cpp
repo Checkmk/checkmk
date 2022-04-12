@@ -109,15 +109,39 @@ std::string MakeDirs() {
 }
 
 std::string GetLegacyPullMode() { return ac::IsInLegacyMode() ? "yes" : "no"; }
+constexpr std::string_view kEmptyIpAllowList{R"("ip_allowlist":[])"};
+void InjectIpAllowedList(std::string &json, const std::string &only_from) {
+    auto base_table = tools::SplitString(json, std::string{kEmptyIpAllowList});
+    if (base_table.size() == 2) {
+        json = base_table[0];
+        json += kEmptyIpAllowList;
+        json.pop_back();  // remove ']'
+        auto only_from_table = tools::SplitString(only_from, " ");
+        for (const auto &e : only_from_table) {
+            json += fmt::format("\"{}\",", e);
+        }
+        json.pop_back();  // remove ","
+        json += "]";
+        json += base_table[1];
+    } else {
+        XLOG::l(
+            "Impossible error during parsing of the output from controller");
+    }
+}
 }  // namespace
 
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
+    auto only_from = makeOnlyFrom();
     out += MakeDirs();
-    out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
+    out += "OnlyFrom: "s + only_from + "\n"s;
     out += section::MakeHeader(section::kCheckMkCtlStatus);
-    const auto json = ac::DetermineAgentCtlStatus();
+    auto json = ac::DetermineAgentCtlStatus();
     if (!json.empty()) {
+        if (!only_from.empty() &&
+            json.find(kEmptyIpAllowList) != std::string::npos) {
+            InjectIpAllowedList(json, only_from);
+        }
         out += json + "\n";
     }
 

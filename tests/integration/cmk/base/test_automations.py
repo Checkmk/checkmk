@@ -45,6 +45,24 @@ def test_cfg_fixture(web, site):  # noqa: F811  # pylint: disable=redefined-oute
                      "tag_criticality": "offline",
                  })
 
+    web.add_host(
+        "host_with_secondary_ip",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            'additional_ipv4addresses': ['127.0.0.1']
+        },
+    )
+
+    web.set_ruleset("active_checks:icmp", {
+        'ruleset': {
+            '': [{
+                'value': {
+                    'address': 'all_ipv4addresses'
+                },
+                'condition': {},
+            }]
+        },
+    })
     site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
@@ -75,6 +93,12 @@ def test_cfg_fixture(web, site):  # noqa: F811  # pylint: disable=redefined-oute
         web.delete_host("modes-test-host2")
         web.delete_host("modes-test-host3")
         web.delete_host("modes-test-host4")
+        web.delete_host("host_with_secondary_ip")
+        web.set_ruleset("active_checks:icmp", {
+            'ruleset': {
+                '': []
+            },
+        })
         web.activate_changes()
 
 
@@ -391,7 +415,6 @@ def test_automation_get_agent_output_unknown_host(test_cfg, site):
     assert data[0] is False
 
 
-# TODO: active-check: Add test for real active_checks check
 # TODO: active-check: Add test for real custom_checks check
 def test_automation_active_check_unknown(test_cfg, site):
     data = _execute_automation(site, "active-check", args=["xxxhost", "xxxplugin", "xxxitem"])
@@ -401,6 +424,14 @@ def test_automation_active_check_unknown(test_cfg, site):
 def test_automation_active_check_unknown_custom(test_cfg, site):
     data = _execute_automation(site, "active-check", args=["xxxhost", "custom", "xxxitem"])
     assert data is None
+
+
+def test_automation_active_check_icmp(test_cfg, site):
+    for host in {"modes-test-host", "host_with_secondary_ip"}:
+        data = _execute_automation(site, "active-check", args=[host, "icmp", "PING"])
+        assert isinstance(data, tuple)
+        assert data[0] == 0
+        assert data[1].startswith("OK - 127.0.0.1: rta")
 
 
 def test_automation_get_configuration(test_cfg, site):

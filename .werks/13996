@@ -1,0 +1,15 @@
+Title: Remove unresolved macros for additional IPs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649758564
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p23
+
+In case you're using the active check_icmp and ping all IP addresses, you may see the following issue:
+
+<tt>(3, u'check_icmp: Failed to resolve $: Name or service not known')</tt>
+
+This is caused by the fact the a host hasn't set additional IP addresses.

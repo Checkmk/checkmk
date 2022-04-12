@@ -160,7 +160,6 @@ def parse(string_table: StringTable) -> Section:
     if line[0] == "[all]":
         try:
             line = next(iter_string_table)
-
         # no services listed
         except StopIteration:
             return parsed
@@ -254,12 +253,11 @@ def discovery_systemd_units_services(
 def check_systemd_units_services(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    services = section.get("service", {})
-    service = services.get(item, None)
+    service = section.get("service", {}).get(item, None)
     if service is None:
         yield Result(state=State(params["else"]), summary="Service not found")
         return
-
+    # TODO: this defaults unkown states to CRIT with the default params
     state = params["states"].get(service.active_status, params["states_default"])
     yield Result(state=State(state), summary=f"Status: {service.active_status}")
     yield Result(state=State.OK, summary=service.description)
@@ -291,8 +289,10 @@ def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResul
     yield Service()
 
 
-def _services_split(services, blacklist):
-    services_organised: dict[str, list] = {
+def _services_split(
+    services: Iterable[UnitEntry], blacklist: Sequence[str]
+) -> Mapping[str, list[UnitEntry]]:
+    services_organised: dict[str, list[UnitEntry]] = {
         "included": [],
         "excluded": [],
         "disabled": [],
@@ -318,12 +318,14 @@ def _services_split(services, blacklist):
     return services_organised
 
 
-def _check_temporary_state(services, params, service_state) -> CheckResult:
+def _check_temporary_state(
+    services: Iterable[UnitEntry], params: Mapping[str, Any], service_state: str
+) -> CheckResult:
     value_store = get_value_store()
     previous_state = value_store.get(service_state, {})
     now = int(time.time())
     current_state = {}
-    levels = params.get("%s_levels" % service_state)
+    levels = params["%s_levels" % service_state]
     for service in services:
         state_since = previous_state.get(service.name, now)
         current_state[service.name] = state_since
@@ -339,12 +341,15 @@ def _check_temporary_state(services, params, service_state) -> CheckResult:
     value_store[service_state] = current_state
 
 
-def _check_non_ok_services(systemd_services, params, output_string) -> Iterable[Result]:
+def _check_non_ok_services(
+    systemd_services: Iterable[UnitEntry], params: Mapping[str, Any], output_string: str
+) -> Iterable[Result]:
     servicenames_by_status: dict[Any, Any] = {}
     for service in systemd_services:
         servicenames_by_status.setdefault(service.active_status, []).append(service.name)
 
     for status, service_names in sorted(servicenames_by_status.items()):
+        # TODO: really default to CRIT if we do not know a state after a systemd updates?
         state = State(params["states"].get(status, params["states_default"]))
         if state == State.OK:
             continue
@@ -360,7 +365,7 @@ def check_systemd_units_services_summary(
     params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     services = section.get("service", {}).values()
-    blacklist = params.get("ignored", [])
+    blacklist = params["ignored"]
     yield Result(state=State.OK, summary="Total: %d" % len(services))
     services_organised = _services_split(services, blacklist)
     yield Result(state=State.OK, summary="Disabled: %d" % len(services_organised["disabled"]))
@@ -399,5 +404,6 @@ register.check_plugin(
         "activating_levels": (30, 60),
         "deactivating_levels": (30, 60),
         "reloading_levels": (30, 60),
+        "ignored": [],
     },
 )

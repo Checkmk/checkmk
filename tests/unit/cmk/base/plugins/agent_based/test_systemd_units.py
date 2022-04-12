@@ -2411,6 +2411,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
             },
             SECTION,
             [
@@ -2423,7 +2427,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
         # Ignored (see 'blacklist')
         (
             {
-                "ignored": "virtual",
+                "ignored": ["virtual"],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
             },
             {
                 "service": {
@@ -2447,7 +2454,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
         ),
         # (de)activating
         (
-            {},
+            {
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
             {
                 "service": {
                     "virtualbox": UnitEntry(
@@ -2480,7 +2492,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
         ),
         # Activating + reloading
         (
-            {},
+            {
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
             {
                 "service": {
                     "virtualbox": UnitEntry(
@@ -2503,7 +2520,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
         ),
         # Reloading
         (
-            {},
+            {
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
             {
                 "service": {
                     "virtualbox": UnitEntry(
@@ -2526,7 +2548,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
         ),
         # Indirect
         (
-            {},
+            {
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
             {
                 "service": {
                     "virtualbox": UnitEntry(
@@ -2552,6 +2579,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
             },
             {
                 "service": {

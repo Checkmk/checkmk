@@ -16,8 +16,6 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import CheckPreviewEntry, SetAutochecksResult, TryDiscoveryResult
 
-from cmk.gui.watolib.services import Discovery
-
 mock_discovery_result = TryDiscoveryResult(
     check_table=[
         CheckPreviewEntry(
@@ -1049,55 +1047,37 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         )
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
 def test_openapi_discover_single_service(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mocker,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    # create a host
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params=json.dumps(
-            {
-                "folder": "/",
-                "host_name": "example.com",
-                "attributes": {},
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
-
-    discovery_spy = mocker.spy(Discovery, "__init__")
-    mocker.patch("cmk.gui.watolib.services.execute_discovery_job")
-
-    # we want to test this call:
-    aut_user_auth_wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "put",
-        base + "/objects/host/example.com/actions/update_discovery_phase/invoke",
+        f"{base}/objects/host/example.com/actions/update_discovery_phase/invoke",
         params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
         headers={"Accept": "application/json"},
         content_type="application/json",
         status=204,
     )
-
-    # 'monitored' is the external name for the target_phase, internally 'old' is used.
-    assert discovery_spy.call_args.kwargs["api_request"]["update_target"] == "old"
+    assert resp.text == ""
+    mock_try_discovery.assert_called_once()
+    # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
+    # known to the host. I have not verified this. But in case something like this happens, the
+    # endpoint should fail with some error instead instead of continuing silently.
+    mock_set_autochecks.assert_not_called()
 
 
 def test_openapi_bulk_discovery_with_default_options(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
     # create some sample hosts
     aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/domain-types/host_config/actions/bulk-create/invoke",
+        f"{base}/domain-types/host_config/actions/bulk-create/invoke",
         params=json.dumps(
             {
                 "entries": [
@@ -1119,7 +1099,7 @@ def test_openapi_bulk_discovery_with_default_options(
 
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+        f"{base}/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
         status=200,
         params=json.dumps(
             {
@@ -1149,13 +1129,12 @@ def test_openapi_bulk_discovery_with_default_options(
 
 
 def test_openapi_bulk_discovery_with_invalid_hostname(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
     aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+        f"{base}/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
         status=400,
         params=json.dumps({"hostnames": ["wrong_hostname"]}),
         headers={"Accept": "application/json"},

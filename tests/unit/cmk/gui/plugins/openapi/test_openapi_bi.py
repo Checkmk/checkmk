@@ -6,7 +6,11 @@
 
 import json
 
+import pytest
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+from cmk.utils.exceptions import MKGeneralException
 
 
 def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK):
@@ -367,3 +371,15 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
         headers={"Accept": "application/json"},
         status=404,
     )
+
+
+def test_get_non_existing_aggregation(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    postfix = "/objects/bi_aggregation/"
+    url = f"{base}{postfix}NO_I_DONT_EXIST"
+
+    with pytest.raises(MKGeneralException):
+        _response = wsgi_app.get(url=url, headers={"Accept": "application/json"})

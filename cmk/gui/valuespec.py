@@ -5068,7 +5068,6 @@ class Optional(ValueSpec):
         label: _Optional[str] = None,
         negate: bool = False,
         none_label: _Optional[str] = None,
-        none_value: Any = None,
         sameline: bool = False,
         indent: bool = True,
         # ValueSpec
@@ -5082,21 +5081,20 @@ class Optional(ValueSpec):
         self._label = label
         self._negate = negate
         self._none_label = none_label if none_label is not None else _("(unset)")
-        self._none_value = none_value
         self._sameline = sameline
         self._indent = indent
 
     def canonical_value(self) -> Any:
-        return self._none_value
+        return None
 
     def render_input(self, varprefix: str, value: Any) -> None:
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked is None:
             if self._negate:
-                checked = value == self._none_value
+                checked = value is None
             else:
-                checked = value != self._none_value
+                checked = value is not None
 
         html.open_span()
         html.checkbox(
@@ -5124,7 +5122,7 @@ class Optional(ValueSpec):
                 "display:none;" if checked == self._negate else None,
             ],
         )
-        if value == self._none_value:
+        if value is None:
             value = self._valuespec.default_value()
         if self._valuespec.title():
             the_title = self._valuespec.title()
@@ -5143,7 +5141,7 @@ class Optional(ValueSpec):
         return _(" Activate this option")
 
     def value_to_html(self, value: Any) -> ValueSpecText:
-        if value == self._none_value:
+        if value is None:
             return self._none_label
         return self._valuespec.value_to_html(value)
 
@@ -5151,38 +5149,38 @@ class Optional(ValueSpec):
         checkbox_checked = html.get_checkbox(varprefix + "_use") is True  # not None or False
         if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
-        return self._none_value
+        return None
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
-        if value != self._none_value:
+        if value is not None:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
-        if value != self._none_value:
+        if value is not None:
             self._valuespec.validate_value(value, varprefix + "_value")
 
     def transform_value(self, value: Any) -> Any:
-        return value if value == self._none_value else self._valuespec.transform_value(value)
+        return value if value is None else self._valuespec.transform_value(value)
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
     def value_to_json(self, value: Any) -> JSONValue:
-        if value != self._none_value:
+        if value is not None:
             return self._valuespec.value_to_json(value)
         if isinstance(value, tuple):
             return list(value)
         return value
 
     def value_from_json(self, json_value: JSONValue) -> Any:
-        if json_value != self._none_value:
+        if json_value is not None:
             return self._valuespec.value_from_json(json_value)
         if isinstance(json_value, list):
             return tuple(json_value)
         return json_value
 
     def value_to_json_safe(self, value: Any) -> JSONValue:
-        if value != self._none_value:
+        if value is not None:
             return self._valuespec.value_to_json_safe(value)
         if isinstance(value, tuple):
             return list(value)

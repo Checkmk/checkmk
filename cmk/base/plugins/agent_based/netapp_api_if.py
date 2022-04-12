@@ -6,8 +6,14 @@
 
 from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict, Union
 
-from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
-from .utils import interfaces, netapp_api
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Result,
+    State,
+    type_defs,
+)
+from cmk.base.plugins.agent_based.utils import interfaces, netapp_api
 
 MACList = List[Tuple[str, Optional[str]]]
 
@@ -16,7 +22,9 @@ class NICExtraInfo(TypedDict, total=False):
     grouped_if: MACList
     speed_differs: Tuple[int, int]
     home_port: str
+    home_node: str | None
     is_home: bool
+    failover_ports: Sequence[Mapping[str, str]]
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
@@ -125,6 +133,17 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
                         oper_status = "1"
                         break
 
+        if "failover_ports" in values and values["failover_ports"] != "none":
+            extra_info.setdefault(nic_name, {})["failover_ports"] = [
+                {
+                    "node": node,
+                    "port": name,
+                    "link-status": link_status,
+                }
+                for port in values["failover_ports"].split(";")
+                for node, name, link_status, *_ in (port.split("|"),)
+            ]
+
         nics.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(
@@ -155,6 +174,7 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
             extra_info.setdefault(nic_name, {}).update(
                 {
                     "home_port": values["home-port"],
+                    "home_node": values.get("home-node"),
                     "is_home": values.get("is-home") == "true",
                 }
             )
@@ -240,6 +260,25 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
                 yield Result(
                     state=State(mon_state),
                     summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
+                )
+
+            if "failover_ports" in vif:
+                failover_group_str = ", ".join(
+                    f"{fop['node']}:{fop['port']}={fop['link-status']}"
+                    for fop in sorted(vif["failover_ports"], key=lambda x: (x["node"], x["port"]))
+                )
+                yield Result(
+                    state=(
+                        State.CRIT
+                        if any(
+                            fop["link-status"] != "up" and fop["node"] == vif["home_node"]
+                            for fop in vif["failover_ports"]
+                        )
+                        else State.WARN
+                        if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
+                        else State.OK
+                    ),
+                    notice=f"Failover Group: [{failover_group_str}]",
                 )
 
             if "grouped_if" in vif:

@@ -781,22 +781,47 @@ def process_interfaces(
     }
 
     # update `extra_info` for every interfaces with associated port-values if available
-    #   I didn't dare to put this here but this mapping seems to be unambigeous
-    #   assert all(i.get("current-node") and i.get("current-port") for i in interface_dict.values())
-    #   assert all(i.get("node") and i.get("port") for i in port_dict.values())
-    #   note: not all ports referenced by interfaces are defined in port_dict:
-    #    print(interface_dict.keys() - extra_port_info.keys())
     interface_dict = create_dict(interfaces, custom_key="interface-name", is_counter=False)
     port_dict = create_dict(ports, custom_key=["node", "port"], is_counter=False)
+    #   I didn't dare to put this here but this mapping seems to be unambigeous
+    # assert all(i.get("current-node") and i.get("current-port") for i in interface_dict.values())
+    # assert all(i.get("node") and i.get("port") for i in port_dict.values())
+    #   note: not all ports referenced by interfaces are defined in port_dict:
+    #    print(interface_dict.keys() - extra_port_info.keys())
     for port_values in port_dict.values():
         for if_key, if_values in interface_dict.items():
             if (
                 if_values["current-port"] == port_values["port"]
                 and if_values["current-node"] == port_values["node"]
             ):
-                # This assertion has been true in all tested situations
-                #  assert not (port_values.keys() & extra_info.setdefault(if_key, {}).keys())
+                # Assertion has been true in all tested situations
+                # assert not port_values.keys() & extra_info.setdefault(if_key, {}).keys()
                 extra_info.setdefault(if_key, {}).update(port_values)
+
+    # Gather information about failover redundancy among broadcast-groups
+    # Assertion has been true in all tested situations:
+    # assert all(
+    #    "broadcast-domain" in port or port["port-type"] in {"physical", "if_group"}
+    #    for port in port_dict.values()
+    # )
+    broadcast_domains: MutableMapping[str, set[str]] = {}
+    for port in port_dict.values():
+        if not "broadcast-domain" in port:
+            continue
+        broadcast_domains.setdefault(port["broadcast-domain"], set()).add(
+            f"{port['node']}|{port['port']}|{port['link-status']}"
+        )
+
+    # Apply failover information to extra_info
+    for name, values in interface_dict.items():
+        # Assertion has been true in all tested situations:
+        #  assert "failover-group" in values or values["use-failover-group"] == "disabled"
+        extra_info.setdefault(name, {})["failover_ports"] = (
+            ";".join(broadcast_domains[failover_group])
+            if "failover-group" in values
+            and (failover_group := values["failover-group"]) in broadcast_domains
+            else "none"
+        )
 
     print("<<<netapp_api_if:sep(9)>>>")
     print(
@@ -817,6 +842,7 @@ def process_interfaces(
                 "operational-speed",
                 "recv_packet",
                 "send_packet",
+                "failover_ports",
             ],
         )
     )

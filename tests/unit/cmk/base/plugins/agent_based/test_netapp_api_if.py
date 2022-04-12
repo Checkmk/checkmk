@@ -357,6 +357,81 @@ from cmk.base.plugins.agent_based.utils import interfaces
                 ),
             ],
         ),
+        (
+            [
+                [
+                    "interface some-if-name",
+                    "address 127.0.0.1",
+                    "address-family ipv4",
+                    "administrative-status up",
+                    "current-node node01",
+                    "current-port e0c",
+                    "data-protocols.data-protocol none",
+                    "dns-domain-name none",
+                    "failover-group Cluster",
+                    "failover-policy local_only",
+                    "home-node fasc01",
+                    "home-port e0c",
+                    "ipspace Cluster",
+                    "is-auto-revert true",
+                    "is-home true",
+                    "is-vip false",
+                    "lif-uuid 12345678-9abc-defc-86db-00a098abc029",
+                    "listen-for-dns-query false",
+                    "netmask 255.255.0.0",
+                    "netmask-length 16",
+                    "operational-status up",
+                    "role cluster",
+                    "service-names.lif-service-name cluster_core",
+                    "service-policy default-cluster",
+                    "use-failover-group unused",
+                    "vserver Cluster",
+                    "instance_name some-instance",
+                    "recv_data 259146428473",
+                    "recv_errors 0",
+                    "recv_packet 255611925",
+                    "send_data 530473658468",
+                    "send_errors 0",
+                    "send_packet 255131226",
+                    "link-status up",
+                    "operational-speed 10000",
+                    "failover_ports fasc01|e0a|up;fasc01|e0c|up;fasc02|e0c|up;fasc02|e0a|up",
+                ],
+            ],
+            [
+                Service(
+                    item="1",
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 10000000000,
+                    },
+                ),
+            ],
+            [
+                (
+                    "1",
+                    {
+                        "errors": {"both": ("abs", (10, 20))},
+                        "discovered_speed": 10000000000,
+                        "discovered_oper_status": ["1"],
+                    },
+                    [
+                        Result(state=State.OK, summary="[some-if-name]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="Speed: 10 GBit/s"),
+                        Result(
+                            state=State.OK,
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.some-if-name..None', in_ucast: Initialized: 'in_ucast.1.some-if-name..None', in_mcast: Initialized: 'in_mcast.1.some-if-name..None', in_err: Initialized: 'in_err.1.some-if-name..None', out_octets: Initialized: 'out_octets.1.some-if-name..None', out_ucast: Initialized: 'out_ucast.1.some-if-name..None', out_mcast: Initialized: 'out_mcast.1.some-if-name..None', out_err: Initialized: 'out_err.1.some-if-name..None'",
+                        ),
+                        Result(state=State.OK, summary="Current Port: e0c (is home port)"),
+                        Result(
+                            state=State.OK,
+                            notice="Failover Group: [fasc01:e0a=up, fasc01:e0c=up, fasc02:e0a=up, fasc02:e0c=up]",
+                        ),
+                    ],
+                ),
+            ],
+        ),
     ],
 )
 def test_netapp_api_if_regression(
@@ -365,29 +440,24 @@ def test_netapp_api_if_regression(
     items_params_results,
 ):
     section = netapp_api_if.parse_netapp_api_if(string_table)
-
-    assert (
-        list(
-            netapp_api_if.discover_netapp_api_if(
-                [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-                section,
-            )
+    generated_discovery_results = list(
+        netapp_api_if.discover_netapp_api_if(
+            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+            section,
         )
-        == discovery_results
     )
+    assert generated_discovery_results == discovery_results
 
-    for item, par, res in items_params_results:
-        assert (
-            list(
-                netapp_api_if._check_netapp_api_if(
-                    item,
-                    (par),
-                    section,
-                    value_store={},
-                )
+    for item, params, expected_results in items_params_results:
+        generated_results = list(
+            netapp_api_if._check_netapp_api_if(
+                item,
+                (params),
+                section,
+                value_store={},
             )
-            == res
         )
+        assert generated_results == expected_results
 
 
 if __name__ == "__main__":

@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections import defaultdict
-from typing import Any, Iterable, Mapping, NamedTuple, Sequence
+from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -96,20 +95,6 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 #             received from its bus interfaces. These are used to manage sets of system
 #             processes that are created externally.
 
-_SYSTEMD_UNITS = [
-    ".service ",
-    ".socket ",
-    ".device ",
-    ".mount ",
-    ".automount ",
-    ".swap ",
-    ".target ",
-    ".path ",
-    ".timer ",
-    ".snapshot ",
-    ".slice ",
-    ".scope ",
-]
 
 _SYSTEMD_UNIT_FILE_STATES = [
     "enabled",
@@ -129,7 +114,6 @@ _SYSTEMD_UNIT_FILE_STATES = [
 
 class UnitEntry(NamedTuple):
     name: str
-    unit_type: str
     loaded_status: str
     active_status: str
     current_state: str
@@ -137,12 +121,12 @@ class UnitEntry(NamedTuple):
     enabled_status: str
 
 
-Section = Mapping[str, Mapping[str, UnitEntry]]
+Section = Mapping[str, UnitEntry]
 
 
-def parse(string_table: StringTable) -> Section:
+def parse(string_table: StringTable) -> Optional[Section]:
     if not string_table:
-        return {}
+        return None
 
     iter_string_table = iter(string_table)
     enabled_status_collection = {}
@@ -156,44 +140,38 @@ def parse(string_table: StringTable) -> Section:
             if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES:
                 enabled_status_collection[line[0]] = line[1]
 
-    parsed: dict[str, dict[str, UnitEntry]] = defaultdict(dict)
-    if line[0] == "[all]":
-        try:
-            line = next(iter_string_table)
-        # no services listed
-        except StopIteration:
-            return parsed
+    if line[0] != "[all]":
+        return None
+    try:
+        line = next(iter_string_table)
+    # no services listed
+    except StopIteration:
+        return None
 
-        for row in iter_string_table:
-            if row[0] in {"●", "*"}:
-                row.pop(0)
-            joinedline = " ".join(row)
-            for unit_marker in _SYSTEMD_UNITS:
-                utype = unit_marker.strip(" ")
-                if row[0].endswith(utype):
-                    unit_type = unit_marker.strip(". ")
-                    name, remains = joinedline.split(unit_marker, 1)
-                    if "@" in name:
-                        pos = name.find("@")
-                        temp = name[: pos + 1]
-                    else:
-                        temp = name
-                    enabled_status = enabled_status_collection.get(
-                        f"{temp}.{unit_type}",
-                        "unknown",
-                    )
-                    loaded_status, active_status, current_state, descr = remains.split(" ", 3)
-                    unit = UnitEntry(
-                        name,
-                        unit_type,
-                        loaded_status,
-                        active_status,
-                        current_state,
-                        descr,
-                        enabled_status,
-                    )
-                    parsed[unit.unit_type][unit.name] = unit
-                    break
+    parsed: dict[str, UnitEntry] = {}
+    for row in iter_string_table:
+        if row[0] in {"●", "*"}:
+            row.pop(0)
+        if row[0].endswith(".service"):
+            name = row[0].replace(".service", "")
+            temp = name[: name.find("@") + 1] if "@" in name else name
+            enabled_status = enabled_status_collection.get(
+                f"{temp}.service",
+                "unknown",
+            )
+            remains = " ".join(row[1:])
+            loaded_status, active_status, current_state, descr = remains.split(" ", 3)
+            unit = UnitEntry(
+                name,
+                loaded_status,
+                active_status,
+                current_state,
+                descr,
+                enabled_status,
+            )
+            parsed[unit.name] = unit
+    if parsed == {}:
+        return None
     return parsed
 
 
@@ -216,7 +194,7 @@ def discovery_systemd_units_services(
     # disappear frequently. No matter what the user configures, we do not want to discover them.
     filtered_services = [
         service
-        for service in section.get("service", {}).values()
+        for service in section.values()
         if not regex("^check-mk-agent@.+").match(service.name)
     ]
 
@@ -253,10 +231,11 @@ def discovery_systemd_units_services(
 def check_systemd_units_services(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    service = section.get("service", {}).get(item, None)
-    if service is None:
+    # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
+    if item not in section:
         yield Result(state=State(params["else"]), summary="Service not found")
         return
+    service = section[item]
     # TODO: this defaults unkown states to CRIT with the default params
     state = params["states"].get(service.active_status, params["states_default"])
     yield Result(state=State(state), summary=f"Status: {service.active_status}")
@@ -369,7 +348,7 @@ def _check_non_ok_services(
 def check_systemd_units_services_summary(
     params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    services = section.get("service", {}).values()
+    services = section.values()
     blacklist = params["ignored"]
     yield Result(state=State.OK, summary=f"Total: {len(services):d}")
     services_organised = _services_split(services, blacklist)

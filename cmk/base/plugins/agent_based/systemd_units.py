@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence
+from collections import defaultdict
+from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -124,41 +125,25 @@ class UnitEntry(NamedTuple):
 Section = Mapping[str, UnitEntry]
 
 
-def parse(string_table: StringTable) -> Optional[Section]:
-    if not string_table:
-        return None
+def _parse_list_unit_files(source: Iterator[Sequence[str]]) -> Mapping[str, str]:
+    return {
+        line[0]: line[1]
+        for line in source
+        if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES
+    }
 
-    iter_string_table = iter(string_table)
-    enabled_status_collection = {}
 
-    line = next(iter_string_table)
-
-    if line[0] == "[list-unit-files]":
-        for line in iter_string_table:
-            if line[0].startswith("["):
-                break
-            if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES:
-                enabled_status_collection[line[0]] = line[1]
-
-    if line[0] != "[all]":
-        return None
-    try:
-        line = next(iter_string_table)
-    # no services listed
-    except StopIteration:
-        return None
-
+def _parse_all(
+    source: Iterable[Sequence[str]], enabled_status: Mapping[str, str]
+) -> Optional[Section]:
     parsed: dict[str, UnitEntry] = {}
-    for row in iter_string_table:
+    for row in source:
         if row[0] in {"●", "*"}:
-            row.pop(0)
+            row = row[1:]
         if row[0].endswith(".service"):
             name = row[0].replace(".service", "")
             temp = name[: name.find("@") + 1] if "@" in name else name
-            enabled_status = enabled_status_collection.get(
-                f"{temp}.service",
-                "unknown",
-            )
+            enabled = enabled_status.get(f"{temp}.service", "unknown")
             remains = " ".join(row[1:])
             loaded_status, active_status, current_state, descr = remains.split(" ", 3)
             unit = UnitEntry(
@@ -167,12 +152,32 @@ def parse(string_table: StringTable) -> Optional[Section]:
                 active_status,
                 current_state,
                 descr,
-                enabled_status,
+                enabled,
             )
             parsed[unit.name] = unit
     if parsed == {}:
         return None
     return parsed
+
+
+def parse(string_table: StringTable) -> Optional[Section]:
+    if not string_table:
+        return None
+    # This is a hack to know about possible markers that start a new section. Just looking for a "[" is
+    # not enough as that can be contained in the systemd output. We also cannot change the section markers
+    # as we have to consume agent output from previous versions. A better way would be to have a unique
+    # section end marker that does not appear in any systemd output.
+    all_sections = {"[list-unit-files]", "[status]", "[all]"}
+    sections = defaultdict(list)
+    section = None
+    for line in string_table:
+        if line[0] in all_sections:
+            section = line[0][1:-1]
+        else:
+            sections[section].append(line)
+
+    enabled_status_collection = _parse_list_unit_files(iter(sections["list-unit-files"]))
+    return _parse_all(iter(sections["all"]), enabled_status_collection)
 
 
 register.agent_section(name="systemd_units", parse_function=parse)

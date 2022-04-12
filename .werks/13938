@@ -1,0 +1,12 @@
+Title: Requesting a non existing BI aggregation now results in a proper 404 response
+Class: feature
+Compatible: incomp
+Component: rest-api
+Date: 1649774207
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p23
+
+Instead of an internal server error (status code 500),
+requesting a non existing BI aggregation now results in a proper not found response (status code 404).

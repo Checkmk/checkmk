@@ -235,7 +235,7 @@ class BIAggregationPacks:
         bi_aggregation = self.get_aggregation(aggregation_id)
         if bi_aggregation:
             return bi_aggregation
-        assert False
+        raise MKGeneralException(_("The requested BI rule does not exist."))
 
     def get_all_aggregations(self) -> List[BIAggregation]:
         aggregations: List[BIAggregation] = []

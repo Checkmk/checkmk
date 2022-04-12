@@ -6,6 +6,10 @@
 
 import json
 
+import pytest
+
+from cmk.utils.exceptions import MKGeneralException
+
 
 def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
     username, secret = with_automation_user
@@ -293,3 +297,15 @@ def test_openapi_delete_pack_forbidden(wsgi_app, with_automation_user):
 
     # Check invalid POST request on existing id
     wsgi_app.delete(base + '/objects/bi_pack/default', content_type='application/json', status=404)
+
+
+def test_get_non_existing_aggregation(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+    postfix = '/objects/bi_aggregation/'
+    url = f'{base}{postfix}NO_I_DONT_EXIST'
+
+    with pytest.raises(MKGeneralException):
+        _response = wsgi_app.get(url=url)

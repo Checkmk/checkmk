@@ -12,8 +12,74 @@ from pydantic import BaseModel, Field
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import HostLabelGenerator
 
-LabelName = NewType("LabelName", str)
 LabelValue = NewType("LabelValue", str)
+"""
+
+A string consisting of alphanumeric characters, '-', '_' or '.', and must
+start and end with an alphanumeric character.
+
+    Examples:
+        >>> import re
+        >>> validation_value = re.compile(r'([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+        >>> is_value = lambda x: bool(validation_value.fullmatch(x))
+        >>> is_value('MyName')
+        True
+        >>> is_value('my.name')
+        True
+        >>> is_value('123-abc')
+        True
+        >>> is_value('a..a') # repeating '.', '_' or '-' characters in the middle is ok
+        True
+        >>> is_value('')  # does not start with alphanumeric character
+        False
+        >>> is_value('a-')  # does not end with alphanumeric character
+        False
+        >>> is_value('a&a')  # & not allowed
+        False
+"""
+
+LabelName = NewType("LabelName", str)
+"""
+
+A string consisting of a name part and an optional prefix part. The validation
+for the name part is the same as that of a `LabelValue`. The prefix part is a
+lowercase RFC 1123 DNS subdomain, which consists of lowercase alphanumeric
+characters, '-', '_' or '.' Note, that these subdomains are more restrictive
+than general DNS domains, which are allowed to have empty DNS labels and DNS
+labels with other special characters.
+
+    Examples:
+        >>> import re
+        >>> validation_name_part = re.compile(r'([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+        >>> is_name_part = lambda x: bool(validation_name_part.fullmatch(x))
+        >>> validation_prefix_part = re.compile(r'[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+        >>> is_prefix_part = lambda x: bool(validation_prefix_part.fullmatch(x))
+        >>> is_prefix_part('a-a')  #  DNS label
+        True
+        >>> is_prefix_part('a.a')  # Two DNS labels seperated by a dot
+        True
+        >>> is_prefix_part('A')  # not a DNS label, upper case not allowed
+        False
+        >>> is_prefix_part('.a')  # not a prefix, each prefix must start and with a non-empty DNS label
+        False
+        >>> is_prefix_part('a..a')  # Empty DNS label in the middle is not allowed
+        False
+        >>> def is_name(x: str) -> bool:
+        ...     *prefix_part, name_part = x.split('/', maxsplit=1)
+        ...     if len(prefix_part) > 0:
+        ...         return is_prefix_part(prefix_part[0]) and is_name_part(name_part)
+        ...     return is_name_part(name_part)
+        >>> is_name('a')  #  A valid name_part without prefix
+        True
+        >>> is_name('a/A')  #  A valid name part and a valid prefix part
+        True
+        >>> is_name('/A')  #  Empty prefix is not allowed
+        False
+        >>> is_name('./a')  # '.' is not a valid prefix part
+        False
+        >>> is_name('a/a/a')  #  Multiple slashes are not allowed
+        False
+"""
 
 
 class Label(BaseModel):

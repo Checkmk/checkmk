@@ -12,13 +12,14 @@ import itertools
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Mapping, Sequence, Tuple
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.utils.exceptions as exceptions
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.type_defs import CheckPluginName, HostName
@@ -418,3 +419,480 @@ def test_compile_delayed_host_check(
     assert compiled_file.resolve() != source_file
     with compiled_file.open("rb") as f:
         assert f.read().startswith(importlib.util.MAGIC_NUMBER)
+
+
+def mock_argument_function(params: Mapping[str, str]) -> str:
+    return "--arg1 arument1 --host_alias $HOSTALIAS$"
+
+
+def mock_service_description(params: Mapping[str, str]) -> str:
+    return "Active check of $HOSTNAME$"
+
+
+@pytest.mark.parametrize(
+    "active_checks, active_check_info, host_attrs, expected_result",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           Active check of my_host\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n",
+            id="active_check",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "0.0.0.0",
+                "address": "0.0.0.0",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2\n'
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           Active check of my_host\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n",
+            id="offline_active_check",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": lambda _: [
+                        "--arg1",
+                        "arument1",
+                        "--host_alias",
+                        "$HOSTALIAS$",
+                    ],
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            "  check_command                 check_mk_active-my_active_check!'--arg1' 'arument1' '--host_alias' '$HOSTALIAS$'\n"
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           Active check of my_host\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n",
+            id="arguments_list",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           Active check of my_host\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n",
+            id="duplicate_active_checks",
+        ),
+        pytest.param(
+            [
+                (
+                    "http",
+                    [
+                        {
+                            "description": "My http check",
+                            "param1": "param1",
+                            "name": "my special HTTP",
+                        }
+                    ],
+                ),
+            ],
+            {
+                "http": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            "  check_command                 check_mk_active-http!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           HTTP my special HTTP\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n",
+            id="old_service_description",
+        ),
+    ],
+)
+def test_create_nagios_servicedefs_active_check(
+    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_check_info: Mapping[str, Mapping[str, str]],
+    host_attrs: Dict[str, Any],
+    expected_result: str,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config, "active_check_info", active_check_info)
+
+    cache = config.get_config_cache()
+    cache.initialize()
+
+    hostname = HostName("my_host")
+    outfile = io.StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+
+    assert outfile.getvalue() == expected_result
+
+
+@pytest.mark.parametrize(
+    "active_checks, active_check_info, host_attrs, expected_result, expected_warning",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                ("my_active_check2", [{"description": "My active check", "param2": "param2"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": lambda e: "My description",
+                },
+                "my_active_check2": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": lambda e: "My description",
+                },
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           My description\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n",
+            "\n"
+            "WARNING: ERROR: Duplicate service description (active check) 'My description' for host 'my_host'!\n"
+            " - 1st occurrence: check plugin / item: active(my_active_check) / 'My description'\n"
+            " - 2nd occurrence: check plugin / item: active(my_active_check2) / None\n"
+            "\n",
+            id="duplicate_descriptions",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": lambda _: "",
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n" "\n" "# Active checks\n",
+            "\n"
+            "WARNING: Skipping invalid service with empty description (active check: my_active_check) on host my_host\n",
+            id="empty_description",
+        ),
+    ],
+)
+def test_create_nagios_servicedefs_with_warnings(
+    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_check_info: Mapping[str, Mapping[str, str]],
+    host_attrs: Dict[str, Any],
+    expected_result: str,
+    expected_warning: str,
+    monkeypatch: MonkeyPatch,
+    capsys,
+) -> None:
+    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config, "active_check_info", active_check_info)
+
+    cache = config.get_config_cache()
+    cache.initialize()
+
+    hostname = HostName("my_host")
+    outfile = io.StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+
+    assert outfile.getvalue() == expected_result
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_warning
+
+
+@pytest.mark.parametrize(
+    "active_checks, active_check_info, host_attrs, expected_result",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n" "\n" "# Active checks\n",
+            id="omitted_service",
+        ),
+    ],
+)
+def test_create_nagios_servicedefs_omit_service(
+    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_check_info: Mapping[str, Mapping[str, str]],
+    host_attrs: Dict[str, Any],
+    expected_result: str,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "service_ignored", lambda *_: True)
+
+    cache = config.get_config_cache()
+    cache.initialize()
+
+    hostname = HostName("my_host")
+    outfile = io.StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+
+    assert outfile.getvalue() == expected_result
+
+
+@pytest.mark.parametrize(
+    "active_checks, active_check_info, host_attrs, error_message",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": lambda _: 12,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Host: my_host, Service: Active check of my_host\).",
+            id="invalid_args",
+        ),
+    ],
+)
+def test_create_nagios_servicedefs_invalid_args(
+    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_check_info: Mapping[str, Mapping[str, str]],
+    host_attrs: Dict[str, Any],
+    error_message: str,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config, "active_check_info", active_check_info)
+
+    cache = config.get_config_cache()
+    cache.initialize()
+
+    hostname = HostName("my_host")
+    outfile = io.StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+
+    with pytest.raises(exceptions.MKGeneralException, match=error_message):
+        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+
+
+@pytest.mark.parametrize(
+    "active_checks, active_check_info, host_attrs, expected_result",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "some_command $ARG1$",
+                    "argument_function": mock_argument_function,
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            "\n"
+            "\n"
+            "# Active checks\n"
+            "define service {\n"
+            "  active_checks_enabled         1\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_interval                1.0\n"
+            "  contact_groups                \n"
+            "  host_name                     my_host\n"
+            "  service_description           Active check of my_host\n"
+            "  use                           check_mk_default\n"
+            "}\n"
+            "\n"
+            "\n"
+            "# ------------------------------------------------------------\n"
+            "# Dummy check commands and active check commands\n"
+            "# ------------------------------------------------------------\n"
+            "\n"
+            "define command {\n"
+            "  command_line                  some_command $ARG1$\n"
+            "  command_name                  check_mk_active-my_active_check\n"
+            "}\n"
+            "\n",
+            id="active_check",
+        ),
+    ],
+)
+def test_create_nagios_config_commands(
+    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_check_info: Mapping[str, Mapping[str, str]],
+    host_attrs: Dict[str, Any],
+    expected_result: str,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config, "active_check_info", active_check_info)
+
+    cache = config.get_config_cache()
+    cache.initialize()
+
+    hostname = HostName("my_host")
+    outfile = io.StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_config_commands(cfg)
+
+    assert outfile.getvalue() == expected_result

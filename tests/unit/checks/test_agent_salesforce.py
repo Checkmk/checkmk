@@ -14,13 +14,23 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
+        pytest.param(
             {"instances": ["5"]},
             [
                 "--section_url",
-                "salesforce_instances",
-                "https://api.status.salesforce.com/v1/instances/5/status",
+                "salesforce_instances,https://api.status.salesforce.com/v1/instances/5/status",
             ],
+            id="single instance",
+        ),
+        pytest.param(
+            {"instances": ["foo", "bar"]},
+            [
+                "--section_url",
+                "salesforce_instances,https://api.status.salesforce.com/v1/instances/foo/status",
+                "--section_url",
+                "salesforce_instances,https://api.status.salesforce.com/v1/instances/bar/status",
+            ],
+            id="multiple instances",
         ),
     ],
 )

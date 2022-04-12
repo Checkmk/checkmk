@@ -161,6 +161,7 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
             pod.spec.init_containers if pod.spec.init_containers is not None else []
         ),
         priority_class_name=pod.spec.priority_class_name,
+        active_deadline_seconds=pod.spec.active_deadline_seconds,
     )
 
 

@@ -621,7 +621,7 @@ def test_create_nagios_servicedefs_active_check(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
     cache = config.get_config_cache()
@@ -716,7 +716,7 @@ def test_create_nagios_servicedefs_with_warnings(
     monkeypatch: MonkeyPatch,
     capsys,
 ) -> None:
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
     cache = config.get_config_cache()
@@ -766,7 +766,7 @@ def test_create_nagios_servicedefs_omit_service(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(config, "service_ignored", lambda *_: True)
 
@@ -814,7 +814,7 @@ def test_create_nagios_servicedefs_invalid_args(
     error_message: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
     cache = config.get_config_cache()
@@ -883,7 +883,7 @@ def test_create_nagios_config_commands(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
     cache = config.get_config_cache()

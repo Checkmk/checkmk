@@ -188,7 +188,7 @@ def test_automation_active_check(
     expected_result: automation_results.ActiveCheckResult,
     monkeypatch,
 ):
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(core_config, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)
@@ -235,7 +235,7 @@ def test_automation_active_check_invalid_args(
     error_message: str,
     monkeypatch,
 ):
-    monkeypatch.setattr(config.CEEHostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(core_config, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)

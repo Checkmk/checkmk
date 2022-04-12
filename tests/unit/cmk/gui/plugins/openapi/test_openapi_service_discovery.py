@@ -802,10 +802,9 @@ def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_discovery(
+def test_openapi_discovery_fails_on_invalid_content_type(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus: MockLiveStatusConnection,
     mock_try_discovery: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
@@ -820,6 +819,14 @@ def test_openapi_discovery(
     mock_try_discovery.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_on_invalid_mode(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
         f"{base}/objects/host/example.com/actions/discover_services/invoke",
@@ -832,6 +839,14 @@ def test_openapi_discovery(
     mock_try_discovery.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_refresh_services(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
         f"{base}/objects/host/example.com/actions/discover_services/invoke",
@@ -846,8 +861,28 @@ def test_openapi_discovery(
         call("NO_SITE", ["@scan"], "example.com"),
         call("NO_SITE", ["@noscan"], "example.com"),
     ]
-    mock_try_discovery.reset_mock()
+    # TODO: This is a bug
     mock_set_autochecks.assert_not_called()
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_disable_and_re_enable_one_service(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/objects/host/example.com/actions/discover_services/invoke",
+        params='{"mode": "refresh"}',
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    assert len(resp.json["members"]) == len(mock_discovery_result.check_table)
+    mock_try_discovery.reset_mock()
 
     with mock_livestatus(expect_status_query=True):
         df_boot_ignore = aut_user_auth_wsgi_app.follow_link(

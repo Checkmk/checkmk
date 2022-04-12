@@ -6,52 +6,125 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as forms from "forms";
 
+interface Dashlet {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+/*
+ * information about DashboardProperties type
+ * we got the data from cmk/gui/dashboard.py
+ * since cmk.dashboard.set_dashboard_properties(%s) is being called there.
+ * refresh_Dashlets[2] it was tricky a bit since it could be
+ * none or string (url) or function the responsible function
+ * is get_refresh_action() in cmk/gui/plugins/dashboard/utils.py:
+ * */
+interface DashboardProperties<T> {
+    MAX: number;
+    GROW: number;
+    grid_size: number;
+    dashlet_padding: [number, number, number, number, number];
+    dashlet_min_size: [number, number];
+    refresh_dashlets: [number, number, T][];
+    on_resize_dashlets: Record<number, T | undefined>;
+    dashboard_name: string;
+    dashboard_mtime: number;
+    dashlets: Dashlet[];
+    slim_editor_thresholds: {
+        width: number;
+        height: number;
+    };
+}
+
+type DashboardPropertiesAPI = DashboardProperties<string>;
+type DashboardPropertiesGlobal = DashboardProperties<string | (() => void)>;
+
+interface GDrag {
+    m_x: number;
+    m_y: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+
+interface Thresholds {
+    height: number;
+    width: number;
+}
 var reload_on_resize = {};
-export var dashboard_properties = {};
+export var dashboard_properties = {} as DashboardPropertiesGlobal;
 
 // Set the dashboard as a start URL for the user
 export function set_start_url(dashboard_name) {
-    ajax.call_ajax("ajax_set_dashboard_start_url.py?name=" + encodeURIComponent(dashboard_name), {
-        response_handler: (_handler_data, response_body) => {
-            const response = JSON.parse(response_body);
-            if (response.result_code === 0) {
-                utils.reload_whole_page();
-            } else {
-                forms.confirm_dialog(
-                    {text: response.result, confirmButtonText: "OK", showCancelButton: false},
-                    null
-                );
-            }
-        },
-        method: "POST",
-    });
+    ajax.call_ajax(
+        "ajax_set_dashboard_start_url.py?name=" +
+            encodeURIComponent(dashboard_name),
+        {
+            response_handler: (_handler_data, response_body) => {
+                const response = JSON.parse(response_body);
+                if (response.result_code === 0) {
+                    utils.reload_whole_page();
+                } else {
+                    forms.confirm_dialog(
+                        {
+                            text: response.result,
+                            confirmButtonText: "OK",
+                            showCancelButton: false,
+                        },
+                        null
+                    );
+                }
+            },
+            method: "POST",
+        }
+    );
 }
 
 export function set_reload_on_resize(dashlet_id, url) {
     reload_on_resize[dashlet_id] = url;
 }
 
-export function set_dashboard_properties(properties) {
+//the python side returns a json which includes javascript code.
+// this javascript code is encoded as string, so we need to eval
+// this string in order to make it executable on the javascript side.
+// but there is more: it could also be possible that the value is not
+// a javascript function, but a literal string. in this case the value
+// is encoded twice: "\"litera_string\"".
+export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
     dashboard_properties = properties;
+    const {refresh_dashlets, on_resize_dashlets, ...others} = properties;
     // HACK: We JSON-encode refresh/resize actions twice, so undo one layer here...
-    dashboard_properties.refresh_dashlets.forEach(function (refresh) {
-        refresh[2] = eval(refresh[2]);
-    });
-    var resize_actions = dashboard_properties.on_resize_dashlets;
-    for (var nr in resize_actions) {
-        resize_actions[nr] = eval(resize_actions[nr]);
+
+    const tmp_refresh_dashlets = refresh_dashlets.map<
+        [number, number, string | (() => void)]
+    >(elem => [elem[0], elem[1], eval(elem[2])]);
+
+    var tmp_on_resize_dashlets: Record<
+        number,
+        string | undefined | (() => void)
+    > = {};
+    for (var key in Object.keys(on_resize_dashlets)) {
+        tmp_on_resize_dashlets[key] = eval(on_resize_dashlets[key]!);
     }
+
+    dashboard_properties = {
+        refresh_dashlets: tmp_refresh_dashlets,
+        on_resize_dashlets: tmp_on_resize_dashlets,
+        ...others,
+    };
 }
 
 function size_dashlets() {
     var size_info = calculate_dashlets();
-    var oDash = null;
-    var oDashTitle = null;
-    var oDashInner = null;
-    var oDashControls = null;
+    var oDash: HTMLElement | null = null;
+    var oDashTitle: HTMLElement | null = null;
+    var oDashInner: HTMLElement | null = null;
+    var oDashControls: HTMLElement | null = null;
 
     for (var d_number = 0; d_number < size_info.length; d_number++) {
-        var dashlet = size_info[d_number];
+        var dashlet: number[] = size_info[d_number];
         var d_left = dashlet[0];
         var d_top = dashlet[1];
         var d_width = dashlet[2];
@@ -60,16 +133,20 @@ function size_dashlets() {
 
         // check if dashlet has title and resize its width
         oDashTitle = document.getElementById("dashlet_title_" + d_number);
+
         let has_title = Boolean(oDashTitle);
         if (has_title) {
+            oDashTitle = oDashTitle!;
             //if browser window to small prevent js error
             if (d_width <= 20) {
                 d_width = 21;
             }
             oDashTitle.style.width = d_width - 17 + "px"; // 9 title padding + empty space on right of dashlet
             oDashTitle.style.display = disstyle;
-            oDashTitle.style.left = dashboard_properties.dashlet_padding[3] + "px";
-            oDashTitle.style.top = dashboard_properties.dashlet_padding[4] + "px";
+            oDashTitle.style.left =
+                dashboard_properties.dashlet_padding[3] + "px";
+            oDashTitle.style.top =
+                dashboard_properties.dashlet_padding[4] + "px";
         }
 
         // resize outer div
@@ -85,7 +162,8 @@ function size_dashlets() {
         var top_padding = dashboard_properties.dashlet_padding[0];
         if (!has_title) top_padding = dashboard_properties.dashlet_padding[4];
 
-        var netto_height = d_height - top_padding - dashboard_properties.dashlet_padding[2];
+        var netto_height =
+            d_height - top_padding - dashboard_properties.dashlet_padding[2];
         var netto_width =
             d_width -
             dashboard_properties.dashlet_padding[1] -
@@ -99,7 +177,8 @@ function size_dashlets() {
             var old_width = oDashInner.clientWidth;
             var old_height = oDashInner.clientHeight;
 
-            oDashInner.style.left = dashboard_properties.dashlet_padding[3] + "px";
+            oDashInner.style.left =
+                dashboard_properties.dashlet_padding[3] + "px";
             oDashInner.style.top = top_padding + "px";
             if (!has_title) {
                 oDashInner.style.top = top_padding + "px";
@@ -112,11 +191,18 @@ function size_dashlets() {
                 }
             }
 
-            if (old_width != oDashInner.clientWidth || old_height != oDashInner.clientHeight) {
+            if (
+                old_width != oDashInner.clientWidth ||
+                old_height != oDashInner.clientHeight
+            ) {
                 if (
                     !g_resizing ||
-                    parseInt(g_resizing.parentNode.parentNode.id.replace("dashlet_", "")) !=
-                        d_number
+                    parseInt(
+                        (
+                            (g_resizing as HTMLElement).parentNode!
+                                .parentNode as HTMLElement
+                        ).id.replace("dashlet_", "")
+                    ) != d_number
                 ) {
                     dashlet_resized(d_number, oDashInner);
                 }
@@ -136,7 +222,9 @@ export function adjust_single_metric_font_size(oTdMetricValue) {
     var oAMetricValue = oTdMetricValue.childNodes[0];
     if (oAMetricValue.scrollWidth > (oTdMetricValue.clientWidth * 9) / 10)
         oTdMetricValue.style.fontSize = (originalFontSize * 9) / 10 + "px";
-    else oTdMetricValue.style.fontSize = (oTdMetricValue.clientHeight * 4) / 5 + "px";
+    else
+        oTdMetricValue.style.fontSize =
+            (oTdMetricValue.clientHeight * 4) / 5 + "px";
 
     if (oAMetricValue.scrollWidth > (oTdMetricValue.clientWidth * 9) / 10)
         adjust_single_metric_font_size(oTdMetricValue);
@@ -162,7 +250,9 @@ function is_dynamic(x) {
 }
 
 function align_to_grid(px) {
-    return ~~(px / dashboard_properties.grid_size) * dashboard_properties.grid_size;
+    return (
+        ~~(px / dashboard_properties.grid_size) * dashboard_properties.grid_size
+    );
 }
 
 function vec(x, y) {
@@ -219,7 +309,7 @@ function calculate_dashlets() {
     var screen_size = new vec(g_dashboard_width, g_dashboard_height);
     var raster_size = screen_size.divide(dashboard_properties.grid_size);
     var used_matrix = {};
-    var positions = [];
+    var positions: number[][] = [];
 
     // first place all dashlets at their absolute positions
     var nr, top, left, right, bottom, grow_by;
@@ -275,7 +365,8 @@ function calculate_dashlets() {
         var x, y;
         // Try if all needed squares are free
         for (x = left; x < right; x++)
-            for (y = top; y < bottom; y++) if (x + " " + y in used_matrix) return false;
+            for (y = top; y < bottom; y++)
+                if (x + " " + y in used_matrix) return false;
 
         // Allocate all needed squares
         for (x = left; x < right; x++)
@@ -289,7 +380,7 @@ function calculate_dashlets() {
     var at_least_one_expanded = true;
     while (at_least_one_expanded) {
         at_least_one_expanded = false;
-        var new_positions = [];
+        var new_positions: number[][] = [];
         for (nr = 0; nr < positions.length; nr++) {
             left = positions[nr][0];
             top = positions[nr][1];
@@ -305,7 +396,11 @@ function calculate_dashlets() {
             ) {
                 at_least_one_expanded = true;
                 right += 1;
-            } else if (grow_by.x < 0 && left > 0 && try_allocate(left - 1, top, left, bottom)) {
+            } else if (
+                grow_by.x < 0 &&
+                left > 0 &&
+                try_allocate(left - 1, top, left, bottom)
+            ) {
                 at_least_one_expanded = true;
                 left -= 1;
             }
@@ -318,7 +413,11 @@ function calculate_dashlets() {
             ) {
                 at_least_one_expanded = true;
                 bottom += 1;
-            } else if (grow_by.y < 0 && top > 0 && try_allocate(left, top - 1, right, top)) {
+            } else if (
+                grow_by.y < 0 &&
+                top > 0 &&
+                try_allocate(left, top - 1, right, top)
+            ) {
                 at_least_one_expanded = true;
                 top -= 1;
             }
@@ -327,7 +426,7 @@ function calculate_dashlets() {
         positions = new_positions;
     }
 
-    var size_info = [];
+    var size_info: number[][] = [];
     for (nr = 0; nr < positions.length; nr++) {
         left = positions[nr][0];
         top = positions[nr][1];
@@ -343,24 +442,24 @@ function calculate_dashlets() {
     return size_info;
 }
 
-var g_dashboard_resizer = null;
-var g_dashboard_top = null;
-var g_dashboard_left = null;
-var g_dashboard_width = null;
-var g_dashboard_height = null;
+var g_dashboard_resizer: null | boolean = null;
+var g_dashboard_top: number | null = null;
+var g_dashboard_left: number | null = null;
+var g_dashboard_width: number | null = null;
+var g_dashboard_height: number | null = null;
 
 export function calculate_dashboard() {
     if (g_dashboard_resizer !== null) return; // another resize is processed
     g_dashboard_resizer = true;
 
     var oDash = document.getElementById("dashboard");
+    if (!oDash) throw new Error("oDash shouldn't be null!");
     let dashboard_rect = oDash.getBoundingClientRect();
 
     g_dashboard_top = dashboard_rect.top;
     g_dashboard_left = dashboard_rect.left;
-    g_dashboard_width = utils.page_width() - g_dashboard_left;
-    g_dashboard_height = utils.page_height() - g_dashboard_top;
-
+    g_dashboard_width = utils.page_width() || 0 - g_dashboard_left;
+    g_dashboard_height = utils.page_height() || 0 - g_dashboard_top;
     oDash.style.width = g_dashboard_width + "px";
     oDash.style.height = g_dashboard_height + "px";
 
@@ -378,14 +477,16 @@ export function execute_dashboard_scheduler(initial) {
         return;
     }
 
-    var timestamp = Date.parse(new Date()) / 1000;
+    var timestamp = Math.trunc(new Date().getTime() / 1000);
     for (var i = 0; i < dashboard_properties.refresh_dashlets.length; i++) {
         var nr = dashboard_properties.refresh_dashlets[i][0];
         var refresh = dashboard_properties.refresh_dashlets[i][1];
         var url = dashboard_properties.refresh_dashlets[i][2];
 
         if (
-            (initial && document.getElementById("dashlet_inner_" + nr).innerHTML == "") ||
+            (initial &&
+                document.getElementById("dashlet_inner_" + nr)?.innerHTML ==
+                    "") ||
             (refresh > 0 && timestamp % refresh == 0)
         ) {
             if (typeof url === "string") {
@@ -428,31 +529,49 @@ export function toggle_dashboard_edit(edit_text, display_text) {
     g_editing = !g_editing;
 
     // Toggle the page menu elements
-    let toggle_suggestion = document.getElementById("menu_suggestion_toggle_edit");
+    let toggle_suggestion = document.getElementById(
+        "menu_suggestion_toggle_edit"
+    );
     let toggle_shortcut = document.getElementById("menu_shortcut_toggle_edit");
     let toggle_entry = document.getElementById("menu_entry_toggle_edit");
 
     if (edit_text && display_text) {
         const title = g_editing ? edit_text : display_text;
-        if (toggle_suggestion) toggle_suggestion.lastChild.textContent = title;
-        toggle_shortcut.title = title;
-        toggle_entry.firstChild.lastChild.textContent = title;
+        if (toggle_suggestion) toggle_suggestion.lastChild!.textContent = title;
+        toggle_shortcut!.title = title;
+        toggle_entry!.firstChild!.lastChild!.textContent = title;
     }
 
     if (g_editing) {
-        const icon_disable = "themes/" + utils.get_theme() + "/images/emblem_disable.svg";
-        if (toggle_suggestion) toggle_suggestion.querySelector("img.emblem").src = icon_disable;
-        toggle_shortcut.querySelector("img.emblem").src = icon_disable;
-        toggle_entry.querySelector("img.emblem").src = icon_disable;
+        const icon_disable =
+            "themes/" + utils.get_theme() + "/images/emblem_disable.svg";
+        if (toggle_suggestion)
+            (
+                toggle_suggestion.querySelector(
+                    "img.emblem"
+                ) as HTMLImageElement
+            ).src = icon_disable;
+        (toggle_shortcut!.querySelector("img.emblem") as HTMLImageElement).src =
+            icon_disable;
+        (toggle_entry!.querySelector("img.emblem") as HTMLImageElement).src =
+            icon_disable;
     } else {
         const icon_trans = "themes/facelift/images/emblem_trans.svg";
-        if (toggle_suggestion) toggle_suggestion.querySelector("img.emblem").src = icon_trans;
-        toggle_shortcut.querySelector("img.emblem").src = icon_trans;
-        toggle_entry.querySelector("img.emblem").src = icon_trans;
+        if (toggle_suggestion)
+            (
+                toggle_suggestion.querySelector(
+                    "img.emblem"
+                ) as HTMLImageElement
+            ).src = icon_trans;
+        (toggle_shortcut!.querySelector("img.emblem") as HTMLImageElement).src =
+            icon_trans;
+        (toggle_entry!.querySelector("img.emblem") as HTMLImageElement).src =
+            icon_trans;
     }
 
     var dashlet_divs = document.getElementsByClassName("dashlet");
-    for (var i = 0; i < dashlet_divs.length; i++) dashlet_toggle_edit(dashlet_divs[i]);
+    for (var i = 0; i < dashlet_divs.length; i++)
+        dashlet_toggle_edit(dashlet_divs[i]);
 
     // Remove/Add edit=1 parameter from URL to make page reload handling correct
     utils.update_url_parameter("edit", g_editing ? "1" : "0");
@@ -479,7 +598,8 @@ function render_resize_controls(controls, i) {
         resize.className = "resize resize" + i + " resize" + i + "_" + a;
         controls.appendChild(resize);
         const indication = document.createElement("div");
-        indication.className = "resize resize" + i + " resize" + i + "_" + a + " circle_handle";
+        indication.className =
+            "resize resize" + i + " resize" + i + "_" + a + " circle_handle";
         const resize_image = document.createElement("div");
         resize_image.className = "resize_image";
         indication.appendChild(resize_image);
@@ -521,7 +641,7 @@ function render_corner_resizers(controls) {
     }
 }
 
-function dashlet_toggle_edit(dashlet_obj, edit) {
+function dashlet_toggle_edit(dashlet_obj, edit?) {
     var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
     var dashlet = dashboard_properties.dashlets[nr];
 
@@ -537,7 +657,11 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         controls.setAttribute("id", "dashlet_controls_" + nr);
         controls.className = "controls";
         dashlet_obj.appendChild(controls);
-        set_control_size(controls, dashlet_obj.clientWidth, dashlet_obj.clientHeight);
+        set_control_size(
+            controls,
+            dashlet_obj.clientWidth,
+            dashlet_obj.clientHeight
+        );
 
         const d_width = parseInt(dashlet_obj.clientWidth);
         const d_height = parseInt(dashlet_obj.clientHeight);
@@ -560,7 +684,8 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             render_sizer(centered_controls, nr, 0, anchor_id, dashlet.w);
             render_sizer(centered_controls, nr, 1, anchor_id, dashlet.h);
 
-            if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h)) render_corner_resizers(controls);
+            if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h))
+                render_corner_resizers(controls);
         }
 
         let create_a_button = function (className, title, onclick) {
@@ -593,7 +718,11 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         }
         var click_actions = function (target) {
             return function () {
-                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                var back_url = utils.makeuri(
+                    {},
+                    window.location.href,
+                    "dashboard.py"
+                );
                 location.href = utils.makeuri_contextless(
                     {
                         name: dashboard_properties.dashboard_name,
@@ -618,7 +747,11 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Add clone dashlet button
         edits.appendChild(
-            create_a_button("clone", "Clone this element", click_actions("clone_dashlet.py"))
+            create_a_button(
+                "clone",
+                "Clone this element",
+                click_actions("clone_dashlet.py")
+            )
         );
 
         // Add delete dashlet button
@@ -662,11 +795,14 @@ function toggle_sizer(nr, sizer_id) {
         } else if (dashlet.w == dashboard_properties.GROW) {
             if (!(nr in g_last_absolute_widths))
                 g_last_absolute_widths[nr] =
-                    dashlet_obj.clientWidth / dashboard_properties.grid_size;
+                    dashlet_obj!.clientWidth / dashboard_properties.grid_size;
             dashlet.w = dashboard_properties.MAX;
         } else if (dashlet.w == dashboard_properties.MAX) {
-            if (nr in g_last_absolute_widths) dashlet.w = g_last_absolute_widths[nr];
-            else dashlet.w = dashlet_obj.clientWidth / dashboard_properties.grid_size;
+            if (nr in g_last_absolute_widths)
+                dashlet.w = g_last_absolute_widths[nr];
+            else
+                dashlet.w =
+                    dashlet_obj!.clientWidth / dashboard_properties.grid_size;
         }
     } else {
         if (dashlet.h > 0) {
@@ -675,11 +811,14 @@ function toggle_sizer(nr, sizer_id) {
         } else if (dashlet.h == dashboard_properties.GROW) {
             if (!(nr in g_last_absolute_heights))
                 g_last_absolute_heights[nr] =
-                    dashlet_obj.clientHeight / dashboard_properties.grid_size;
+                    dashlet_obj!.clientHeight / dashboard_properties.grid_size;
             dashlet.h = dashboard_properties.MAX;
         } else if (dashlet.h == dashboard_properties.MAX) {
-            if (nr in g_last_absolute_heights) dashlet.h = g_last_absolute_heights[nr];
-            else dashlet.h = dashlet_obj.clientHeight / dashboard_properties.grid_size;
+            if (nr in g_last_absolute_heights)
+                dashlet.h = g_last_absolute_heights[nr];
+            else
+                dashlet.h =
+                    dashlet_obj!.clientHeight / dashboard_properties.grid_size;
         }
     }
 
@@ -721,7 +860,10 @@ function toggle_anchor(nr, anchor_id) {
 
 // We do not want to recompute the dimensions of growing dashlets here,
 // use the current effective size
-function calculate_relative_dashlet_coords(nr, anchor_id) {
+function calculate_relative_dashlet_coords(
+    nr,
+    anchor_id: number | string | undefined = undefined
+) {
     var dashlet = dashboard_properties.dashlets[nr];
 
     // When the anchor id is not set explicit here autodetect the anchor
@@ -733,10 +875,16 @@ function calculate_relative_dashlet_coords(nr, anchor_id) {
 
     var dashlet_obj = document.getElementById("dashlet_" + nr);
 
-    var x = align_to_grid(dashlet_obj.offsetLeft) / dashboard_properties.grid_size;
-    var y = align_to_grid(dashlet_obj.offsetTop) / dashboard_properties.grid_size;
-    var w = align_to_grid(dashlet_obj.clientWidth) / dashboard_properties.grid_size;
-    var h = align_to_grid(dashlet_obj.clientHeight) / dashboard_properties.grid_size;
+    var x =
+        align_to_grid(dashlet_obj?.offsetLeft) / dashboard_properties.grid_size;
+    var y =
+        align_to_grid(dashlet_obj?.offsetTop) / dashboard_properties.grid_size;
+    var w =
+        align_to_grid(dashlet_obj?.clientWidth) /
+        dashboard_properties.grid_size;
+    var h =
+        align_to_grid(dashlet_obj?.clientHeight) /
+        dashboard_properties.grid_size;
 
     var screen_size = new vec(g_dashboard_width, g_dashboard_height);
     var raster_size = screen_size.divide(dashboard_properties.grid_size);
@@ -771,8 +919,8 @@ function rerender_dashlet_controls(dashlet_obj) {
  * Dragging of dashlets
  */
 
-var g_dragging = false;
-var g_drag_start = null;
+var g_dragging: HTMLElement | false = false;
+var g_drag_start: GDrag | null = null;
 
 function drag_dashlet_start(event) {
     if (!event) event = window.event;
@@ -782,14 +930,22 @@ function drag_dashlet_start(event) {
     var target = event.target;
     var button = utils.get_button(event);
 
-    if (g_dragging === false && button == "LEFT" && utils.has_class(target, "controls")) {
-        g_dragging = target.parentNode;
+    if (
+        g_dragging === false &&
+        button == "LEFT" &&
+        utils.has_class(target, "controls")
+    ) {
+        g_dragging = target.parentNode as HTMLElement;
         var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
         var dashlet = dashboard_properties.dashlets[nr];
 
         // minimal dashlet sizes in pixels
-        var min_w = dashboard_properties.dashlet_min_size[0] * dashboard_properties.grid_size;
-        var min_h = dashboard_properties.dashlet_min_size[1] * dashboard_properties.grid_size;
+        var min_w =
+            dashboard_properties.dashlet_min_size[0] *
+            dashboard_properties.grid_size;
+        var min_h =
+            dashboard_properties.dashlet_min_size[1] *
+            dashboard_properties.grid_size;
 
         // reduce the dashlet to the minimum dashlet size for movement bound checks
         var x = g_dragging.offsetLeft;
@@ -826,15 +982,15 @@ function drag_dashlet_start(event) {
 
         g_drag_start = {
             // mouse position in px relative to dashboard
-            m_x: event.clientX - g_dashboard_left,
-            m_y: event.clientY - g_dashboard_top,
+            m_x: event.clientX - g_dashboard_left!,
+            m_y: event.clientY - g_dashboard_top!,
             // x/y position of shrunk dashlet in px relative to dashboard
             x: x,
             y: y,
             // size of shrunk dashlet in px
             w: w,
             h: h,
-        };
+        } as GDrag;
 
         bring_dashlet_to_front(g_dragging);
 
@@ -848,26 +1004,26 @@ function drag_dashlet(event) {
     if (!event) event = window.event;
 
     // mosue coords in px relative to dashboard
-    var mouse_x = event.clientX - g_dashboard_left;
-    var mouse_y = event.clientY - g_dashboard_top;
+    var mouse_x = event.clientX - g_dashboard_left!;
+    var mouse_y = event.clientY - g_dashboard_top!;
 
     if (!g_dragging) return true;
+    const g_drag_start_const: GDrag = g_drag_start!;
 
     var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
     var dashlet_obj = g_dragging;
-
     // get the relative mouse position offset to the dragging beginning
-    var diff_x = align_to_grid(g_drag_start.m_x - mouse_x);
-    var diff_y = align_to_grid(g_drag_start.m_y - mouse_y);
+    var diff_x = align_to_grid(g_drag_start_const.m_x - mouse_x);
+    var diff_y = align_to_grid(g_drag_start_const.m_y - mouse_y);
 
-    var x = g_drag_start.x - diff_x;
-    var y = g_drag_start.y - diff_y;
-    var w = g_drag_start.w;
-    var h = g_drag_start.h;
+    var x = g_drag_start_const.x - diff_x;
+    var y = g_drag_start_const.y - diff_y;
+    var w = g_drag_start_const.w;
+    var h = g_drag_start_const.h;
 
     var board_w = align_to_grid(g_dashboard_width);
     var board_h = align_to_grid(g_dashboard_height);
-
+    dashlet_obj = dashlet_obj as HTMLElement;
     if (x < 0) {
         // reached left limit: left screen border
         dashlet_obj.style.left = "0px";
@@ -893,7 +1049,6 @@ function drag_dashlet(event) {
         dashlet_obj.style.top = y + "px";
         dashlet_obj.style.height = h + "px";
     }
-
     // Calculates new data for the internal coord structure
     calculate_relative_dashlet_coords(nr);
 
@@ -965,9 +1120,9 @@ function handle_dashlet_post_response(_unused, response_text) {
 
 function bring_dashlet_to_front(obj) {
     document.querySelectorAll("div.dashlet").forEach(function (elem) {
-        elem.style.zIndex = 1;
+        (elem as HTMLElement).style.zIndex = "1";
     });
-    obj.style.zIndex = 80;
+    obj.style.zIndex = "80";
 }
 
 /**
@@ -975,8 +1130,8 @@ function bring_dashlet_to_front(obj) {
  */
 
 // false or the resizer dom object currently being worked with
-var g_resizing = false;
-var g_resize_start = null;
+var g_resizing: boolean | HTMLElement = false;
+var g_resize_start: GDrag | null = null;
 
 function resize_dashlet_start(event) {
     if (!event) event = window.event;
@@ -986,7 +1141,11 @@ function resize_dashlet_start(event) {
     var target = event.target;
     var button = utils.get_button(event);
 
-    if (g_resizing === false && button == "LEFT" && utils.has_class(target, "resize")) {
+    if (
+        g_resizing === false &&
+        button == "LEFT" &&
+        utils.has_class(target, "resize")
+    ) {
         var dashlet_obj = target.parentNode.parentNode;
 
         g_resizing = target;
@@ -1045,9 +1204,10 @@ function resize_dashlet(event) {
 
     if (!g_resizing) return true;
 
-    var dashlet_obj = g_resizing.parentNode.parentNode;
+    var dashlet_obj = (g_resizing as HTMLElement).parentNode!
+        .parentNode as HTMLElement;
     var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
-
+    if (!g_resize_start) throw new Error("g_resize_start is not defined!");
     var diff_x = align_to_grid(Math.abs(g_resize_start.m_x - event.clientX));
     var diff_y = align_to_grid(Math.abs(g_resize_start.m_y - event.clientY));
 
@@ -1057,8 +1217,12 @@ function resize_dashlet(event) {
     var board_w = align_to_grid(g_dashboard_width);
     var board_h = align_to_grid(g_dashboard_height);
 
-    var min_w = dashboard_properties.dashlet_min_size[0] * dashboard_properties.grid_size;
-    var min_h = dashboard_properties.dashlet_min_size[1] * dashboard_properties.grid_size;
+    var min_w =
+        dashboard_properties.dashlet_min_size[0] *
+        dashboard_properties.grid_size;
+    var min_h =
+        dashboard_properties.dashlet_min_size[1] *
+        dashboard_properties.grid_size;
 
     if (get_horizontal_direction(g_resizing) == "left") {
         // resizing with left border
@@ -1066,7 +1230,8 @@ function resize_dashlet(event) {
         if (new_x < 0) {
             // reached left limit: left screen border
             dashlet_obj.style.left = "0px";
-            dashlet_obj.style.width = g_resize_start.w + g_resize_start.x + "px";
+            dashlet_obj.style.width =
+                g_resize_start.w + g_resize_start.x + "px";
         } else if (g_resize_start.w + diff_x < min_w) {
             // reached right limit: minimum dashlet width
             dashlet_obj.style.width = min_w + "px";
@@ -1095,7 +1260,8 @@ function resize_dashlet(event) {
         if (new_y < 0) {
             // reached top limit: top screen border
             dashlet_obj.style.top = "0px";
-            dashlet_obj.style.height = g_resize_start.h + g_resize_start.y + "px";
+            dashlet_obj.style.height =
+                g_resize_start.h + g_resize_start.y + "px";
         } else if (g_resize_start.h + diff_y < min_h) {
             // reached bottom limit: minimum dashlet height
             dashlet_obj.style.height = min_h + "px";
@@ -1117,10 +1283,13 @@ function resize_dashlet(event) {
             dashlet_obj.style.height = g_resize_start.h - diff_y + "px";
         }
     }
-
-    const new_width = parseInt(dashlet_obj.clientWidth);
-    const new_height = parseInt(dashlet_obj.clientHeight);
-    toggle_slim_controls(document.getElementById("dashlet_controls_" + nr), new_width, new_height);
+    const new_width = Math.trunc(dashlet_obj.clientWidth);
+    const new_height = Math.trunc(dashlet_obj.clientHeight);
+    toggle_slim_controls(
+        document.getElementById("dashlet_controls_" + nr),
+        new_width,
+        new_height
+    );
 
     // Calculates new data for the internal coord structure
     calculate_relative_dashlet_coords(nr);
@@ -1134,7 +1303,8 @@ function resize_dashlet_stop(event) {
 
     if (!g_resizing) return true;
 
-    var dashlet_obj = g_resizing.parentNode.parentNode;
+    var dashlet_obj = (g_resizing as HTMLElement).parentNode
+        ?.parentNode as HTMLElement;
     var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
     g_resizing = false;
 
@@ -1146,13 +1316,21 @@ function resize_dashlet_stop(event) {
 function dashlet_resized(nr, dashlet_obj) {
     if (typeof reload_on_resize[nr] != "undefined") {
         var base_url = reload_on_resize[nr];
-        var iframe = document.getElementById("dashlet_iframe_" + nr);
+        var iframe = document.getElementById(
+            "dashlet_iframe_" + nr
+        ) as HTMLFrameElement;
         iframe.src =
-            base_url + "&width=" + dashlet_obj.clientWidth + "&height=" + dashlet_obj.clientHeight;
+            base_url +
+            "&width=" +
+            dashlet_obj.clientWidth +
+            "&height=" +
+            dashlet_obj.clientHeight;
     }
+    let on_resize: undefined | (() => void) | string =
+        dashboard_properties.on_resize_dashlets[nr];
 
-    if (typeof dashboard_properties.on_resize_dashlets[nr] != "undefined") {
-        dashboard_properties.on_resize_dashlets[nr]();
+    if (typeof on_resize !== "undefined" && typeof on_resize !== "string") {
+        on_resize();
     }
 }
 
@@ -1191,8 +1369,17 @@ export function register_event_handlers() {
     );
 }
 
-export function chart_pie(pie_id, x_scale, radius, color, right_side, pie_diameter) {
-    var context = document.getElementById(pie_id + "_stats").getContext("2d");
+export function chart_pie(
+    pie_id,
+    x_scale,
+    radius,
+    color,
+    right_side,
+    pie_diameter
+) {
+    var context = (
+        document.getElementById(pie_id + "_stats") as HTMLCanvasElement
+    ).getContext("2d");
     if (!context) return;
     var pie_x = pie_diameter / 2;
     var pie_y = pie_diameter / 2;
@@ -1202,8 +1389,24 @@ export function chart_pie(pie_id, x_scale, radius, color, right_side, pie_diamet
     context.translate(pie_x, pie_y);
     context.scale(x_scale, 1);
     context.beginPath();
-    if (right_side) context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
-    else context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false);
+    if (right_side)
+        context.arc(
+            0,
+            0,
+            (pie_d / 2) * radius,
+            1.5 * Math.PI,
+            0.5 * Math.PI,
+            false
+        );
+    else
+        context.arc(
+            0,
+            0,
+            (pie_d / 2) * radius,
+            0.5 * Math.PI,
+            1.5 * Math.PI,
+            false
+        );
     context.closePath();
     context.fill();
     context.restore();
@@ -1211,10 +1414,11 @@ export function chart_pie(pie_id, x_scale, radius, color, right_side, pie_diamet
 }
 
 function toggle_slim_controls(controls_obj, width, height) {
-    let thresholds = {};
+    let thresholds = {} as Thresholds;
     for (const key in dashboard_properties.slim_editor_thresholds) {
         thresholds[key] =
-            dashboard_properties.slim_editor_thresholds[key] * dashboard_properties.grid_size;
+            dashboard_properties.slim_editor_thresholds[key] *
+            dashboard_properties.grid_size;
     }
 
     if (width < thresholds.width || height < thresholds.height) {

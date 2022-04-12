@@ -1,6 +1,7 @@
 # The following files contain a lot of ESLint warnings or errors.
 # These issues will be fixed on a file per file basis over a longer period of time.
 
+web/htdocs/js/modules/dashboard.*s
 
 # These are just copied files and should be replaced
 # with npm dependencies in the future

@@ -378,6 +378,7 @@ class PodSpec(BaseModel):
     restart_policy: RestartPolicy
     containers: Sequence[ContainerSpec]
     init_containers: Sequence[ContainerSpec]
+    priority_class_name: Optional[str] = None
 
 
 class ContainerRunningState(BaseModel):

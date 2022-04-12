@@ -536,6 +536,8 @@ section_systemd() {
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
         systemctl list-unit-files --no-pager | tr -s ' '
+        echo "[status]"
+        systemctl status --all --type service --no-pager | tr -s ' '
         echo "[all]"
         systemctl --all --no-pager | sed '/^$/q' | tr -s ' '
     fi

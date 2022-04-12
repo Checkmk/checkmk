@@ -56,13 +56,13 @@ from cmk.gui.valuespec import (
     AbsoluteDate,
     Checkbox,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     HostState,
     MonitoringState,
     Optional,
     TextAreaUnicode,
     TextInput,
-    ValueSpec,
 )
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
@@ -1202,59 +1202,60 @@ def _validate_reclassify_of_states(value, varprefix):
 
 
 def _vs_annotation():
-    extra_elements: List[Tuple[str, ValueSpec]] = []
-    if not cmk_version.is_raw_edition():
-        extra_elements.append(("hide_from_report", Checkbox(title=_("Hide annotation in report"))))
-
+    elements: List[DictionaryEntry] = [
+        ("site", TextInput(title=_("Site"))),
+        ("host", TextInput(title=_("Hostname"))),
+        (
+            "host_state",
+            Optional(
+                valuespec=HostState(),
+                sameline=True,
+                title=_("Host state"),
+                label=_("Reclassify host state of this period"),
+            ),
+        ),
+        (
+            "service",
+            Optional(
+                valuespec=TextInput(allow_empty=False),
+                sameline=True,
+                title=_("Service"),
+                label=_("Service description"),
+            ),
+        ),
+        (
+            "service_state",
+            Optional(
+                valuespec=MonitoringState(),
+                sameline=True,
+                title=_("Service state"),
+                label=_("Reclassify service state of this period"),
+            ),
+        ),
+        ("from", AbsoluteDate(title=_("Start-Time"), include_time=True)),
+        ("until", AbsoluteDate(title=_("End-Time"), include_time=True)),
+        (
+            "downtime",
+            Optional(
+                valuespec=DropdownChoice(
+                    choices=[
+                        (True, _("regard as scheduled downtime")),
+                        (False, _("do not regard as scheduled downtime")),
+                    ],
+                ),
+                title=_("Scheduled downtime"),
+                label=_("Reclassify downtime of this period"),
+            ),
+        ),
+        ("text", TextAreaUnicode(title=_("Annotation"), allow_empty=False)),
+    ]
+    extra_elements: List[DictionaryEntry] = (
+        []
+        if cmk_version.is_raw_edition()
+        else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
+    )
     return Dictionary(
-        elements=[
-            ("site", TextInput(title=_("Site"))),
-            ("host", TextInput(title=_("Hostname"))),
-            (
-                "host_state",
-                Optional(
-                    valuespec=HostState(),
-                    sameline=True,
-                    title=_("Host state"),
-                    label=_("Reclassify host state of this period"),
-                ),
-            ),
-            (
-                "service",
-                Optional(
-                    valuespec=TextInput(allow_empty=False),
-                    sameline=True,
-                    title=_("Service"),
-                    label=_("Service description"),
-                ),
-            ),
-            (
-                "service_state",
-                Optional(
-                    valuespec=MonitoringState(),
-                    sameline=True,
-                    title=_("Service state"),
-                    label=_("Reclassify service state of this period"),
-                ),
-            ),
-            ("from", AbsoluteDate(title=_("Start-Time"), include_time=True)),
-            ("until", AbsoluteDate(title=_("End-Time"), include_time=True)),
-            (
-                "downtime",
-                Optional(
-                    valuespec=DropdownChoice(
-                        choices=[
-                            (True, _("regard as scheduled downtime")),
-                            (False, _("do not regard as scheduled downtime")),
-                        ],
-                    ),
-                    title=_("Scheduled downtime"),
-                    label=_("Reclassify downtime of this period"),
-                ),
-            ),
-            ("text", TextAreaUnicode(title=_("Annotation"), allow_empty=False)),
-        ]
-        + extra_elements,
+        elements + extra_elements,
         title=_("Edit annotation"),
         optional_keys=[],
         validate=_validate_reclassify_of_states,

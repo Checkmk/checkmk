@@ -5056,7 +5056,7 @@ def TimeFormat(  # pylint: disable=redefined-builtin
     )
 
 
-class Optional(ValueSpec):
+class Optional(ValueSpec[_Optional[T]]):
     """Make a configuration value optional, i.e. it may be None.
 
     The user has a checkbox for activating the option. Example:
@@ -5064,7 +5064,7 @@ class Optional(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        valuespec: ValueSpec,
+        valuespec: ValueSpec[T],
         label: _Optional[str] = None,
         negate: bool = False,
         none_label: _Optional[str] = None,
@@ -5073,8 +5073,8 @@ class Optional(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[Any] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
+        default_value: ValueSpecDefault[_Optional[T]] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[_Optional[T]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
@@ -5084,10 +5084,10 @@ class Optional(ValueSpec):
         self._sameline = sameline
         self._indent = indent
 
-    def canonical_value(self) -> Any:
+    def canonical_value(self) -> _Optional[T]:
         return None
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: _Optional[T]) -> None:
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked is None:
@@ -5140,46 +5140,46 @@ class Optional(ValueSpec):
             return _(" Ignore this option")
         return _(" Activate this option")
 
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[T]) -> ValueSpecText:
         if value is None:
             return self._none_label
         return self._valuespec.value_to_html(value)
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> _Optional[T]:
         checkbox_checked = html.get_checkbox(varprefix + "_use") is True  # not None or False
         if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         return None
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: _Optional[T], varprefix: str) -> None:
         if value is not None:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: _Optional[T], varprefix: str) -> None:
         if value is not None:
             self._valuespec.validate_value(value, varprefix + "_value")
 
-    def transform_value(self, value: Any) -> Any:
+    def transform_value(self, value: _Optional[T]) -> _Optional[T]:
         return value if value is None else self._valuespec.transform_value(value)
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: Any) -> JSONValue:
+    def value_to_json(self, value: _Optional[T]) -> JSONValue:
         if value is not None:
             return self._valuespec.value_to_json(value)
         if isinstance(value, tuple):
             return list(value)
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> _Optional[T]:
         if json_value is not None:
             return self._valuespec.value_from_json(json_value)
         if isinstance(json_value, list):
             return tuple(json_value)
         return json_value
 
-    def value_to_json_safe(self, value: Any) -> JSONValue:
+    def value_to_json_safe(self, value: _Optional[T]) -> JSONValue:
         if value is not None:
             return self._valuespec.value_to_json_safe(value)
         if isinstance(value, tuple):

@@ -756,6 +756,10 @@ msgstr "(無題モジュール)"
 msgid "(builtin)"
 msgstr "(組み込み)"
 
+#, python-format
+msgid "(default is %r for %s/TLS)"
+msgstr ""
+
 msgid "(disabled)"
 msgstr "(無効)"
 
@@ -3308,6 +3312,10 @@ msgstr "新しいパターンを追加する"
 msgid "Add new project"
 msgstr "新しいプロジェクトを追加する"
 
+#, fuzzy
+msgid "Add new role"
+msgstr "新しいグループを追加する"
+
 msgid "Add new row"
 msgstr "新しい行を追加します"
 
@@ -4007,6 +4015,9 @@ msgstr "エージェントのデプロイメントステータス"
 msgid "Agent for %s (%s)"
 msgstr "%sのエージェント(%s)"
 
+msgid "Agent internal TCP port used to communicate with controller"
+msgstr ""
+
 #, fuzzy
 msgid "Agent labels"
 msgstr "エージェントルール"
@@ -4553,6 +4564,10 @@ msgstr "パスワード認証を許可する"
 msgid "Allow to see the icon %s in the host and service views"
 msgstr "ホストビューとサービスビューでアイコン %s を表示できるようにします"
 
+#, fuzzy
+msgid "Allow unencrypted legacy communication"
+msgstr "通信を暗号化する"
+
 msgid "Allow upload of insecure WATO snapshots"
 msgstr "安全でないWATOスナップショットのアップロードを許可する"
 
@@ -4697,6 +4712,9 @@ msgid ""
 msgstr ""
 "これらのグループは、常に<b>連絡先</b>として<b>このフォルダのすべてのサブフォ"
 "ルダ内のすべてのサービスに追加</b>してください。"
+
+msgid "Always allow to use not encrypted( legacy ) communication as a fallback"
+msgstr ""
 
 msgid "Always assume host to be up"
 msgstr "常にホストが稼働していると想定します"
@@ -7032,18 +7050,6 @@ msgstr ""
 "ESXホストを単独で実行するユーザー、または監視にvCenterを含めないユーザーは、"
 "ESXホスト自体にスナップショットの概要を表示することを選択できます。"
 
-msgid "By default the standard IMAP Port 143 is used."
-msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
-
-msgid "By default the standard IMAP/SSL Port 993 is used."
-msgstr "デフォルトでは、標準のIMAP/SSLポート993が使用されます。"
-
-msgid "By default the standard POP3 Port 110 is used."
-msgstr "デフォルトでは、標準のPOP3ポート110が使用されます。"
-
-msgid "By default the standard POP3/SSL Port 995 is used."
-msgstr "デフォルトでは、標準のPOP3/SSLポート995が使用されます。"
-
 msgid ""
 "By default the users are synchronized automatically in the interval "
 "configured in the connection. For example the LDAP connector synchronizes "
@@ -8128,7 +8134,7 @@ msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr "チェック HTTP:SSL/TLS接続にHTTPの代わりにHTTPSを使用する"
 
 #, fuzzy
-msgid "Check IMAP Mailboxes"
+msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAPメールボックスを確認する"
 
 msgid "Check Item"
@@ -9457,6 +9463,9 @@ msgstr "コマンド"
 msgid "Command %s/%d not found"
 msgstr "コマンド %s/%d が見つかりません"
 
+msgid "Command 'locale -a' could not be executed. Exit code of command was"
+msgstr ""
+
 msgid "Command Line"
 msgstr "コマンドライン"
 
@@ -10180,6 +10189,10 @@ msgstr "接続名"
 msgid "Connection option"
 msgstr "接続オプション"
 
+#, fuzzy
+msgid "Connection settings"
+msgstr "接続状態"
+
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
 "all sites of each customer at once."
@@ -10710,7 +10723,8 @@ msgstr "トリガーされるまでカウント"
 msgid "Count, size and age of files"
 msgstr "ファイルの数、サイズ、および経過時間(Linux、Windows)"
 
-msgid "Count, size and age of files - mk_filestat (Linux)"
+#, fuzzy
+msgid "Count, size and age of files - mk_filestat (Linux/Solaris)"
 msgstr "ファイルの数、サイズ、および経過時間 - mk_filestat (Linux)"
 
 msgid "Counter"
@@ -11187,14 +11201,6 @@ msgstr "クリティカル(アウト)"
 
 msgid "Critical (active connections)"
 msgstr "クリティカル(アクティブな接続)"
-
-msgid ""
-"Critical Level for time since last diagnostic test of the device. For a "
-"value of 0 the critical level will not be used"
-msgstr ""
-
-msgid "Critical Level for time since last self test"
-msgstr "最後のセルフテストからの時間のクリティカルレベル"
 
 msgid "Critical above"
 msgstr "上記のクリティカル"
@@ -12698,8 +12704,8 @@ msgstr "集計を削除する"
 
 msgid ""
 "Delete all messages identified as being related to this check. This is "
-"disabled by default, which will make your mailbox grow when you not clean it "
-"up on your own."
+"disabled by default, which will make your mailbox grow when you do not clean "
+"it up on your own."
 msgstr ""
 
 msgid "Delete all processed message belonging to this check"
@@ -13624,11 +13630,19 @@ msgstr "SSL証明書の検証を無効にする"
 msgid "Disable SSL certificate verification"
 msgstr "SSL証明書の検証を無効にする"
 
+#, fuzzy
+msgid "Disable TLS/SSL"
+msgstr "無効 "
+
 msgid "Disable active checks"
 msgstr "アクティブチェックを無効にする"
 
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr "自動ユーザー同期を無効にします(マスターサイトユーザーを使用します)"
+
+#, fuzzy
+msgid "Disable certificate validation"
+msgstr "SSL証明書の検証を無効にする"
 
 msgid "Disable configuration via WATO on this site"
 msgstr "このサイトでWATOを介した構成を無効にする"
@@ -15354,6 +15368,9 @@ msgstr "ESXホストと仮想マシンの状態"
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "ESXホスト:仮想マシンの配布"
 
+msgid "EWS"
+msgstr ""
+
 msgid "EXITED"
 msgstr "EXITED"
 
@@ -15987,6 +16004,10 @@ msgstr "アクティブチェックを有効にする"
 msgid "Enable adhoc downtime"
 msgstr "アドホックダウンタイムを有効にする"
 
+#, fuzzy
+msgid "Enable agent controller"
+msgstr "Windows認証"
+
 msgid "Enable automatic agent updates"
 msgstr "エージェントの自動更新を有効にする"
 
@@ -16032,19 +16053,6 @@ msgstr "可用性のためにメモリ内キャッシュを有効にする"
 
 msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
 msgstr ""
-
-#, python-format
-msgid ""
-"Enable listening for passible checks via NSCA. With the default "
-"configuration the TCP port 5667 will be opened. You may also want to update "
-"the NSCA configuration file %s to fit your needs."
-msgstr ""
-"NSCAを介したパッシブチェックのリッスンを有効にします。デフォルト構成では、TCP"
-"ポート5667が開かれます。ニーズに合わせてNSCA構成ファイル %s を更新することも"
-"できます。"
-
-msgid "Enable listening for passive checks using NSCA"
-msgstr "NSCAを使用してパッシブチェックのリッスンを有効にする"
 
 #, fuzzy
 msgid "Enable logging of logon failures"
@@ -16227,12 +16235,6 @@ msgstr "エンクロージャー統計"
 
 msgid "Enclosures"
 msgstr "エンクロージャー"
-
-msgid "Encrypt IMAP communication using SSL"
-msgstr "SSLを使用してIMAP通信を暗号化する"
-
-msgid "Encrypt POP3 communication using SSL"
-msgstr "SSLを使用してPOP3通信を暗号化する"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "TLSを使用してSMTP通信を暗号化する"
@@ -16876,6 +16878,10 @@ msgstr "除外する"
 
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr "時間範囲の\"変更のアクティブ化\"を除外する"
+
+#, fuzzy
+msgid "Exclude Nodes based on their role"
+msgstr "宛先vserverを除外する"
 
 msgid "Exclude Pattern"
 msgstr "パターンを除外する"
@@ -18586,6 +18592,10 @@ msgstr "OKになるように強制"
 
 msgid "Force to be WARN, if aggregate is not OK"
 msgstr "集計に問題がある場合は、強制的に警告にします"
+
+#, fuzzy
+msgid "Force unencrypted communication"
+msgstr "通信を暗号化する"
 
 msgid "Force update of PNP meta information on restart / reload"
 msgstr "再起動/リロード時にPNPメタ情報を強制的に更新します"
@@ -21729,12 +21739,6 @@ msgstr "レプリケーションの状態"
 msgid "IMAP"
 msgstr "IMAP"
 
-msgid "IMAP Server"
-msgstr "IMAPサーバー"
-
-msgid "IMAP authentification uses TLS"
-msgstr "IMAP認証はTLSを使用します"
-
 msgid "INotify Levels"
 msgstr "INotifyレベル"
 
@@ -22214,6 +22218,15 @@ msgid ""
 "link speed here."
 msgstr ""
 "リンク速度の自動検出が機能しない場合は、ここでリンク速度を設定できます。"
+
+msgid ""
+"If the flag is set, then the windows agent allows possibility to use not "
+"encrypted communication between the monitoring site and the host. You may "
+"enable this flag for compatibility reasons or if you experience problems "
+"with the controller related to TLS or encryption. But please pay attention, "
+"that this enables an unencrypted communication if your controller connection "
+"isn't properly configured."
+msgstr ""
 
 msgid ""
 "If the host has a kernel of version 3.14 or newer, the information "
@@ -23249,6 +23262,9 @@ msgstr "バージョンを無視する"
 msgid "Ignore these levels"
 msgstr "これらのレベルを無視する"
 
+msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
+msgstr ""
+
 msgid "Ignore unverified HTTPS request warnings. Use with caution."
 msgstr "未確認のHTTPSリクエストの警告を無視します。注意して使用してください。"
 
@@ -23757,6 +23773,10 @@ msgstr "パターンを含める"
 
 msgid "Include WAFs in front of CloudFront resources in the monitoring"
 msgstr "モニタリングでCloudFrontリソースの前にWAFを含める"
+
+#, fuzzy
+msgid "Include all Nodes"
+msgstr "すべてのサブフォルダーを含める"
 
 msgid "Include all subfolders"
 msgstr "すべてのサブフォルダーを含める"
@@ -26328,6 +26348,9 @@ msgstr ""
 msgid "Limit length of mail body"
 msgstr "メール本文の長さを制限する"
 
+msgid "Limit local access to the agent data to the agent controller"
+msgstr ""
+
 msgid "Limit login to single session at a time"
 msgstr "ログインを一度に1つのセッションに制限する"
 
@@ -26588,9 +26611,6 @@ msgstr "パッケージ化されていないファイルを一覧表示する"
 
 msgid "Listen for incoming messages via"
 msgstr "経由で着信メッセージを聞く"
-
-msgid "Listen for passive checks via NSCA"
-msgstr "NSCAを介してパッシブチェックをリッスンします"
 
 #, fuzzy
 msgid "Listeners per load balancer"
@@ -27294,6 +27314,10 @@ msgid "Lower levels for health check percentage healty"
 msgstr "ヘルスライフタイムの低レベル"
 
 msgid "Lower levels for health lifetime"
+msgstr "ヘルスライフタイムの低レベル"
+
+#, fuzzy
+msgid "Lower levels for hit ratio"
 msgstr "ヘルスライフタイムの低レベル"
 
 msgid "Lower levels for remaining API reads"
@@ -29890,9 +29914,6 @@ msgstr "NGINX Webサーバー(Linux)"
 msgid "NODATA"
 msgstr "データなし"
 
-msgid "NSCA is disabled"
-msgstr "NSCAが無効になっている"
-
 msgid "NTLS Clients"
 msgstr "NTLSクライアント"
 
@@ -30185,6 +30206,10 @@ msgstr "ネームスペース"
 
 msgid "Namespace prefix for hosts"
 msgstr "ホストの名前空間プレフィックス"
+
+#, fuzzy
+msgid "Namespaces"
+msgstr "ネームスペース"
 
 #, fuzzy
 msgid "Native cluster mode"
@@ -30565,8 +30590,10 @@ msgstr "SNMPなし"
 msgid "No TX Credits"
 msgstr "TXクレジットなし"
 
+#, fuzzy
 msgid ""
-"No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding."
+"No UTF-8 encoding found in your locale -a! Please install appropriate "
+"locales."
 msgstr ""
 "ロケール -a にUTF-8エンコーディングが見つかりません！C.UTF-8エンコーディング"
 "を使ってください。"
@@ -33255,9 +33282,6 @@ msgstr "PNP4Nagiosテンプレート(非推奨)"
 msgid "POP3"
 msgstr "POP3"
 
-msgid "POP3 Server"
-msgstr "POP3サーバー"
-
 msgid "POST / GET Variables"
 msgstr "POST/GET 変数"
 
@@ -33541,6 +33565,10 @@ msgstr "このホストのパラメーター"
 #, fuzzy
 msgid "Parameters for the bucket requests"
 msgstr "このホストのパラメーター"
+
+#, fuzzy
+msgid "Parameters for the key hit ratio"
+msgstr "スイッチポートインベントリのパラメータ"
 
 msgid "Parameters for this host"
 msgstr "このホストのパラメーター"
@@ -35489,6 +35517,9 @@ msgstr "%s のプロパティ"
 msgid "Properties of host"
 msgstr "ホストのプロパティ"
 
+msgid "Protect the agent data from an unauthorized access"
+msgstr ""
+
 msgid "Protocol"
 msgstr "プロトコル"
 
@@ -36301,6 +36332,10 @@ msgstr "Redisの永続性"
 
 msgid "Redis server name"
 msgstr "Redisサーバー名"
+
+#, fuzzy
+msgid "Redis/Hitratio"
+msgstr "ルールヒット率"
 
 msgid "Reenable this test"
 msgstr "このテストを再度有効にする"
@@ -38275,9 +38310,6 @@ msgstr "リモートホストのSSHユーザー名"
 
 msgid "SSL"
 msgstr "SSL"
-
-msgid "SSL Encryption"
-msgstr "SSL暗号化"
 
 msgid "SSL certificate checking"
 msgstr "SSL証明書のチェック"
@@ -44752,7 +44784,15 @@ msgid ""
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
 "disable the controller if you experience problems with the controller. In "
-"this case, the Windows agent will work in legacy pull mode. "
+"this case the Windows agent will work in legacy pull mode. Please note: In "
+"the legacy pull mode the transported data is not encrypted."
+msgstr ""
+
+msgid ""
+"The agent controller uses TCP port 50001 to communicate with Windows agent. "
+"You may change this port in the case if the port 50001 isn't available. For "
+"example, this port may be used by other application or is blocked due to the "
+"security reason by the administrator."
 msgstr ""
 
 msgid ""
@@ -48905,6 +48945,13 @@ msgstr ""
 "これは、拡張パッケージモジュールと一緒にパッケージ化できるルールパックです。"
 
 msgid ""
+"This is security feature, which should prevent unauthorized local access to "
+"the monitoring data. You may disable this flag in the case of emergency. For "
+"example, if theagent can't reliably determine the agent controller as a "
+"valid peer which tries to access the data. "
+msgstr ""
+
+msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
 "contact the REST API: <tt>/controller/rest/applications/foobar/metric-data</"
@@ -52764,6 +52811,10 @@ msgstr "アップ"
 msgid "UPS Capacity"
 msgstr "UPS容量"
 
+#, fuzzy
+msgid "UPS selftest"
+msgstr "最後のUPSセルフテストからの時間"
+
 msgid "UPTIME"
 msgstr "稼働時間"
 
@@ -53865,6 +53916,10 @@ msgstr "完了するまでの推定時間の上位レベル"
 msgid "Upper levels for first output item"
 msgstr "最初の出力項目の上位レベル"
 
+#, fuzzy
+msgid "Upper levels for hit ratio"
+msgstr "バックアップ経過日数の上位レベル"
+
 msgid "Upper levels for indexes"
 msgstr "インデックスの上位レベル"
 
@@ -54195,10 +54250,6 @@ msgstr "クラシックバックエンドを使用する"
 msgid "Use Classic SNMP Backend"
 msgstr "クラシックSNMPバックエンドを使用する"
 
-#, fuzzy
-msgid "Use Controller"
-msgstr "コントローラ"
-
 msgid "Use DNS lookup cache"
 msgstr "DNSルックアップキャッシュを使用する"
 
@@ -54287,9 +54338,6 @@ msgstr "STS AssumeRoleを使用して、別のIAMロールを引き受けます�
 #, fuzzy
 msgid "Use TLS encryption (Linux)"
 msgstr "暗号化を使用しない"
-
-msgid "Use TLS for IMAP authentification"
-msgstr "IMAP認証にTLSを使用する"
 
 msgid "Use TLS over SMTP"
 msgstr "TLS overSMTPを使用する"
@@ -54459,9 +54507,6 @@ msgstr ""
 
 msgid "Use new service descriptions"
 msgstr "新しいサービスの説明を使用する"
-
-msgid "Use no encryption"
-msgstr "暗号化を使用しない"
 
 msgid "Use normal state, ignore acknowledgement"
 msgstr "通常の状態を使用し、確認応答を無視します"
@@ -55926,16 +55971,6 @@ msgstr "警告(Out)"
 
 msgid "Warning (active connections)"
 msgstr "警告(アクティブな接続)"
-
-msgid ""
-"Warning Level for time since last diagnostic test of the device. For a value "
-"of 0 the warning level will not be used"
-msgstr ""
-"デバイスの最後の診断テストからの時間の警告レベル。値が 0 の場合、警告レベルは"
-"使用されません"
-
-msgid "Warning Level for time since last self test"
-msgstr "最後のセルフテストからの時間の警告レベル"
 
 msgid "Warning above"
 msgstr "上記の警告"
@@ -58992,6 +59027,18 @@ msgstr ""
 "ただし、サブフォルダーに対するアクセス許可がある場合は、フォルダーに入ること"
 "ができます。"
 
+#, python-brace-format
+msgid ""
+"You may find that some Nodes don't add resources to the overall workload "
+"your Cluster can handle. This option allows you to remove Nodes from "
+"aggregations on the Cluster host based on their role. A node will be "
+"omitted, if any of the listed {role}s matches a label with name 'node-role."
+"kubernetes.io/{role}'.  This affects the following services: Memory "
+"resources, CPU resources, Pod resources. Only Services on the Cluster host "
+"are affected. By default, Nodes with role control-plane and infra are "
+"omitted."
+msgstr ""
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr "レポートアーカイブのベースディレクトリからの相対パスのみを使用できます"
 
@@ -61361,20 +61408,78 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
-#, fuzzy
-#~| msgid "Add new group"
-#~ msgid "Add new role"
-#~ msgstr "新しいグループを追加する"
+#~ msgid "By default the standard IMAP Port 143 is used."
+#~ msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
+
+#~ msgid "By default the standard IMAP/SSL Port 993 is used."
+#~ msgstr "デフォルトでは、標準のIMAP/SSLポート993が使用されます。"
+
+#~ msgid "By default the standard POP3 Port 110 is used."
+#~ msgstr "デフォルトでは、標準のPOP3ポート110が使用されます。"
+
+#~ msgid "By default the standard POP3/SSL Port 995 is used."
+#~ msgstr "デフォルトでは、標準のPOP3/SSLポート995が使用されます。"
+
+#~ msgid "Critical Level for time since last self test"
+#~ msgstr "最後のセルフテストからの時間のクリティカルレベル"
+
+#, python-format
+#~ msgid ""
+#~ "Enable listening for passible checks via NSCA. With the default "
+#~ "configuration the TCP port 5667 will be opened. You may also want to "
+#~ "update the NSCA configuration file %s to fit your needs."
+#~ msgstr ""
+#~ "NSCAを介したパッシブチェックのリッスンを有効にします。デフォルト構成では、"
+#~ "TCPポート5667が開かれます。ニーズに合わせてNSCA構成ファイル %s を更新する"
+#~ "こともできます。"
+
+#~ msgid "Enable listening for passive checks using NSCA"
+#~ msgstr "NSCAを使用してパッシブチェックのリッスンを有効にする"
+
+#~ msgid "Encrypt IMAP communication using SSL"
+#~ msgstr "SSLを使用してIMAP通信を暗号化する"
+
+#~ msgid "Encrypt POP3 communication using SSL"
+#~ msgstr "SSLを使用してPOP3通信を暗号化する"
+
+#~ msgid "IMAP Server"
+#~ msgstr "IMAPサーバー"
+
+#~ msgid "IMAP authentification uses TLS"
+#~ msgstr "IMAP認証はTLSを使用します"
+
+#~ msgid "Listen for passive checks via NSCA"
+#~ msgstr "NSCAを介してパッシブチェックをリッスンします"
+
+#~ msgid "NSCA is disabled"
+#~ msgstr "NSCAが無効になっている"
+
+#~ msgid "POP3 Server"
+#~ msgstr "POP3サーバー"
+
+#~ msgid "SSL Encryption"
+#~ msgstr "SSL暗号化"
 
 #, fuzzy
-#~| msgid "Exclude destination vserver"
-#~ msgid "Exclude Nodes based on their role"
-#~ msgstr "宛先vserverを除外する"
+#~| msgid "Controller"
+#~ msgid "Use Controller"
+#~ msgstr "コントローラ"
 
-#, fuzzy
-#~| msgid "Include all subfolders"
-#~ msgid "Include all Nodes"
-#~ msgstr "すべてのサブフォルダーを含める"
+#~ msgid "Use TLS for IMAP authentification"
+#~ msgstr "IMAP認証にTLSを使用する"
+
+#~ msgid "Use no encryption"
+#~ msgstr "暗号化を使用しない"
+
+#~ msgid ""
+#~ "Warning Level for time since last diagnostic test of the device. For a "
+#~ "value of 0 the warning level will not be used"
+#~ msgstr ""
+#~ "デバイスの最後の診断テストからの時間の警告レベル。値が 0 の場合、警告レベ"
+#~ "ルは使用されません"
+
+#~ msgid "Warning Level for time since last self test"
+#~ msgstr "最後のセルフテストからの時間の警告レベル"
 
 #~ msgid "Select graph"
 #~ msgstr "グラフを選択"

@@ -758,6 +758,10 @@ msgstr ""
 msgid "(builtin)"
 msgstr ""
 
+#, python-format
+msgid "(default is %r for %s/TLS)"
+msgstr ""
+
 msgid "(disabled)"
 msgstr "(dezactivat)"
 
@@ -3207,6 +3211,10 @@ msgid "Add new project"
 msgstr "Adaungă un nou element"
 
 #, fuzzy
+msgid "Add new role"
+msgstr "Adaugă group de model"
+
+#, fuzzy
 msgid "Add new row"
 msgstr "Adaugă Contoar"
 
@@ -3926,6 +3934,9 @@ msgstr ""
 msgid "Agent for %s (%s)"
 msgstr ""
 
+msgid "Agent internal TCP port used to communicate with controller"
+msgstr ""
+
 #, fuzzy
 msgid "Agent labels"
 msgstr "Editeaza regulile de loguri"
@@ -4472,6 +4483,9 @@ msgstr "Confirma Parola"
 msgid "Allow to see the icon %s in the host and service views"
 msgstr ""
 
+msgid "Allow unencrypted legacy communication"
+msgstr ""
+
 msgid "Allow upload of insecure WATO snapshots"
 msgstr ""
 
@@ -4615,6 +4629,9 @@ msgid ""
 msgstr ""
 "adaugă aceste grupuri ca și <b>contacte</b> la toate elementele în acest "
 "director"
+
+msgid "Always allow to use not encrypted( legacy ) communication as a fallback"
+msgstr ""
 
 msgid "Always assume host to be up"
 msgstr ""
@@ -6887,18 +6904,6 @@ msgid ""
 "monitoring can choose to display the snapshot summary on the ESX host itself."
 msgstr ""
 
-msgid "By default the standard IMAP Port 143 is used."
-msgstr ""
-
-msgid "By default the standard IMAP/SSL Port 993 is used."
-msgstr ""
-
-msgid "By default the standard POP3 Port 110 is used."
-msgstr ""
-
-msgid "By default the standard POP3/SSL Port 995 is used."
-msgstr ""
-
 msgid ""
 "By default the users are synchronized automatically in the interval "
 "configured in the connection. For example the LDAP connector synchronizes "
@@ -7930,7 +7935,7 @@ msgstr ""
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr ""
 
-msgid "Check IMAP Mailboxes"
+msgid "Check IMAP/EWS Mailboxes"
 msgstr ""
 
 msgid "Check Item"
@@ -9220,6 +9225,9 @@ msgstr ""
 msgid "Command %s/%d not found"
 msgstr ""
 
+msgid "Command 'locale -a' could not be executed. Exit code of command was"
+msgstr ""
+
 msgid "Command Line"
 msgstr ""
 
@@ -9913,6 +9921,10 @@ msgstr ""
 msgid "Connection option"
 msgstr "Conexiune Noua"
 
+#, fuzzy
+msgid "Connection settings"
+msgstr "Conexiuni Active"
+
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
 "all sites of each customer at once."
@@ -10471,8 +10483,9 @@ msgstr ""
 msgid "Count, size and age of files"
 msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 
-msgid "Count, size and age of files - mk_filestat (Linux)"
-msgstr ""
+#, fuzzy
+msgid "Count, size and age of files - mk_filestat (Linux/Solaris)"
+msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 
 #, fuzzy
 msgid "Counter"
@@ -10983,14 +10996,6 @@ msgstr "Vechimea maxima"
 #, fuzzy
 msgid "Critical (active connections)"
 msgstr "Conexiuni Active"
-
-msgid ""
-"Critical Level for time since last diagnostic test of the device. For a "
-"value of 0 the critical level will not be used"
-msgstr ""
-
-msgid "Critical Level for time since last self test"
-msgstr ""
 
 msgid "Critical above"
 msgstr ""
@@ -12555,8 +12560,8 @@ msgstr "Agregare noua"
 
 msgid ""
 "Delete all messages identified as being related to this check. This is "
-"disabled by default, which will make your mailbox grow when you not clean it "
-"up on your own."
+"disabled by default, which will make your mailbox grow when you do not clean "
+"it up on your own."
 msgstr ""
 
 msgid "Delete all processed message belonging to this check"
@@ -13502,11 +13507,19 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Disable SSL certificate verification"
 msgstr "Dezactiveaza Notificarile"
 
+#, fuzzy
+msgid "Disable TLS/SSL"
+msgstr "(dezactivat)"
+
 msgid "Disable active checks"
 msgstr ""
 
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
+
+#, fuzzy
+msgid "Disable certificate validation"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Disable configuration via WATO on this site"
 msgstr ""
@@ -15283,6 +15296,9 @@ msgstr ""
 msgid "ESX hosts: distribution of virtual machines"
 msgstr ""
 
+msgid "EWS"
+msgstr ""
+
 msgid "EXITED"
 msgstr ""
 
@@ -15916,6 +15932,10 @@ msgstr ""
 msgid "Enable adhoc downtime"
 msgstr ""
 
+#, fuzzy
+msgid "Enable agent controller"
+msgstr "trimite notificare"
+
 msgid "Enable automatic agent updates"
 msgstr ""
 
@@ -15955,16 +15975,6 @@ msgid "Enable in-memory cache for availability"
 msgstr ""
 
 msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
-msgstr ""
-
-#, python-format
-msgid ""
-"Enable listening for passible checks via NSCA. With the default "
-"configuration the TCP port 5667 will be opened. You may also want to update "
-"the NSCA configuration file %s to fit your needs."
-msgstr ""
-
-msgid "Enable listening for passive checks using NSCA"
 msgstr ""
 
 #, fuzzy
@@ -16143,12 +16153,6 @@ msgid "Enclosure Stats"
 msgstr ""
 
 msgid "Enclosures"
-msgstr ""
-
-msgid "Encrypt IMAP communication using SSL"
-msgstr ""
-
-msgid "Encrypt POP3 communication using SSL"
 msgstr ""
 
 msgid "Encrypt SMTP communication using TLS"
@@ -16825,6 +16829,10 @@ msgstr ""
 #, fuzzy
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr " Activează această opțiune"
+
+#, fuzzy
+msgid "Exclude Nodes based on their role"
+msgstr "Linii de header adiționale"
 
 msgid "Exclude Pattern"
 msgstr ""
@@ -18531,6 +18539,10 @@ msgstr ""
 
 msgid "Force to be WARN, if aggregate is not OK"
 msgstr ""
+
+#, fuzzy
+msgid "Force unencrypted communication"
+msgstr "Conexiune Noua"
 
 msgid "Force update of PNP meta information on restart / reload"
 msgstr ""
@@ -21553,13 +21565,6 @@ msgstr ""
 msgid "IMAP"
 msgstr ""
 
-msgid "IMAP Server"
-msgstr ""
-
-#, fuzzy
-msgid "IMAP authentification uses TLS"
-msgstr "Adaugă notificare"
-
 #, fuzzy
 msgid "INotify Levels"
 msgstr "Notifica utilizatorii"
@@ -21977,6 +21982,15 @@ msgstr ""
 msgid ""
 "If the automatic detection of the link speed does not work you can set the "
 "link speed here."
+msgstr ""
+
+msgid ""
+"If the flag is set, then the windows agent allows possibility to use not "
+"encrypted communication between the monitoring site and the host. You may "
+"enable this flag for compatibility reasons or if you experience problems "
+"with the controller related to TLS or encryption. But please pay attention, "
+"that this enables an unencrypted communication if your controller connection "
+"isn't properly configured."
 msgstr ""
 
 msgid ""
@@ -22731,6 +22745,9 @@ msgstr ""
 msgid "Ignore these levels"
 msgstr "(fără Nivel de serviciu)"
 
+msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
+msgstr ""
+
 msgid "Ignore unverified HTTPS request warnings. Use with caution."
 msgstr ""
 
@@ -23117,6 +23134,9 @@ msgid "Include Pattern"
 msgstr ""
 
 msgid "Include WAFs in front of CloudFront resources in the monitoring"
+msgstr ""
+
+msgid "Include all Nodes"
 msgstr ""
 
 msgid "Include all subfolders"
@@ -25808,6 +25828,9 @@ msgstr ""
 msgid "Limit length of mail body"
 msgstr ""
 
+msgid "Limit local access to the agent data to the agent controller"
+msgstr ""
+
 msgid "Limit login to single session at a time"
 msgstr ""
 
@@ -26076,9 +26099,6 @@ msgid "List unpackaged files"
 msgstr "Reguli neaplicate"
 
 msgid "Listen for incoming messages via"
-msgstr ""
-
-msgid "Listen for passive checks via NSCA"
 msgstr ""
 
 #, fuzzy
@@ -26825,6 +26845,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Lower levels for health lifetime"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Lower levels for hit ratio"
 msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Lower levels for remaining API reads"
@@ -29561,10 +29585,6 @@ msgstr ""
 msgid "NODATA"
 msgstr ""
 
-#, fuzzy
-msgid "NSCA is disabled"
-msgstr "(dezactivat)"
-
 msgid "NTLS Clients"
 msgstr ""
 
@@ -29883,6 +29903,10 @@ msgstr "spatiu utilizat"
 #, fuzzy
 msgid "Namespace prefix for hosts"
 msgstr "Cautare"
+
+#, fuzzy
+msgid "Namespaces"
+msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Native cluster mode"
@@ -30298,7 +30322,8 @@ msgid "No TX Credits"
 msgstr ""
 
 msgid ""
-"No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding."
+"No UTF-8 encoding found in your locale -a! Please install appropriate "
+"locales."
 msgstr ""
 
 msgid "No VMWare Tools installed."
@@ -33028,9 +33053,6 @@ msgstr " pe siteul de monitorizare: "
 msgid "POP3"
 msgstr ""
 
-msgid "POP3 Server"
-msgstr ""
-
 msgid "POST / GET Variables"
 msgstr ""
 
@@ -33321,6 +33343,10 @@ msgstr ""
 #, fuzzy
 msgid "Parameters for the bucket requests"
 msgstr "trei nivele"
+
+#, fuzzy
+msgid "Parameters for the key hit ratio"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Parameters for this host"
 msgstr ""
@@ -35256,6 +35282,9 @@ msgstr ""
 msgid "Properties of host"
 msgstr ""
 
+msgid "Protect the agent data from an unauthorized access"
+msgstr ""
+
 msgid "Protocol"
 msgstr ""
 
@@ -36130,6 +36159,9 @@ msgstr "Adaugă nume de senzor"
 #, fuzzy
 msgid "Redis server name"
 msgstr "Adaugă nume de senzor"
+
+msgid "Redis/Hitratio"
+msgstr ""
 
 #, fuzzy
 msgid "Reenable this test"
@@ -38134,9 +38166,6 @@ msgid "SSH user name on remote host"
 msgstr ""
 
 msgid "SSL"
-msgstr ""
-
-msgid "SSL Encryption"
 msgstr ""
 
 #, fuzzy
@@ -44482,7 +44511,15 @@ msgid ""
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
 "disable the controller if you experience problems with the controller. In "
-"this case, the Windows agent will work in legacy pull mode. "
+"this case the Windows agent will work in legacy pull mode. Please note: In "
+"the legacy pull mode the transported data is not encrypted."
+msgstr ""
+
+msgid ""
+"The agent controller uses TCP port 50001 to communicate with Windows agent. "
+"You may change this port in the case if the port 50001 isn't available. For "
+"example, this port may be used by other application or is blocked due to the "
+"security reason by the administrator."
 msgstr ""
 
 msgid ""
@@ -48014,6 +48051,13 @@ msgid "This is rule pack can be packaged with the Extension Packages module."
 msgstr ""
 
 msgid ""
+"This is security feature, which should prevent unauthorized local access to "
+"the monitoring data. You may disable this flag in the case of emergency. For "
+"example, if theagent can't reliably determine the agent controller as a "
+"valid peer which tries to access the data. "
+msgstr ""
+
+msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
 "contact the REST API: <tt>/controller/rest/applications/foobar/metric-data</"
@@ -51338,6 +51382,9 @@ msgstr ""
 msgid "UPS Capacity"
 msgstr ""
 
+msgid "UPS selftest"
+msgstr ""
+
 msgid "UPTIME"
 msgstr ""
 
@@ -52468,6 +52515,10 @@ msgid "Upper levels for first output item"
 msgstr ""
 
 #, fuzzy
+msgid "Upper levels for hit ratio"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Upper levels for indexes"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -52827,9 +52878,6 @@ msgstr ""
 msgid "Use Classic SNMP Backend"
 msgstr ""
 
-msgid "Use Controller"
-msgstr ""
-
 msgid "Use DNS lookup cache"
 msgstr ""
 
@@ -52917,9 +52965,6 @@ msgstr ""
 #, fuzzy
 msgid "Use TLS encryption (Linux)"
 msgstr "Salveaza configuratia manuala a verificarilor"
-
-msgid "Use TLS for IMAP authentification"
-msgstr ""
 
 msgid "Use TLS over SMTP"
 msgstr ""
@@ -53098,9 +53143,6 @@ msgid "Use mountpoint"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Use new service descriptions"
-msgstr ""
-
-msgid "Use no encryption"
 msgstr ""
 
 msgid "Use normal state, ignore acknowledgement"
@@ -54522,14 +54564,6 @@ msgstr "pornit"
 #, fuzzy
 msgid "Warning (active connections)"
 msgstr "Conexiuni Active"
-
-msgid ""
-"Warning Level for time since last diagnostic test of the device. For a value "
-"of 0 the warning level will not be used"
-msgstr ""
-
-msgid "Warning Level for time since last self test"
-msgstr ""
 
 msgid "Warning above"
 msgstr ""
@@ -57057,6 +57091,18 @@ msgid ""
 "though."
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"You may find that some Nodes don't add resources to the overall workload "
+"your Cluster can handle. This option allows you to remove Nodes from "
+"aggregations on the Cluster host based on their role. A node will be "
+"omitted, if any of the listed {role}s matches a label with name 'node-role."
+"kubernetes.io/{role}'.  This affects the following services: Memory "
+"resources, CPU resources, Pod resources. Only Services on the Cluster host "
+"are affected. By default, Nodes with role control-plane and infra are "
+"omitted."
+msgstr ""
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 
@@ -59461,12 +59507,12 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
-#~ msgid "Add new role"
-#~ msgstr "Adaugă group de model"
+#~ msgid "IMAP authentification uses TLS"
+#~ msgstr "Adaugă notificare"
 
 #, fuzzy
-#~ msgid "Exclude Nodes based on their role"
-#~ msgstr "Linii de header adiționale"
+#~ msgid "NSCA is disabled"
+#~ msgstr "(dezactivat)"
 
 #, fuzzy
 #~ msgid "Select graph"
@@ -63290,10 +63336,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "LDAP Configuration"
 #~ msgstr "Activare Configurare"
-
-#, fuzzy
-#~ msgid "LDAP Connection Settings"
-#~ msgstr "Conexiuni Active"
 
 #, fuzzy
 #~ msgid "LDAP Group Settings"

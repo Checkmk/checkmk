@@ -766,6 +766,10 @@ msgstr "(Module sans titre)"
 msgid "(builtin)"
 msgstr "(intégré)"
 
+#, python-format
+msgid "(default is %r for %s/TLS)"
+msgstr ""
+
 msgid "(disabled)"
 msgstr "(désactivé)"
 
@@ -3468,6 +3472,10 @@ msgstr "Ajouter un nouveau modèle"
 msgid "Add new project"
 msgstr "Ajouter un nouveau projet"
 
+#, fuzzy
+msgid "Add new role"
+msgstr "Ajouter un nouveau groupe"
+
 msgid "Add new row"
 msgstr "Ajouter une nouvelle ligne"
 
@@ -4213,6 +4221,9 @@ msgstr "État du déploiement des agents"
 msgid "Agent for %s (%s)"
 msgstr "Agent pour %s (%s)"
 
+msgid "Agent internal TCP port used to communicate with controller"
+msgstr ""
+
 #, fuzzy
 msgid "Agent labels"
 msgstr "Règlement des agents"
@@ -4774,6 +4785,10 @@ msgstr "Autoriser l'authentification par mot de passe"
 msgid "Allow to see the icon %s in the host and service views"
 msgstr "Permet de voir l'icône %s dans les vues des hôtes et des services"
 
+#, fuzzy
+msgid "Allow unencrypted legacy communication"
+msgstr "Crypter la communication"
+
 msgid "Allow upload of insecure WATO snapshots"
 msgstr "Autoriser le téléchargement d'instantanés WATO non sécurisés"
 
@@ -4923,6 +4938,9 @@ msgid ""
 msgstr ""
 "Ajoutez toujours ces groupes comme <b>contacts</b> à tous les services "
 "<b>dans tous les sous-dossiers de ce dossier</b>."
+
+msgid "Always allow to use not encrypted( legacy ) communication as a fallback"
+msgstr ""
 
 msgid "Always assume host to be up"
 msgstr "Toujours supposer que l'hôte est debout"
@@ -7367,18 +7385,6 @@ msgstr ""
 "n'incluent pas leur vCenter dans la surveillance peuvent choisir d'afficher "
 "le résumé des instantanés sur l'hôte ESX lui-même."
 
-msgid "By default the standard IMAP Port 143 is used."
-msgstr "Par défaut, le port standard IMAP 143 est utilisé."
-
-msgid "By default the standard IMAP/SSL Port 993 is used."
-msgstr "Par défaut, le port standard IMAP/SSL 993 est utilisé."
-
-msgid "By default the standard POP3 Port 110 is used."
-msgstr "Par défaut, le port standard POP3 110 est utilisé."
-
-msgid "By default the standard POP3/SSL Port 995 is used."
-msgstr "Par défaut, le port standard POP3/SSL 995 est utilisé."
-
 msgid ""
 "By default the users are synchronized automatically in the interval "
 "configured in the connection. For example the LDAP connector synchronizes "
@@ -8553,7 +8559,7 @@ msgstr ""
 "Vérifier HTTP : utiliser HTTPS au lieu de HTTP pour les connexions SSL/TLS."
 
 #, fuzzy
-msgid "Check IMAP Mailboxes"
+msgid "Check IMAP/EWS Mailboxes"
 msgstr "Vérifier les boîtes aux lettres IMAP"
 
 msgid "Check Item"
@@ -9943,6 +9949,12 @@ msgstr "Commande"
 msgid "Command %s/%d not found"
 msgstr "Commande %s/%d non trouvée"
 
+#, fuzzy
+msgid "Command 'locale -a' could not be executed. Exit code of command was"
+msgstr ""
+"Le courrier n'a pas pu être distribué. Le code de sortie de la commande est "
+"%r. La sortie est : %s"
+
 msgid "Command Line"
 msgstr "Ligne de commande"
 
@@ -10728,6 +10740,10 @@ msgstr "Nom de la connexion"
 msgid "Connection option"
 msgstr "Option de connexion"
 
+#, fuzzy
+msgid "Connection settings"
+msgstr "État de la connexion"
+
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
 "all sites of each customer at once."
@@ -11277,7 +11293,8 @@ msgstr "Compter jusqu'au déclenchement"
 msgid "Count, size and age of files"
 msgstr "Comptage, taille et âge des fichiers (Linux, Windows)"
 
-msgid "Count, size and age of files - mk_filestat (Linux)"
+#, fuzzy
+msgid "Count, size and age of files - mk_filestat (Linux/Solaris)"
 msgstr "Compte, taille et âge des fichiers - mk_filestat (Linux)"
 
 msgid "Counter"
@@ -11775,16 +11792,6 @@ msgstr "Critique (Out)"
 
 msgid "Critical (active connections)"
 msgstr "Critique (connexions actives)"
-
-msgid ""
-"Critical Level for time since last diagnostic test of the device. For a "
-"value of 0 the critical level will not be used"
-msgstr ""
-"Niveau critique pour le temps écoulé depuis le dernier test de diagnostic du "
-"dispositif. Pour une valeur de 0, le niveau critique ne sera pas utilisé."
-
-msgid "Critical Level for time since last self test"
-msgstr "Niveau critique pour le temps écoulé depuis le dernier autotest"
 
 msgid "Critical above"
 msgstr "Critique ci-dessus"
@@ -13317,10 +13324,11 @@ msgstr "Supprimer après"
 msgid "Delete aggregations"
 msgstr "Supprimer les agrégations"
 
+#, fuzzy
 msgid ""
 "Delete all messages identified as being related to this check. This is "
-"disabled by default, which will make your mailbox grow when you not clean it "
-"up on your own."
+"disabled by default, which will make your mailbox grow when you do not clean "
+"it up on your own."
 msgstr ""
 "Supprimer tous les messages identifiés comme étant liés à cette "
 "vérification. Cette option est désactivée par défaut, ce qui fera grossir "
@@ -14276,6 +14284,10 @@ msgstr "Désactiver la validation des certificats SSL"
 msgid "Disable SSL certificate verification"
 msgstr "Désactiver la vérification des certificats SSL"
 
+#, fuzzy
+msgid "Disable TLS/SSL"
+msgstr "Désactivé "
+
 msgid "Disable active checks"
 msgstr "Désactiver les contrôles actifs"
 
@@ -14283,6 +14295,10 @@ msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 "Désactiver la synchronisation automatique des utilisateurs (utiliser les "
 "utilisateurs du site maître)"
+
+#, fuzzy
+msgid "Disable certificate validation"
+msgstr "Désactiver la validation des certificats SSL"
 
 msgid "Disable configuration via WATO on this site"
 msgstr "Désactiver la configuration via WATO sur ce site"
@@ -16067,6 +16083,10 @@ msgstr "États de l'hôte ESX et de la machine virtuelle"
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "Hôtes ESX : distribution des machines virtuelles"
 
+#, fuzzy
+msgid "EWS"
+msgstr "AES"
+
 msgid "EXITED"
 msgstr "EXITED"
 
@@ -16711,6 +16731,10 @@ msgstr "Activer les contrôles actifs"
 msgid "Enable adhoc downtime"
 msgstr "Permettre les temps d'arrêt adhoc"
 
+#, fuzzy
+msgid "Enable agent controller"
+msgstr "Authentification Windows"
+
 msgid "Enable automatic agent updates"
 msgstr "Activer les mises à jour automatiques de l'agent"
 
@@ -16760,19 +16784,6 @@ msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
 msgstr ""
 "Activer le SNMP en ligne (utiliser directement les bibliothèques net-snmp) "
 "(déprécié)"
-
-#, python-format
-msgid ""
-"Enable listening for passible checks via NSCA. With the default "
-"configuration the TCP port 5667 will be opened. You may also want to update "
-"the NSCA configuration file %s to fit your needs."
-msgstr ""
-"Active l'écoute des contrôles passibles via NSCA. Avec la configuration par "
-"défaut, le port TCP 5667 sera ouvert. Vous pouvez également mettre à jour le "
-"fichier de configuration NSCA %s pour l'adapter à vos besoins."
-
-msgid "Enable listening for passive checks using NSCA"
-msgstr "Activer l'écoute pour les contrôles passifs utilisant NSCA"
 
 #, fuzzy
 msgid "Enable logging of logon failures"
@@ -16964,12 +16975,6 @@ msgstr "Statistiques sur les boîtiers"
 
 msgid "Enclosures"
 msgstr "Enceintes"
-
-msgid "Encrypt IMAP communication using SSL"
-msgstr "Crypter la communication IMAP en utilisant SSL"
-
-msgid "Encrypt POP3 communication using SSL"
-msgstr "Crypter la communication POP3 en utilisant SSL"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "Crypter la communication SMTP en utilisant TLS"
@@ -17629,6 +17634,10 @@ msgstr "Exclure"
 
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr "Exclure \"Activer les changements\" pour les plages horaires"
+
+#, fuzzy
+msgid "Exclude Nodes based on their role"
+msgstr "Exclure le serveur de destination"
 
 msgid "Exclude Pattern"
 msgstr "Exclure le motif"
@@ -19401,6 +19410,10 @@ msgstr "Force pour être OK"
 
 msgid "Force to be WARN, if aggregate is not OK"
 msgstr "Force à être WARN, si l'agrégat n'est pas OK."
+
+#, fuzzy
+msgid "Force unencrypted communication"
+msgstr "Crypter la communication"
 
 msgid "Force update of PNP meta information on restart / reload"
 msgstr ""
@@ -22736,12 +22749,6 @@ msgstr "États de réplication"
 msgid "IMAP"
 msgstr "IMAP"
 
-msgid "IMAP Server"
-msgstr "Serveur IMAP"
-
-msgid "IMAP authentification uses TLS"
-msgstr "L'authentification IMAP utilise TLS"
-
 msgid "INotify Levels"
 msgstr "Niveaux d'INotify"
 
@@ -23273,6 +23280,15 @@ msgid ""
 msgstr ""
 "Si la détection automatique de la vitesse de la liaison ne fonctionne pas, "
 "vous pouvez régler la vitesse de la liaison ici."
+
+msgid ""
+"If the flag is set, then the windows agent allows possibility to use not "
+"encrypted communication between the monitoring site and the host. You may "
+"enable this flag for compatibility reasons or if you experience problems "
+"with the controller related to TLS or encryption. But please pay attention, "
+"that this enables an unencrypted communication if your controller connection "
+"isn't properly configured."
+msgstr ""
 
 msgid ""
 "If the host has a kernel of version 3.14 or newer, the information "
@@ -24436,6 +24452,9 @@ msgstr "Ignorer la version"
 msgid "Ignore these levels"
 msgstr "Ignorer ces niveaux"
 
+msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
+msgstr ""
+
 msgid "Ignore unverified HTTPS request warnings. Use with caution."
 msgstr ""
 "Ignorer les avertissements des requêtes HTTPS non vérifiées. A utiliser avec "
@@ -24995,6 +25014,10 @@ msgstr "Inclure le motif"
 
 msgid "Include WAFs in front of CloudFront resources in the monitoring"
 msgstr "Inclure les WAFs devant les ressources CloudFront dans la surveillance"
+
+#, fuzzy
+msgid "Include all Nodes"
+msgstr "Inclure tous les sous-dossiers"
 
 msgid "Include all subfolders"
 msgstr "Inclure tous les sous-dossiers"
@@ -27658,6 +27681,9 @@ msgstr ""
 msgid "Limit length of mail body"
 msgstr "Limiter la longueur du corps du message"
 
+msgid "Limit local access to the agent data to the agent controller"
+msgstr ""
+
 msgid "Limit login to single session at a time"
 msgstr "Limiter la connexion à une seule session à la fois"
 
@@ -27927,9 +27953,6 @@ msgstr "Liste des fichiers non emballés"
 
 msgid "Listen for incoming messages via"
 msgstr "Écouter les messages entrants via"
-
-msgid "Listen for passive checks via NSCA"
-msgstr "Écoutez les contrôles passifs via la NSCA"
 
 #, fuzzy
 msgid "Listeners per load balancer"
@@ -28653,6 +28676,10 @@ msgid "Lower levels for health check percentage healty"
 msgstr "Niveaux inférieurs pour la santé à vie"
 
 msgid "Lower levels for health lifetime"
+msgstr "Niveaux inférieurs pour la santé à vie"
+
+#, fuzzy
+msgid "Lower levels for hit ratio"
 msgstr "Niveaux inférieurs pour la santé à vie"
 
 msgid "Lower levels for remaining API reads"
@@ -31318,9 +31345,6 @@ msgstr "Serveurs web NGINX (Linux)"
 msgid "NODATA"
 msgstr "NODATA"
 
-msgid "NSCA is disabled"
-msgstr "Le NSCA est désactivé"
-
 msgid "NTLS Clients"
 msgstr "Clients NTLS"
 
@@ -31614,6 +31638,10 @@ msgstr "Espace de nommage"
 
 msgid "Namespace prefix for hosts"
 msgstr "Préfixe d'espace de nommage pour les hôtes"
+
+#, fuzzy
+msgid "Namespaces"
+msgstr "Espace de nommage"
 
 #, fuzzy
 msgid "Native cluster mode"
@@ -32000,8 +32028,10 @@ msgstr "Non SNMP"
 msgid "No TX Credits"
 msgstr "Pas de crédits TX"
 
+#, fuzzy
 msgid ""
-"No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding."
+"No UTF-8 encoding found in your locale -a! Please install appropriate "
+"locales."
 msgstr ""
 "Aucun encodage UTF-8 trouvé dans votre locale -a ! Veuillez fournir "
 "l'encodage C.UTF-8."
@@ -34814,9 +34844,6 @@ msgstr "Modèles PNP4Nagios (obsolète)"
 msgid "POP3"
 msgstr "POP3"
 
-msgid "POP3 Server"
-msgstr "Serveur POP3"
-
 msgid "POST / GET Variables"
 msgstr "Variables POST / GET"
 
@@ -35102,6 +35129,10 @@ msgstr "Paramètres pour cet hôte"
 #, fuzzy
 msgid "Parameters for the bucket requests"
 msgstr "Paramètres pour cet hôte"
+
+#, fuzzy
+msgid "Parameters for the key hit ratio"
+msgstr "Paramètres pour l'inventaire des ports du commutateur"
 
 msgid "Parameters for this host"
 msgstr "Paramètres pour cet hôte"
@@ -37174,6 +37205,9 @@ msgstr "Propriétés de %s"
 msgid "Properties of host"
 msgstr "Propriétés de l'hôte"
 
+msgid "Protect the agent data from an unauthorized access"
+msgstr ""
+
 msgid "Protocol"
 msgstr "Protocole"
 
@@ -37998,6 +38032,10 @@ msgstr "Persistance Redis"
 
 msgid "Redis server name"
 msgstr "Nom du serveur Redis"
+
+#, fuzzy
+msgid "Redis/Hitratio"
+msgstr "Taux de réussite de la règle"
 
 msgid "Reenable this test"
 msgstr "Réactivation de ce test"
@@ -40034,9 +40072,6 @@ msgstr "Nom d'utilisateur SSH sur l'hôte distant"
 
 msgid "SSL"
 msgstr "SSL"
-
-msgid "SSL Encryption"
-msgstr "Cryptage SSL"
 
 msgid "SSL certificate checking"
 msgstr "Vérification des certificats SSL"
@@ -46903,7 +46938,15 @@ msgid ""
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
 "disable the controller if you experience problems with the controller. In "
-"this case, the Windows agent will work in legacy pull mode. "
+"this case the Windows agent will work in legacy pull mode. Please note: In "
+"the legacy pull mode the transported data is not encrypted."
+msgstr ""
+
+msgid ""
+"The agent controller uses TCP port 50001 to communicate with Windows agent. "
+"You may change this port in the case if the port 50001 isn't available. For "
+"example, this port may be used by other application or is blocked due to the "
+"security reason by the administrator."
 msgstr ""
 
 msgid ""
@@ -51589,6 +51632,13 @@ msgstr ""
 "Ce paquet de règles peut être emballé avec le module Paquets d'extension."
 
 msgid ""
+"This is security feature, which should prevent unauthorized local access to "
+"the monitoring data. You may disable this flag in the case of emergency. For "
+"example, if theagent can't reliably determine the agent controller as a "
+"valid peer which tries to access the data. "
+msgstr ""
+
+msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
 "contact the REST API: <tt>/controller/rest/applications/foobar/metric-data</"
@@ -55847,6 +55897,10 @@ msgstr "UP"
 msgid "UPS Capacity"
 msgstr "Capacité de l'ASI"
 
+#, fuzzy
+msgid "UPS selftest"
+msgstr "Temps écoulé depuis le dernier autotest UPS"
+
 msgid "UPTIME"
 msgstr "UPTIME"
 
@@ -56987,6 +57041,10 @@ msgstr "Niveaux supérieurs pour l'estimation du temps de réalisation"
 msgid "Upper levels for first output item"
 msgstr "Niveaux supérieurs pour le premier élément de sortie"
 
+#, fuzzy
+msgid "Upper levels for hit ratio"
+msgstr "Niveaux supérieurs pour l'âge"
+
 msgid "Upper levels for indexes"
 msgstr "Niveaux supérieurs pour les indices"
 
@@ -57335,10 +57393,6 @@ msgstr "Utiliser le backend classique"
 msgid "Use Classic SNMP Backend"
 msgstr "Utiliser le backend SNMP classique"
 
-#, fuzzy
-msgid "Use Controller"
-msgstr "Contrôleur"
-
 msgid "Use DNS lookup cache"
 msgstr "Utiliser le cache de recherche DNS"
 
@@ -57429,9 +57483,6 @@ msgstr "Utiliser STS AssumeRole pour assumer un rôle IAM différent"
 #, fuzzy
 msgid "Use TLS encryption (Linux)"
 msgstr "Ne pas utiliser de cryptage"
-
-msgid "Use TLS for IMAP authentification"
-msgstr "Utiliser TLS pour l'authentification IMAP"
 
 msgid "Use TLS over SMTP"
 msgstr "Utiliser TLS sur SMTP"
@@ -57606,9 +57657,6 @@ msgstr "Utiliser le point de montage"
 
 msgid "Use new service descriptions"
 msgstr "Utiliser de nouvelles descriptions de services"
-
-msgid "Use no encryption"
-msgstr "Ne pas utiliser de cryptage"
 
 msgid "Use normal state, ignore acknowledgement"
 msgstr "Utiliser l'état normal, ignorer l'accusé de réception"
@@ -59176,17 +59224,6 @@ msgstr "Avertissement (Out)"
 
 msgid "Warning (active connections)"
 msgstr "Avertissement (connexions actives)"
-
-msgid ""
-"Warning Level for time since last diagnostic test of the device. For a value "
-"of 0 the warning level will not be used"
-msgstr ""
-"Niveau d'avertissement pour le temps écoulé depuis le dernier test de "
-"diagnostic de l'appareil. Pour une valeur de 0, le niveau d'avertissement ne "
-"sera pas utilisé."
-
-msgid "Warning Level for time since last self test"
-msgstr "Niveau d'alerte pour le temps écoulé depuis le dernier autotest"
 
 msgid "Warning above"
 msgstr "Avertissement ci-dessus"
@@ -62662,6 +62699,18 @@ msgstr ""
 "Vous pouvez cependant entrer dans le dossier comme si vous aviez la "
 "permission sur un sous-dossier."
 
+#, python-brace-format
+msgid ""
+"You may find that some Nodes don't add resources to the overall workload "
+"your Cluster can handle. This option allows you to remove Nodes from "
+"aggregations on the Cluster host based on their role. A node will be "
+"omitted, if any of the listed {role}s matches a label with name 'node-role."
+"kubernetes.io/{role}'.  This affects the following services: Memory "
+"resources, CPU resources, Pod resources. Only Services on the Cluster host "
+"are affected. By default, Nodes with role control-plane and infra are "
+"omitted."
+msgstr ""
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "Vous ne pouvez utiliser que des chemins relatifs au répertoire de base de "
@@ -65091,20 +65140,87 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
-#, fuzzy
-#~| msgid "Add new group"
-#~ msgid "Add new role"
-#~ msgstr "Ajouter un nouveau groupe"
+#~ msgid "By default the standard IMAP Port 143 is used."
+#~ msgstr "Par défaut, le port standard IMAP 143 est utilisé."
+
+#~ msgid "By default the standard IMAP/SSL Port 993 is used."
+#~ msgstr "Par défaut, le port standard IMAP/SSL 993 est utilisé."
+
+#~ msgid "By default the standard POP3 Port 110 is used."
+#~ msgstr "Par défaut, le port standard POP3 110 est utilisé."
+
+#~ msgid "By default the standard POP3/SSL Port 995 is used."
+#~ msgstr "Par défaut, le port standard POP3/SSL 995 est utilisé."
+
+#~ msgid ""
+#~ "Critical Level for time since last diagnostic test of the device. For a "
+#~ "value of 0 the critical level will not be used"
+#~ msgstr ""
+#~ "Niveau critique pour le temps écoulé depuis le dernier test de diagnostic "
+#~ "du dispositif. Pour une valeur de 0, le niveau critique ne sera pas "
+#~ "utilisé."
+
+#~ msgid "Critical Level for time since last self test"
+#~ msgstr "Niveau critique pour le temps écoulé depuis le dernier autotest"
+
+#, python-format
+#~ msgid ""
+#~ "Enable listening for passible checks via NSCA. With the default "
+#~ "configuration the TCP port 5667 will be opened. You may also want to "
+#~ "update the NSCA configuration file %s to fit your needs."
+#~ msgstr ""
+#~ "Active l'écoute des contrôles passibles via NSCA. Avec la configuration "
+#~ "par défaut, le port TCP 5667 sera ouvert. Vous pouvez également mettre à "
+#~ "jour le fichier de configuration NSCA %s pour l'adapter à vos besoins."
+
+#~ msgid "Enable listening for passive checks using NSCA"
+#~ msgstr "Activer l'écoute pour les contrôles passifs utilisant NSCA"
+
+#~ msgid "Encrypt IMAP communication using SSL"
+#~ msgstr "Crypter la communication IMAP en utilisant SSL"
+
+#~ msgid "Encrypt POP3 communication using SSL"
+#~ msgstr "Crypter la communication POP3 en utilisant SSL"
+
+#~ msgid "IMAP Server"
+#~ msgstr "Serveur IMAP"
+
+#~ msgid "IMAP authentification uses TLS"
+#~ msgstr "L'authentification IMAP utilise TLS"
+
+#~ msgid "Listen for passive checks via NSCA"
+#~ msgstr "Écoutez les contrôles passifs via la NSCA"
+
+#~ msgid "NSCA is disabled"
+#~ msgstr "Le NSCA est désactivé"
+
+#~ msgid "POP3 Server"
+#~ msgstr "Serveur POP3"
+
+#~ msgid "SSL Encryption"
+#~ msgstr "Cryptage SSL"
 
 #, fuzzy
-#~| msgid "Exclude destination vserver"
-#~ msgid "Exclude Nodes based on their role"
-#~ msgstr "Exclure le serveur de destination"
+#~| msgid "Controller"
+#~ msgid "Use Controller"
+#~ msgstr "Contrôleur"
 
-#, fuzzy
-#~| msgid "Include all subfolders"
-#~ msgid "Include all Nodes"
-#~ msgstr "Inclure tous les sous-dossiers"
+#~ msgid "Use TLS for IMAP authentification"
+#~ msgstr "Utiliser TLS pour l'authentification IMAP"
+
+#~ msgid "Use no encryption"
+#~ msgstr "Ne pas utiliser de cryptage"
+
+#~ msgid ""
+#~ "Warning Level for time since last diagnostic test of the device. For a "
+#~ "value of 0 the warning level will not be used"
+#~ msgstr ""
+#~ "Niveau d'avertissement pour le temps écoulé depuis le dernier test de "
+#~ "diagnostic de l'appareil. Pour une valeur de 0, le niveau d'avertissement "
+#~ "ne sera pas utilisé."
+
+#~ msgid "Warning Level for time since last self test"
+#~ msgstr "Niveau d'alerte pour le temps écoulé depuis le dernier autotest"
 
 #~ msgid "Select graph"
 #~ msgstr "Sélectionner le graphique"
@@ -65802,11 +65918,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Do not deploy the ORACLE plugin"
 #~ msgstr "Ne pas déployer le plugin ORACLE"
-
-#, fuzzy
-#~| msgid "AES"
-#~ msgid "EWS"
-#~ msgstr "AES"
 
 #, fuzzy
 #~| msgid "DNS Server"

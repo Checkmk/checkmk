@@ -220,7 +220,7 @@ def discovery_systemd_units_services(
         if not regex("^check-mk-agent@.+").match(service.name)
     ]
 
-    def regex_match(what, name):
+    def regex_match(what: Sequence[str], name: str) -> bool:
         if not what:
             return True
         for entry in what:
@@ -232,7 +232,7 @@ def discovery_systemd_units_services(
                 return True
         return False
 
-    def state_match(rule_states, state):
+    def state_match(rule_states: Sequence[str], state: str) -> bool:
         if not rule_states:
             return True
         return any(s in (None, state) for s in rule_states)

@@ -607,6 +607,17 @@ def _extra_service_attributes(
 #   +----------------------------------------------------------------------+
 #   | Managing of host attributes                                          |
 #   '----------------------------------------------------------------------'
+def _set_addresses(
+    attrs: ObjectAttributes,
+    addresses: Optional[List[HostAddress]],
+    what: Literal["4", "6"],
+) -> None:
+    key_base = f"_ADDRESSES_{what}"
+    if addresses:
+        attrs[key_base] = " ".join(addresses)
+        for nr, address in enumerate(addresses):
+            key = f"{key_base}_{nr + 1}"
+            attrs[key] = address
 
 
 def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> ObjectAttributes:
@@ -650,17 +661,8 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
         attrs["_ADDRESS_FAMILY"] = "4"
 
     add_ipv4addrs, add_ipv6addrs = host_config.additional_ipaddresses
-    if add_ipv4addrs:
-        attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
-        for nr, ipv4_address in enumerate(add_ipv4addrs):
-            key = "_ADDRESS_4_%s" % (nr + 1)
-            attrs[key] = ipv4_address
-
-    if add_ipv6addrs:
-        attrs["_ADDRESSES_6"] = " ".join(add_ipv6addrs)
-        for nr, ipv6_address in enumerate(add_ipv6addrs):
-            key = "_ADDRESS_6_%s" % (nr + 1)
-            attrs[key] = ipv6_address
+    _set_addresses(attrs, add_ipv4addrs, "4")
+    _set_addresses(attrs, add_ipv6addrs, "6")
 
     # Add the optional WATO folder path
     path = config.host_paths.get(hostname)

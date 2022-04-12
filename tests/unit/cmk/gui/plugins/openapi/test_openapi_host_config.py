@@ -24,11 +24,6 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
-@pytest.fixture(name="base")
-def fixture_base() -> str:
-    return "/NO_SITE/check_mk/api/1.0"
-
-
 def test_openapi_missing_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",

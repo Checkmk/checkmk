@@ -18,3 +18,8 @@ def aut_user_auth_wsgi_app(
 ) -> WebTestAppForCMK:
     wsgi_app.set_authorization(("Bearer", " ".join(with_automation_user)))
     return wsgi_app
+
+
+@pytest.fixture(name="base")
+def fixture_base() -> str:
+    return "/NO_SITE/check_mk/api/1.0"

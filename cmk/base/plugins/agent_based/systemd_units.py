@@ -179,7 +179,7 @@ def parse(string_table: StringTable) -> Section:
                     else:
                         temp = name
                     enabled_status = enabled_status_collection.get(
-                        "%s.%s" % (temp, unit_type),
+                        f"{temp}.{unit_type}",
                         "unknown",
                     )
                     loaded_status, active_status, current_state, descr = remains.split(" ", 3)
@@ -325,7 +325,7 @@ def _check_temporary_state(
     previous_state = value_store.get(service_state, {})
     now = int(time.time())
     current_state = {}
-    levels = params["%s_levels" % service_state]
+    levels = params[f"{service_state}_levels"]
     for service in services:
         state_since = previous_state.get(service.name, now)
         current_state[service.name] = state_since
@@ -334,7 +334,7 @@ def _check_temporary_state(
             elapsed_time,
             levels_upper=levels,
             render_func=render.timespan,
-            label="Service '%s' %s for" % (service.name, service_state),
+            label=f"Service '{service.name}' {service_state} for",
             notice_only=True,
         )
 
@@ -356,7 +356,12 @@ def _check_non_ok_services(
 
         count = len(service_names)
         services_text = ", ".join(sorted(service_names))
-        info = output_string % (count, "" if count == 1 else "s", status, services_text)
+        info = output_string.format(
+            count=count,
+            is_plural="" if count == 1 else "s",
+            status=status,
+            service_text=services_text,
+        )
 
         yield Result(state=State(state), summary=info)
 
@@ -366,17 +371,17 @@ def check_systemd_units_services_summary(
 ) -> CheckResult:
     services = section.get("service", {}).values()
     blacklist = params["ignored"]
-    yield Result(state=State.OK, summary="Total: %d" % len(services))
+    yield Result(state=State.OK, summary=f"Total: {len(services):d}")
     services_organised = _services_split(services, blacklist)
-    yield Result(state=State.OK, summary="Disabled: %d" % len(services_organised["disabled"]))
+    yield Result(state=State.OK, summary=f"Disabled: {len(services_organised['disabled']):d}")
     # some of the failed ones might be ignored, so this is OK:
     yield Result(
-        state=State.OK, summary="Failed: %d" % sum(s.active_status == "failed" for s in services)
+        state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in services):d}"
     )
-    included_template = "%d service%s %s (%s)"
+    included_template = "{count:d} service{is_plural} {status} ({service_text})"
     yield from _check_non_ok_services(services_organised["included"], params, included_template)
 
-    static_template = "%d static service%s %s (%s)"
+    static_template = "{count:d} static service{is_plural} {status} ({service_text})"
     yield from _check_non_ok_services(services_organised["static"], params, static_template)
 
     for temporary_type in ("activating", "reloading", "deactivating"):
@@ -384,7 +389,7 @@ def check_systemd_units_services_summary(
             services_organised[temporary_type], params, temporary_type
         )
     if services_organised["excluded"]:
-        yield Result(state=State.OK, notice="Ignored: %d" % len(services_organised["excluded"]))
+        yield Result(state=State.OK, notice=f"Ignored: {len(services_organised['excluded']):d}")
 
 
 register.check_plugin(

@@ -1,0 +1,21 @@
+Title: Removed none_value keyword argument from Optional ValueSpec
+Class: feature
+Compatible: incomp
+Component: multisite
+Date: 1649767957
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Note: If you don't use the Optional ValueSpec in your checks or in your GUI
+modifications, you are not affected by this change.  And even if you use it,
+this change only affects you when you use the "none_value" keyword argument
+with a value different from "None".  In a nutshell: Most users should not be
+affected at all.
+
+The "none_value" keyword argeument has been removed to improve the typing of
+the Optional ValueSpec.  The previous usages of this were a bit error-prone
+and not really necessary at all.  If you are affected by this removal, you
+can use the Transform ValueSpec and/or tiny modifications of you code to
+handle "None".

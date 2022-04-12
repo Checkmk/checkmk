@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -60,6 +59,21 @@ def parse_int(val):
         return None
 
 
+def status_result(status: str, params: Mapping[str, Any]) -> CheckResult:
+    """
+    Yield the proper Result based on the available statuses in the params.
+    State.WARN if status not in params.
+    """
+    if status in params:
+        yield Result(state=State(params[status]), summary=f"Status: {status}")
+    else:
+        # covers partial statuses like DOWN 1/2 and MAINT(via)
+        yield Result(
+            state=State.WARN,
+            summary=f"Status: {status}",
+        )
+
+
 def parse_haproxy(string_table: StringTable) -> Section:
     frontends = {}
     servers = {}
@@ -78,7 +92,7 @@ def parse_haproxy(string_table: StringTable) -> Section:
             frontends[name] = Frontend(status=status, stot=stot)
 
         elif line[32] == "2":
-            name = "%s/%s" % (line[0], line[1])
+            name = f"{line[0]}/{line[1]}"
             layer_check = line[36]
             uptime = parse_int(line[23])
             active = parse_int(line[19])
@@ -108,7 +122,7 @@ def check_haproxy_frontend(item: str, params: Mapping[str, Any], section: Sectio
         return
 
     status = data.status
-    yield Result(state=State(params[status]), summary=f"Status: {status}")
+    yield from status_result(status, params)
 
     stot = data.stot
     if stot is not None:
@@ -144,7 +158,7 @@ def check_haproxy_server(item: str, params: Mapping[str, Any], section: Section)
         return
 
     status = data.status
-    yield Result(state=State(params[status]), summary=f"Status: {status}")
+    yield from status_result(status, params)
 
     if data.active:
         yield Result(state=State.OK, summary="Active")

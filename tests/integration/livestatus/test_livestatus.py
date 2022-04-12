@@ -64,6 +64,8 @@ def test_host_custom_variables(site: Site) -> None:
         "TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp"
         % site.id,
         "FILENAME": "/wato/hosts.mk",
+        "ADDRESSES_4": "",
+        "ADDRESSES_6": "",
         "ADDRESS_4": "127.0.0.1",
         "ADDRESS_6": "",
     }

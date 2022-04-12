@@ -535,7 +535,6 @@ class Overridable(Base):
                 title=_("Visibility"),
                 label=_("Make this %s available for other users") % cls.phrase("title"),
                 none_label=_("Don't publish to other users"),
-                none_value=False,
                 valuespec=PublishTo(
                     publish_all=cls.has_overriding_permission("publish"),
                     publish_groups=cls.has_overriding_permission("publish_to_groups"),

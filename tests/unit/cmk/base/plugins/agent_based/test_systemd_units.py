@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from datetime import timedelta
+
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import Result, Service, State
@@ -1702,9 +1704,365 @@ def test_services_split(services, blacklist, expected):
             },
             id="C.UTF-8 locale (● instead of * for broken units)",
         ),
+        pytest.param(
+            [
+                ["[list-unit-files]"],
+                ["[status]"],
+                ["●", "sssd.service", "-", "System", "Security", "Services", "Daemon"],
+                [
+                    "Loaded:",
+                    "loaded",
+                    "(/lib/systemd/system/sssd.service;",
+                    "enabled;",
+                    "vendor",
+                    "preset:",
+                    "enabled)",
+                ],
+                ["", "Active:", "inactive", "(dead)"],
+                [
+                    "",
+                    "Condition:",
+                    "start",
+                    "condition",
+                    "failed",
+                    "at",
+                    "Tue",
+                    "2022-04-12",
+                    "12:53:54",
+                    "CEST;",
+                    "2h",
+                    "0min",
+                    "ago",
+                ],
+                ["", "├─", "ConditionPathExists=|/etc/sssd/sssd.conf", "was", "not", "met"],
+                ["", "└─", "ConditionDirectoryNotEmpty=|/etc/sssd/conf.d", "was", "not", "met"],
+                [""],
+                [
+                    "○",
+                    "systemd-ask-password-console.service",
+                    "-",
+                    "Dispatch",
+                    "Password",
+                    "Requests",
+                    "to",
+                    "Console",
+                ],
+                [
+                    "Loaded:",
+                    "loaded",
+                    "(/lib/systemd/system/systemd-ask-password-console.service;",
+                    "static)",
+                ],
+                ["Active:", "inactive", "(dead)"],
+                ["TriggeredBy:", "○", "systemd-ask-password-console.path"],
+                ["", "Docs:", "man:systemd-ask-password-console.service(8)"],
+                [""],
+                [
+                    " ",
+                    "systemd-ask-password-plymouth.service",
+                    "-",
+                    "Forward",
+                    "Password",
+                    "Requests",
+                    "to",
+                    "Plymouth",
+                ],
+                [
+                    "Loaded:",
+                    "loaded",
+                    "(/lib/systemd/system/systemd-ask-password-plymouth.service;",
+                    "static)",
+                ],
+                ["Active:", "inactive", "(dead)"],
+                ["TriggeredBy:", "●", "systemd-ask-password-plymouth.path"],
+                ["", "Docs:", "http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents"],
+                ["●", "cmktest.service", "-", "Checkmk", "Monitoring"],
+                [
+                    "Loaded:",
+                    "loaded",
+                    "(/etc/systemd/system/cmktest.service;",
+                    "disabled;",
+                    "vendor",
+                    "preset:",
+                    "enabled)",
+                ],
+                [
+                    "Active:",
+                    "activating",
+                    "(start)",
+                    "since",
+                    "Tue",
+                    "2022-04-19",
+                    "15:02:38",
+                    "CEST;",
+                    "33min",
+                    "ago",
+                ],
+                ["Docs:", "https://docs.checkmk.com/latest/en"],
+                ["Main", "PID:", "173988", "(sleep)"],
+                ["Tasks:", "1", "(limit:", "38101"],
+                ["Memory:", "176.0K"],
+                ["CPU:", "815u"],
+                ["CGroup:", "/system.slice/cmktest.service"],
+                ["└─173988", "/usr/bin/sleep", "88888"],
+                [""],
+                [
+                    "Apr",
+                    "19",
+                    "15:02:38",
+                    "klappmax",
+                    "systemd[1]:",
+                    "Starting",
+                    "Checkmk",
+                    "Monitoring..",
+                ],
+                ["[all]"],
+                ["UNIT", "LOAD", "ACTIVE", "SUB", "JOB", "DESCRIPTION"],
+                [
+                    "sssd.service",
+                    "loaded",
+                    "active",
+                    "running",
+                    "SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                ],
+                [
+                    "systemd-ask-password-plymouth.service",
+                    "loaded",
+                    "active",
+                    "running",
+                    "NOT FROM SYSTEMD",
+                ],
+                [
+                    "cmktest.service",
+                    "loaded",
+                    "active",
+                    "running",
+                    "NOT FROM SYSTEMD",
+                ],
+            ],
+            {
+                "sssd": UnitEntry(
+                    name="sssd",
+                    loaded_status="loaded",
+                    active_status="active",
+                    current_state="running",
+                    description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                    enabled_status="unknown",
+                ),
+                "cmktest": UnitEntry(
+                    name="cmktest",
+                    loaded_status="loaded",
+                    active_status="active",
+                    current_state="running",
+                    description="NOT FROM SYSTEMD",
+                    enabled_status="unknown",
+                    time_since_change=timedelta(minutes=33),
+                ),
+                "systemd-ask-password-plymouth": UnitEntry(
+                    name="systemd-ask-password-plymouth",
+                    loaded_status="loaded",
+                    active_status="active",
+                    current_state="running",
+                    description="NOT FROM SYSTEMD",
+                    enabled_status="unknown",
+                ),
+            },
+            id="parse status change",
+        ),
+        pytest.param(
+            [
+                ["[list-unit-files]"],
+                ["[status]"],
+                ["●", "sssd.service", "-", "System", "Security", "Services", "Daemon"],
+                [
+                    "Loaded:",
+                    "loaded",
+                    "(/lib/systemd/system/sssd.service;",
+                    "enabled;",
+                    "vendor",
+                    "preset:",
+                    "enabled)",
+                ],
+                ["", "Active:", "inactive", "(dead)"],
+                [
+                    "",
+                    "Condition:",
+                    "start",
+                    "condition",
+                    "failed",
+                    "at",
+                    "Tue",
+                    "2022-04-12",
+                    "12:53:54",
+                    "CEST;",
+                    "2h",
+                    "0min",
+                    "ago",
+                ],
+                ["", "├─", "ConditionPathExists=|/etc/sssd/sssd.conf", "was", "not", "met"],
+                ["", "└─", "ConditionDirectoryNotEmpty=|/etc/sssd/conf.d", "was", "not", "met"],
+                [""],
+                ["●", "rpcbind.socket", "-", "RPCbind", "Server", "Activation", "Socket"],
+                [
+                    "Loaded:",
+                    "loaded",
+                    "(/lib/systemd/system/rpcbind.socket;",
+                    "enabled;",
+                    "vendor",
+                    "preset:",
+                    "enabled)",
+                ],
+                [
+                    "Active:",
+                    "active",
+                    "(running)",
+                    "since",
+                    "Mon",
+                    "2022-04-18",
+                    "22:03:32",
+                    "CEST;",
+                    "15h",
+                    "ago",
+                ],
+                ["Triggers:", "●", "rpcbind.service"],
+                ["Listen:", "/run/rpcbind.sock", "(Stream)"],
+                ["0.0.0.0:111", "(Stream)"],
+                ["0.0.0.0:111", "(Datagram)"],
+                ["[::]:111", "(Stream)"],
+                ["[::]:111", "(Datagram)"],
+                ["Tasks:", "0", "(limit:", "38101)"],
+                ["Memory:", "16.0K"],
+                ["CPU:", "1ms"],
+                ["[all]"],
+                ["UNIT", "LOAD", "ACTIVE", "SUB", "JOB", "DESCRIPTION"],
+                [
+                    "sssd.service",
+                    "loaded",
+                    "active",
+                    "running",
+                    "SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                ],
+            ],
+            {
+                "sssd": UnitEntry(
+                    name="sssd",
+                    loaded_status="loaded",
+                    active_status="active",
+                    current_state="running",
+                    description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                    enabled_status="unknown",
+                ),
+            },
+            id="[ can also be used by systemd",
+        ),
     ],
 )
 def test_parse_systemd_units(string_table: StringTable, section: Section) -> None:
+    assert parse(string_table) == section
+
+
+# This test is exhaustive given the options in the systemd source code at the time of writing
+# https://github.com/systemd/systemd/blob/c87c30780624df257ed96909a2286b2b933f8c44/src/basic/time-util.c#L417
+SEC_PER_MONTH = 2629800
+SEC_PER_YEAR = 31557600
+
+
+@pytest.mark.parametrize(
+    "time, expected",
+    [
+        ("10us ago", timedelta(microseconds=10)),
+        ("10ms ago", timedelta(milliseconds=10)),
+        ("10s ago", timedelta(seconds=10)),
+        ("2min 10s ago", timedelta(minutes=2, seconds=10)),
+        ("2min 0s ago", timedelta(minutes=2)),
+        ("23min ago", timedelta(minutes=23)),
+        ("10h 42min ago", timedelta(hours=10, minutes=42)),
+        ("1h 0min ago", timedelta(hours=1)),
+        ("13h ago", timedelta(hours=13)),
+        ("1 day 13h ago", timedelta(days=1, hours=13)),
+        ("1 day 0h ago", timedelta(days=1)),
+        ("21 days ago", timedelta(days=21)),
+        ("1 week 1 day ago", timedelta(weeks=1, days=1)),
+        ("1 week 0 day ago", timedelta(weeks=1)),
+        ("2 weeks 2 days ago", timedelta(weeks=2, days=2)),
+        ("1 month 1 day ago", timedelta(days=1, seconds=SEC_PER_MONTH)),
+        ("1 month 0 day ago", timedelta(seconds=SEC_PER_MONTH)),
+        ("2 months 2 days ago", timedelta(days=2, seconds=SEC_PER_MONTH * 2)),
+        ("1 year 1 month ago", timedelta(seconds=SEC_PER_MONTH + SEC_PER_YEAR)),
+        ("1 year 0 month ago", timedelta(seconds=SEC_PER_YEAR)),
+        ("2 years 2 months ago", timedelta(seconds=SEC_PER_MONTH * 2 + SEC_PER_YEAR * 2)),
+        ("0 years 12 months ago", timedelta(seconds=SEC_PER_MONTH * 12)),
+    ],
+)
+def test_parse_time_since_state_change(time, expected):
+    condition = f" Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; {time}"
+    string_table = [
+        ["[list-unit-files]"],
+        ["[status]"],
+        ["●", "sssd.service", "-", "System", "Security", "Services", "Daemon"],
+        [
+            "Loaded:",
+            "loaded",
+            "(/lib/systemd/system/sssd.service;",
+            "enabled;",
+            "vendor",
+            "preset:",
+            "enabled)",
+        ],
+        condition.split(),
+        [""],
+        ["[all]"],
+        ["UNIT", "LOAD", "ACTIVE", "SUB", "JOB", "DESCRIPTION"],
+        [
+            "sssd.service",
+            "loaded",
+            "active",
+            "running",
+            "SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+        ],
+    ]
+    section = {
+        "sssd": UnitEntry(
+            name="sssd",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="running",
+            description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+            enabled_status="unknown",
+            time_since_change=expected,
+        ),
+    }
+
+    assert parse(string_table) == section
+
+
+@pytest.mark.parametrize(
+    "icon",
+    ["●", "○", "↻", "×", "x", "*"],
+)
+def test_all_possible_service_states_in_status_section(icon):
+    pre_string_table = [
+        "[list-unit-files]",
+        "[status]",
+        f"{icon} sssd.service - System Security Services Daemon",
+        "Loaded: loaded (/lib/systemd/system/sssd.service; enabled; vendor preset: enabled)",
+        " Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; 3s ago",
+        "[all]",
+        "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+        "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+    ]
+    section = {
+        "sssd": UnitEntry(
+            name="sssd",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="running",
+            description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+            enabled_status="unknown",
+            time_since_change=timedelta(seconds=3),
+        ),
+    }
+    string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
 
 
@@ -1716,6 +2074,7 @@ SECTION = {
         current_state="exited",
         description="LSB: VirtualBox Linux kernel module",
         enabled_status="unknown",
+        time_since_change=timedelta(seconds=2),
     ),
     "bar": UnitEntry(
         name="bar",
@@ -1936,6 +2295,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
                     current_state="exited",
                     description="LSB: VirtualBox Linux kernel module",
                     enabled_status="unknown",
+                    time_since_change=timedelta(seconds=2),
                 ),
                 "actualbox": UnitEntry(
                     name="actualbox",
@@ -1944,14 +2304,15 @@ def test_check_systemd_units_services(item, params, section, check_results):
                     current_state="finished",
                     description="A made up service for this test",
                     enabled_status="unknown",
+                    time_since_change=timedelta(seconds=4),
                 ),
             },
             [
                 Result(state=State.OK, summary="Total: 2"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 0"),
-                Result(state=State.OK, notice="Service 'virtualbox' activating for: 0 seconds"),
-                Result(state=State.OK, notice="Service 'actualbox' deactivating for: 0 seconds"),
+                Result(state=State.OK, notice="Service 'virtualbox' activating for: 2 seconds"),
+                Result(state=State.OK, notice="Service 'actualbox' deactivating for: 4 seconds"),
             ],
         ),
         # Activating + reloading
@@ -1970,13 +2331,14 @@ def test_check_systemd_units_services(item, params, section, check_results):
                     current_state="exited",
                     description="LSB: VirtualBox Linux kernel module",
                     enabled_status="reloading",
+                    time_since_change=timedelta(seconds=2),
                 ),
             },
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 0"),
-                Result(state=State.OK, notice="Service 'virtualbox' activating for: 0 seconds"),
+                Result(state=State.OK, notice="Service 'virtualbox' activating for: 2 seconds"),
             ],
         ),
         # Reloading
@@ -1995,13 +2357,14 @@ def test_check_systemd_units_services(item, params, section, check_results):
                     current_state="exited",
                     description="LSB: VirtualBox Linux kernel module",
                     enabled_status="reloading",
+                    time_since_change=timedelta(seconds=2),
                 ),
             },
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 0"),
-                Result(state=State.OK, notice="Service 'virtualbox' reloading for: 0 seconds"),
+                Result(state=State.OK, notice="Service 'virtualbox' reloading for: 2 seconds"),
             ],
         ),
         # Indirect

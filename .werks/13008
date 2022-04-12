@@ -1,0 +1,12 @@
+Title: Fix haproxy status on DOWN 1/2 and MAINT(via)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649855798
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+

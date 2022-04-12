@@ -1,0 +1,11 @@
+Title: cmk_agent_ctl_status: Fix crash upon empty section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649750768
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+

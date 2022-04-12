@@ -603,11 +603,14 @@ def _set_addresses(
     what: Literal["4", "6"],
 ) -> None:
     key_base = f"_ADDRESSES_{what}"
-    if addresses:
-        attrs[key_base] = " ".join(addresses)
-        for nr, address in enumerate(addresses):
-            key = f"{key_base}_{nr + 1}"
-            attrs[key] = address
+    if not addresses:
+        # If other addresses are not available, set to empty string in order to avoid unresolved macros
+        attrs[key_base] = ""
+        return
+    attrs[key_base] = " ".join(addresses)
+    for nr, address in enumerate(addresses):
+        key = f"{key_base}_{nr + 1}"
+        attrs[key] = address
 
 
 def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> ObjectAttributes:

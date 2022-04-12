@@ -58,6 +58,8 @@ def test_format_nagios_object() -> None:
         (
             "localhost",
             {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
                 "_ADDRESS_4": "127.0.0.1",
                 "_ADDRESS_6": "",
                 "_ADDRESS_FAMILY": "4",
@@ -86,6 +88,8 @@ def test_format_nagios_object() -> None:
         (
             "host2",
             {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
                 "_ADDRESS_4": "0.0.0.0",
                 "_ADDRESS_6": "",
                 "_ADDRESS_FAMILY": "4",
@@ -114,6 +118,8 @@ def test_format_nagios_object() -> None:
         (
             "cluster1",
             {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
                 "_ADDRESS_4": "",
                 "_ADDRESS_6": "",
                 "_ADDRESS_FAMILY": "4",
@@ -147,6 +153,8 @@ def test_format_nagios_object() -> None:
         (
             "cluster2",
             {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
                 "_ADDRESS_4": "",
                 "_ADDRESS_6": "",
                 "_ADDRESS_FAMILY": "4",
@@ -180,6 +188,8 @@ def test_format_nagios_object() -> None:
         (
             "node1",
             {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
                 "_ADDRESS_4": "127.0.0.1",
                 "_ADDRESS_6": "",
                 "_ADDRESS_FAMILY": "4",

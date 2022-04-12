@@ -141,6 +141,8 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     config_cache = ts.apply(monkeypatch)
 
     expected_attrs = {
+        "_ADDRESSES_4": "",
+        "_ADDRESSES_6": "",
         "_ADDRESS_4": "0.0.0.0",
         "_ADDRESS_6": "",
         "_ADDRESS_FAMILY": "4",

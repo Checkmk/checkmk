@@ -25,3 +25,4 @@ Systemd
 tmpfs
 todo
 Vlissides
+rrdcached

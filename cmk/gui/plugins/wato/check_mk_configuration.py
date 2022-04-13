@@ -4386,7 +4386,7 @@ def _valuespec_metrics_node() -> _Tuple[str, ConfigHostname]:
         "metrics_node",
         ConfigHostname(
             title=_("Override automatic metric selection"),
-            label=_("Use Metrics of"),
+            label=_("Use metrics of"),
             help=_(
                 "Since all nodes yield metrics with the same name, Checkmk has to decide which "
                 "nodes' metrics to keep. By default, it will select the node that was crucial "

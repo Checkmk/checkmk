@@ -14,7 +14,18 @@ import subprocess
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 import requests
 import urllib3  # type: ignore[import]
@@ -318,6 +329,69 @@ def _do_remote_automation_serialized(
         raise MKAutomationException(_("Empty output from remote site."))
 
     return response
+
+
+class PiggybackHostsConnectorAttributes(TypedDict):
+    hosts: Sequence[str]
+    tmpfs_initialization_time: int
+
+
+class ExecutionStepAttributes(TypedDict):
+    _name: str
+    _title: str
+    _time_initialized: float
+    _time_started: float
+    _time_completed: float
+    _log_entries: Sequence[str]
+    phase: Literal[0, 1, 2]
+    status: Literal[0, 1]
+    message: str
+
+
+class ExecutionStep(TypedDict):
+    class_name: Literal["ExecutionStep"]
+    attributes: ExecutionStepAttributes
+
+
+class ExecutionStatusAttributes(TypedDict):
+    _steps: Sequence[ExecutionStep]
+    _finished: bool
+    _time_initialized: float
+    _time_completed: float
+
+
+class ExecutionStatus(TypedDict):
+    class_name: Literal["ExecutionStatus"]
+    attributes: ExecutionStatusAttributes
+
+
+class ConnectorObject(TypedDict):
+    # Literal["PiggybackHosts"]
+    class_name: str  # TODO: replace str type with Literal
+    # attributes of new connector objects should be listed here
+    attributes: Union[PiggybackHostsConnectorAttributes, dict]
+
+
+class PhaseOneAttributes(TypedDict):
+    connector_object: ConnectorObject
+    status: ExecutionStatus
+
+
+class PhaseOneResult(TypedDict):
+    class_name: Literal["Phase1Result"]
+    attributes: PhaseOneAttributes
+
+
+def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult:
+    command_args = {
+        "request_format": "python",
+        "request": repr(
+            {"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}
+        ),
+    }
+    return do_remote_automation(
+        site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+    )
 
 
 def do_remote_automation(site, command, vars_, files=None, timeout=None) -> Any:

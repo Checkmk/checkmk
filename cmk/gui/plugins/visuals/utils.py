@@ -412,11 +412,11 @@ RangedTables = Literal[
 ]
 
 
-def parse_ranged_tables_literal(s: str) -> RangedTables:
+def get_ranged_table(s: str) -> Optional[RangedTables]:
     for lit in get_args(RangedTables):
         if s == lit:
             return lit
-    raise ValueError("Expected a RangedTables Literal")
+    return None
 
 
 def recover_pre_2_1_range_filter_request_vars(query: query_filters.NumberRangeQuery):

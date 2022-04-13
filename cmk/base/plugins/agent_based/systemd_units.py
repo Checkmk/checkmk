@@ -215,17 +215,19 @@ def discovery_systemd_units_services(
             return True
         return any(s in (None, state) for s in rule_states)
 
-    for settings in params:
-        descriptions = settings.get("descriptions", [])
-        names = settings.get("names", [])
-        states = settings.get("states", [])
-        for service in filtered_services:
+    # defaults are always last and empty to apeace the new api
+    for service in filtered_services:
+        for settings in params:
+            descriptions = settings.get("descriptions", [])
+            names = settings.get("names", [])
+            states = settings.get("states", [])
             if (
                 regex_match(descriptions, service.description)
                 and regex_match(names, service.name)
                 and state_match(states, service.active_status)
             ):
                 yield Service(item=service.name)
+                continue
 
 
 def check_systemd_units_services(
@@ -248,7 +250,7 @@ register.check_plugin(
     service_name="Systemd Service %s",
     check_ruleset_name="systemd_services",
     discovery_function=discovery_systemd_units_services,
-    discovery_default_parameters={},
+    discovery_default_parameters={"names": ["(never discover)^"]},
     discovery_ruleset_name="discovery_systemd_units_services_rules",
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_systemd_units_services,

@@ -136,7 +136,7 @@ def link_host_with_uuid(
 ) -> None:
     if (
         response := _forward_put(
-            f"objects/host_config/{host_name}/actions/link_uuid/invoke",
+            f"objects/host_config_internal/{host_name}/actions/link_uuid/invoke",
             credentials,
             {"uuid": str(uuid)},
         )

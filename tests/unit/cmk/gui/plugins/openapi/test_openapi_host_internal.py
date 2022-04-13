@@ -18,7 +18,7 @@ from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
 from cmk.gui.exceptions import MKAuthException
 
 _BASE = "/NO_SITE/check_mk/api/1.0"
-_URL_LINK_UUID = _BASE + "/objects/host_config/example.com/actions/link_uuid/invoke"
+_URL_LINK_UUID = _BASE + "/objects/host_config_internal/example.com/actions/link_uuid/invoke"
 
 
 @pytest.mark.usefixtures("with_host")
@@ -69,4 +69,47 @@ def test_openapi_host_link_uuid_204(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
             data_source_dir=data_source_push_agent_dir,
         ).get_uuid("example.com")
         == uuid
+    )
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_show_host_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    assert aut_user_auth_wsgi_app.call_method(
+        "get",
+        f"{_BASE}/objects/host_config_internal/heute",
+        status=200,
+        headers={"Accept": "application/json"},
+    ).json_body == {
+        "site": "NO_SITE",
+        "is_cluster": False,
+    }
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_show_host_cluster_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{_BASE}/domain-types/host_config/collections/clusters",
+        params='{"host_name": "my-cluster", "folder": "/", "nodes": ["heute"]}',
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type='application/json; charset="utf-8"',
+    )
+    assert aut_user_auth_wsgi_app.call_method(
+        "get",
+        f"{_BASE}/objects/host_config_internal/my-cluster",
+        status=200,
+        headers={"Accept": "application/json"},
+    ).json_body == {
+        "site": "NO_SITE",
+        "is_cluster": True,
+    }
+
+
+def test_openapi_show_host_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "get",
+        f"{_BASE}/objects/host_config_internal/missing",
+        headers={"Accept": "application/json"},
+        status=404,
     )

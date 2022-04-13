@@ -21,6 +21,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
     permissions,
     request_schemas,
+    response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
@@ -47,7 +48,7 @@ def _link_with_uuid(
 
 @Endpoint(
     constructors.object_action_href(
-        "host_config",
+        "host_config_internal",
         "{host_name}",
         action_name="link_uuid",
     ),
@@ -73,3 +74,26 @@ def link_with_uuid(params) -> Response:
         params["body"]["uuid"],
     )
     return Response(status=204)
+
+
+@Endpoint(
+    constructors.object_href(
+        "host_config_internal",
+        "{host_name}",
+    ),
+    "cmk/show",
+    method="get",
+    tag_group="Checkmk Internal",
+    path_params=[HOST_NAME],
+    response_schema=response_schemas.HostConfigSchemaInternal,
+    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+)
+def show_host(params) -> Response:
+    """Show a host"""
+    host = Host.load_host(params["host_name"])
+    return constructors.serve_json(
+        {
+            "site": host.site_id(),
+            "is_cluster": host.is_cluster(),
+        }
+    )

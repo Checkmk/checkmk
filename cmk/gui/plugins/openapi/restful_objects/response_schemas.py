@@ -910,3 +910,14 @@ class X509PEM(BaseSchema):
         required=True,
         description="PEM-encoded X.509 certificate.",
     )
+
+
+class HostConfigSchemaInternal(BaseSchema):
+    site = fields.String(
+        required=True,
+        description="The site the host is monitored on.",
+    )
+    is_cluster = fields.Boolean(
+        required=True,
+        description="Indicates if the host is a cluster host.",
+    )

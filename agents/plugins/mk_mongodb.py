@@ -49,9 +49,8 @@ except ImportError:
 try:
     import pymongo  # type: ignore[import] # pylint: disable=import-error
     import pymongo.errors  # type: ignore[import] # pylint: disable=import-error
-    # dalla versione di pymongo 3.4 dumps converte datetime in isoformat
-    # con queste impostazioni converte in timestamp
-    # from bson.json_util import dumps # type: ignore[import]
+    # Starting from pymongo v. 3.4 dumps change datetime to isoformat
+    # To have the "LEGACY OPSTIONS" it needs to import them and use it in "dumps" method
     from bson.json_util import dumps, LEGACY_JSON_OPTIONS  # type: ignore[import]
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
@@ -156,6 +155,8 @@ def sections_replica_set(client):
     sys.stdout.write(
         "%s\n"
         % json.dumps(
+            # Starting from pymongo v. 3.4 dumps change datetime to isoformat
+            # To have the "LEGACY OPSTIONS" it needs to import them and use it in "dumps" method
             json.loads(dumps(rep_set_status, json_options=LEGACY_JSON_OPTIONS)),
             separators=(",", ":"),
         ),

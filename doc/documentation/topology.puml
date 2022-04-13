@@ -48,7 +48,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
     interface "Livestatus client" as liveproxyd_livestatus_client
 
-    component dcd
+    component "[[../arch-comp-dcd.html dcd]]" as dcd
     interface "HTTP" as dcd_web_api_client
     interface Piggyback as dcd_piggyback
 

@@ -10,11 +10,13 @@ The main requirement we solve with the Livestatus proxy daemon is:
 * Optimize Livestatus connections from the central site to the remote site in
   distributed setups of the Enterprise Edition.
 
-Other features we get from OMD:
+Other features we get:
 
 * Caching of Livestatus queries
 * Transport of HW/SW inventory information from remote to central site
 * Shared livestatus connections between apache worker processes
+
+The Livestatus proxy daemon is an Enterprise feature.
 
 Architecture
 ============

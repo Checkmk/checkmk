@@ -28,6 +28,7 @@ Components
    arch-comp-checkengine.rst
    arch-comp-core.rst
    arch-comp-liveproxyd.rst
+   arch-comp-dcd.rst
    arch-comp-livestatus.rst
    arch-comp-template.rst
 

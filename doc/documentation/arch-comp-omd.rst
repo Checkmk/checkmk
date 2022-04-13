@@ -97,8 +97,9 @@ on the configuration.
       [mkeventd]
       [rrdcached]
       [liveproxyd]
+      component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
       [crontab]
-      [dcd]
+      component "[[../arch-comp-dcd.html dcd]]" as dcd
       [apache]
       [agent-receiver]
       [redis]

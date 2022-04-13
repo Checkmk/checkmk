@@ -18,12 +18,9 @@ import shutil
 import sys
 import tempfile
 import uuid
-from typing import Final
 
 import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
-
-AGENT_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 
 opt_verbose = True
 
@@ -277,7 +274,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
             path_prefix = "./"
             tmp_dir = "."
 
-        new_msi_file = src_dir + "/" + AGENT_MSI_FILE
+        new_msi_file = src_dir + "/check_mk_agent.msi"
         work_dir = tempfile.mkdtemp(prefix=tmp_dir + "/msi-update.")
         deobfuscated_file = Path(new_msi_file)
 

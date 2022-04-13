@@ -10,8 +10,8 @@ chmod +x enterprise/agents/plugins/cmk-update-agent-32
 
 touch agents/windows/check_mk_agent.msi
 chmod +x agents/windows/check_mk_agent.msi
-touch agents/windows/check_mk_agent_unsigned.msi
-chmod +x agents/windows/check_mk_agent_unsigned.msi
+touch agents/windows/check_mk_agent_no_sign.msi
+chmod +x agents/windows/check_mk_agent_no_sign.msi
 touch agents/windows/check_mk_agent_legacy-64.exe
 chmod +x agents/windows/check_mk_agent_legacy-64.exe
 touch agents/windows/check_mk_agent_legacy.exe

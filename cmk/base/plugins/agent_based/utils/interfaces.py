@@ -677,6 +677,7 @@ def _check_ungrouped_ifs(
     section: Section,
     timestamp: float,
     input_is_rate: bool,
+    value_store: Optional[MutableMapping[str, Any]] = None,
 ) -> type_defs.CheckResult:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
@@ -700,6 +701,7 @@ def _check_ungrouped_ifs(
                         timestamp=timestamp,
                         input_is_rate=input_is_rate,
                         use_discovered_state_and_speed=interface.node is None,
+                        value_store=value_store,
                     )
                 )
             except IgnoreResultsError as excpt:
@@ -734,6 +736,7 @@ def _check_grouped_ifs(
     group_name: str,
     timestamp: float,
     input_is_rate: bool,
+    value_store: Optional[MutableMapping[str, Any]] = None,
 ) -> type_defs.CheckResult:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
@@ -771,7 +774,7 @@ def _check_grouped_ifs(
 
     # Now we're done and have all matching interfaces
     # Accumulate info over matching_interfaces
-    value_store = get_value_store()
+    used_value_store = value_store if value_store is not None else get_value_store()
 
     cumulated_interface = Interface(
         index=item,
@@ -822,7 +825,7 @@ def _check_grouped_ifs(
                     # We make sure that every group member has valid rates before adding up the
                     # counters
                     get_rate(
-                        value_store,
+                        used_value_store,
                         _get_value_store_key(name, str(interface.node), str(idx)),
                         timestamp,
                         saveint(counter),
@@ -884,6 +887,7 @@ def _check_grouped_ifs(
         # the discovered speed corresponds to only one of the nodes, so it cannot be used for
         # interface groups on clusters; same for state
         use_discovered_state_and_speed=section[0].node is None,
+        value_store=used_value_store,
     )
 
 
@@ -891,9 +895,11 @@ def check_multiple_interfaces(
     item: str,
     params: Mapping[str, Any],
     section: Section,
+    *,
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
     input_is_rate: bool = False,
+    value_store: Optional[MutableMapping[str, Any]] = None,
 ) -> type_defs.CheckResult:
 
     if timestamp is None:
@@ -907,6 +913,7 @@ def check_multiple_interfaces(
             group_name,
             timestamp,
             input_is_rate,
+            value_store,
         )
     else:
         yield from _check_ungrouped_ifs(
@@ -915,6 +922,7 @@ def check_multiple_interfaces(
             section,
             timestamp,
             input_is_rate,
+            value_store,
         )
 
 
@@ -998,15 +1006,17 @@ def check_single_interface(
     params: Mapping[str, Any],
     interface: Interface,
     group_members: Optional[GroupMembers] = None,
+    *,
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
     input_is_rate: bool = False,
     use_discovered_state_and_speed: bool = True,
+    value_store: Optional[MutableMapping[str, Any]] = None,
 ) -> type_defs.CheckResult:
 
     if timestamp is None:
         timestamp = time.time()
-    value_store = get_value_store()
+    used_value_store = value_store if value_store is not None else get_value_store()
 
     # Params now must be a dict. Some keys might
     # be set to None
@@ -1105,7 +1115,7 @@ def check_single_interface(
     for name, counter in rate_content:
         try:
             rate = _get_rate(
-                value_store,
+                used_value_store,
                 _get_value_store_key(name, str(interface.node)),
                 timestamp,
                 counter,
@@ -1139,7 +1149,7 @@ def check_single_interface(
         average,
         unit,
         traffic_levels,
-        value_store,
+        used_value_store,
         timestamp,
         item,
         assumed_speed_in,
@@ -1155,7 +1165,7 @@ def check_single_interface(
         average_bmcast,
         item=item,
         rates=rates,
-        value_store=value_store,
+        value_store=used_value_store,
         timestamp=timestamp,
     )
 

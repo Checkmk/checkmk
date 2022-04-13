@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
 
-from .agent_based_api.v1 import register, Result
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict, Union
+
+from .agent_based_api.v1 import get_value_store, register, Result
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1 import type_defs
 from .utils import interfaces, netapp_api
@@ -21,19 +22,15 @@ class NICExtraInfo(TypedDict, total=False):
     is_home: bool
 
 
-ExtraInfo = Dict[str, NICExtraInfo]
+ExtraInfo = Mapping[str, NICExtraInfo]
 Section = Tuple[interfaces.Section, ExtraInfo]
-
-# <<<netapp_api_if:sep(9)>>>
-# interface clu1-01_clus1 use-failover-group unused       address 222.254.110.11  dns-domain-name none    is-auto-revert true     lif-uuid 3d682f64-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0a        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0a   is-home true    send_data 4265424  send_errors 0   recv_errors 0   instance_name clu1-01_clus1     recv_data 5988948
-# interface clu1-01_clus2 use-failover-group unused       address 222.254.110.12  dns-domain-name none    is-auto-revert true     lif-uuid 3d6817c9-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0b        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0b   is-home true    send_data 4389886  send_errors 0   recv_errors 0   instance_name clu1-01_clus2     recv_data 6113182
 
 
 def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
     ifaces = netapp_api.parse_netapp_api_single_instance(string_table)
 
     # Dictionary with lists of common mac addresses
-    if_mac_list: Dict[str, MACList] = {}
+    if_mac_list: MutableMapping[str, MACList] = {}
     # List of virtual interfaces
     vif_list = []
 
@@ -87,7 +84,7 @@ def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
             if_mac_list[values["mac-address"]].append((name, values.get("state")))
 
     nics = []
-    extra_info: ExtraInfo = {}
+    extra_info: MutableMapping[str, NICExtraInfo] = {}
     for idx, (nic_name, values) in enumerate(sorted(ifaces.items())):
         speed = values.get("speed", 0)
 
@@ -193,12 +190,21 @@ def check_netapp_api_if(
     params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
+    yield from _check_netapp_api_if(item, params, section, get_value_store())
 
+
+def _check_netapp_api_if(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    value_store: MutableMapping[str, Any],
+) -> type_defs.CheckResult:
     nics, extra_info = section
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
         nics,
+        value_store=value_store,
     )
 
     for iface in nics:

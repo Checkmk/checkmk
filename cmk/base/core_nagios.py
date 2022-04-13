@@ -427,15 +427,6 @@ def _create_nagios_servicedefs(
                     hostname, host_attrs["alias"], acttype, params
                 )
 
-                if not description:
-                    core_config.warning(
-                        f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
-                    )
-                    continue
-
-                if do_omit_service(hostname, description):
-                    continue
-
                 # compute argument, and quote ! and \ for Nagios
                 args = (
                     core_config.active_check_arguments(
@@ -444,6 +435,15 @@ def _create_nagios_servicedefs(
                     .replace("\\", "\\\\")
                     .replace("!", "\\!")
                 )
+
+                if not description:
+                    core_config.warning(
+                        f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
+                    )
+                    continue
+
+                if do_omit_service(hostname, description):
+                    continue
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]

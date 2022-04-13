@@ -42,7 +42,7 @@ Check_MK %s Agent
 USAGE: agent_%s --section_url [{section_name},{url}]
 
     Parameters:
-        --section_url   Pair of section_name and url
+        --section_url   Pair of section_name and url separated by a comma
                         Can be defined multiple times
         --debug         Output json data with pprint
 

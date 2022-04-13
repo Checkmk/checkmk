@@ -9,8 +9,9 @@ def agent_salesforce_arguments(params, hostname, ipaddress):
     args = []
     for instance in params["instances"]:
         args += [
-            "--section_url", "salesforce_instances",
-            "https://api.status.salesforce.com/v1/instances/%s/status" % instance
+            "--section_url",
+            "salesforce_instances,https://api.status.salesforce.com/v1/instances/%s/status" %
+            instance,
         ]
     return args
 

@@ -36,6 +36,8 @@ import sys
 import time
 from collections import defaultdict
 from urllib.parse import quote_plus
+from bson.json_util import DEFAULT_JSON_OPTIONS
+DEFAULT_JSON_OPTIONS.datetime_representation = 0
 
 PY2 = sys.version_info[0] == 2
 

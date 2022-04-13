@@ -24,7 +24,7 @@ version of pymongo (at least 2.8).
 
 """
 
-__version__ = "2.2.0i1"
+__version__ = "2.1.0i1"
 
 import argparse
 import configparser
@@ -36,8 +36,7 @@ import sys
 import time
 from collections import defaultdict
 from urllib.parse import quote_plus
-from bson.json_util import DEFAULT_JSON_OPTIONS
-DEFAULT_JSON_OPTIONS.datetime_representation = 0
+
 
 PY2 = sys.version_info[0] == 2
 
@@ -50,7 +49,10 @@ except ImportError:
 try:
     import pymongo  # type: ignore[import] # pylint: disable=import-error
     import pymongo.errors  # type: ignore[import] # pylint: disable=import-error
-    from bson.json_util import dumps  # type: ignore[import]
+    # dalla versione di pymongo 3.4 dumps converte datetime in isoformat
+    # con queste impostazioni converte in timestamp
+    # from bson.json_util import dumps # type: ignore[import]
+    from bson.json_util import dumps, LEGACY_JSON_OPTIONS  # type: ignore[import]
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
@@ -129,74 +131,32 @@ def section_flushing(server_status):
     sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
 
 
-def _write_section_replica(
-    primary,
-    secondary_actives=None,
-    secondary_passives=None,
-    arbiters=None,
-):
-    """
-    >>> _write_section_replica(None)
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": null, "secondaries": {"active": [], "passive": []}, "arbiters": []}
-    >>> _write_section_replica("primary")
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": "primary", "secondaries": {"active": [], "passive": []}, "arbiters": []}
-    >>> _write_section_replica("primary", secondary_actives=["1", "2"], secondary_passives=["3"], arbiters=["4"])
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": "primary", "secondaries": {"active": ["1", "2"], "passive": ["3"]}, "arbiters": ["4"]}
-    """
-    sys.stdout.write("<<<mongodb_replica:sep(0)>>>\n")
-    sys.stdout.write(
-        json.dumps(
-            {
-                "primary": primary,
-                "secondaries": {
-                    "active": secondary_actives or [],
-                    "passive": secondary_passives or [],
-                },
-                "arbiters": arbiters or [],
-            }
-        )
-        + "\n"
-    )
-
-
 def sections_replica(server_status):
-    """
-    >>> sections_replica({})
-    >>> sections_replica({"repl": {}})
-    >>> sections_replica({"repl": {"primary": "abc"}})
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": "abc", "secondaries": {"active": [], "passive": []}, "arbiters": []}
-    """
     repl_info = server_status.get("repl")
+
     if not repl_info:
         return
-    _write_section_replica(
-        repl_info.get("primary"),
-        secondary_actives=repl_info.get("hosts"),
-        secondary_passives=repl_info.get("passives"),
-        arbiters=repl_info.get("arbiters"),
-    )
+    sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
+    sys.stdout.write("primary\t%s\n" % repl_info.get("primary", "n/a"))
+    if repl_info.get("hosts"):
+        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
+
+    if repl_info.get("arbiters"):
+        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
 
 def sections_replica_set(client):
     try:
         rep_set_status = client.admin.command("replSetGetStatus")
-    except pymongo.errors.OperationFailure:
-        LOGGER.debug(
-            "Calling replSetGetStatus returned an error. "
-            "This might be ok if you have not configured replication on you mongodb server.",
-            exc_info=True,
-        )
+    except pymongo.errors.OperationFailure as e:
+        sys.stderr.write("%s\n" % e)
         return
 
     sys.stdout.write("<<<mongodb_replica_set:sep(9)>>>\n")
     sys.stdout.write(
         "%s\n"
         % json.dumps(
-            json.loads(dumps(rep_set_status)),
+            json.loads(dumps(rep_set_status, json_options=LEGACY_JSON_OPTIONS)),
             separators=(",", ":"),
         ),
     )
@@ -225,7 +185,7 @@ def _get_replication_info(client, databases):
     :return: result
     """
     oplog = databases.get("local", {}).get("collstats", {}).get("oplog.rs", {})
-    result = {}
+    result = dict()
 
     # Returns the total size of the oplog in bytes
     # This refers to the total amount of space allocated to the oplog rather than
@@ -313,7 +273,7 @@ def _get_balancer_info(client):
     :param client: mongdb client
     :return: balancer status dictionary
     """
-    balancer_dict = {}
+    balancer_dict = dict()
 
     # check if balancer is enabled for cluster
     settings = client["config"]["settings"]
@@ -385,7 +345,7 @@ def _aggregate_chunks_and_shards_info(
     _lensing_data(databases_dict)
 
     # shards_dict: add shard information to collections statistic dictionary
-    all_information_dict = {}
+    all_information_dict = dict()
     all_information_dict["databases"] = databases_dict
     all_information_dict["shards"] = shards_dict
     all_information_dict["balancer"] = balancer_dict
@@ -482,7 +442,7 @@ def _get_shards_information(client):
     :param client: mongodb client
     :return: dictionary with shards information
     """
-    shard_dict = {}
+    shard_dict = dict()
     for shard in client.config.shards.find():
         shard_name = shard.get("_id")
         shard.pop("_id", None)
@@ -674,8 +634,8 @@ def _get_indexes_information(client, databases):
                         }
                     ]
                 )
-            except pymongo.errors.OperationFailure:
-                LOGGER.debug("Could not access $indexStat", exc_info=True)
+            except pymongo.errors.OperationFailure as e:
+                sys.stderr.write("%s\n" % e)
                 return
 
     return indexes_dict
@@ -693,8 +653,11 @@ def get_timestamp(text):
 
 def read_statefile(state_file):
     try:
-        with open(state_file) as state_fd:
+        state_fd = open(state_file)
+        try:
             last_timestamp = int(state_fd.read())
+        finally:
+            state_fd.close()
     except (IOError, ValueError):
         return None, True
 
@@ -715,8 +678,11 @@ def update_statefile(state_file, startup_warnings):
         return
     timestamp = get_timestamp(lines[-1])
     try:
-        with open(state_file, "w") as state_fd:
+        state_fd = open(state_file, "w")
+        try:
             state_fd.write("%d" % timestamp)
+        finally:
+            state_fd.close()
     except (IOError, TypeError):
         # TypeError: timestamp was None, but at least ctime is updated.
         pass
@@ -972,7 +938,8 @@ def main(argv=None):
         # this is a special case: replica set without master
         # this is detected here
         if "primary" in repl_info and not repl_info.get("primary"):
-            _write_section_replica(None)
+            sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
+            sys.stdout.write("primary\tn/a\n")
         return
 
     piggyhost = repl_info.get("setName") if repl_info else None

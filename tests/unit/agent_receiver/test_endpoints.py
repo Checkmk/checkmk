@@ -15,7 +15,7 @@ from zlib import compress
 
 import pytest
 from agent_receiver import site_context
-from agent_receiver.checkmk_rest_api import CMKEdition
+from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration
 from agent_receiver.models import HostTypeEnum
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -46,8 +46,11 @@ def test_register_register_with_hostname_host_missing(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.endpoints.host_exists",
-        return_value=False,
+        "agent_receiver.endpoints.host_configuration",
+        side_effect=HTTPException(
+            status_code=404,
+            detail="N O T  F O U N D",
+        ),
     )
     response = client.post(
         "/register_with_hostname",
@@ -58,7 +61,57 @@ def test_register_register_with_hostname_host_missing(
         },
     )
     assert response.status_code == 404
-    assert response.json() == {"detail": "Host myhost does not exist"}
+    assert response.json() == {"detail": "N O T  F O U N D"}
+
+
+def test_register_register_with_hostname_wrong_site(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    mocker.patch(
+        "agent_receiver.endpoints.host_configuration",
+        return_value=HostConfiguration(
+            site="some-site",
+            is_cluster=False,
+        ),
+    )
+    response = client.post(
+        "/register_with_hostname",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "This host is monitored on the site some-site, but you tried to register it at the site NO_SITE."
+    }
+
+
+def test_register_register_with_hostname_cluster_host(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    mocker.patch(
+        "agent_receiver.endpoints.host_configuration",
+        return_value=HostConfiguration(
+            site="NO_SITE",
+            is_cluster=True,
+        ),
+    )
+    response = client.post(
+        "/register_with_hostname",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "This host is a cluster host. Register its nodes instead."}
 
 
 def test_register_register_with_hostname_unauthorized(
@@ -67,8 +120,11 @@ def test_register_register_with_hostname_unauthorized(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.endpoints.host_exists",
-        return_value=True,
+        "agent_receiver.endpoints.host_configuration",
+        return_value=HostConfiguration(
+            site="NO_SITE",
+            is_cluster=False,
+        ),
     )
     mocker.patch(
         "agent_receiver.endpoints.link_host_with_uuid",
@@ -95,8 +151,11 @@ def test_register_register_with_hostname_ok(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.endpoints.host_exists",
-        return_value=True,
+        "agent_receiver.endpoints.host_configuration",
+        return_value=HostConfiguration(
+            site="NO_SITE",
+            is_cluster=False,
+        ),
     )
     mocker.patch(
         "agent_receiver.endpoints.link_host_with_uuid",

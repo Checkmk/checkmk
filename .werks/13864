@@ -1,0 +1,21 @@
+Title: Host registration: Enable on sites with disabled Setup & check site name
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1649870529
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+The host registration via the <tt>cmk-agent-ctl</tt> command failed for
+sites with disabled Setup.
+
+Furthermore, upon registration, we now check if the site where the host is
+registering is also the site on which it is monitored (only relevant in
+distributed setups). If not, the registration fails.
+
+Finally, upon registration we also ensure that the host is not a cluster
+host, since cluster hosts have no direct physical or virtual counterpart
+which needs to be registered.

@@ -14,6 +14,7 @@ import requests
 from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
+from pydantic import BaseModel
 
 
 class CMKEdition(Enum):
@@ -113,16 +114,31 @@ def post_csr(
     )
 
 
-def host_exists(
+class HostConfiguration(BaseModel):
+    site: str
+    is_cluster: bool
+
+
+def host_configuration(
     credentials: HTTPBasicCredentials,
     host_name: str,
-) -> bool:
-    return (
-        _forward_get(
-            f"objects/host_config/{host_name}",
+) -> HostConfiguration:
+    if (
+        response := _forward_get(
+            f"objects/host_config_internal/{host_name}",
             credentials,
-        ).status_code
-        == HTTPStatus.OK
+        )
+    ).status_code == HTTPStatus.OK:
+        return HostConfiguration(**response.json())
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        # The REST API only says 'Not Found' in the response title here
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Host {host_name} does not exist.",
+        )
+    raise HTTPException(
+        status_code=response.status_code,
+        detail=parse_error_response_body(response.text),
     )
 
 

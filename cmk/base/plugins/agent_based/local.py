@@ -276,13 +276,26 @@ _STATE_MARKERS = {
 
 # Compute state according to warn/crit levels contained in the
 # performance data.
-def local_compute_state(perfdata):
+def local_compute_state(perfdata, ignore_levels=False):
     for entry in perfdata:
+        try:
+            _ = Metric(entry.name, 0)
+        except TypeError as exc:
+            yield Result(
+                state=State.WARN,
+                summary=f"Invalid metric name: {entry.name!r}",
+                details=(f"The metric name {entry.name!r} is invalid. "
+                         f"It will not be recorded. Problem: {exc}"),
+            )
+            metric_name = None
+        else:
+            metric_name = entry.name
+
         yield from check_levels(
             entry.value,
-            levels_upper=entry.levels[:2],
-            levels_lower=entry.levels[2:],
-            metric_name=entry.name,
+            levels_upper=None if ignore_levels else entry.levels[:2],
+            levels_lower=None if ignore_levels else entry.levels[2:],
+            metric_name=metric_name,
             label=entry.name,
             boundaries=entry.tuple[-2:],
         )
@@ -314,9 +327,6 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
             summary=summary,
             details=details if details else None,
         )
-        for perf in local_result.perfdata:
-            yield Metric(perf.name, perf.value, levels=perf.levels[:2], boundaries=perf.tuple[4:6])
-
     else:
         if local_result.text:
             yield Result(
@@ -324,7 +334,7 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
                 summary=summary,
                 details=details if details else None,
             )
-        yield from local_compute_state(local_result.perfdata)
+    yield from local_compute_state(local_result.perfdata, local_result.state != 'P')
 
     if local_result.cached is not None:
         value_store = get_value_store()

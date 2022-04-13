@@ -17,6 +17,24 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as sta
 value_store_fixture = get_value_store_fixture(local)
 
 
+def test_invalid_metric_name_does_not_crash() -> None:
+    assert list(
+        local.check_local(
+            "MyService",
+            {},
+            local.parse_local([["0", "MyService", "invalid:name=1", "This", "is", "a", "summary"]]),
+        )) == [
+            Result(state=state.OK, summary="This is a summary"),
+            Result(
+                state=state.WARN,
+                summary="Invalid metric name: 'invalid:name'",
+                details=("The metric name 'invalid:name' is invalid. It will not be recorded. "
+                         "Problem: invalid character(s) in metric name: ':'"),
+            ),
+            Result(state=state.OK, summary="invalid:name: 1.00"),
+        ]
+
+
 @pytest.mark.parametrize('line,expected_output', [
     (
         'service_name some rest',
@@ -266,7 +284,8 @@ def test_fix_state():
         local.check_local("NotGood", {},
                           local.LocalSection(errors=[], data={"NotGood": local_result}))) == [
                               Result(state=state.CRIT, summary="A critical check"),
-                              Metric("V", 120, levels=(50, 100), boundaries=(0, 1000)),
+                              Result(state=state.OK, summary="V: 120.00"),
+                              Metric("V", 120, boundaries=(0, 1000)),
                           ]
 
 

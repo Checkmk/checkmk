@@ -11,7 +11,6 @@ from typing import Any, Mapping
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    AbsoluteDirname,
     Dictionary,
     Tuple,
     Integer,
@@ -1044,14 +1043,13 @@ def _valuespec_active_checks_http():
                               title=_("URL Checking"),
                               elements=[
                                   ("uri",
-                                   AbsoluteDirname(
-                                       title=_("URI to fetch (default is <tt>/</tt>)"),
-                                       help=_("The URI of the request. This should start with"
-                                              " '/' and not include the domain"
-                                              " (e.g. '/index.html')."),
-                                       allow_empty=False,
-                                       default_value="/",
-                                       size=45)),
+                                   TextAscii(title=_("URI to fetch (default is <tt>/</tt>)"),
+                                             help=_("The URI of the request. This should start with"
+                                                    " '/' and not include the domain"
+                                                    " (e.g. '/index.html')."),
+                                             allow_empty=False,
+                                             default_value="/",
+                                             size=45)),
                                   ("ssl",
                                    Transform(
                                        DropdownChoice(

@@ -223,7 +223,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		waitmax \
 		windows/cfg_examples \
 		windows/check_mk_agent.msi \
-		windows/check_mk_agent_no_sign.msi \
+		windows/check_mk_agent_unsigned.msi \
 		windows/python-3.8.zip \
 		windows/python-3.4.zip \
 		windows/check_mk.user.yml \

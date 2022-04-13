@@ -16,7 +16,7 @@ MSI_LOCATION = "share/check_mk/agents/windows"
 
 EXPECTED_EXECUTABLES = ["msiinfo", "msibuild", "lcab"]
 
-EXPECTED_TEST_FILES = ["check_mk_agent.msi", "check_mk.user.yml"]
+EXPECTED_TEST_FILES = ["check_mk_agent.msi", msi_engine.AGENT_MSI_FILE, "check_mk.user.yml"]
 
 # check base files are presented
 # binaries and test files
@@ -34,14 +34,14 @@ def test_files(site, test_file):
     assert Path(msi_path / test_file).exists(), "path: '{}' file: '{}'".format(msi_path, test_file)
 
 
-def _get_msi_file_path(site):
+def _get_msi_file_path_not_signed(site):
     msi_path = Path(site.path(MSI_LOCATION))
-    return msi_path / "check_mk_agent.msi"
+    return msi_path / msi_engine.AGENT_MSI_FILE
 
 
 # check the export with site/bin tools
 def test_export_msi_file(site, tmp_path):
-    msi_file = _get_msi_file_path(site=site)
+    msi_file = _get_msi_file_path_not_signed(site=site)
 
     out_dir = tmp_path / 'idts'
     bin_path = site.path("bin/")

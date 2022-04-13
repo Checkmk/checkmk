@@ -19,7 +19,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
 )
 from cmk.gui.valuespec import (
-    AbsoluteDirname,
     Age,
     Alternative,
     CascadingDropdown,
@@ -1238,7 +1237,7 @@ def _valuespec_active_checks_http():
                                     elements=[
                                         (
                                             "uri",
-                                            AbsoluteDirname(
+                                            TextInput(
                                                 title=_("URI to fetch (default is <tt>/</tt>)"),
                                                 help=_(
                                                     "The URI of the request. This should start with"

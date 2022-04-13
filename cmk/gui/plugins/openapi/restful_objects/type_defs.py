@@ -36,6 +36,7 @@ DomainType = Literal[
     "folder_config",
     "host",
     "host_config",
+    "host_config_internal",
     "hostgroup",
     "host_group_config",
     "host_tag_group",

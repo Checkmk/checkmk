@@ -13,6 +13,7 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 from typing import (
+    Any,
     AnyStr,
     Callable,
     Dict,
@@ -20,6 +21,8 @@ from typing import (
     Iterator,
     List,
     Literal,
+    Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -431,6 +434,76 @@ def _verify_non_duplicate_hosts() -> None:
 #   '----------------------------------------------------------------------'
 
 
+class HostAddressConfiguration(NamedTuple):
+    """Host configuration for active checks
+
+    This class is exposed to the active checks that implement a service_generator.
+    However, it's NOT part of the official API and can change at any time.
+    """
+
+    hostname: str
+    host_address: str
+    alias: str
+    ipv4address: Optional[str]
+    ipv6address: Optional[str]
+    indexed_ipv4addresses: dict[str, str]
+    indexed_ipv6addresses: dict[str, str]
+
+
+def _get_indexed_addresses(
+    host_attrs: config.ObjectAttributes, address_family: Literal["4", "6"]
+) -> Iterator[Tuple[str, str]]:
+    for name, address in host_attrs.items():
+        address_template = f"_ADDRESSES_{address_family}_"
+        if address_template in name:
+            index = name.removeprefix(address_template)
+            yield f"$_HOSTADDRESSES_{address_family}_{index}$", address
+
+
+def _get_host_address_config(
+    hostname: str, host_attrs: config.ObjectAttributes
+) -> HostAddressConfiguration:
+    return HostAddressConfiguration(
+        hostname=hostname,
+        host_address=host_attrs["address"],
+        alias=host_attrs["alias"],
+        ipv4address=host_attrs.get("_ADDRESS_4"),
+        ipv6address=host_attrs.get("_ADDRESS_6"),
+        indexed_ipv4addresses=dict(_get_indexed_addresses(host_attrs, "4")),
+        indexed_ipv6addresses=dict(_get_indexed_addresses(host_attrs, "6")),
+    )
+
+
+def iter_active_check_services(
+    check_name: str,
+    active_info: Mapping[str, Any],
+    hostname: str,
+    host_attrs: config.ObjectAttributes,
+    params: Dict[Any, Any],
+) -> Iterator[Tuple[str, str]]:
+    """Iterate active service descriptions and arguments
+
+    This function is used to allow multiple active services per one WATO rule.
+    This functionality is now used only in ICMP active check and it's NOT
+    part of an official API. This function can be changed at any time.
+    """
+    host_config = _get_host_address_config(hostname, host_attrs)
+
+    if "service_generator" in active_info:
+        for desc, args in active_info["service_generator"](host_config, params):
+            yield str(desc), str(args)
+        return
+
+    description = config.active_check_service_description(
+        host_config.hostname, host_config.alias, check_name, params
+    )
+    arguments = active_check_arguments(
+        host_config.hostname, description, active_info["argument_function"](params)
+    )
+
+    yield description, arguments
+
+
 def active_check_arguments(
     hostname: HostName,
     description: Optional[ServiceName],
@@ -502,6 +575,24 @@ def _prepare_check_command(
         formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
 
     return " ".join(formated)
+
+
+def get_active_check_descriptions(
+    hostname: HostName,
+    hostalias: str,
+    host_attrs: ObjectAttributes,
+    check_name: str,
+    params: Dict,
+) -> Iterator[str]:
+    host_config = _get_host_address_config(hostname, host_attrs)
+    active_check_info = config.active_check_info[check_name]
+
+    if "service_generator" in active_check_info:
+        for description, _ in active_check_info["service_generator"](host_config, params):
+            yield str(description)
+        return
+
+    yield config.active_check_service_description(hostname, hostalias, check_name, params)
 
 
 # .

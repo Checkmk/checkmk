@@ -678,8 +678,9 @@ class AutomationAnalyseServices(Automation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
+        host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
-        service_info = self._get_service_info(config_cache, host_config, servicedesc)
+        service_info = self._get_service_info(config_cache, host_config, host_attrs, servicedesc)
         if not service_info:
             return automation_results.AnalyseServiceResult({})
 
@@ -695,7 +696,11 @@ class AutomationAnalyseServices(Automation):
     # constructed
     # TODO: Refactor this huge function
     def _get_service_info(
-        self, config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
+        self,
+        config_cache: config.ConfigCache,
+        host_config: config.HostConfig,
+        host_attrs: core_config.ObjectAttributes,
+        servicedesc: str,
     ) -> Mapping[str, Union[None, str, LegacyCheckParameters]]:
         hostname = host_config.hostname
 
@@ -746,15 +751,19 @@ class AutomationAnalyseServices(Automation):
         with plugin_contexts.current_host(hostname):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
-                    description = config.active_check_service_description(
-                        hostname, host_config.alias, plugin_name, active_check_params
-                    )
-                    if description == servicedesc:
-                        return {
-                            "origin": "active",
-                            "checktype": plugin_name,
-                            "parameters": active_check_params,
-                        }
+                    for description in core_config.get_active_check_descriptions(
+                        hostname,
+                        host_config.alias,
+                        host_attrs,
+                        plugin_name,
+                        active_check_params,
+                    ):
+                        if description == servicedesc:
+                            return {
+                                "origin": "active",
+                                "checktype": plugin_name,
+                                "parameters": active_check_params,
+                            }
 
         return {}  # not found
 
@@ -1504,7 +1513,9 @@ class AutomationActiveCheck(Automation):
         plugin, raw_item = args[1:]
         item = raw_item
 
-        host_config = config.get_config_cache().get_host_config(hostname)
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+        host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
         if plugin == "custom":
             for entry in host_config.custom_checks:
@@ -1533,20 +1544,18 @@ class AutomationActiveCheck(Automation):
         # (used e.g. by check_http)
         with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
-                description = config.active_check_service_description(
-                    hostname, host_config.alias, plugin, params
-                )
-                if description != item:
-                    continue
 
-                command_args = core_config.active_check_arguments(
-                    hostname, description, act_info["argument_function"](params)
-                )
-                command_line = self._replace_core_macros(
-                    hostname, act_info["command_line"].replace("$ARG1$", command_args)
-                )
-                cmd = core_config.autodetect_plugin(command_line)
-                return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
+                for description, command_args in core_config.iter_active_check_services(
+                    plugin, act_info, hostname, host_attrs, params
+                ):
+                    if description != item:
+                        continue
+
+                    command_line = self._replace_core_macros(
+                        hostname, act_info["command_line"].replace("$ARG1$", command_args)
+                    )
+                    cmd = core_config.autodetect_plugin(command_line)
+                    return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
 
         return automation_results.ActiveCheckResult(
             None,

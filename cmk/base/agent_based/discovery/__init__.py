@@ -67,7 +67,12 @@ from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters, ServiceID
-from cmk.base.core_config import MonitoringCore
+from cmk.base.core_config import (
+    get_active_check_descriptions,
+    get_host_attributes,
+    MonitoringCore,
+    ObjectAttributes,
+)
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
 
 from ._discovered_services import analyse_discovered_services
@@ -1195,6 +1200,7 @@ def get_check_preview(
     all services if possible"""
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
+    host_attrs = get_host_attributes(host_name, config_cache)
 
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
@@ -1272,7 +1278,7 @@ def get_check_preview(
 
     return [
         *passive_rows,
-        *_active_check_preview_rows(host_config),
+        *_active_check_preview_rows(host_config, host_attrs),
         *_custom_check_preview_rows(host_config),
     ], host_labels
 
@@ -1339,6 +1345,7 @@ def _custom_check_preview_rows(
 
 def _active_check_preview_rows(
     host_config: config.HostConfig,
+    host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
     return list(
         {
@@ -1354,10 +1361,8 @@ def _active_check_preview_rows(
             )
             for plugin_name, entries in host_config.active_checks
             for params in entries
-            if (
-                descr := config.active_check_service_description(
-                    host_config.hostname, host_config.alias, plugin_name, params
-                )
+            for descr in get_active_check_descriptions(
+                host_config.hostname, host_config.alias, host_attrs, plugin_name, params
             )
         }.values()
     )

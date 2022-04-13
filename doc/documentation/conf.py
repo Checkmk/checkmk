@@ -75,4 +75,7 @@ html_theme = "alabaster"
 html_static_path = ["_static"]
 
 language = "en"
+
+# Replaces e.g. "Checkmk's" with characters that can not correctly be rendered
+# in htmlhelp in all cases
 smartquotes = False

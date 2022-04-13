@@ -1,6 +1,6 @@
 Title: Requesting a non existing BI aggregation now results in a proper 404 response
 Class: feature
-Compatible: incomp
+Compatible: compat
 Component: rest-api
 Date: 1649774207
 Edition: cre

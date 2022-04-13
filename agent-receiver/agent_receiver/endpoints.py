@@ -16,7 +16,8 @@ from agent_receiver.certificates import uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
     get_root_cert,
-    host_exists,
+    host_configuration,
+    HostConfiguration,
     link_host_with_uuid,
     parse_error_response_body,
     post_csr,
@@ -32,16 +33,11 @@ from agent_receiver.models import (
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
 )
-from agent_receiver.site_context import r4r_dir
+from agent_receiver.site_context import r4r_dir, site_name
 from agent_receiver.utils import get_registration_status_from_file, Host
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from starlette.status import (
-    HTTP_204_NO_CONTENT,
-    HTTP_403_FORBIDDEN,
-    HTTP_404_NOT_FOUND,
-    HTTP_501_NOT_IMPLEMENTED,
-)
+from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_NOT_IMPLEMENTED
 
 security = HTTPBasic()
 
@@ -95,6 +91,19 @@ async def pairing(
     )
 
 
+def _validate_registration_request(host_config: HostConfiguration) -> None:
+    if host_config.site != site_name():
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail=f"This host is monitored on the site {host_config.site}, but you tried to register it at the site {site_name()}.",
+        )
+    if host_config.is_cluster:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="This host is a cluster host. Register its nodes instead.",
+        )
+
+
 @agent_receiver_app.post(
     "/register_with_hostname",
     status_code=HTTP_204_NO_CONTENT,
@@ -104,14 +113,12 @@ async def register_with_hostname(
     credentials: HTTPBasicCredentials = Depends(security),
     registration_body: RegistrationWithHNBody,
 ) -> Response:
-    if not host_exists(
-        credentials,
-        registration_body.host_name,
-    ):
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Host {registration_body.host_name} does not exist",
+    _validate_registration_request(
+        host_configuration(
+            credentials,
+            registration_body.host_name,
         )
+    )
     link_host_with_uuid(
         credentials,
         registration_body.host_name,

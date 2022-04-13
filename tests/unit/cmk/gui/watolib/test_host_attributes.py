@@ -318,6 +318,18 @@ expected_attributes = {
         "show_inherited_value": True,
         "topic": "Custom attributes",
     },
+    "inventory_failed": {
+        "depends_on_roles": [],
+        "depends_on_tags": [],
+        "editable": False,
+        "from_config": False,
+        "show_in_folder": False,
+        "show_in_form": False,
+        "show_in_host_search": False,
+        "show_in_table": False,
+        "show_inherited_value": False,
+        "topic": "Creation / Locking",
+    },
 }
 
 
@@ -523,6 +535,7 @@ def test_host_attributes(for_what, new):
             "meta_data",
             "locked_by",
             "locked_attributes",
+            "inventory_failed",
         ],
         "custom_attributes": [
             "labels",

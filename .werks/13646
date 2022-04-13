@@ -1,0 +1,14 @@
+Title: Fix host API calls in case a previous discovery failed
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1649836743
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+REST API calls returning host data structures could fail in case a bulk
+discovery failed for one of the handled hosts before. The API calls failed
+with a HTTP 500 error and a message like "Server was about to send an
+ invalid response: inventory_failed - Unknown field"

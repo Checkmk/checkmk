@@ -236,6 +236,7 @@ def test_openapi_groups_with_customer(
     assert resp.json_body["extensions"]["customer"] == "provider"
 
 
+@managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_openapi_group_values_are_links(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user

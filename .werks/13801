@@ -1,0 +1,12 @@
+Title: KUBE: Update inventory paths
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1649833291
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The HW/SW inventory entries Name and Namespace have been moved to the General path for all
+Kubernetes hosts. An additional entry Object has been added which shows the Kubernetes object type.

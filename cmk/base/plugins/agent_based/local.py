@@ -193,10 +193,10 @@ def _split_check_result(line: str) -> Optional[Tuple[str, str, str, Optional[str
     forbidden_service_name_characters = r"\"\'"
     match = re.match(
         r"^"
-        r"([^ ]+) "  #                                     - service state (permissive)
-        r"((\"([^%s]+)\")|(\'([^%s]+)\')|([^ %s]+)) "  #   - optionally quoted service name
-        r"([^ ]+)"  #                                      - perf data
-        r"( +(.*))?"  #                                    - service string
+        r"([^ ]+) "  # -                                   - service state (permissive)
+        r"((\"([^%s]+)\")|(\'([^%s]+)\')|([^ %s]+)) "  # - - optionally quoted service name
+        r"([^ ]+)"  # -                                    - perf data
+        r"( +(.*))?"  # -                                  - service string
         r"$" % ((forbidden_service_name_characters,) * 3),
         line,
     )
@@ -341,12 +341,27 @@ _STATE_MARKERS = {
 # performance data.
 def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
     for entry in local_result.perfdata:
+        try:
+            _ = Metric(entry.name, 0)
+        except TypeError as exc:
+            yield Result(
+                state=State.WARN,
+                summary=f"Invalid metric name: {entry.name!r}",
+                details=(
+                    f"The metric name {entry.name!r} is invalid. "
+                    f"It will not be recorded. Problem: {exc}"
+                ),
+            )
+            metric_name = None
+        else:
+            metric_name = entry.name
+
         yield from check_levels(
             entry.value,
             # check_levels does not like levels like (23, None), but it does deal with it.
             levels_upper=entry.levels_upper if local_result.apply_levels else None,
             levels_lower=entry.levels_lower if local_result.apply_levels else None,
-            metric_name=entry.name,
+            metric_name=metric_name,
             label=_labelify(entry.name),
             boundaries=entry.boundaries,
         )

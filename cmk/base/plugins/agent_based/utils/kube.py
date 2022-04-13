@@ -161,10 +161,24 @@ def condition_detailed_description(
 
 
 def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
+    """Convert Kubernetes Labels to HostLabels.
+
+    Key-value pairs of Kubernetes labels are valid checkmk labels (see
+    `LabelName` and `LabelValue`). However, a user can add labels to their
+    Kubernetes objects, which overwrite existing checkmk labels, if we simply
+    add `HostLabel(label.name, label.value)`. To circumvent this problem, we
+    prepend every label name with 'kube/'.
+
+    >>> list(kube_labels_to_cmk_labels({
+    ... 'k8s.io/app': Label(name='k8s.io/app', value='nginx'),
+    ... 'infra': Label(name='infra', value='yes'),
+    ... }))
+    [HostLabel('cmk/kube/k8s.io/app', 'nginx'), HostLabel('cmk/kube/infra', 'yes')]
+    """
     for label in labels.values():
         if (value := label.value) == "":
             value = LabelValue("true")
-        yield HostLabel(label.name, value)
+        yield HostLabel(f"cmk/kube/{label.name}", value)
 
 
 class KubernetesError(Exception):

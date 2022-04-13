@@ -39,6 +39,7 @@ from typing import (
     Protocol,
     Sequence,
     Set,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -65,6 +66,11 @@ LOGGER = logging.getLogger()
 AGENT_TMP_PATH = Path(
     cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else tempfile.gettempdir(), "agent_kube"
 )
+
+
+SectionName = NewType("SectionName", str)
+SectionJson = NewType("SectionJson", str)
+
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",
@@ -1405,9 +1411,9 @@ def _write_object_sections(containers: Collection[PerformanceContainer]):
         writer.append(section_json)
 
 
-def _containers_from_pods(
+def filter_associating_performance_pods_from_agent_pods(
     performance_pods: Mapping[PodLookupName, PerformancePod], pods: Collection[Pod]
-) -> Sequence[PerformanceContainer]:
+) -> Sequence[PerformancePod]:
     selected_pods = []
     # the containers with "POD" in their cAdvisor generated name represent the container's
     # respective parent cgroup. A multitude of memory calculation references omit these for
@@ -1419,7 +1425,19 @@ def _containers_from_pods(
             # TODO: include logging without adding false positives
             continue
         selected_pods.append(performance_pods[pod_lookup])
-    return [container for pod in selected_pods for container in pod.containers]
+    return selected_pods
+
+
+def filter_associating_performance_pods_from_api_pods(
+    api_pods: Sequence[api.Pod], performance_pods: Mapping[PodLookupName, PerformancePod]
+) -> Sequence[PerformancePod]:
+    selected_pods = []
+    for pod in api_pods:
+        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
+            continue
+        selected_pods.append(performance_pods[pod_lookup])
+
+    return selected_pods
 
 
 def write_kube_object_performance_section(
@@ -1432,11 +1450,51 @@ def write_kube_object_performance_section(
     if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
         return
 
-    if not (containers := _containers_from_pods(performance_pods, pods)):
+    if not (
+        kube_obj_performance_pods := filter_associating_performance_pods_from_agent_pods(
+            performance_pods, pods
+        )
+    ):
         return
 
     with ConditionalPiggybackSection(piggyback_name):
-        _write_object_sections(containers)
+        for section_name, section_json in kube_object_performance_sections(
+            kube_obj_performance_pods
+        ):
+            with SectionWriter(section_name) as writer:
+                writer.append(section_json)
+
+
+def kube_object_performance_sections(
+    performance_pods: Sequence[PerformancePod],
+) -> List[Tuple[SectionName, SectionJson]]:
+    performance_containers = [container for pod in performance_pods for container in pod.containers]
+    return [
+        (
+            SectionName("kube_performance_memory_v1"),
+            SectionJson(
+                section.PerformanceUsage(
+                    resource=section.Memory(
+                        usage=_aggregate_metric(
+                            performance_containers, MetricName("memory_working_set_bytes")
+                        )
+                    ),
+                ).json()
+            ),
+        ),
+        (
+            SectionName("kube_performance_cpu_v1"),
+            SectionJson(
+                section.PerformanceUsage(
+                    resource=section.Cpu(
+                        usage=_aggregate_rate_metric(
+                            performance_containers, MetricName("cpu_usage_seconds_total")
+                        ),
+                    ),
+                ).json()
+            ),
+        ),
+    ]
 
 
 def write_kube_object_performance_section_cluster(
@@ -1444,21 +1502,29 @@ def write_kube_object_performance_section_cluster(
 ):
     """Write Cluster sections based on collected performance metrics"""
 
-    if not (pods := cluster.pods(phase=api.Phase.RUNNING, for_cluster_aggregation_only=True)):
+    if not (
+        cluster_pods := cluster.pods(phase=api.Phase.RUNNING, for_cluster_aggregation_only=True)
+    ):
         return
 
-    if not (containers := _containers_from_pods(performance_pods, pods)):
+    if not (
+        cluster_performance_pods := filter_associating_performance_pods_from_agent_pods(
+            performance_pods, cluster_pods
+        )
+    ):
         return
 
-    _write_object_sections(containers)
+    for section_name, section_json in kube_object_performance_sections(cluster_performance_pods):
+        with SectionWriter(section_name) as writer:
+            writer.append(section_json)
 
 
 def write_kube_object_performance_section_pod(pod: PerformancePod, piggyback_name: str) -> None:
     """Write Pod sections based on collected performance metrics"""
-    if not pod.containers:
-        return
     with ConditionalPiggybackSection(piggyback_name):
-        _write_object_sections(pod.containers)
+        for section_name, section_json in kube_object_performance_sections([pod]):
+            with SectionWriter(section_name) as writer:
+                writer.append(section_json)
 
 
 def _aggregate_metric(
@@ -1984,27 +2050,6 @@ def write_sections_based_on_performance_pods(
     write_kube_object_performance_section_cluster(cluster, performance_pods)
 
 
-def write_object_sections_based_on_performance_pods(
-    api_pods: Sequence[api.Pod],
-    performance_pods: Mapping[PodLookupName, PerformancePod],
-    piggyback_name: str,
-):
-    if not (pods := filter_pods_by_phase(api_pods, api.Phase.RUNNING)):
-        return
-
-    selected_pods = []
-    for pod in pods:
-        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
-            continue
-        selected_pods.append(performance_pods[pod_lookup])
-
-    if not selected_pods:
-        return
-
-    with ConditionalPiggybackSection(piggyback_name):
-        _write_object_sections([container for pod in selected_pods for container in pod.containers])
-
-
 def _identify_unsupported_node_collector_components(
     nodes: Sequence[section.NodeMetadata], supported_max_major_version: int
 ):
@@ -2350,16 +2395,25 @@ def main(args: Optional[List[str]] = None) -> int:
 
                     if "namespaces" in arguments.monitored_objects:
                         for api_namespace in api_namespaces:
-                            write_object_sections_based_on_performance_pods(
-                                api_pods=filter_pods_by_namespace(
-                                    api_pods, namespace_name(api_namespace)
-                                ),
-                                performance_pods=performance_pods,
-                                piggyback_name=piggyback_formatter(
-                                    object_type="namespace",
-                                    namespaced_name=namespace_name(api_namespace),
+                            namespace_api_pods = filter_pods_by_phase(
+                                filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
+                                api.Phase.RUNNING,
+                            )
+                            namespace_sections = kube_object_performance_sections(
+                                performance_pods=filter_associating_performance_pods_from_api_pods(
+                                    namespace_api_pods, performance_pods
                                 ),
                             )
+
+                            with ConditionalPiggybackSection(
+                                piggyback_formatter(
+                                    object_type="namespace",
+                                    namespaced_name=namespace_name(api_namespace),
+                                )
+                            ):
+                                for section_name, section_json in namespace_sections:
+                                    with SectionWriter(section_name) as writer:
+                                        writer.append(section_json)
 
                 except Exception as e:
                     raise CollectorHandlingException(

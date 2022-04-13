@@ -65,3 +65,10 @@ def api_to_agent_deployment(api_deployment: api.Deployment) -> agent.Deployment:
         spec=api_deployment.spec,
         status=api_deployment.status,
     )
+
+
+# Performance related Factories
+
+
+class PerformancePodFactory(ModelFactory):
+    __model__ = agent.PerformancePod

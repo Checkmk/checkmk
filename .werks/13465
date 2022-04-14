@@ -1,0 +1,10 @@
+Title: pdu_gude: Add support for model 8801
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649941321
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+

@@ -76,6 +76,7 @@ def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
+    monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)

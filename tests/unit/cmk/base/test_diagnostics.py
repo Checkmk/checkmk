@@ -59,6 +59,7 @@ def test_diagnostics_dump_elements():
     assert fixed_element_classes.issubset(element_classes)
 
 
+@pytest.mark.usefixtures("mock_livestatus")
 def test_diagnostics_dump_create():
     diagnostics_dump = diagnostics.DiagnosticsDump()
     diagnostics_dump._create_dump_folder()

@@ -73,6 +73,7 @@ def test_quote_dict(inp, expected_result):
 
 
 def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmp_path):
+    monkeypatch.delenv("OMD_ROOT")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()
 

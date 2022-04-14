@@ -216,15 +216,6 @@ def fake_version_and_paths():
         Path(tmp_dir, "var/check_mk/discovered_host_labels"),
     )
     monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
-    monkeypatch.setattr("agent_receiver.constants.LOG_FILE", Path(tmp_dir, "agent-receiver.log"))
-    monkeypatch.setattr(
-        "agent_receiver.constants.AGENT_OUTPUT_DIR",
-        Path(tmp_dir, "agent_output_dir"),
-    )
-    monkeypatch.setattr(
-        "agent_receiver.constants.REGISTRATION_REQUESTS",
-        Path(tmp_dir, "registration_request"),
-    )
 
     # Agent registration paths
     monkeypatch.setattr(

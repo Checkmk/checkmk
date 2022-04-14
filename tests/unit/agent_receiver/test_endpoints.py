@@ -14,7 +14,7 @@ from uuid import UUID
 from zlib import compress
 
 import pytest
-from agent_receiver import constants
+from agent_receiver import site_context
 from agent_receiver.checkmk_rest_api import CMKEdition
 from agent_receiver.models import HostTypeEnum
 from fastapi import HTTPException
@@ -35,7 +35,7 @@ def fixture_symlink_push_host(
     tmp_path: Path,
     uuid: UUID,
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    source = site_context.agent_output_dir() / str(uuid)
     (target_dir := tmp_path / "hostname").mkdir()
     source.symlink_to(target_dir)
 
@@ -182,7 +182,7 @@ def _test_register_with_labels(
         },
     )
     assert response.status_code == 204
-    assert json.loads((constants.REGISTRATION_REQUESTS / "NEW" / f"{uuid}.json").read_text()) == {
+    assert json.loads((site_context.r4r_dir() / "NEW" / f"{uuid}.json").read_text()) == {
         "uuid": str(uuid),
         "username": "monitoring",
         "agent_labels": {
@@ -191,7 +191,7 @@ def _test_register_with_labels(
         },
     }
     assert (
-        oct(stat.S_IMODE((constants.REGISTRATION_REQUESTS / "NEW" / f"{uuid}.json").stat().st_mode))
+        oct(stat.S_IMODE((site_context.r4r_dir() / "NEW" / f"{uuid}.json").stat().st_mode))
         == "0o660"
     )
 
@@ -201,13 +201,13 @@ def test_register_with_labels_folder_missing(
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    assert not (constants.REGISTRATION_REQUESTS / "NEW").exists()
+    assert not (site_context.r4r_dir() / "NEW").exists()
     _test_register_with_labels(
         mocker,
         client,
         uuid,
     )
-    assert oct(stat.S_IMODE((constants.REGISTRATION_REQUESTS / "NEW").stat().st_mode)) == "0o770"
+    assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
 
 
 def test_register_with_labels_folder_exists(
@@ -215,7 +215,7 @@ def test_register_with_labels_folder_exists(
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    (constants.REGISTRATION_REQUESTS / "NEW").mkdir(parents=True)
+    (site_context.r4r_dir() / "NEW").mkdir(parents=True)
     _test_register_with_labels(
         mocker,
         client,
@@ -258,7 +258,7 @@ def test_agent_data_pull_host(
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    source = site_context.agent_output_dir() / str(uuid)
     source.symlink_to(tmp_path / "hostname")
 
     response = client.post(
@@ -355,7 +355,7 @@ def test_agent_data_move_ready(
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    (path_ready := constants.REGISTRATION_REQUESTS / "READY").mkdir()
+    (path_ready := site_context.r4r_dir() / "READY").mkdir()
     (path_ready / f"{uuid}.json").touch()
 
     client.post(
@@ -364,14 +364,14 @@ def test_agent_data_move_ready(
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
-    assert (constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json").exists()
+    assert (site_context.r4r_dir() / "DISCOVERABLE" / f"{uuid}.json").exists()
 
 
 def test_registration_status_declined(
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    (path_declined := constants.REGISTRATION_REQUESTS / "DECLINED").mkdir()
+    (path_declined := site_context.r4r_dir() / "DECLINED").mkdir()
     (path_declined / f"{uuid}.json").write_text(
         json.dumps({"message": "Registration request declined"})
     )
@@ -408,7 +408,7 @@ def test_registration_status_push_host(
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    (path_discoverable := constants.REGISTRATION_REQUESTS / "DISCOVERABLE").mkdir()
+    (path_discoverable := site_context.r4r_dir() / "DISCOVERABLE").mkdir()
     (path_discoverable / f"{uuid}.json").touch()
 
     response = client.get(
@@ -430,7 +430,7 @@ def test_registration_status_pull_host(
     client: TestClient,
     uuid: UUID,
 ) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 

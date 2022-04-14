@@ -9,7 +9,7 @@ from binascii import Error
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
-from agent_receiver.constants import ROOT_CERT
+from agent_receiver.site_context import root_cert_path
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
@@ -59,7 +59,7 @@ def _check_validity_period(certificate: Certificate) -> None:
 
 
 def _check_signature(certificate: Certificate) -> None:
-    root_certificate = load_pem_x509_certificate(ROOT_CERT.read_bytes())
+    root_certificate = load_pem_x509_certificate(root_cert_path().read_bytes())
     if not isinstance(
         root_public_key := root_certificate.public_key(),
         RSAPublicKey,

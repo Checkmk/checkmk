@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from agent_receiver.certificates import CertValidationRoute
-from agent_receiver.utils import site_name_prefix
+from agent_receiver.log import configure_logger
+from agent_receiver.site_context import log_path, site_name
 from fastapi import APIRouter, FastAPI
 
 agent_receiver_app = FastAPI(title="Checkmk Agent Receiver")
@@ -13,6 +14,8 @@ cert_validation_router = APIRouter(route_class=CertValidationRoute)
 
 
 def main_app() -> FastAPI:
+    configure_logger(log_path())
+
     # register endpoints
     from agent_receiver import endpoints  # pylint: disable=unused-import
 
@@ -24,5 +27,5 @@ def main_app() -> FastAPI:
         docs_url=None,
         redoc_url=None,
     )
-    main_app_.mount(site_name_prefix("agent-receiver"), agent_receiver_app)
+    main_app_.mount(f"/{site_name()}/agent-receiver", agent_receiver_app)
     return main_app_

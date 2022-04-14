@@ -10,13 +10,13 @@ from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
-from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
+from agent_receiver.site_context import agent_output_dir, r4r_dir
 
 
 class Host:
     def __init__(self, uuid: UUID):
-        self._source_path = AGENT_OUTPUT_DIR / str(uuid)
+        self._source_path = agent_output_dir() / str(uuid)
 
         self._registered = self.source_path.is_symlink()
         target_path = self._get_target_path() if self.registered else None
@@ -72,7 +72,7 @@ def update_file_access_time(path: Path) -> None:
 
 def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
     for status in RegistrationStatusEnum:
-        path = REGISTRATION_REQUESTS / status.name / f"{uuid}.json"
+        path = r4r_dir() / status.name / f"{uuid}.json"
         if path.exists():
             message = (
                 read_message_from_file(path) if status is RegistrationStatusEnum.DECLINED else None
@@ -82,8 +82,3 @@ def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
             return RegistrationData(status=status, message=message)
 
     return None
-
-
-def site_name_prefix(app_name: str) -> str:
-    site_prefix = f"/{site}" if (site := os.getenv("OMD_SITE")) else ""
-    return f"{site_prefix}/{app_name}"

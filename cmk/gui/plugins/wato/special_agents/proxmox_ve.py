@@ -27,9 +27,9 @@ def _valuespec_special_agents_proxmox_ve():
             (
                 "timeout",
                 Integer(
-                    title=_("Connect Timeout"),
+                    title=_("Query Timeout"),
                     help=_("The network timeout in seconds"),
-                    default_value=60,
+                    default_value=50,
                     minvalue=1,
                     unit=_("seconds"),
                 ),

@@ -54,7 +54,7 @@ LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     """parse command line arguments and return argument object"""
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--timeout", "-t", type=int, default=20, help="API call timeout")
+    parser.add_argument("--timeout", "-t", type=int, default=50, help="API call timeout")
     parser.add_argument("--port", type=int, default=8006, help="IPv4 port to connect to")
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")

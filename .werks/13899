@@ -1,0 +1,18 @@
+Title: Notification spooler: Support for TLS authentication
+Class: security
+Compatible: compat
+Component: notifications
+Date: 1649935530
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+Previously mknotifyd did not authenticate peers. With this Werk mknotifyd can
+be configured to require TLS client certificate authentication. This is only
+available if encryption for mknotifyd is configured. In order to verify the
+peers correctly the corresponding site CAs must be trusted. This is usually the
+case if you enabled the configuration sync and enabled the encryption of
+livestatus. If you have another setup make sure both all Site CAs are trusted
+on each site.

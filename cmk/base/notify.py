@@ -126,9 +126,8 @@ notification_log_template = \
     u"$HOSTNAME$ $HOSTSTATE$ - " \
     u"$SERVICEDESC$ $SERVICESTATE$ "
 
-notification_mail_command = u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'"
-notification_host_subject = u"Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"
-notification_service_subject = u"Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$"
+notification_host_subject = "Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"
+notification_service_subject = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$"
 
 notification_common_body = u"""Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
@@ -313,7 +312,7 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
 
     logger.debug(events.render_context_dump(raw_context))
 
-    _complete_raw_context_with_notification_vars(raw_context)
+    raw_context["LOGDIR"] = notification_logdir
     events.complete_raw_context(raw_context, with_dump=config.notification_logging <= 10)
 
     # Spool notification to remote host, if this is enabled
@@ -323,13 +322,6 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
     return None
-
-
-# Add some notification specific variables to the context. These are currently
-# not added to alert handler scripts
-def _complete_raw_context_with_notification_vars(raw_context: EventContext) -> None:
-    raw_context["LOGDIR"] = notification_logdir
-    raw_context["MAIL_COMMAND"] = notification_mail_command
 
 
 # Here we decide which notification implementation we are using.
@@ -1356,20 +1348,17 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     subject = substitute_context(subject_t, plugin_context)
     plugin_context["SUBJECT"] = ensure_str(subject)
     body = substitute_context(notification_common_body + body_t, plugin_context)
-    command = substitute_context(notification_mail_command, plugin_context)
-    command_utf8 = command.encode("utf-8")
+    command = [cmk.utils.paths.bin_dir + "/mail", "-s", subject, plugin_context["CONTACTEMAIL"]]
 
     old_lang = os.getenv("LANG", "")
     ensure_utf8(logger)
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
-    logger.debug("Executing command: %s", command)
+    logger.debug("Executing command: %s", " ".join(command))
 
-    # TODO: Cleanup this shell=True call!
-    p = subprocess.Popen(  # nosec
-        command_utf8,
-        shell=True,
+    p = subprocess.Popen(
+        command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -1427,6 +1416,10 @@ def create_bulk_parameter_context(params: NotifyPluginParams) -> List[str]:
 
 
 def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> Optional[str]:
+    if "/" in plugin_name:
+        logger.error("Pluginname %r with slash. Raising exception...")
+        raise MKGeneralException("Slashes in plugin_name are forbidden!")
+
     # Call actual script without any arguments
     local_path = cmk.utils.paths.local_notifications_dir / plugin_name
     if local_path.exists():
@@ -1645,6 +1638,9 @@ def do_bulk_notify(plugin_name: NotificationPluginNameStr, params: NotifyPluginP
 
     what = plugin_context["WHAT"]
     contact = plugin_context["CONTACTNAME"]
+    if "/" in contact or "/" in plugin_name:
+        logger.error("Tried to construct bulk dir with unsanitized attributes")
+        raise MKGeneralException("Slashes in CONTACTNAME or plugin_name are forbidden!")
     if bulk.get("timeperiod"):
         bulk_path: List[str] = [
             contact, plugin_name, 'timeperiod:' + bulk["timeperiod"],
@@ -1717,15 +1713,15 @@ def do_bulk_notify(plugin_name: NotificationPluginNameStr, params: NotifyPluginP
         ])
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
-    bulk_dirname = create_bulk_dirname(bulk_path)
-    notify_uuid = fresh_uuid()
+    bulk_dirname = _create_bulk_dir(bulk_path)
+    notify_uuid = str(uuid.uuid4())
     filename = bulk_dirname + "/" + notify_uuid
     open(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
     os.rename(filename + ".new", filename)  # We need an atomic creation!
     logger.info("        - stored in %s", filename)
 
 
-def create_bulk_dirname(bulk_path: List[str]) -> str:
+def _create_bulk_dir(bulk_path: List[str]) -> str:
     dirname = os.path.join(notification_bulkdir, bulk_path[0], bulk_path[1],
                            ",".join([b.replace("/", "\\") for b in bulk_path[2:]]))
 

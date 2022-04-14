@@ -80,3 +80,17 @@ NotifyAnalysisInfo = Tuple[List[NotifyRuleInfo], List[NotifyPluginInfo]]
 UUIDs = List[Tuple[float, str]]
 NotifyBulk = Tuple[str, float, Union[None, str, int], Union[None, str, int], int, UUIDs]
 NotifyBulks = List[NotifyBulk]
+
+
+class DisabledNotificationsOptions(TypedDict, total=False):
+    disabled: bool
+    timerange: tuple[float, float]
+
+
+class Contact(TypedDict, total=False):
+    alias: str
+    contactgroups: Union[tuple[str, ...], list[str]]
+    disable_notifications: DisabledNotificationsOptions
+    email: str
+    name: str
+    pager: str

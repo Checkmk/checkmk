@@ -406,10 +406,9 @@ class TestOptional:
                     ]
                 ),
                 forth=lambda p: {k: v + 10 if k == "b" else v for k, v in p.items()},
-            ),
-            none_value="NONE_VALUE",
+            )
         )
-        assert opt_vs.transform_value("NONE_VALUE") == "NONE_VALUE"
+        assert opt_vs.transform_value(None) is None
         assert opt_vs.transform_value({"a": "text", "b": 10}) == {"a": "text", "b": 20}
 
 

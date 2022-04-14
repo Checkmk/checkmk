@@ -1,0 +1,13 @@
+Title: KUBE: add data processing information to Cluster Collector
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649679560
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, the Cluster collector service did not report any data processing
+messages. This werk fixes this and displays the messages if they are available.
+The issue was caused by an incorrect section header.

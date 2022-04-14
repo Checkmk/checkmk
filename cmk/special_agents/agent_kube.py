@@ -140,6 +140,16 @@ class TCPTimeout(BaseModel):
     read: Optional[int]
 
 
+class PBFormatter(Protocol):
+    def __call__(self, object_type: str, namespaced_name: str) -> str:
+        ...
+
+
+class ObjectSpecificPBFormatter(Protocol):
+    def __call__(self, namespaced_name: str) -> str:
+        ...
+
+
 def parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
@@ -1141,7 +1151,7 @@ def write_namespaces_api_sections(
     cluster_name: str,
     api_namespaces: Sequence[api.Namespace],
     api_pods: Sequence[api.Pod],
-    piggyback_formatter: Callable[[str], str],
+    piggyback_formatter: ObjectSpecificPBFormatter,
 ):
     def output_sections(namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]) -> None:
         sections = {
@@ -1164,7 +1174,7 @@ def write_namespaces_api_sections(
 
 
 def write_nodes_api_sections(
-    cluster_name: str, api_nodes: Sequence[Node], piggyback_formatter: Callable[[str], str]
+    cluster_name: str, api_nodes: Sequence[Node], piggyback_formatter: ObjectSpecificPBFormatter
 ) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
@@ -1190,7 +1200,7 @@ def write_nodes_api_sections(
 def write_deployments_api_sections(
     cluster_name: str,
     api_deployments: Sequence[Deployment],
-    piggyback_formatter: Callable[[str], str],
+    piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     """Write the deployment relevant sections based on k8 API information"""
 
@@ -1216,7 +1226,7 @@ def write_deployments_api_sections(
 def write_daemon_sets_api_sections(
     cluster_name: str,
     api_daemon_sets: Sequence[DaemonSet],
-    piggyback_formatter: Callable[[str], str],
+    piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     """Write the daemon set relevant sections based on k8 API information"""
 
@@ -1241,7 +1251,7 @@ def write_daemon_sets_api_sections(
 def write_statefulsets_api_sections(
     cluster_name: str,
     api_statefulsets: Sequence[StatefulSet],
-    piggyback_formatter: Callable[[str], str],
+    piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     """Write the StatefulSet relevant sections based on k8 API information"""
 
@@ -1264,7 +1274,7 @@ def write_statefulsets_api_sections(
 
 
 def write_pods_api_sections(
-    cluster_name: str, api_pods: Sequence[Pod], piggyback_formatter: Callable[[str], str]
+    cluster_name: str, api_pods: Sequence[Pod], piggyback_formatter: ObjectSpecificPBFormatter
 ) -> None:
     for pod in api_pods:
         with ConditionalPiggybackSection(piggyback_formatter(pod.name(prepend_namespace=True))):
@@ -1278,7 +1288,7 @@ def write_pods_api_sections(
 def write_machine_sections(
     cluster: Cluster,
     machine_sections: Mapping[str, str],
-    piggyback_formatter_node: Callable[[str], str],
+    piggyback_formatter_node: ObjectSpecificPBFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
     for node in cluster.nodes():
@@ -1867,8 +1877,8 @@ def write_sections_based_on_performance_pods(
     monitored_pods: Set[PodLookupName],
     cluster: Cluster,
     monitored_namespaces: Set[api.NamespaceName],
-    piggyback_formatter,
-    piggyback_formatter_node,
+    piggyback_formatter: PBFormatter,
+    piggyback_formatter_node: ObjectSpecificPBFormatter,
 ):
     # Write performance sections
     if "pods" in monitored_objects:
@@ -2045,21 +2055,28 @@ def collector_exception_handler(logs: List[section.CollectorHandlerLog], debug: 
         )
 
 
-def custom_error_message_for_cmk(e: client.kubernetes.ApiException) -> str:
-    """
+class CustomKubernetesApiException(Exception):
+    def __init__(self, api_exception: client.ApiException):
+        self.e = api_exception
+        super().__init__()
 
-    This is a modified version of __str__ method of client.kubernetes.ApiException.
-    It strips the first \n in order make the output of plugin check-mk more verbose.
-    """
+    def __str__(self):
+        """
 
-    error_message = "({0}, Reason: {1})\n".format(e.status, e.reason)
-    if e.headers:
-        error_message += "HTTP response headers: {0}\n".format(e.headers)
+        This is a modified version of __str__ method of client.kubernetes.ApiException.
+        It strips the first \n in order make the output of plugin check-mk more verbose.
+        """
 
-    if e.body:
-        error_message += "HTTP response body: {0}\n".format(e.body)
+        error_message_visible_in_check_mk_service_summary = (
+            f"{self.e.status}, Reason: {self.e.reason}"
+        )
 
-    return error_message
+        if self.e.body:
+            error_message_visible_in_check_mk_service_summary += (
+                f", Message: {json.loads(self.e.body).get('message')}"
+            )
+
+        return error_message_visible_in_check_mk_service_summary
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -2087,7 +2104,9 @@ def main(args: Optional[List[str]] = None) -> int:
                 raise ClusterConnectionError(
                     f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
                     f"at URL {e.url}"
-                )
+                ) from e
+            except client.ApiException as e:
+                raise CustomKubernetesApiException(e) from e
 
             api_pods = api_server.pods()
 
@@ -2114,7 +2133,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 arguments.namespace_exclude_patterns,
             )
             piggyback_formatter = functools.partial(cluster_piggyback_formatter, arguments.cluster)
-            piggyback_formatter_node: Callable[[str], str] = functools.partial(
+            piggyback_formatter_node: ObjectSpecificPBFormatter = functools.partial(
                 piggyback_formatter, "node"
             )
 
@@ -2366,18 +2385,13 @@ def main(args: Optional[List[str]] = None) -> int:
                     )
                 )
 
-            with SectionWriter("kube_processing_logs_v1") as writer:
+            with SectionWriter("kube_collector_processing_logs_v1") as writer:
                 writer.append(
                     section.CollectorProcessingLogs(
                         container=collector_container_logs[-1],
                         machine=collector_machine_logs[-1],
                     ).json()
                 )
-    except client.exceptions.ApiException as e:
-        if arguments.debug:
-            raise
-        sys.stderr.write(custom_error_message_for_cmk(e))
-        return 1
     except Exception as e:
         if arguments.debug:
             raise

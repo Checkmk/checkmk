@@ -23,7 +23,7 @@ from typing import (
 )
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import ContactgroupName, EventRule, UserId
+from cmk.utils.type_defs import ContactgroupName, DisabledNotificationsOptions, EventRule, UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
@@ -94,7 +94,7 @@ class UserSpec(TypedDict, total=False):
     connector: Optional[str]
     contactgroups: list[ContactgroupName]
     customer: Optional[str]
-    disable_notifications: Any  # TODO: Improve this
+    disable_notifications: DisabledNotificationsOptions
     email: str  # TODO: Why do we have "email" *and* "mail"?
     enforce_pw_change: Optional[bool]
     fallback_contact: Optional[bool]

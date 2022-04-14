@@ -23,12 +23,18 @@ def inventory_kube_daemonset(
 ) -> InventoryResult:
     if section_kube_daemonset_info is None or section_kube_update_strategy is None:
         return
+    yield Attributes(
+        path=["software", "applications", "kube", "metadata"],
+        inventory_attributes={
+            "object": "DaemonSet",
+            "name": section_kube_daemonset_info.name,
+            "namespace": section_kube_daemonset_info.namespace,
+        },
+    )
     selector = section_kube_daemonset_info.selector
     yield Attributes(
         path=["software", "applications", "kube", "daemonset"],
         inventory_attributes={
-            "name": section_kube_daemonset_info.name,
-            "namespace": section_kube_daemonset_info.namespace,
             "strategy": strategy_text(section_kube_update_strategy.strategy),
             "match_labels": match_labels_to_str(selector.match_labels),
             "match_expressions": match_expressions_to_str(selector.match_expressions),

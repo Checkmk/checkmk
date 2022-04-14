@@ -688,6 +688,19 @@ inventory_displayhints.update({
             "container_id",
         ],
     },
+
+    ".software.applications.kube.metadata.": {
+        "title": _l("General"),
+        "keyorder": [
+            "object",
+            "name",
+            "namespace",
+        ],
+    },
+    ".software.applications.kube.metadata.object": {"title": _l("Object")},
+    ".software.applications.kube.metadata.name": {"title": _l("Name")},
+    ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},
+
     ".software.applications.kube.containers:*.name": {"title": _l("Name")},
     ".software.applications.kube.containers:*.image": {"title": _l("Image")},
     ".software.applications.kube.containers:*.image_pull_policy": {"title": _l("Image pull policy")},
@@ -697,31 +710,24 @@ inventory_displayhints.update({
     ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
 
     ".software.applications.kube.cluster.": {"title": _l("Cluster")},
-    ".software.applications.kube.cluster.name": {"title": _l("Name")},
     ".software.applications.kube.cluster.version": {"title": _l("Version")},
 
     ".software.applications.kube.deployment.": {"title": _l("Deployment")},
-    ".software.applications.kube.deployment.name": {"title": _l("Name")},
-    ".software.applications.kube.deployment.namespace": {"title": _l("Namespace")},
     ".software.applications.kube.deployment.strategy": {"title": _l("StrategyType")},
     ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.deployment.match_expressions": {"title": _l("matchExpressions")},
 
     ".software.applications.kube.daemonset.": {"title": _l("DaemonSet")},
-    ".software.applications.kube.daemonset.name": {"title": _l("Name")},
-    ".software.applications.kube.daemonset.namespace": {"title": _l("Namespace")},
     ".software.applications.kube.daemonset.strategy": {"title": _l("StrategyType")},
     ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.daemonset.match_expressions": {"title": _l("matchExpressions")},
 
     ".software.applications.kube.statefulset.": {"title": _l("StatefulSet")},
-    ".software.applications.kube.statefulset.name": {"title": _l("Name")},
-    ".software.applications.kube.statefulset.namespace": {"title": _l("Namespace")},
+    ".software.applications.kube.statefulset.strategy": {"title": _l("StrategyType")},
     ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.statefulset.match_expressions": {"title": _l("matchExpressions")},
 
     ".software.applications.kube.node.": { "title": _l("Node") },
-    ".software.applications.kube.node.name": {"title": _l("Name")},
     ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
     ".software.applications.kube.node.os_image": {"title": _l("OS image")},
     ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},
@@ -731,8 +737,6 @@ inventory_displayhints.update({
     ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
 
     ".software.applications.kube.pod.": {"title": _l("Pod")},
-    ".software.applications.kube.pod.name": {"title": _l("Name")},
-    ".software.applications.kube.pod.namespace": {"title": _l("Namespace")},
     ".software.applications.kube.pod.dns_policy": {"title": _l("DNS policy")},
     ".software.applications.kube.pod.host_ip": {"title": _l("Host IP")},
     ".software.applications.kube.pod.host_network": {"title": _l("Host network")},

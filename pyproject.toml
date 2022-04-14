@@ -33,3 +33,16 @@ py_version = "39"
 [tool.black]
 line-length = 100
 target-version = ['py39']
+
+
+# If you add more modules, add them to mypy-raw.ini as well...
+[[tool.mypy.overrides]]
+module = [
+    "cmk.notification_plugins.*"
+]
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_return_any = true

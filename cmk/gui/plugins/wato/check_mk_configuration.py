@@ -2204,23 +2204,26 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         return "lock_on_logon_failures"
 
     def valuespec(self):
-        return Optional(
-            valuespec=Integer(
-                label=_("Number of logon failures to lock the account"),
-                default_value=3,
-                minvalue=1,
+        return Transform(
+            Optional(
+                valuespec=Integer(
+                    label=_("Number of logon failures to lock the account"),
+                    default_value=3,
+                    minvalue=1,
+                ),
+                title=_("Lock user accounts after N logon failures"),
+                label=_("Activate automatic locking of user accounts"),
+                help=_(
+                    "This options enables automatic locking of user accounts after "
+                    "the configured number of consecutive invalid login attempts. "
+                    "Once the account is locked only an admin user can unlock it. "
+                    "Beware: Also the admin users will be locked that way. You need "
+                    "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
+                    "in case you are locked out completely."
+                ),
             ),
-            none_value=False,
-            title=_("Lock user accounts after N logon failures"),
-            label=_("Activate automatic locking of user accounts"),
-            help=_(
-                "This options enables automatic locking of user accounts after "
-                "the configured number of consecutive invalid login attempts. "
-                "Once the account is locked only an admin user can unlock it. "
-                "Beware: Also the admin users will be locked that way. You need "
-                "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
-                "in case you are locked out completely."
-            ),
+            # We accidentally used False instead of None in the past.
+            forth=lambda x: None if x is False else x,
         )
 
 
@@ -3709,25 +3712,28 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_host_conf_notification_interval():
-    return Optional(
-        valuespec=Transform(
-            valuespec=Float(
-                minvalue=0.05,
-                default_value=120.0,
-                label=_("Interval:"),
-                unit=_("minutes"),
+    return Transform(
+        Optional(
+            valuespec=Transform(
+                valuespec=Float(
+                    minvalue=0.05,
+                    default_value=120.0,
+                    label=_("Interval:"),
+                    unit=_("minutes"),
+                ),
+                forth=float,
             ),
-            forth=float,
+            title=_("Periodic notifications during host problems"),
+            help=_(
+                "If you enable periodic notifications, then during a problem state "
+                "of the host notifications will be sent out in regular intervals "
+                "until the problem is acknowledged."
+            ),
+            label=_("Enable periodic notifications"),
+            none_label=_("disabled"),
         ),
-        title=_("Periodic notifications during host problems"),
-        help=_(
-            "If you enable periodic notifications, then during a problem state "
-            "of the host notifications will be sent out in regular intervals "
-            "until the problem is acknowledged."
-        ),
-        label=_("Enable periodic notifications"),
-        none_label=_("disabled"),
-        none_value=0.0,
+        # We used 0.0 instead of None in the past to signal "no periodic host notifications".
+        forth=lambda x: x if x else None,
     )
 
 
@@ -3741,22 +3747,25 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_service_conf_notification_interval():
-    return Optional(
-        valuespec=Transform(
-            valuespec=Float(
-                minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+    return Transform(
+        Optional(
+            valuespec=Transform(
+                valuespec=Float(
+                    minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+                ),
+                forth=float,
             ),
-            forth=float,
+            title=_("Periodic notifications during service problems"),
+            help=_(
+                "If you enable periodic notifications, then during a problem state "
+                "of the service notifications will be sent out in regular intervals "
+                "until the problem is acknowledged."
+            ),
+            label=_("Enable periodic notifications"),
+            none_label=_("disabled"),
         ),
-        title=_("Periodic notifications during service problems"),
-        help=_(
-            "If you enable periodic notifications, then during a problem state "
-            "of the service notifications will be sent out in regular intervals "
-            "until the problem is acknowledged."
-        ),
-        label=_("Enable periodic notifications"),
-        none_label=_("disabled"),
-        none_value=0.0,
+        # We used 0.0 instead of None in the past to signal "no periodic service notifications".
+        forth=lambda x: x if x else None,
     )
 
 
@@ -4254,7 +4263,7 @@ def _valuespec_metrics_node() -> _Tuple[str, ConfigHostname]:
         "metrics_node",
         ConfigHostname(
             title=_("Override automatic metric selection"),
-            label=_("Use Metrics of"),
+            label=_("Use metrics of"),
             help=_(
                 "Since all nodes yield metrics with the same name, Checkmk has to decide which "
                 "nodes' metrics to keep. By default, it will select the node that was crucial "

@@ -46,7 +46,7 @@ import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
-from cmk.utils import password_store
+from cmk.utils import password_store, version
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.encryption import raw_certificates_from_file
@@ -279,6 +279,7 @@ class UpdateConfig:
             (self._renew_site_cert, "Renewing certificates without server name extension"),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
             (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
+            (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1606,6 +1607,26 @@ class UpdateConfig:
                     outgoing.setdefault("encryption", "upgradable")
 
         save_mk_file(sitespecific_file_path, "notification_spooler_config = %s" % mknotifyd_config)
+
+    def _transform_influxdb_connnections(self) -> None:
+        """
+        Apply valuespec transforms to InfluxDB connections
+        """
+        if version.is_raw_edition():
+            return
+
+        # fmt: off
+        from cmk.gui.cee.plugins.wato import influxdb  # type: ignore[import] # isort:skip # pylint: disable=no-name-in-module
+        # fmt: on
+
+        influx_db_connection_config = influxdb.InfluxDBConnectionConfig()
+        influx_db_connection_valuespec = influxdb.ModeEditInfluxDBConnection().valuespec()
+        influx_db_connection_config.save(
+            {
+                connection_id: influx_db_connection_valuespec.transform_value(connection_config)
+                for connection_id, connection_config in influx_db_connection_config.load_for_modification().items()
+            }
+        )
 
 
 class PasswordSanitizer:

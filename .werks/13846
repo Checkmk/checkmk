@@ -1,0 +1,12 @@
+Title: Agent encryption: Enforce TLS for registered hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649784298
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In general we may accept unencryptet agent data, as there are various reasons why a hosts agent might not be registered with the site.
+However, once a host is registered the site <b>must</b> insist on a TLS encrypted connection.

@@ -42,9 +42,14 @@ from .utils_inventory import sort_inventory_result
             ),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "node"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
                         "name": "minikube",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "node"],
+                    inventory_attributes={
                         "operating_system": "linux",
                         "os_image": "Ubuntu 20.04.2 LTS",
                         "kernel_version": "5.13.0-27-generic",

@@ -16,7 +16,7 @@ from tests.testlib.site import Site
 
 
 @pytest.fixture(name="default_cfg", scope="module")
-def default_cfg_fixture(request, site: Site, web) -> None:
+def default_cfg_fixture(request: pytest.FixtureRequest, site: Site, web) -> None:
     site.ensure_running()
     print("Applying default config")
     create_linux_test_host(request, site, "livestatus-test-host")
@@ -64,6 +64,8 @@ def test_host_custom_variables(site: Site) -> None:
         "TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp"
         % site.id,
         "FILENAME": "/wato/hosts.mk",
+        "ADDRESSES_4": "",
+        "ADDRESSES_6": "",
         "ADDRESS_4": "127.0.0.1",
         "ADDRESS_6": "",
     }
@@ -134,42 +136,35 @@ def test_usage_counters(site: Site) -> None:
 
 
 @pytest.fixture(name="configure_service_tags")
-def configure_service_tags_fixture(site, web, default_cfg):
-    web.set_ruleset(  # Replace with RestAPI, see CMK-9251
-        "service_tag_rules",
-        {
-            "ruleset": {
-                "": [
-                    {
-                        "value": [("criticality", "prod")],
-                        "condition": {
-                            "host_name": ["livestatus-test-host"],
-                            "service_description": [
-                                {
-                                    "$regex": "CPU load$",
-                                }
-                            ],
-                        },
-                    },
-                ],
-            }
+def configure_service_tags_fixture(site: Site, default_cfg):
+    site.openapi.create_host(
+        "modes-test-host",
+        attributes={
+            "ipaddress": "127.0.0.1",
+        },
+    )
+    rule_id = site.openapi.create_rule(
+        ruleset_name="service_tag_rules",
+        value=[("criticality", "prod")],
+        conditions={
+            "host_name": {
+                "match_on": ["livestatus-test-host"],
+                "operator": "one_of",
+            },
+            "service_description": {
+                "match_on": ["CPU load$"],
+                "operator": "one_of",
+            },
         },
     )
     site.activate_changes_and_wait_for_core_reload()
     yield
-    web.set_ruleset(  # Replace with RestAPI, see CMK-9251
-        "service_tag_rules",
-        {
-            "ruleset": {
-                "": [],
-            }
-        },
-    )
+    site.openapi.delete_rule(rule_id)
     site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.usefixtures("default_cfg")
-def test_service_custom_variables(configure_service_tags, site: Site) -> None:
+@pytest.mark.usefixtures("configure_service_tags")
+def test_service_custom_variables(site: Site) -> None:
     rows = site.live.query(
         "GET services\n"
         "Columns: custom_variables tags\n"

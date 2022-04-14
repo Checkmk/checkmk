@@ -103,7 +103,7 @@ DISCOVERY_ACTION = {
         }
     ],
 )
-def show_services(params):
+def show_services(params) -> Response:
     """Show all services of specific phase"""
     host = watolib.Host.load_host(params["host_name"])
     discovery_request = StartDiscoveryRequest(
@@ -179,7 +179,7 @@ class UpdateDiscoveryPhase(BaseSchema):
         ]
     ),
 )
-def update_service_phase(params):
+def update_service_phase(params) -> Response:
     """Update the phase of a service"""
     body = params["body"]
     host = watolib.Host.load_host(params["host_name"])
@@ -252,7 +252,7 @@ class DiscoverServices(BaseSchema):
     request_schema=DiscoverServices,
     response_schema=response_schemas.DomainObject,
 )
-def execute(params):
+def execute(params) -> Response:
     """Execute a service discovery on a host"""
     host = watolib.Host.load_host(params["host_name"])
     body = params["body"]
@@ -280,7 +280,7 @@ def _serve_services(
     host: watolib.CREHost,
     discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
-):
+) -> Response:
     response = Response()
     response.set_data(
         json.dumps(serialize_service_discovery(host, discovered_services, discovery_phases))
@@ -440,7 +440,7 @@ class BulkDiscovery(BaseSchema):
     request_schema=BulkDiscovery,
     response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
-def execute_bulk_discovery(params):
+def execute_bulk_discovery(params) -> Response:
     """Start a bulk discovery job"""
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
@@ -470,7 +470,7 @@ def execute_bulk_discovery(params):
     },
     response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
-def show_bulk_discovery_status(params):
+def show_bulk_discovery_status(params) -> Response:
     """Show the status of a bulk discovery job"""
 
     job_id = params["job_id"]

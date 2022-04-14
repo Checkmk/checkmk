@@ -22,6 +22,7 @@ from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqString
 from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.http import Response
@@ -244,7 +245,7 @@ def _update_bi_aggregation(params, must_exist: bool):
     aggregation_config = params["body"]
     try:
         target_pack = bi_packs.get_pack_mandatory(aggregation_config["pack_id"])
-    except KeyError:
+    except MKGeneralException:
         _bailout_with_message("Unknown bi_pack: %s" % aggregation_config["pack_id"])
 
     aggregation_id = params["aggregation_id"]

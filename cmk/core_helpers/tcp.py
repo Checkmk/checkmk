@@ -9,6 +9,7 @@ import logging
 import socket
 import ssl
 from typing import Any, Final, List, Mapping, Optional, Tuple
+from uuid import UUID
 
 import cmk.utils.debug
 from cmk.utils import paths
@@ -139,10 +140,11 @@ class TCPFetcher(AgentFetcher):
             raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
         )
 
-        self._validate_protocol(protocol)
+        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
+        self._validate_protocol(protocol, is_registered=controller_uuid is not None)
 
         if protocol is TransportProtocol.TLS:
-            with self._wrap_tls() as ssock:
+            with self._wrap_tls(controller_uuid) as ssock:
                 raw_agent_data = self._recvall(ssock)
             try:
                 agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
@@ -164,9 +166,12 @@ class TCPFetcher(AgentFetcher):
                 raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
             raise MKFetcherError(empty_msg)
 
-    def _validate_protocol(self, protocol: TransportProtocol) -> None:
+    def _validate_protocol(self, protocol: TransportProtocol, is_registered: bool) -> None:
         if protocol is TransportProtocol.TLS:
             return
+
+        if is_registered:
+            raise MKFetcherError("Host is registered for TLS but not using it")
 
         enc_setting = self.encryption_settings["use_regular"]
         if enc_setting == "tls":
@@ -184,8 +189,7 @@ class TCPFetcher(AgentFetcher):
                 "Agent output is encrypted but encryption is disabled by configuration"
             )
 
-    def _wrap_tls(self) -> ssl.SSLSocket:
-        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
+    def _wrap_tls(self, controller_uuid: Optional[UUID]) -> ssl.SSLSocket:
 
         if controller_uuid is None:
             raise MKFetcherError("Agent controller not registered")

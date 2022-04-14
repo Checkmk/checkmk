@@ -269,7 +269,6 @@ class ErrorReporter:
         ("discovery", "discovery_netapp_api_fan_rules"),
         ("discovery", "discovery_netapp_api_ports_ignored"),
         ("discovery", "discovery_netapp_api_psu_rules"),
-        ("discovery", "discovery_systemd_units_services_rules"),
         ("discovery", "discovery_win_dhcp_pools"),
         ("discovery", "ewon_discovery_rules"),
         ("discovery", "inventory_df_rules"),
@@ -303,11 +302,6 @@ class ErrorReporter:
         ("check", "mongodb_replica_set", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "mongodb_replica_set_election", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "netapp_fcpio", "checkgroup_parameters:netapp_fcportio"),
-        (
-            "check",
-            "systemd_units_services_summary",
-            "checkgroup_parameters:systemd_services_summary",
-        ),
         ("check", "ucd_mem", "checkgroup_parameters:memory_simple"),
     }
     KNOWN_WATO_MISSING = {

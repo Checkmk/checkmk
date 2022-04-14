@@ -61,12 +61,10 @@ class WalkCache(
         self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
 
-    @staticmethod
-    def _read_row(path: Path) -> SNMPRowInfo:
+    def _read_row(self, path: Path) -> SNMPRowInfo:
         return store.load_object_from_file(path, default=None)
 
-    @staticmethod
-    def _write_row(path: Path, rowinfo: SNMPRowInfo) -> None:
+    def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:
         return store.save_object_to_file(path, rowinfo, pretty=False)
 
     @staticmethod

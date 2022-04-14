@@ -81,11 +81,9 @@ if "--legacy" in sys.argv:
         sys.exit(1)
 
 try:
-    # lxml was quite promising in our test environment: Uses 2 times less CPU resources
-    # Unfortunaly, it is not a builtin module and need to be installed manually with
-    # pip install lxml
-    import lxml.etree as ET  # type: ignore[import]
+    import lxml.etree as ET
 except ImportError:
+    # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -412,7 +410,7 @@ class NetAppResponse:
         self.content = None
         self.reason = None
 
-        self.raw_response_text = response.text
+        self.raw_response_text = response.text  # needed only for xml-dump
 
         # Check for invalid authorization
         if response.status_code == 401:
@@ -423,16 +421,17 @@ class NetAppResponse:
         # We except an XML answer (not HTML)
         try:
             try:
-                self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+                tree = ET.fromstring(response.content)
             except ET.ParseError:
-                clean = NetAppResponse.INVALID_XML.sub("", self.raw_response_text)
-                self.content = NetAppNode(ET.fromstring(clean))
+                tree = ET.fromstring(NetAppResponse.INVALID_XML.sub("", response.text))
         except ET.ParseError as exc:
             if debug:
                 raise
             self.status = "parse-exception"
             self.reason = str(exc)
             return
+
+        self.content = NetAppNode(tree)
 
         self.status = self.content.child_get("results").node.attrib["status"]
         if self.status != "passed":

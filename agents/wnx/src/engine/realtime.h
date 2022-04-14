@@ -13,7 +13,6 @@
 
 #include "common/cfg_info.h"
 #include "encryption.h"
-#include "logger.h"
 
 namespace cma::rt {
 
@@ -23,16 +22,16 @@ enum {
     kDataOffset = kHeaderSize + kTimeStampSize
 };
 
-constexpr const std::string_view kEncryptedHeader = "00";
-constexpr const std::string_view kPlainHeader = "99";
+constexpr const std::string_view kEncryptedHeader{"00"};
+constexpr const std::string_view kPlainHeader{"99"};
 
 using RtBlock = std::vector<uint8_t>;
 using RtTable = std::vector<std::string_view>;
 
-// Crypt is nullptr when encryption is not required
-RtBlock PackData(std::string_view Output, const cma::encrypt::Commander *Crypt);
+/// crypt is nullptr when encryption is not required
+RtBlock PackData(std::string_view output, const encrypt::Commander *crypt);
 
-// has internal thread
+// uses internal thread
 // should be start-stopped
 // connectFrom is signal to start actual work thread
 class Device {
@@ -49,9 +48,15 @@ public:
     void stop();
     bool start();
 
-    void connectFrom(std::string_view Address, int Port,
-                     const RtTable &Sections, std::string_view Passphrase,
-                     int Timeout = cma::cfg::kDefaultRealtimeTimeout);
+    void connectFrom(std::string_view address, int port,
+                     const RtTable &sections, std::string_view passphrase,
+                     int Timeout);
+
+    void connectFrom(std::string_view address, int port,
+                     const RtTable &sections, std::string_view passphrase) {
+        connectFrom(address, port, sections, passphrase,
+                    cfg::kDefaultRealtimeTimeout);
+    }
 
     bool started() const noexcept { return started_; }
 
@@ -68,25 +73,23 @@ private:
     mutable std::mutex lock_;
     std::thread thread_;
     std::condition_variable cv_;
-    std::atomic<bool> started_ = false;
+    std::atomic<bool> started_{false};
     std::chrono::steady_clock::time_point kick_time_;
     std::string ip_address_;
     std::string passphrase_;
-    int port_ = 0;
+    int port_{0};
 
-    int timeout_ = cma::cfg::kDefaultRealtimeTimeout;
-    uint64_t kick_count_ = 0;
+    int timeout_{cfg::kDefaultRealtimeTimeout};
+    uint64_t kick_count_{0};
 
-    bool working_period_ = false;
+    bool working_period_{false};
 
-    bool use_df_ = false;
-    bool use_mem_ = false;
-    bool use_winperf_processor_ = false;
-    bool use_test_ = false;
+    bool use_df_{false};
+    bool use_mem_{false};
+    bool use_winperf_processor_{false};
+    bool use_test_{false};
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class RealtimeTest;
-    FRIEND_TEST(RealtimeTest, Base_Long);
     FRIEND_TEST(RealtimeTest, LowLevel);
 #endif
 };

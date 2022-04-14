@@ -410,44 +410,35 @@ def on_succeeded_login(username: UserId) -> str:
 
 def on_failed_login(username: UserId) -> None:
     users = load_users(lock=True)
-    if username in users:
-        if "num_failed_logins" in users[username]:
-            users[username]["num_failed_logins"] += 1
-        else:
-            users[username]["num_failed_logins"] = 1
-
+    if user := users.get(username):
+        user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
         if active_config.lock_on_logon_failures:
-            if users[username]["num_failed_logins"] >= active_config.lock_on_logon_failures:
-                users[username]["locked"] = True
-
+            if user["num_failed_logins"] >= active_config.lock_on_logon_failures:
+                user["locked"] = True
         save_users(users)
 
     if active_config.log_logon_failures:
-        log_details: List[str] = []
-        if users.get(username):
-            log_msg_until_locked: int = (
-                active_config.lock_on_logon_failures - users[username]["num_failed_logins"]
+        if user:
+            existing = "Yes"
+            log_msg_until_locked = str(
+                bool(active_config.lock_on_logon_failures) - user["num_failed_logins"]
             )
-            log_msg_locked: str = "No"
-            if users[username].get("locked"):
+            if not user.get("locked"):
+                log_msg_locked = "No"
+            elif log_msg_until_locked == "0":
+                log_msg_locked = "Yes (now)"
+            else:
                 log_msg_locked = "Yes"
-                if log_msg_until_locked == 0:
-                    log_msg_locked += " (now)"
-
-            log_details.extend(
-                [
-                    "existing: Yes",
-                    "locked: %s" % log_msg_locked,
-                    "failed logins until locked: %d" % log_msg_until_locked,
-                ]
-            )
         else:
-            log_details.extend(["existing: No", "locked: N/A", "failed logins until locked: N/A"])
-
+            existing = "No"
+            log_msg_until_locked = "N/A"
+            log_msg_locked = "N/A"
         auth_logger.warning(
-            "Login failed for username: %s (%s), client: %s",
+            "Login failed for username: %s (existing: %s, locked: %s, failed logins until locked: %s), client: %s",
             username,
-            ", ".join(log_details),
+            existing,
+            log_msg_locked,
+            log_msg_until_locked,
             request.remote_ip,
         )
 
@@ -709,53 +700,6 @@ class GenericUserAttribute(UserAttribute):
 
     def domain(self) -> str:
         return self._domain
-
-
-# TODO: Legacy plugin API. Converts to new internal structure. Drop this with 1.6 or later.
-def declare_user_attribute(
-    name: str,
-    vs: ValueSpec,
-    user_editable: bool = True,
-    permission: Optional[str] = None,
-    show_in_table: bool = False,
-    topic: Optional[str] = None,
-    add_custom_macro: bool = False,
-    domain: str = "multisite",
-    from_config: bool = False,
-) -> None:
-
-    # FIXME: The classmethods "name" and "topic" shadow the arguments from the function scope.
-    # Any use off "name" and "topic" inside the class will result in a NameError.
-    attr_name = name
-    attr_topic = topic
-
-    @user_attribute_registry.register
-    class _LegacyUserAttribute(GenericUserAttribute):
-        _name = attr_name
-        _valuespec = vs
-        _topic = attr_topic if attr_topic else "personal"
-
-        @classmethod
-        def name(cls) -> str:
-            return cls._name
-
-        @classmethod
-        def valuespec(cls) -> ValueSpec:
-            return cls._valuespec
-
-        @classmethod
-        def topic(cls) -> str:
-            return cls._topic
-
-        def __init__(self) -> None:
-            super().__init__(
-                user_editable=user_editable,
-                show_in_table=show_in_table,
-                add_custom_macro=add_custom_macro,
-                domain=domain,
-                permission=permission,
-                from_config=from_config,
-            )
 
 
 def load_contacts() -> Dict[str, Any]:
@@ -1280,22 +1224,39 @@ def update_config_based_user_attributes() -> None:
     _clear_config_based_user_attributes()
 
     for attr in active_config.wato_user_attrs:
-        if attr["type"] == "TextAscii":
-            vs = TextInput(title=attr["title"], help=attr["help"])
-        else:
+        if attr["type"] != "TextAscii":
             raise NotImplementedError()
 
-        # TODO: This method uses LegacyUserAttribute(). Use another class for
-        # this kind of attribute
-        declare_user_attribute(
-            attr["name"],
-            vs,
-            user_editable=attr["user_editable"],
-            show_in_table=attr.get("show_in_table", False),
-            topic=attr.get("topic", "personal"),
-            add_custom_macro=attr.get("add_custom_macro", False),
-            from_config=True,
-        )
+        @user_attribute_registry.register
+        class _LegacyUserAttribute(GenericUserAttribute):
+            # Play safe: Grab all necessary data at class construction time,
+            # it's highly unclear if the attr dict is mutated later or not.
+            _name = attr["name"]
+            _valuespec = TextInput(title=attr["title"], help=attr["help"])
+            _topic = attr.get("topic", "personal")
+            _user_editable = attr["user_editable"]
+            _show_in_table = attr.get("show_in_table", False)
+            _add_custom_macro = attr.get("add_custom_macro", False)
+
+            @classmethod
+            def name(cls) -> str:
+                return cls._name
+
+            def valuespec(self) -> ValueSpec:
+                return self._valuespec
+
+            def topic(self) -> str:
+                return self._topic
+
+            def __init__(self) -> None:
+                super().__init__(
+                    user_editable=self._user_editable,
+                    show_in_table=self._show_in_table,
+                    add_custom_macro=self._add_custom_macro,
+                    domain="multisite",
+                    permission=None,
+                    from_config=True,
+                )
 
     cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins()
 

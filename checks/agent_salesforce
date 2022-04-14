@@ -14,8 +14,8 @@ def agent_salesforce_arguments(
     for instance in params["instances"]:
         args += [
             "--section_url",
-            "salesforce_instances",
-            "https://api.status.salesforce.com/v1/instances/%s/status" % instance,
+            "salesforce_instances,https://api.status.salesforce.com/v1/instances/%s/status"
+            % instance,
         ]
     return args
 

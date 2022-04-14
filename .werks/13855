@@ -1,0 +1,16 @@
+Title: Bakery sets windows agent product name correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649693437
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Previously, the bakery set product name as 'Check MK Agent 
+2.0'.
+
+With this release, the correct name 'Check MK Agent 2.1' 
+is used.

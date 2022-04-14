@@ -63,6 +63,7 @@ from cmk.utils.notify import (
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import (
+    Contact,
     ContactName,
     EventRule,
     NotifyAnalysisInfo,
@@ -103,8 +104,7 @@ NotificationTable = List[NotificationTableEntry]
 
 Event = str
 
-ContactId = str
-Contact = Dict[str, Union[str, bool, Dict[str, Any]]]
+
 Contacts = List[Contact]
 ConfigContacts = Dict[ContactName, Contact]
 ContactNames = FrozenSet[ContactName]  # Must be hasable
@@ -174,15 +174,6 @@ $LONGSERVICEOUTPUT$
 def _initialize_logging() -> None:
     log.logger.setLevel(config.notification_logging)
     log.open_log(notification_log)
-
-
-def _transform_user_disable_notifications_opts(contact: Contact) -> Dict[str, Any]:
-    if "disable_notifications" in contact and isinstance(contact["disable_notifications"], bool):
-        return {"disable": contact["disable_notifications"]}
-
-    disable_notifications = contact.get("disable_notifications", {})
-    assert isinstance(disable_notifications, dict)
-    return disable_notifications
 
 
 # .
@@ -382,10 +373,9 @@ def locally_deliver_raw_context(
         # Now fetch all configuration about that contact (it needs to be configure via
         # Checkmk for that purpose). If we do not know that contact then we cannot use
         # flexible notifications even if they are enabled.
-        # TODO find a common place for type hint 'Contact'/'Contacts'
-        contact = cast(Contact, config.contacts.get(contactname))
+        contact: Contact = config.contacts[contactname]
 
-        disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
+        disable_notifications_opts = contact.get("disable_notifications", {})
         if disable_notifications_opts.get("disable", False):
             start, end = disable_notifications_opts.get("timerange", (None, None))
             if start is None or end is None:
@@ -532,7 +522,6 @@ def _create_notifications(
     contactstxt = ", ".join(contacts)
 
     plugin_name, plugin_parameters = rule["notify_plugin"]
-    _transform_parameters(plugin_name, plugin_parameters)
 
     plugintxt = plugin_name or "plain email"
 
@@ -592,20 +581,6 @@ def _create_notifications(
 
     rule_info.append(("match", rule, ""))
     return notifications, rule_info
-
-
-def _transform_parameters(plugin: str, params: Union[List, NotifyPluginParams]) -> None:
-    if not isinstance(params, dict):  # NotifyPluginParams
-        return
-
-    if plugin in ["asiimail", "mail"]:
-        from_ = params.get("from")
-        if from_ and not isinstance(from_, dict):
-            params["from"] = {"address": from_}
-
-        reply_to = params.get("reply_to")
-        if reply_to and not isinstance(reply_to, dict):
-            params["reply_to"] = {"address": reply_to}
 
 
 def _process_notifications(
@@ -705,7 +680,6 @@ def rbn_fallback_contacts() -> Contacts:
     if config.notification_fallback_email:
         fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
 
-    # TODO find a common place for type hint 'Contact'/'Contacts'
     contacts = cast(ConfigContacts, config.contacts)
     for contact_name, contact in contacts.items():
         if contact.get("fallback_contact", False) and contact.get("email"):
@@ -1033,13 +1007,12 @@ def rbn_rule_contacts(rule: EventRule, context: EventContext) -> ContactNames:
     all_enabled = []
     for contactname in the_contacts:
         if contactname == config.notification_fallback_email:
-            contact = rbn_fake_email_contact(config.notification_fallback_email)
+            contact: Optional[Contact] = rbn_fake_email_contact(config.notification_fallback_email)
         else:
-            # TODO find a common place for type hint 'Contact'/'Contacts'
-            contact = cast(Contact, config.contacts.get(contactname))
+            contact = config.contacts.get(contactname)
 
         if contact:
-            disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
+            disable_notifications_opts = contact.get("disable_notifications", {})
             if disable_notifications_opts.get("disable", False):
                 start, end = disable_notifications_opts.get("timerange", (None, None))
                 if start is None or end is None:
@@ -1236,7 +1209,7 @@ def rbn_object_contact_names(context: EventContext) -> List[ContactName]:
     return []
 
 
-def rbn_all_contacts(with_email: bool = False) -> List[ContactId]:
+def rbn_all_contacts(with_email: bool = False) -> List[ContactName]:
     if not with_email:
         return list(config.contacts)  # We have that via our main.mk contact definitions!
 

@@ -53,6 +53,10 @@ def test_cfg_fixture(site: Site, web):
             "tag_criticality": "offline",
         },
     )
+    site.openapi.create_host(
+        "host_with_secondary_ip",
+        attributes={"ipaddress": "127.0.0.1", "additional_ipv4addresses": ["127.0.0.1"]},
+    )
 
     site.write_text_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
@@ -73,6 +77,10 @@ def test_cfg_fixture(site: Site, web):
     web.discover_services("modes-test-host")  # Replace with RestAPI call, see CMK-9249
     web.discover_services("modes-test-host2")  # Replace with RestAPI call, see CMK-9249
     web.discover_services("modes-test-host3")  # Replace with RestAPI call, see CMK-9249
+    web.discover_services("host_with_secondary_ip")  # Replace with RestAPI call, see CMK-9249
+    icmp_rule_id = site.openapi.create_rule(
+        ruleset_name="active_checks:icmp", value={"address": "all_ipv4addresses"}
+    )
 
     try:
         site.activate_changes_and_wait_for_core_reload()
@@ -91,6 +99,8 @@ def test_cfg_fixture(site: Site, web):
         site.openapi.delete_host("modes-test-host2")
         site.openapi.delete_host("modes-test-host3")
         site.openapi.delete_host("modes-test-host4")
+        site.openapi.delete_host("host_with_secondary_ip")
+        site.openapi.delete_rule(icmp_rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -437,7 +447,6 @@ def test_automation_get_agent_output_unknown_host(test_cfg, site: Site):
     assert result.success is False
 
 
-# TODO: active-check: Add test for real active_checks check
 # TODO: active-check: Add test for real custom_checks check
 def test_automation_active_check_unknown(test_cfg, site: Site):
     result = _execute_automation(
@@ -448,6 +457,18 @@ def test_automation_active_check_unknown(test_cfg, site: Site):
     assert isinstance(result, results.ActiveCheckResult)
     assert result.state is None
     assert result.output == "Failed to compute check result"
+
+
+def test_automation_active_check_icmp_all_ipv4(test_cfg, site: Site):
+    for host in ("modes-test-host", "host_with_secondary_ip"):
+        result = _execute_automation(
+            site,
+            "active-check",
+            args=[host, "icmp", "PING all IPv4 Addresses"],
+        )
+        assert isinstance(result, results.ActiveCheckResult)
+        assert result.state == 0
+        assert result.output.startswith("OK - 127.0.0.1: rta")
 
 
 def test_automation_active_check_unknown_custom(test_cfg, site: Site):

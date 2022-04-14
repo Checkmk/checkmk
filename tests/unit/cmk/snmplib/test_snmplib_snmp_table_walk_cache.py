@@ -5,23 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Iterable, MutableMapping, Optional
+from typing import Iterable, MutableMapping
 
 from cmk.utils.type_defs import HostName
 
-import cmk.snmplib.snmp_table as snmp_table
+from cmk.snmplib.snmp_table import WalkCache
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPRowInfo
 
 
-class MockWalkCache(snmp_table.WalkCache):
+class MockWalkCache(WalkCache):
     def __init__(self, mockdata: MutableMapping[str, SNMPRowInfo]) -> None:
         super().__init__(HostName("testhost"))
         self.mock_stored_on_fs = mockdata
 
-    def _read_row(self, path: Path) -> Optional[SNMPRowInfo]:  # type: ignore[override]
-        return self.mock_stored_on_fs.get(str(path.name))
+    def _read_row(self, path: Path) -> SNMPRowInfo:
+        return self.mock_stored_on_fs[str(path.name)]
 
-    def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:  # type: ignore[override]
+    def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:
         self.mock_stored_on_fs[str(path.name)] = rowinfo
 
     def _iterfiles(self) -> Iterable[Path]:
@@ -31,7 +31,7 @@ class MockWalkCache(snmp_table.WalkCache):
 class TestWalkCache:
     def test_oid2name_roundtrip(self) -> None:
         fetchoid = ".3.1.4.1.5.9.2.6.5.3.5"
-        assert fetchoid == snmp_table.WalkCache._name2oid(snmp_table.WalkCache._oid2name(fetchoid))
+        assert fetchoid == WalkCache._name2oid(WalkCache._oid2name(fetchoid))
 
     def test_cache_keeps_stored_data(self) -> None:
 

@@ -26,6 +26,11 @@ class Node;
 }
 
 namespace tst {
+// located in test_files/config
+constexpr const wchar_t *kDefaultDevConfigUTF16 = L"check_mk_dev_utf16.yml";
+constexpr const wchar_t *kDefaultDevMinimum = L"check_mk_dev_minimum.yml";
+constexpr const wchar_t *kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
+
 std::filesystem::path GetSolutionRoot();
 std::filesystem::path GetProjectRoot();
 std::filesystem::path GetUnitTestFilesRoot();

@@ -546,7 +546,7 @@ TEST(AgentConfig, LogFile) {
 }
 
 TEST(AgentConfig, YamlRead) {
-    auto file = tst::MakePathToConfigTestFiles() / files::kDefaultDevMinimum;
+    auto file = tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
 
@@ -842,7 +842,7 @@ TEST(AgentConfig, UTF16LE) {
     details::KillDefaultConfig();
 
     auto file_utf16 =
-        tst::MakePathToConfigTestFiles() / files::kDefaultDevConfigUTF16;
+        tst::MakePathToConfigTestFiles() / tst::kDefaultDevConfigUTF16;
     bool success = loader(file_utf16.wstring());
     EXPECT_TRUE(success);
 
@@ -882,7 +882,7 @@ TEST(AgentConfig, FailScenario_Long) {
     auto test_config_path = tst::MakePathToConfigTestFiles();
 
     auto file_1 = (test_config_path / files::kDefaultMainConfig).wstring();
-    auto file_2 = (test_config_path / files::kDefaultDevMinimum).wstring();
+    auto file_2 = (test_config_path / tst::kDefaultDevMinimum).wstring();
 
     EXPECT_TRUE(loader(file_1, file_2));
     EXPECT_FALSE(loader(L"StrangeName<GTEST>.yml"));

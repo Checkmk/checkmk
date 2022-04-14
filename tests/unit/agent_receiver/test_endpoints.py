@@ -17,11 +17,9 @@ import pytest
 from agent_receiver import constants
 from agent_receiver.checkmk_rest_api import CMKEdition
 from agent_receiver.models import HostTypeEnum
-from agent_receiver.server import agent_receiver_app, main_app
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
-from starlette.routing import Mount
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +46,7 @@ def test_register_register_with_hostname_host_missing(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.server.host_exists",
+        "agent_receiver.endpoints.host_exists",
         return_value=False,
     )
     response = client.post(
@@ -69,11 +67,11 @@ def test_register_register_with_hostname_unauthorized(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.server.host_exists",
+        "agent_receiver.endpoints.host_exists",
         return_value=True,
     )
     mocker.patch(
-        "agent_receiver.server.link_host_with_uuid",
+        "agent_receiver.endpoints.link_host_with_uuid",
         side_effect=HTTPException(
             status_code=403,
             detail="You do not have the permission for agent pairing.",
@@ -97,11 +95,11 @@ def test_register_register_with_hostname_ok(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.server.host_exists",
+        "agent_receiver.endpoints.host_exists",
         return_value=True,
     )
     mocker.patch(
-        "agent_receiver.server.link_host_with_uuid",
+        "agent_receiver.endpoints.link_host_with_uuid",
         return_value=None,
     )
     response = client.post(
@@ -122,7 +120,7 @@ def test_register_with_labels_unauthenticated(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.server.cmk_edition",
+        "agent_receiver.endpoints.cmk_edition",
         side_effect=HTTPException(
             status_code=401,
             detail="User authentication failed",
@@ -146,7 +144,7 @@ def test_register_with_labels_cre(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.server.cmk_edition",
+        "agent_receiver.endpoints.cmk_edition",
         lambda _c: CMKEdition["cre"],
     )
     response = client.post(
@@ -169,7 +167,7 @@ def _test_register_with_labels(
     uuid: UUID,
 ) -> None:
     mocker.patch(
-        "agent_receiver.server.cmk_edition",
+        "agent_receiver.endpoints.cmk_edition",
         lambda _c: CMKEdition["cpe"],
     )
     response = client.post(
@@ -338,7 +336,7 @@ def test_agent_data_move_error(
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    with mock.patch("agent_receiver.server.Path.rename") as move_mock:
+    with mock.patch("agent_receiver.endpoints.Path.rename") as move_mock:
         move_mock.side_effect = FileNotFoundError()
         response = client.post(
             f"/agent_data/{uuid}",
@@ -448,10 +446,3 @@ def test_registration_status_pull_host(
         "type": HostTypeEnum.PULL.value,
         "message": "Host registered",
     }
-
-
-def test_main_app_structure() -> None:
-    # we only want one route, namely the one to the sub-app which is mounted under the site name
-    assert len(main_app.routes) == 1
-    assert isinstance(mount := main_app.routes[0], Mount)
-    assert mount.app is agent_receiver_app

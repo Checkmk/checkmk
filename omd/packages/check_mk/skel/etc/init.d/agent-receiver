@@ -27,7 +27,7 @@ case "$1" in
                 --keyfile "$KEY_AND_CERT_FILE" \
                 --certfile "$KEY_AND_CERT_FILE" \
                 -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
-                -k uvicorn.workers.UvicornWorker agent_receiver.server:main_app
+                -k uvicorn.workers.UvicornWorker 'agent_receiver.apps:main_app()'
         if [ $? -eq 0 ]; then
             echo "OK"
             exit 0

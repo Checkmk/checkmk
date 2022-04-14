@@ -93,7 +93,6 @@ notification_log_template = \
     u"$HOSTNAME$ $HOSTSTATE$ - " \
     u"$SERVICEDESC$ $SERVICESTATE$ "
 
-notification_mail_command = u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'"
 notification_host_subject = u"Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"
 notification_service_subject = u"Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$"
 
@@ -279,7 +278,7 @@ def notify_notify(raw_context, analyse=False):
 
     notify_log_debug(events.render_context_dump(raw_context))
 
-    _complete_raw_context_with_notification_vars(raw_context)
+    raw_context["LOGDIR"] = notification_logdir
     events.complete_raw_context(raw_context,
                                 with_dump=config.notification_logging <= 10,
                                 log_func=notify_log)
@@ -290,13 +289,6 @@ def notify_notify(raw_context, analyse=False):
 
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
-
-
-# Add some notification specific variables to the context. These are currently
-# not added to alert handler scripts
-def _complete_raw_context_with_notification_vars(raw_context):
-    raw_context["LOGDIR"] = notification_logdir
-    raw_context["MAIL_COMMAND"] = notification_mail_command
 
 
 # Here we decide which notification implementation we are using.
@@ -1207,8 +1199,7 @@ def notify_via_email(plugin_context):
     subject = substitute_context(subject_t, plugin_context)
     plugin_context["SUBJECT"] = subject
     body = substitute_context(notification_common_body + body_t, plugin_context)
-    command = substitute_context(notification_mail_command, plugin_context)
-    command_utf8 = command.encode("utf-8")
+    command = [cmk.utils.paths.bin_dir + "/mail", "-s", subject, plugin_context["CONTACTEMAIL"]]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
@@ -1231,16 +1222,14 @@ def notify_via_email(plugin_context):
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
-    notify_log_debug("Executing command: %s" % command)
+    notify_log_debug("Executing command: %s" % " ".join(command))
 
-    # TODO: Cleanup this shell=True call!
-    p = subprocess.Popen(  # nosec
-        command_utf8,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        close_fds=True)
+    p = subprocess.Popen(command,
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         stdin=subprocess.PIPE,
+                         close_fds=True)
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
     exitcode = p.returncode
     os.putenv("LANG", old_lang)  # Important: do not destroy our environment
@@ -1292,6 +1281,10 @@ def create_bulk_parameter_context(params):
 
 def path_to_notification_script(plugin):
     # Call actual script without any arguments
+    if "/" in plugin:
+        notify_log("Pluginname %r with slash. Raising exception...")
+        raise MKGeneralException("Slashes in plugin_name are forbidden!")
+
     local_path = cmk.utils.paths.local_notifications_dir + "/" + plugin
     if os.path.exists(local_path):
         path = local_path
@@ -1491,6 +1484,11 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
 
     what = plugin_context["WHAT"]
     contact = plugin_context["CONTACTNAME"]
+
+    if "/" in contact or "/" in plugin:
+        notify_log("Tried to construct bulk dir with unsanitized attributes")
+        raise MKGeneralException("Slashes in CONTACTNAME or plugin_name are forbidden!")
+
     if bulk.get("timeperiod"):
         bulk_path = (contact, plugin, 'timeperiod:' + bulk["timeperiod"], str(bulk["count"]))
     else:

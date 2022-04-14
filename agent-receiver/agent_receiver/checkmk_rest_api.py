@@ -5,14 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import os
 from enum import Enum
 from http import HTTPStatus
-from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 import requests
+from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 
@@ -35,9 +34,7 @@ class CMKEdition(Enum):
 
 
 def _local_apache_port() -> int:
-    for site_config_line in (
-        Path(os.environ["OMD_ROOT"], "etc", "omd", "site.conf").read_text().splitlines()
-    ):
+    for site_config_line in site_config_path().read_text().splitlines():
         key, value = site_config_line.split("=")
         if key == "CONFIG_APACHE_TCP_PORT":
             return int(value.strip("'"))
@@ -45,7 +42,7 @@ def _local_apache_port() -> int:
 
 
 def _local_rest_api_url() -> str:
-    return f"http://localhost:{_local_apache_port()}/{os.environ['OMD_SITE']}/check_mk/api/1.0"
+    return f"http://localhost:{_local_apache_port()}/{site_name()}/check_mk/api/1.0"
 
 
 def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:

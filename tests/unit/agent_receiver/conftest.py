@@ -9,7 +9,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from agent_receiver import constants
+from agent_receiver import site_context
 from agent_receiver.apps import agent_receiver_app, main_app
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate
@@ -20,9 +20,10 @@ from cmk.utils.certs import RootCA
 
 
 @pytest.fixture(autouse=True)
-def create_dirs() -> None:
-    constants.AGENT_OUTPUT_DIR.mkdir()
-    constants.REGISTRATION_REQUESTS.mkdir()
+def setup_site_context() -> None:
+    site_context.agent_output_dir().mkdir(parents=True)
+    site_context.r4r_dir().mkdir(parents=True)
+    site_context.log_path().parent.mkdir(parents=True)
 
 
 @pytest.fixture(name="client")
@@ -37,7 +38,7 @@ def fixture_root_ca(
     tmp_path: Path,
 ) -> RootCA:
     ca_path = tmp_path / "ca"
-    mocker.patch("agent_receiver.certificates.ROOT_CERT", ca_path)
+    mocker.patch("agent_receiver.certificates.root_cert_path", lambda: ca_path)
     return RootCA.load_or_create(ca_path, "test-ca")
 
 

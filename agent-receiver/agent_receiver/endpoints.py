@@ -21,7 +21,6 @@ from agent_receiver.checkmk_rest_api import (
     parse_error_response_body,
     post_csr,
 )
-from agent_receiver.constants import REGISTRATION_REQUESTS
 from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
 from agent_receiver.models import (
@@ -33,6 +32,7 @@ from agent_receiver.models import (
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
 )
+from agent_receiver.site_context import r4r_dir
 from agent_receiver.utils import get_registration_status_from_file, Host
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -129,7 +129,7 @@ def _write_registration_file(
     username: str,
     registration_body: RegistrationWithLabelsBody,
 ) -> None:
-    (dir_new_requests := REGISTRATION_REQUESTS / "NEW").mkdir(
+    (dir_new_requests := r4r_dir() / RegistrationStatusEnum.NEW.name).mkdir(
         mode=0o770,
         parents=True,
         exist_ok=True,
@@ -191,11 +191,9 @@ def _store_agent_data(
 
 
 def _move_ready_file(uuid: UUID) -> None:
-    (dir_discoverable := REGISTRATION_REQUESTS / RegistrationStatusEnum.DISCOVERABLE.name).mkdir(
-        exist_ok=True
-    )
+    (dir_discoverable := r4r_dir() / RegistrationStatusEnum.DISCOVERABLE.name).mkdir(exist_ok=True)
     with suppress(FileNotFoundError):
-        (REGISTRATION_REQUESTS / RegistrationStatusEnum.READY.name / f"{uuid}.json").rename(
+        (r4r_dir() / RegistrationStatusEnum.READY.name / f"{uuid}.json").rename(
             dir_discoverable / f"{uuid}.json"
         )
 

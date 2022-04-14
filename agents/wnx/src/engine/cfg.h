@@ -61,14 +61,6 @@ constexpr const wchar_t *kDefaultUserExt = L".user.yml";
 // special
 constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
 constexpr std::string_view kInstallProtocol = "install.protocol";
-
-// located in test_files/config
-// constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";
-constexpr const wchar_t *kDefaultDevConfigUTF16 = L"check_mk_dev_utf16.yml";
-constexpr const wchar_t *kDefaultDevMinimum = L"check_mk_dev_minimum.yml";
-
-constexpr const wchar_t *kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
-
 constexpr const wchar_t *kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
 constexpr const wchar_t *kAgentCtl = L"cmk-agent-ctl.exe";
 
@@ -106,9 +98,7 @@ std::vector<std::wstring> DefaultConfigArray();
 void ProcessKnownConfigGroups();
 void SetupEnvironmentFromGroups();
 
-bool ReloadConfigAutomatically();
-
-// sometimes we have to reload config without
+inline bool ReloadConfigAutomatically() { return false; }
 
 // returns stored value from Windows OS
 // This is Absolute Global per OS
@@ -344,25 +334,28 @@ inline StringPairArray ConvertNode2StringPairArray(
 }
 
 template <typename T>
-std::vector<T> GetArray(std::string_view Section, std::string_view Name,
-                        int *ErrorOut = nullptr) noexcept {
+std::vector<T> GetArray(std::string_view section_name, std::string_view name,
+                        int *error_out = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        if (error_out) {
+            *error_out = Error::kEmpty;
+        }
         return {};
     }
     try {
-        auto section = yaml[Section];
-        auto val = section[Name];
-        if (val.IsDefined() && val.IsSequence())
+        auto section = yaml[section_name];
+        auto val = section[name];
+        if (val.IsDefined() && val.IsSequence()) {
             return ConvertNode2Sequence<T>(val);
+        }
 
         // this is OK when nothing inside
-        XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+        XLOG::d.t("Absent/Empty node {}.{} type is {}", section_name, name,
                   val.Type());
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), Section, Name,
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, name,
                 e.what());
     }
     return {};
@@ -376,15 +369,18 @@ inline StringPairArray GetPairArray(std::string_view section_name,
                                     int *error_out = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
-        if (error_out) *error_out = Error::kEmpty;
+        if (error_out) {
+            *error_out = Error::kEmpty;
+        }
 
         return {};
     }
     try {
         auto section = yaml[section_name];
         auto val = section[value_name];
-        if (val.IsDefined() && val.IsSequence())
+        if (val.IsDefined() && val.IsSequence()) {
             return ConvertNode2StringPairArray(val);
+        }
 
         // this is OK when nothing inside
         XLOG::d.t("Absent/Empty node {}.{} type is {}", section_name,
@@ -399,38 +395,35 @@ inline StringPairArray GetPairArray(std::string_view section_name,
 
 // gets string from the yaml and split it in table using space as divider
 std::vector<std::string> GetInternalArray(std::string_view section_name,
-                                          std::string_view value_name,
-                                          int *error_out = nullptr);
+                                          std::string_view value_name);
 
-// opposite operation for the GetInternalArray
 void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
                       std::vector<std::string> &arr);
 
-// opposite operation for the GetInternalArray
-// used ONLY for testing
 void PutInternalArray(std::string_view section, std::string_view name,
-                      std::vector<std::string> &arr, int *error_out = nullptr);
+                      std::vector<std::string> &arr);
 
 // gets string from the yaml and split it in table using space as divider
 std::vector<std::string> GetInternalArray(const YAML::Node &yaml_node,
                                           std::string_view name);
 
 template <typename T>
-std::vector<T> GetArray(const YAML::Node &yaml, std::string_view node_name,
-                        int *error_out = nullptr) {
+std::vector<T> GetArray(const YAML::Node &yaml, std::string_view node_name) {
     try {
         if (yaml.size() == 0) {
-            if (error_out) *error_out = Error::kEmpty;
             return {};
         }
         auto val = yaml[node_name];
-        if (val.IsSequence()) return ConvertNode2Sequence<T>(val);
+        if (val.IsSequence()) {
+            return ConvertNode2Sequence<T>(val);
+        }
 
-        if (!val.IsDefined() || val.IsNull())
+        if (!val.IsDefined() || val.IsNull()) {
             XLOG::t("Node '{}' is not defined/empty,return empty array",
                     node_name);
-        else
+        } else {
             XLOG::d("Node '{}' has bad type [{}]", node_name, val.Type());
+        }
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
                 wtools::ToUtf8(GetPathOfLoadedConfig()), node_name, e.what());
@@ -706,29 +699,36 @@ private:
 
             bool only_v4 = !ipv6_;
             bool entry_ipv6 = of::IsIpV6(entry);
-            //::IsIpV6(entry);
 
             // skipping ipv6 entries in ipv4 mode
-            if (only_v4 && entry_ipv6) continue;
+            if (only_v4 && entry_ipv6) {
+                continue;
+            }
 
             only_from_.push_back(entry);
 
             // skipping because of
             // * in ipv4-mode no mapping
             // * for ipv6-entry no mapping too
-            if (only_v4 || entry_ipv6) continue;
+            if (only_v4 || entry_ipv6) {
+                continue;
+            }
 
             // ipv6-mode:
             if (of::IsAddressV4(entry)) {
                 // V4 address we are mapping to ipv6
                 auto mapped = of::MapToV6Address(entry);
-                if (mapped.empty()) continue;
+                if (mapped.empty()) {
+                    continue;
+                }
 
                 only_from_.push_back(mapped);
             } else if (of::IsNetworkV4(entry)) {
                 // V4 network we are mapping to ipv6
                 auto mapped = of::MapToV6Network(entry);
-                if (mapped.empty()) continue;
+                if (mapped.empty()) {
+                    continue;
+                }
 
                 only_from_.push_back(mapped);
             }
@@ -854,43 +854,6 @@ private:
     bool trace_{false};
 };
 
-/*
-plugins:
-# scripts in plugin
-    enabled : no
-    # default value, you may disable all scripts in local with no
-    run : yes
-    # folder : default or 'c:\myfolder\'  or whatever your want
-    folder :
-        - default   # special keyword to use default location
-        - c:\mydlx  #
-        - c:\zx     #
-    # example: the windows_updates.vbs
-    # plugin is executed asynchronous
-    # and is only updated every 3600 seconds
-    # it may fail(timeout / error) up to 3 times before the last known data
-is discarded execution : # execution pattern for  windows - updates.vbs:
--pattern : windows_updates.vbs async : yes timeout : 120 cache_age : 3600
-retry_count : 3 description : Update!!!!
-
-
-    - pattern : ps_perf.ps1
-    timeout : 20
-
-    - pattern : '*.ps1'
-    timeout : 10
-
-    - pattern : '*'
-    timeout : 30
-    # When using the Check_MK Inventory plugin, it is a good idea to make
-the # plugin being executed asynchronous to prevent it from hooking up the
-    # whole agent processing.Additionally it should have a execution
-timeout.
-    - pattern     : mk_inventory.ps1
-    async : yes
-    timeout : 240
-*/
-
 // $BUILTIN_PLUGINS_PATH$ -> c:\Program Files (x86)\checkmk\service\plugins
 // $CUSTOM_PLUGINS_PATH$ -> c:\ProgramData\checkmk\agent\plugins
 // $CUSTOM_AGENT_PATH$ ->c:\ProgramData\checkmk\agent
@@ -950,7 +913,9 @@ void ApplyValueIfScalar(const YAML::Node &entry, T &var,
     }
     try {
         auto v = entry[name.data()];
-        if (v.IsDefined() && v.IsScalar()) var = v.as<T>(var);
+        if (v.IsDefined() && v.IsScalar()) {
+            var = v.as<T>(var);
+        }
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + "Exception '{}'", e.what());
     }
@@ -1001,10 +966,9 @@ public:
 
     private:
         void validateAndFix() {
-            if (cacheAge() >= kMinimumCacheAge) return;
-            if (cacheAge() == 0) return;  // this is special case
-
-            if (!async_ && cacheAge() == 0) return;
+            if (cacheAge() >= kMinimumCacheAge || cacheAge() == 0) {
+                return;
+            }
 
             XLOG::t(
                 "Plugin Entry '{}' has too low cache_age: [{}]. Setting at [{}]",
@@ -1090,10 +1054,11 @@ private:
     int max_wait_;
 };
 
-void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &ExeUnit,
-                          const std::vector<YAML::Node> &Yaml) noexcept;
+void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
+                          const std::vector<YAML::Node> &yaml_node) noexcept;
 
-// used to setup on start and forever. These environment variables are stable
+// used to setup on start and forever. These environment variables are
+// stable
 void SetupPluginEnvironment();
 
 void ProcessPluginEnvironment(
@@ -1101,7 +1066,7 @@ void ProcessPluginEnvironment(
         &func);
 
 // called on every connect from monitoring site.
-void SetupRemoteHostEnvironment(const std::string &IpAddress);
+void SetupRemoteHostEnvironment(const std::string &ip_address);
 
 namespace groups {
 extern Global global;

@@ -21,6 +21,7 @@
 #include "tools/_xlog.h"
 #include "upgrade.h"
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace {
 std::string ErrorCodeToMessage(std::error_code ec) {
@@ -241,10 +242,11 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
 [[nodiscard]] bool StoreFileAgressive(const std::wstring &name,
                                       const std::vector<char> &data,
                                       uint32_t attempts_count) {
-    using namespace std::chrono;
     for (uint32_t i = 0; i < attempts_count + 1; ++i) {
         auto success = StoreFile(name, data);
-        if (success) return true;
+        if (success) {
+            return true;
+        }
 
         // we try to kill potentially running process
         auto proc_name = GetProcessToKill(name);
@@ -254,21 +256,19 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
             return false;
         }
 
-        auto allowed_to_kill = IsAllowedToKill(proc_name);
-
-        if (!allowed_to_kill) return false;
+        if (!IsAllowedToKill(proc_name)) {
+            return false;
+        }
 
         wtools::KillProcessFully(proc_name);
-        constexpr auto delay = 500ms;
-        tools::sleep(delay);
+        tools::sleep(500ms);
     }
 
     return false;
 }
 
 [[nodiscard]] bool IsStoreFileAgressive() noexcept {
-    // stub function
-    return GetTryKillMode() != cma::cfg::values::kTryKillNo;
+    return GetTryKillMode() != cfg::values::kTryKillNo;
 }
 
 bool CheckAllFilesWritable(const std::string &directory) {
@@ -276,11 +276,13 @@ bool CheckAllFilesWritable(const std::string &directory) {
     for (const auto &p : fs::recursive_directory_iterator(directory)) {
         std::error_code ec;
         auto const &path = p.path();
-        if (fs::is_directory(path, ec)) continue;
-        if (!fs::is_regular_file(path, ec)) continue;
+        if (fs::is_directory(path, ec) || !fs::is_regular_file(path, ec))
+            continue;
 
         auto path_string = path.wstring();
-        if (path_string.empty()) continue;
+        if (path_string.empty()) {
+            continue;
+        }
 
         auto *handle =
             ::CreateFile(path_string.c_str(),                 // file to open
@@ -338,7 +340,9 @@ bool Process(const std::string &cap_name, ProcMode mode,
 
     while (!ifs.eof()) {
         auto [name, data, eof] = ExtractFile(ifs);
-        if (eof) return true;
+        if (eof) {
+            return true;
+        }
 
         if (name.empty()) {
             XLOG::l("CAP file {} looks as bad", cap_name);

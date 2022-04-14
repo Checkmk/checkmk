@@ -24,7 +24,7 @@ version of pymongo (at least 2.8).
 
 """
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 import argparse
 import configparser
@@ -36,7 +36,6 @@ import sys
 import time
 from collections import defaultdict
 from urllib.parse import quote_plus
-
 
 PY2 = sys.version_info[0] == 2
 
@@ -130,25 +129,67 @@ def section_flushing(server_status):
     sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
 
 
-def sections_replica(server_status):
-    repl_info = server_status.get("repl")
+def _write_section_replica(
+    primary,
+    secondary_actives=None,
+    secondary_passives=None,
+    arbiters=None,
+):
+    """
+    >>> _write_section_replica(None)
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": null, "secondaries": {"active": [], "passive": []}, "arbiters": []}
+    >>> _write_section_replica("primary")
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": "primary", "secondaries": {"active": [], "passive": []}, "arbiters": []}
+    >>> _write_section_replica("primary", secondary_actives=["1", "2"], secondary_passives=["3"], arbiters=["4"])
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": "primary", "secondaries": {"active": ["1", "2"], "passive": ["3"]}, "arbiters": ["4"]}
+    """
+    sys.stdout.write("<<<mongodb_replica:sep(0)>>>\n")
+    sys.stdout.write(
+        json.dumps(
+            {
+                "primary": primary,
+                "secondaries": {
+                    "active": secondary_actives or [],
+                    "passive": secondary_passives or [],
+                },
+                "arbiters": arbiters or [],
+            }
+        )
+        + "\n"
+    )
 
+
+def sections_replica(server_status):
+    """
+    >>> sections_replica({})
+    >>> sections_replica({"repl": {}})
+    >>> sections_replica({"repl": {"primary": "abc"}})
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": "abc", "secondaries": {"active": [], "passive": []}, "arbiters": []}
+    """
+    repl_info = server_status.get("repl")
     if not repl_info:
         return
-    sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-    sys.stdout.write("primary\t%s\n" % repl_info.get("primary", "n/a"))
-    if repl_info.get("hosts"):
-        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
-
-    if repl_info.get("arbiters"):
-        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
+    _write_section_replica(
+        repl_info.get("primary"),
+        secondary_actives=repl_info.get("hosts"),
+        secondary_passives=repl_info.get("passives"),
+        arbiters=repl_info.get("arbiters"),
+    )
 
 
 def sections_replica_set(client):
     try:
         rep_set_status = client.admin.command("replSetGetStatus")
-    except pymongo.errors.OperationFailure as e:
-        sys.stderr.write("%s\n" % e)
+    except pymongo.errors.OperationFailure:
+        LOGGER.debug(
+            "Calling replSetGetStatus returned an error. "
+            "This might be ok if you have not configured replication on you mongodb server.",
+            exc_info=True,
+        )
         return
 
     sys.stdout.write("<<<mongodb_replica_set:sep(9)>>>\n")
@@ -186,7 +227,7 @@ def _get_replication_info(client, databases):
     :return: result
     """
     oplog = databases.get("local", {}).get("collstats", {}).get("oplog.rs", {})
-    result = dict()
+    result = {}
 
     # Returns the total size of the oplog in bytes
     # This refers to the total amount of space allocated to the oplog rather than
@@ -274,7 +315,7 @@ def _get_balancer_info(client):
     :param client: mongdb client
     :return: balancer status dictionary
     """
-    balancer_dict = dict()
+    balancer_dict = {}
 
     # check if balancer is enabled for cluster
     settings = client["config"]["settings"]
@@ -346,7 +387,7 @@ def _aggregate_chunks_and_shards_info(
     _lensing_data(databases_dict)
 
     # shards_dict: add shard information to collections statistic dictionary
-    all_information_dict = dict()
+    all_information_dict = {}
     all_information_dict["databases"] = databases_dict
     all_information_dict["shards"] = shards_dict
     all_information_dict["balancer"] = balancer_dict
@@ -443,7 +484,7 @@ def _get_shards_information(client):
     :param client: mongodb client
     :return: dictionary with shards information
     """
-    shard_dict = dict()
+    shard_dict = {}
     for shard in client.config.shards.find():
         shard_name = shard.get("_id")
         shard.pop("_id", None)
@@ -635,8 +676,8 @@ def _get_indexes_information(client, databases):
                         }
                     ]
                 )
-            except pymongo.errors.OperationFailure as e:
-                sys.stderr.write("%s\n" % e)
+            except pymongo.errors.OperationFailure:
+                LOGGER.debug("Could not access $indexStat", exc_info=True)
                 return
 
     return indexes_dict
@@ -654,11 +695,8 @@ def get_timestamp(text):
 
 def read_statefile(state_file):
     try:
-        state_fd = open(state_file)
-        try:
+        with open(state_file) as state_fd:
             last_timestamp = int(state_fd.read())
-        finally:
-            state_fd.close()
     except (IOError, ValueError):
         return None, True
 
@@ -679,11 +717,8 @@ def update_statefile(state_file, startup_warnings):
         return
     timestamp = get_timestamp(lines[-1])
     try:
-        state_fd = open(state_file, "w")
-        try:
+        with open(state_file, "w") as state_fd:
             state_fd.write("%d" % timestamp)
-        finally:
-            state_fd.close()
     except (IOError, TypeError):
         # TypeError: timestamp was None, but at least ctime is updated.
         pass
@@ -939,8 +974,7 @@ def main(argv=None):
         # this is a special case: replica set without master
         # this is detected here
         if "primary" in repl_info and not repl_info.get("primary"):
-            sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-            sys.stdout.write("primary\tn/a\n")
+            _write_section_replica(None)
         return
 
     piggyhost = repl_info.get("setName") if repl_info else None

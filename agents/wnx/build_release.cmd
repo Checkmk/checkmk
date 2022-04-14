@@ -114,7 +114,7 @@ goto end
 :error
 powershell Write-Host "Unit test failed" -Foreground Red
 powershell Write-Host "Killing msi in artefacts" -Foreground Red
-call %cur_dir%\clean_artifacts.cmd
+call %cur_dir%\clean_artefacts.cmd
 exit 100
 :end
 

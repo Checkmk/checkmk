@@ -100,7 +100,7 @@ def _format_error(error):
     return "%s%s - %s" % (2 * _GAP, tty.error, error)
 
 
-#.
+# .
 #   .--dump----------------------------------------------------------------.
 #   |                         _                                            |
 #   |                      __| |_   _ _ __ ___  _ __                       |
@@ -113,6 +113,7 @@ def _format_error(error):
 
 class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
+
     _keep_num_dumps = 5
 
     def __init__(self, parameters: Optional[DiagnosticsOptionalParameters] = None) -> None:
@@ -125,7 +126,7 @@ class DiagnosticsDump:
         self.tarfile_path = dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
         self.tarfile_created = False
 
-    def _get_fixed_elements(self) -> 'List[ABCDiagnosticsElement]':
+    def _get_fixed_elements(self) -> "List[ABCDiagnosticsElement]":
         return [
             GeneralDiagnosticsElement(),
             PerfDataDiagnosticsElement(),
@@ -135,7 +136,7 @@ class DiagnosticsDump:
 
     def _get_optional_elements(
             self,
-            parameters: Optional[DiagnosticsOptionalParameters]) -> 'List[ABCDiagnosticsElement]':
+            parameters: Optional[DiagnosticsOptionalParameters]) -> "List[ABCDiagnosticsElement]":
         if parameters is None:
             return []
 
@@ -174,8 +175,8 @@ class DiagnosticsDump:
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
-        with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar,\
-             tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder:
+        with tarfile.open(name=self.tarfile_path, mode="w:gz") as tar, tempfile.TemporaryDirectory(
+                dir=self.dump_folder) as tmp_dump_folder:
             for filepath in self._get_filepaths(Path(tmp_dump_folder)):
                 rel_path = str(filepath).replace(str(tmp_dump_folder), "")
                 tar.add(str(filepath), arcname=rel_path)
@@ -212,7 +213,8 @@ class DiagnosticsDump:
 
         dumps = sorted(
             [(dump.stat().st_mtime, dump) for dump in self.dump_folder.glob("*%s" % SUFFIX)],
-            key=lambda t: t[0])[:-self._keep_num_dumps]
+            key=lambda t: t[0],
+        )[:-self._keep_num_dumps]
 
         section.section_step("Cleanup dump folder",
                              add_info="keep last %d dumps" % self._keep_num_dumps)
@@ -228,7 +230,7 @@ class DiagnosticsDump:
                 raise
 
 
-#.
+# .
 #   .--collectors----------------------------------------------------------.
 #   |                        _ _           _                               |
 #   |               ___ ___ | | | ___  ___| |_ ___  _ __ ___               |
@@ -275,8 +277,9 @@ class OMDConfigCollector(ABCCollector):
 
 class CheckmkServerNameCollector(ABCCollector):
     def _collect_infos(self) -> Optional[str]:
-        query = ("GET hosts\nColumns: host_name\n"
-                 "Filter: host_labels = 'cmk/check_mk_server' 'yes'\n")
+        query = (
+            "GET services\nColumns: host_name\nFilter: service_description ~ OMD %s performance\n" %
+            cmk_version.omd_site())
         result = livestatus.LocalConnection().query(query)
         try:
             return result[0][0]
@@ -284,7 +287,7 @@ class CheckmkServerNameCollector(ABCCollector):
             return None
 
 
-#.
+# .
 #   .--elements------------------------------------------------------------.
 #   |                   _                           _                      |
 #   |               ___| | ___ _ __ ___   ___ _ __ | |_ ___                |

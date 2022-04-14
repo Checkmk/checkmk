@@ -1,0 +1,9 @@
+Title: fortigate_sensors: Add support for FortiGate 501E and FortiGate 100F
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649943622
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1

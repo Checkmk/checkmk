@@ -60,7 +60,6 @@ _STR_PATHS: Final = {
     "check_manpages_dir",
     "agents_dir",
     "web_dir",
-    "bin_dir",
     "lib_dir",
 }
 

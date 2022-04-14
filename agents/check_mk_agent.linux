@@ -796,25 +796,23 @@ section_megaraid() {
     elif inpath storcli64; then
         MegaCli_bin="storcli64"
     else
-        MegaCli_bin="unknown"
+        return 1
     fi
 
-    if [ "${MegaCli_bin}" != "unknown" ]; then
-        echo '<<<megaraid_pdisks>>>'
-        for part in $(${MegaCli_bin} -EncInfo -aALL -NoLog </dev/null |
-            sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ "${part}" = adapter ] && printf "\n"
-            [ "${part}" = 'Enclosure' ] && printf "\ndev2enc"
-            printf " %s" "${part}"
-        done
-        echo
-        ${MegaCli_bin} -PDList -aALL -NoLog </dev/null |
-            grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
-        echo '<<<megaraid_ldisks>>>'
-        ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
-        echo '<<<megaraid_bbu>>>'
-        ${MegaCli_bin} -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
-    fi
+    echo '<<<megaraid_pdisks>>>'
+    for part in $(${MegaCli_bin} -EncInfo -aALL -NoLog </dev/null |
+        sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
+        [ "${part}" = adapter ] && printf "\n"
+        [ "${part}" = 'Enclosure' ] && printf "\ndev2enc"
+        printf " %s" "${part}"
+    done
+    echo
+    ${MegaCli_bin} -PDList -aALL -NoLog </dev/null |
+        grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
+    echo '<<<megaraid_ldisks>>>'
+    ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
+    echo '<<<megaraid_bbu>>>'
+    ${MegaCli_bin} -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
 }
 
 section_3ware_raid() {

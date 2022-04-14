@@ -122,6 +122,9 @@ class TCPFetcher(AgentFetcher):
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        if mode is not Mode.CHECKING:
+            raise MKFetcherError(f"Refusing to fetch live data during {mode.name.lower()}")
+
         if self.use_only_cache:
             raise MKFetcherError(
                 "Got no data: No usable cache file present at %s" % self.file_cache.base_path

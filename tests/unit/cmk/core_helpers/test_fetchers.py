@@ -852,7 +852,30 @@ class TestTCPFetcher:
 
         assert fetched.is_ok()
 
-    def test_open_exception_becomes_fetche_rerror(
+    def test_fetching_without_cache_raises_in_non_checking_mode(self) -> None:
+        with TCPFetcher(
+            StubFileCache(
+                HostName("hostname"),
+                base_path=Path(os.devnull),
+                max_age=MaxAge.none(),
+                disabled=False,
+                use_outdated=True,
+                simulation=False,
+            ),
+            family=socket.AF_INET,
+            address=("127.0.0.1", 6556),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.1,
+            encryption_settings={"use_regular": "allow"},
+            use_only_cache=False,
+        ) as fetcher:
+            for mode in Mode:
+                if mode is Mode.CHECKING:
+                    continue
+                fetched = fetcher.fetch(mode)
+                assert isinstance(fetched.error, MKFetcherError)
+
+    def test_open_exception_becomes_fetcher_rerror(
         self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:
         with TCPFetcher(

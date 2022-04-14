@@ -11,7 +11,8 @@ from contextlib import suppress
 from pathlib import Path
 from uuid import UUID
 
-from agent_receiver.certificates import CertValidationRoute, uuid_from_pem_csr
+from agent_receiver.apps import agent_receiver_app, cert_validation_router
+from agent_receiver.certificates import uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
     get_root_cert,
@@ -32,8 +33,8 @@ from agent_receiver.models import (
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
 )
-from agent_receiver.utils import get_registration_status_from_file, Host, site_name_prefix
-from fastapi import APIRouter, Depends, FastAPI, File, Header, HTTPException, Response, UploadFile
+from agent_receiver.utils import get_registration_status_from_file, Host
+from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import (
     HTTP_204_NO_CONTENT,
@@ -42,13 +43,6 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-main_app = FastAPI(
-    openapi_url=None,
-    docs_url=None,
-    redoc_url=None,
-)
-agent_receiver_app = FastAPI(title="Checkmk Agent Receiver")
-cert_validation_router = APIRouter(route_class=CertValidationRoute)
 security = HTTPBasic()
 
 
@@ -310,7 +304,3 @@ async def registration_status(
         type=host.host_type,
         message="Host registered",
     )
-
-
-agent_receiver_app.include_router(cert_validation_router)
-main_app.mount(site_name_prefix("agent-receiver"), agent_receiver_app)

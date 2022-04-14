@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
+from cmk.gui.plugins.metrics import graph_info, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -43,17 +39,6 @@ metric_info["citrix_load"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["citrix_licenses"] = {
-    "title": _("Citrix licenses"),
-    "metrics": [("licenses", "area"),],
-    "scalars": [
-        "licenses:warn",
-        "licenses:crit",
-        ("licenses:max#000000", "Installed licenses"),
-    ],
-    "range": (0, "licenses:max"),
-}
 
 graph_info["citrix_serverload"] = {
     "title": _("Citrix Serverload"),

@@ -1,0 +1,12 @@
+Title: rename license graph
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649934740
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p24
+
+License graph are renamed from "Citrix License" to "License"

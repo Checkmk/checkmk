@@ -34,7 +34,6 @@ from typing import (
     List,
     Literal,
     Mapping,
-    NamedTuple,
     NewType,
     Optional,
     Protocol,
@@ -102,7 +101,7 @@ class PerformanceContainer(BaseModel):
     rate_metrics: Optional[Mapping[MetricName, RateMetric]]
 
 
-class PerformancePod(NamedTuple):
+class PerformancePod(BaseModel):
     lookup_name: PodLookupName
     containers: List[PerformanceContainer]
 

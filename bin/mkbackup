@@ -46,7 +46,7 @@ import cmk.utils.store as store
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.exceptions import MKTerminate, MKGeneralException
 
-VERSION = "2.0.0p23"
+VERSION = "2.0.0p24"
 
 # Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
 # files available... :-/

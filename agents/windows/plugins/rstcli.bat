@@ -1,5 +1,5 @@
 @ECHO off & setlocal EnableDelayedExpansion
-set CMK_VERSION="2.0.0p23"
+set CMK_VERSION="2.0.0p24"
 REM ***
 REM * plugin to to monitor Intel RST raids
 REM * customize StorCli path to your needs

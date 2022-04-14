@@ -1,0 +1,12 @@
+Title: citrix_state.controller: Provide info on powered off machine
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649935344
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+In case of an empty "controller" field, the message "Machine powered off"
+is displayed.

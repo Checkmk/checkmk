@@ -70,7 +70,6 @@ import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
 from cmk.base.api.agent_based import register
-from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 
 import cmk.gui.config
 import cmk.gui.groups
@@ -283,9 +282,8 @@ class UpdateConfig:
         ]
 
     def _initialize_base_environment(self) -> None:
-        # Failing to load the config here will result in the loss of *all*
-        # services due to an exception thrown by cmk.base.config.service_description
-        # in _parse_autocheck_entry of cmk.base.autochecks.
+        # Failing to load the config here will result in the loss of *all* services due to (...)
+        # EDIT: This is no longer the case; but we probably need the config for other reasons?
         cmk.base.config.load()
         cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
 
@@ -384,7 +382,6 @@ class UpdateConfig:
         return global_config
 
     def _rewrite_autochecks(self) -> None:
-        check_variables = cmk.base.config.get_check_variables()
         failed_hosts = []
 
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
@@ -392,25 +389,18 @@ class UpdateConfig:
 
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
+            store = cmk.base.autochecks.AutochecksStore(hostname)
+
             try:
-                autochecks = load_unmigrated_autocheck_entries(
-                    autocheck_file,
-                    check_variables,
-                )
+                autochecks = store.read()
             except MKGeneralException as exc:
-                msg = (
-                    "%s\nIf you encounter this error during the update process "
-                    "you need to replace the the variable by its actual value, e.g. "
-                    "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc
-                )
                 if self._arguments.debug:
-                    raise MKGeneralException(msg)
-                self._logger.error(msg)
+                    raise
+                self._logger.error(str(exc))
                 failed_hosts.append(hostname)
                 continue
 
-            autochecks = [self._fix_entry(s, all_rulesets, hostname) for s in autochecks]
-            cmk.base.autochecks.AutochecksStore(hostname).write(autochecks)
+            store.write([self._fix_entry(s, all_rulesets, hostname) for s in autochecks])
 
         if failed_hosts:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)

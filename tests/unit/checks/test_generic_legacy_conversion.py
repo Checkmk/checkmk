@@ -894,12 +894,12 @@ def test_all_check_variables_present(fix_plugin_legacy):
     missing_variables = expected_check_variables - set(fix_plugin_legacy.check_variables)
 
     assert not missing_variables, (
-        "'%s' were variables present in config.get_check_variables(). "
-        "They may be needed to resolve the default parameters in users autochecks file. "
-        "If you are sure this is not the case, you may remove the variables from the "
-        "list above. If they may still be needed, you may add them to the module "
-        "cmk.utils.migrated_check_variables."
-    ) % sorted(missing_variables)
+        "It appears you have removed the following variables from the global scope of a check: "
+        f"{sorted(missing_variables)!r}\n"
+        "Note that such variables were configurable via .mk files. By removing them, you may "
+        "inadvertedly break that functionality.\n"
+        "But: Most of the time that is not the case, and you can simply remove them."
+    )
 
 
 def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):

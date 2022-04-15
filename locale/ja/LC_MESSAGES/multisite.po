@@ -2844,6 +2844,12 @@ msgstr "選択したサイトでアクティブ化"
 msgid "Activate only services matching"
 msgstr "一致するサービスのみをアクティブ化する"
 
+msgid ""
+"Activate or deactivate TLS for the connection. No certificate validation "
+"means that the server certificate will not be validated by the locally "
+"available certificate authorities."
+msgstr ""
+
 msgid "Activate pending changes"
 msgstr "保留中の変更をアクティブ化する"
 
@@ -3882,6 +3888,10 @@ msgstr "期間フィルターの指定は、<operator><int>の形式である必
 
 msgid "Age in weeks of log data to fetch"
 msgstr "フェッチするログデータの週単位の経過時間"
+
+#, fuzzy
+msgid "Age levels"
+msgstr "使用レベル"
 
 msgid "Age of Anti-Virus signature"
 msgstr "アンチウイルス署名の年数"
@@ -6185,9 +6195,6 @@ msgstr "バックアップモード"
 msgid "Backup codes"
 msgstr "バックアップモード"
 
-msgid "Backup conditions"
-msgstr "バックアップ条件"
-
 msgid "Backup configured"
 msgstr "バックアップが構成されています"
 
@@ -6262,6 +6269,10 @@ msgstr "バンド"
 
 msgid "Bandwidth"
 msgstr "帯域幅"
+
+#, fuzzy
+msgid "Bandwidth levels"
+msgstr "パスレベル"
 
 msgid "Bank (30 day) month"
 msgstr "銀行(30日)月"
@@ -13846,6 +13857,10 @@ msgstr "ディスカバリー出力"
 
 msgid "Discovery and Checkmk settings"
 msgstr "DiscoveryとCheckmkの設定"
+
+#, fuzzy
+msgid "Discovery failed"
+msgstr "検出に失敗しました: %s"
 
 msgid "Discovery mode"
 msgstr "ディスカバリーモード"
@@ -30587,6 +30602,9 @@ msgstr "レベルなし"
 msgid "No SNMP"
 msgstr "SNMPなし"
 
+msgid "No TLS"
+msgstr ""
+
 msgid "No TX Credits"
 msgstr "TXクレジットなし"
 
@@ -39864,12 +39882,6 @@ msgid "Set the width"
 msgstr "幅を設定する"
 
 msgid ""
-"Set this in order to specify the name of the virtual host for the query "
-"(using HTTP/1.1). When you leave this empty, then the IP address of the host "
-"will be used instead."
-msgstr ""
-
-msgid ""
 "Set this in order to specify the name of the virtual host for the query."
 msgstr ""
 
@@ -43583,6 +43595,18 @@ msgstr "リスナーのTCPポート"
 
 msgid "TIME_WAIT"
 msgstr "TIME_WAIT"
+
+#, fuzzy
+msgid "TLS"
+msgstr "SSL/TLS"
+
+#, fuzzy
+msgid "TLS without certificate validation"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
+msgid "TLS/HTTPS configuration"
+msgstr "RRA構成"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Httpsが無効になっています"
@@ -54326,9 +54350,6 @@ msgstr "SSLを使用し、TLSv1.2を適用します"
 msgid "Use SSL/HTTPS for the connection"
 msgstr "接続にSSL/HTTPSを使用する"
 
-msgid "Use SSL/HTTPS for the connection."
-msgstr "接続にはSSL/HTTPSを使用します。"
-
 msgid "Use STARTTLS for the connection."
 msgstr "接続にはSTARTTLSを使用します。"
 
@@ -57131,6 +57152,11 @@ msgid ""
 msgstr ""
 "ページコンテキスト(フィルター)からの追加情報を上記のタイトルに追加する必要が"
 "あるかどうか。"
+
+msgid ""
+"Whether or not the last bulk discovery failed. It is set to True once it "
+"fails and unset in case a later discovery succeeds."
+msgstr ""
 
 msgid ""
 "Whether or not the user is permitted to see the number of open events in the "
@@ -61256,9 +61282,6 @@ msgstr "上限"
 msgid "use SSL"
 msgstr "SSLを使用する"
 
-msgid "use SSL/HTTPS"
-msgstr "SSL/HTTPSを使用する"
-
 msgid "use alias"
 msgstr "エイリアスを使用"
 
@@ -61407,6 +61430,15 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Backup conditions"
+#~ msgstr "バックアップ条件"
+
+#~ msgid "Use SSL/HTTPS for the connection."
+#~ msgstr "接続にはSSL/HTTPSを使用します。"
+
+#~ msgid "use SSL/HTTPS"
+#~ msgstr "SSL/HTTPSを使用する"
 
 #~ msgid "By default the standard IMAP Port 143 is used."
 #~ msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"

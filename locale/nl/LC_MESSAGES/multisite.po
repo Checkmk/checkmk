@@ -2965,6 +2965,12 @@ msgstr "Activeren op geselecteerde sites"
 msgid "Activate only services matching"
 msgstr "Activeer alleen diensten die overeenkomen"
 
+msgid ""
+"Activate or deactivate TLS for the connection. No certificate validation "
+"means that the server certificate will not be validated by the locally "
+"available certificate authorities."
+msgstr ""
+
 msgid "Activate pending changes"
 msgstr "In behandeling zijnde wijzigingen activeren"
 
@@ -4040,6 +4046,10 @@ msgstr ""
 
 msgid "Age in weeks of log data to fetch"
 msgstr "Leeftijd in weken van op te halen loggegevens"
+
+#, fuzzy
+msgid "Age levels"
+msgstr "Gebruiksniveaus"
 
 msgid "Age of Anti-Virus signature"
 msgstr "Leeftijd van Anti-Virus handtekening"
@@ -6398,9 +6408,6 @@ msgstr "Back-up modi"
 msgid "Backup codes"
 msgstr "Back-up modi"
 
-msgid "Backup conditions"
-msgstr "Back-up voorwaarden"
-
 msgid "Backup configured"
 msgstr "Back-up geconfigureerd"
 
@@ -6475,6 +6482,10 @@ msgstr "Band"
 
 msgid "Bandwidth"
 msgstr "Bandbreedte"
+
+#, fuzzy
+msgid "Bandwidth levels"
+msgstr "padniveaus"
 
 msgid "Bank (30 day) month"
 msgstr "Bank (30 dagen) maand"
@@ -14322,6 +14333,10 @@ msgstr "Ontdekking Uitgangen"
 
 msgid "Discovery and Checkmk settings"
 msgstr "Discovery en Checkmk instellingen"
+
+#, fuzzy
+msgid "Discovery failed"
+msgstr "ontdekking mislukt: %s"
 
 msgid "Discovery mode"
 msgstr "Ontdekkingsmodus"
@@ -31630,6 +31645,9 @@ msgstr "Geen niveaus"
 msgid "No SNMP"
 msgstr "Geen SNMP"
 
+msgid "No TLS"
+msgstr ""
+
 msgid "No TX Credits"
 msgstr "Geen TX-kredieten"
 
@@ -41178,15 +41196,6 @@ msgid "Set the width"
 msgstr "Stel de breedte in"
 
 msgid ""
-"Set this in order to specify the name of the virtual host for the query "
-"(using HTTP/1.1). When you leave this empty, then the IP address of the host "
-"will be used instead."
-msgstr ""
-"Stel dit in om de naam van de virtuele host voor de query (met HTTP/1.1) op "
-"te geven. Als je dit leeg laat, dan zal in plaats daarvan het IP adres van "
-"de host gebruikt worden."
-
-msgid ""
 "Set this in order to specify the name of the virtual host for the query."
 msgstr "Stel dit in om de naam van de virtuele host voor de query op te geven."
 
@@ -45046,6 +45055,18 @@ msgstr "TCP-poort voor luisteraar"
 
 msgid "TIME_WAIT"
 msgstr "TIJD_WACHT"
+
+#, fuzzy
+msgid "TLS"
+msgstr "SSL/TLS"
+
+#, fuzzy
+msgid "TLS without certificate validation"
+msgstr "SSL-certificaat validatie"
+
+#, fuzzy
+msgid "TLS/HTTPS configuration"
+msgstr "RRA-configuratie"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https uitgeschakeld"
@@ -56743,9 +56764,6 @@ msgstr "SSL gebruiken, TLSv1.2 afdwingen"
 msgid "Use SSL/HTTPS for the connection"
 msgstr "Gebruik SSL/HTTPS voor de verbinding"
 
-msgid "Use SSL/HTTPS for the connection."
-msgstr "Gebruik SSL/HTTPS voor de verbinding."
-
 msgid "Use STARTTLS for the connection."
 msgstr "Gebruik STARTTLS voor de verbinding."
 
@@ -59775,6 +59793,11 @@ msgid ""
 msgstr ""
 "Of er al dan niet extra informatie uit de paginacontext (filters) moet "
 "worden toegevoegd aan de hierboven gegeven titel."
+
+msgid ""
+"Whether or not the last bulk discovery failed. It is set to True once it "
+"fails and unset in case a later discovery succeeds."
+msgstr ""
 
 msgid ""
 "Whether or not the user is permitted to see the number of open events in the "
@@ -64136,9 +64159,6 @@ msgstr "bovengrens"
 msgid "use SSL"
 msgstr "SSL gebruiken"
 
-msgid "use SSL/HTTPS"
-msgstr "SSL/HTTPS gebruiken"
-
 msgid "use alias"
 msgstr "alias gebruiken"
 
@@ -64287,6 +64307,24 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Backup conditions"
+#~ msgstr "Back-up voorwaarden"
+
+#~ msgid ""
+#~ "Set this in order to specify the name of the virtual host for the query "
+#~ "(using HTTP/1.1). When you leave this empty, then the IP address of the "
+#~ "host will be used instead."
+#~ msgstr ""
+#~ "Stel dit in om de naam van de virtuele host voor de query (met HTTP/1.1) "
+#~ "op te geven. Als je dit leeg laat, dan zal in plaats daarvan het IP adres "
+#~ "van de host gebruikt worden."
+
+#~ msgid "Use SSL/HTTPS for the connection."
+#~ msgstr "Gebruik SSL/HTTPS voor de verbinding."
+
+#~ msgid "use SSL/HTTPS"
+#~ msgstr "SSL/HTTPS gebruiken"
 
 #~ msgid "By default the standard IMAP Port 143 is used."
 #~ msgstr "Standaard wordt de standaard IMAP poort 143 gebruikt."

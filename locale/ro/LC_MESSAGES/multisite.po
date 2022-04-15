@@ -2647,6 +2647,12 @@ msgstr "Conexiuni Active"
 msgid "Activate only services matching"
 msgstr "Activare Configurare"
 
+msgid ""
+"Activate or deactivate TLS for the connection. No certificate validation "
+"means that the server certificate will not be validated by the locally "
+"available certificate authorities."
+msgstr ""
+
 #, fuzzy
 msgid "Activate pending changes"
 msgstr "Activare Schimbări!"
@@ -3796,6 +3802,10 @@ msgstr ""
 
 msgid "Age in weeks of log data to fetch"
 msgstr ""
+
+#, fuzzy
+msgid "Age levels"
+msgstr "Editeaza regulile de loguri"
 
 msgid "Age of Anti-Virus signature"
 msgstr ""
@@ -6088,9 +6098,6 @@ msgstr "foloseste numele portului"
 msgid "Backup codes"
 msgstr "foloseste numele portului"
 
-msgid "Backup conditions"
-msgstr ""
-
 msgid "Backup configured"
 msgstr ""
 
@@ -6175,6 +6182,10 @@ msgstr "latime"
 
 #, fuzzy
 msgid "Bandwidth"
+msgstr "latime"
+
+#, fuzzy
+msgid "Bandwidth levels"
 msgstr "latime"
 
 msgid "Bank (30 day) month"
@@ -13746,6 +13757,10 @@ msgstr "Statusul Serverului"
 #, fuzzy
 msgid "Discovery and Checkmk settings"
 msgstr "Setari"
+
+#, fuzzy
+msgid "Discovery failed"
+msgstr "Ascude regulile de utilizator"
 
 #, fuzzy
 msgid "Discovery mode"
@@ -30318,6 +30333,9 @@ msgstr ""
 msgid "No SNMP"
 msgstr ""
 
+msgid "No TLS"
+msgstr ""
+
 msgid "No TX Credits"
 msgstr ""
 
@@ -39794,12 +39812,6 @@ msgid "Set the width"
 msgstr ""
 
 msgid ""
-"Set this in order to specify the name of the virtual host for the query "
-"(using HTTP/1.1). When you leave this empty, then the IP address of the host "
-"will be used instead."
-msgstr ""
-
-msgid ""
 "Set this in order to specify the name of the virtual host for the query."
 msgstr ""
 
@@ -43481,6 +43493,18 @@ msgstr "TCP-Port pentru Listener"
 
 msgid "TIME_WAIT"
 msgstr ""
+
+#, fuzzy
+msgid "TLS"
+msgstr "foloseste SSL/HTTPS"
+
+#, fuzzy
+msgid "TLS without certificate validation"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "TLS/HTTPS configuration"
+msgstr "Activare Configurare"
 
 #, fuzzy
 msgid "TLS/SSL/Https disabled"
@@ -52953,9 +52977,6 @@ msgstr ""
 msgid "Use SSL/HTTPS for the connection"
 msgstr "Portul TCP pentru conexiune"
 
-msgid "Use SSL/HTTPS for the connection."
-msgstr ""
-
 msgid "Use STARTTLS for the connection."
 msgstr ""
 
@@ -55471,6 +55492,11 @@ msgstr ""
 msgid ""
 "Whether or not additional information from the page context (filters) should "
 "be added to the title given above."
+msgstr ""
+
+msgid ""
+"Whether or not the last bulk discovery failed. It is set to True once it "
+"fails and unset in case a later discovery succeeds."
 msgstr ""
 
 msgid ""
@@ -59345,9 +59371,6 @@ msgstr "limita superioara"
 msgid "use SSL"
 msgstr "foloseste SSL"
 
-msgid "use SSL/HTTPS"
-msgstr "foloseste SSL/HTTPS"
-
 msgid "use alias"
 msgstr "foloseste alias"
 
@@ -59505,6 +59528,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "use SSL/HTTPS"
+#~ msgstr "foloseste SSL/HTTPS"
 
 #, fuzzy
 #~ msgid "IMAP authentification uses TLS"

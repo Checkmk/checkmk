@@ -2969,6 +2969,12 @@ msgstr "Auf ausgewählten Instanzen aktivieren"
 msgid "Activate only services matching"
 msgstr "Nur zutreffende Services aktivieren"
 
+msgid ""
+"Activate or deactivate TLS for the connection. No certificate validation "
+"means that the server certificate will not be validated by the locally "
+"available certificate authorities."
+msgstr ""
+
 msgid "Activate pending changes"
 msgstr "Aktiviere offene Änderungen"
 
@@ -4046,6 +4052,10 @@ msgstr "Die Angabe des Altersfilters muss das Format <operator><int> haben."
 
 msgid "Age in weeks of log data to fetch"
 msgstr "Alter der abgerufenen Logdaten (in Wochen)"
+
+#, fuzzy
+msgid "Age levels"
+msgstr "Auslastungsschwellwerte"
 
 msgid "Age of Anti-Virus signature"
 msgstr "Alter der AntiVirus-Signatur"
@@ -6400,9 +6410,6 @@ msgstr "Backup-Modi"
 msgid "Backup codes"
 msgstr "Backup-Modi"
 
-msgid "Backup conditions"
-msgstr "Backup-Bedingungen"
-
 msgid "Backup configured"
 msgstr "Datensicherung konfiguriert"
 
@@ -6477,6 +6484,10 @@ msgstr "Band"
 
 msgid "Bandwidth"
 msgstr "Bandbreite"
+
+#, fuzzy
+msgid "Bandwidth levels"
+msgstr "Ebenen in der Pfad-Hierarchie"
 
 msgid "Bank (30 day) month"
 msgstr "Vorrat (30 Tage) Monat"
@@ -14369,6 +14380,10 @@ msgstr "Erkennungs-Ausgaben"
 
 msgid "Discovery and Checkmk settings"
 msgstr "Inventarisierungs/Checkmk Einstellungen"
+
+#, fuzzy
+msgid "Discovery failed"
+msgstr "Erkennung fehlgeschlagen: %s"
 
 msgid "Discovery mode"
 msgstr "Erkennungsmodus"
@@ -31701,6 +31716,9 @@ msgstr "Keine Schwellwerte"
 msgid "No SNMP"
 msgstr "Kein SNMP"
 
+msgid "No TLS"
+msgstr ""
+
 msgid "No TX Credits"
 msgstr "No TX Credits"
 
@@ -41274,15 +41292,6 @@ msgid "Set the width"
 msgstr "Breite setzen"
 
 msgid ""
-"Set this in order to specify the name of the virtual host for the query "
-"(using HTTP/1.1). When you leave this empty, then the IP address of the host "
-"will be used instead."
-msgstr ""
-"Legen Sie hier den Namen des virtuellen Hosts für die HTTP/1.1-Abfrage fest. "
-"Wenn Sie diesen Wert leer lassen, dann wird die IP Adresse des Hosts "
-"verwendet."
-
-msgid ""
 "Set this in order to specify the name of the virtual host for the query."
 msgstr ""
 "Setzen Sie dies, um den Namen des virtuellen Hosts für die Abfrage anzugeben."
@@ -45144,6 +45153,18 @@ msgstr "TCP-Port des Listeners"
 
 msgid "TIME_WAIT"
 msgstr "TIME_WAIT"
+
+#, fuzzy
+msgid "TLS"
+msgstr "SSL/TLS"
+
+#, fuzzy
+msgid "TLS without certificate validation"
+msgstr "SSL Zertifikats Überprüfung"
+
+#, fuzzy
+msgid "TLS/HTTPS configuration"
+msgstr "RRA-Konfiguration"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https deaktiviert"
@@ -56804,9 +56825,6 @@ msgstr "Benutze SSL, erzwinge TLSv1.2"
 msgid "Use SSL/HTTPS for the connection"
 msgstr "SSL/HTTPS für Verbindung verwenden."
 
-msgid "Use SSL/HTTPS for the connection."
-msgstr "SSL/HTTPS für Verbindung verwenden."
-
 msgid "Use STARTTLS for the connection."
 msgstr "STARTTLS für Verbindung verwenden."
 
@@ -59822,6 +59840,11 @@ msgid ""
 msgstr ""
 "Ob nach dem oben genannten Titel zusätzliche Informationen aus dem "
 "Seitenkontext (Filtern) hinzugefügt werden sollen oder nicht."
+
+msgid ""
+"Whether or not the last bulk discovery failed. It is set to True once it "
+"fails and unset in case a later discovery succeeds."
+msgstr ""
 
 msgid ""
 "Whether or not the user is permitted to see the number of open events in the "
@@ -64189,9 +64212,6 @@ msgstr "Oberer Schwellwert"
 msgid "use SSL"
 msgstr "SSL verwenden"
 
-msgid "use SSL/HTTPS"
-msgstr "SSL/HTTPS verwenden"
-
 msgid "use alias"
 msgstr "Alias verwenden"
 
@@ -64341,6 +64361,24 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Backup conditions"
+#~ msgstr "Backup-Bedingungen"
+
+#~ msgid ""
+#~ "Set this in order to specify the name of the virtual host for the query "
+#~ "(using HTTP/1.1). When you leave this empty, then the IP address of the "
+#~ "host will be used instead."
+#~ msgstr ""
+#~ "Legen Sie hier den Namen des virtuellen Hosts für die HTTP/1.1-Abfrage "
+#~ "fest. Wenn Sie diesen Wert leer lassen, dann wird die IP Adresse des "
+#~ "Hosts verwendet."
+
+#~ msgid "Use SSL/HTTPS for the connection."
+#~ msgstr "SSL/HTTPS für Verbindung verwenden."
+
+#~ msgid "use SSL/HTTPS"
+#~ msgstr "SSL/HTTPS verwenden"
 
 #~ msgid "By default the standard IMAP Port 143 is used."
 #~ msgstr "Standard ist die Benutzung von IMAP Port 143"

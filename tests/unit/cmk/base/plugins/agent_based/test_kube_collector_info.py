@@ -84,7 +84,7 @@ def collectors_metadata(
     return CollectorComponentsMetadata(
         processing_log=metadata_collection_log,
         cluster_collector=ClusterCollectorMetadataFactory.build(),
-        node_collectors=[NodeMetadataFactory.build()],
+        nodes=[NodeMetadataFactory.build()],
     )
 
 
@@ -206,7 +206,7 @@ def test_check_all_ok_sections(collectors_metadata, collector_handling_logs):
             collector_daemons,
         )
     )
-    assert len(check_result) == 5
+    assert len(check_result) == 6
     assert all(isinstance(result, Result) for result in check_result)
     assert all(result.state == State.OK for result in check_result if isinstance(result, Result))
 
@@ -230,7 +230,7 @@ def test_check_with_no_collector_components_section(collectors_metadata):
     assert isinstance(check_result[0], Result) and check_result[0].summary.startswith(
         "Cluster collector version:"
     )
-    assert len(check_result) == 3
+    assert len(check_result) == 4
 
 
 @pytest.mark.parametrize("collector_metadata_handling_state", [CollectorState.ERROR])

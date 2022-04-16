@@ -35515,6 +35515,9 @@ msgstr ""
 msgid "Query Time Limit"
 msgstr ""
 
+msgid "Query Timeout"
+msgstr ""
+
 msgid "Query elasticsearch logs"
 msgstr ""
 
@@ -52942,10 +52945,6 @@ msgstr ""
 msgid "Use Livestatus Proxy Daemon"
 msgstr ""
 
-#, fuzzy
-msgid "Use Metrics of"
-msgstr "serviciu"
-
 msgid "Use Piggyback"
 msgstr ""
 
@@ -53151,6 +53150,10 @@ msgstr ""
 #, python-format
 msgid "Use maximum age from <a href=\"%s\">global settings</a> or above"
 msgstr ""
+
+#, fuzzy
+msgid "Use metrics of"
+msgstr "serviciu"
 
 #, fuzzy
 msgid "Use monitoring host name"

@@ -36967,6 +36967,10 @@ msgstr "Consulta %s recurso"
 msgid "Query Time Limit"
 msgstr "Limite de Tempo de Consulta"
 
+#, fuzzy
+msgid "Query Timeout"
+msgstr "Limite de Tempo de Consulta"
+
 msgid "Query elasticsearch logs"
 msgstr "Consulta de logs de procura elástica"
 
@@ -56683,10 +56687,6 @@ msgstr "Use LDAPS (SSL)"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Use o Livestatus Proxy Daemon"
 
-#, fuzzy
-msgid "Use Metrics of"
-msgstr "Métricas"
-
 msgid "Use Piggyback"
 msgstr "Use o Piggyback"
 
@@ -56881,6 +56881,10 @@ msgstr "Use a idade máxima de <a href=\"%s\">global settings</a>"
 #, python-format
 msgid "Use maximum age from <a href=\"%s\">global settings</a> or above"
 msgstr "Use a idade máxima de <a href=\"%s\">global settings</a> ou acima"
+
+#, fuzzy
+msgid "Use metrics of"
+msgstr "Métricas"
 
 msgid "Use monitoring host name"
 msgstr "Use o nome do host de monitoramento"

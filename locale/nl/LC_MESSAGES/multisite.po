@@ -36948,6 +36948,10 @@ msgstr "Bron %s opvragen"
 msgid "Query Time Limit"
 msgstr "Beperking van de zoektijd"
 
+#, fuzzy
+msgid "Query Timeout"
+msgstr "Beperking van de zoektijd"
+
 msgid "Query elasticsearch logs"
 msgstr "Zoeken in elasticsearch logs"
 
@@ -56730,10 +56734,6 @@ msgstr "LDAPS (SSL) gebruiken"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Gebruik Livestatus Proxy Daemon"
 
-#, fuzzy
-msgid "Use Metrics of"
-msgstr "Metriek"
-
 msgid "Use Piggyback"
 msgstr "Gebruik Piggyback"
 
@@ -56935,6 +56935,10 @@ msgid "Use maximum age from <a href=\"%s\">global settings</a> or above"
 msgstr ""
 "Gebruik de maximumleeftijd van <a href=\"%s\">globale instellingen</a> of "
 "hoger"
+
+#, fuzzy
+msgid "Use metrics of"
+msgstr "Metriek"
 
 msgid "Use monitoring host name"
 msgstr "Gebruik de hostnaam voor de bewaking"

@@ -37432,6 +37432,10 @@ msgstr "Requête de la ressource %s"
 msgid "Query Time Limit"
 msgstr "Limite de temps d'interrogation"
 
+#, fuzzy
+msgid "Query Timeout"
+msgstr "Limite de temps d'interrogation"
+
 msgid "Query elasticsearch logs"
 msgstr "Interroger les journaux d'elasticsearch"
 
@@ -57458,10 +57462,6 @@ msgstr "Utiliser LDAPS (SSL)"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Utiliser le démon Proxy de Livestatus"
 
-#, fuzzy
-msgid "Use Metrics of"
-msgstr "Métriques"
-
 msgid "Use Piggyback"
 msgstr "Utiliser le ferroutage"
 
@@ -57663,6 +57663,10 @@ msgstr "Utiliser l'âge maximum de <a href=\"%s\">paramètres généraux</a>."
 msgid "Use maximum age from <a href=\"%s\">global settings</a> or above"
 msgstr ""
 "Utiliser l'âge maximum de <a href=\"%s\">paramètres globaux</a> ou plus haut."
+
+#, fuzzy
+msgid "Use metrics of"
+msgstr "Métriques"
 
 msgid "Use monitoring host name"
 msgstr "Utiliser le nom de l'hôte de surveillance"

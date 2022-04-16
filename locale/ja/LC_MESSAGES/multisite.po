@@ -35739,6 +35739,10 @@ msgstr "%s リソースをクエリ"
 msgid "Query Time Limit"
 msgstr "クエリの時間制限"
 
+#, fuzzy
+msgid "Query Timeout"
+msgstr "クエリの時間制限"
+
 msgid "Query elasticsearch logs"
 msgstr "Elasticsearchログをクエリする"
 
@@ -54316,10 +54320,6 @@ msgstr "LDAPS(SSL)を使用する"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatusプロキシデーモンを使用する"
 
-#, fuzzy
-msgid "Use Metrics of"
-msgstr "メトリクス"
-
 msgid "Use Piggyback"
 msgstr "ピギーバックを使用する"
 
@@ -54516,6 +54516,10 @@ msgstr "<a href=\"%s\">グローバル設定</a>の最大期間を使用しま�
 #, python-format
 msgid "Use maximum age from <a href=\"%s\">global settings</a> or above"
 msgstr "<a href = \"%s\">グローバル設定</a>以上の経過日数を使用する"
+
+#, fuzzy
+msgid "Use metrics of"
+msgstr "メトリクス"
 
 msgid "Use monitoring host name"
 msgstr "監視ホスト名を使用する"

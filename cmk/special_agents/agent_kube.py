@@ -361,7 +361,7 @@ class Pod:
             namespace=self.metadata.namespace,
             name=self.metadata.name,
             creation_timestamp=self.metadata.creation_timestamp,
-            labels=self.metadata.labels if self.metadata.labels else {},
+            labels=self.metadata.labels,
             node=self.node,
             host_network=self.spec.host_network,
             dns_policy=self.spec.dns_policy,
@@ -520,7 +520,7 @@ class Deployment(PodNamespacedOwner):
             name=self.name(),
             namespace=self.metadata.namespace,
             creation_timestamp=self.metadata.creation_timestamp,
-            labels=self.metadata.labels if self.metadata.labels else {},
+            labels=self.metadata.labels,
             selector=self.spec.selector,
             containers=_thin_containers(self.pods()),
             cluster=cluster_name,
@@ -1110,7 +1110,7 @@ def pod_namespace(pod: api.Pod) -> api.NamespaceName:
 def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
     """The name of the namespace
     Examples:
-        >>> namespace_name(api.Namespace(metadata=api.MetaData(name="foo", creation_timestamp=0.0)))
+        >>> namespace_name(api.Namespace(metadata=api.MetaData(name="foo", creation_timestamp=0.0, labels={})))
         'foo'
     """
     return namespace.metadata.name

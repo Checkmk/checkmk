@@ -27,7 +27,7 @@ def default_pod(
     attributes: Optional[Mapping[str, Any]] = None,
 ) -> Pod:
     if metadata is None:
-        metadata = api.PodMetaData(name="", namespace="default")
+        metadata = api.PodMetaData(name="", namespace="default", labels={})
     if attributes is None:
         attributes = {}
     return Pod(
@@ -81,10 +81,12 @@ def test_collect_cpu_resources():
 
 def test_filter_pods_from_namespaces():
     pod_one = default_pod(
-        "one", metadata=api.PodMetaData(name="one", namespace=api.NamespaceName("default"))
+        "one",
+        metadata=api.PodMetaData(name="one", namespace=api.NamespaceName("default"), labels={}),
     )
     pod_two = default_pod(
-        "two", metadata=api.PodMetaData(name="two", namespace=api.NamespaceName("standard"))
+        "two",
+        metadata=api.PodMetaData(name="two", namespace=api.NamespaceName("standard"), labels={}),
     )
     assert pods_from_namespaces([pod_one, pod_two], {api.NamespaceName("default")}) == [pod_one]
 

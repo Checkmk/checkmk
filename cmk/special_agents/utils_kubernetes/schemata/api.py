@@ -54,7 +54,7 @@ class MetaData(BaseModel):
     name: str
     namespace: Optional[NamespaceName] = None
     creation_timestamp: Optional[CreationTimestamp] = None
-    labels: Optional[Labels] = None
+    labels: Labels
 
 
 class NodeMetaData(MetaData):
@@ -68,7 +68,7 @@ class PodMetaData(MetaData):
 
 class NamespaceMetaData(BaseModel):
     name: NamespaceName
-    labels: Optional[Labels] = None
+    labels: Labels
     creation_timestamp: CreationTimestamp
 
 

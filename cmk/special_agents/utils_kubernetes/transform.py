@@ -90,9 +90,9 @@ def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
     return date_time.timestamp()
 
 
-def parse_labels(labels: Optional[Mapping[str, str]]) -> Optional[Mapping[LabelName, Label]]:
+def parse_labels(labels: Optional[Mapping[str, str]]) -> Mapping[LabelName, Label]:
     if labels is None:
-        return None
+        return {}
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
 

@@ -1,22 +1,56 @@
 import * as cmk_figures from "cmk_figures";
 import * as d3Hexbin from "d3-hexbin";
 
-//TODO: add generic type to Figurebase and adjust getEmptyData to fit the data
-export class HostStats extends cmk_figures.FigureBase {
+interface FigurePart {
+    count: number;
+    css_class: string;
+    title: string;
+    url: string;
+}
+interface FigureResponceData extends cmk_figures.FigureData{
+    parts: FigurePart[];
+    total: FigurePart;
+}
+
+interface Hex_Config {
+    title: string,
+    path: [number, number][],
+    css_class,
+    tooltip: string,
+    count: number,
+}
+
+export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
+    _table_div;
+    _hexagon_box;
+    _max_radius!: number;
+    _title: string = "";
+    _title_url: string = "";
     ident() {
         return "hoststats";
     }
-    getEmptyData() {
-        return cmk_figures.getEmptyBasicFigureData();
+
+    getEmptyData(): FigureResponceData {
+        return {
+            data: [],
+            plot_definitions: [],
+            total: {count: 0, css_class: "", title: "", url: ""},
+            parts: [],
+        };
     }
+
     initialize(debug) {
         super.initialize(debug);
 
         this._div_selection.classed("stats_dashlet", true);
-        this._table_div = this._div_selection.append("div").classed("stats_table", true);
+        this._table_div = this._div_selection
+            .append("div")
+            .classed("stats_table", true);
         this.svg = this._div_selection.append("svg");
         // NOTE: for IE11 support we set the attribute here and do not use a CSS class
-        this._hexagon_box = this.svg.append("g").attr("transform", "translate(60, 95)");
+        this._hexagon_box = this.svg
+            .append("g")
+            .attr("transform", "translate(60, 95)");
         this._max_radius = 48;
     }
 
@@ -32,11 +66,12 @@ export class HostStats extends cmk_figures.FigureBase {
         this.resize();
         let parts = this._data.parts;
         const hexbin = d3Hexbin.hexbin();
-        let hexagon_config = [];
+        let hexagon_config: Hex_Config[] = [];
 
         let largest_element_count = 0;
         for (const element of this._data.parts) {
-            if (element.count > largest_element_count) largest_element_count = element.count;
+            if (element.count > largest_element_count)
+                largest_element_count = element.count;
         }
 
         if (this._data.total.count == 0) {
@@ -54,8 +89,9 @@ export class HostStats extends cmk_figures.FigureBase {
                 radius =
                     part.count == 0
                         ? 0
-                        : (Math.pow(sum, 0.33) / Math.pow(this._data.total.count, 0.33)) *
-                          this._max_radius;
+                        : (Math.pow(sum, 0.33) /
+                            Math.pow(this._data.total.count, 0.33)) *
+                        this._max_radius;
                 sum -= part.count;
 
                 hexagon_config.push({

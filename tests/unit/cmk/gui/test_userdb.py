@@ -74,7 +74,7 @@ def user_idle_timeout_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None
 
 
 @pytest.fixture(name="session_timed_out")
-def fixture_session_timed_out(monkeypatch: MonkeyPatch, user_id: UserId, fix_time: None) -> str:
+def fixture_session_timed_out(user_id: UserId, fix_time: None) -> str:
     session_id = "sess1"
     now = int(time.time()) - 20
     userdb._save_session_infos(
@@ -92,7 +92,7 @@ def fixture_session_timed_out(monkeypatch: MonkeyPatch, user_id: UserId, fix_tim
 
 
 @pytest.fixture(name="session_valid")
-def fixture_session_valid(monkeypatch: MonkeyPatch, user_id: UserId, fix_time: None) -> str:
+def fixture_session_valid(user_id: UserId, fix_time: None) -> str:
     session_id = "sess2"
     now = int(time.time()) - 5
     userdb._save_session_infos(
@@ -330,9 +330,7 @@ def test_ensure_user_can_init_no_previous_session(user_id: UserId) -> None:
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_ensure_user_can_init_with_previous_session_timeout(
-    monkeypatch: MonkeyPatch, user_id: UserId
-) -> None:
+def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> None:
     assert userdb._ensure_user_can_init_session(user_id) is True
 
 

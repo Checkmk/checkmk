@@ -18,7 +18,7 @@ pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
 pub const WINDOWS_INTERNAL_PORT: &str = "50001";
 
 // FILES
-pub const PAIRING_PRESET_FILE: &str = "cmk-agent-ctl-config.json";
+pub const REGISTRATION_PRESET_FILE: &str = "registration_preset.json";
 pub const REGISTRY_FILE: &str = "registered_connections.json";
 pub const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";

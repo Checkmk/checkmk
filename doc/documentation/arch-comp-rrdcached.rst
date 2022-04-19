@@ -21,6 +21,13 @@ writes the updates to the RRD file. A flush command may be used to force writing
 of values to disk, so that graphing facilities and similar can work with
 up-to-date data.
 
+Interfaces
+----------
+
+The :doc:`arch-comp-core` is communicating with the rrdcached over it's command
+socket `tmp/run/rrdcached.sock`. The protocol is described in the
+`rrdcached man page <https://oss.oetiker.ch/rrdtool/doc/rrdcached.en.html>`_.
+
 See also
 --------
 - :doc:`arch-comp-core`

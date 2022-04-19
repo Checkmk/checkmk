@@ -28,7 +28,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
             component WebAPI
             component "[[../arch-comp-livestatus-client.html Livestatus client]]" as apache_livestatus_client
         }
-        component "NagVis" as nagvis
+        component "[[../arch-comp-nagvis.html NagVis]]" as nagvis
     }
     interface Livestatus as apache_livestatus
 

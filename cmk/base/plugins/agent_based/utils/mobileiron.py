@@ -18,6 +18,13 @@ class Section(NamedTuple):
     availableCapacity: Optional[float]
     uptime: Optional[int]
     ipAddress: Optional[str]
+    deviceModel: Optional[str]
+    platformType: Optional[str]
+    registrationState: Optional[str]
+    manufacturer: Optional[str]
+    serialNumber: Optional[str]
+    totalCapacity: Optional[float]
+    dmPartitionName: Optional[str]
 
 
 class SourceHostSection(NamedTuple):
@@ -37,6 +44,13 @@ def parse_mobileiron(string_table: StringTable) -> Section:
         availableCapacity=json_raw.get("availableCapacity"),
         uptime=json_raw.get("uptime"),
         ipAddress=json_raw.get("ipAddress"),
+        deviceModel=json_raw.get("deviceModel"),
+        platformType=json_raw.get("platformType"),
+        registrationState=json_raw.get("registrationState"),
+        manufacturer=json_raw.get("manufacturer"),
+        serialNumber=json_raw.get("serialNumber"),
+        totalCapacity=json_raw.get("totalCapacity"),
+        dmPartitionName=json_raw.get("dmPartitionName"),
     )
 
 

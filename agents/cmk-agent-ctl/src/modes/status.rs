@@ -851,7 +851,7 @@ mod test_status {
             _status(
                 &registry,
                 &config::PullConfig::new(
-                    config::ConfigFromDisk::new().unwrap(),
+                    config::RuntimeConfig::new().unwrap(),
                     cli::PullArgs {
                         port: None,
                         #[cfg(windows)]

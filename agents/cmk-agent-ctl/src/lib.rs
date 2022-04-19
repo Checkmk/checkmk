@@ -29,7 +29,7 @@ pub use setup::init;
 
 pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
     let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
-    let config_from_disk = config::ConfigFromDisk::load(&paths.config_path)?;
+    let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
     let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
@@ -54,20 +54,20 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         ),
         cli::Args::Push { .. } => push(&registry),
         cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
-            config_from_disk,
+            runtime_config,
             pull_args,
             legacy_pull_marker,
             registry,
         )?),
         cli::Args::Daemon(daemon_args) => daemon(
             registry.clone(),
-            config::PullConfig::new(config_from_disk, daemon_args, legacy_pull_marker, registry)?,
+            config::PullConfig::new(runtime_config, daemon_args, legacy_pull_marker, registry)?,
         ),
         cli::Args::Dump { .. } => dump(),
         cli::Args::Status(status_args) => status(
             &registry,
             &config::PullConfig::new(
-                config_from_disk,
+                runtime_config,
                 // this will vanish once the Windows agent also uses the toml config
                 cli::PullArgs {
                     port: None,

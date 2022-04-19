@@ -129,7 +129,7 @@ impl RegistrationConfig {
 }
 
 #[derive(Deserialize)]
-pub struct ConfigFromDisk {
+pub struct RuntimeConfig {
     #[serde(default)]
     allowed_ip: Option<Vec<String>>,
 
@@ -137,7 +137,7 @@ pub struct ConfigFromDisk {
     pull_port: Option<types::Port>,
 }
 
-impl TOMLLoader for ConfigFromDisk {}
+impl TOMLLoader for RuntimeConfig {}
 
 pub struct LegacyPullMarker(std::path::PathBuf);
 
@@ -174,18 +174,18 @@ pub struct PullConfig {
 
 impl PullConfig {
     pub fn new(
-        config_from_disk: ConfigFromDisk,
+        runtime_config: RuntimeConfig,
         pull_args: cli::PullArgs,
         legacy_pull_marker: LegacyPullMarker,
         registry: Registry,
     ) -> AnyhowResult<PullConfig> {
         let allowed_ip = pull_args
             .allowed_ip
-            .or(config_from_disk.allowed_ip)
+            .or(runtime_config.allowed_ip)
             .unwrap_or_default();
         let port = pull_args
             .port
-            .or(config_from_disk.pull_port)
+            .or(runtime_config.pull_port)
             .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
         #[cfg(unix)]
         let agent_channel = setup::agent_socket();

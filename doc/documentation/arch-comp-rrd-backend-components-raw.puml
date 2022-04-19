@@ -1,0 +1,31 @@
+@startuml
+component "Nagios core" as cmc {
+    component "npcdmod.o" as npcdmod_o
+    component "[[../arch-comp-livestatus.html Livestatus]]" as cmc_livestatus_server {
+        component "RRDColumn" as rrd_column
+    }
+}
+
+interface spool
+interface socket
+
+package "RRD backend" as rrd_backend {
+    component "[[../arch-comp-rrdcached.html rrdcached]]" as rrdcached
+    component npcd
+    component "process_perfdata.pl" as process_perfdata_pl
+    database "RRD storage" as rrd
+    interface librrd
+}
+
+npcdmod_o --> spool : write
+spool --> npcd
+npcd -> process_perfdata_pl : launch
+rrd_column --> socket : flush
+process_perfdata_pl -u-> socket : write
+socket --> rrdcached
+rrdcached --> librrd : write
+librrd --> rrd_column : read
+process_perfdata_pl --> librrd : create
+librrd <--> rrd
+
+@enduml

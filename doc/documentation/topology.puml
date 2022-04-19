@@ -32,6 +32,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     interface Livestatus as apache_livestatus
 
     component "[[../arch-comp-core.html Monitoring Core]]" as cmc {
+        component "RRD integration" as rrd_integration
         component "[[../arch-comp-livestatus.html Livestatus]]" as cmc_livestatus_server
         component "[[../arch-comp-checkengine.html Check engine]]" as check_engine {
             component checker
@@ -41,7 +42,9 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
             component ICMPReceiver
             component ICMPSender
         }
-        component "Notification engine" as notify_engine
+        component "Notification engine" as cmc_notify {
+            component "Notify helper" as notify_helper
+        }
     }
     interface "call" as call_notification_plugins
 
@@ -60,16 +63,18 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     component mknotifyd
     interface Notification as mknotifyd_notification
 
-    component "[[../arch-comp-rrdcached.html rrdcached]]" as rrdcached
-    interface "RRD socket" as rrdcached_socket
-}
-interface "mknotifyd other site" as mknotifyd_other_site
+    component "[[../arch-comp-rrd-backend.html RRD backend]]" as rrd_backend
+    interface "IO" as rrd_io
 
-package "Notification plugins" as notification_plugins {
-    component Email
-    component SMS
-    component "..."
+    package "Notification plugins" as notification_plugins
 }
+
+package "Other site" as other_site {
+    component "[[../arch-comp-core.html Monitoring Core]]" as cmc_other_site
+    component "GUI" as gui_other_site
+    component "mknotifyd" as mknotifyd_other_site
+}
+interface "mknotifyd protocol" as mknotifyd_protocol
 
 package "[[../arch-comp-hosts.html hosts]]" as hosts {
     package agent_based_host
@@ -107,32 +112,36 @@ dcd -d- dcd_piggyback
 dcd_web_api_client -l- WebAPI
 dcd_piggyback -d- check_engine
 
-checker -- Fetcher
+' Help visualization
+notify_helper -[hidden]r-> rrd_integration
+rrd_integration -r- cmc_livestatus_server
+checker -r- Fetcher
 
 external_livestatus_client -d- cmc_livestatus_server
-Fetcher -d- TCP
+Fetcher -d----- TCP
+Fetcher -d----- SNMP
+Fetcher -d----- api_hosts_http
 TCP -d- agent_based_host
-Fetcher -d- SNMP
 SNMP -d- snmp_host
-Fetcher -d- api_hosts_http
 api_hosts_http -d- api_hosts
-ICMPSender -d- hosts
-ICMPReceiver -d- hosts
+ICMPSender -d---- hosts
+ICMPReceiver -d---- hosts
 
-cmc -u- rrdcached_socket
-rrdcached_socket -u- rrdcached
+rrd_integration -d- rrd_io
+rrd_io -d- rrd_backend
 
-notify_engine -d-- call_notification_plugins
-call_notification_plugins -d----- notification_plugins
-notify_engine -d-- mknotifyd_notification
+notify_helper -d- call_notification_plugins
+call_notification_plugins -d---- notification_plugins
+notify_helper -d- mknotifyd_notification
 mknotifyd_notification -d- mknotifyd
-mknotifyd -d- mknotifyd_other_site
+mknotifyd -d------ mknotifyd_protocol
+mknotifyd_protocol -d- mknotifyd_other_site
 
-cmc_livestatus_server --d- mkeventd_livestatus
+cmc_livestatus_server -d- mkeventd_livestatus
 mkeventd_livestatus -d- mkeventd
-mkeventd -d- Syslog
+mkeventd -d-- Syslog
 Syslog -d- agent_based_host
-mkeventd -d- trap
+mkeventd -d----- trap
 trap -d- snmp_host
 
 @enduml

@@ -31,6 +31,7 @@ Components
    arch-comp-dcd.rst
    arch-comp-livestatus.rst
    arch-comp-livestatus-client.rst
+   arch-comp-rrd-backend.rst
    arch-comp-rrdcached.rst
    arch-comp-nagvis.rst
    arch-comp-template.rst

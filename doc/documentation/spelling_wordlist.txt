@@ -13,6 +13,7 @@ Makefile
 Makefiles
 microcore
 Nagios
+PNP4Nagios
 omd
 parsers
 preforking

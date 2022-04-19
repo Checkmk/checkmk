@@ -5,7 +5,8 @@ rrdcached - The RRD cache daemon
 Introduction and goals
 ======================
 
-The rrdcached is a 3rd party component provided by the rrdtool project.
+The rrdcached is a 3rd party component provided by the rrdtool project. It is a
+part of our :doc:`arch-comp-rrd-backend`.
 
 The time series data of our metric system is stored in RRD databases in the
 file system of a OMD site. The rrdcached helps to optimize the IO with these RRD

@@ -22,29 +22,15 @@ regression test dataset as described in ''checks/generictests/regression.py''
 """
 from importlib import import_module
 
-import pytest
-
 from tests.testlib import on_time
 
 from . import generictests
 
-pytestmark = pytest.mark.checks
 
-
-# TODO: Shouldn't we enable this by default for all unit tests?
-@pytest.fixture(name="mock_time", scope="module")
-def fixture_mock_time():
-    """Use this fixture for simple time + zone mocking
-
-    Use this fixture instead of directly invoking on_time in case you don't need a specific time.
-    Calling this once instead of on_time() a lot of times saves execution time.
-    """
+# Making this a single test with a loop instead of a parameterized test cuts down the runtime
+# from 9.2s to 4.9s. Furthermore, freezing the time only once is a big win, too.
+def test_dataset(fix_plugin_legacy):
     with on_time(1572247138, "CET"):
-        yield
-
-
-@pytest.mark.usefixtures("mock_time")
-@pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
-def test_dataset(datasetname, fix_plugin_legacy):
-    dataset = import_module("tests.unit.checks.generictests.datasets.%s" % datasetname)
-    generictests.run(fix_plugin_legacy.check_info, dataset)
+        for datasetname in generictests.DATASET_NAMES:
+            dataset = import_module(f"tests.unit.checks.generictests.datasets.{datasetname}")
+            generictests.run(fix_plugin_legacy.check_info, dataset)

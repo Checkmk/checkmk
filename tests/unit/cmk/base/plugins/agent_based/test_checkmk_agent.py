@@ -27,12 +27,6 @@ from cmk.base.plugins.agent_based.utils.checkmk import ControllerSection, Plugin
 # TODO: make this more blackboxy once API vialoations are reduced!
 
 
-@pytest.fixture(name="fix_time")
-def _get_fix_time():
-    with on_time(1645800081.5039608, "UTC"):
-        yield
-
-
 def test_discovery_something() -> None:
     assert [*discover_checkmk_agent({}, None, None)] == [Service()]
 
@@ -242,25 +236,28 @@ def test_check_no_check_yet() -> None:
 
 
 @pytest.mark.parametrize("duplicate", [False, True])
-def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
-    assert [
-        *_check_cmk_agent_update(
-            {},
-            {
-                "agentupdate": " ".join(
-                    (1 + duplicate)
-                    * (
-                        "last_check 1645000081.5039608",
-                        "last_update 1645000181.5039608",
-                        "aghash 38bf6e44175732bc",
-                        "pending_hash 1234abcd5678efgh",
-                        "update_url https://server/site/check_mk",
-                        "error 503 Server Error: Service Unavailable",
+def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
+    with on_time(1645800081.5039608, "UTC"):
+        actual = list(
+            _check_cmk_agent_update(
+                {},
+                {
+                    "agentupdate": " ".join(
+                        (1 + duplicate)
+                        * (
+                            "last_check 1645000081.5039608",
+                            "last_update 1645000181.5039608",
+                            "aghash 38bf6e44175732bc",
+                            "pending_hash 1234abcd5678efgh",
+                            "update_url https://server/site/check_mk",
+                            "error 503 Server Error: Service Unavailable",
+                        )
                     )
-                )
-            },
+                },
+            )
         )
-    ] == [
+
+    assert actual == [
         Result(state=State.WARN, summary="Update error: 503 Server Error: Service Unavailable"),
         Result(
             state=State.WARN,

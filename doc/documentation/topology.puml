@@ -22,10 +22,13 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     interface HTTP as http_rest_api
     interface HTTP as http_web_api
     component apache {
+        component "mod_wsgi" as mod_wsgi {
             component GUI
             component "REST API" as rest_api
             component WebAPI
             component "[[../arch-comp-livestatus-client.html Livestatus client]]" as apache_livestatus_client
+        }
+        component "NagVis" as nagvis
     }
     interface Livestatus as apache_livestatus
 
@@ -86,6 +89,7 @@ web_api_client -d- http_web_api
 rest_api_client -d- http_rest_api
 
 http_gui -d- GUI
+http_gui -d- nagvis
 http_web_api -d- WebAPI
 http_rest_api -d- rest_api
 
@@ -93,6 +97,7 @@ GUI -d- apache_livestatus_client
 WebAPI -d- apache_livestatus_client
 rest_api -d- apache_livestatus_client
 apache_livestatus_client -d- apache_livestatus
+nagvis -d- apache_livestatus
 apache_livestatus -d- liveproxyd
 
 liveproxyd -d- liveproxyd_livestatus_client

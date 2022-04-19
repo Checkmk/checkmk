@@ -2501,18 +2501,28 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # 2. Actual modification
         affected_sites = subfolder.all_site_ids()
         old_filesystem_path = subfolder.filesystem_path()
-        del self._subfolders[subfolder.name()]
-        subfolder._parent = target_folder
-        target_folder._subfolders[subfolder.name()] = subfolder
-        shutil.move(old_filesystem_path, subfolder.filesystem_path())
-        subfolder.rewrite_hosts_files()  # fixes changed inheritance
+        shutil.move(old_filesystem_path, target_folder.filesystem_path())
+
         self._clear_id_cache()
         Folder.invalidate_caches()
-        affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
+
+        # Reload folder at new location and rewrite host files
+        # Again, some special handling because of the missing slash in the main folder
+        if not target_folder.is_root():
+            moved_subfolder = Folder.folder(f"{target_folder.path()}/{subfolder.name()}")
+        else:
+            moved_subfolder = Folder.folder(subfolder.name())
+
+        with disable_redis():
+            # Do not update redis while rewriting a plethora of host files
+            # Redis automatically updates on the next request
+            moved_subfolder.rewrite_hosts_files()  # fixes changed inheritance
+
+        affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
         add_change(
             "move-folder",
             _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
-            object_ref=subfolder.object_ref(),
+            object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
         )
         need_sidebar_reload()

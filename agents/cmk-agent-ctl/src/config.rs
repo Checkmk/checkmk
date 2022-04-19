@@ -9,8 +9,10 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
-use std::fs::{metadata, read_to_string, write};
+use std::fs;
 use std::io;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::SystemTime;
@@ -33,7 +35,7 @@ pub trait JSONLoader: DeserializeOwned {
         if !path.exists() {
             return Self::new();
         }
-        Ok(serde_json::from_str(&read_to_string(path)?)?)
+        Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
@@ -46,7 +48,7 @@ pub trait TOMLLoader: DeserializeOwned {
         if !path.exists() {
             return Self::new();
         }
-        Ok(toml::from_str(&read_to_string(path)?)?)
+        Ok(toml::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
@@ -270,7 +272,7 @@ impl JSONLoader for RegisteredConnections {}
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
-        Some(metadata(&path)?.modified()?)
+        Some(fs::metadata(&path)?.modified()?)
     } else {
         None
     })
@@ -340,10 +342,17 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        write(
+        let write_op_result = fs::write(
             &self.path,
             &serde_json::to_string_pretty(&self.connections)?,
-        )
+        );
+        #[cfg(windows)]
+        return write_op_result;
+        #[cfg(unix)]
+        {
+            write_op_result?;
+            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o640))
+        }
     }
 
     pub fn pull_standard_is_empty(&self) -> bool {
@@ -512,6 +521,12 @@ mod test_registry {
 
         reg.save().unwrap();
         assert!(reg.path.exists());
+        #[cfg(unix)]
+        assert_eq!(
+            fs::metadata(&reg.path).unwrap().permissions().mode(),
+            0o100640 // mode apparently returns the full file mode, not just the permission bits ...
+        );
+
         let new_reg = Registry::from_file(&reg.path).unwrap();
         assert_eq!(reg.connections, new_reg.connections);
         assert_eq!(reg.path, new_reg.path);

@@ -3,10 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Final
+from typing import Any, Final, Mapping, NamedTuple, Optional
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.api.agent_based.type_defs import StringTable
 
 from .df import df_check_filesystem_single
 
@@ -28,22 +27,49 @@ CHECK_DEFAULT_PARAMETERS: Final = {
 }
 
 
-def parse_network_fs_mounts(info):
-    parsed: dict[str, dict[str, str]] = {}
-    for line in info:
-        if " ".join(line[-2:]) == "Permission denied":
-            parsed.setdefault(" ".join(line[:-2]), {"state": "Permission denied"})
+class NetworkFSUsage(NamedTuple):
+    total_blocks: str
+    free_blocks_su: str
+    free_blocks: str
+    blocksize: str
 
-        else:
-            parsed.setdefault(
-                " ".join(line[:-5]),
-                {
-                    "state": line[-5],
-                    "data": line[-4:],
-                },
+
+class NetworkFSMount(NamedTuple):
+    mountpoint: str
+    state: str
+    usage: Optional[NetworkFSUsage]
+
+
+NetworkFSSection = dict[str, NetworkFSMount]
+
+
+def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
+    section: dict[str, NetworkFSMount] = {}
+    for entry in string_table:
+        if " ".join(entry[-2:]) == "Permission denied":
+            section.setdefault(
+                " ".join(entry[:-2]),
+                NetworkFSMount(
+                    mountpoint=" ".join(entry[:-2]),
+                    state="Permission denied",
+                    usage=None,
+                ),
             )
-
-    return parsed
+            continue
+        section.setdefault(
+            " ".join(entry[:-5]),
+            NetworkFSMount(
+                mountpoint=" ".join(entry[:-5]),
+                state=entry[-5],
+                usage=NetworkFSUsage(
+                    total_blocks=entry[-4],
+                    free_blocks_su=entry[-3],
+                    free_blocks=entry[-2],
+                    blocksize=entry[-1],
+                ),
+            ),
+        )
+    return section
 
 
 MEGA = 1048576.0
@@ -61,21 +87,27 @@ def _scaled_metric(new_name, metric, factor):
     return tuple(metric_def_as_list)
 
 
-@get_parsed_item_data
-def check_network_fs_mounts(item, params, attrs):
+def check_network_fs_mounts(
+    item: str,
+    params: Mapping[str, Any],
+    section: NetworkFSSection,
+):
+    if not (mount := section.get(item)):
+        return
 
-    state = attrs["state"]
-    if state == "Permission denied":
+    if mount.state == "Permission denied":
         return 2, "Permission denied"
-    if state == "hanging":
+    if mount.state == "hanging":
         return 2, "Server not responding"
-    if state != "ok":
-        return 2, "Unknown state: %s" % state
+    if mount.state != "ok":
+        return 2, "Unknown state: %s" % mount.state
 
-    data = attrs["data"]
-    if data == ["-", "-", "-", "-"]:
+    if not (usage := mount.usage):
+        return
+    if usage == ("-", "-", "-", "-"):
         return 0, "Mount seems OK"
-    size_blocks, _, free_blocks, blocksize = map(int, data)
+
+    size_blocks, _, free_blocks, blocksize = map(int, usage)
 
     if size_blocks <= 0 or free_blocks < 0 or blocksize > 16.0 * MEGA:
         return 2, "Stale fs handle"

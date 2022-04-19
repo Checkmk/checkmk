@@ -173,12 +173,12 @@ def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
     ... 'k8s.io/app': Label(name='k8s.io/app', value='nginx'),
     ... 'infra': Label(name='infra', value='yes'),
     ... }))
-    [HostLabel('cmk/kube/k8s.io/app', 'nginx'), HostLabel('cmk/kube/infra', 'yes')]
+    [HostLabel('cmk/kubernetes/label/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/label/infra', 'yes')]
     """
     for label in labels.values():
         if (value := label.value) == "":
             value = LabelValue("true")
-        yield HostLabel(f"cmk/kube/{label.name}", value)
+        yield HostLabel(f"cmk/kubernetes/label/{label.name}", value)
 
 
 class KubernetesError(Exception):

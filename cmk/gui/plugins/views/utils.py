@@ -2290,6 +2290,24 @@ class Cell:
             or len(result) != 2
             or not isinstance(result[1], (str, HTML))
         ):
+            output_formats: List[str] = [
+                "csv_export",
+                "csv",
+                "json_export",
+                "json",
+            ]
+            if (
+                request.var("output_format") in output_formats
+                and isinstance(
+                    painter,
+                    (
+                        cmk.gui.plugins.views.painters.PainterHostLabels,
+                        cmk.gui.plugins.views.painters.PainterServiceLabels,
+                    ),
+                )
+                and isinstance(result[1], dict)
+            ):
+                return result
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 

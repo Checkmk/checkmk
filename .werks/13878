@@ -1,0 +1,15 @@
+Title: Fix usage of piggyback data in simulation mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650357776
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If simulation mode was used, checks of piggyback hosts got stale because they
+are not cached.
+
+The piggyback files will now be used instead.

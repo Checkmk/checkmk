@@ -20,6 +20,6 @@ def test_kube_labels_to_cmk_labels():
     }
     result = list(kube_labels_to_cmk_labels(labels))
     assert result == [
-        HostLabel("cmk/kube/asd", "bsd"),
-        HostLabel("cmk/kube/empty", "true"),
+        HostLabel("cmk/kubernetes/label/asd", "bsd"),
+        HostLabel("cmk/kubernetes/label/empty", "true"),
     ]

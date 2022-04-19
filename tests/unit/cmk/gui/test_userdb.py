@@ -109,18 +109,13 @@ def fixture_session_valid(monkeypatch: MonkeyPatch, user_id: UserId, fix_time: N
     return session_id
 
 
-@pytest.fixture(name="session_pre_20")
-def fixture_session_pre_20(monkeypatch: MonkeyPatch, user_id: UserId, fix_time: None) -> str:
-    session_id = "sess2"
-    userdb.save_custom_attr(user_id, "session_info", "%s|%s" % (session_id, int(time.time() - 5)))
-    return session_id
-
-
-def test_load_pre_20_session(user_id: UserId, session_pre_20: str) -> None:
+def test_load_pre_20_session(user_id: UserId) -> None:
+    timestamp = 1234567890
+    userdb.save_custom_attr(user_id, "session_info", f"sess2|{timestamp}")
     old_session = userdb._load_session_infos(user_id)
     assert isinstance(old_session, dict)
-    assert old_session["sess2"].started_at == int(time.time()) - 5
-    assert old_session["sess2"].last_activity == int(time.time()) - 5
+    assert old_session["sess2"].started_at == timestamp
+    assert old_session["sess2"].last_activity == timestamp
 
 
 def test_on_succeeded_login(user_id: UserId) -> None:

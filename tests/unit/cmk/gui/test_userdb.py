@@ -57,22 +57,6 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
         userdb.load_users.cache_clear()  # type: ignore[attr-defined]
 
 
-# user_id needs to be used here because it executes a reload of the config and the monkeypatch of
-# the config needs to be done after loading the config
-@pytest.fixture()
-def lock_on_logon_failures_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr(active_config, "lock_on_logon_failures", 3)
-    assert active_config.lock_on_logon_failures == 3
-
-
-# user_id needs to be used here because it executes a reload of the config and the monkeypatch of
-# the config needs to be done after loading the config
-@pytest.fixture()
-def user_idle_timeout_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr(active_config, "user_idle_timeout", 8)
-    assert active_config.user_idle_timeout == 8
-
-
 @pytest.fixture(name="session_timed_out")
 def fixture_session_timed_out(user_id: UserId, fix_time: None) -> str:
     session_id = "sess1"
@@ -177,8 +161,10 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     assert userdb.user_locked(user_id) is False
 
 
-@pytest.mark.usefixtures("lock_on_logon_failures_enabled", "request_context")
-def test_on_failed_login_with_locking(user_id: UserId) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_on_failed_login_with_locking(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+    monkeypatch.setattr(active_config, "lock_on_logon_failures", 3)
+
     assert active_config.lock_on_logon_failures == 3
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
@@ -266,8 +252,11 @@ def test_on_access_update_unknown_session(user_id: UserId, session_valid: str) -
         userdb.on_access(user_id, "xyz")
 
 
-@pytest.mark.usefixtures("user_idle_timeout_enabled")
-def test_on_access_logout_on_idle_timeout(user_id: UserId, session_timed_out: str) -> None:
+def test_on_access_logout_on_idle_timeout(
+    monkeypatch: MonkeyPatch, user_id: UserId, session_timed_out: str
+) -> None:
+    monkeypatch.setattr(active_config, "user_idle_timeout", 8)
+
     session_info = userdb._load_session_infos(user_id)[session_timed_out]
     session_info.started_at = int(time.time()) - 10
 

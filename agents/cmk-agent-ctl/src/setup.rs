@@ -62,8 +62,8 @@ impl PathResolver {
                 .join(constants::CONFIG_FILE)
                 .exists_or(etc_dir.join(constants::CONFIG_FILE)),
             registration_preset_path: home_dir
-                .join(constants::PAIRING_PRESET_FILE)
-                .exists_or(etc_dir.join(constants::PAIRING_PRESET_FILE)),
+                .join(constants::REGISTRATION_PRESET_FILE)
+                .exists_or(etc_dir.join(constants::REGISTRATION_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
             legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
         }
@@ -76,7 +76,7 @@ impl PathResolver {
         PathResolver {
             home_dir: PathBuf::from(home_dir),
             config_path: home_dir.join(Path::new(constants::CONFIG_FILE)),
-            registration_preset_path: home_dir.join(Path::new(constants::PAIRING_PRESET_FILE)),
+            registration_preset_path: home_dir.join(Path::new(constants::REGISTRATION_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
             legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
             log_path: home_dir.join("log").join(Path::new(constants::LOG_FILE)),
@@ -279,7 +279,7 @@ mod tests {
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(
             p.registration_preset_path,
-            std::path::PathBuf::from(&home).join("cmk-agent-ctl-config.json")
+            std::path::PathBuf::from(&home).join("registration_preset.json")
         );
         assert_eq!(
             p.registry_path,

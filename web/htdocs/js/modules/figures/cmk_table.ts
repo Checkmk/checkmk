@@ -3,8 +3,42 @@
 import * as d3 from "d3";
 import * as dc from "dc";
 import * as cmk_figures from "cmk_figures";
+import * as crossfilter from "crossfilter2";
+
+interface TableFigureData {
+    label: string;
+    value: number;
+}
+interface FigureConfig {
+    id: string;
+    type: string;
+    title: string;
+    data: TableFigureData;
+}
+
+interface TableFigureRowsCells {
+    text: string;
+    html: string;
+    cell_type: string;
+    classes: string[];
+    rowspan: number;
+    colspan: number;
+    figure_config: FigureConfig;
+}
+
+interface TableFigureRows {
+    classes: string[];
+    cells: TableFigureRowsCells[];
+}
+
+interface TableFigureDatum {
+    classes: string[];
+    rows: TableFigureRows[];
+}
 
 export class TableFigure extends cmk_figures.FigureBase {
+    _table;
+
     ident() {
         return "table";
     }
@@ -61,7 +95,7 @@ export class TableFigure extends cmk_figures.FigureBase {
         // New td inline figures
         _update_figures_in_selection(this._div_selection);
         // Legacy inline figures
-        _update_dc_graphs_in_selection(this._div_selection);
+        _update_dc_graphs_in_selection(this._div_selection, null);
     }
 }
 
@@ -75,7 +109,7 @@ function _update_figures_in_selection(selection) {
                 return;
 
             let new_figure = new figure_class(figure_config["selector"], figure_config["size"]);
-            new_figure.initialize();
+            new_figure.initialize(false);
             nodes[idx].__figure_instance__ = new_figure;
         }
 
@@ -96,7 +130,7 @@ function _update_dc_graphs_in_selection(selection, graph_group) {
         let node = d3.select(nodes[idx]);
         let svg = node.select("svg");
         if (svg.empty()) {
-            let new_crossfilter = new crossfilter(d.figure_config.data);
+            let new_crossfilter = crossfilter<any>(d.figure_config.data);
             let label_dimension = new_crossfilter.dimension(d => d.label);
             let label_group = label_dimension.group().reduceSum(d => d.value);
             let pie_chart = dc.pieChart(d.figure_config.selector, graph_group);
@@ -142,7 +176,7 @@ function _pie_chart_custom_renderlet(chart, d) {
     if (chart.svg().select(".empty-chart").empty()) return;
 
     // TODO: WIP
-    let labels_data = [];
+    let labels_data: Selection[] = [];
     chart.selectAll("text.pie-label").each((d, idx, nodes) => {
         labels_data.push(d3.select(nodes[idx]));
     });
@@ -180,7 +214,7 @@ function _get_translation(transform) {
     // consolidate the SVGTransformList containing all transformations
     // to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
     // its SVGMatrix.
-    var matrix = g.transform.baseVal.consolidate().matrix;
+    var matrix = g.transform.baseVal.consolidate()!.matrix;
 
     // As per definition values e and f are the ones for the translation.
     return [matrix.e, matrix.f];

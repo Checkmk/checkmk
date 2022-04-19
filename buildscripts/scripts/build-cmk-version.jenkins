@@ -38,7 +38,8 @@ properties([
     string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' ),
     booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', defaultValue: false, description: 'Use faked windows agent artifacts instead of building them'),
     booleanParam(name: 'USE_OMD_PACKAGE_CACHE', defaultValue: USE_OMD_PACKAGE_CACHE_DEFAULT, description: 'Use OMD package cache (NEXUS_ environment variables needed)'),
-    booleanParam(name: 'DEPLOY_TO_WEBSITE', defaultValue: false, description: 'Upload and deploy the packages to the website')
+    booleanParam(name: 'DEPLOY_TO_WEBSITE', defaultValue: false, description: 'Upload and deploy the packages to the website'),
+    booleanParam(name: 'DEPLOY_TO_WEBSITE_ONLY', defaultValue: false, description: 'Do (almost) nothing, except upload & deployment of already built packages to the website')
   ])
 ])
 
@@ -83,7 +84,7 @@ timeout(time: 12, unit: 'HOURS') {
             sh('mkdir -p "${WORKSPACE}/versions"')
         }
 
-        stage('Checkout sources') {
+        stage('Checkout, clean-up git, load groovy libs') {
             /// takes place as regular Jenkins user
             dir(SOURCE_DIR) {
                 checkout_git(scm, VERSION)
@@ -99,7 +100,24 @@ timeout(time: 12, unit: 'HOURS') {
                 notify = load 'buildscripts/scripts/lib/notify.groovy'
                 upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
                 docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
+            }
+        }
 
+        if (params.DEPLOY_TO_WEBSITE_ONLY) {
+            // This stage is used only by bauwelt/bw-release in order to publish an already built release
+            stage('Deploying previously build version to website only') {
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside(DOCKER_ARGS) {
+                    upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS)
+                }
+            }
+            // The job is already done here, so terminate it.
+            currentBuild.result = 'SUCCESS'
+            return
+        }
+
+        stage('Patch repo & get additional params') {
+            dir(SOURCE_DIR) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                     BUILD_IMAGE.inside(DOCKER_ARGS) {
